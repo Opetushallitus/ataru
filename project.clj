@@ -11,6 +11,7 @@
                  ;clojure/clojurescript
                  [prismatic/schema "1.0.5"]
                  [com.taoensso/timbre "4.3.1"]
+                 [org.clojure/core.match "0.3.0-alpha4"]
 
                  ;clojure
                  [compojure "1.5.0"]
@@ -22,7 +23,8 @@
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [clj-time "0.11.0"]
                  [cider/cider-nrepl "0.11.0" :exclusions [org.clojure/clojure]]
-                 [camel-snake-kebab "0.3.2"]]
+                 [camel-snake-kebab "0.3.2"]
+                 [cheshire/cheshire "5.5.0"]]
 
   :min-lein-version "2.5.3"
 
