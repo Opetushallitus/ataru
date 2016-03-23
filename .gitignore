@@ -6,3 +6,5 @@ out
 .lein-env
 resources/public/css
 .nrepl-port
+.idea
+*.iml
