@@ -1,27 +1,49 @@
 (defproject lomake-editori "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 ; clojurescript
                  [org.clojure/clojurescript "1.7.170"]
                  [reagent "0.5.1"]
                  [re-frame "0.7.0"]
                  [re-com "0.8.0"]
                  [secretary "1.2.3"]
+                 [com.andrewmcveigh/cljs-time "0.4.0"]
+
+                 ;clojure/clojurescript
+                 [prismatic/schema "1.0.5"]
+                 [com.taoensso/timbre "4.3.1"]
+
+                 ;clojure
                  [compojure "1.5.0"]
-                 [ring "1.4.0"]]
+                 [metosin/compojure-api "1.0.1"]
+                 [ring "1.4.0"]
+                 [yesql "0.5.2"]
+                 [environ "1.0.2"]
+                 [org.clojure/java.jdbc "0.4.2"]
+                 [postgresql/postgresql "9.1-901-1.jdbc4"]
+                 [clj-time "0.11.0"]
+                 [cider/cider-nrepl "0.11.0" :exclusions [org.clojure/clojure]]
+                 [camel-snake-kebab "0.3.2"]]
 
   :min-lein-version "2.5.3"
 
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "src/cljc"]
+  :resource-paths ["src/sql" "resources"]
+  :uberjar-name "lomake-editori.jar"
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-figwheel "0.5.0-6"]
             [lein-doo "0.1.6"]
-            [lein-less "1.7.5"]]
+            [lein-less "1.7.5"]
+            [lein-ancient "0.6.8"]
+            [lein-environ "1.0.2"]]
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"]
 
   :figwheel {:css-dirs ["resources/public/css"]
-             :ring-handler lomake-editori.handler/handler}
+             :ring-handler lomake-editori.handler/handler
+             :server-port 3449
+             :nrepl-port 3334}
 
 
   :less {:source-paths ["less"]
@@ -48,4 +70,14 @@
                                    :output-to "resources/public/js/compiled/app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
-                                   :pretty-print false}}]})
+                                   :pretty-print false}}]}
+
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+  :profiles {:repl-options {:init-ns lomake-editori.handler
+                            :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+             :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]]
+                   :source-paths ["env/dev/clj"]
+                   :env {:dev? true}}})
+
+
+

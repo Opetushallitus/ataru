@@ -5,10 +5,11 @@
               [lomake-editori.subs]
               [lomake-editori.routes :as routes]
               [lomake-editori.views :as views]
-              [lomake-editori.config :as config]))
+              [lomake-editori.config :as config]
+              [taoensso.timbre :refer-macros [spy]]))
 
 (when config/debug?
-  (println "dev mode"))
+  (info "dev mode"))
 
 (defn mount-root []
   (reagent/render [views/main-panel]
