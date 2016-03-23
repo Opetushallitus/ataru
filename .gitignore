@@ -4,6 +4,7 @@
 /resources/public/js/compiled
 out
 .lein-env
+.lein-failures
 resources/public/css
 .nrepl-port
 .idea
