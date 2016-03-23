@@ -18,12 +18,12 @@
                  [metosin/compojure-api "1.0.1"]
                  [ring "1.4.0"]
                  [yesql "0.5.2"]
+                 [camel-snake-kebab "0.3.2"]
                  [environ "1.0.2"]
                  [org.clojure/java.jdbc "0.4.2"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [clj-time "0.11.0"]
-                 [cider/cider-nrepl "0.11.0" :exclusions [org.clojure/clojure]]
-                 [camel-snake-kebab "0.3.2"]
+                 [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.5.0"]]
 
   :min-lein-version "2.5.3"
@@ -44,8 +44,7 @@
 
   :figwheel {:css-dirs ["resources/public/css"]
              :ring-handler lomake-editori.handler/handler
-             :server-port 3449
-             :nrepl-port 3334}
+             :server-port 3449}
 
 
   :less {:source-paths ["less"]
@@ -74,10 +73,13 @@
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false}}]}
 
-  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
-  :profiles {:repl-options {:init-ns lomake-editori.handler
-                            :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
-             :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]]
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
+                 :init (set! *print-length* 50)}
+  :profiles {:repl {:plugins [[cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
+             :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
+                                  [figwheel-sidecar "0.5.0-2"]
+                                  [refactor-nrepl "2.2.0"]
+                                  [org.clojure/tools.nrepl "0.2.12"]]
                    :source-paths ["env/dev/clj"]
                    :env {:dev? true}}})
 
