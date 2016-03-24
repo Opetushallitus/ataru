@@ -39,7 +39,10 @@
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]]
 
-  :eastwood {:namespaces [:source-paths]}
+  :eastwood {:namespaces [:source-paths]
+             :add-linters [:unused-locals
+                           :unused-namespaces
+                           :unused-private-vars]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"]
