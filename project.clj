@@ -52,7 +52,7 @@
              :server-port 3449}
 
 
-  :less {:source-paths ["less"]
+  :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
   :cljsbuild {:builds [{:id "dev"
