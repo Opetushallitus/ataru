@@ -9,3 +9,4 @@ resources/public/css
 .nrepl-port
 .idea
 *.iml
+node_modules
