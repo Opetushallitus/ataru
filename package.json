@@ -1,0 +1,11 @@
+{
+  "name": "lomake-editori",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Opetushallitus/lomake-editori.git"
+  },
+  "license": "EUPL-1.1",
+  "devDependencies": {
+    "phantomjs-prebuilt": "*"
+  }
+}

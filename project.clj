@@ -51,6 +51,7 @@
              :ring-handler lomake-editori.handler/handler
              :server-port 3449}
 
+  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
