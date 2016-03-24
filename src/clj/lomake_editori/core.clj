@@ -1,2 +1,1 @@
-(ns lomake-editori.core
-  (:require []))
+(ns lomake-editori.core)
