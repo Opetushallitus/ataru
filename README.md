@@ -29,6 +29,14 @@ Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
 ### Run tests:
 
+[doo](https://github.com/bensu/doo) assumes that [PhantomJS](http://phantomjs.org/) is installed locally to `./node_modules/phantomjs-prebuilt/bin/phantomjs`. The `package.json` in this repository does just that:
+
+```
+npm install
+```
+
+To actually run tests:
+
 ```
 lein clean
 lein doo phantom test once
