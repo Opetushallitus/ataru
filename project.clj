@@ -7,6 +7,7 @@
                  [re-com "0.8.0"]
                  [secretary "1.2.3"]
                  [com.andrewmcveigh/cljs-time "0.4.0"]
+                 [oph/soresu "0.1.0-SNAPSHOT"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.0.5"]
@@ -16,6 +17,7 @@
                  ;clojure
                  [compojure "1.5.0"]
                  [metosin/compojure-api "1.0.1"]
+                 [aleph "0.4.1"]
                  [ring "1.4.0"]
                  [yesql "0.5.2"]
                  [camel-snake-kebab "0.3.2"]
@@ -27,6 +29,18 @@
                  [cheshire/cheshire "5.5.0"]]
 
   :min-lein-version "2.5.3"
+
+  :repositories [["releases" {:url "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local"
+                              :sign-releases false
+                              :snapshots false
+;                             :creds :gpg
+}]
+                 ["snapshots"      {:url "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local"
+;                                   :creds :gpg
+                                     }]
+                 ["ext-snapshots"  {:url "https://artifactory.oph.ware.fi/artifactory/ext-snapshot-local"}]
+                 ["Laughing Panda" {:url "http://maven.laughingpanda.org/maven2"
+                                    :snapshots false}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :resource-paths ["src/sql" "resources"]
@@ -55,6 +69,8 @@
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
+
+  :main lomake-editori.core
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs"]

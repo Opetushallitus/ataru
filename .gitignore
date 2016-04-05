@@ -10,3 +10,4 @@ resources/public/css
 .idea
 *.iml
 node_modules
+.lein-repl-history
