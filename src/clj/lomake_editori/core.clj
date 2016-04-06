@@ -3,6 +3,7 @@
             [lomake-editori.handler :refer [handler]]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [cider.nrepl :refer [cider-nrepl-handler]]
             [clojure.tools.nrepl.server :refer [start-server]]
             [aleph.http :as http])
@@ -20,14 +21,17 @@
 
 (defn -main [& [prt & _]]
   (let [port (or (try-f (fn [] (Integer/parseInt prt)))
-                 3449)]
+                 3450)]
     (do
       (a/go (start-repl!))
       (info "Starting server on port" port)
-      (reset! server (http/start-server handler {:port port}))
+      (reset! server
+              (http/start-server
+               (if (:dev? env)
+                 (wrap-reload (var handler))
+                 handler)
+               {:port port}))
       (info "Started server on port" port)
       (println "Press <enter> to win prize")
       (read-line)
       (.close @server))))
-
-; (.close s)
