@@ -11,3 +11,4 @@ resources/public/css
 *.iml
 node_modules
 .lein-repl-history
+.#*
