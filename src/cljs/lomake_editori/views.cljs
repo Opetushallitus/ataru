@@ -1,16 +1,21 @@
 (ns lomake-editori.views
     (:require [re-frame.core :as re-frame]
-              [re-com.core :as re-com]))
-
+              [re-com.core :as re-com]
+              [lomake-editori.soresu.components :refer [form component edit img preview]]))
 
 ;; home
 
 (defn home-title []
   (let [name (re-frame/subscribe [:name])]
     (fn []
-      [re-com/title
-       :label (str "Hello from " @name ". This is the Home Page.")
-       :level :level1])))
+      [:div
+       [re-com/title
+        :label (str "Hello from " @name ". This is the Home Page.")
+        :level :level1]]
+
+
+
+      )))
 
 (defn link-to-about-page []
   [re-com/hyperlink-href

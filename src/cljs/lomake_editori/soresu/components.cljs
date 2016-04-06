@@ -29,3 +29,11 @@
                  :let [img (apply str (drop 2 k))]]
              {img base64image})))
 (def preview (-> soresu .-preview adapt-components))
+
+; clojurescript does not have eval/intern
+#_(defn declare-components [ns m & keys]
+  (binding [*ns* ns]
+    (mapv (fn [[kw val]]
+            (eval `(def ~(symbol (name kw)) val)))
+          (-> (select-keys m keys)
+              vec))))
