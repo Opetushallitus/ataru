@@ -1,14 +1,15 @@
 (ns lomake-editori.handler
-  (:require [compojure.core :refer [GET defroutes]]
+  (:require [byte-streams :as bs]
+            [clojure.core.async :as a]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [ring.middleware.params :as params]
-            [byte-streams :as bs]
-            [manifold.stream :as s]
+            [lomake-editori.db.extensions]
             [manifold.deferred :as d]
-            [clojure.core.async :as a]
+            [manifold.stream :as s]
+            [ring.middleware.params :as params]
             [ring.util.response :refer [file-response resource-response]]
+            [compojure.core :refer [GET defroutes]]
             [taoensso.timbre :refer [spy]]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -36,4 +37,4 @@
 
 (def handler
   (-> routes
-      (params/wrap-params)))
+    (params/wrap-params)))
