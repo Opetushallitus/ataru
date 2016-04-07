@@ -7,9 +7,12 @@
             [lomake-editori.db.extensions]
             [manifold.deferred :as d]
             [manifold.stream :as s]
-            [ring.middleware.params :as params]
+            [ring.util.response :refer [response]]
+            [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response]]
-            [compojure.core :refer [GET defroutes]]
+            [compojure.core :refer [GET POST PUT defroutes]]
             [taoensso.timbre :refer [spy]]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -23,18 +26,14 @@
 ;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
 
 (defroutes routes
-  (route/files "/" {:root "resources/public"})
   (GET "/" [] (file-response "index.html" {:root "resources/templates"}))
-
-  (GET "/vendor/precompiled/js/soresu.js" []
-    ; provided by oph/soresu 0.1.0-SNAPSHOT
-    (resource-response "/public/js/soresu.js"))
-  (GET "/vendor/precompiled/js/soresu.js.map" []
-    ; provided by oph/soresu 0.1.0-SNAPSHOT
-    (resource-response "/public/js/soresu.js.map"))
-
   (route/not-found "Not found"))
 
 (def handler
   (-> routes
-    (params/wrap-params)))
+      (wrap-defaults (-> site-defaults
+                         (update-in [:security] dissoc :content-type-options)
+                         (update-in [:responses] dissoc :content-types)))
+      (wrap-json-body {:keywords? true})
+      (wrap-json-response)
+      (wrap-gzip)))

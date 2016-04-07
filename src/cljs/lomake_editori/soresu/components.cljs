@@ -6,14 +6,13 @@
 
 (def soresu js/soresu)
 
-(defn- function? [js-f] (= "function"
-                           (js* "typeof " js-f)))
+(defn- function? [js-f]
+  (= "function"
+     (js* "typeof " js-f)))
 
 (defn- adapt-components [js-obj]
   (reduce-kv
     (fn [m key react-class]
-      (info key (map? react-class))
-      (.dir js/console react-class)
       (match [react-class (-> key csk/->kebab-case keyword)]
              [(module :guard map?) k] (assoc m k (adapt-components module))
              [(c :guard function?) k] (assoc m k (r/adapt-react-class c))
