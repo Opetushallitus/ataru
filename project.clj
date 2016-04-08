@@ -77,7 +77,7 @@
   :main lomake-editori.core
 
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs"]
+                        :source-paths ["src/cljs" "env/dev/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
@@ -105,11 +105,13 @@
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-2"]
                                   [refactor-nrepl "2.2.0"]
-                                  [org.clojure/tools.nrepl "0.2.12"]]
+                                  [org.clojure/tools.nrepl "0.2.12"]
+                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]]
                    :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
                              [refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]
-                   :source-paths ["env/dev/clj"]
+                   :source-paths ["env/dev/clj" "env/dev/cljc"]
+                   :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
                                               :server-port 3449}}})
