@@ -2,7 +2,8 @@
   (:require [reagent.core :as r :refer [adapt-react-class]]
             [cljs.core.match :refer-macros [match]]
             [camel-snake-kebab.core :as csk]
-            [taoensso.timbre :refer-macros [spy info]]))
+            [taoensso.timbre :refer-macros [spy info]]
+            [oph.lib.soresu]))
 
 (def soresu js/soresu)
 

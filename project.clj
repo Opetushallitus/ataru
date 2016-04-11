@@ -76,13 +76,15 @@
 
   :main lomake-editori.core
 
-  :cljsbuild {:builds [{:id "dev"
+  :cljsbuild { :builds [{:id "dev"
                         :source-paths ["src/cljs" "env/dev/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
+                                   :foreign-libs [{:file "temp/soresu.js",
+                                                   :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
                        {:id "test"

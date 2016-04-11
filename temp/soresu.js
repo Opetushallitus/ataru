@@ -1,0 +1,1 @@
+../../soresu-form/resources/public/js/soresu.js

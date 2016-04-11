@@ -1,21 +1,34 @@
 (ns lomake-editori.views
     (:require [re-frame.core :as re-frame]
+              [reagent.core :as r]
               [re-com.core :as re-com]
-              [lomake-editori.soresu.components :refer [form component edit img preview]]))
+              [lomake-editori.soresu.form      :as f]
+              [lomake-editori.soresu.component :as component]
+              [lomake-editori.soresu.components :as components]
+              [taoensso.timbre :refer-macros [spy]]
+              [dev.cljs.lomake :as l]))
 
 ;; home
 
+(defn adapter [props children this]
+  (.dir js/console component/form-component)
+  [component/form-component props])
+
 (defn home-title []
-  (let [name (re-frame/subscribe [:name])]
-    (fn []
-      [:div
-       [re-com/title
-        :label (str "Hello from " @name ". This is the Home Page.")
-        :level :level1]]
+  (fn []
+    [:div
+     [re-com/title
+      :label "Opintopolku.fi"
+      :level :level1]
 
+     [:div "KATO TÄTÄ"]
 
-
-      )))
+     [component/form-component
+      (merge l/controller
+             l/translations
+             (l/field l/text-field)
+             {:lang  :sv
+              :value "foo"})]]))
 
 (defn link-to-about-page []
   [re-com/hyperlink-href
@@ -25,7 +38,7 @@
 (defn home-panel []
   [re-com/v-box
    :gap "1em"
-   :children [[home-title] [link-to-about-page]]])
+   :children [[home-title]]])
 
 
 ;; about
