@@ -1,12 +1,14 @@
 (defproject lomake-editori "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.8.0"]
+
                  ; clojurescript
                  [org.clojure/clojurescript "1.7.170"]
-                 [reagent "0.5.1"]
-                 [re-frame "0.7.0"]
-                 [re-com "0.8.0"]
-                 [secretary "1.2.3"]
+                 [reagent "0.5.1"]   ; react in clojure
+                 [re-frame "0.7.0"]  ; flux for re-agent
+                 [re-com "0.8.0"]    ; reusable re-frame components
+                 [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
+                 [oph/soresu "0.1.0-SNAPSHOT"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.0.5"]
@@ -16,7 +18,12 @@
                  ;clojure
                  [compojure "1.5.0"]
                  [metosin/compojure-api "1.0.1"]
+                 [aleph "0.4.1"]
                  [ring "1.4.0"]
+                 [ring/ring-defaults "0.2.0"]
+                 [ring/ring-json "0.4.0"]
+                 [ring-ratelimit "0.2.2"]
+                 [bk/ring-gzip "0.1.1"]
                  [yesql "0.5.2"]
                  [camel-snake-kebab "0.3.2"]
                  [environ "1.0.2"]
@@ -27,6 +34,18 @@
                  [cheshire/cheshire "5.5.0"]]
 
   :min-lein-version "2.5.3"
+
+  :repositories [["releases" {:url "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local"
+                              :sign-releases false
+                              :snapshots false
+;                             :creds :gpg
+}]
+                 ["snapshots"      {:url "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local"
+;                                   :creds :gpg
+                                     }]
+                 ["ext-snapshots"  {:url "https://artifactory.oph.ware.fi/artifactory/ext-snapshot-local"}]
+                 ["Laughing Panda" {:url "http://maven.laughingpanda.org/maven2"
+                                    :snapshots false}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :resource-paths ["src/sql" "resources"]
@@ -48,21 +67,24 @@
                                     "test/js"]
 
   :figwheel {:css-dirs ["resources/public/css"]
-             :ring-handler lomake-editori.handler/handler
-             :server-port 3449}
+             :nrepl-port 3334}
 
   :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
-  :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs"]
+  :main lomake-editori.core
+
+  :cljsbuild { :builds [{:id "dev"
+                        :source-paths ["src/cljs" "env/dev/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
+                                   :foreign-libs [{:file "temp/soresu.js",
+                                                   :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
                        {:id "test"
@@ -85,10 +107,16 @@
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-2"]
                                   [refactor-nrepl "2.2.0"]
-                                  [org.clojure/tools.nrepl "0.2.12"]]
-                   :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]]
-                   :source-paths ["env/dev/clj"]
-                   :env {:dev? true}}})
+                                  [org.clojure/tools.nrepl "0.2.12"]
+                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]]
+                   :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
+                             [refactor-nrepl "2.2.0"]
+                             [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]
+                   :source-paths ["env/dev/clj" "env/dev/cljc"]
+                   :resource-paths ["dev-resources"]
+                   :env {:dev? true}}
+             :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
+                                              :server-port 3449}}})
 
 
 

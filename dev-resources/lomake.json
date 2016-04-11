@@ -1,0 +1,1957 @@
+{
+  "content": [
+    {
+      "fieldClass": "infoElement",
+      "id": "name",
+      "fieldType": "h1"
+    },
+    {
+      "fieldClass": "infoElement",
+      "id": "duration",
+      "fieldType": "dateRange"
+    },
+    {
+      "fieldClass": "infoElement",
+      "id": "duration-help",
+      "fieldType": "p",
+      "params": {
+        "preview": false
+      },
+      "text": {
+        "fi": "Hakemusta on mahdollista muokata hakuajan loppuun asti. Hakemukset käsitellään hakuajan jälkeen.",
+        "sv": "Ansökan kan bearbetas ända till ansökningstidens slut. Ansökningarna behandlas efter ansökningstiden."
+      }
+    },
+    {
+      "fieldClass": "infoElement",
+      "id": "link-0",
+      "fieldType": "link",
+      "params": {
+        "href": {
+          "fi": "http://oph.fi/download/173879_ohje_othk_2016_hakijoille.pdf",
+          "sv": "http://oph.fi/download/173895_anvisingar_for_ansokan_personalfortbildning_2016.pdf"
+        }
+      },
+      "text": {
+        "fi": "Lataa ohje hakijoille.",
+        "sv": "Ladda ner anvisningarna för ansökan "
+      }
+    },
+    {
+      "fieldClass": "wrapperElement",
+      "id": "applicant-info",
+      "fieldType": "theme",
+      "children": [
+        {
+          "fieldClass": "wrapperElement",
+          "id": "organization-fieldset",
+          "fieldType": "fieldset",
+          "children": [
+            {
+              "params": {
+                "size": "large",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "Hakijoina voivat olla kunnat, kuntayhtymät, rekisteröidyt yhteisöt tai säätiöt, yliopistot ja ammattikorkeakoulut. Hakijayhteisöiltä edellytetään osaamista ja kokemusta henkilöstökoulutuksesta kasvatuksen tai opetuksen toimialoilla. \nNäyttötutkintomestarikoulutuksen toteuttajiksi ovat hakukelpoisia vain Näyttötutkintomestarin koulutusohjelmaa toteuttamaan hyväksytyt järjestäjät.\n",
+                "sv": "Statsunderstödet kan sökas av kommuner, samkommuner, registrerade sammanslutningar eller stiftelser, universitet och yrkeshögskolor. Av sökandeorganisationerna förutsätts erfarenhet av\npersonalutbildning inom fostran eller undervisning.\nAnsökningsbehöriga som genomförare av examensmästarutbildning är endast de organisationer\nsom godkänts i grunderna för utbildningsprogrammet för examensmästare.\n"
+              },
+              "label": {
+                "fi": "Hakija",
+                "sv": "Sökande"
+              },
+              "id": "organization",
+              "required": true,
+              "fieldType": "textField"
+            },
+            {
+              "params": {
+                "size": "small",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "Ilmoita hakijaorganisaation virallinen sähköpostiosoite, johon voidaan lähettää päätöksentekoon liittyviä asiakirjoja.",
+                "sv": "Meddela den sökande organisationens officiella e-postadress, dit dokument som rör beslutsfattandet kan sändas."
+              },
+              "label": {
+                "fi": "Hakijan virallinen sähköpostiosoite",
+                "sv": "Sökandens officiella e-postadress"
+              },
+              "id": "organization-email",
+              "required": true,
+              "fieldType": "vaEmailNotification"
+            }
+          ]
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 9
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Y-tunnus",
+            "sv": "Företags- och organisationsnummer"
+          },
+          "id": "business-id",
+          "required": true,
+          "fieldType": "finnishBusinessIdField"
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "applicant-fieldset",
+          "fieldType": "fieldset",
+          "children": [
+            {
+              "params": {
+                "size": "large",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "Yhteyshenkilöllä tarkoitetaan hankkeen vastuuhenkilöä.",
+                "sv": "Med kontaktperson avses den projektansvariga i sökandeorganisationen."
+              },
+              "label": {
+                "fi": "Yhteyshenkilö",
+                "sv": "Kontaktperson"
+              },
+              "id": "applicant-name",
+              "required": true,
+              "fieldType": "textField"
+            },
+            {
+              "params": {
+                "size": "small",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Sähköposti",
+                "sv": "E-post"
+              },
+              "id": "primary-email",
+              "required": true,
+              "fieldType": "vaEmailNotification"
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "id": "postal-stuff-2",
+              "fieldType": "fieldset",
+              "children": [
+                {
+                  "params": {
+                    "size": "large",
+                    "maxlength": 100
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Postiosoite",
+                    "sv": "Postadress"
+                  },
+                  "id": "textField-2",
+                  "required": true,
+                  "fieldType": "textField"
+                }
+              ]
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "id": "postal-stuff",
+              "fieldType": "fieldset",
+              "children": [
+                {
+                  "params": {
+                    "size": "extra-small",
+                    "maxlength": 8
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Postinumero",
+                    "sv": "Postnummer"
+                  },
+                  "id": "textField-3",
+                  "required": true,
+                  "fieldType": "textField"
+                },
+                {
+                  "params": {
+                    "size": "small",
+                    "maxlength": 100
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Postitoimipaikka",
+                    "sv": "Postanstalt"
+                  },
+                  "id": "textField-4",
+                  "required": true,
+                  "fieldType": "textField"
+                }
+              ]
+            },
+            {
+              "params": {
+                "size": "medium",
+                "koodisto": {
+                  "uri": "maakunta",
+                  "name": "maakunta",
+                  "version": 1
+                },
+                "inputType": "dropdown",
+                "maxlength": 100
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Maakunta",
+                "sv": "Landskap"
+              },
+              "id": "koodistoField-1",
+              "required": true,
+              "fieldType": "koodistoField"
+            },
+            {
+              "params": {},
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Omistajatyyppi",
+                "sv": "Ägartyp"
+              },
+              "id": "radioButton-0",
+              "options": [
+                {
+                  "value": "kunta-kuntayhtymae",
+                  "label": {
+                    "fi": "Kunta/Kuntayhtymä",
+                    "sv": "Kommun/Samkommun"
+                  }
+                },
+                {
+                  "value": "rekisteroeity-yhteisoe-tai-saeaetioe",
+                  "label": {
+                    "fi": "rekisteröity yhteisö tai säätiö",
+                    "sv": "registrerad sammanslutning eller stiftelse"
+                  }
+                },
+                {
+                  "value": "yliopisto",
+                  "label": {
+                    "fi": "Yliopisto",
+                    "sv": "Universitet"
+                  }
+                }
+              ],
+              "required": true,
+              "fieldType": "radioButton"
+            },
+            {
+              "params": {
+                "size": "small",
+                "maxlength": 100
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Yritysmuoto",
+                "sv": "Företagsform"
+              },
+              "id": "textField-0",
+              "required": true,
+              "fieldType": "textField"
+            }
+          ]
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "signatories-fieldset",
+          "fieldType": "growingFieldset",
+          "children": [
+            {
+              "fieldClass": "wrapperElement",
+              "id": "signatories-fieldset-1",
+              "fieldType": "growingFieldsetChild",
+              "children": [
+                {
+                  "params": {
+                    "size": "large",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Allekirjoitusoikeuden omaava henkilö",
+                    "sv": "Person med namnteckningsrätt"
+                  },
+                  "id": "signatories-fieldset-1.name",
+                  "required": true,
+                  "fieldType": "textField"
+                },
+                {
+                  "params": {
+                    "size": "small",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Sähköposti",
+                    "sv": "E-post"
+                  },
+                  "id": "signatories-fieldset-1.email",
+                  "required": true,
+                  "fieldType": "vaEmailNotification"
+                }
+              ]
+            }
+          ],
+          "params": {
+            "showOnlyFirstLabels": true
+          }
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "bank-fieldset",
+          "fieldType": "fieldset",
+          "children": [
+            {
+              "params": {
+                "size": "large",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Tilinumero IBAN-muodossa",
+                "sv": "Kontonummer i IBAN-format"
+              },
+              "id": "bank-iban",
+              "required": true,
+              "fieldType": "iban"
+            },
+            {
+              "params": {
+                "size": "small",
+                "maxlength": 80
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Pankin BIC/SWIFT-koodi",
+                "sv": "Bankens BIC/SWIFT-kod"
+              },
+              "id": "bank-bic",
+              "required": true,
+              "fieldType": "bic"
+            }
+          ]
+        }
+      ],
+      "label": {
+        "fi": "Hakijan tiedot",
+        "sv": "Uppgifter om sökanden"
+      }
+    },
+    {
+      "fieldClass": "wrapperElement",
+      "id": "project-info",
+      "fieldType": "theme",
+      "children": [
+        {
+          "params": {
+            "size": "large",
+            "maxlength": 200
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen nimi",
+            "sv": "Projektets namn"
+          },
+          "id": "project-name",
+          "required": true,
+          "fieldType": "textField"
+        },
+        {
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen asiointikieli",
+            "sv": "Projektets språk"
+          },
+          "id": "language",
+          "options": [
+            {
+              "value": "fi",
+              "label": {
+                "fi": "Suomi",
+                "sv": "Finska"
+              }
+            },
+            {
+              "value": "sv",
+              "label": {
+                "fi": "Ruotsi",
+                "sv": "Svenska"
+              }
+            }
+          ],
+          "required": true,
+          "fieldType": "radioButton"
+        },
+        {
+          "params": {},
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Ilmoita mikäli hankkeeseen sisältyy asiointikielen lisäksi muunkielisiä osioita",
+            "sv": "Meddela om det i projektet ingår delar på andra språk än projektets språk."
+          },
+          "label": {
+            "fi": "Hankkeeseen sisältyy myös:",
+            "sv": "I projektet ingår även:"
+          },
+          "id": "checkboxButton-0",
+          "options": [
+            {
+              "value": "suomenkielinen-osio",
+              "label": {
+                "fi": "Suomenkielinen osio",
+                "sv": "Finskspråkig del"
+              }
+            },
+            {
+              "value": "ruotsinkielinen-osio",
+              "label": {
+                "fi": "Ruotsinkielinen osio",
+                "sv": "Svenskspråkig del"
+              }
+            },
+            {
+              "value": "englanninkielinen-osio",
+              "label": {
+                "fi": "Englanninkielinen osio",
+                "sv": "Engelskspråkig del"
+              }
+            }
+          ],
+          "required": false,
+          "fieldType": "checkboxButton"
+        },
+        {
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Onko kyseessä yhteishanke?",
+            "sv": "Är projektet ett samprojekt?"
+          },
+          "id": "combined-effort",
+          "options": [
+            {
+              "value": "yes",
+              "label": {
+                "fi": "Kyllä",
+                "sv": "Ja"
+              }
+            },
+            {
+              "value": "no",
+              "label": {
+                "fi": "Ei",
+                "sv": "Nej"
+              }
+            }
+          ],
+          "required": true,
+          "fieldType": "radioButton"
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "other-organizations",
+          "fieldType": "growingFieldset",
+          "children": [
+            {
+              "fieldClass": "wrapperElement",
+              "id": "other-organizations-1",
+              "fieldType": "growingFieldsetChild",
+              "children": [
+                {
+                  "params": {
+                    "size": "large",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "Lisää hankkeen toteuttamiseen osallistuvat yhteistyökumppanit joilla on oma osatoteuttamissuunnitelmansa ja talousarvionsa osana koko hanketta. Yhteistyökumppaneiden tulee olla hakukelpoisia.",
+                    "sv": "Nämn de samarbetspartner som deltar i genomförandet av projektet, som har en egen delgenomföringsplan och en egen budget som en  del av hela projektet. Samarbetspartnerna ska vara ansökningsbehöriga."
+                  },
+                  "label": {
+                    "fi": "Yhteistyökumppanin nimi",
+                    "sv": "Projektets samarbetspartner"
+                  },
+                  "id": "other-organizations.other-organizations-1.name",
+                  "required": true,
+                  "fieldType": "textField"
+                },
+                {
+                  "params": {
+                    "size": "large",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Yhteyshenkilön nimi",
+                    "sv": "Kontaktpersonens namn"
+                  },
+                  "id": "other-organizations.other-organizations-1.contactperson",
+                  "required": true,
+                  "fieldType": "textField"
+                },
+                {
+                  "params": {
+                    "size": "small",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Yhteyshenkilön sähköposti",
+                    "sv": "Kontaktpersonens e-postadress"
+                  },
+                  "id": "other-organizations.other-organizations-1.email",
+                  "required": true,
+                  "fieldType": "emailField"
+                }
+              ]
+            }
+          ],
+          "params": {
+            "showOnlyFirstLabels": false
+          }
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Mainitse hankkeeseen osallistuvat muut tahot, jotka osallistuvat omalla kustannuksellaan, muut kuin alihankkijat, joilta ostetaan palveluita.",
+            "sv": "Nämn de aktörer som deltar i projektet på egen bekostnad, andra aktörer än underleverantörerna som man köper tjänster av."
+          },
+          "label": {
+            "fi": "Hankkeen muut yhteistyökumppanit",
+            "sv": "Projektets övriga samarbetspartner"
+          },
+          "id": "other-partners",
+          "required": false,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Mainitse organisaatiot tai henkilöt, joilta ostetaan esimerkiksi koulutuspalveluita.",
+            "sv": "Nämn de organisationer eller personer som man köper t.ex. utbildningstjänster av."
+          },
+          "label": {
+            "fi": "Hankkeeseen suunnitellut alihankkijat",
+            "sv": "Planerade underleverantörer i projektet"
+          },
+          "id": "textArea-0",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hakijayhteisön osaaminen ja kokemus opetustoimen henkilöstökoulutuksesta\n(kuvaile lyhyesti)\n",
+            "sv": "Sökandeorganisationens  \nkompetens och erfarenhet av personalutbildning för utbildningsväsendet (kort beskrivning)"
+          },
+          "id": "textArea-2",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Koulutushankkeen kouluttajat, heidän osaamisensa ja kokemuksensa opetustoimen henkilöstökoulutuksesta",
+            "sv": "Utbildningsprojektets utbildare, utbildarnas kompetens och erfarenhet av undervisningsväsendets personalutbildning"
+          },
+          "id": "textArea-3",
+          "required": true,
+          "fieldType": "textArea"
+        }
+      ],
+      "label": {
+        "fi": "HANKETIEDOT",
+        "sv": "UPPGIFTER OM PROJEKTET"
+      }
+    },
+    {
+      "fieldClass": "wrapperElement",
+      "id": "project-plan",
+      "fieldType": "theme",
+      "children": [
+        {
+          "fieldClass": "infoElement",
+          "id": "selection-criteria",
+          "fieldType": "bulletList",
+          "params": {
+            "preview": false,
+            "initiallyOpen": true
+          }
+        },
+        {
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Liittyykö aiempaan hankkeeseen? ",
+            "sv": "Är detta projekt en fortsättning på verksamheten i ett tidigare projekt?"
+          },
+          "id": "continuation-project",
+          "options": [
+            {
+              "value": "yes",
+              "label": {
+                "fi": "Kyllä",
+                "sv": "Ja"
+              }
+            },
+            {
+              "value": "no",
+              "label": {
+                "fi": "Ei",
+                "sv": "Nej"
+              }
+            }
+          ],
+          "required": false,
+          "fieldType": "radioButton"
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "togglable-wrapper-cp",
+          "fieldType": "fieldset",
+          "children": [
+            {
+              "params": {
+                "size": "medium",
+                "maxlength": 500
+              },
+              "fieldClass": "formField",
+              "helpText": {
+                "fi": "",
+                "sv": ""
+              },
+              "label": {
+                "fi": "Miten?",
+                "sv": "Hur?"
+              },
+              "id": "precise-former-project",
+              "required": true,
+              "fieldType": "textField"
+            }
+          ]
+        },
+        {
+          "params": {},
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Teemoista voi valita vain yhden. Hankesuunnitelmaan voi sisältyä elementtejä myös muista teemoista.",
+            "sv": "Man kan välja endast ett tema. I projektplanen kan det ingå element från andra teman."
+          },
+          "label": {
+            "fi": "Teema",
+            "sv": "Teman"
+          },
+          "id": "radioButton-1",
+          "options": [
+            {
+              "value": "johtamisosaaminen",
+              "label": {
+                "fi": "Johtamisosaaminen",
+                "sv": "Ledarskapskompetens"
+              }
+            },
+            {
+              "value": "kehittaemisosaaminen",
+              "label": {
+                "fi": "Kehittämisosaaminen",
+                "sv": "Utvecklingskompetens"
+              }
+            },
+            {
+              "value": "pedagoginen-osaaminen-aineenhallinta-ja-ammatillinen-osaaminen",
+              "label": {
+                "fi": "Pedagoginen osaaminen, aineenhallinta ja ammatillinen osaaminen",
+                "sv": "Pedagogisk kompetens, ämneskompetens och yrkeskompetens"
+              }
+            },
+            {
+              "value": "hyvinvointi-ja-turvallisuusosaaminen",
+              "label": {
+                "fi": "Hyvinvointi ja turvallisuusosaaminen",
+                "sv": "Kompetens för välbefinnande och säkerhet"
+              }
+            },
+            {
+              "value": "kulttuurinen-moninaisuus",
+              "label": {
+                "fi": "Kulttuurinen moninaisuus",
+                "sv": "Kulturell mångfald"
+              }
+            },
+            {
+              "value": "osaamisperusteisuus",
+              "label": {
+                "fi": "Osaamisperusteisuus",
+                "sv": "Kompetensinriktning"
+              }
+            },
+            {
+              "value": "tieto-ja-viestintaeteknologinen-osaaminen-sekae-digitalisaatio",
+              "label": {
+                "fi": "Tieto- ja viestintäteknologinen osaaminen sekä digitalisaatio",
+                "sv": "IKT-kompetens och digitalisering"
+              }
+            },
+            {
+              "value": "naeyttoetutkintomestarikoulutus",
+              "label": {
+                "fi": "Näyttötutkintomestarikoulutus",
+                "sv": "Examensmästarutbildning"
+              }
+            }
+          ],
+          "required": true,
+          "fieldType": "radioButton"
+        },
+        {
+          "params": {},
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Kohderyhmiä, joille koulutus suunnataan, voi valita useampia. Olennaista koulutuksen toteutuksen kannalta on, että sisältö on relevantti kohderyhmien kannalta ja että mukana ovat keskeiset sidosryhmät.",
+            "sv": "Man kan välja flera målgrupper som utbildningen riktar sig till. Avgörande för förverkligandet av utbildningen är, att innehållet är relevant för målgrupperna och att de centrala intressegrupperna är med."
+          },
+          "label": {
+            "fi": "Mille kohderyhmille koulutus suunnataan?",
+            "sv": "Till vilka målgrupper riktar sig utbildningen?"
+          },
+          "id": "checkboxButton-1",
+          "options": [
+            {
+              "value": "varhaiskasvatus",
+              "label": {
+                "fi": "Varhaiskasvatus",
+                "sv": "Småbarnspedagogik"
+              }
+            },
+            {
+              "value": "esiopetus",
+              "label": {
+                "fi": "Esiopetus",
+                "sv": "Förskoleundervisning"
+              }
+            },
+            {
+              "value": "perusopetus",
+              "label": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning"
+              }
+            },
+            {
+              "value": "taiteen-perusopetus",
+              "label": {
+                "fi": "Taiteen perusopetus",
+                "sv": "Grundläggande konstundervisning"
+              }
+            },
+            {
+              "value": "lukiokoulutus",
+              "label": {
+                "fi": "Lukiokoulutus",
+                "sv": "Gymnasieutbildning"
+              }
+            },
+            {
+              "value": "ammatillinen-peruskoulutus",
+              "label": {
+                "fi": "Ammatillinen peruskoulutus",
+                "sv": "Grundläggande yrkesutbildning"
+              }
+            },
+            {
+              "value": "ammatillinen-aikuiskoulutus",
+              "label": {
+                "fi": "Ammatillinen aikuiskoulutus",
+                "sv": "Yrkesinriktad vuxenutbildning"
+              }
+            },
+            {
+              "value": "vapaa-sivistystyoe",
+              "label": {
+                "fi": "Vapaa sivistystyö",
+                "sv": "Fritt bildningsarbete"
+              }
+            },
+            {
+              "value": "muu",
+              "label": {
+                "fi": "Muu",
+                "sv": "Övriga"
+              }
+            }
+          ],
+          "required": true,
+          "fieldType": "checkboxButton"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 900
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Kuvaa lyhyesti mistä hankkeessa on kyse: mitä tavoitellaan, mitä tehdään, miten tehdään ja ketkä ovat hyödynsaajat. Opetushallitus voi julkaista kuvauksen verkkosivuillaan.",
+            "sv": "Beskriv i korthet vad projektet handlar om: vad som eftersträvas, vad som görs, hur man gör och vilka nyttotagarna är. Utbildningsstyrelsen kan publicera beskrivningen på sin webbsida"
+          },
+          "label": {
+            "fi": "Hanke pähkinänkuoressa",
+            "sv": "Projektet i ett nötskal"
+          },
+          "id": "project-goals",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Kuvaa lyhyesti, miksi hanke tarvitaan ja miten tarve on kartoitettu.",
+            "sv": "Beskriv kort varför projektet behövs och hur man har kartlagt behovet."
+          },
+          "label": {
+            "fi": "Miksi hanke tarvitaan? Miten tarve on kartoitettu?",
+            "sv": "Varför behövs projektet? Hur har man kartlagt behovet?"
+          },
+          "id": "textArea-4",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1500
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Kuvaa hankkeen tavoitteet, toteutustapa ja aikataulutus sekä tulokset ja tuotokset tiivistetysti.",
+            "sv": "Sammanfatta projektets mål, genomförande och tidtabell samt resultaten och produkterna."
+          },
+          "label": {
+            "fi": "Hankkeen yleiset tavoitteet, toteutustapa, tulokset ja tuotokset",
+            "sv": "Projektets allmänna mål, genomförande, resultat och produkter"
+          },
+          "id": "textArea-5",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen osapuolet ja työnjako",
+            "sv": "Projektets samarbetspartner och arbetsfördelning"
+          },
+          "id": "textArea-6",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Toteuttamispaikkakunnat",
+            "sv": "Utbildningsorterna"
+          },
+          "id": "textArea-1",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Miten osallistujat rekrytoidaan koulutukseen?",
+            "sv": "Hur rekryteras deltagarna till utbildningen?"
+          },
+          "id": "project-announce",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Kuvaa menetelmät, joilla hankkeen toteutumista suhteessa hyväksyttyihin tavoitteisiin seurataan ja mitataan ja miten niistä raportoidaan. Esitä myös menetelmät siitä miten mahdollisiin poikkeamiin reagoidaan.",
+            "sv": "Beskriv metoderna som man använder för att följa upp och mäta de godkända resultaten för projektet och hur man rapporterar om dessa. Beskriv även metoderna för hur man reagerar vid eventuella avvikelser."
+          },
+          "label": {
+            "fi": "Miten hankkeen tavoitteiden toteutumista seurataan? ",
+            "sv": "Hur följer man upp att målen i projektet förverkligas?"
+          },
+          "id": "project-effectiveness",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "small",
+            "maxlength": 1000
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen tulosten levittämissuunnitelma",
+            "sv": "Spridningsplan för projektets resultat"
+          },
+          "id": "project-spreading-plan",
+          "required": true,
+          "fieldType": "textArea"
+        },
+        {
+          "params": {
+            "size": "medium",
+            "maxlength": 100
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen www-osoite",
+            "sv": "Projektets www-adress"
+          },
+          "id": "textField-1",
+          "required": false,
+          "fieldType": "textField"
+        },
+        {
+          "params": {
+            "size": "extra-small",
+            "maxlength": 10
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen alkamisaika",
+            "sv": "Projektet inleds"
+          },
+          "id": "project-begin",
+          "required": false,
+          "fieldType": "textField"
+        },
+        {
+          "params": {
+            "size": "extra-small",
+            "maxlength": 10
+          },
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Hankkeen päättymisaika",
+            "sv": "Projektet avslutas"
+          },
+          "id": "project-end",
+          "required": false,
+          "fieldType": "textField"
+        }
+      ],
+      "label": {
+        "fi": "Hankesuunnitelma",
+        "sv": "Projektplan"
+      }
+    },
+    {
+      "fieldClass": "wrapperElement",
+      "id": "koulutusosiot-theme",
+      "fieldType": "theme",
+      "children": [
+        {
+          "fieldClass": "infoElement",
+          "id": "koulutusosiot-h3",
+          "fieldType": "h3",
+          "text": {
+            "fi": "Enintään viisi koulutusosiota",
+            "sv": "Högst fem utbildningsmoduler"
+          }
+        },
+        {
+          "fieldClass": "infoElement",
+          "id": "p-0",
+          "fieldType": "p",
+          "params": {},
+          "text": {
+            "fi": "Koulutuksen laajuus ilmoitetaan opintopisteinä tai koulutuspäivinä ja opiskelijamäärinä. Lomakkeeseen sisältyvä kaava laskee automaattisesti koulutettavapäivien yhteismäärän.\nKoulutettavapäivä on kestoltaan kuusi tuntia opiskelijatyötä/opiskelija/päivä. Opiskelutunnin pituus on 45 minuuttia. Koulutettavapäivä sisältää esimerkiksi lähiopetukseen, välitöihin ja verkkotyöskentelyyn käytettävän ajan. Opintopiste on 4,5 koulutettavapäivää tai 27 tuntia opiskelua.\n",
+            "sv": "Utbildningens omfattning beskrivs antingen i studiepoäng eller i utbildningsdagar och studerandeantal. Beräkningsformeln i ansökningsblanketten räknar automatiskt kursdeltagardagarnas sammanlagda antal. En kursdeltagardag består av sex timmars studier/studerande/dag. En studietimme är 45 minuter. Kursdeltagardagen innehåller till exempel den tid som används för närundervisning, mellanarbeten och e-arbete. En studiepoäng är 4,5 kursdeltagardagar eller 27 timmars studier."
+          }
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "koulutusosiot",
+          "fieldType": "growingFieldset",
+          "children": [
+            {
+              "fieldClass": "wrapperElement",
+              "id": "koulutusosio-1",
+              "fieldType": "growingFieldsetChild",
+              "children": [
+                {
+                  "params": {
+                    "size": "large",
+                    "maxlength": 80
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Koulutusosion nimi",
+                    "sv": "Utbildningsdelens namn"
+                  },
+                  "id": "koulutusosiot.koulutusosio-1.nimi",
+                  "required": true,
+                  "fieldType": "nameField"
+                },
+                {
+                  "params": {
+                    "size": "medium",
+                    "maxlength": 1000
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Keskeiset sisällöt ja toteuttamistapa",
+                    "sv": "Centralt innehåll och metod för genomförande"
+                  },
+                  "id": "koulutusosiot.koulutusosio-1.keskeiset-sisallot",
+                  "required": true,
+                  "fieldType": "textArea"
+                },
+                {
+                  "params": {
+                    "size": "extra-large",
+                    "maxlength": 100
+                  },
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Kohderyhmät",
+                    "sv": "Målgrupper"
+                  },
+                  "id": "koulutusosiot.koulutusosio-1.kohderyhmat",
+                  "required": true,
+                  "fieldType": "textField"
+                },
+                {
+                  "fieldClass": "formField",
+                  "helpText": {
+                    "fi": "",
+                    "sv": ""
+                  },
+                  "label": {
+                    "fi": "Koulutettavapäivät",
+                    "sv": "Kursdeltagardagar"
+                  },
+                  "id": "koulutusosiot.koulutusosio-1.koulutettavapaivat",
+                  "required": true,
+                  "fieldType": "vaTraineeDayCalculator"
+                }
+              ]
+            }
+          ],
+          "params": {
+            "showOnlyFirstLabels": false
+          }
+        },
+        {
+          "fieldClass": "infoElement",
+          "id": "koulutettavapaivat-yhteensa",
+          "fieldType": "vaTraineeDayTotalCalculator"
+        }
+      ],
+      "label": {
+        "fi": "Koulutusosiot",
+        "sv": "Utbildningsmoduler"
+      }
+    },
+    {
+      "fieldClass": "wrapperElement",
+      "id": "financing-plan",
+      "fieldType": "theme",
+      "children": [
+        {
+          "fieldClass": "infoElement",
+          "id": "financing-plan-help",
+          "fieldType": "p",
+          "params": {
+            "preview": false
+          },
+          "text": {
+            "fi": "Valtionavustuksen kokonaiskustannuksiin hyväksytään hankkeen toteuttamisesta aiheutuvat välittömät kustannukset sekä organisaation muista kustannuksista ne kustannuserät, jotka voidaan suoran dokumentoida aiheuttamisperiaatteen mukaisesti kirjata hankkeen menoksi. Vain todellisiin ja toteutuneisiin kustannuksiin perustuvat menot ovat hyväksyttäviä. Tällaisia ovat esimerkiksi osuus kouluttajan palkasta, työtilan vuokra hankkeessa käytetyn työajan suhteessa ja koulutuksiin käytettyjen tilojen vuokra koulutusajalta. Laskennallisia ja prosentuaalisia kustannuseriä, jotka eivät perustu välittömästi hankkeesta aiheutuviin todellisiin menoihin ja jotka olisivat syntyneet ilman kyseistä hankettakin, ei hyväksytä valtionavustushankkeen kustannukseksi.",
+            "sv": "För statsunderstödets totala kostnader godkänns de omedelbara kostnaderna för projektet, samt för organisationens andra kostnader, de kostnadsposter, som man direkt enligt upphovsprincipen kan dokumentera som utgifter för projektet. Endast utgifter som baserar sig på faktiska och förverkligade kostnader godkänns. Sådana utgifter är t.ex. en del av utbildarens lön, hyreskostnader för arbetsutrymmen i förhållande till arbetstiden inom projektet och hyreskostnaderna för de lokaler som behövs vid genomförandet av utbildningen. Kalkylerade och procentuella kostnadsposter, som inte baserar sig omedelbart på kostnader för projektets faktiska utgifter och som skulle ha uppstått även utan detta projekt, godkänns inte som kostnader för statsunderstödsprojekt."
+          }
+        },
+        {
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "Arvonlisävero on hyväksyttävä kustannus, jos se jää hakijan lopulliseksi kustannukseksi. Yhteishankkeissa, mikäli yhdelläkin osatoteuttajalla arvonlisävero jää osatoteuttajan maksettavaksi, on päähakijan valittavat vaihtoehto \"kyllä\"",
+            "sv": "Mervärdesskatt är en godtagbar kostnad, om den blir en slutlig kostnad för sökanden. I samprojekt ska kostnaderna meddelas antingen med eller utan mervärdesskatt enligt den sökandes bokföring. I detta fall ska man välja alternativet ”ja”."
+          },
+          "label": {
+            "fi": "Onko kustannukset ilmoitettu arvonlisäverollisina?",
+            "sv": "Har kostnaderna anmälts inkl. mervärdesskatt?"
+          },
+          "id": "vat-included",
+          "options": [
+            {
+              "value": "yes",
+              "label": {
+                "fi": "Kyllä",
+                "sv": "Ja"
+              }
+            },
+            {
+              "value": "no",
+              "label": {
+                "fi": "Ei",
+                "sv": "Nej"
+              }
+            }
+          ],
+          "required": false,
+          "fieldType": "radioButton"
+        },
+        {
+          "fieldClass": "infoElement",
+          "id": "p-1",
+          "fieldType": "p",
+          "params": {},
+          "text": {
+            "fi": "Lataa Excel-taulukko eritellyn talousarvion pohjaksi. Kun hakemus on valmis, liitetään talousarvio sähköisen hakemuksen liitteeksi.",
+            "sv": "Ladda ner Excel-tabellen som underlag för budgeten. Då ansökan är färdig, bifogas blanketten för budgeten som bilaga till den elektroniska ansökan."
+          }
+        },
+        {
+          "fieldClass": "infoElement",
+          "id": "link-1",
+          "fieldType": "link",
+          "params": {
+            "href": {
+              "fi": "http://oph.fi/download/173880_othk_2016_hankkeen_talousarvio.xls",
+              "sv": "http://oph.fi/download/173896_personalfortbildning_2016_projektets_budget.xls"
+            }
+          },
+          "text": {
+            "fi": "Lataa Excel-talukko",
+            "sv": "Ladda ner Excel-tabellen"
+          }
+        },
+        {
+          "params": {},
+          "fieldClass": "formField",
+          "helpText": {
+            "fi": "",
+            "sv": ""
+          },
+          "label": {
+            "fi": "Liitä Excel-talukko",
+            "sv": "Bifoga Excel-tabellen"
+          },
+          "id": "namedAttachment-0",
+          "required": true,
+          "fieldType": "namedAttachment"
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "id": "budget",
+          "fieldType": "vaBudget",
+          "children": [
+            {
+              "fieldClass": "wrapperElement",
+              "id": "project-budget",
+              "fieldType": "vaSummingBudgetElement",
+              "children": [
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "personnel-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 200
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "personnel-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "personnel-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Henkilöstökustannukset",
+                    "sv": "Personalkostnader"
+                  },
+                  "helpText": {
+                    "fi": "Hyväksyttäviä kustannuksia ovat suoraan hankkeesta aiheutuvat kohtuulliset palkat lakisääteisine sivukuluineen. Hankkeessa työskentelevien henkilöiden työajankäytöstä on pidettävä päiväkohtaista työajanseurantaa. ",
+                    "sv": "Godtagbara kostnader är skäliga lönekostnader, inklusive lagstadgade bikostnader, som direkt ansluter sig till genomförandet av projektet. Då det gäller arbetstidsuppföljningen för de personer som arbetar inom projektet ska det föras daglig arbetstidsuppföljning. "
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "material-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "material-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "material-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Aineet, tarvikkeet ja tavarat",
+                    "sv": "Material, utrustning och varor"
+                  },
+                  "helpText": {
+                    "fi": "Hankkeeseen sisältyvien toimenpiteiden toteuttamiseen liittyvät kustannukset, kuten opetus- ja koulutusmateriaalit sekä toimisto- ja ATK-tarvikkeet. Laitehankinnat eivät ole sallittuja opetustoimen henkilöstökoulutuksessa. ",
+                    "sv": "Kostnaderna för genomförandet av de åtgärder som ingår i projektet, som undervisnings- och utbildningsmaterial samt kontors- och datautrustning. Anskaffning av apparatur är inte tillåtet inom undervisningsväsendets personalutbildning."
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "rent-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "rent-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "rent-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Vuokrat",
+                    "sv": "Hyror"
+                  },
+                  "helpText": {
+                    "fi": "Hankkeen vuokrakuluihin voidaan kirjata hankkeen toteuttamiseen osallistuneiden henkilöiden työtilakustannukset aiheuttamisperiaatteen mukaisesti; esimerkiksi työtilan vuokra hankkeessa käytetyn työajan suhteessa. Hankkeeseen mahdollisesti vuokrattujen ATK-laitteiden todelliset vuokrakulut. Koulutushankkeissa koulutuksen toteuttamisessa tarvittavien tilojen vuokrat.",
+                    "sv": "I projektets hyreskostnader kan antecknas de faktiska hyreskostnaderna för de lokaler som behövs vid genomförandet av utbildningen enligt upphovsprincipen: till exempel hyran för arbetsutrymme i förhållande till den arbetstid som använts för projektet. Faktiska hyreskostnader för eventuell datautrustning som man hyrt inom projektet. Hyreskostnader för utrymmen som behövs för genomförandet av utbildningsprojektet."
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "service-purchase-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 200
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "service-purchase-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "service-purchase-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Palvelut",
+                    "sv": "Tjänster"
+                  },
+                  "helpText": {
+                    "fi": "Ulkopuolisista, ennakkoperintärekisteriin merkityiltä palveluntuottajilta ostettavat koulutus- ja asiantuntijapalvelut.  Muut maksut välittömästi hankkeen toteuttamiseen liittyvistä ostetuista palveluista (esim. ilmoitus-, mainos- ja markkinointi- sekä painatuspalvelut, ravitsemuspalvelut). Toimistopalveluiden ostot ja niihin liittyvät palveluiden tuottajan laskuttamat materiaali- ja matkamenot. Tietoliikennepalveluiden ostot, jotka ovat välttämättömiä hankkeen toteutuksen kannalta. Näitä ovat esimerkiksi posti-, tele- ja puhelinpalvelut sekä sähköpostin ja tiedonsiirtopalveluiden kulut käytetyn työajan suhteessa. Hankkeen toteutuksen edellyttämät sovellusvuokrauspalvelut (ASP = application service provision), joita palveluntuottaja tarjoaa. Palvelujen ostoissa on noudatettava lakia julkisista hankinnoista.",
+                    "sv": "Sakkunnig- och utbildningstjänster som köps av externa serviceproducenter, som är införda i förskottsuppbördsregistret. Övriga avgifter för köpta tjänster som omedelbart ansluter till projektets genomförande (till exempel kostnader för annons, reklam, marknadsföring, tryckkostnader och kostnader för traktering). Vid köp av kontorstjänster och till material- och resekostnader som hänför sig till dem och som serviceproducenten fakturerar för. Vid köp av tjänster för datakommunikation, som är nödvändiga för genomförandet av projektet. Dessa är till exempel post, digital kommunikation och telefon samt kostnader för e-post och dataöverföring som hänför sig till projektet i förhållande till använd arbetstid. Applikationsuthyrningstjänster (ASP = application service provision) som är nödvändiga för genomförandet av projektet, som serviceproducenten erbjuder. Vid köp av tjänster ska lagen om offentlig upphandling följas."
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "steamship-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "steamship-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "steamship-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Matkakustannukset",
+                    "sv": "Resekostnader"
+                  },
+                  "helpText": {
+                    "fi": "Hankkeen toteuttamisen kannalta välttämättömät matka- ja majoituskustannukset, (myös kv-hankkeiden ulkomaan matkat) sekä päivärahat valtion matkustussäännön mukaisesti. ",
+                    "sv": "Nödvändiga rese- och inkvarteringskostnader för genomförandet av projektet, (även utlandsresor inom internationella projekt) samt dagtraktamenten enligt statens allmänna tjänste- och arbetskollektivavtal. "
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "other-costs-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "other-costs-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "other-costs-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": true
+                  },
+                  "label": {
+                    "fi": "Muut kustannukset",
+                    "sv": "Övriga kostnader"
+                  },
+                  "helpText": {
+                    "fi": "Muut kustannukset -kohtaan kirjataan ne kustannukset, joita ei kirjata muihin tiliryhmiin. Muiksi menoiksi kirjataan esimerkiksi ohjelmistojen käyttömaksut.",
+                    "sv": "I punkten Övriga kostnader antecknas sådana kostnader som inte antecknas i de övriga kontoklasserna. I punkten kan antecknas t.ex. avgifter för användning av program."
+                  }
+                }
+              ],
+              "params": {
+                "sumRowLabel": {
+                  "fi": "Kustannukset yhteensä",
+                  "sv": "Kostnader sammanlagt"
+                },
+                "columnTitles": {
+                  "label": {
+                    "fi": "Menot",
+                    "sv": "Kostnader"
+                  },
+                  "amount": {
+                    "fi": "Yhteensä",
+                    "sv": "Totalt"
+                  },
+                  "description": {
+                    "fi": "Selite, lyhyt kuvaus",
+                    "sv": "Förklaring, kort beskrivning"
+                  }
+                },
+                "showColumnTitles": true
+              },
+              "label": {
+                "fi": "Hankkeen talousarvio",
+                "sv": "Projektets budget"
+              }
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "id": "project-income-rows",
+              "fieldType": "vaSummingBudgetElement",
+              "children": [
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "project-incomes-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "small",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": {
+                        "fi": "Erittele liitteessä",
+                        "sv": "Redogör närmare i bilagan"
+                      },
+                      "id": "project-incomes-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "project-incomes-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": false
+                  },
+                  "label": {
+                    "fi": "Hankkeesta saadut tulot",
+                    "sv": "Projektets inkomster"
+                  },
+                  "helpText": {
+                    "fi": "Hankkeesta saatavat tulot on arvioitava ja kirjattava erikseen sillä ne vähentävät hankkeen hyväksyttävien kustannusten määrää. Hanke voi saada tuloa esimerkiksi, jos se myy hankkeessa syntyneitä materiaaleja tai järjestää hankkeessa maksullista koulutusta. Hankkeesta saatavia tuloja ei voida lukea hankkeen omarahoitukseksi. Huom. täydennyskoulutushankkeissa ei voi hankkia tuloja",
+                    "sv": "Inkomster som man får från projektet måste bedömas och dokumenteras separat, eftersom de drar ner på de godkända kostnaderna för projektet. Projektet kan få inkomster till exempel genom att sälja produkter som uppkommit som ett resultat av projektet eller ordnar avgiftsbelagd utbildning inom projektet. Inkomster som fås av projektet kan inte räknas som självfinansiering för projektet. Obs. Inom projekten för personalutbildningen kan man inte erhålla inkomster."
+                  }
+                }
+              ],
+              "params": {
+                "sumRowLabel": {
+                  "fi": "",
+                  "sv": ""
+                },
+                "showColumnTitles": false
+              },
+              "label": {
+                "fi": "Hankkeen tulot",
+                "sv": "Projektets inkomster"
+              }
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "id": "other-income",
+              "fieldType": "vaSummingBudgetElement",
+              "children": [
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "own-income-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "medium",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "id": "own-income-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "own-income-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": false
+                  },
+                  "label": {
+                    "fi": "Hakijan oma rahoitus",
+                    "sv": "Sökandens egen finansiering"
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "eu-programs-income-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "medium",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "id": "eu-programs-income-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "eu-programs-income-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": false
+                  },
+                  "label": {
+                    "fi": "EU-rahoitus",
+                    "sv": "EU-program"
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "other-public-financing-income-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "medium",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "id": "other-public-financing-income-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "other-public-financing-income-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": false
+                  },
+                  "label": {
+                    "fi": "Muu julkinen rahoitus",
+                    "sv": "Annan offentlig finansiering"
+                  }
+                },
+                {
+                  "fieldClass": "wrapperElement",
+                  "id": "private-financing-income-row",
+                  "fieldType": "vaBudgetItemElement",
+                  "children": [
+                    {
+                      "params": {
+                        "size": "medium",
+                        "maxlength": 120
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "id": "private-financing-income-row.description",
+                      "required": false,
+                      "fieldType": "textField"
+                    },
+                    {
+                      "params": {
+                        "size": "extra-extra-small",
+                        "maxlength": 16
+                      },
+                      "fieldClass": "formField",
+                      "helpText": {
+                        "fi": "",
+                        "sv": ""
+                      },
+                      "initialValue": 0,
+                      "id": "private-financing-income-row.amount",
+                      "required": true,
+                      "fieldType": "moneyField"
+                    }
+                  ],
+                  "params": {
+                    "incrementsTotal": false
+                  },
+                  "label": {
+                    "fi": "Yksityinen rahoitus",
+                    "sv": "Privat finansiering"
+                  }
+                }
+              ],
+              "params": {
+                "sumRowLabel": {
+                  "fi": "Muu rahoitus yhteensä",
+                  "sv": "Övrig finansiering sammanlagt"
+                },
+                "showColumnTitles": false
+              },
+              "label": {
+                "fi": "Hankkeen muu rahoitus",
+                "sv": "Finansieringen av projektet"
+              }
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "id": "budget-summary",
+              "fieldType": "vaBudgetSummaryElement",
+              "children": [],
+              "params": {
+                "showColumnTitles": false,
+                "totalSumRowLabel": {
+                  "fi": "Opetushallitukselta haettava rahoitus",
+                  "sv": "Finansiering som söks av Utbildningsstyrelsen"
+                },
+                "ophFinancingLabel": {
+                  "fi": "Opetushallitukselta haettava rahoitus",
+                  "sv": "Finansiering som söks av Utbildningsstyrelsen"
+                },
+                "selfFinancingLabel": {
+                  "fi": "Omarahoitus",
+                  "sv": "Egen finansiering"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "label": {
+        "fi": "Talousarvio",
+        "sv": "Projektets budget"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "type": "includeIf",
+      "triggerId": "combined-effort",
+      "targetIds": [
+        "other-organizations"
+      ],
+      "params": {
+        "triggerValue": "yes"
+      }
+    },
+    {
+      "type": "includeIf",
+      "triggerId": "continuation-project",
+      "targetIds": [
+        "togglable-wrapper-cp"
+      ],
+      "params": {
+        "triggerValue": "yes"
+      }
+    }
+  ],
+  "created_at": "2016-03-29T09:52:58Z"
+}

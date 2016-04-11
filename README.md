@@ -20,12 +20,26 @@ lein less auto
 
 ```
 lein clean
-lein figwheel dev
+lein with-profile figwheel-standalone figwheel dev
 ```
 
 Figwheel will automatically push cljs changes to the browser.
 
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
+
+### Preferred way to run application
+
+This way is preferred because you can shutdown the server and frontend separately from each other.
+
+This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
+
+```
+lein with-profile dev run
+(in another terminal)
+lein with-profile dev figwheel dev
+```
+
+Browse to [http://localhost:3450](http://localhost:3450).
 
 ### Run tests:
 
