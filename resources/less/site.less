@@ -1,17 +1,21 @@
 @import "vars";
 
 .heading-type {
-  font-family: @heading-font;
+  font-family: @paragraph-font;
   font-weight: bold;
   margin: 0.5em 0.5em;
   line-height: 1.3em;
 }
 
-p {
+.text {
   font-family: @paragraph-font;
   font-style: normal;
   line-height: 1.3em;
   text-rendering: optimizeLegibility;
+}
+
+span, p {
+  .text();
 }
 
 .top-banner {
@@ -19,4 +23,30 @@ p {
   color: white;
 
   .logo { margin-left: 85px; }
+  .title {
+    text-transform: uppercase;
+    .section-name {
+      border-bottom: 1px solid white;
+    }
+    .divider {
+      background-color: @paler-blue;
+      height: 30px;
+    }
+  }
+  .profile {
+    a { color: white; }
+    > div:nth-child(1) {
+      p { margin: 0; }
+      p:nth-child(2) { font-size: 80%; }
+      color: @paler-blue;
+      display: inline-block;
+      border-right: 1px solid @paler-blue;
+      padding-right: 1em;
+    }
+    > div:nth-child(2) {
+      float: right;
+      padding-top: 0.5em;
+      margin-left: 1em;
+    }
+  }
 }
