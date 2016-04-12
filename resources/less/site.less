@@ -1,3 +1,22 @@
-body {
-    color:red;
+@import "vars";
+
+.heading-type {
+  font-family: @heading-font;
+  font-weight: bold;
+  margin: 0.5em 0.5em;
+  line-height: 1.3em;
+}
+
+p {
+  font-family: @paragraph-font;
+  font-style: normal;
+  line-height: 1.3em;
+  text-rendering: optimizeLegibility;
+}
+
+.top-banner {
+  background-color: @pale-blue;
+  color: white;
+
+  .logo { margin-left: 85px; }
 }
