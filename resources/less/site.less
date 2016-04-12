@@ -21,6 +21,7 @@ span, p {
 .top-banner {
   background-color: @pale-blue;
   color: white;
+  @bar-height: 40px;
 
   .logo { margin-left: 85px; }
   .title {
@@ -30,22 +31,25 @@ span, p {
     }
     .divider {
       background-color: @paler-blue;
-      height: 30px;
+      height: @bar-height;
     }
   }
   .profile {
     a { color: white; }
     > div:nth-child(1) {
-      p { margin: 0; }
+      p {
+        margin: 0;
+      }
       p:nth-child(2) { font-size: 80%; }
       color: @paler-blue;
       display: inline-block;
       border-right: 1px solid @paler-blue;
       padding-right: 1em;
+      height: @bar-height;
     }
     > div:nth-child(2) {
       float: right;
-      padding-top: 0.5em;
+      line-height: @bar-height;
       margin-left: 1em;
     }
   }
