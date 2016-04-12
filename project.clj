@@ -83,7 +83,7 @@
                                    :output-to "resources/public/js/compiled/app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
-                                   :foreign-libs [{:file "temp/soresu.js",
+                                   :foreign-libs [{:file "jar:soresu-0.1.0-SNAPSHOT.jar!js/soresu.js",
                                                    :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
