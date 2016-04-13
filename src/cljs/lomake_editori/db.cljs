@@ -5,4 +5,5 @@
                                  :applicant {:first "Jussi"
                                              :last "Fagerlund"}
                                  :arrived-at "15.4.2016 klo 11:32"
-                                 :state {:description "Käsittelemättä"}}]}})
+                                 :state {:description "Käsittelemättä"}}]}
+   :active-panel :editor})

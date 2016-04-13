@@ -1,6 +1,7 @@
 (ns lomake-editori.handlers
     (:require [re-frame.core :as re-frame :refer [register-handler]]
-              [lomake-editori.db :as db]))
+              [lomake-editori.db :as db]
+              [taoensso.timbre :refer-macros [spy]]))
 
 (register-handler
  :initialize-db

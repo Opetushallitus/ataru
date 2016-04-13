@@ -33,6 +33,11 @@ span, p {
       background-color: @paler-blue;
       height: @bar-height;
     }
+    a { color: white; }
+    a:hover {
+      text-decoration: none;
+      .active-section();
+    }
   }
   @media only screen and (max-width: 920px) {
     .title {

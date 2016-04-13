@@ -4,7 +4,8 @@
   (:require [cljs.core.match :refer-macros [match]]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [re-com.core :as c]))
+            [re-com.core :as c]
+            [taoensso.timbre :refer-macros [spy]]))
 
 (def logo
   [:div.logo
@@ -22,35 +23,33 @@
   {:editor "Lomake-editori"
    :application "Hakemukset"})
 
-(def invert-panels (clojureset/map-invert panels))
-
-(defn section-link [name]
+(defn section-link [panel-kw]
   (let [active-panel         (subscribe [:active-panel])
-        name-of-active-panel (reaction (get invert-panels @active-panel))
-        active? (reaction (= @name-of-active-panel name))]
+        active?              (reaction (= @active-panel
+                                          panel-kw))]
     (fn []
       [c/box
-       :child (if @active?
-                [:span.active-section name]
-                [:a {:on-click #(dispatch [:set-active-panel (get invert-panels name)])} name])])))
+       :child (if (spy @active?)
+                [:span.active-section (panel-kw panels)]
+                [:a {:on-click #(dispatch [:set-active-panel panel-kw])}
+                 (panel-kw panels)])])))
 
 (defn title []
-  (let [panels (subscribe [:panels])]
-    (fn []
-      [c/h-box
-       :class "title"
-       :width "100%"
-       :align :center
-       :gap "1em"
-       :children
-       [[section-link "Lomake-editori"]
-        [c/box
-         :child ""
-         :class "divider"
-         :size "1px"]
-        [section-link "Hakemukset"]
-        [c/box
-         :child [applications]]]])))
+  (fn []
+    [c/h-box
+     :class "title"
+     :width "100%"
+     :align :center
+     :gap "1em"
+     :children
+     [[section-link :editor]
+      [c/box
+       :child ""
+       :class "divider"
+       :size "1px"]
+      [section-link :application]
+      [c/box
+       :child [applications]]]]))
 
 (def profile
   [:div.profile

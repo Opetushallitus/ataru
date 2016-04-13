@@ -3,7 +3,7 @@
               [reagent.core :as r]
               [re-com.core :as re-com]
               [lomake-editori.views.banner :refer [top-banner]]
-              [lomake-editori.applications.view :refer [application]]
+              [lomake-editori.application.view :refer [application]]
               [lomake-editori.editor.view :refer [editor]]
               [lomake-editori.soresu.form      :as f]
               [lomake-editori.soresu.component :as component]
