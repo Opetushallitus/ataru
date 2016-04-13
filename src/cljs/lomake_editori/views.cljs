@@ -3,7 +3,8 @@
               [reagent.core :as r]
               [re-com.core :as re-com]
               [lomake-editori.views.banner :refer [top-banner]]
-              [lomake-editori.views.clerk-panel :refer [clerk-panel]]
+              [lomake-editori.applications.view :refer [application]]
+              [lomake-editori.editor.view :refer [editor]]
               [lomake-editori.soresu.form      :as f]
               [lomake-editori.soresu.component :as component]
               [lomake-editori.soresu.components :as components]
@@ -27,7 +28,8 @@
               :value "foo"})]]))
 
 (defmulti panels identity)
-(defmethod panels :clerk-panel [] [clerk-panel])
+(defmethod panels :application [] [application])
+(defmethod panels :editor [] [editor])
 (defmethod panels :default [] [:div])
 
 (defn main-panel []

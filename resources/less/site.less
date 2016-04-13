@@ -26,7 +26,7 @@ span, p {
   .logo { margin-left: 85px; }
   .title {
     text-transform: uppercase;
-    .section-name {
+    .active-section {
       border-bottom: 1px solid white;
     }
     .divider {
@@ -35,9 +35,21 @@ span, p {
     }
   }
   @media only screen and (max-width: 920px) {
-      .title {
-          display: none;
-      }
+    .title {
+      display: none;
+    }
+  }
+  .applications-count {
+    border-radius: 50%;
+    background-color: @selected-blue;
+    width: 30px;
+    height: 30px;
+    position: relative;
+    left: -10px;
+    span {
+      padding-left: 10px;
+      padding-top: 4px;
+    }
   }
   .profile {
     a { color: white; }

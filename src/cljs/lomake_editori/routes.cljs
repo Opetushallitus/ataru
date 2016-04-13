@@ -19,7 +19,7 @@
   ;; --------------------
   ;; define routes here
   (defroute "/" []
-    (re-frame/dispatch [:set-active-panel :clerk-panel]))
+    (re-frame/dispatch [:set-active-panel :application]))
 
   ;; --------------------
   (hook-browser-navigation!))
