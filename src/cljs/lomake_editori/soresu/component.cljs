@@ -3,5 +3,3 @@
             [taoensso.timbre :refer-macros [spy]]))
 
 (def form-component (:form-component component))
-
-(spy (keys component))

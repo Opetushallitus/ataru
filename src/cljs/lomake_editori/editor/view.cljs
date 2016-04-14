@@ -1,8 +1,15 @@
 (ns lomake-editori.editor.view
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
-            [re-com.core :as re-com]))
+            [lomake-editori.soresu.component :as component]
+            [re-com.core :as re-com]
+            [dev.cljs.lomake :as l]))
 
 (defn editor []
   (fn []
-    [:div "editor"]))
+    [component/form-component
+     (merge l/controller
+            l/translations
+            (l/field l/text-field)
+            {:lang  :sv
+             :value "Valmis arvo"})]))

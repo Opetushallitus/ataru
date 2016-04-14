@@ -29,7 +29,7 @@
                                           panel-kw))]
     (fn []
       [c/box
-       :child (if (spy @active?)
+       :child (if @active?
                 [:span.active-section (panel-kw panels)]
                 [:a {:on-click #(dispatch [:set-active-panel panel-kw])}
                  (panel-kw panels)])])))
