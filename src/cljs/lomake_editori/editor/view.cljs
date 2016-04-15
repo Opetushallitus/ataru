@@ -8,8 +8,8 @@
 (defn form-list []
   (let [forms (subscribe [:state-query [:editor :forms]])]
     (fn []
-      (into [:ul]
-        (map (fn [form] [:li (:name form)]) @forms)))))
+      (into [:div.editor-form__list]
+        (mapv (fn [form] [:div.editor-form__row (:name form)]) @forms)))))
 
 (defn editor-panel []
   (fn []

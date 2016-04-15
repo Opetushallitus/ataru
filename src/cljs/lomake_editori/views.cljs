@@ -38,4 +38,4 @@
       [re-com/v-box
        :height "100%"
        :children [top-banner
-                  [re-com/box :child (panels @active-panel)]]])))
+                  [re-com/box :class "panel-content" :child (panels @active-panel)]]])))
