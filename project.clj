@@ -92,6 +92,8 @@
                         :source-paths ["src/cljs" "test/cljs"]
                         :compiler {:output-to "resources/public/js/compiled/test.js"
                                    :main lomake-editori.runner
+                                   :foreign-libs [{:file ~soresu
+                                                   :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
                        {:id "min"
