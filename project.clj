@@ -114,7 +114,8 @@
                                   [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]]
                    :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
                              [refactor-nrepl "2.2.0"]
-                             [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]
+                             [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
+                             [lein-cljfmt "0.5.1"]]
                    :source-paths ["env/dev/clj" "env/dev/cljc"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
