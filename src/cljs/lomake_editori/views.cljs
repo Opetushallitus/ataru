@@ -4,12 +4,12 @@
               [re-com.core :as re-com]
               [lomake-editori.views.banner :refer [top-banner]]
               [lomake-editori.application.view :refer [application]]
+              [lomake-editori.dev.lomake :as l]
               [lomake-editori.editor.view :refer [editor]]
               [lomake-editori.soresu.form      :as f]
               [lomake-editori.soresu.component :as component]
               [lomake-editori.soresu.components :as components]
-              [taoensso.timbre :refer-macros [spy]]
-              [dev.cljs.lomake :as l]))
+              [taoensso.timbre :refer-macros [spy]]))
 
 (defn home-title []
   (fn []

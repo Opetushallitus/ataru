@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [re-com.core :as re-com]
-            [dev.cljs.lomake :as l]))
+            [lomake-editori.dev.lomake :as l]))
 
 (defn editor []
   (fn []

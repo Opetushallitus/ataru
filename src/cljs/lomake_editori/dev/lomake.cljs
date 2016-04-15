@@ -1,4 +1,4 @@
-(ns dev.cljs.lomake)
+(ns lomake-editori.dev.lomake)
 
 (def translations {:translations  #js {}})
 
