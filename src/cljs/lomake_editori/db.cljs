@@ -17,7 +17,7 @@
                     {:id 3 :name "Helsingin kaupungin lomake" :form-data {}}
                     {:id 4 :name "Aallon lomake" :form-data {}}
                     {:id 5 :name "Akin lomake" :form-data {}}
-                    {:id 6 :name "Porvoon lomake" :form-data {}}
-                    ]}
+                    {:id 6 :name "Porvoon lomake" :form-data {}}]
+            :selected-form-id 1}
    ; Initial active panel on page load.
    :active-panel :editor})
