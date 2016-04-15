@@ -102,7 +102,9 @@
                                    :output-to "resources/public/js/compiled/app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
-                                   :pretty-print false}}]}
+                                   :pretty-print false
+                                   :foreign-libs [{:file ~soresu
+                                                   :provides ["oph.lib.soresu"]}]}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
                  :init (set! *print-length* 50)}
