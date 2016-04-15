@@ -78,7 +78,7 @@
   :main lomake-editori.core
 
   :cljsbuild { :builds [{:id "dev"
-                        :source-paths ["src/cljs" "env/dev/cljs"]
+                        :source-paths ["src/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
