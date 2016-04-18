@@ -27,6 +27,9 @@
 (defn editor-panel []
   (fn []
     [:div.panel-content
+     [:div.editor-form__form-name-row
+      [:input.editor-form__form-name-input {:type "text"}]
+      [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
      [component/form-component
       (merge l/controller
              l/translations
