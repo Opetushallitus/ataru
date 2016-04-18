@@ -23,14 +23,16 @@
 
 (defn editor-panel []
   (fn []
-    [component/form-component
-     (merge l/controller
-            l/translations
-            (l/field l/text-field)
-            {:lang  :sv
-             :value "Valmis arvo"})]))
+    [:div.panel-content
+     [component/form-component
+      (merge l/controller
+             l/translations
+             (l/field l/text-field)
+             {:lang  :sv
+              :value "Valmis arvo"})]]))
 
 (defn editor []
     [:div
-     [form-list]
+     [:div.editor-form__container.panel-content
+      [form-list]]
      [editor-panel]])

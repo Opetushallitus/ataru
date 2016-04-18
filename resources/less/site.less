@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 @import "editor";
 
 .heading-type {
@@ -6,21 +7,6 @@
   font-weight: bold;
   margin: 0.5em 0.5em;
   line-height: 1.3em;
-}
-
-.panel-content {
-  padding: 15px 85px 15px 85px;
-}
-
-.text {
-  font-family: @paragraph-font;
-  font-style: normal;
-  line-height: 1.3em;
-  text-rendering: optimizeLegibility;
-}
-
-span, p {
-  .text();
 }
 
 .top-banner {

@@ -1,12 +1,23 @@
 @import "vars";
 
+.editor-form__container {
+  background-color: @light-gray;
+  border-bottom: 1px solid @gray;
+}
+
 .editor-form__list {
-  margin: 10px;
   overflow: auto;
-  height: 100px;
+  height: 150px;
+}
+
+.editor-form__row {
+  padding: 0.5em;
+  margin: 0;
+  color: @blue-text-color;
 }
 
 .editor-form__selected-row {
+  border-radius: 5px;
   background-color: @selected-blue;
   color: white;
 }
