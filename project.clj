@@ -1,5 +1,5 @@
 (load-file "soresu.clj")
-(defproject lomake-editori "0.1.0-SNAPSHOT"
+(defproject ataru "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.8.0"]
 
                  ; clojurescript
