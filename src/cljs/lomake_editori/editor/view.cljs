@@ -21,6 +21,9 @@
                   :on-click #(dispatch [:editor/select-form (:id form)])} (:name form)])
               @forms)))))
 
+(defn add-form []
+  [:button.button "Uusi lomake"])
+
 (defn editor-panel []
   (fn []
     [:div.panel-content
@@ -34,5 +37,6 @@
 (defn editor []
     [:div
      [:div.editor-form__container.panel-content
-      [form-list]]
+      [form-list]
+      [add-form]]
      [editor-panel]])
