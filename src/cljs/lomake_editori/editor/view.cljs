@@ -25,17 +25,20 @@
   [:button.button "Uusi lomake"])
 
 (defn editor-panel []
-  (fn []
-    [:div.panel-content
-     [:div.editor-form__form-name-row
-      [:input.editor-form__form-name-input {:type "text"}]
-      [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
-     [component/form-component
-      (merge l/controller
-             l/translations
-             (l/field l/text-field)
-             {:lang  :sv
-              :value "Valmis arvo"})]]))
+  (let [forms (subscribe [:state-query [:editor :forms]])
+        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
+        selected-form (fn [] (first (filter #(= @selected-form-id (:id %)) @forms)))]
+    (fn []
+      [:div.panel-content
+       [:div.editor-form__form-name-row
+        [:input.editor-form__form-name-input {:type "text" :value (:name (selected-form))}]
+        [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
+       [component/form-component
+        (merge l/controller
+               l/translations
+               (l/field l/text-field)
+               {:lang  :sv
+                :value "Valmis arvo"})]])))
 
 (defn editor []
     [:div
