@@ -4,14 +4,16 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [re-com.core :as re-com]
+            [cljs-uuid-utils.core :as uuid]
             [lomake-editori.dev.lomake :as l]))
 
 (register-handler :editor/select-form (fn [db [_ clicked-row-id]]
                                         (assoc-in db [:editor :selected-form-id] clicked-row-id)))
 
 (register-handler :editor/add-form (fn [db _]
-                                     (let [new-form {:id 9 :name "Uusi lomake"}
+                                     (let [new-form {:id (uuid/uuid-string (uuid/make-random-uuid)) :name "Uusi lomake"}
                                            new-forms (conj (-> db (:editor) (:forms)) new-form)]
+                                       (println new-form)
                                        (-> db
                                            (assoc-in [:editor :selected-form-id] (:id new-form))
                                            (assoc-in [:editor :forms] new-forms)))))
