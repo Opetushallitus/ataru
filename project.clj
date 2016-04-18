@@ -1,5 +1,5 @@
 (load-file "soresu.clj")
-(defproject lomake-editori "0.1.0-SNAPSHOT"
+(defproject ataru "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.8.0"]
 
                  ; clojurescript
@@ -28,6 +28,7 @@
                  [yesql "0.5.2"]
                  [camel-snake-kebab "0.3.2"]
                  [environ "1.0.2"]
+                 [org.clojure/core.async "0.2.374"]
                  [org.clojure/java.jdbc "0.4.2"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [clj-time "0.11.0"]
@@ -50,7 +51,7 @@
 
   :source-paths ["src/clj" "src/cljc"]
   :resource-paths ["src/sql" "resources"]
-  :uberjar-name "lomake-editori.jar"
+  :uberjar-name "ataru.jar"
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-figwheel "0.5.0-6"]
@@ -121,6 +122,9 @@
                    :source-paths ["env/dev/clj" "env/dev/cljc"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
+             :uberjar {:aot :all
+                       :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"]]
+                       :resource-paths ["resources"]}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
                                               :server-port 3449}}})
 
