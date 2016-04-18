@@ -28,6 +28,7 @@
                  [yesql "0.5.2"]
                  [camel-snake-kebab "0.3.2"]
                  [environ "1.0.2"]
+                 [org.clojure/core.async "0.2.374"]
                  [org.clojure/java.jdbc "0.4.2"]
                  [postgresql/postgresql "9.1-901-1.jdbc4"]
                  [clj-time "0.11.0"]
