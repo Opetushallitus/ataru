@@ -9,6 +9,12 @@
 (register-handler :editor/select-form (fn [db [_ clicked-row-id]]
                                         (assoc-in db [:editor :selected-form-id] clicked-row-id)))
 
+(register-handler :editor/add-form (fn [db _]
+                                     (let [new-form {:id 9 :name "Uusi lomake"}
+                                           new-forms (conj (-> db (:editor) (:forms)) new-form)]
+                                       (-> db
+                                           (assoc-in [:editor :selected-form-id] (:id new-form))
+                                           (assoc-in [:editor :forms] new-forms)))))
 
 (defn form-list []
   (let [forms (subscribe [:state-query [:editor :forms]])
@@ -22,7 +28,7 @@
               @forms)))))
 
 (defn add-form []
-  [:button.button "Uusi lomake"])
+  [:button.button {:on-click #(dispatch [:editor/add-form])} "Uusi lomake"])
 
 (defn editor-panel []
   (let [forms (subscribe [:state-query [:editor :forms]])
@@ -31,7 +37,7 @@
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row
-        [:input.editor-form__form-name-input {:type "text" :value (:name (selected-form))}]
+        [:input.editor-form__form-name-input {:type "text" :value (:name (selected-form)) :placeholder "Lomakkeen nimi"}]
         [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
        [component/form-component
         (merge l/controller
