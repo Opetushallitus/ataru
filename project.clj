@@ -122,6 +122,9 @@
                    :source-paths ["env/dev/clj" "env/dev/cljc"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
+             :uberjar {:aot :all
+                       :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"]]
+                       :resource-paths ["resources"]}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
                                               :server-port 3449}}})
 
