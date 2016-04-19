@@ -1,19 +1,13 @@
 (ns lomake-editori.handler
-  (:require [byte-streams :as bs]
-            [clojure.core.async :as a]
-            [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
+  (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [lomake-editori.db.extensions]
-            [manifold.deferred :as d]
-            [manifold.stream :as s]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response]]
-            [ring.util.response :refer [response not-found]]
-            [taoensso.timbre :refer [spy]]))
+            [ring.util.response :refer [response not-found]]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized

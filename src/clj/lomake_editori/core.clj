@@ -33,5 +33,5 @@
                {:port port}))
       (info "Started server on port" port)
       (println "Press <enter> to win prize")
-      (read-line)
-      (.close @server))))
+      (let [_ (read-line)]
+        (.close @server)))))
