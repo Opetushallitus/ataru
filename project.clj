@@ -63,7 +63,6 @@
 
   :eastwood {:namespaces [:source-paths]
              :add-linters [:unused-locals
-                           :unused-namespaces
                            :unused-private-vars]
              :exclude-linters [:local-shadows-var]}
 

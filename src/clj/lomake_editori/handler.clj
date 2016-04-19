@@ -3,11 +3,13 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
+            [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response]]
-            [ring.util.response :refer [response not-found]]))
+            [ring.util.response :refer [response not-found]])
+  (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
