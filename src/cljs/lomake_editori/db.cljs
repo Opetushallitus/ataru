@@ -18,6 +18,6 @@
                     {:id "4444444" :name "Aallon lomake" :form-data {}}
                     {:id "5555555" :name "Akin lomake" :form-data {}}
                     {:id "6666666" :name "Porvoon lomake" :form-data {}}]
-            :selected-form-id 1}
+            :selected-form-id "1111111"}
    ; Initial active panel on page load.
    :active-panel :editor})

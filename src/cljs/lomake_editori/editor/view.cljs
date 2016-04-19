@@ -7,6 +7,15 @@
             [cljs-uuid-utils.core :as uuid]
             [lomake-editori.dev.lomake :as l]))
 
+(defn find-form [form-id forms] (first (filter #(= form-id (:id %)) forms)))
+
+(defn change-form-name [form-id new-name db]
+  (let [forms (-> db :editor :forms)
+        form (find-form form-id forms)
+        changed-form (assoc form :name new-name)
+        new-forms (conj (remove #(= (:id %) form-id) forms) changed-form)]
+    (assoc-in db [:editor :forms] new-forms)))
+
 (register-handler :editor/select-form (fn [db [_ clicked-row-id]]
                                         (assoc-in db [:editor :selected-form-id] clicked-row-id)))
 
@@ -17,6 +26,9 @@
                                        (-> db
                                            (assoc-in [:editor :selected-form-id] (:id new-form))
                                            (assoc-in [:editor :forms] new-forms)))))
+
+(register-handler :editor/change-form-name (fn [db [_ name-change]]
+                                             (change-form-name (:id name-change) (:new-form-name name-change) db)))
 
 (defn form-list []
   (let [forms (subscribe [:state-query [:editor :forms]])
@@ -34,12 +46,15 @@
 
 (defn editor-panel []
   (let [forms (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
-        selected-form (fn [] (first (filter #(= @selected-form-id (:id %)) @forms)))]
+        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
+
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row
-        [:input.editor-form__form-name-input {:type "text" :value (:name (selected-form)) :placeholder "Lomakkeen nimi"}]
+        [:input.editor-form__form-name-input {:type "text"
+                                              :value (:name (find-form @selected-form-id @forms))
+                                              :on-change #(dispatch [:editor/change-form-name {:id @selected-form-id :new-form-name (.-value (.-target %))}])
+                                              :placeholder "Lomakkeen nimi"}]
         [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
        [component/form-component
         (merge l/controller
