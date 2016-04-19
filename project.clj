@@ -64,7 +64,8 @@
   :eastwood {:namespaces [:source-paths]
              :add-linters [:unused-locals
                            :unused-namespaces
-                           :unused-private-vars]}
+                           :unused-private-vars]
+             :exclude-linters [:local-shadows-var]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"]
