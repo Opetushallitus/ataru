@@ -1,3 +1,2 @@
-(ns lomake-editori.db.extensions
-  (:require [oph.soresu.common.jdbc.extensions]))
+(ns lomake-editori.db.extensions)
 
