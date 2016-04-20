@@ -1,6 +1,7 @@
 (ns lomake-editori.core
   (:require [taoensso.timbre :refer [info]]
             [lomake-editori.handler :refer [handler]]
+            [lomake-editori.db.migrations :as migrations]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -17,6 +18,9 @@
       (start-server :port 3333 :handler cider-nrepl-handler)
       (info "nREPL started on port 3333"))))
 
+(defn run-migrations []
+  (migrations/migrate :db "db.migration"))
+
 (defn- try-f [f] (try (f) (catch Exception ignored nil)))
 
 (defn -main [& [prt & _]]
@@ -24,6 +28,7 @@
                  3450)]
     (do
       (a/go (start-repl!))
+      (run-migrations)
       (info "Starting server on port" port)
       (reset! server
               (http/start-server
