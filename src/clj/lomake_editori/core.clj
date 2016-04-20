@@ -19,7 +19,11 @@
       (info "nREPL started on port 3333"))))
 
 (defn run-migrations []
-  (migrations/migrate :db "db.migration"))
+  ;; Only run migrations when in dev mode for now
+  ;; Deployment has to catch up before we can run migrations on test/prod
+  ;; servers
+  (when (:dev? env)
+    (migrations/migrate :db "db.migration")))
 
 (defn- try-f [f] (try (f) (catch Exception ignored nil)))
 
