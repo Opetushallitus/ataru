@@ -16,6 +16,36 @@ Automatically recompile css file on change.
 lein less auto
 ```
 
+### Create database
+
+Install PostgreSQL
+
+Init Postgres database files to a desired location (this will create a subdir here)
+
+```
+initdb -d atarudb
+```
+
+Run the server
+ 
+```
+postgres -D atarudb
+```
+
+In another shell, create the DB:
+
+```
+createdb ataru
+```
+
+Create user for the db:
+
+```
+createuser -s oph -P
+```
+
+Give it a password `oph`
+
 ### Run application:
 
 ```
