@@ -25,6 +25,11 @@ task(zipIt, type: Zip) {
 
     destinationDir new File(buildDir, "distributions")
     archiveName zipFileName
+
+    include("ataru.jar")
+    include("oph-configuration/*")
+
+    from '.'
     from 'target'
 }
 
