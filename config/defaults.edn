@@ -4,4 +4,4 @@
        :password "oph"
        :server-name "localhost"
        :port-number 5432
-       :schema "ataru"}}
+       :schema "public"}}
