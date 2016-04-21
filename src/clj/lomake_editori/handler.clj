@@ -8,7 +8,8 @@
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response]]
-            [ring.util.response :refer [response not-found]])
+            [ring.util.http-response :refer [ok not-found]]
+            [ring.util.response :refer [response]])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -35,13 +36,22 @@
 
 (defroutes app-routes
   (GET "/" [] (file-response "index.html" {:root "resources/templates"}))
-  (route/not-found "Not found"))
+  (not-found "Not found"))
+
+(defroutes api-routes
+  (context "/api" []
+    (GET "/forms" [] (ok {:forms []}))
+    (POST "/form" []
+      (ok {}))
+    (not-found "Not found")))
 
 (def handler
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
-              app-routes)
+              app-routes
+              api-routes)
       (wrap-defaults (-> site-defaults
                          (update-in [:security] dissoc :content-type-options)
+                         (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
       (wrap-json-body {:keywords? true})
       (wrap-json-response)
