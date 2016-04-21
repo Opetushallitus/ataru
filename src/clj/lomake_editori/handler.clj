@@ -40,7 +40,12 @@
 
 (defroutes api-routes
   (context "/api" []
-    (GET "/forms" [] (ok {:forms []}))
+    (GET "/forms" [] (ok {:forms [{:id "1111111" :name "Stadin aikuisopiston yhteinen lomake" :form-data {}}
+                                  {:id "2222222" :name "Salpauksen lomake" :form-data {}}
+                                  {:id "3333333" :name "Helsingin kaupungin lomake" :form-data {}}
+                                  {:id "4444444" :name "Aallon lomake" :form-data {}}
+                                  {:id "5555555" :name "Akin lomake" :form-data {}}
+                                  {:id "6666666" :name "Porvoon lomake" :form-data {}}]}))
     (POST "/form" []
       (ok {}))
     (not-found "Not found")))

@@ -11,6 +11,7 @@
                  [com.andrewmcveigh/cljs-time "0.4.0"]
                  [oph/soresu "0.1.0-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
+                 [cljs-ajax "0.5.4"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.0.5"]
