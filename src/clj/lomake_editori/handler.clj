@@ -9,8 +9,7 @@
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response]]
             [ring.util.http-response :refer [ok not-found]]
-            [oph.soresu.common.db :refer [exec]]
-            [lomake-editori.db.queries :as queries]
+            [lomake-editori.db.form-store :as form-store]
             [ring.util.response :refer [response]])
   (:import  [manifold.deferred.Deferred]))
 
@@ -44,7 +43,7 @@
   (context "/api" []
     (GET "/forms" []
       (ok
-        {:forms (exec :db queries/get-forms {})}))
+        {:forms (form-store/get-forms)}))
     (POST "/form" []
       (ok {}))
     (not-found "Not found")))
