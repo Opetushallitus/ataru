@@ -1,8 +1,25 @@
 (ns lomake-editori.handlers
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
-              [ajax.core :refer [GET POST]]
+              [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
               [taoensso.timbre :refer-macros [spy]]))
+
+(defn http [method path handler-or-dispatch override-args]
+  (let [f (case method
+            :get    GET
+            :post   POST
+            :put    PUT
+            :delete DELETE)]
+    (dispatch [:set-state [:loading?] true])
+    (f path
+       (merge {:response-format :json
+               :keywords?       true
+               :error-handler   #(dispatch [:handle-error %])
+               :finally         #(dispatch [:set-state [:loading?] false])
+               :handler (if keyword? handler-or-dispatch
+                            #(dispatch [handler-or-dispatch %])
+                            handler)}
+              override-args))))
 
 (register-handler
  :initialize-db
@@ -10,12 +27,22 @@
    db/default-db))
 
 (register-handler
-  ::hadle-get-forms
-  (fn [db [_ forms-response]]
-    (assoc-in db [:editor :forms] (:forms forms-response))))
+  :set-state
+  (fn [db [_ path args]]
+    (assert (or (vector? path)
+                (seq? path)))
+    (if (map? args)
+      (update-in db path merge args)
+      (assoc-in db path args))))
 
 (register-handler
-  ::hadle-error
+  :handle-get-forms
+  (fn [db [_ forms-response]]
+    (-> (assoc-in db [:editor :forms] (group-by :id (:forms forms-response)))
+        (update-in [:editor :forms] dissoc :selected-form))))
+
+(register-handler
+  :handle-error
   (fn [db [_ error]]
     ;; TODO make a generic error message panel in UI which is shown when
     ;; :error-message exists and has a control for emptying it
@@ -24,15 +51,11 @@
 (register-handler
   :fetch-initial-data
   (fn [db _]
-    (GET
+    (http
+      :get
       "/api/forms"
-      {:handler       #(dispatch [::hadle-get-forms %1])
-       :error-handler #(dispatch [::hadle-error %1])
-       :response-format :json
-       :keywords? true})
-
-    ;; update a flag in `app-db` ... presumably to trigger UI changes
-    (assoc db :loading? true)))
+      :handle-get-forms)
+    db))
 
 (register-handler
  :set-active-panel

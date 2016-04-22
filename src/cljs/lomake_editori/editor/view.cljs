@@ -7,53 +7,49 @@
             [cljs-uuid-utils.core :as uuid]
             [lomake-editori.dev.lomake :as l]))
 
-(defn find-form [form-id forms] (first (filter #(= form-id (:id %)) forms)))
+(register-handler
+  :editor/select-form
+  (fn [db [_ clicked-form]]
+    (assoc-in db [:editor :selected-form]
+      clicked-form)))
 
-(defn change-form-name [form-id new-name db]
-  (let [forms (-> db :editor :forms)
-        form (find-form form-id forms)
-        changed-form (assoc form :name new-name)
-        new-forms (conj (remove #(= (:id %) form-id) forms) changed-form)]
-    (assoc-in db [:editor :forms] new-forms)))
+(register-handler
+  :editor/add-form
+  (fn [db _]
+    (let [id (uuid/uuid-string (uuid/make-random-uuid))
+          new-form  {:id id :name "Uusi lomake"}]
+      (-> db
+          (assoc-in [:editor :selected-form] new-form)
+          (update-in [:editor :forms] assoc id new-form)))))
 
-(register-handler :editor/select-form (fn [db [_ clicked-row-id]]
-                                        (assoc-in db [:editor :selected-form-id] clicked-row-id)))
-
-(register-handler :editor/add-form (fn [db _]
-                                     (let [new-form {:id (uuid/uuid-string (uuid/make-random-uuid)) :name "Uusi lomake"}
-                                           new-forms (conj (-> db (:editor) (:forms)) new-form)]
-                                       (println new-form)
-                                       (-> db
-                                           (assoc-in [:editor :selected-form-id] (:id new-form))
-                                           (assoc-in [:editor :forms] new-forms)))))
-
-(register-handler :editor/change-form-name (fn [db [_ name-change]]
-                                             (change-form-name (:id name-change) (:new-form-name name-change) db)))
+(register-handler
+  :editor/change-form-name
+  (fn [db [_ {:keys [id new-form-name]}]]
+    (update-in db [:editor :forms form-id]
+               assoc :name new-name)))
 
 (defn form-list []
-  (let [forms (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
+  (let [forms            (subscribe [:state-query [:editor :forms]])
+        selected-form-id (subscribe [:state-query [:editor :selected-form :id]])]
     (fn []
       (into [:div.editor-form__list]
-        (mapv (fn [form]
+        (mapv (fn [[id form]]
                 [:div.editor-form__row
-                 {:class (when (= (:id form) @selected-form-id) "editor-form__selected-row")
-                  :on-click #(dispatch [:editor/select-form (:id form)])} (:name form)])
+                 {:class (when (= id @selected-form-id) "editor-form__selected-row")
+                  :on-click #(dispatch [:editor/select-form form])} (:name form)])
               @forms)))))
 
 (defn add-form []
   [:button.button {:on-click #(dispatch [:editor/add-form])} "Uusi lomake"])
 
 (defn editor-panel []
-  (let [forms (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
-
+  (let [selected-form (subscribe [:state-query [:editor :selected-form]])]
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row
         [:input.editor-form__form-name-input {:type "text"
-                                              :value (:name (find-form @selected-form-id @forms))
-                                              :on-change #(dispatch [:editor/change-form-name {:id @selected-form-id :new-form-name (.-value (.-target %))}])
+                                              :value (:name @selected-form)
+                                              :on-change #(dispatch [:editor/change-form-name {:id (:id @selected-form) :new-form-name (.-value (.-target %))}])
                                               :placeholder "Lomakkeen nimi"}]
         [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
        [component/form-component
