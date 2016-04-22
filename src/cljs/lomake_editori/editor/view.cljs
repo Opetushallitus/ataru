@@ -25,8 +25,8 @@
 (register-handler
   :editor/change-form-name
   (fn [db [_ {:keys [id new-form-name]}]]
-    (update-in db [:editor :forms form-id]
-               assoc :name new-name)))
+    (update-in db [:editor :forms id]
+               assoc :name new-form-name)))
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])

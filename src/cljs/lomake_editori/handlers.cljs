@@ -4,7 +4,7 @@
               [lomake-editori.db :as db]
               [taoensso.timbre :refer-macros [spy]]))
 
-(defn http [method path handler-or-dispatch override-args]
+(defn http [method path handler-or-dispatch & [override-args]]
   (let [f (case method
             :get    GET
             :post   POST
@@ -16,9 +16,9 @@
                :keywords?       true
                :error-handler   #(dispatch [:handle-error %])
                :finally         #(dispatch [:set-state [:loading?] false])
-               :handler (if keyword? handler-or-dispatch
+               :handler (if (keyword? handler-or-dispatch)
                             #(dispatch [handler-or-dispatch %])
-                            handler)}
+                            handler-or-dispatch)}
               override-args))))
 
 (register-handler

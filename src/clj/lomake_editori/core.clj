@@ -32,7 +32,7 @@
                  3450)]
     (do
       (a/go (start-repl!))
-      (run-migrations)
+      (a/go (run-migrations))
       (info "Starting server on port" port)
       (reset! server
               (http/start-server
