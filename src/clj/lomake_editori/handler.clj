@@ -36,8 +36,9 @@
       (file-response file {:root "dev-resources"}))))
 
 (defroutes app-routes
-  (GET "/" [] (redirect "/lomake-editori"))
-  (GET "/lomake-editori" [] (file-response "index.html" {:root "resources/templates"})))
+  (GET "/" [] (redirect "/lomake-editori/"))
+  (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
+  (GET "/lomake-editori/" [] (file-response "index.html" {:root "resources/templates"})))
 
 (defroutes api-routes
   (context "/lomake-editori/api" []
@@ -47,8 +48,12 @@
     (POST "/form" []
       (ok {}))))
 
+(defroutes resource-routes
+  (route/files "/lomake-editori" {:root "resources/public"}))
+
 (def handler
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
+              resource-routes
               app-routes
               api-routes
               (route/not-found "Not found"))

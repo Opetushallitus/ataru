@@ -9,7 +9,7 @@
 
 (def logo
   [:div.logo
-    [:img {:src "/images/opintopolku_large-fi.png"
+    [:img {:src "images/opintopolku_large-fi.png"
            :height "40px"}]])
 
 (defn applications []
