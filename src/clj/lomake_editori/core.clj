@@ -40,7 +40,4 @@
                  (wrap-reload (var handler))
                  handler)
                {:port port}))
-      (info "Started server on port" port)
-      (println "Press <enter> to win prize")
-      (let [_ (read-line)]
-        (.close @server)))))
+      (info "Started server on port" port))))
