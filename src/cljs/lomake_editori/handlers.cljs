@@ -2,6 +2,7 @@
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
+              [lomake-editori.util :as util]
               [taoensso.timbre :refer-macros [spy]]))
 
 (defn http [method path handler-or-dispatch & [override-args]]
@@ -38,7 +39,7 @@
 (register-handler
   :handle-get-forms
   (fn [db [_ forms-response]]
-    (-> (assoc-in db [:editor :forms] (group-by :id (:forms forms-response)))
+    (-> (assoc-in db [:editor :forms] (util/group-by-first :id (:forms forms-response)))
         (update-in [:editor :forms] dissoc :selected-form))))
 
 (register-handler
