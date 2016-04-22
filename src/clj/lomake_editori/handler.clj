@@ -1,5 +1,5 @@
 (ns lomake-editori.handler
-  (:require [compojure.core :refer [ANY GET POST PUT defroutes context routes wrap-routes]]
+  (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
