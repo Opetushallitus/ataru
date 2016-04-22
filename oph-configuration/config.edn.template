@@ -1,1 +1,8 @@
 ; Configuration template for remote deployments
+{:db {:database-name "{{ataru_db_name}}"
+       :pool-name "ataru-pool"
+       :username "{{ataru_db_username}}"
+       :password "{{ataru_db_password}}"
+       :server-name "{{ataru_db_host}}"
+       :port-number {{ataru_db_port}}
+       :schema "public"}}
