@@ -1,11 +1,13 @@
 (ns lomake-editori.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [subscribe dispatch register-handler]]
+  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [re-com.core :as re-com]
+            [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
-            [lomake-editori.dev.lomake :as l]))
+            [lomake-editori.dev.lomake :as l]
+            [taoensso.timbre :refer-macros [spy]]))
 
 (register-handler
   :editor/select-form
@@ -24,9 +26,14 @@
 
 (register-handler
   :editor/change-form-name
-  (fn [db [_ {:keys [id new-form-name]}]]
-    (update-in db [:editor :forms id]
-               assoc :name new-form-name)))
+  (fn [db [_ new-form-name]]
+    (let [selected-form (-> db :editor :selected-form)
+          name-before-edit (:name selected-form)]
+      (update-in db [:editor :forms (:id selected-form)]
+                 assoc :name
+                 (if (empty? new-form-name)
+                   name-before-edit
+                   new-form-name)))))
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])
@@ -43,14 +50,16 @@
   [:button.button {:on-click #(dispatch [:editor/add-form])} "Uusi lomake"])
 
 (defn editor-panel []
-  (let [selected-form (subscribe [:state-query [:editor :selected-form]])]
+  (let [selected-form-id (subscribe [:state-query [:editor :selected-form :id]])
+        selected-form (reaction @(subscribe [:state-query [:editor :forms @selected-form-id :name]]))]
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row
-        [:input.editor-form__form-name-input {:type "text"
-                                              :value (:name @selected-form)
-                                              :on-change #(dispatch [:editor/change-form-name {:id (:id @selected-form) :new-form-name (.-value (.-target %))}])
-                                              :placeholder "Lomakkeen nimi"}]
+        [:input.editor-form__form-name-input
+         {:type        "text"
+          :value       @selected-form
+          :placeholder "Lomakkeen nimi"
+          :on-change   #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}]
         [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
        [component/form-component
         (merge l/controller
