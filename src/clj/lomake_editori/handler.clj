@@ -1,5 +1,5 @@
 (ns lomake-editori.handler
-  (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
+  (:require [compojure.core :refer [ANY GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -10,7 +10,8 @@
             [ring.util.response :refer [file-response resource-response]]
             [ring.util.http-response :refer [ok not-found]]
             [lomake-editori.db.form-store :as form-store]
-            [ring.util.response :refer [response]])
+            [ring.util.response :refer [response]]
+            [taoensso.timbre :refer [spy]])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -22,7 +23,6 @@
                  (render [d _] d))
 
 ;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
-
 
 (defn wrap-dev-only [handler]
   (fn [req]
@@ -36,8 +36,7 @@
       (file-response file {:root "dev-resources"}))))
 
 (defroutes app-routes
-  (GET "/" [] (file-response "index.html" {:root "resources/templates"}))
-  (not-found "Not found"))
+  (GET "/" [] (file-response "index.html" {:root "resources/templates"})))
 
 (defroutes api-routes
   (context "/api" []
@@ -45,13 +44,13 @@
       (ok
         {:forms (form-store/get-forms)}))
     (POST "/form" []
-      (ok {}))
-    (not-found "Not found")))
+      (ok {}))))
 
 (def handler
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
               app-routes
-              api-routes)
+              api-routes
+              (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
