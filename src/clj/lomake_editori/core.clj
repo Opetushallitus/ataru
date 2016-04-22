@@ -27,6 +27,8 @@
 
 (defn- try-f [f] (try (f) (catch Exception ignored nil)))
 
+(defn wait-forever [] @(promise))
+
 (defn -main [& [prt & _]]
   (let [port (or (try-f (fn [] (Integer/parseInt prt)))
                  3450)]
@@ -40,4 +42,5 @@
                  (wrap-reload (var handler))
                  handler)
                {:port port}))
-      (info "Started server on port" port))))
+      (info "Started server on port" port)
+      (wait-forever))))
