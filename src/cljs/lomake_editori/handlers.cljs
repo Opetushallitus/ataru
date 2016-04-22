@@ -54,7 +54,7 @@
   (fn [db _]
     (http
       :get
-      "/api/forms"
+      "/lomake-editori/api/forms"
       :handle-get-forms)
     db))
 

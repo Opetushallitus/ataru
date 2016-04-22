@@ -7,7 +7,7 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
-            [ring.util.response :refer [file-response resource-response]]
+            [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok not-found]]
             [lomake-editori.db.form-store :as form-store]
             [ring.util.response :refer [response]]
@@ -36,10 +36,11 @@
       (file-response file {:root "dev-resources"}))))
 
 (defroutes app-routes
-  (GET "/" [] (file-response "index.html" {:root "resources/templates"})))
+  (GET "/" [] (redirect "/lomake-editori"))
+  (GET "/lomake-editori" [] (file-response "index.html" {:root "resources/templates"})))
 
 (defroutes api-routes
-  (context "/api" []
+  (context "/lomake-editori/api" []
     (GET "/forms" []
       (ok
         {:forms (form-store/get-forms)}))
