@@ -47,13 +47,14 @@
 
 (defn api-routes []
   (api/api
-    (api/GET "/lomake-editori/api/forms" []
-             (ok
-               {:forms (form-store/get-forms)}))
-    (api/POST "/lomake-editori/api/form" []
-              :body [form Form]
-              (form-store/upsert-form form)
-              (ok {}))))
+    (api/context "/lomake-editori/api" []
+      (api/GET "/forms" []
+               (ok
+                 {:forms (form-store/get-forms)}))
+      (api/POST "/form" []
+                :body [form Form]
+                (form-store/upsert-form form)
+                (ok {})))))
 
 (defroutes resource-routes
   (route/files "/lomake-editori" {:root "resources/public"}))
