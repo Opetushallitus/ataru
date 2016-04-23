@@ -2,6 +2,8 @@
   (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
+            [compojure.api.sweet :as api]
+            [schema.core :as s]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
@@ -40,14 +42,18 @@
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
   (GET "/lomake-editori/" [] (file-response "index.html" {:root "resources/templates"})))
 
-(defroutes api-routes
-  (context "/lomake-editori/api" []
-    (GET "/forms" []
-      (ok
-        {:forms (form-store/get-forms)}))
-    (POST "/form" request
-      (form-store/upsert-form (:body request))
-      (ok {}))))
+(s/defschema Form
+  {:id s/Str :name s/Str})
+
+(defn api-routes []
+  (api/api
+    (api/GET "/lomake-editori/api/forms" []
+             (ok
+               {:forms (form-store/get-forms)}))
+    (api/POST "/lomake-editori/api/form" []
+              :body [form Form]
+              (form-store/upsert-form form)
+              (ok {}))))
 
 (defroutes resource-routes
   (route/files "/lomake-editori" {:root "resources/public"}))
@@ -56,12 +62,10 @@
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
                     resource-routes
                     app-routes
-                    api-routes
+                    (api-routes)
                     (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
-      (wrap-json-body {:keywords? true})
-      (wrap-json-response)
       (wrap-gzip)))
