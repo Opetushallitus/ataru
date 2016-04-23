@@ -1,6 +1,6 @@
 (ns lomake-editori.core
   (:require [taoensso.timbre :refer [info]]
-            [lomake-editori.handler :refer [handler]]
+            [lomake-editori.clerk-routes :refer [clerk-routes]]
             [lomake-editori.db.migrations :as migrations]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
@@ -39,8 +39,8 @@
       (reset! server
               (http/start-server
                (if (:dev? env)
-                 (wrap-reload (var handler))
-                 handler)
+                 (wrap-reload (var clerk-routes))
+                 clerk-routes)
                {:port port}))
       (info "Started server on port" port)
       (wait-forever))))

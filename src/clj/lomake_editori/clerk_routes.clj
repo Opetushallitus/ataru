@@ -1,4 +1,4 @@
-(ns lomake-editori.handler
+(ns lomake-editori.clerk-routes
   (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
@@ -52,12 +52,12 @@
 (defroutes resource-routes
   (route/files "/lomake-editori" {:root "resources/public"}))
 
-(def handler
+(def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
-              resource-routes
-              app-routes
-              api-routes
-              (route/not-found "Not found"))
+                    resource-routes
+                    app-routes
+                    api-routes
+                    (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
