@@ -45,7 +45,8 @@
     (GET "/forms" []
       (ok
         {:forms (form-store/get-forms)}))
-    (POST "/form" []
+    (POST "/form" request
+      (form-store/upsert-form (:body request))
       (ok {}))))
 
 (defroutes resource-routes
