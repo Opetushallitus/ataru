@@ -8,7 +8,6 @@
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok not-found]]
             [lomake-editori.db.form-store :as form-store]
@@ -47,6 +46,11 @@
 
 (defn api-routes []
   (api/api
+    {:swagger {:spec "/lomake-editori/swagger.json"
+               :ui "/lomake-editori/api-docs"
+               :data {:info {:version "1.0.0"
+                             :title "Ataru Clerk API"
+                             :description "Specifiecs the clerk API for Ataru"}}}}
     (api/context "/lomake-editori/api" []
       (api/GET "/forms" []
                (ok
