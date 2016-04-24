@@ -1,1 +1,1 @@
-ALTER TABLE forms ADD COLUMN modified_time TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+alter table forms add column modified_time timestamp with time zone default now()
