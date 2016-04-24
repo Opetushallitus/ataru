@@ -6,8 +6,14 @@
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
+            [cljs-time.format :as time-format]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy]]))
+
+(def ^:private time-formatter (time-format/formatter "dd.MM.yyyy HH:mm"))
+
+(defn- time->str [raw-timestamp]
+  (time-format/unparse time-formatter (time-format/parse raw-timestamp)))
 
 (register-handler
   :editor/select-form
@@ -43,7 +49,10 @@
         (mapv (fn [[id form]]
                 [:div.editor-form__row
                  {:class (when (= id @selected-form-id) "editor-form__selected-row")
-                  :on-click #(dispatch [:editor/select-form form])} (:name form)])
+                  :on-click #(dispatch [:editor/select-form form])}
+                 [:span.editor-form__list-form-name  (str (:name form))]
+                 [:span.editor-form__list-form-time (time->str (:modified-time form))]
+                 ])
               @forms)))))
 
 (defn add-form []
