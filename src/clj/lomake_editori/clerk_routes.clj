@@ -9,10 +9,10 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.util.response :refer [file-response resource-response redirect]]
-            [ring.util.http-response :refer [ok not-found]]
+            [ring.util.http-response :refer [ok internal-server-error not-found]]
             [lomake-editori.db.form-store :as form-store]
             [ring.util.response :refer [response]]
-            [taoensso.timbre :refer [spy]])
+            [taoensso.timbre :refer [spy error]])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -24,6 +24,12 @@
                  (render [d _] d))
 
 ;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
+
+(defn trying [f]
+  (try (ok (f))
+       (catch Exception e
+         (error e)
+         (internal-server-error))))
 
 (defn wrap-dev-only [handler]
   (fn [req]
@@ -44,7 +50,9 @@
                                        "text/html")))
 
 (s/defschema Form
-  {:id s/Str :name s/Str})
+  {(s/optional-key :id) (s/maybe s/Str)
+   :name s/Str
+   s/Any s/Any})
 
 (defn api-routes []
   (api/api
@@ -61,8 +69,7 @@
                  {:forms (form-store/get-forms)}))
       (api/POST "/form" []
                 :body [form Form]
-                (form-store/upsert-form form)
-                (ok {})))))
+                (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
   (route/resources "/lomake-editori"))
