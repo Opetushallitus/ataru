@@ -1,5 +1,8 @@
 (ns lomake-editori.db.extensions
-  (:require [oph.soresu.common.jdbc.extensions])) ; don't remove! imports JSONB handling
+  (:import [java.sql PreparedStatement])
+  (:require [oph.soresu.common.jdbc.extensions] ; don't remove! imports JSONB handling
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :as c]))
 
 (extend-protocol jdbc/IResultSetReadColumn
                  java.sql.Date
