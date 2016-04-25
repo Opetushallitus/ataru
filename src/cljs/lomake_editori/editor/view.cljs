@@ -14,7 +14,9 @@
 (def ^:private time-formatter (time-format/formatter "dd.MM.yyyy HH:mm"))
 
 (defn- time->str [raw-timestamp]
-  (time-format/unparse time-formatter (time-format/parse raw-timestamp)))
+  (let [utc-timestamp (time-format/parse raw-timestamp)
+        timestamp (time/minus utc-timestamp (time/minutes (.getTimezoneOffset(new js/Date))))]
+  (time-format/unparse time-formatter timestamp)))
 
 (register-handler
   :editor/select-form
