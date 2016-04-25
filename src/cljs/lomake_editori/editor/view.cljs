@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [lomake-editori.temporal :refer [time->str]]
-            [lomake-editor.handlers :refer [post]]
+            [lomake-editori.handlers :refer [post]]
             [goog.date :as gd]
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]

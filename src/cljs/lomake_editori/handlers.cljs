@@ -6,7 +6,7 @@
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [goog.date :as gd]
-              [clojure.core.match :refer [match]]
+              [cljs.core.match :refer-macros [match]]
               [taoensso.timbre :refer-macros [spy]]))
 
 (def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
@@ -27,11 +27,7 @@
                :handler         (match [handler]
                                        [(dispatch-keyword :guard keyword?)] #(dispatch [dispatch-keyword %])
                                        :else (fn [response]
-                                               (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))
-
-               (if (keyword? handler-or-dispatch)
-                            #(dispatch [handler-or-dispatch %])
-                            handler-or-dispatch)}
+                                               (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
               override-args))))
 
 (defn post [path params handler-or-dispatch]
