@@ -1,0 +1,6 @@
+artifactId=oppijan-tunnistus
+version={{version}}
+buildNumber={{buildNumber}}
+branchName={{branchName}}
+vcsRevision={{revisionNumber}}
+buildTime={{buildTime}}

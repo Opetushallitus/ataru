@@ -61,7 +61,8 @@
             [lein-doo "0.1.6"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
-            [lein-environ "1.0.2"]]
+            [lein-environ "1.0.2"]
+            [lein-resource "15.10.2"]]
 
   :eastwood {:namespaces [:source-paths]
              :exclude-linters [:local-shadows-var]}
@@ -110,6 +111,19 @@
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
                  :init (set! *print-length* 50)}
+
+  :resource {:resource-paths ["templates"]
+             :target-path "resources/public"
+             :update false ;; if true only process files with src newer than dest
+             :extra-values {:version "0.1.0-SNAPSHOT"
+                            :buildNumber ~(java.lang.System/getProperty "buildNumber")
+                            :branchName ~(java.lang.System/getProperty "branchName")
+                            :revisionNumber ~(java.lang.System/getProperty "revisionNumber")
+                            :buildTime ~(.format
+                                          (java.text.SimpleDateFormat. "yyyyMMdd-HHmm")
+                                          (java.util.Date.) )}
+             :silent false}
+
   :profiles {:repl {:plugins [[cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.0-2"]
@@ -124,7 +138,7 @@
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
-                       :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"]]
+                       :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"] "resource"]
                        :resource-paths ["resources"]}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
                                               :server-port 3449}}})
