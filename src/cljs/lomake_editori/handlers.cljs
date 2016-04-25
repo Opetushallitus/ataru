@@ -22,6 +22,13 @@
                             handler-or-dispatch)}
               override-args))))
 
+(defn with-modification [form]
+  form
+  )
+
+(defn with-author [form]
+  form)
+
 (register-handler
  :initialize-db
  (fn  [_ _]
@@ -39,7 +46,9 @@
 (register-handler
   :handle-get-forms
   (fn [db [_ forms-response]]
-    (-> (assoc-in db [:editor :forms] (util/group-by-first :id (:forms forms-response)))
+    (-> (assoc-in db [:editor :forms] (util/group-by-first
+                                        :id (mapv (comp with-modifications with-authors)
+                                                  (:forms forms-response))))
         (update-in [:editor :forms] dissoc :selected-form))))
 
 (register-handler

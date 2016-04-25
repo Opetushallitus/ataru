@@ -80,7 +80,7 @@
 
   :main lomake-editori.core
 
-  :cljsbuild { :builds [{:id "dev"
+  :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
