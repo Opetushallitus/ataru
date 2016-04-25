@@ -64,8 +64,6 @@
             [lein-environ "1.0.2"]]
 
   :eastwood {:namespaces [:source-paths]
-             :add-linters [:unused-locals
-                           :unused-private-vars]
              :exclude-linters [:local-shadows-var]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
