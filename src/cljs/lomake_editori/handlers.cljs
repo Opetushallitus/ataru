@@ -3,6 +3,7 @@
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
               [lomake-editori.util :as util]
+              [lomake-editori.temporal :refer [coerce-timestamp]]
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [goog.date :as gd]
@@ -24,7 +25,7 @@
                :keywords?       true
                :error-handler   #(dispatch [:handle-error %])
                :finally         #(dispatch [:set-state [:loading?] false])
-               :handler         (match [handler]
+               :handler         (match [handler-or-dispatch]
                                        [(dispatch-keyword :guard keyword?)] #(dispatch [dispatch-keyword %])
                                        :else (fn [response]
                                                (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
@@ -60,7 +61,7 @@
   :handle-get-forms
   (fn [db [_ forms-response]]
     (-> (assoc-in db [:editor :forms] (util/group-by-first
-                                        :id (mapv (comp with-author)
+                                        :id (mapv (comp with-author (coerce-timestamp :modified-time))
                                                   (:forms forms-response))))
         (update-in [:editor :forms] dissoc :selected-form))))
 

@@ -6,11 +6,15 @@
 
 (defqueries "sql/form-queries.sql")
 
+(defn t-exec [& args]
+  (transform-keys ->kebab-case-keyword (apply exec args)))
+
 (defn get-forms []
-  (transform-keys ->kebab-case-keyword (exec :db get-forms-query {})))
+  (t-exec :db get-forms-query {}))
 
 (defn upsert-form [{:keys [id] :as form}]
   (if (some? (when id
                (exec :db form-exists-query {:id id})))
-    (exec :db update-form-query! form)
-    (exec :db add-form-query<! form)))
+    (t-exec :db update-form-query! form)
+    (t-exec :db add-form-query<! form)))
+

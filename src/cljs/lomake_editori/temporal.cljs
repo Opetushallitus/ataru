@@ -17,9 +17,17 @@
 (defn with-dow [google-date]
   (days-finnish (.getDay google-date)))
 
+(defn str->googdate [value]
+  (f/parse (f/formatters :date-time-no-ms) value))
+
+(defn coerce-timestamp [kw]
+  (fn [element]
+    (update-in element [kw] str->googdate)))
+
 (defn- time->str [google-date]
-  (-> (f/unparse time-formatter google-date)
-      (as-> formatted
-          (str (with-dow google-date)
-               "na " formatted))))
+  (->> google-date
+       c/to-default-time-zone
+       (f/unparse time-formatter)
+       (str (with-dow google-date)
+            "na ")))
 
