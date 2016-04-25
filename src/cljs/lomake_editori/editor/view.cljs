@@ -3,20 +3,14 @@
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
+            [lomake-editori.temporal :refer [time->str]]
+            [goog.date :as gd]
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
-            [cljs-time.core :as time]
-            [cljs-time.format :as time-format]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy]]))
 
-(def ^:private time-formatter (time-format/formatter "dd.MM.yyyy HH:mm"))
-
-(defn- time->str [raw-timestamp]
-  (let [utc-timestamp (time-format/parse raw-timestamp)
-        timestamp (time/minus utc-timestamp (time/minutes (.getTimezoneOffset(new js/Date))))]
-  (time-format/unparse time-formatter timestamp)))
 
 (register-handler
   :editor/select-form
@@ -28,7 +22,10 @@
   :editor/add-form
   (fn [db _]
     (let [id (uuid/uuid-string (uuid/make-random-uuid))
-          new-form  {:id id :name "Uusi lomake" :modified-time (time-format/unparse (time-format/formatters :date-time) (time/now))}]
+          new-form {:id id
+                    :name "Uusi lomake"
+                    :modified-time (gd/DateTime.)
+                    :author {:last "Testaaja" :first "Teppo"}}]
       (-> db
           (assoc-in [:editor :selected-form] new-form)
           (update-in [:editor :forms] assoc id new-form)))))
@@ -53,8 +50,10 @@
                 [:div.editor-form__row
                  {:class (when (= id @selected-form-id) "editor-form__selected-row")
                   :on-click #(dispatch [:editor/select-form form])}
-                 [:span.editor-form__list-form-name  (str (:name form))]
+                 [:span.editor-form__list-form-name (str (:name form))]
                  [:span.editor-form__list-form-time (time->str (:modified-time form))]
+                 [:span.editor-form__list-form-editor (let [a (:author form)]
+                                                        (str (:last a) " " (:first a)))]
                  ])
               @forms)))))
 

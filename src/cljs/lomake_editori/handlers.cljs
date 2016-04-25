@@ -3,7 +3,12 @@
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
               [lomake-editori.util :as util]
+              [cljs-time.core :as c]
+              [cljs-time.format :as f]
+              [goog.date :as gd]
               [taoensso.timbre :refer-macros [spy]]))
+
+(def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
 (defn http [method path handler-or-dispatch & [override-args]]
   (let [f (case method
@@ -22,12 +27,8 @@
                             handler-or-dispatch)}
               override-args))))
 
-(defn with-modification [form]
-  form
-  )
-
 (defn with-author [form]
-  form)
+  (assoc form :author {:last "Turtiainen" :first "Janne"}))
 
 (register-handler
  :initialize-db
@@ -47,7 +48,7 @@
   :handle-get-forms
   (fn [db [_ forms-response]]
     (-> (assoc-in db [:editor :forms] (util/group-by-first
-                                        :id (mapv (comp with-modifications with-authors)
+                                        :id (mapv (comp with-author)
                                                   (:forms forms-response))))
         (update-in [:editor :forms] dissoc :selected-form))))
 
