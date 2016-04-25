@@ -6,6 +6,7 @@
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
+            [cljs-time.core :as time]
             [cljs-time.format :as time-format]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy]]))
@@ -25,7 +26,7 @@
   :editor/add-form
   (fn [db _]
     (let [id (uuid/uuid-string (uuid/make-random-uuid))
-          new-form  {:id id :name "Uusi lomake"}]
+          new-form  {:id id :name "Uusi lomake" :modified-time (time-format/unparse (time-format/formatters :date-time) (time/now))}]
       (-> db
           (assoc-in [:editor :selected-form] new-form)
           (update-in [:editor :forms] assoc id new-form)))))
