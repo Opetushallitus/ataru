@@ -7,6 +7,7 @@
             [environ.core :refer [env]]
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.logger :as logger]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok not-found]]
@@ -75,4 +76,5 @@
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
-      (wrap-gzip)))
+      (wrap-gzip)
+      (logger/wrap-with-logger)))
