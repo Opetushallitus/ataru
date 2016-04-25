@@ -40,7 +40,9 @@
 (defroutes app-routes
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (resource-response "index.html" {:root "/templates"})))
+  (GET "/lomake-editori/" [] (assoc-in (resource-response "index.html" {:root "/templates"})
+                                       [:headers  "Content-Type"]
+                                       "text/html")))
 
 (s/defschema Form
   {:id s/Str :name s/Str})
