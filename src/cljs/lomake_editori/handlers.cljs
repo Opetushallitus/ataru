@@ -6,6 +6,7 @@
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [goog.date :as gd]
+              [clojure.core.match :refer [match]]
               [taoensso.timbre :refer-macros [spy]]))
 
 (def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
@@ -19,13 +20,22 @@
     (dispatch [:set-state [:loading?] true])
     (f path
        (merge {:response-format :json
+               :format          :json
                :keywords?       true
                :error-handler   #(dispatch [:handle-error %])
                :finally         #(dispatch [:set-state [:loading?] false])
-               :handler (if (keyword? handler-or-dispatch)
+               :handler         (match [handler]
+                                       [(dispatch-keyword :guard keyword?)] #(dispatch [dispatch-keyword %])
+                                       :else (fn [response]
+                                               (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))
+
+               (if (keyword? handler-or-dispatch)
                             #(dispatch [handler-or-dispatch %])
                             handler-or-dispatch)}
               override-args))))
+
+(defn post [path params handler-or-dispatch]
+  (http :post path handler-or-dispatch {:params params}))
 
 (defn with-author [form]
   (assoc form :author {:last "Turtiainen" :first "Janne"}))
@@ -43,6 +53,12 @@
     (if (map? args)
       (update-in db path merge args)
       (assoc-in db path args))))
+
+(register-handler
+  :state-update
+  (fn [db [_ f]]
+    (or (f db)
+        db)))
 
 (register-handler
   :handle-get-forms

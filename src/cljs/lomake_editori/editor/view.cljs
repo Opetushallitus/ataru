@@ -4,10 +4,10 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [lomake-editori.temporal :refer [time->str]]
+            [lomake-editor.handlers :refer [post]]
             [goog.date :as gd]
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]
-            [cljs-uuid-utils.core :as uuid]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy]]))
 
@@ -21,14 +21,15 @@
 (register-handler
   :editor/add-form
   (fn [db _]
-    (let [id (uuid/uuid-string (uuid/make-random-uuid))
-          new-form {:id id
-                    :name "Uusi lomake"
-                    :modified-time (gd/DateTime.)
-                    :author {:last "Testaaja" :first "Teppo"}}]
-      (-> db
-          (assoc-in [:editor :selected-form] new-form)
-          (update-in [:editor :forms] assoc id new-form)))))
+    (post "/lomake-editori/api/form"
+          {:name   "Uusi lomake"
+           :author {:last  "Testaaja"
+                    :first "Teppo"}}
+          (fn [db new-form]
+            (-> db
+                (assoc-in [:editor :selected-form] new-form)
+                (update-in [:editor :forms] assoc (:id new-form) new-form))))
+    db))
 
 (register-handler
   :editor/change-form-name
