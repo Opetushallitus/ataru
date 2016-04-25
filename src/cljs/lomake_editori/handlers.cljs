@@ -8,7 +8,7 @@
               [cljs-time.format :as f]
               [goog.date :as gd]
               [cljs.core.match :refer-macros [match]]
-              [taoensso.timbre :refer-macros [spy]]))
+              [taoensso.timbre :refer-macros [spy debug]]))
 
 (def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
@@ -57,12 +57,22 @@
     (or (f db)
         db)))
 
+(defn sorted-by-time [m]
+  (let [custom-comp (comparator (fn [d1 d2] (if-not d1 1 (c/after? d1 d2))))]
+    (into (sorted-map-by
+            (fn [k1 k2]
+              (let [v1 (-> (get m k1) :modified-time)
+                    v2 (-> (get m k2) :modified-time)]
+                (custom-comp v1 v2))))
+          m)))
+
 (register-handler
   :handle-get-forms
   (fn [db [_ forms-response]]
-    (-> (assoc-in db [:editor :forms] (util/group-by-first
-                                        :id (mapv (comp with-author (coerce-timestamp :modified-time))
-                                                  (:forms forms-response))))
+    (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
+                                            :id (mapv (comp with-author (coerce-timestamp :modified-time))
+                                                      (:forms forms-response)))
+                                          (sorted-by-time)))
         (update-in [:editor :forms] dissoc :selected-form))))
 
 (register-handler

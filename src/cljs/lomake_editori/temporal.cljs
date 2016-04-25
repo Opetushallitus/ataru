@@ -1,7 +1,8 @@
 (ns lomake-editori.temporal
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
-            [goog.date :as gd]))
+            [goog.date :as gd]
+            [taoensso.timbre :refer-macros [spy]]))
 
 (def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
@@ -17,8 +18,9 @@
 (defn with-dow [google-date]
   (days-finnish (.getDay google-date)))
 
-(defn str->googdate [value]
-  (f/parse (f/formatters :date-time-no-ms) value))
+(defn str->googdate [timestamp-value]
+  {:pre [(some? timestamp-value)]}
+  (f/parse (f/formatters :date-time) timestamp-value))
 
 (defn coerce-timestamp [kw]
   (fn [element]

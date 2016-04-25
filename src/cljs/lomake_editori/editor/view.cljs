@@ -3,7 +3,7 @@
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
-            [lomake-editori.temporal :refer [time->str]]
+            [lomake-editori.temporal :refer [time->str coerce-timestamp]]
             [lomake-editori.handlers :refer [post]]
             [goog.date :as gd]
             [re-com.core :as re-com]
@@ -23,12 +23,15 @@
   (fn [db _]
     (post "/lomake-editori/api/form"
           {:name   "Uusi lomake"
-           :author {:last  "Testaaja"
+           :author {:last  "Testaaja" ;; placeholder
                     :first "Teppo"}}
           (fn [db new-form]
-            (-> db
-                (assoc-in [:editor :selected-form] new-form)
-                (update-in [:editor :forms] assoc (:id new-form) new-form))))
+            (let [form-with-time (-> ((coerce-timestamp :modified-time) new-form)
+                                     (assoc :author {:last  "Testaaja" ;; placeholder
+                                                     :first "Teppo"}))]
+              (-> db
+                  (assoc-in [:editor :selected-form] form-with-time)
+                  (update-in [:editor :forms] assoc (:id new-form) form-with-time)))))
     db))
 
 (register-handler
