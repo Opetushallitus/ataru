@@ -1,8 +1,8 @@
 (ns lomake-editori.db.form-store
   (:require [yesql.core :refer [defqueries]]
             [oph.soresu.common.db :refer [exec]]
-            [camel-snake-kebab.extras :refer [transform-keys ]]
-             [camel-snake-kebab.core :refer [->kebab-case-keyword]]))
+            [camel-snake-kebab.extras :refer [transform-keys]]
+            [camel-snake-kebab.core :refer [->kebab-case-keyword]]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -14,4 +14,4 @@
         exists (not-empty existing-form-id-result)]
     (if exists
       (exec :db update-form-query! form)
-      (exec :db add-form-query! form))))
+      (exec :db add-form-query<! form))))
