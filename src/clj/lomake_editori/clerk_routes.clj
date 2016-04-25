@@ -52,7 +52,7 @@
                :ui "/lomake-editori/api-docs"
                :data {:info {:version "1.0.0"
                              :title "Ataru Clerk API"
-                             :description "Specifiecs the clerk API for Ataru"}}
+                             :description "Specifies the clerk API for Ataru"}}
                :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/lomake-editori/api" []
                  :tags ["form-api"]
