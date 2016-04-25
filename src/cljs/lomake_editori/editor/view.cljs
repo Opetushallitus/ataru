@@ -9,14 +9,14 @@
             [re-com.core :as re-com]
             [cljs.core.match :refer-macros [match]]
             [lomake-editori.dev.lomake :as l]
-            [taoensso.timbre :refer-macros [spy]]))
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 
 (register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
     (assoc-in db [:editor :selected-form]
-      clicked-form)))
+              clicked-form)))
 
 (register-handler
   :editor/add-form
@@ -31,7 +31,7 @@
                                                      :first "Teppo"}))]
               (-> db
                   (assoc-in [:editor :selected-form] form-with-time)
-                  (update-in [:editor :forms] assoc (:id new-form) form-with-time)))))
+                  (assoc-in [:editor :forms (:id form-with-time)] form-with-time)))))
     db))
 
 (register-handler
@@ -54,7 +54,7 @@
                 [:div.editor-form__row
                  {:class (when (= id @selected-form-id) "editor-form__selected-row")
                   :on-click #(dispatch [:editor/select-form form])}
-                 [:span.editor-form__list-form-name (str (:name form))]
+                 [:span.editor-form__list-form-name (:name form)]
                  [:span.editor-form__list-form-time (time->str (:modified-time form))]
                  [:span.editor-form__list-form-editor (let [a (:author form)]
                                                         (str (:last a) " " (:first a)))]
@@ -66,7 +66,14 @@
 
 (defn editor-panel []
   (let [selected-form-id (subscribe [:state-query [:editor :selected-form :id]])
-        selected-form (reaction @(subscribe [:state-query [:editor :forms @selected-form-id :name]]))]
+        forms (subscribe [:state-query [:editor :forms]])
+        selected-form (reaction
+                        (:name (or
+                                 (get @forms @selected-form-id)
+                                 ; cannot get newly inserted items from this map without filtering
+                                 (first (for [[k v] @forms
+                                              :when (= k @selected-form-id)]
+                                          v)))))]
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row

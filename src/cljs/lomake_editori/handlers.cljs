@@ -58,7 +58,9 @@
         db)))
 
 (defn sorted-by-time [m]
-  (let [custom-comp (comparator (fn [d1 d2] (if-not d1 1 (c/after? d1 d2))))]
+  (let [custom-comp (comparator (fn [d1 d2] (cond (nil? d1) 1
+                                                  (nil? d2) -1
+                                                  :else (c/after? d1 d2))))]
     (into (sorted-map-by
             (fn [k1 k2]
               (let [v1 (-> (get m k1) :modified-time)
