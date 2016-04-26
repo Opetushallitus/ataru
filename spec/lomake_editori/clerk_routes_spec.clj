@@ -3,9 +3,13 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 
+(defmacro with-static-resource
+  [name path]
+  `(with ~name (-> (mock/request :get ~path)
+                   (clerk/clerk-routes))))
+
 (describe "GET /lomake-editori"
-  (with resp (-> (mock/request :get "/lomake-editori")
-                 (clerk/clerk-routes)))
+  (with-static-resource resp "/lomake-editori")
 
   (it "should not return nil"
     (should-not-be-nil @resp))
