@@ -36,7 +36,8 @@
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
                  [clj-time "0.11.0"]
                  [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
-                 [cheshire/cheshire "5.5.0"]]
+                 [cheshire/cheshire "5.5.0"]
+                 [metosin/ring-http-response "0.6.5"]]
 
   :min-lein-version "2.5.3"
 
