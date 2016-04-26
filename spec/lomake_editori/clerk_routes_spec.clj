@@ -23,4 +23,13 @@
       (should-contain "Location" headers)
       (should= "http://localhost/lomake-editori/" (get headers "Location")))))
 
+(describe "GET /lomake-editori/"
+  (with-static-resource resp "/lomake-editori/")
+
+  (it "should not return nil"
+    (should-not-be-nil @resp))
+
+  (it "should return HTTP 200"
+    (should= 200 (:status @resp))))
+
 (run-specs)
