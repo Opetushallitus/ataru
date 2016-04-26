@@ -50,30 +50,24 @@
         selected-form-id (subscribe [:state-query [:editor :selected-form :id]])]
     (fn []
       (into [:div.editor-form__list]
-        (mapv (fn [[id form]]
-                [:div.editor-form__row
-                 {:class (when (= id @selected-form-id) "editor-form__selected-row")
-                  :on-click #(dispatch [:editor/select-form form])}
-                 [:span.editor-form__list-form-name (:name form)]
-                 [:span.editor-form__list-form-time (time->str (:modified-time form))]
-                 [:span.editor-form__list-form-editor (let [a (:author form)]
-                                                        (str (:last a) " " (:first a)))]
-                 ])
-              @forms)))))
+            (for [form (vals @forms)]
+              [:div.editor-form__row
+               {:key      (:id form)
+                :class    (when (= (:id form) (str @selected-form-id)) "editor-form__selected-row")
+                :on-click #(dispatch [:editor/select-form form])}
+               [:span.editor-form__list-form-name (:name form)]
+               [:span.editor-form__list-form-time (time->str (:modified-time form))]
+               [:span.editor-form__list-form-editor (let [a (:author form)]
+                                                      (str (:last a) " " (:first a)))]])))))
 
 (defn add-form []
   [:button.button {:on-click #(dispatch [:editor/add-form])} "Uusi lomake"])
 
 (defn editor-panel []
   (let [selected-form-id (subscribe [:state-query [:editor :selected-form :id]])
-        forms (subscribe [:state-query [:editor :forms]])
-        selected-form (reaction
-                        (:name (or
-                                 (get @forms @selected-form-id)
-                                 ; cannot get newly inserted items from this map without filtering
-                                 (first (for [[k v] @forms
-                                              :when (= k @selected-form-id)]
-                                          v)))))]
+        forms            (subscribe [:state-query [:editor :forms]])
+        selected-form    (reaction
+                           (:name (get @forms @selected-form-id)))]
     (fn []
       [:div.panel-content
        [:div.editor-form__form-name-row

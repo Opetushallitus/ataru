@@ -58,13 +58,16 @@
         db)))
 
 (defn sorted-by-time [m]
-  (let [custom-comp (comparator (fn [d1 d2] (c/after? d1 d2)))]
-    (into (sorted-map-by
-            (fn [k1 k2]
-              (let [v1 (-> (get m k1) :modified-time)
-                    v2 (-> (get m k2) :modified-time)]
-                (custom-comp v1 v2))))
-          m)))
+  (into (sorted-map-by
+          (fn [k1 k2]
+            (let [v1 (-> (get m k1) :modified-time)
+                  v2 (-> (get m k2) :modified-time)]
+              (match [v1 v2]
+                     [nil nil] 0
+                     [_ nil] 1
+                     [nil _] -1
+                     :else (c/after? v1 v2)))))
+        m))
 
 (register-handler
   :handle-get-forms
