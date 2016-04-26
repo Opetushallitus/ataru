@@ -1,4 +1,4 @@
-artifactId=oppijan-tunnistus
+artifactId=ataru-editori
 version={{version}}
 buildNumber={{buildNumber}}
 branchName={{branchName}}
