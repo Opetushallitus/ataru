@@ -8,6 +8,13 @@
   `(with ~name (-> (mock/request :get ~path)
                    (clerk/clerk-routes))))
 
+(defn ^:private should-have-header
+  [header expected-val resp]
+  (let [headers (:headers @resp)]
+    (should-not-be-nil headers)
+    (should-contain header headers)
+    (should= expected-val (get headers header))))
+
 (describe "GET /lomake-editori"
   (with-static-resource resp "/lomake-editori")
 
@@ -18,10 +25,7 @@
     (should= 302 (:status @resp)))
 
   (it "should redirect to /lomake-editori/"
-    (let [headers (:headers @resp)]
-      (should-not-be-nil headers)
-      (should-contain "Location" headers)
-      (should= "http://localhost/lomake-editori/" (get headers "Location")))))
+    (should-have-header "Location" "http://localhost/lomake-editori/" resp)))
 
 (describe "GET /lomake-editori/"
   (with-static-resource resp "/lomake-editori/")
