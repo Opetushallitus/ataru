@@ -116,9 +116,6 @@
              :target-path "resources/public"
              :update false ;; if true only process files with src newer than dest
              :extra-values {:version "0.1.0-SNAPSHOT"
-                            :buildNumber ~(java.lang.System/getProperty "buildNumber")
-                            :branchName ~(java.lang.System/getProperty "branchName")
-                            :revisionNumber ~(java.lang.System/getProperty "revisionNumber")
                             :buildTime ~(.format
                                           (java.text.SimpleDateFormat. "yyyyMMdd-HHmm")
                                           (java.util.Date.) )}
