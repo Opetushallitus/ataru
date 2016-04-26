@@ -30,7 +30,7 @@
 
 (defn -main [& [prt & _]]
   (let [port (or (try-f (fn [] (Integer/parseInt prt)))
-                 3450)]
+                 8350)]
     (do
       (a/go (start-repl!))
       (a/go (run-migrations))
