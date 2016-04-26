@@ -12,7 +12,8 @@
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
             [lomake-editori.db.form-store :as form-store]
             [ring.util.response :refer [response]]
-            [taoensso.timbre :refer [spy error]])
+            [taoensso.timbre :refer [spy error]]
+            [selmer.parser :as selmer])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -45,8 +46,7 @@
 (defroutes app-routes
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (-> (resource-response "index.html" {:root "/templates"})
-                                 (content-type "text/html"))))
+  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {})))
 
 (s/defschema Form
   {(s/optional-key :id) (s/maybe s/Str)
