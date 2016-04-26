@@ -129,6 +129,7 @@
                                   [refactor-nrepl "2.2.0"]
                                   [org.clojure/tools.nrepl "0.2.12"]
                                   [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
+                                  [ring/ring-mock "0.3.0"]
                                   [speclj "3.3.2"]
                                   [speclj-junit "0.0.10"]]
                    :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
