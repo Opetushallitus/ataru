@@ -53,6 +53,7 @@
                                     :snapshots false}]]
 
   :source-paths ["src/clj" "src/cljc"]
+  :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
 
@@ -62,7 +63,8 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
-            [lein-resource "15.10.2"]]
+            [lein-resource "15.10.2"]
+            [speclj "3.3.0"]]
 
   :eastwood {:namespaces [:source-paths]
              :exclude-linters [:local-shadows-var]}
@@ -126,7 +128,8 @@
                                   [figwheel-sidecar "0.5.0-2"]
                                   [refactor-nrepl "2.2.0"]
                                   [org.clojure/tools.nrepl "0.2.12"]
-                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]]
+                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
+                                  [speclj "3.3.2"]]
                    :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
                              [refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
