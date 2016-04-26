@@ -31,8 +31,27 @@
                     (autosave/interval-loop 2000
                                             [:editor :forms (:id clicked-form)]
                                             (fn [form previous-autosave-form]
-                                              (debug "HANDLER" previous-autosave-form form))
+                                              (dispatch [:editor/save-form]))
                                             clicked-form))))))
+
+(defn- callback-after-post [db new-or-updated-form]
+  (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
+                           (assoc :author {:last  "Testaaja" ;; placeholder
+                                           :first "Teppo"}))]
+    (-> db
+        (assoc-in [:editor :selected-form] form-with-time)
+        (assoc-in [:editor :forms (:id form-with-time)] form-with-time))))
+
+(register-handler
+  :editor/save-form
+  (fn [db _]
+    (post "/lomake-editori/api/form"
+          (-> db :editor :forms
+              (get (-> db :editor :selected-form :id))
+              (dissoc :modified-time))
+          callback-after-post)
+    db))
+
 
 (register-handler
   :editor/add-form
@@ -41,13 +60,7 @@
           {:name   "Uusi lomake"
            :author {:last  "Testaaja" ;; placeholder
                     :first "Teppo"}}
-          (fn [db new-form]
-            (let [form-with-time (-> ((coerce-timestamp :modified-time) new-form)
-                                     (assoc :author {:last  "Testaaja" ;; placeholder
-                                                     :first "Teppo"}))]
-              (-> db
-                  (assoc-in [:editor :selected-form] form-with-time)
-                  (assoc-in [:editor :forms (:id form-with-time)] form-with-time)))))
+          callback-after-post)
     db))
 
 (register-handler

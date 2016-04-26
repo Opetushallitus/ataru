@@ -39,7 +39,8 @@
                (info "Stopping autosave. Could not find current value for autosave at" subscribe-path)
 
                ; interval-ch is closed, loop should stop
-               [[nil interval-ch] _ _] (debug "Channel closed, stopping loop" subscribe-path)
+               [[nil interval-ch] _ _]
+               (debug "Channel closed, stopping loop" subscribe-path)
 
                [[alt-result _] current prev]
                (do
