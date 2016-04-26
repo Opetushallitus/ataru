@@ -38,6 +38,9 @@
 
   (it "should refer to the compiled app.js in response body"
     (let [body (slurp (:body @resp))]
-      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\"></script>.*" body)))))
+      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\"></script>.*" body))))
+
+  (it "should have text/html as content type"
+    (should-have-header "Content-Type" "text/html; charset=utf-8" resp)))
 
 (run-specs)
