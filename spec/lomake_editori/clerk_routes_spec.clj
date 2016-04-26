@@ -30,6 +30,10 @@
     (should-not-be-nil @resp))
 
   (it "should return HTTP 200"
-    (should= 200 (:status @resp))))
+    (should= 200 (:status @resp)))
+
+  (it "should refer to the compiled app.js in response body"
+    (let [body (slurp (:body @resp))]
+      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\"></script>.*" body)))))
 
 (run-specs)
