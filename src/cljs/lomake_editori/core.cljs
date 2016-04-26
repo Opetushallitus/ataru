@@ -6,6 +6,7 @@
               [lomake-editori.routes :as routes]
               [lomake-editori.views :as views]
               [lomake-editori.config :as config]
+              [lomake-editori.editor.handlers]
               [taoensso.timbre :refer-macros [spy info]]))
 
 (when config/debug?

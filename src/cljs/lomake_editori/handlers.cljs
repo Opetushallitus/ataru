@@ -58,9 +58,7 @@
         db)))
 
 (defn sorted-by-time [m]
-  (let [custom-comp (comparator (fn [d1 d2] (cond (nil? d1) 1
-                                                  (nil? d2) -1
-                                                  :else (c/after? d1 d2))))]
+  (let [custom-comp (comparator (fn [d1 d2] (c/after? d1 d2)))]
     (into (sorted-map-by
             (fn [k1 k2]
               (let [v1 (-> (get m k1) :modified-time)
@@ -75,7 +73,7 @@
                                             :id (mapv (comp with-author (coerce-timestamp :modified-time))
                                                       (:forms forms-response)))
                                           (sorted-by-time)))
-        (update-in [:editor :forms] dissoc :selected-form))))
+        (update-in [:editor] dissoc :selected-form))))
 
 (register-handler
   :handle-error
