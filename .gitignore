@@ -14,3 +14,4 @@ node_modules
 .#*
 .cljs_rhino_repl
 .DS_Store
+resources/public/buildversion.txt

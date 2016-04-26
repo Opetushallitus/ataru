@@ -1,6 +1,0 @@
-artifactId=oppijan-tunnistus
-version=0.1.0-SNAPSHOT
-buildNumber=
-branchName=
-vcsRevision=
-buildTime=20160425-1452
