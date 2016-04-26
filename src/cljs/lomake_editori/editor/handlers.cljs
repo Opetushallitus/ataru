@@ -3,8 +3,7 @@
             [lomake-editori.handlers :refer [http]]
             [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.handlers :refer [post]]
-            [cljs.core.match :refer-macros [match]]
-            [goog.date :as gd]
+            [lomake-editori.autosave :as autosave]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn refresh-forms []
@@ -22,8 +21,18 @@
 (register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
-    (assoc-in db [:editor :selected-form]
-              clicked-form)))
+    (let [previous-form (-> db :editor :selected-form)]
+      (when (not= (:id previous-form) (:id clicked-form))
+        (autosave/stop-autosave! (-> db :editor :autosave)))
+
+      (-> db
+          (assoc-in [:editor :selected-form] clicked-form)
+          (assoc-in [:editor :autosave]
+                    (autosave/interval-loop 2000
+                                            [:editor :forms (:id clicked-form)]
+                                            (fn [form previous-autosave-form]
+                                              (debug "HANDLER" previous-autosave-form form))
+                                            clicked-form))))))
 
 (register-handler
   :editor/add-form
@@ -51,4 +60,3 @@
                  (if (empty? new-form-name)
                    name-before-edit
                    new-form-name)))))
-
