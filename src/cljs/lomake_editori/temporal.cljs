@@ -2,7 +2,7 @@
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
             [goog.date :as gd]
-            [taoensso.timbre :refer-macros [spy]]))
+            [taoensso.timbre :refer-macros [spy warn]]))
 
 (def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
@@ -18,9 +18,15 @@
 (defn with-dow [google-date]
   (days-finnish (.getDay google-date)))
 
+(def formatters (mapv f/formatters [:date-time-no-ms :date-time]))
+
 (defn str->googdate [timestamp-value]
   {:pre [(some? timestamp-value)]}
-  (f/parse (f/formatters :date-time) timestamp-value))
+  (first (for [formatter formatters]
+           (try (f/parse formatter timestamp-value)
+                (catch :default _
+                  (warn "Could not parse " timestamp-value)
+                  nil)))))
 
 (defn coerce-timestamp [kw]
   (fn [element]
@@ -32,4 +38,3 @@
        (f/unparse time-formatter)
        (str (with-dow google-date)
             "na ")))
-

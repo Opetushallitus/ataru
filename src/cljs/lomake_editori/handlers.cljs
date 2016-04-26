@@ -88,10 +88,7 @@
 (register-handler
   :fetch-initial-data
   (fn [db _]
-    (http
-      :get
-      "/lomake-editori/api/forms"
-      :handle-get-forms)
+    (dispatch [:editor/refresh-forms])
     db))
 
 (register-handler

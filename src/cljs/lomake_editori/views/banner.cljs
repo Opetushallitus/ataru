@@ -31,7 +31,7 @@
       [c/box
        :child (if @active?
                 [:span.active-section (panel-kw panels)]
-                [:a {:on-click #(dispatch [:set-active-panel panel-kw])}
+                [:a {:href (str "#/" (name panel-kw))}
                  (panel-kw panels)])])))
 
 (defn title []
