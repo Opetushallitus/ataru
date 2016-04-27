@@ -38,7 +38,6 @@
                                                                       :delete "poistettaessa."))
                                                       :detail %}])
                :handler         (fn [response]
-                                  (println "foo")
                                   (dispatch [:flasher {:loading? false
                                                        :message (str "Kaikki tiedot "
                                                                      (case method

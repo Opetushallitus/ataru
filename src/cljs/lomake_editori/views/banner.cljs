@@ -51,9 +51,10 @@
    [:div
     [:a {:href "#"} "Kirjaudu ulos"]]])
 
-(defn- icon [icon & [classes]]
+(defn- icon [icon & classes]
   (fn [icon]
-    [:i.zmdi.zmdi-hc-2x {:class (str "zmdi-" icon " " classes)}]))
+    [:i.zmdi.zmdi-hc-2x {:class (str "zmdi-" icon " "
+                                     (apply str (interpose " " classes)))}]))
 
 (defn status []
   (let [flasher          (subscribe [:state-query [:flasher]])
@@ -71,12 +72,12 @@
                 [true {:message message}]
                 [:div
                  [icon "hc-spin" "zmdi-rotate-right"]
-                 [:span message]]
+                 [:span.animated.fadeOut message]]
 
                 [false {:message message}]
                 [:div
-                 [icon "flower-alt"]
-                 [:span message]]))])))
+                 [icon "flower-alt" "animated" "fadeIn"]
+                 [:span.animated.fadeIn message]]))])))
 
 (defn top-banner []
   [:div.top-banner [:div.tabs logo [title] [status]] profile])
