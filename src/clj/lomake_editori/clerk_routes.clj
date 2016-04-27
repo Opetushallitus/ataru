@@ -44,10 +44,11 @@
       (file-response file {:root "dev-resources"}))))
 
 (defn app-routes []
+  (let [cache-fingerprint (System/currentTimeMillis)]
   (api/api
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {}))))
+  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))))
 
 (s/defschema Form
   {(s/optional-key :id) (s/maybe s/Str)
