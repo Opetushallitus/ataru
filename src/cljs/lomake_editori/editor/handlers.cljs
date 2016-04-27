@@ -28,11 +28,16 @@
       (-> db
           (assoc-in [:editor :selected-form] clicked-form)
           (assoc-in [:editor :autosave]
-                    (autosave/interval-loop 2000
-                                            [:editor :forms (:id clicked-form)]
-                                            (fn [form previous-autosave-form]
-                                              (dispatch [:editor/save-form]))
-                                            clicked-form))))))
+                    (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
+                                             :changed-predicate
+                                             (fn [current prev]
+                                               (not=
+                                                 (dissoc prev :modified-time)
+                                                 (dissoc current :modified-time)))
+                                             :handler
+                                             (fn [form previous-autosave-form]
+                                               (dispatch [:editor/save-form form]))
+                                             :initial clicked-form}))))))
 
 (defn- callback-after-post [db new-or-updated-form]
   (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
@@ -44,14 +49,11 @@
 
 (register-handler
   :editor/save-form
-  (fn [db _]
+  (fn [db [_ form]]
     (post "/lomake-editori/api/form"
-          (-> db :editor :forms
-              (get (-> db :editor :selected-form :id))
-              (dissoc :modified-time))
+          form
           callback-after-post)
     db))
-
 
 (register-handler
   :editor/add-form
