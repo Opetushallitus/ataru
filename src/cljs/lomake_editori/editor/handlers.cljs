@@ -66,9 +66,8 @@
            :author {:last  "Testaaja" ;; placeholder
                     :first "Teppo"}}
           (fn [db new-or-updated-form]
-            ; dispatch is run after callback-after-post
-            (dispatch [:editor/select-form new-or-updated-form])
-            (callback-after-post db new-or-updated-form)))
+            (refresh-forms)
+            db))
     db))
 
 (register-handler
