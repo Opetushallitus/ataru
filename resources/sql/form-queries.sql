@@ -8,8 +8,13 @@ insert into forms (name) values (:name);
 
 -- name: form-exists-query
 -- Get single form
-select id from forms where id = :id;
+select id from forms where id = CAST(:id AS uuid);
+
+-- name: get-by-id
+select * from forms where id = CAST(:id AS uuid);
 
 -- name: update-form-query!
 -- Update form
-update forms set name = :name where id = :id;
+UPDATE forms SET
+  name = :name, modified_time = now()
+  WHERE id = CAST(:id AS uuid);
