@@ -44,7 +44,7 @@
     (should-have-header "Content-Type" "text/html; charset=utf-8" resp)))
 
 (describe "Getting a static resource"
-  (with-static-resource resp "/lomake-editori/buildversion.txt")
+  (with-static-resource resp "/lomake-editori/js/compiled/app.js")
 
   (it "should provide the resource found from the resources/ directory"
     (should-not-be-nil @resp))
