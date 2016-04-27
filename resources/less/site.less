@@ -9,13 +9,25 @@
   line-height: 1.3em;
 }
 
+
 .top-banner {
+  padding-top: 26px;
+  width: 100%;
+  display: flex;
+  flex: none;
+  height: 100px;
+  flex-flow: row nowrap;
   background-color: @pale-blue;
   color: white;
   @bar-height: 40px;
 
-  .logo { margin-left: 85px; }
+  .logo {
+    margin-left: 85px;
+    margin-right: 42px;
+  }
+
   .title {
+    display: flex;
     text-transform: uppercase;
     .active-section {
       border-bottom: 1px solid white;
@@ -23,6 +35,8 @@
     .divider {
       background-color: @paler-blue;
       height: @bar-height;
+      width: 1px;
+      margin-right: 20px;
     }
     a { color: white; }
     a:hover {
@@ -30,12 +44,19 @@
       .active-section();
     }
   }
+
+  .section-link {
+    margin-right: 20px;
+    margin-top: 12px;
+  }
+
   @media only screen and (max-width: 920px) {
     .title {
       display: none;
     }
   }
   .applications-count {
+    margin-top: 7px;
     border-radius: 50%;
     background-color: @selected-blue;
     width: 30px;

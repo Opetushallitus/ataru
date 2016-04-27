@@ -11,22 +11,6 @@
               [lomake-editori.soresu.components :as components]
               [taoensso.timbre :refer-macros [spy]]))
 
-(defn home-title []
-  (fn []
-    [:div
-     [re-com/title
-      :label "Opintopolku.fi"
-      :level :level1]
-
-     [:div "KATO TÄTÄ"]
-
-     [component/form-component
-      (merge l/controller
-             l/translations
-             (l/field l/text-field)
-             {:lang  :sv
-              :value "foo"})]]))
-
 (defmulti panels identity)
 (defmethod panels :application [] [application])
 (defmethod panels :editor [] [editor])
@@ -35,7 +19,6 @@
 (defn main-panel []
   (let [active-panel (re-frame/subscribe [:active-panel])]
     (fn []
-      [re-com/v-box
-       :height "100%"
-       :children [top-banner
-                  [re-com/box :child (panels @active-panel)]]])))
+      [:div.main-container
+       [top-banner]
+        [:div (panels @active-panel)]])))

@@ -28,28 +28,19 @@
         active?              (reaction (= @active-panel
                                           panel-kw))]
     (fn []
-      [c/box
-       :child (if @active?
+      [:div.section-link
+       (if @active?
                 [:span.active-section (panel-kw panels)]
                 [:a {:href (str "#/" (name panel-kw))}
                  (panel-kw panels)])])))
 
 (defn title []
   (fn []
-    [c/h-box
-     :class "title"
-     :width "100%"
-     :align :center
-     :gap "1em"
-     :children
-     [[section-link :editor]
-      [c/box
-       :child ""
-       :class "divider"
-       :size "1px"]
+    [:div.title
+     [section-link :editor]
+      [:div.divider]
       [section-link :application]
-      [c/box
-       :child [applications]]]]))
+      [:div [applications]]]))
 
 (def profile
   [:div.profile
@@ -59,20 +50,5 @@
    [:div
     [:a {:href "#"} "Kirjaudu ulos"]]])
 
-(def top-banner
-  [c/h-box
-   :class "top-banner"
-   :width  "100%"
-   :height "100px"
-   :align :center
-   :justify :center
-   :children [[c/box
-               :child logo
-               :size "300px"]
-              [c/box
-               :child [title]
-               :size "1"]
-              [c/box
-               :child profile
-               :size "300px"]]])
-
+(defn top-banner []
+  [:div.top-banner logo [title] profile])
