@@ -15,4 +15,6 @@ select * from forms where id = CAST(:id AS uuid);
 
 -- name: update-form-query!
 -- Update form
-UPDATE forms SET name = :name WHERE id = CAST(:id AS uuid);
+UPDATE forms SET
+  name = :name, modified_time = now()
+  WHERE id = CAST(:id AS uuid);
