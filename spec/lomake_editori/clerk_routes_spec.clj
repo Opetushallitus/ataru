@@ -35,7 +35,10 @@
       (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\?fingerprint=\d{13}\"></script>.*" body))))
 
   (it "should have text/html as content type"
-    (should-have-header "Content-Type" "text/html; charset=utf-8" @resp)))
+    (should-have-header "Content-Type" "text/html; charset=utf-8" @resp))
+
+  (it "should have Cache-Control: no-cache header"
+    (should-have-header "Cache-Control" "no-cache" @resp)))
 
 (describe "Getting a static resource"
   (with-static-resource resp "/lomake-editori/js/compiled/app.js")
@@ -44,6 +47,9 @@
     (should-not-be-nil @resp))
 
   (it "should return HTTP 200"
-    (should= 200 (:status @resp))))
+    (should= 200 (:status @resp)))
+
+  (it "should have Cache-Control: max-age=86400 header"
+    (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
 (run-specs)

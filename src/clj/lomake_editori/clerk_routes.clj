@@ -11,6 +11,7 @@
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
             [lomake-editori.db.form-store :as form-store]
+            [lomake-editori.middleware.cache-control :as cache-control]
             [ring.util.response :refer [response]]
             [taoensso.timbre :refer [spy error]]
             [selmer.parser :as selmer])
@@ -85,4 +86,5 @@
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
-      (wrap-gzip)))
+      (wrap-gzip)
+      (cache-control/wrap-cache-control)))

@@ -4,5 +4,9 @@
 (defn wrap-cache-control
   [handler]
   (fn [req]
-    (let [resp (handler req)]
-      (response/header resp "Cache-Control" "max-age=86400"))))
+    (let [resp (handler req)
+          uri  (:uri req)]
+      (if
+        (some #(= uri %) ["/" "/lomake-editori" "/lomake-editori/"])
+        (response/header resp "Cache-Control" "no-cache")
+        (response/header resp "Cache-Control" "max-age=86400")))))
