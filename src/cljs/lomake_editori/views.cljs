@@ -1,7 +1,6 @@
 (ns lomake-editori.views
     (:require [re-frame.core :as re-frame]
               [reagent.core :as r]
-              [re-com.core :as re-com]
               [lomake-editori.views.banner :refer [top-banner]]
               [lomake-editori.application.view :refer [application]]
               [lomake-editori.dev.lomake :as l]

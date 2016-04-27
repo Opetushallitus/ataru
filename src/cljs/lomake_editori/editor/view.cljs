@@ -4,7 +4,6 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [lomake-editori.temporal :refer [time->str]]
-            [re-com.core :as re-com]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy debug]]))
 
