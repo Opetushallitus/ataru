@@ -26,11 +26,3 @@
     (with-resp [resp "/lomake-editori/"]
       (should-not-be-nil resp)
       (should-have-header "Cache-Control" "no-cache" resp))))
-
-
-
-;
-;(it "should not add Cache-Control header for app root without trailing slash"
-;  (with-resp [resp "/lomake-editori"]
-;    (should-not-be-nil resp)
-;    (should-not-have-header "Cache-Control" resp)))
