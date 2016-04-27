@@ -34,7 +34,6 @@
                              (let [changed? (changed-predicate current prev)]
                                (when changed?
                                  (do
-                                   (debug current prev)
                                    (reset! previous current)
                                    (handler current prev)))))]
     (do

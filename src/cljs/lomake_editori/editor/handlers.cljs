@@ -44,6 +44,9 @@
                            (assoc :author {:last  "Testaaja" ;; placeholder
                                            :first "Teppo"}))]
     (-> db
+        ; take note :selected-form is not watched/subscribed by autosave or the ui
+        ; it is only changed here to keep it in sync with [:editor :forms]
+        ; changes to selected-form should be done via (dispatch [:editor/select-form form])
         (assoc-in [:editor :selected-form] form-with-time)
         (assoc-in [:editor :forms (:id form-with-time)] form-with-time))))
 
@@ -62,7 +65,10 @@
           {:name   "Uusi lomake"
            :author {:last  "Testaaja" ;; placeholder
                     :first "Teppo"}}
-          callback-after-post)
+          (fn [db new-or-updated-form]
+            ; dispatch is run after callback-after-post
+            (dispatch [:editor/select-form new-or-updated-form])
+            (callback-after-post db new-or-updated-form)))
     db))
 
 (register-handler
