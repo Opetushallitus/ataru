@@ -25,4 +25,9 @@
   (it "should add Cache-Control: no-cache header for app root"
     (with-resp [resp "/lomake-editori/"]
       (should-not-be-nil resp)
-      (should-have-header "Cache-Control" "no-cache" resp))))
+      (should-have-header "Cache-Control" "no-cache" resp)))
+
+  (it "should add Cache-Control: no-store for requests to /lomake-editori/api"
+    (with-resp [resp "/lomake-editori/api/forms"]
+      (should-not-be-nil resp)
+      (should-have-header "Cache-Control" "no-store" resp))))
