@@ -15,6 +15,7 @@
 (register-handler
   :editor/refresh-forms
   (fn [db _]
+    (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms)
     db))
 
