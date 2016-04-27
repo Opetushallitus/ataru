@@ -43,9 +43,9 @@
     (GET "/:file" [file]
       (file-response file {:root "dev-resources"}))))
 
-(defn app-routes []
+(defn get-app-routes []
   (let [cache-fingerprint (System/currentTimeMillis)]
-  (api/api
+  (defroutes app-routes
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
   (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))))
@@ -78,7 +78,7 @@
 (def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
                     resource-routes
-                    (app-routes)
+                    (get-app-routes)
                     (api-routes)
                     (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
