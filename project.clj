@@ -36,7 +36,9 @@
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
                  [clj-time "0.11.0"]
                  [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
-                 [cheshire/cheshire "5.5.0"]]
+                 [cheshire/cheshire "5.5.0"]
+                 [selmer "1.0.4"]
+                 [metosin/ring-http-response "0.6.5"]]
 
   :min-lein-version "2.5.3"
 
@@ -53,6 +55,7 @@
                                     :snapshots false}]]
 
   :source-paths ["src/clj" "src/cljc"]
+  :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
 
@@ -62,7 +65,8 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
-            [lein-resource "15.10.2"]]
+            [lein-resource "15.10.2"]
+            [speclj "3.3.0"]]
 
   :eastwood {:namespaces [:source-paths]
              :exclude-linters [:local-shadows-var]}
@@ -126,7 +130,10 @@
                                   [figwheel-sidecar "0.5.0-2"]
                                   [refactor-nrepl "2.2.0"]
                                   [org.clojure/tools.nrepl "0.2.12"]
-                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]]
+                                  [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
+                                  [ring/ring-mock "0.3.0"]
+                                  [speclj "3.3.2"]
+                                  [speclj-junit "0.0.10"]]
                    :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
                              [refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
