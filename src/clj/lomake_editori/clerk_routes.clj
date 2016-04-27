@@ -43,10 +43,11 @@
     (GET "/:file" [file]
       (file-response file {:root "dev-resources"}))))
 
-(defroutes app-routes
+(defn app-routes []
+  (api/api
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {})))
+  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {}))))
 
 (s/defschema Form
   {(s/optional-key :id) (s/maybe s/Str)
@@ -76,7 +77,7 @@
 (def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
                     resource-routes
-                    app-routes
+                    (app-routes)
                     (api-routes)
                     (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
