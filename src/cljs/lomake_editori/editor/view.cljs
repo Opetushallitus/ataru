@@ -16,7 +16,9 @@
             (for [form (vals @forms)]
               [:div.editor-form__row
                {:key      (:id form)
-                :class    (when (= (:id form) (str @selected-form-id)) "editor-form__selected-row")
+                :class    (when (= (:id form)
+                                   (str @selected-form-id))
+                            "editor-form__selected-row")
                 :on-click #(dispatch [:editor/select-form form])}
                [:span.editor-form__list-form-name (:name form)]
                [:span.editor-form__list-form-time (time->str (:modified-time form))]

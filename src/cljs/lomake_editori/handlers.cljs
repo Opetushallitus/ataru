@@ -47,8 +47,7 @@
                                                                        :delete "poistettu."))}])
                                   (match [handler-or-dispatch]
                                          [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response])
-                                         :else (fn [response]
-                                                 (dispatch [:state-update (fn [db] (handler-or-dispatch db response))]))))}
+                                         :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
               override-args))))
 
 (defn post [path params handler-or-dispatch]
