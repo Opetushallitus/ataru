@@ -4,7 +4,6 @@
   (:require [cljs.core.match :refer-macros [match]]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [re-com.core :as c]
             [taoensso.timbre :refer-macros [spy]]))
 
 (def logo
@@ -51,4 +50,4 @@
     [:a {:href "#"} "Kirjaudu ulos"]]])
 
 (defn top-banner []
-  [:div.top-banner logo [title] profile])
+  [:div.top-banner [:div.tabs logo [title]] profile])

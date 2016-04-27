@@ -11,6 +11,7 @@
 
 
 .top-banner {
+  justify-content: space-between;
   padding-top: 26px;
   width: 100%;
   display: flex;
@@ -20,6 +21,10 @@
   background-color: @pale-blue;
   color: white;
   @bar-height: 40px;
+
+  .tabs {
+    display: flex;
+  }
 
   .logo {
     margin-left: 85px;
@@ -69,6 +74,8 @@
     }
   }
   .profile {
+    margin-right: 50px;
+
     a { color: white; }
     > div:nth-child(1) {
       p {
