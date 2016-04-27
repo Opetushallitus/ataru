@@ -43,4 +43,13 @@
   (it "should have text/html as content type"
     (should-have-header "Content-Type" "text/html; charset=utf-8" resp)))
 
+(describe "Getting a static resource"
+  (with-static-resource resp "/lomake-editori/buildversion.txt")
+
+  (it "should provide the resource found from the resources/ directory"
+    (should-not-be-nil @resp))
+
+  (it "should return HTTP 200"
+    (should= 200 (:status @resp))))
+
 (run-specs)
