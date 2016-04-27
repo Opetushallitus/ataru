@@ -1,10 +1,12 @@
 (ns lomake-editori.views.banner
   (:require-macros
-            [reagent.ratom :refer [reaction]])
+            [reagent.ratom :refer [reaction]]
+            [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.match :refer-macros [match]]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy]]))
+            [cljs.core.async :as a :refer  [<! timeout]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (def logo
   [:div.logo
@@ -49,5 +51,32 @@
    [:div
     [:a {:href "#"} "Kirjaudu ulos"]]])
 
+(defn- icon [icon & [classes]]
+  (fn [icon]
+    [:i.zmdi.zmdi-hc-2x {:class (str "zmdi-" icon " " classes)}]))
+
+(defn status []
+  (let [flasher          (subscribe [:state-query [:flasher]])
+        loading?         (subscribe [:state-query [:flasher :loading?]])]
+    (fn []
+      [:div.flasher
+       (when @flasher
+         (match [@loading? @flasher]
+                [false {:detail detailed-error
+                        :message message}]
+                [:div {:style {"color" "crimson"}}
+                 [icon "alert-triangle" "animated pulse infinite"]
+                 [:span message]]
+
+                [true {:message message}]
+                [:div
+                 [icon "hc-spin" "zmdi-rotate-right"]
+                 [:span message]]
+
+                [false {:message message}]
+                [:div
+                 [icon "flower-alt"]
+                 [:span message]]))])))
+
 (defn top-banner []
-  [:div.top-banner [:div.tabs logo [title]] profile])
+  [:div.top-banner [:div.tabs logo [title] [status]] profile])

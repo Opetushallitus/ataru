@@ -18,17 +18,38 @@
             :post   POST
             :put    PUT
             :delete DELETE)]
-    (dispatch [:set-state [:loading?] true])
+    (dispatch [:flasher {:loading? true
+                         :message  (str "Tietoja "
+                                        (case method
+                                          :get    "haetaan."
+                                          :post   "tallennetaan."
+                                          :put    "tallennetaan."
+                                          :delete "poistetaan."))}])
     (f path
        (merge {:response-format :json
                :format          :json
                :keywords?       true
-               :error-handler   #(dispatch [:handle-error %])
-               :finally         #(dispatch [:set-state [:loading?] false])
-               :handler         (match [handler-or-dispatch]
-                                       [(dispatch-keyword :guard keyword?)] #(dispatch [dispatch-keyword %])
-                                       :else (fn [response]
-                                               (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
+               :error-handler   #(dispatch [:flasher {:loading? false
+                                                      :message (str "Virhe "
+                                                                    (case method
+                                                                      :get "haettaessa."
+                                                                      :post "tallennettaessa."
+                                                                      :put "tallennettaessa."
+                                                                      :delete "poistettaessa."))
+                                                      :detail %}])
+               :handler         (fn [response]
+                                  (println "foo")
+                                  (dispatch [:flasher {:loading? false
+                                                       :message (str "Kaikki tiedot "
+                                                                     (case method
+                                                                       :get "haettu."
+                                                                       :post "tallennettu."
+                                                                       :put "tallennettu."
+                                                                       :delete "poistettu."))}])
+                                  (match [handler-or-dispatch]
+                                         [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response])
+                                         :else (fn [response]
+                                                 (dispatch [:state-update (fn [db] (handler-or-dispatch db response))]))))}
               override-args))))
 
 (defn post [path params handler-or-dispatch]
@@ -96,3 +117,7 @@
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
 
+(register-handler
+  :flasher
+  (fn [db [_ flash]]
+    (assoc db :flasher flash)))

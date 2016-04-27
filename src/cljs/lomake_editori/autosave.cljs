@@ -31,11 +31,10 @@
                                (save-and-close-autosave! interval-ch))
                              true)
         when-changed-save! (fn [current prev]
-                             (let [changed? (changed-predicate current prev)]
-                               (when changed?
-                                 (do
-                                   (reset! previous current)
-                                   (handler current prev)))))]
+                             (when (changed-predicate current prev)
+                               (do
+                                 (reset! previous current)
+                                 (handler current prev))))]
     (do
       (go-loop []
         (match [(alts! [interval-ch (timeout interval-ms)]) @value-to-watch @previous]

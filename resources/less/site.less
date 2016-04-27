@@ -21,7 +21,7 @@
   flex-flow: row nowrap;
   background-color: @pale-blue;
   color: white;
-  @bar-height: 40px;
+  @bar-height: 44px;
 
   .tabs {
     display: flex;
@@ -48,6 +48,20 @@
     a:hover {
       text-decoration: none;
       .active-section();
+    }
+  }
+
+  .flasher {
+    margin-top: 12px;
+    margin-left: 3em;
+    white-space: nowrap;
+    height: 40px;
+    width: 250px;
+    display:flex;
+    div {
+      display: flex;
+      :nth-child(1) { margin-top: -5px; }
+      span { margin-left: 1em; }
     }
   }
 
@@ -80,9 +94,8 @@
 
     a { color: white; }
     > div:nth-child(1) {
-      p {
-        margin: 0;
-      }
+      p {margin: 0;}
+      p:nth-child(1) { margin-top: 4px;}
       p:nth-child(2) { font-size: 80%; }
       color: @paler-blue;
       display: inline-block;
@@ -96,4 +109,5 @@
       margin-left: 1em;
     }
   }
+
 }
