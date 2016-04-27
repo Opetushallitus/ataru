@@ -24,7 +24,8 @@
                                                       (str (:last a) " " (:first a)))]])))))
 
 (defn add-form []
-  [:button.button {:on-click #(dispatch [:editor/add-form])} "Uusi lomake"])
+  [:div.editor-form__add-new
+   [:a {:on-click (fn [evt] (.preventDefault evt) (dispatch [:editor/add-form])) :href "#"} "Luo uusi lomake"]])
 
 (defn editor-panel []
   (let [selected-form-id (subscribe [:state-query [:editor :selected-form :id]])
@@ -50,6 +51,6 @@
 (defn editor []
     [:div
      [:div.editor-form__container.panel-content
-      [form-list]
-      [add-form]]
+      [add-form]
+      [form-list]]
      [editor-panel]])
