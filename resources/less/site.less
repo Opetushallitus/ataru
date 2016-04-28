@@ -39,20 +39,19 @@
     .active-section {
       color: @paler-blue;
     }
-    .divider {
-      background-color: @paler-blue;
-      height: @bar-height;
-      width: 1px;
-      margin-right: 20px;
-      margin-left: 20px;
-    }
+
     a { color: white; }
     a:hover {
       text-decoration: none;
       border-bottom: 1px solid white;
     }
   }
-
+  .divider {
+    background-color: @paler-blue;
+    height: 33px;
+    width: 1px;
+    margin: 5px 20px 0 20px;
+  }
   .active-section-arrow {
     position: absolute;
     top: 10px;
@@ -101,19 +100,22 @@
     margin-right: 50px;
     min-width: 246px;
     display: flex;
-
+    .divider {
+      margin-left: 5px;
+      margin-right: 5px;
+    }
     a { color: white; }
     > div:nth-child(1) {
       p {margin: 0;}
       p:nth-child(1) { margin-top: 4px;}
-      p:nth-child(2) { font-size: 80%; }
+      p:nth-child(3) { font-size: 80%; }
       color: @paler-blue;
       display: inline-block;
-      border-right: 1px solid @paler-blue;
+//      border-right: 1px solid @paler-blue;
       padding-right: 1em;
       height: @bar-height;
     }
-    > div:nth-child(2) {
+    > div:nth-child(3) {
       line-height: @bar-height;
       margin-left: 1em;
     }

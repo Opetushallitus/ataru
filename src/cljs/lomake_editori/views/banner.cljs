@@ -52,13 +52,9 @@
    [:div
     [:p "Testi Käyttäjä"]
     [:p "Stadin Aikuisopisto"]]
+   [:div.divider]
    [:div
     [:a {:href "#"} "Kirjaudu ulos"]]])
-
-(defn- icon [icon & classes]
-  (fn [icon]
-    [:i.zmdi.zmdi-hc-2x {:class (str "zmdi-" icon " "
-                                     (apply str (interpose " " classes)))}]))
 
 (defn status []
   (let [flasher          (subscribe [:state-query [:flasher]])
