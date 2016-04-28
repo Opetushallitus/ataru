@@ -20,6 +20,7 @@
 
                  ;clojure
                  [compojure "1.5.0"]
+                 [com.stuartsierra/component "0.3.1"]
                  [metosin/compojure-api "1.0.1"]
                  [aleph "0.4.1"]
                  [ring "1.4.0"]
