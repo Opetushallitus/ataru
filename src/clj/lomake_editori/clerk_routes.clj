@@ -49,7 +49,7 @@
   (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {})))
 
 (s/defschema Form
-  {(s/optional-key :id) (s/maybe s/Str)
+  {(s/optional-key :id) (s/maybe s/Int)
    :name s/Str
    s/Any s/Any})
 
