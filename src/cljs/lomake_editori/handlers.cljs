@@ -18,8 +18,8 @@
             :delete DELETE)]
     (dispatch [:flasher {:loading? true
                          :message  (match [method]
-                                          [:post] "Tietoja tallennetaan."
-                                          [:delete] "Tietoja poistetaan."
+                                          [:post] "Tietoja tallennetaan"
+                                          [:delete] "Tietoja poistetaan"
                                           :else nil)}])
     (f path
        (merge {:response-format :json
@@ -37,7 +37,7 @@
                                   (dispatch [:flasher {:loading? false
                                                        :message
                                                        (match [method]
-                                                              [:post] "Kaikki tiedot tallennettu."
+                                                              [:post] "Kaikki muutokset tallennettu"
                                                               [:delete] "Tiedot poistettu"
                                                               :else nil)}])
                                   (match [handler-or-dispatch]

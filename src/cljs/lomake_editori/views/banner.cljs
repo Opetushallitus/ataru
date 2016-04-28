@@ -60,20 +60,23 @@
   (let [flasher          (subscribe [:state-query [:flasher]])
         loading?         (subscribe [:state-query [:flasher :loading?]])]
     (fn []
-      [:div.flasher
+      [:div
        (when @flasher
          (match [@loading? @flasher]
                 [false {:detail detailed-error
                         :message message}]
-                [:div {:style {"color" "crimson"}}
+                [:div.flasher {:style {"color" "crimson"}}
                  [:span message]]
 
                 [true {:message message}]
-                [:div
+                [:div.flasher
                  [:span.animated.fadeOut message]]
 
+                [false {:message nil}]
+                [:div]
+
                 [false {:message message}]
-                [:div
+                [:div.flasher
                  [:span.animated.fadeIn message]]))])))
 
 (defn top-banner []
