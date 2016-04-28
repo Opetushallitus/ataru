@@ -13,7 +13,7 @@
                                  :arrived-at "10.5.2016 klo 10:11"
                                  :state {:description "Käsittelemättä"}}]}
    :editor {:forms nil
-            :autosave nil ; autosave core.async channel, see autosave.cljs
+            :autosave nil ; autosave stop function, see autosave.cljs
             :selected-form nil}
    ; Initial active panel on page load.
    :active-panel :editor})
