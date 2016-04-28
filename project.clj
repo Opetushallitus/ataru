@@ -138,7 +138,6 @@
                              [refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.1"]]
-                   :source-paths ["env/dev/clj" "env/dev/cljc"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
