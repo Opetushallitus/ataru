@@ -66,17 +66,14 @@
                 [false {:detail detailed-error
                         :message message}]
                 [:div {:style {"color" "crimson"}}
-                 [icon "alert-triangle" "animated pulse infinite"]
                  [:span message]]
 
                 [true {:message message}]
                 [:div
-                 [icon "hc-spin" "zmdi-rotate-right"]
                  [:span.animated.fadeOut message]]
 
                 [false {:message message}]
                 [:div
-                 [icon "flower-alt" "animated" "fadeIn"]
                  [:span.animated.fadeIn message]]))])))
 
 (defn top-banner []

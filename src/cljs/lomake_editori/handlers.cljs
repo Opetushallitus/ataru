@@ -2,11 +2,9 @@
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
-              [lomake-editori.util :as util]
               [lomake-editori.temporal :refer [coerce-timestamp]]
               [cljs-time.core :as c]
               [cljs-time.format :as f]
-              [goog.date :as gd]
               [cljs.core.match :refer-macros [match]]
               [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -19,12 +17,10 @@
             :put    PUT
             :delete DELETE)]
     (dispatch [:flasher {:loading? true
-                         :message  (str "Tietoja "
-                                        (case method
-                                          :get    "haetaan."
-                                          :post   "tallennetaan."
-                                          :put    "tallennetaan."
-                                          :delete "poistetaan."))}])
+                         :message  (match [method]
+                                          [:post] "Tietoja tallennetaan."
+                                          [:delete] "Tietoja poistetaan."
+                                          :else nil)}])
     (f path
        (merge {:response-format :json
                :format          :json
@@ -39,12 +35,11 @@
                                                       :detail %}])
                :handler         (fn [response]
                                   (dispatch [:flasher {:loading? false
-                                                       :message (str "Kaikki tiedot "
-                                                                     (case method
-                                                                       :get "haettu."
-                                                                       :post "tallennettu."
-                                                                       :put "tallennettu."
-                                                                       :delete "poistettu."))}])
+                                                       :message
+                                                       (match [method]
+                                                              [:post] "Kaikki tiedot tallennettu."
+                                                              [:delete] "Tiedot poistettu"
+                                                              :else nil)}])
                                   (match [handler-or-dispatch]
                                          [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response])
                                          :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
@@ -52,9 +47,6 @@
 
 (defn post [path params handler-or-dispatch]
   (http :post path handler-or-dispatch {:params params}))
-
-(defn with-author [form]
-  (assoc form :author {:last "Turtiainen" :first "Janne"}))
 
 (register-handler
  :initialize-db
@@ -75,27 +67,6 @@
   (fn [db [_ f]]
     (or (f db)
         db)))
-
-(defn sorted-by-time [m]
-  (into (sorted-map-by
-          (fn [k1 k2]
-            (let [v1 (-> (get m k1) :modified-time)
-                  v2 (-> (get m k2) :modified-time)]
-              (match [v1 v2]
-                     [nil nil] 0
-                     [_ nil] 1
-                     [nil _] -1
-                     :else (c/after? v1 v2)))))
-        m))
-
-(register-handler
-  :handle-get-forms
-  (fn [db [_ forms-response]]
-    (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                            :id (mapv (comp with-author (coerce-timestamp :modified-time))
-                                                      (:forms forms-response)))
-                                          (sorted-by-time)))
-        (update-in [:editor] dissoc :selected-form))))
 
 (register-handler
   :handle-error

@@ -1,9 +1,11 @@
 (ns lomake-editori.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
-            [lomake-editori.handlers :refer [http]]
-            [lomake-editori.temporal :refer [coerce-timestamp]]
-            [lomake-editori.handlers :refer [post]]
+            [cljs-time.core :as c]
+            [cljs.core.match :refer-macros [match]]
             [lomake-editori.autosave :as autosave]
+            [lomake-editori.handlers :refer [http post]]
+            [lomake-editori.temporal :refer [coerce-timestamp]]
+            [lomake-editori.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn refresh-forms []
@@ -11,6 +13,31 @@
     :get
     "/lomake-editori/api/forms"
     :handle-get-forms))
+
+(defn with-author [form]
+  (assoc form :author {:last "Turtiainen" :first "Janne"}))
+
+(defn sorted-by-time [m]
+  (into (sorted-map-by
+          (fn [k1 k2]
+            (let [v1 (-> (get m k1) :modified-time)
+                  v2 (-> (get m k2) :modified-time)]
+              (match [v1 v2]
+                     [nil nil] 0
+                     [_ nil] 1
+                     [nil _] -1
+                     :else (c/after? v1 v2)))))
+        m))
+
+(register-handler
+  :handle-get-forms
+  (fn [db [_ forms-response]]
+    (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
+                                            :id (mapv (comp with-author (coerce-timestamp :modified-time))
+                                                      (:forms forms-response)))
+                                          (sorted-by-time)))
+        (update-in [:editor] dissoc :selected-form))))
+
 
 (register-handler
   :editor/refresh-forms
