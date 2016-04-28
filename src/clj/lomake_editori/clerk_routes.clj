@@ -11,6 +11,7 @@
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
             [lomake-editori.db.form-store :as form-store]
+            [lomake-editori.middleware.cache-control :as cache-control]
             [ring.util.response :refer [response]]
             [taoensso.timbre :refer [spy error]]
             [selmer.parser :as selmer])
@@ -43,10 +44,12 @@
     (GET "/:file" [file]
       (file-response file {:root "dev-resources"}))))
 
+(def ^:private cache-fingerprint (System/currentTimeMillis))
+
 (defroutes app-routes
   (GET "/" [] (redirect "/lomake-editori/"))
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {})))
+  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))
 
 (s/defschema Form
   {(s/optional-key :id) (s/maybe s/Int)
@@ -83,4 +86,5 @@
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
-      (wrap-gzip)))
+      (wrap-gzip)
+      (cache-control/wrap-cache-control)))

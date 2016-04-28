@@ -1,5 +1,6 @@
 (ns lomake-editori.clerk-routes-spec
   (:require [lomake-editori.clerk-routes :as clerk]
+            [lomake-editori.test-utils :refer [should-have-header]]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 
@@ -7,13 +8,6 @@
   [name path]
   `(with ~name (-> (mock/request :get ~path)
                    (clerk/clerk-routes))))
-
-(defn ^:private should-have-header
-  [header expected-val resp]
-  (let [headers (:headers @resp)]
-    (should-not-be-nil headers)
-    (should-contain header headers)
-    (should= expected-val (get headers header))))
 
 (describe "GET /lomake-editori"
   (with-static-resource resp "/lomake-editori")
@@ -25,7 +19,7 @@
     (should= 302 (:status @resp)))
 
   (it "should redirect to /lomake-editori/"
-    (should-have-header "Location" "http://localhost/lomake-editori/" resp)))
+    (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
 
 (describe "GET /lomake-editori/"
   (with-static-resource resp "/lomake-editori/")
@@ -38,10 +32,13 @@
 
   (it "should refer to the compiled app.js in response body"
     (let [body (:body @resp)]
-      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\"></script>.*" body))))
+      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\?fingerprint=\d{13}\"></script>.*" body))))
 
   (it "should have text/html as content type"
-    (should-have-header "Content-Type" "text/html; charset=utf-8" resp)))
+    (should-have-header "Content-Type" "text/html; charset=utf-8" @resp))
+
+  (it "should have Cache-Control: no-cache header"
+    (should-have-header "Cache-Control" "no-cache" @resp)))
 
 (describe "Getting a static resource"
   (with-static-resource resp "/lomake-editori/js/compiled/app.js")
@@ -50,6 +47,9 @@
     (should-not-be-nil @resp))
 
   (it "should return HTTP 200"
-    (should= 200 (:status @resp))))
+    (should= 200 (:status @resp)))
+
+  (it "should have Cache-Control: max-age=86400 header"
+    (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
 (run-specs)
