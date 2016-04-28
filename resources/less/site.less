@@ -12,6 +12,7 @@
 
 
 .top-banner {
+  font-size: 14px;
   justify-content: space-between;
   padding-top: 26px;
   width: 100%;
@@ -34,7 +35,6 @@
 
   .title {
     display: flex;
-    text-transform: uppercase;
     white-space: nowrap;
     .active-section {
       border-bottom: 1px solid white;
@@ -73,22 +73,22 @@
     }
   }
   .applications-count {
-    padding-top: 3px;
-    margin-top: 7px;
+    font-size: 12px;
+    padding-top: 0px;
+    margin-top: 13px;
     border-radius: 50%;
     background-color: @selected-blue;
-    width: 30px;
-    height: 30px;
-    position: relative;
-    left: -10px;
+    width: 17px;
+    height: 17px;
+    margin-left: -10px;
     span {
-      padding-left: 10px;
-      padding-top: 4px;
+      padding-left: 5px;
     }
   }
   .profile {
     margin-right: 50px;
     min-width: 246px;
+    display: flex;
 
     a { color: white; }
     > div:nth-child(1) {
@@ -102,7 +102,6 @@
       height: @bar-height;
     }
     > div:nth-child(2) {
-      float: right;
       line-height: @bar-height;
       margin-left: 1em;
     }
