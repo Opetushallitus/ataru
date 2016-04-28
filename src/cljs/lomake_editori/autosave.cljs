@@ -43,9 +43,7 @@
 
                ; interval-ch is closed, loop should stop
                [[nil interval-ch] current prev]
-               (do
-                 (when-changed-save! current prev)
-                 (debug "Channel closed, stopping loop" subscribe-path))
+               (when-changed-save! current prev)
 
                ; matched when interval-ms timeouts or _anything_ is sent to interval-ch
                [_ current prev]

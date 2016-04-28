@@ -24,19 +24,22 @@
                   v2 (-> (get m k2) :modified-time)]
               (match [v1 v2]
                      [nil nil] 0
-                     [_ nil] 1
-                     [nil _] -1
+                     [_   nil] 1
+                     [nil   _] -1
                      :else (c/after? v1 v2)))))
         m))
 
 (register-handler
   :handle-get-forms
   (fn [db [_ forms-response]]
-    (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                            :id (mapv (comp with-author (coerce-timestamp :modified-time))
-                                                      (:forms forms-response)))
-                                          (sorted-by-time)))
-        (update-in [:editor] dissoc :selected-form))))
+    (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
+                                                              :id (mapv (comp with-author (coerce-timestamp :modified-time))
+                                                                        (:forms forms-response)))
+                                                            (sorted-by-time)))
+                          (update-in [:editor] dissoc :selected-form))
+          newest-form (-> mdb :editor :forms first second) ]
+      (dispatch [:editor/select-form newest-form])
+      mdb)))
 
 
 (register-handler

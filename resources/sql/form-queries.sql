@@ -1,6 +1,6 @@
 -- name: get-forms-query
 -- Get all stored forms
-select id, name, modified_time from forms;
+select id, name, modified_time from forms order by modified_time desc;
 
 -- name: add-form-query<!
 -- Add form

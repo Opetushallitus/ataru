@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [lomake-editori.soresu.component :as component]
             [lomake-editori.temporal :refer [time->str]]
+            [lomake-editori.editor.subs]
             [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -29,26 +30,39 @@
   [:div.editor-form__add-new
    [:a {:on-click (fn [evt] (.preventDefault evt) (dispatch [:editor/add-form])) :href "#"} "Luo uusi lomake"]])
 
+(defn editor-name [form-name]
+  (let [typing? (r/atom false)]
+    (r/create-class
+      {:display-name "editor-name"
+       :component-did-update (fn [element]
+                               (when-not @typing?
+                                 (doto (r/dom-node element)
+                                   (.focus)
+                                   (.select))))
+       :reagent-render       (fn [form-name]
+                               [:input.editor-form__form-name-input
+                                {:type                "text"
+                                 :value               form-name
+                                 :placeholder         "Lomakkeen nimi"
+                                 :on-blur             #(do (reset! typing? false)
+                                                           nil)
+                                 :on-change           #(do
+                                                         (reset! typing? true)
+                                                         (dispatch-sync [:editor/change-form-name (.-value (.-target %))]))}])})))
+
 (defn editor-panel []
-  (let [selected-form-id (subscribe [:state-query [:editor :selected-form :id]])
-        forms            (subscribe [:state-query [:editor :forms]])
-        selected-form    (reaction
-                           (:name (get @forms @selected-form-id)))]
-    (fn []
-      [:div.panel-content
-       [:div.editor-form__form-name-row
-        [:input.editor-form__form-name-input
-         {:type        "text"
-          :value       @selected-form
-          :placeholder "Lomakkeen nimi"
-          :on-change   #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}]
-        [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
-       [component/form-component
-        (merge l/controller
-               l/translations
-               (l/field l/text-field)
-               {:lang  :sv
-                :value "Valmis arvo"})]])))
+  (let [form-name (reaction (:name @(subscribe [:editor/selected-form])))]
+    [:div.panel-content
+     [:div.editor-form__form-name-row
+      [editor-name @form-name]
+      [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
+
+     [component/form-component
+      (merge l/controller
+             l/translations
+             (l/field l/text-field)
+             {:lang  :sv
+              :value "Valmis arvo"})]]))
 
 (defn editor []
     [:div
