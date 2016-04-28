@@ -80,4 +80,4 @@
                  [:span.animated.fadeIn message]]))])))
 
 (defn top-banner []
-  [:div.top-banner [:div.tabs logo [title] [status]] profile])
+  [:div.top-banner [:div.tabs logo [title]] [status] profile])
