@@ -44,6 +44,7 @@
       height: @bar-height;
       width: 1px;
       margin-right: 20px;
+      margin-left: 20px;
     }
     a { color: white; }
     a:hover {
@@ -55,7 +56,7 @@
   .active-section-arrow {
     position: absolute;
     top: 10px;
-    left: 43px;
+    left: 47px;
     font-size: 20px;
   }
 
@@ -71,9 +72,10 @@
   }
 
   .section-link {
-    margin-right: 20px;
     margin-top: 12px;
     position: relative;
+    min-width: 100px;
+    text-align: center;
   }
 
   @media only screen and (max-width: 920px) {
@@ -89,7 +91,6 @@
     background-color: @selected-blue;
     width: 19px;
     height: 19px;
-    margin-left: -10px;
     span {
       padding-left: 6.5px;
       padding-top: 2px;
