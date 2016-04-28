@@ -14,7 +14,7 @@
 .top-banner {
   font-size: 14px;
   justify-content: space-between;
-  padding-top: 26px;
+  padding-top: 28px;
   width: 100%;
   display: flex;
   flex: none;
@@ -37,7 +37,7 @@
     display: flex;
     white-space: nowrap;
     .active-section {
-      border-bottom: 1px solid white;
+      color: @paler-blue;
     }
     .divider {
       background-color: @paler-blue;
@@ -48,8 +48,15 @@
     a { color: white; }
     a:hover {
       text-decoration: none;
-      .active-section();
+      border-bottom: 1px solid white;
     }
+  }
+
+  .active-section-arrow {
+    position: absolute;
+    top: 10px;
+    left: 43px;
+    font-size: 20px;
   }
 
   .flasher {
@@ -66,6 +73,7 @@
   .section-link {
     margin-right: 20px;
     margin-top: 12px;
+    position: relative;
   }
 
   @media only screen and (max-width: 920px) {

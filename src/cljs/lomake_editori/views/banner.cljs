@@ -24,6 +24,8 @@
   {:editor "Lomake-editori"
    :application "Hakemukset"})
 
+(def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
+
 (defn section-link [panel-kw]
   (let [active-panel         (subscribe [:active-panel])
         active?              (reaction (= @active-panel
@@ -31,7 +33,9 @@
     (fn []
       [:div.section-link
        (if @active?
-                [:span.active-section (panel-kw panels)]
+                [:span.active-section
+                 active-section-arrow
+                 (panel-kw panels)]
                 [:a {:href (str "#/" (name panel-kw))}
                  (panel-kw panels)])])))
 
