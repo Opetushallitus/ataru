@@ -15,5 +15,5 @@
 (defn -main [& _]
   (let [system (new-system)]
     (info "Starting lomake-editori system")
-    (component/start-system system)
-    (wait-forever)))
+    (let [_ (component/start-system system)]
+      (wait-forever))))
