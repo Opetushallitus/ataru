@@ -23,7 +23,9 @@
   ;; servers
   (migrations/migrate :db "db.migration"))
 
-(defn- try-f [f] (try (f) (catch Exception ignored nil)))
+(defmacro ^:private try-f
+  [& form]
+  `(try ~@form (catch Exception _#)))
 
 (defrecord Server []
   component/Lifecycle
