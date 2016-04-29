@@ -43,9 +43,13 @@
   (fn []
     [:div.title
      [section-link :editor]
-      [:div.divider]
-      [section-link :application]
-      [:div [applications]]]))
+     ;;
+     ;; Hidden until the tab contains something real
+     ;;
+     ;;      [:div.divider]
+     ;;      [section-link :application]
+     ;;      [:div [applications]]
+     ]))
 
 (def profile
   [:div.profile
