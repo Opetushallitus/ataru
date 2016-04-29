@@ -11,8 +11,6 @@
             [com.stuartsierra.component :as component])
   (:gen-class))
 
-(def server (atom nil))
-
 (defn start-repl! []
   (when (:dev? env)
     (do
@@ -26,24 +24,6 @@
   (migrations/migrate :db "db.migration"))
 
 (defn- try-f [f] (try (f) (catch Exception ignored nil)))
-
-(defn wait-forever [] @(promise))
-
-(defn -main [& [prt & _]]
-  (let [port (or (try-f (fn [] (Integer/parseInt prt)))
-                 8350)]
-    (do
-      (a/go (start-repl!))
-      (a/go (run-migrations))
-      (info "Starting server on port" port)
-      (reset! server
-              (http/start-server
-               (if (:dev? env)
-                 (wrap-reload (var clerk-routes))
-                 clerk-routes)
-               {:port port}))
-      (info "Started server on port" port)
-      (wait-forever))))
 
 (defrecord Server []
   component/Lifecycle
