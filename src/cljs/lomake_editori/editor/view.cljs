@@ -53,10 +53,9 @@
 (defn editor-panel []
   (let [form-name (reaction (:name @(subscribe [:editor/selected-form])))]
     [:div.panel-content
-     [:div.editor-form__form-name-row
-      [editor-name @form-name]
-      [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
-
+     [:div
+      [editor-name @form-name]]
+     [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
      [component/form-component
       (merge l/controller
              l/translations
