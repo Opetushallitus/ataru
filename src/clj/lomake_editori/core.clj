@@ -1,7 +1,6 @@
 (ns lomake-editori.core
   (:require [taoensso.timbre :refer [info]]
             [lomake-editori.clerk-routes :refer [clerk-routes]]
-            [lomake-editori.db.migrations :as migrations]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -17,12 +16,6 @@
       (start-server :port 3333 :handler cider-nrepl-handler)
       (info "nREPL started on port 3333"))))
 
-(defn run-migrations []
-  ;; Only run migrations when in dev mode for now
-  ;; Deployment has to catch up before we can run migrations on test/prod
-  ;; servers
-  (migrations/migrate :db "db.migration"))
-
 (defmacro ^:private try-f
   [& form]
   `(try ~@form (catch Exception _#)))
@@ -35,8 +28,7 @@
           handler clerk-routes
           server  (http/start-server handler {:port port})]
       (do
-        (a/go (start-repl!))
-        (a/go (run-migrations)))
+        (a/go (start-repl!)))
       (info (str "Started server on port " port))
       (assoc component :server server)))
 

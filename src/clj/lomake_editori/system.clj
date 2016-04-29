@@ -1,12 +1,14 @@
 (ns lomake-editori.system
   (:require [com.stuartsierra.component :as component]
             [lomake-editori.core :as server]
+            [lomake-editori.db.migrations :as migrations]
             [taoensso.timbre :refer [info]]))
 
 (defn new-system
   []
   (component/system-map
-    :server (server/new-server)))
+    :migration (migrations/new-migration)
+    :server    (server/new-server)))
 
 (defn ^:private wait-forever
   []
