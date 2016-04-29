@@ -7,7 +7,8 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [cider.nrepl :refer [cider-nrepl-handler]]
             [clojure.tools.nrepl.server :refer [start-server]]
-            [aleph.http :as http])
+            [aleph.http :as http]
+            [com.stuartsierra.component :as component])
   (:gen-class))
 
 (def server (atom nil))
@@ -43,3 +44,27 @@
                {:port port}))
       (info "Started server on port" port)
       (wait-forever))))
+
+(defrecord Server []
+  component/Lifecycle
+
+  (start [component]
+    (let [port    8350
+          handler clerk-routes
+          server  (http/start-server handler {:port port})]
+      (do
+        (a/go (start-repl!))
+        (a/go (run-migrations)))
+      (info (str "Started server on port " port))
+      (assoc component :server server)))
+
+  (stop [component]
+    (info "Stopping server")
+    (try-f #(let [server (:server component)]
+             (.close server)))
+    (info "Stopped server")
+    (assoc component :stop-fn nil)))
+
+(defn new-server
+  []
+  (->Server))
