@@ -2,10 +2,11 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
+            [lomake-editori.dev.lomake :as l]
+            [lomake-editori.editor.core :as c]
+            [lomake-editori.editor.subs]
             [lomake-editori.soresu.component :as component]
             [lomake-editori.temporal :refer [time->str]]
-            [lomake-editori.editor.subs]
-            [lomake-editori.dev.lomake :as l]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 
@@ -59,12 +60,7 @@
      [:div
       [editor-name @form-name]]
      [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
-     [component/form-component
-      (merge l/controller
-             l/translations
-             (l/field l/text-field)
-             {:lang  :sv
-              :value "Valmis arvo"})]]))
+     [c/editor]]))
 
 (defn editor []
     [:div

@@ -3,6 +3,7 @@
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [lomake-editori.autosave :as autosave]
+            [lomake-editori.dev.lomake :as dev]
             [lomake-editori.handlers :refer [http post]]
             [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.util :as util]
@@ -33,7 +34,8 @@
   :handle-get-forms
   (fn [db [_ forms-response]]
     (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                                              :id (mapv (comp with-author (coerce-timestamp :modified-time))
+                                                              :id (mapv (comp with-author
+                                                                              (coerce-timestamp :modified-time))
                                                                         (:forms forms-response)))
                                                             (sorted-by-time)))
                           (update-in [:editor] dissoc :selected-form))
@@ -52,12 +54,14 @@
 (register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
-    (let [previous-form (-> db :editor :selected-form)]
+    (let [previous-form (-> db :editor :selected-form)
+          clicked-form-with-content (merge clicked-form dev/placeholder-content)]
       (when (not= (:id previous-form) (:id clicked-form))
-        (autosave/stop-autosave! (-> db :editor :autosave)))
+       (autosave/stop-autosave! (-> db :editor :autosave)))
 
       (-> db
-          (assoc-in [:editor :selected-form] clicked-form)
+          (assoc-in [:editor :forms (:id clicked-form)] clicked-form-with-content)
+          (assoc-in [:editor :selected-form] clicked-form-with-content)
           (assoc-in [:editor :autosave]
                     (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
                                              :changed-predicate
@@ -68,7 +72,7 @@
                                              :handler
                                              (fn [form previous-autosave-form]
                                                (dispatch [:editor/save-form form]))
-                                             :initial clicked-form}))))))
+                                             :initial clicked-form-with-content}))))))
 
 (defn- callback-after-post [db new-or-updated-form]
   (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
