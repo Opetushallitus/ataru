@@ -88,7 +88,7 @@
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
-                        :compiler {:main lomake-editori.system
+                        :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
@@ -106,7 +106,7 @@
 
                        {:id "min"
                         :source-paths ["src/cljs"]
-                        :compiler {:main lomake-editori.system
+                        :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
