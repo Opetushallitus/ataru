@@ -20,6 +20,7 @@
 
                  ;clojure
                  [compojure "1.5.0"]
+                 [com.stuartsierra/component "0.3.1"]
                  [metosin/compojure-api "1.0.1"]
                  [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1"]
@@ -83,7 +84,7 @@
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
-  :main lomake-editori.core
+  :main lomake-editori.system
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs"]
@@ -115,7 +116,8 @@
                                                    :provides ["oph.lib.soresu"]}]}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
-                 :init (set! *print-length* 50)}
+                 :init (set! *print-length* 50)
+                 :init-ns user}
 
   :resource {:resource-paths ["templates"]
              :target-path "resources/public"
@@ -132,6 +134,7 @@
                                   [refactor-nrepl "2.2.0"]
                                   [org.clojure/tools.nrepl "0.2.12"]
                                   [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
+                                  [reloaded.repl "0.2.1"]
                                   [ring/ring-mock "0.3.0"]
                                   [speclj "3.3.2"]
                                   [speclj-junit "0.0.10"]]
@@ -139,7 +142,7 @@
                              [refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.1"]]
-                   :source-paths ["env/dev/clj" "env/dev/cljc"]
+                   :source-paths ["dev/clj"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
