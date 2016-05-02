@@ -25,7 +25,9 @@
 
   (start [component]
     (let [port    8350
-          handler clerk-routes
+          handler (if (:dev? env)
+                    (wrap-reload (var clerk-routes))
+                    clerk-routes)
           server  (http/start-server handler {:port port})]
       (do
         (a/go (start-repl!)))
