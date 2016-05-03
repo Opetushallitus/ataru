@@ -60,6 +60,7 @@
   :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
+  :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-figwheel "0.5.0-6"]
