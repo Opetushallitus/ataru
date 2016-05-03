@@ -7,8 +7,7 @@
             [cider.nrepl :refer [cider-nrepl-handler]]
             [clojure.tools.nrepl.server :refer [start-server]]
             [aleph.http :as http]
-            [com.stuartsierra.component :as component])
-  (:gen-class))
+            [com.stuartsierra.component :as component]))
 
 (defn start-repl! []
   (when (:dev? env)

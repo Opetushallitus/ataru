@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [lomake-editori.core :as server]
             [lomake-editori.db.migrations :as migrations]
-            [taoensso.timbre :refer [info]]))
+            [taoensso.timbre :refer [info]])
+  (:gen-class))
 
 (defn new-system
   []
