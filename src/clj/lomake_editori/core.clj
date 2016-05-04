@@ -38,7 +38,7 @@
     (try-f #(let [server (:server component)]
              (.close server)))
     (info "Stopped server")
-    (assoc component :stop-fn nil)))
+    (assoc component :server nil)))
 
 (defn new-server
   []
