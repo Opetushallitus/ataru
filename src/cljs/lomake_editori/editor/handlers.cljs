@@ -67,8 +67,8 @@
                                              :changed-predicate
                                              (fn [current prev]
                                                (not=
-                                                 (dissoc prev :modified-time)
-                                                 (dissoc current :modified-time)))
+                                                 (dissoc prev :modified-time :content)
+                                                 (dissoc current :modified-time :content)))
                                              :handler
                                              (fn [form previous-autosave-form]
                                                (dispatch [:editor/save-form form]))

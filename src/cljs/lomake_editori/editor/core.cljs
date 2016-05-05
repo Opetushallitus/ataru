@@ -6,56 +6,98 @@
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
             [lomake-editori.soresu.component :as component]
-            [taoensso.timbre :refer-macros [spy debug]]))
-
-(defonce soresu-id-uuid-separator "-__-")
+            [taoensso.timbre :refer-macros [spy debug error]]))
 
 (register-sub
-  :editor/selected-form-values
-  (fn [db [_ id] [form]]
-    (reaction (-> form :values (get id)))))
+  :editor/get-component-value
+  (fn [db [_ & path]]
+    (reaction (get-in @db
+                      (flatten (concat
+                                 [:editor :forms (-> @db :editor :selected-form :id) :content]
+                                 path))))))
+
+(register-handler
+  :editor/set-component-value
+  (fn [db [_ value & path]]
+    (assoc-in db
+              (spy (flatten (concat [:editor :forms (-> db :editor :selected-form :id) :content]
+                                    path)))
+              value)))
 
 (register-sub
   :editor/languages
   (fn [db]
     (reaction [:fi :sv])))
 
-(defn soresu->reagent [{:keys [id fieldClass fieldType children text label] :as soresu-component}]
-  (let [selected-languages     (subscribe [:editor/languages])
-        selected-form          (subscribe [:editor/selected-form])
-        stored-values          (subscribe [:editor/selected-form-values id] [selected-form])
-        soresu-component-class (match [fieldClass]
-                                      ["infoElement"] component/info-element
-                                      :else component/form-component)]
-    (fn [{:keys [id fieldClass fieldType children text label] :as soresu-component}]
-      (if (some? children)
-        [:section.child
-         (soresu->reagent children)]
-        (into [:section.component]
-              (for [language @selected-languages]
-                [soresu-component-class
-                 (merge soresu-component
-                        {:id           (str id soresu-id-uuid-separator (uuid/uuid-string (uuid/make-random-uuid)))
-                         :controller   (clj->js {:getCustomComponentTypeMapping (fn [] #js [])
-                                                 :componentDidMount             (fn [field value]
-                                                                                  (debug field value))
-                                                 :createCustomComponent         (fn [props])})
-                         :translations #js {} ; required or soresu does nothing
-                         :field        soresu-component
-                         :lang         language
+(defn link-info [{:keys [params] :as content} path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn [{:keys [params] :as content} path]
+      (into
+        [:div.link-info
+         [:p "Linkki"]]
+        (for [lang @languages]
+          [:div
+           [:p "Osoite"]
+           [:input {:value       (get-in @value [:params :href lang])
+                    :type        "url"
+                    :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :params :href lang])
+                    :placeholder "http://"}]
+           [:textarea {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                       :value       (get-in @value [:text lang])
+                       :placeholder "Otsikko"}]])))))
 
-                                       ; formField has :value
-                         :value        (get @stored-values language)
+(defn info [{:keys [params] :as content} path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path :text])]
+    (fn [{:keys [params] :as content} path]
+      (into
+        [:div.info
+         [:p "Ohjeteksti"]]
+        (for [lang @languages]
+          [:div
+           [:textarea
+            {:value       (get @value lang)
+             :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
+             :placeholder "Ohjetekstin sisältö"}]])))))
 
-                                       ; info-element has :values
-                         :values       (get @stored-values language)})]))))))
+(defn add-component []
+  (fn []
+    [:div
+     [:hr]
+     [:span "(+) add component"]]))
+
+(defn soresu->reagent [{:keys [children] :as content} path]
+  (fn [{:keys [children] :as content} path]
+    [:section.component
+     (match [content]
+            [{:fieldClass "wrapperElement"
+              :params     {:name n}
+              :children   children}]
+            (into [:section.wrapper
+                   [:h1 n]]
+                  (for [[index child] (zipmap (range) children)]
+                    [soresu->reagent child (conj path :children index)]))
+
+            [{:fieldClass "infoElement"
+              :fieldType  "link"}]
+            [link-info content path]
+
+            [{:fieldClass "infoElement"}]
+            [info content path]
+
+            :else (do
+                    (error content)
+                    (throw "error" content)))
+     [add-component]]))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
-        content (reaction (spy (:content @form)))]
+        content (reaction (take 2 (:content @form)))]
     (fn []
       [:section.form
        (into [:form]
-             (for [soresu-component @content]
-               [soresu->reagent soresu-component]))])))
+             (for [[index json-blob] (zipmap (range) @content)
+                   :when             (not-empty @content)]
+               [soresu->reagent json-blob [index]]))])))
 
