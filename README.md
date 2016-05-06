@@ -71,20 +71,34 @@ lein with-profile dev figwheel dev
 
 Browse to [http://localhost:3450](http://localhost:3450).
 
-### Run tests:
+### Browser tests:
 
-[doo](https://github.com/bensu/doo) assumes that [PhantomJS](http://phantomjs.org/) is installed locally to `./node_modules/phantomjs-prebuilt/bin/phantomjs`. The `package.json` in this repository does just that:
+Browser tests can be run by invoking
 
 ```
 npm install
+
+# In one terminal window, run the actual application:
+lein with-profile dev run
+
+# In second window, you'll want to run figwheel in dev profile as normally:
+lein figwheel dev
+
+# And in the third window, run cljsbuild for tests to automatically recompile test.js
+lein cljdbuild auto test
 ```
 
-To actually run tests:
+After this you can run tests by navigating to http://localhost:8350/lomake-editori/test.html .
+
+### Backend tests
+
+To run tests once:
 
 ```
-lein clean
-lein doo phantom test once
+lein spec
 ```
+
+To run them automatically whenever code changes, use `-a`.
 
 ### Clojure linter
 
