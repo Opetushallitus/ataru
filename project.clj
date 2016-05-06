@@ -73,12 +73,14 @@
              :exclude-linters [:local-shadows-var]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
-                                    "test/js"]
+                                    "test/js"
+                                    "resources/public/js/test"]
 
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 3334}
 
-  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
+  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"
+                :karma "./node_modules/karma/bin/karma"}}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
@@ -98,7 +100,9 @@
 
                        {:id "test"
                         :source-paths ["src/cljs" "test/cljs"]
-                        :compiler {:output-to "resources/public/js/compiled/test.js"
+                        :compiler {:output-to "resources/public/js/test/test.js"
+                                   :output-dir "resources/public/js/test/out"
+                                   :asset-path "js/test/out"
                                    :main lomake-editori.runner
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
