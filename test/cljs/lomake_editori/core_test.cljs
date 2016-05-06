@@ -1,7 +1,37 @@
 (ns lomake-editori.core-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :refer-macros [async deftest is testing use-fixtures]]
+            [goog.dom :as dom]
+            [goog.dom.DomHelper :as dh]
+            [jayq.core :as jq]
             [lomake-editori.core :as core]))
 
-(deftest fake-test
-  (testing "fake description"
-    (is (= 1 1))))
+(defn app-frame
+  []
+  (-> (jq/$ :#test)
+      (first)
+      (.-contentWindow)
+      (.-document)
+      (jq/$)))
+
+(defn setup
+  []
+  (async done
+    (doto (jq/$ :#test)
+      (jq/attr :src "/lomake-editori/")
+      (jq/attr :width "1024")
+      (jq/attr :height "768"))
+    (js/setTimeout done 3000)))
+
+(defn editor-link
+  [app-frame]
+  (.xpath app-frame "//span[@class='active-section']/span[text()='Lomake-editori']"))
+
+(use-fixtures :once {:before setup})
+
+(deftest ui-header
+  (testing "header has editor link"
+    (let [header-link-set? (-> (app-frame)
+                               (editor-link)
+                               (count)
+                               (= 1))]
+      (is header-link-set?))))
