@@ -12,6 +12,7 @@
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
             [lomake-editori.db.form-store :as form-store]
             [lomake-editori.middleware.cache-control :as cache-control]
+            [lomake-editori.authentication.auth-middleware :as auth-middleware]
             [ring.util.response :refer [response]]
             [taoensso.timbre :refer [spy error]]
             [selmer.parser :as selmer])
@@ -89,6 +90,7 @@
                     test-routes
                     (api-routes)
                     (route/not-found "Not found"))
+      (auth-middleware/with-authentication)
       (wrap-defaults (-> site-defaults
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
