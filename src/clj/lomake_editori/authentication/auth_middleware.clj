@@ -8,16 +8,14 @@
 
 (defonce opintopolku-login-url "https://testi.virkailija.opintopolku.fi/cas/login?service=")
 
-(defonce ataru-login-success-url "http://localhost:8350/login/cas")
+(defonce ataru-login-success-url "http://localhost:8350/lomake-editori/auth/cas")
 
 (def backend (session-backend))
 
 (defn any-access [request] true)
 
-(defn check-identity [identity] false) ;; TODO!!
-
 (defn- authenticated-access [request]
-  (if (check-identity (-> request :session :identity))
+  (if (-> request :session :identity)
     true
     (error "Authentication required")))
 
@@ -32,15 +30,17 @@
              "Content-Type" "text/plain"}
    :body    (str "Access to " (:uri request) " is not authorized, redirecting to login")})
 
-(def ^:private rules [{:pattern #"/js/.*"
+(def ^:private rules [{:pattern #".*/auth/.*"
                        :handler any-access}
-                      {:pattern #"/images/.*"
+                      {:pattern #".*/js/.*"
                        :handler any-access}
-                      {:pattern #"/css/.*"
+                      {:pattern #".*/images/.*"
                        :handler any-access}
-                      {:pattern #"^/favicon.ico"
+                      {:pattern #".*/css/.*"
                        :handler any-access}
-                      {:pattern #"^/lomake-editori/api/.*"
+                      {:pattern #".*/favicon.ico"
+                       :handler any-access}
+                      {:pattern #".*/api/.*"
                        :handler authenticated-access
                        :on-error send-not-authenticated-api-response}
                       {:pattern #".*"
