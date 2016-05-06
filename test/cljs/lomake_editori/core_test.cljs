@@ -24,7 +24,9 @@
 
 (defn editor-link
   [app-frame]
-  (.xpath app-frame "//span[@class='active-section']/span[text()='Lomake-editori']"))
+  (let [links (.xpath app-frame "//span[@class='active-section']/span[text()='Lomake-editori']")]
+    (when (= 1 (count links))
+      (first links))))
 
 (use-fixtures :once {:before setup})
 
@@ -32,6 +34,6 @@
   (testing "header has editor link"
     (let [header-link-set? (-> (app-frame)
                                (editor-link)
-                               (count)
-                               (= 1))]
+                               (nil?)
+                               (not))]
       (is header-link-set?))))
