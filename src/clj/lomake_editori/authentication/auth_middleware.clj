@@ -21,12 +21,12 @@
     true
     (error "Authentication required")))
 
-(defn- send-not-authenticated-api-response [request]
+(defn- send-not-authenticated-api-response [& _]
   {:status  401
    :headers {"Content-Type" "application/json"}
    :body    (json/write-str {:error-message "Not authenticated"})})
 
-(defn- redirect-to-login [request response]
+(defn- redirect-to-login [request _]
   {:status  302
    :headers {"Location" (str opintopolku-login-url ataru-login-success-url)
              "Content-Type" "text/plain"}
@@ -40,7 +40,7 @@
                        :handler any-access}
                       {:pattern #"^/favicon.ico"
                        :handler any-access}
-                      {:pattern #"^/lomake-editori/api"
+                      {:pattern #"^/lomake-editori/api/.*"
                        :handler authenticated-access
                        :on-error send-not-authenticated-api-response}
                       {:pattern #".*"
