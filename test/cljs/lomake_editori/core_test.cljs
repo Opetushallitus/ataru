@@ -22,6 +22,10 @@
       (jq/attr :height "768"))
     (js/setTimeout done 3000)))
 
+(defn not-nil?
+  [x]
+  (not (nil? x)))
+
 (defn editor-link
   [app-frame]
   (let [links (.xpath app-frame "//span[@class='active-section']/span[text()='Lomake-editori']")]
@@ -34,6 +38,5 @@
   (testing "header has editor link"
     (let [header-link-set? (-> (app-frame)
                                (editor-link)
-                               (nil?)
-                               (not))]
+                               (not-nil?))]
       (is header-link-set?))))
