@@ -26,17 +26,21 @@
   [x]
   (not (nil? x)))
 
+(defn get-element
+  [xpath]
+  (let [elements (-> (app-frame)
+                     (.xpath xpath))]
+    (when (= 1 (count elements))
+      (first elements))))
+
 (defn editor-link
-  [app-frame]
-  (let [links (.xpath app-frame "//span[@class='active-section']/span[text()='Lomake-editori']")]
-    (when (= 1 (count links))
-      (first links))))
+  []
+  (get-element "//span[@class='active-section']/span[text()='Lomake-editori']"))
 
 (use-fixtures :once {:before setup})
 
 (deftest ui-header
   (testing "header has editor link"
-    (let [header-link-set? (-> (app-frame)
-                               (editor-link)
+    (let [header-link-set? (-> (editor-link)
                                (not-nil?))]
       (is header-link-set?))))
