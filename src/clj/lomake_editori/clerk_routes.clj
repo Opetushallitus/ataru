@@ -51,6 +51,12 @@
   (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
   (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))
 
+(defroutes test-routes
+  (GET "/lomake-editori/test.html" []
+    (if (:dev? env)
+        (selmer/render-file "templates/test.html" {})
+        (not-found "Not found"))))
+
 (s/defschema Form
   {(s/optional-key :id) (s/maybe s/Int)
    :name s/Str
@@ -80,6 +86,7 @@
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
                     resource-routes
                     app-routes
+                    test-routes
                     (api-routes)
                     (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
