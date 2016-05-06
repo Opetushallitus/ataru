@@ -64,7 +64,6 @@
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-figwheel "0.5.0-6"]
-            [lein-doo "0.1.6"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
@@ -80,9 +79,6 @@
 
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 3334}
-
-  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"
-                :karma "./node_modules/karma/bin/karma"}}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
