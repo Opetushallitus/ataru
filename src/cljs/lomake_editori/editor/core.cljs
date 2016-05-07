@@ -43,9 +43,9 @@
                     :type        "url"
                     :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :params :href lang])
                     :placeholder "http://"}]
-           [:textarea {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
-                       :value       (get-in @value [:text lang])
-                       :placeholder "Otsikko"}]])))))
+           [:input {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                    :value       (get-in @value [:text lang])
+                    :placeholder "Otsikko"}]])))))
 
 (defn info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
@@ -61,6 +61,20 @@
              :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
              :placeholder "Ohjetekstin sisältö"}]])))))
 
+(defn form-field [path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn [path]
+      (into [:div.form-field]
+            (for [lang @languages]
+              [:div
+               [:p "Kentän nimi"]
+               [:input {:value     (get-in @value [:label lang])
+                        :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]
+               [:p "Aputeksti"]
+               [:input {:value     (get-in @value [:helpText lang])
+                        :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :helpText lang])}]])))))
+
 (defn add-component []
   (fn []
     [:div
@@ -72,12 +86,15 @@
     [:section.component
      (match [content]
             [{:fieldClass "wrapperElement"
-              :params     {:name n}
               :children   children}]
             (into [:section.wrapper
-                   [:h1 n]]
+                   (when-let [n (-> content :params :name)]
+                     [:h1 n])]
                   (for [[index child] (zipmap (range) children)]
                     [soresu->reagent child (conj path :children index)]))
+
+            [{:fieldClass "formField"}]
+            [form-field path]
 
             [{:fieldClass "infoElement"
               :fieldType  "link"}]
@@ -93,7 +110,7 @@
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
-        content (reaction (take 2 (:content @form)))]
+        content (reaction (take 3 (:content @form)))]
     (fn []
       [:section.form
        (into [:form]
