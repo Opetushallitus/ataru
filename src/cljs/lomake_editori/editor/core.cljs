@@ -20,14 +20,15 @@
   :editor/set-component-value
   (fn [db [_ value & path]]
     (assoc-in db
-              (spy (flatten (concat [:editor :forms (-> db :editor :selected-form :id) :content]
-                                    path)))
+              (flatten (concat [:editor :forms (-> db :editor :selected-form :id) :content]
+                               path))
               value)))
 
 (register-sub
   :editor/languages
   (fn [db]
     (reaction [:fi :sv])))
+
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
@@ -75,11 +76,31 @@
                [:input {:value     (get-in @value [:helpText lang])
                         :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :helpText lang])}]])))))
 
-(defn add-component []
-  (fn []
-    [:div
-     [:hr]
-     [:span "(+) add component"]]))
+(def toolbar-elements
+  (let [dummy [:div "ei vielä toteutettu.."]]
+    {"Lomakeosio"                dummy
+     "Tekstikenttä"              form-field
+     "Tekstialue"                dummy
+     "Lista, monta valittavissa" dummy
+     "Lista, yksi valittavissa"  dummy
+     "Pudotusvalikko"            dummy
+     "Vierekkäiset kentät"       dummy
+     "Liitetiedosto"             dummy
+     "Ohjeteksti"                info
+     "Linkki"                    link-info
+     "Väliotsikko"               dummy}))
+
+(defn component-toolbar [path]
+  (fn [path]
+    (into [:ul]
+          (for [[component-name generated-component] toolbar-elements]
+            [:li {:on-click #(dispatch [:generate-component generated-component path])}
+             component-name]))))
+
+(defn add-component [path]
+  (fn [path]
+    [:div.add-component
+     [:p "(+)"]]))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
@@ -106,7 +127,7 @@
             :else (do
                     (error content)
                     (throw "error" content)))
-     [add-component]]))
+     [add-component path]]))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
