@@ -80,6 +80,22 @@ section.component {
     padding: 0.5em;
     border: 1px solid @section-header-text;
     border-radius: 2px;
+    padding-right: 6em;
+    width: 33%;
+    margin: 0.5em 0;
+  }
+  div.language {
+    display: inline-block;
+    width: 0;
+    & >div {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      color: @section-gray-border;
+      font-size: 80%;
+      position: relative;
+      left: -1em;
+    }
   }
 }
 
