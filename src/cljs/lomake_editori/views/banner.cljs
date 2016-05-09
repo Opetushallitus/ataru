@@ -63,7 +63,7 @@
           ]
          [:div.divider]
          [:div
-          [:a {:href "#"} "Kirjaudu ulos"]]]))))
+          [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]]))))
 
 (defn status []
   (let [flasher          (subscribe [:state-query [:flasher]])
