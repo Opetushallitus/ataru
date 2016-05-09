@@ -85,7 +85,7 @@ lein with-profile dev run
 lein figwheel dev
 
 # And in the third window, run cljsbuild for tests to automatically recompile test.js
-lein cljdbuild auto test
+lein cljsbuild auto test
 ```
 
 After this you can run tests by navigating to http://localhost:8350/lomake-editori/test.html .
