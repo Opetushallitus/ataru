@@ -30,6 +30,10 @@
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms]))
 
+  (defroute #"/editor/forms/(\d+)" [id]
+    (dispatch [:set-active-panel :editor])
+    (dispatch [:editor/refresh-forms (js/parseInt id)]))
+
   (defroute "/application" []
     (dispatch [:set-active-panel :application]))
 

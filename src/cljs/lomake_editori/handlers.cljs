@@ -76,12 +76,6 @@
     (assoc db :error-message "Lomakelistan hakeminen epäonnistui")))
 
 (register-handler
-  :fetch-initial-data
-  (fn [db _]
-    (dispatch [:editor/refresh-forms])
-    db))
-
-(register-handler
  :set-active-panel
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
