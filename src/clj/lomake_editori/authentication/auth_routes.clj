@@ -9,6 +9,9 @@
   ;; TODO implement logged-out page
   (resp/redirect (str "/lomake-editori/logged-out")))
 
+(def opintopolku-logout-url "https://testi.virkailija.opintopolku.fi/cas/logout?service=")
+(def ataru-login-success-url "http://localhost:8350/lomake-editori/auth/cas")
+
 (defn auth-routes []
   (api/api
     (api/context "/lomake-editori/auth" []
@@ -25,4 +28,7 @@
                               (redirect-to-loggged-out-page))
                             (catch Exception e
                               (error "Error in login ticket handling" e)
-                              (redirect-to-loggged-out-page)))))))
+                              (redirect-to-loggged-out-page))))
+                 (api/GET "/logout" {session :session}
+                          (-> (resp/redirect (str opintopolku-logout-url ataru-login-success-url))
+                           (assoc :session {:identity nil}))))))
