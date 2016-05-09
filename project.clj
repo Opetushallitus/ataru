@@ -16,7 +16,9 @@
                  ;clojure/clojurescript
                  [prismatic/schema "1.0.5"]
                  [com.taoensso/timbre "4.3.1"]
+                 [org.clojure/core.async "0.2.374"]
                  [org.clojure/core.match "0.3.0-alpha4"]
+                 [jayq "2.5.4"]
 
                  ;clojure
                  [compojure "1.5.0"]
@@ -64,7 +66,6 @@
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-figwheel "0.5.0-6"]
-            [lein-doo "0.1.6"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
@@ -75,12 +76,11 @@
              :exclude-linters [:local-shadows-var]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
-                                    "test/js"]
+                                    "test/js"
+                                    "resources/public/js/test"]
 
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 3334}
-
-  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
@@ -100,7 +100,9 @@
 
                        {:id "test"
                         :source-paths ["src/cljs" "test/cljs"]
-                        :compiler {:output-to "resources/public/js/compiled/test.js"
+                        :compiler {:output-to "resources/public/js/test/test.js"
+                                   :output-dir "resources/public/js/test/out"
+                                   :asset-path "js/test/out"
                                    :main lomake-editori.runner
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]

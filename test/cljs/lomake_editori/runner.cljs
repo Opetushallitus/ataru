@@ -1,5 +1,7 @@
 (ns lomake-editori.runner
-    (:require [doo.runner :refer-macros [doo-tests]]
+    (:require [cljs.test :refer-macros [run-all-tests]]
               [lomake-editori.core-test]))
 
-(doo-tests 'lomake-editori.core-test)
+(defn ^:export run
+  []
+  (run-all-tests #"lomake-editori.*-test"))
