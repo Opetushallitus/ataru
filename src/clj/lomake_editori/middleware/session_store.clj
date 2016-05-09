@@ -1,7 +1,8 @@
 (ns lomake-editori.middleware.session-store
   (:require [ring.middleware.session.store :refer [SessionStore]]
             [yesql.core :refer [defqueries]]
-            [oph.soresu.common.db :refer [exec]]))
+            [oph.soresu.common.db :refer [exec]])
+  (:import (java.util UUID)))
 
 (defqueries "sql/session-queries.sql")
 
@@ -20,7 +21,7 @@
   (exec :db delete-session-query! {:key key})
   key)
 
-(defn generate-new-random-key [] (str (java.util.UUID/randomUUID)))
+(defn generate-new-random-key [] (str (UUID/randomUUID)))
 
 (deftype DatabaseStore []
     SessionStore
