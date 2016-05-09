@@ -105,10 +105,40 @@ section.wrapper {
 }
 
 .add-component {
+  &:hover {
+    background-color: @selected-blue;
+    transition: background-color 0.5s ease;
+    .plus-component {
+      transition: background-color 0.5s ease;
+      background-color: #F7F7F7;
+      span {
+        transition: background-color 0.5s ease;
+        color: @selected-blue;
+      }
+    }
+  }
+  cursor: pointer;
+  display: flex;
+  justify-content: center; 
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
+  transition: background-color 0.5s ease;
   width: 100%;
   margin: 1em 0;
   padding: 0.5em;
-  p { text-align: center;}
+  .plus-component {
+    background-color: @selected-blue;
+    transition: background-color 0.5s ease;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    span {
+      color: #F7F7F7;
+      transition: background-color 0.5s ease;
+      display: flex;
+      justify-content: center; 
+      font-size: 125%;
+      align-items: center;
+    }
+  }
 }

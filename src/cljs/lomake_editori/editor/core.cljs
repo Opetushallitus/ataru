@@ -108,10 +108,33 @@
             [:li {:on-click #(dispatch [:generate-component generated-component path])}
              component-name]))))
 
+(defn delayed-trigger [timeout-ms on-trigger]
+  (let [latch (atom nil)]
+    [(fn [] (reset! latch nil))
+     (fn [event]
+       (let [local-latch (atom nil)
+             handle      (js/setTimeout (fn []
+                                          (when (= @latch @local-latch)
+                                            (on-trigger event)))
+                                        timeout-ms)]
+         (do
+           (reset! local-latch handle)
+           (reset! latch handle))))]))
+
 (defn add-component [path]
-  (fn [path]
-    [:div.add-component
-     [:p "(+)"]]))
+  (let [show-bar? (reaction nil)
+        [abort-trigger delayed-trigger] (delayed-trigger 500 #(reset! show-bar? true))]
+    (fn [path]
+      (if @show-bar?
+        [component-toolbar
+         {:on-mouse-leave #(debug "pylly")} path]
+        [:div.add-component
+         {:on-mouse-enter delayed-trigger
+          :on-mouse-leave #(do
+                             (abort-trigger)
+                             (reset! show-bar? false))}
+         [:div.plus-component
+          [:span "+"]]]))))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
