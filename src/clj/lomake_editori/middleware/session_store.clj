@@ -1,32 +1,37 @@
 (ns lomake-editori.middleware.session-store
-  (:require [ring.middleware.session.store :refer [SessionStore]]))
+  (:require [ring.middleware.session.store :refer [SessionStore]]
+            [yesql.core :refer [defqueries]]
+            [oph.soresu.common.db :refer [exec]]))
 
-(def atom-store (atom {}))
+(defqueries "sql/session-queries.sql")
 
 (defn read-data [key]
-  (println "read-data" key)
-  (get @atom-store key))
+  (:data (first  (exec :db get-session-query {:key key}))))
+
+(defn add-data [key data]
+  (exec :db add-session-query! {:key key :data data})
+  key)
 
 (defn save-data [key data]
-  (println "save-data" key data)
-  (swap! atom-store assoc key data))
+  (exec :db update-session-query! {:key key :data data})
+  key)
 
 (defn delete-data [key]
-  (println "delete-data" key)
-  (swap! atom-store assoc key nil))
+  (exec :db delete-session-query! {:key key})
+  key)
 
 (defn generate-new-random-key [] (str (java.util.UUID/randomUUID)))
 
 (deftype DatabaseStore []
     SessionStore
   (read-session [_ key]
-                (read-data key))
+    (read-data key))
   (write-session [_ key data]
-                 (let [key (or key (generate-new-random-key))]
-                   (save-data key data)
-                   key))
+    (if key
+      (save-data key data)
+      (add-data (generate-new-random-key) data)))
   (delete-session [_ key]
-                  (delete-data key)
-                nil))
+    (delete-data key)
+    nil))
 
 (defn create-store [] (DatabaseStore.))
