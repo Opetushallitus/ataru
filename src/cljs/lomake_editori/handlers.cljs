@@ -10,7 +10,7 @@
 
 (def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
-(defn http [method path handler-or-dispatch & [override-args]]
+(defn http [method path handler-or-dispatch & {:keys [override-args]}]
   (let [f (case method
             :get    GET
             :post   POST
@@ -46,7 +46,7 @@
               override-args))))
 
 (defn post [path params handler-or-dispatch]
-  (http :post path handler-or-dispatch {:params params}))
+  (http :post path handler-or-dispatch :override-args {:params params}))
 
 (register-handler
  :initialize-db
