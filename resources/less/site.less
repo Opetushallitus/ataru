@@ -97,7 +97,6 @@
     }
   }
   .profile {
-    visibility: hidden; /* Remove this when the login feature is implemented */
     margin-right: 50px;
     min-width: 246px;
     display: flex;
@@ -108,7 +107,10 @@
     a { color: white; }
     > div:nth-child(1) {
       p {margin: 0;}
-      p:nth-child(1) { margin-top: 4px;}
+      p:nth-child(1) {
+        /* Use this when organization is shown: */
+        /*margin-top: 4px;*/
+        margin-top: 15px; }
       p:nth-child(3) { font-size: 80%; }
       color: @paler-blue;
       display: inline-block;

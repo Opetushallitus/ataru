@@ -75,12 +75,14 @@
                :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/lomake-editori/api" []
                  :tags ["form-api"]
-      (api/GET "/forms" []
-               (ok
-                 {:forms (form-store/get-forms)}))
-      (api/POST "/form" []
-                :body [form Form]
-                (trying #(form-store/upsert-form form))))))
+                 (api/GET "/user-info" {session :session}
+                          (ok {:username (-> session :identity :username)}))
+                 (api/GET "/forms" []
+                          (ok
+                           {:forms (form-store/get-forms)}))
+                 (api/POST "/form" []
+                           :body [form Form]
+                           (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
   (route/resources "/lomake-editori"))
