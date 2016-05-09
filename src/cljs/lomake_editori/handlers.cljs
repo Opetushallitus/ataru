@@ -79,6 +79,7 @@
   :fetch-initial-data
   (fn [db _]
     (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/get-user-info])
     db))
 
 (register-handler
