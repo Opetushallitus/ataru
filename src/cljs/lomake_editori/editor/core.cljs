@@ -123,16 +123,18 @@
 
 (defn add-component [path]
   (let [show-bar? (reaction nil)
-        [abort-trigger delayed-trigger] (delayed-trigger 500 #(reset! show-bar? true))]
+        [toolbar-abort-trigger
+         toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
+        [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
     (fn [path]
       (if @show-bar?
-        [component-toolbar
-         {:on-mouse-leave #(debug "pylly")} path]
+        [:div.component-toolbar
+         {:on-mouse-leave toolbar-delayed-trigger
+          :on-mouse-enter toolbar-abort-trigger}
+         [component-toolbar path]]
         [:div.add-component
-         {:on-mouse-enter delayed-trigger
-          :on-mouse-leave #(do
-                             (abort-trigger)
-                             (reset! show-bar? false))}
+         {:on-mouse-enter plus-delayed-trigger
+          :on-mouse-leave plus-abort-trigger}
          [:div.plus-component
           [:span "+"]]]))))
 
