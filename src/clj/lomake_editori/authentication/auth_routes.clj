@@ -28,6 +28,7 @@
                   (catch Exception e
                     (error "Error in login ticket handling" e)
                     (redirect-to-loggged-out-page))))
-           (GET "/logout" []
+           (GET "/logout" {session :session}
+                (info "username" (-> session :identity :username) "logged out")
                 (-> (resp/redirect (str opintopolku-logout-url ataru-login-success-url))
                     (assoc :session {:identity nil})))))
