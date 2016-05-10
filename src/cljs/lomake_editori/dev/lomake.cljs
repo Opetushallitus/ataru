@@ -51,7 +51,7 @@
        :required   true,
        :fieldType  "textField"}
       {:fieldClass "wrapperElement",
-       :id         "postal-stuff-2",
+       :id         "postal-stuff",
        :fieldType  "fieldset",
        :children
        [{:params     {:size "large", :maxlength 100},
@@ -60,12 +60,8 @@
          :label      {:fi "Postiosoite", :sv "Postadress"},
          :id         "textField-2",
          :required   true,
-         :fieldType  "textField"}]}
-      {:fieldClass "wrapperElement",
-       :id         "postal-stuff",
-       :fieldType  "fieldset",
-       :children
-       [{:params     {:size "extra-small", :maxlength 8},
+         :fieldType  "textField"}
+        {:params     {:size "extra-small", :maxlength 8},
          :fieldClass "formField",
          :helpText   {:fi "", :sv ""},
          :label      {:fi "Postinumero", :sv "Postnummer"},
