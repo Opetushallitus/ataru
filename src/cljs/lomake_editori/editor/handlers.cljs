@@ -8,11 +8,16 @@
             [lomake-editori.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn refresh-forms []
-  (http
-    :get
-    "/lomake-editori/api/forms"
-    :handle-get-forms))
+(defn refresh-forms
+  ([] (http
+        :get
+        "/lomake-editori/api/forms"
+        :handle-get-forms))
+  ([selected-form-id] (http
+                        :get
+                        "/lomake-editori/api/forms"
+                        :handle-get-forms
+                        :handler-args selected-form-id)))
 
 (defn with-author [form]
   (assoc form :author {:last "Turtiainen" :first "Janne"}))
@@ -31,22 +36,30 @@
 
 (register-handler
   :handle-get-forms
-  (fn [db [_ forms-response]]
+  (fn [db [_ forms-response selected-form-id]]
     (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
                                                               :id (mapv (comp with-author (coerce-timestamp :modified-time))
                                                                         (:forms forms-response)))
                                                             (sorted-by-time)))
                           (update-in [:editor] dissoc :selected-form))
-          newest-form (-> mdb :editor :forms first second) ]
-      (dispatch [:editor/select-form newest-form])
+          forms       (-> mdb :editor :forms)
+          active-form (or
+                        (->> forms
+                          (filter #(= selected-form-id (:id (second %))))
+                          first
+                          second)
+                        (->> forms
+                          first
+                          second))]
+      (dispatch [:editor/select-form active-form])
       mdb)))
-
 
 (register-handler
   :editor/refresh-forms
-  (fn [db _]
+  (fn [db [_ selected-form-id]]
+    (.log js/console (str "refresh-forms: " selected-form-id))
     (autosave/stop-autosave! (-> db :editor :autosave))
-    (refresh-forms)
+    (refresh-forms selected-form-id)
     db))
 
 (register-handler

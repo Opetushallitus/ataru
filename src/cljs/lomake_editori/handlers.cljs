@@ -10,7 +10,7 @@
 
 (def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
-(defn http [method path handler-or-dispatch & [override-args]]
+(defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
             :get    GET
             :post   POST
@@ -41,12 +41,12 @@
                                                               [:delete] "Tiedot poistettu"
                                                               :else nil)}])
                                   (match [handler-or-dispatch]
-                                         [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response])
-                                         :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response))])))}
+                                         [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
+                                         :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))}
               override-args))))
 
 (defn post [path params handler-or-dispatch]
-  (http :post path handler-or-dispatch {:params params}))
+  (http :post path handler-or-dispatch :override-args {:params params}))
 
 (register-handler
  :initialize-db
@@ -74,12 +74,6 @@
     ;; TODO make a generic error message panel in UI which is shown when
     ;; :error-message exists and has a control for emptying it
     (assoc db :error-message "Lomakelistan hakeminen epäonnistui")))
-
-(register-handler
-  :fetch-initial-data
-  (fn [db _]
-    (dispatch [:editor/refresh-forms])
-    db))
 
 (register-handler
  :set-active-panel
