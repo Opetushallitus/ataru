@@ -31,6 +31,7 @@
                  [ring/ring-json "0.4.0"]
                  [ring-ratelimit "0.2.2"]
                  [bk/ring-gzip "0.1.1"]
+                 [buddy/buddy-auth "0.13.0"]
                  [yesql "0.5.2"]
                  [org.flywaydb/flyway-core "3.2.1"]
                  [camel-snake-kebab "0.3.2"]
@@ -42,7 +43,8 @@
                  [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.5.0"]
                  [selmer "1.0.4"]
-                 [metosin/ring-http-response "0.6.5"]]
+                 [metosin/ring-http-response "0.6.5"]
+                 [oph/clj-util "0.1.0"]]
 
   :min-lein-version "2.5.3"
 

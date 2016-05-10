@@ -5,4 +5,8 @@
        :password "{{ataru_db_password}}"
        :server-name "{{ataru_db_host}}"
        :port-number {{ataru_db_port}}
-       :schema "public"}}
+       :schema "public"}
+ :authentication {:opintopolku-login-url "{{ataru_authentication_opintopolku_login_url}}"
+                  :opintopolku-logout-url  "{{ataru_authentication_opintopolku_logout_url}}"
+                  :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
+                  :cas-client-url "{{ataru_authentication_cas_client_url}}"}}

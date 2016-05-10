@@ -12,6 +12,9 @@
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
             [lomake-editori.db.form-store :as form-store]
             [lomake-editori.middleware.cache-control :as cache-control]
+            [lomake-editori.middleware.session-store :refer [create-store]]
+            [lomake-editori.authentication.auth-middleware :as auth-middleware]
+            [lomake-editori.authentication.auth-routes :refer [auth-routes]]
             [ring.util.response :refer [response]]
             [taoensso.timbre :refer [spy error]]
             [selmer.parser :as selmer])
@@ -72,12 +75,14 @@
                :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/lomake-editori/api" []
                  :tags ["form-api"]
-      (api/GET "/forms" []
-               (ok
-                 {:forms (form-store/get-forms)}))
-      (api/POST "/form" []
-                :body [form Form]
-                (trying #(form-store/upsert-form form))))))
+                 (api/GET "/user-info" {session :session}
+                          (ok {:username (-> session :identity :username)}))
+                 (api/GET "/forms" []
+                          (ok
+                           {:forms (form-store/get-forms)}))
+                 (api/POST "/form" []
+                           :body [form Form]
+                           (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
   (route/resources "/lomake-editori"))
@@ -88,8 +93,11 @@
                     app-routes
                     test-routes
                     (api-routes)
+                    (auth-routes)
                     (route/not-found "Not found"))
+      (auth-middleware/with-authentication)
       (wrap-defaults (-> site-defaults
+                         (update-in [:session] assoc :store (create-store))
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))

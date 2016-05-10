@@ -51,14 +51,19 @@
      ;;      [:div [applications]]
      ]))
 
-(def profile
-  [:div.profile
-   [:div
-    [:p "Testi Käyttäjä"]
-    [:p "Stadin Aikuisopisto"]]
-   [:div.divider]
-   [:div
-    [:a {:href "#"} "Kirjaudu ulos"]]])
+(defn profile []
+  (let [username         (subscribe [:state-query [:editor :user-info :username]])]
+    (fn []
+      (when @username
+        [:div.profile
+         [:div
+          [:p @username]
+          ;; Hidden until we get the relevant organization
+          ;; [:p "Stadin Aikuisopisto"]
+          ]
+         [:div.divider]
+         [:div
+          [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]]))))
 
 (defn status []
   (let [flasher          (subscribe [:state-query [:flasher]])
@@ -84,4 +89,4 @@
                  [:span.animated.fadeIn message]]))])))
 
 (defn top-banner []
-  [:div.top-banner [:div.tabs logo [title]] [status] profile])
+  [:div.top-banner [:div.tabs logo [title]] [status] [profile]])

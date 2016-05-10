@@ -19,6 +19,16 @@
                         :handle-get-forms
                         :handler-args selected-form-id)))
 
+(defn get-user-info [db _]
+  (println "get-user-info")
+  (http
+    :get
+    "/lomake-editori/api/user-info"
+    :editor/handle-user-info)
+  db)
+
+(register-handler :editor/get-user-info get-user-info)
+
 (defn with-author [form]
   (assoc form :author {:last "Turtiainen" :first "Janne"}))
 
@@ -53,6 +63,11 @@
                           second))]
       (dispatch [:editor/select-form active-form])
       mdb)))
+
+(register-handler
+  :editor/handle-user-info
+  (fn [db [_ user-info-response]]
+    (assoc-in db [:editor :user-info] user-info-response)))
 
 (register-handler
   :editor/refresh-forms
