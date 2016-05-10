@@ -5,25 +5,25 @@ export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
 export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 
 build-clojurescript() {
-    ./bin/lein cljsbuild once min
+    ../bin/lein cljsbuild once min
 }
 
 package() {
-    ./bin/lein do clean, uberjar
+    ../bin/lein do clean, uberjar
 }
 
 clean() {
-    ./bin/lein clean
+    ../bin/lein clean
     rm -rf target
     rm -rf node_modules
 }
 
 test-clojure() {
-    ./bin/lein spec
+    ../bin/lein spec
 }
 
 lint-clojure() {
-    ./bin/lein eastwood
+    ../bin/lein eastwood
 }
 
 command="$1"
