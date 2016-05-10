@@ -20,7 +20,6 @@
                         :handler-args selected-form-id)))
 
 (defn get-user-info [db _]
-  (println "get-user-info")
   (http
     :get
     "/lomake-editori/api/user-info"
