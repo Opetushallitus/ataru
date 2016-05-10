@@ -22,8 +22,6 @@ test-clojure() {
     ./bin/lein spec
 }
 
-test-browser() {
-    ./bin/lein doo phantom test once
 }
 
 command="$1"
@@ -35,8 +33,6 @@ case "$command" in
     "test-clojure" )
         test-clojure
         ;;
-    "test-browser" )
-        test-browser
         ;;
     "package" )
         package
