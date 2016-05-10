@@ -9,6 +9,8 @@
               [lomake-editori.editor.handlers]
               [taoensso.timbre :refer-macros [spy info]]))
 
+(enable-console-print!)
+
 (when config/debug?
   (info "dev mode"))
 
