@@ -1,14 +1,14 @@
 (ns lomake-editori.authentication.auth-middleware
   (:require
+    [oph.soresu.common.config :refer [config]]
     [buddy.auth :refer [authenticated?]]
     [buddy.auth.middleware :refer [wrap-authentication]]
     [buddy.auth.accessrules :refer [wrap-access-rules success error]]
     [buddy.auth.backends.session :refer [session-backend]]
     [clojure.data.json :as json]))
 
-(defonce opintopolku-login-url "https://testi.virkailija.opintopolku.fi/cas/login?service=")
-
-(defonce ataru-login-success-url "http://localhost:8350/lomake-editori/auth/cas")
+(def opintopolku-login-url (-> config :authentication :opintopolku-login-url))
+(def ataru-login-success-url (-> config :authentication :ataru-login-success-url))
 
 (def backend (session-backend))
 
