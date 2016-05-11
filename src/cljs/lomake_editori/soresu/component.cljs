@@ -2,4 +2,5 @@
   (:require [lomake-editori.soresu.components :refer [component]]
             [taoensso.timbre :refer-macros [spy]]))
 
-(def form-component (:form-component component))
+(defonce form-component (:form-component component))
+(defonce info-element (:info-element component))
