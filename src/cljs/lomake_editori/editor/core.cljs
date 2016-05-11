@@ -144,11 +144,14 @@
      (match [content]
             [{:fieldClass "wrapperElement"
               :children   children}]
+       (into []
+         (concat
             (into [:section.wrapper
                    (when-let [n (-> content :params :name)]
                      [:h1 n])]
                   (for [[index child] (zipmap (range) children)]
                     [soresu->reagent child (conj path :children index)]))
+            [((add-component) path)]))
 
             [{:fieldClass "formField"}]
             [form-field path]
