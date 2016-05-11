@@ -121,7 +121,7 @@
            (reset! local-latch handle)
            (reset! latch handle))))]))
 
-(defn add-component []
+(defn add-component [path]
   (let [show-bar? (reaction nil)
         [toolbar-abort-trigger
          toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
