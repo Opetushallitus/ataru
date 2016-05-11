@@ -140,7 +140,6 @@
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
-    (let [component
           [:section.component
            (match [content]
              [{:fieldClass "wrapperElement"
@@ -163,18 +162,16 @@
 
              :else (do
                      (error content)
-                     (throw "error" content)))]]
-      (if-not (some #{:children} path)
-        (conj component [add-component path])
-        component))))
+                     (throw "error" content)))]))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (take 3 (:content @form)))]
     (fn []
       [:section.form
+       (conj
        (into [:form]
              (for [[index json-blob] (zipmap (range) @content)
                    :when             (not-empty @content)]
-               [soresu->reagent json-blob [index]]))])))
-
+               [soresu->reagent json-blob [index]]))
+         [add-component (count @content)])])))
