@@ -141,30 +141,29 @@
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     (let [component
-    [:section.component
-     (match [content]
-            [{:fieldClass "wrapperElement"
-              :children   children}]
-       (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
-                                    [soresu->reagent child (conj path :children index)])
-                                  (into [:section.wrapper (when-let [n (-> content :params :name)]
-                                                            [:h1 n])]))]
-         (conj wrapper-element [add-component path]))
+          [:section.component
+           (match [content]
+             [{:fieldClass "wrapperElement"
+               :children   children}]
+             (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
+                                          [soresu->reagent child (conj path :children index)])
+                                     (into [:section.wrapper (when-let [n (-> content :params :name)]
+                                                               [:h1 n])]))]
+               (conj wrapper-element [add-component path]))
 
-            [{:fieldClass "formField"}]
-            [form-field path]
+             [{:fieldClass "formField"}]
+             [form-field path]
 
-            [{:fieldClass "infoElement"
-              :fieldType  "link"}]
-            [link-info content path]
+             [{:fieldClass "infoElement"
+               :fieldType  "link"}]
+             [link-info content path]
 
-            [{:fieldClass "infoElement"}]
-            [info content path]
+             [{:fieldClass "infoElement"}]
+             [info content path]
 
-            :else (do
-                    (error content)
-                    (throw "error" content)))
-     ]]
+             :else (do
+                     (error content)
+                     (throw "error" content)))]]
       (if-not (some #{:children} path)
         (conj component [add-component path])
         component))))
