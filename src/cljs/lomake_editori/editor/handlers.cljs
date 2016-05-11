@@ -73,7 +73,6 @@
 (register-handler
   :editor/refresh-forms
   (fn [db [_ selected-form-id]]
-    (.log js/console (str "refresh-forms: " selected-form-id))
     (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms selected-form-id)
     db))
