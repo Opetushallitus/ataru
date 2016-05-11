@@ -1,6 +1,6 @@
 (ns lomake-editori.authentication.auth-routes
-  (:require [lomake-editori.authentication.login :refer [login]]
-            [compojure.core :refer [GET routes context]]
+  (:require [lomake-editori.authentication.auth :refer [login logout cas-initiated-logout]]
+            [compojure.core :refer [GET POST routes context]]
             [oph.soresu.common.config :refer [config]]
             [taoensso.timbre :refer [info error]]
             [ring.util.http-response :refer [ok]]
@@ -28,7 +28,11 @@
                (catch Exception e
                  (error "Error in login ticket handling" e)
                  (redirect-to-logged-out-page))))
+           (POST "/cas" [logoutRequest]
+                 (cas-initiated-logout logoutRequest)
+                 (ok))
            (GET "/logout" {session :session}
                 (info "username" (-> session :identity :username) "logged out")
+                (logout session)
                 (-> (resp/redirect (str opintopolku-logout-url ataru-login-success-url))
                     (assoc :session {:identity nil})))))
