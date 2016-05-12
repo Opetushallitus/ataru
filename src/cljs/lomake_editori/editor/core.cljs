@@ -148,7 +148,7 @@
                                     [soresu->reagent child (conj path :children index)])
                                   (into [:section.wrapper (when-let [n (-> content :params :name)]
                                                             [:h1 n])]))]
-         (conj wrapper-element [add-component path]))
+         (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
        [form-field path]
