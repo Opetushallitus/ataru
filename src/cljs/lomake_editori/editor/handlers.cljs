@@ -66,6 +66,22 @@
       mdb)))
 
 (register-handler
+  :generate-component
+  (fn [db [_ generated-component path]]
+    (let [form-id      (-> db :editor :selected-form :id)
+          path-vec     (if
+                         (coll? path)
+                         path
+                         [path])
+          element-path (into []
+                         (concat [:editor :forms form-id :content] path-vec))]
+      (assoc-in db element-path {:fieldClass "formField"
+                                 :label      {:fi element-path, :sv element-path}
+                                 :id         "applicant-surname"
+                                 :required   true
+                                 :fieldType  "textField"}))))
+
+(register-handler
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
