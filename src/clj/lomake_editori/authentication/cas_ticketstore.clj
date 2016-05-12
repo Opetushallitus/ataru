@@ -1,12 +1,14 @@
-(ns lomake-editori.authentication.cas-ticketstore)
+(ns lomake-editori.authentication.cas-ticketstore
+  (:require [oph.soresu.common.db :refer [exec]]
+            [yesql.core :refer [defqueries]]))
 
-(def tickets (atom #{}))
+(defqueries "sql/cas-ticketstore-queries.sql")
 
 (defn login [ticket]
-  (swap! tickets conj ticket))
+  (exec :db add-ticket-query! {:ticket ticket}))
 
 (defn logout [ticket]
-  (swap! tickets disj ticket))
+  (exec :db remove-ticket-query! {:ticket ticket}))
 
 (defn logged-in? [ticket]
-  (contains? @tickets ticket))
+  (first (exec :db ticket-exists-query {:ticket ticket})))
