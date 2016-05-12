@@ -1,4 +1,4 @@
-(ns lomake-editori.middleware.session-store
+(ns ataru.middleware.session-store
   (:require [ring.middleware.session.store :refer [SessionStore]]
             [yesql.core :refer [defqueries]]
             [oph.soresu.common.db :refer [exec]])

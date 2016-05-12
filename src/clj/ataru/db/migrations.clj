@@ -1,4 +1,4 @@
-(ns lomake-editori.db.migrations
+(ns ataru.db.migrations
   (:require [com.stuartsierra.component :as component]
             [oph.soresu.common.db.migrations :as migrations])
   (:use [oph.soresu.common.config :only [config]]))

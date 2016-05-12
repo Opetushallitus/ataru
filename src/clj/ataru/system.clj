@@ -1,7 +1,7 @@
-(ns lomake-editori.system
+(ns ataru.system
   (:require [com.stuartsierra.component :as component]
-            [lomake-editori.core :as server]
-            [lomake-editori.db.migrations :as migrations]
+            [ataru.virkailija.virkailija-server :as virkailija-server]
+            [ataru.db.migrations :as migrations]
             [taoensso.timbre :refer [info]])
   (:gen-class))
 
@@ -9,7 +9,7 @@
   []
   (component/system-map
     :migration (migrations/new-migration)
-    :server    (server/new-server)))
+    :server (virkailija-server/new-server)))
 
 (defn ^:private wait-forever
   []

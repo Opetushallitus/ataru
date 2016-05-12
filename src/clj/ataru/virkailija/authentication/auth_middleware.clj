@@ -1,4 +1,4 @@
-(ns lomake-editori.authentication.auth-middleware
+(ns ataru.virkailija.authentication.auth-middleware
   (:require
     [oph.soresu.common.config :refer [config]]
     [buddy.auth :refer [authenticated?]]
@@ -6,7 +6,7 @@
     [buddy.auth.accessrules :refer [wrap-access-rules success error]]
     [buddy.auth.backends.session :refer [session-backend]]
     [clojure.data.json :as json]
-    [lomake-editori.authentication.auth :refer [logged-in?]]))
+    [ataru.virkailija.authentication.auth :refer [logged-in?]]))
 
 (def opintopolku-login-url (-> config :authentication :opintopolku-login-url))
 (def ataru-login-success-url (-> config :authentication :ataru-login-success-url))

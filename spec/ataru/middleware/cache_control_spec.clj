@@ -1,6 +1,6 @@
-(ns lomake-editori.middleware.cache-control-spec
-  (:require [lomake-editori.middleware.cache-control :as cache]
-            [lomake-editori.test-utils :refer [should-have-header should-not-have-header]]
+(ns ataru.middleware.cache-control-spec
+  (:require [ataru.middleware.cache-control :as cache]
+            [ataru.test-utils :refer [should-have-header should-not-have-header]]
             [ring.mock.request :as mock]
             [ring.util.http-response :as response]
             [speclj.core :refer :all]))

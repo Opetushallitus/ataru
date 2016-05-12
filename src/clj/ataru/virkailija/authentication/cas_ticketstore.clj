@@ -1,4 +1,4 @@
-(ns lomake-editori.authentication.cas-ticketstore
+(ns ataru.virkailija.authentication.cas-ticketstore
   (:require [oph.soresu.common.db :refer [exec]]
             [yesql.core :refer [defqueries]]))
 

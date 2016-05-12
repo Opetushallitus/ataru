@@ -1,4 +1,4 @@
-(ns lomake-editori.middleware.cache-control
+(ns ataru.middleware.cache-control
   (:require [ring.util.response :as response]))
 
 (defn wrap-cache-control

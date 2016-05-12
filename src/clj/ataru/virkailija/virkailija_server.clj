@@ -1,6 +1,6 @@
-(ns lomake-editori.core
+(ns ataru.virkailija.virkailija-server
   (:require [taoensso.timbre :refer [info]]
-            [lomake-editori.clerk-routes :refer [clerk-routes]]
+            [ataru.virkailija.virkailija-routes :refer [clerk-routes]]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]

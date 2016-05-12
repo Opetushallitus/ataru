@@ -1,6 +1,6 @@
-(ns lomake-editori.clerk-routes-spec
-  (:require [lomake-editori.clerk-routes :as clerk]
-            [lomake-editori.test-utils :refer [should-have-header]]
+(ns ataru.clerk-routes-spec
+  (:require [ataru.virkailija.virkailija-routes :as clerk]
+            [ataru.test-utils :refer [should-have-header]]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 

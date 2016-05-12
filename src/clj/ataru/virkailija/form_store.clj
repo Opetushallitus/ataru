@@ -1,4 +1,4 @@
-(ns lomake-editori.db.form-store
+(ns ataru.virkailija.form-store
   (:require [yesql.core :refer [defqueries]]
             [oph.soresu.common.db :refer [exec]]
             [camel-snake-kebab.extras :refer [transform-keys]]

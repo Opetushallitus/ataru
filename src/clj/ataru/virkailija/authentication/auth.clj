@@ -1,7 +1,7 @@
-(ns lomake-editori.authentication.auth
+(ns ataru.virkailija.authentication.auth
   (:require [oph.soresu.common.config :refer [config]]
             [taoensso.timbre :refer [info error]]
-            [lomake-editori.authentication.cas-ticketstore :as cas-store]
+            [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [clj-util.cas :as cas]
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp])

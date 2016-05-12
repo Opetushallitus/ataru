@@ -1,4 +1,4 @@
-(ns lomake-editori.db.extensions
+(ns ataru.db.extensions
   (:import [java.sql PreparedStatement])
   (:require [oph.soresu.common.jdbc.extensions] ; don't remove! imports JSONB handling
             [clojure.java.jdbc :as jdbc]

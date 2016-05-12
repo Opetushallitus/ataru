@@ -1,4 +1,4 @@
-(ns lomake-editori.test-utils
+(ns ataru.test-utils
   (:require [speclj.core :refer :all]))
 
 (defn should-have-header

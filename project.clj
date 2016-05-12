@@ -87,7 +87,7 @@
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
-  :main lomake-editori.system
+  :main ataru.system
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs"]
