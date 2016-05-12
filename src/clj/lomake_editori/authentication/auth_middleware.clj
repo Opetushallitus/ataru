@@ -5,7 +5,8 @@
     [buddy.auth.middleware :refer [wrap-authentication]]
     [buddy.auth.accessrules :refer [wrap-access-rules success error]]
     [buddy.auth.backends.session :refer [session-backend]]
-    [clojure.data.json :as json]))
+    [clojure.data.json :as json]
+    [lomake-editori.authentication.auth :refer [logged-in?]]))
 
 (def opintopolku-login-url (-> config :authentication :opintopolku-login-url))
 (def ataru-login-success-url (-> config :authentication :ataru-login-success-url))
@@ -15,7 +16,7 @@
 (defn any-access [request] true)
 
 (defn- authenticated-access [request]
-  (if (-> request :session :identity)
+  (if (logged-in? request)
     true
     (error "Authentication required")))
 
