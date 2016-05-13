@@ -90,7 +90,7 @@
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                dummy
-     "Tekstikenttä"              form-field
+     "Tekstikenttä"              component/text-field
      "Tekstialue"                dummy
      "Lista, monta valittavissa" dummy
      "Lista, yksi valittavissa"  dummy
@@ -104,8 +104,8 @@
 (defn component-toolbar [path]
   (fn [path]
     (into [:ul]
-          (for [[component-name generated-component] toolbar-elements]
-            [:li {:on-click #(dispatch [:generate-component generated-component path])}
+          (for [[component-name generate-fn] toolbar-elements]
+            [:li {:on-click #(dispatch [:generate-component generate-fn path])}
              component-name]))))
 
 (defn delayed-trigger [timeout-ms on-trigger]
@@ -148,7 +148,7 @@
                                     [soresu->reagent child (conj path :children index)])
                                   (into [:section.wrapper (when-let [n (-> content :params :name)]
                                                             [:h1 n])]))]
-         (conj wrapper-element [add-component path]))
+         (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
        [form-field path]
