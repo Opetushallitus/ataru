@@ -6,4 +6,6 @@
    :label      {:fi "Tekstikenttä", :sv "Textfält"}
    :id         "applicant-surname"
    :required   true
-   :fieldType  "textField"})
+   :fieldType  "textField"
+   :helpText   {:fi "Aputeksti"
+                :sv "Hjälptext"}})
