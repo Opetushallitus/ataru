@@ -146,7 +146,7 @@
          :children   children}]
        (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                     [soresu->reagent child (conj path :children index)])
-                                  (into [:section.wrapper (when-let [n (-> content :params :name)]
+                                  (into [:section.wrapper (when-let [n (-> content :label)]
                                                             [:h1 n])]))]
          (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 

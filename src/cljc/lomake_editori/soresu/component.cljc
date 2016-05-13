@@ -15,4 +15,5 @@
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
    :id         (str (gensym))
+   :label      "Osion nimi"
    :children   []})
