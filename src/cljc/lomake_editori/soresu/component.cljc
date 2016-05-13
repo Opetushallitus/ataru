@@ -1,6 +1,4 @@
-(ns lomake-editori.soresu.component
-  (:require [lomake-editori.soresu.components :refer [component]]
-            [taoensso.timbre :refer-macros [spy]]))
+(ns lomake-editori.soresu.component)
 
 (defn text-field
   []
