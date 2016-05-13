@@ -90,16 +90,16 @@
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                component/form-section
-     "Tekstikenttä"              component/text-field
-     "Tekstialue"                dummy
-     "Lista, monta valittavissa" dummy
-     "Lista, yksi valittavissa"  dummy
-     "Pudotusvalikko"            dummy
-     "Vierekkäiset kentät"       dummy
-     "Liitetiedosto"             dummy
-     "Ohjeteksti"                info
-     "Linkki"                    link-info
-     "Väliotsikko"               dummy}))
+     "Tekstikenttä"              component/text-field}))
+     ;"Tekstialue"                dummy
+     ;"Lista, monta valittavissa" dummy
+     ;"Lista, yksi valittavissa"  dummy
+     ;"Pudotusvalikko"            dummy
+     ;"Vierekkäiset kentät"       dummy
+     ;"Liitetiedosto"             dummy
+     ;"Ohjeteksti"                info
+     ;"Linkki"                    link-info
+     ;"Väliotsikko"               dummy
 
 (defn component-toolbar [path]
   (fn [path]
