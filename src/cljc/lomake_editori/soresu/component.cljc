@@ -4,7 +4,7 @@
   []
   {:fieldClass "formField"
    :label      {:fi "Tekstikenttä", :sv "Textfält"}
-   :id         "applicant-surname"
+   :id         (str gensym)
    :required   true
    :fieldType  "textField"
    :helpText   {:fi "Aputeksti"
@@ -14,5 +14,5 @@
   []
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
-   :id         "form-section"
+   :id         (str gensym)
    :children   []})
