@@ -9,3 +9,10 @@
    :fieldType  "textField"
    :helpText   {:fi "Aputeksti"
                 :sv "Hjälptext"}})
+
+(defn form-section
+  []
+  {:fieldClass "wrapperElement"
+   :fieldType  "fieldset"
+   :id         "form-section"
+   :children   []})

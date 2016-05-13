@@ -89,7 +89,7 @@
 
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
-    {"Lomakeosio"                dummy
+    {"Lomakeosio"                component/form-section
      "Tekstikenttä"              component/text-field
      "Tekstialue"                dummy
      "Lista, monta valittavissa" dummy
