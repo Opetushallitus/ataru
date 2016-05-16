@@ -50,12 +50,10 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defroutes app-routes
-  (GET "/" [] (redirect "/lomake-editori/"))
-  (GET "/lomake-editori" [] (redirect "/lomake-editori/")) ;; Without slash -> 404 unless we do this redirect
-  (GET "/lomake-editori/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))
+  (GET "/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))
 
 (defroutes test-routes
-  (GET "/lomake-editori/test.html" []
+  (GET "/test.html" []
     (if (:dev? env)
         (selmer/render-file "templates/test.html" {})
         (not-found "Not found"))))
@@ -65,7 +63,7 @@
    :name s/Str
    s/Any s/Any})
 
-(defn api-routes []
+(def api-routes
   (api/api
     {:swagger {:spec "/lomake-editori/swagger.json"
                :ui "/lomake-editori/api-docs"
@@ -73,7 +71,7 @@
                              :title "Ataru Clerk API"
                              :description "Specifies the clerk API for Ataru"}}
                :tags [{:name "form-api" :description "Form handling"}]}}
-    (api/context "/lomake-editori/api" []
+    (api/context "/api" []
                  :tags ["form-api"]
                  (api/GET "/user-info" {session :session}
                           (ok {:username (-> session :identity :username)}))
@@ -85,16 +83,18 @@
                            (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
-  (route/resources "/lomake-editori"))
+  (route/resources "/"))
 
 (def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
-                    resource-routes
-                    app-routes
-                    test-routes
-                    (api-routes)
-                    (auth-routes)
-                    (route/not-found "Not found"))
+              (GET "/" [] (redirect "/lomake-editori/"))
+              (context "/lomake-editori" []
+                resource-routes
+                app-routes
+                test-routes
+                api-routes
+                auth-routes)
+              (route/not-found "Not found"))
       (auth-middleware/with-authentication)
       (wrap-defaults (-> site-defaults
                          (update-in [:session] assoc :store (create-store))

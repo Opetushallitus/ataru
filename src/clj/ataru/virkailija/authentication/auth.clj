@@ -1,10 +1,11 @@
 (ns ataru.virkailija.authentication.auth
-  (:require [oph.soresu.common.config :refer [config]]
-            [taoensso.timbre :refer [info error]]
-            [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
+  (:require [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
             [clj-util.cas :as cas]
+            [environ.core :refer [env]]
             [ring.util.http-response :refer [ok]]
-            [ring.util.response :as resp])
+            [ring.util.response :as resp]
+            [taoensso.timbre :refer [info spy error]]
+            [oph.soresu.common.config :refer [config]])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (def cas-client-url (-> config :authentication :cas-client-url))
@@ -17,7 +18,9 @@
 
 (defn- cas-login [ticket virkailija-login-url]
   (let [cas-client (cas/cas-client cas-client-url)
-        username (.run (.validateServiceTicket cas-client virkailija-login-url ticket))]
+        username (if (:dev? env)
+                   "DEVELOPER"
+                   (.run (.validateServiceTicket cas-client virkailija-login-url ticket)))]
     (cas-store/login ticket)
     username))
 
