@@ -69,10 +69,10 @@
   :generate-component
   (fn [db [_ generate-fn path]]
     (let [form-id  (get-in db [:editor :selected-form :id])
-          path-vec     (if
-                         (coll? path)
-                         path
-                         [path])
+          path-vec (if
+                     (coll? path)
+                     path
+                     [path])
           new-form (-> db
                      (get-in [:editor :forms form-id :content])
                      (assoc-in path-vec (generate-fn)))]
