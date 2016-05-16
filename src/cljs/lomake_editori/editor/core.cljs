@@ -166,7 +166,7 @@
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
-        content (reaction (take 3 (:content @form)))]
+        content (reaction (:content @form))]
     (fn []
       [:section.form
        (conj
