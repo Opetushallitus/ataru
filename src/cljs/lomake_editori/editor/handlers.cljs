@@ -68,7 +68,7 @@
 (register-handler
   :generate-component
   (fn [db [_ generate-fn path]]
-    (let [form-id      (-> db :editor :selected-form :id)
+    (let [form-id  (get-in db [:editor :selected-form :id])
           path-vec     (if
                          (coll? path)
                          path
