@@ -4,8 +4,16 @@
   []
   {:fieldClass "formField"
    :label      {:fi "Tekstikenttä", :sv "Textfält"}
-   :id         "applicant-surname"
+   :id         (str (gensym))
    :required   true
    :fieldType  "textField"
    :helpText   {:fi "Aputeksti"
                 :sv "Hjälptext"}})
+
+(defn form-section
+  []
+  {:fieldClass "wrapperElement"
+   :fieldType  "fieldset"
+   :id         (str (gensym))
+   :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
+   :children   []})

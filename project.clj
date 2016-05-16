@@ -14,7 +14,7 @@
                  [cljs-ajax "0.5.4"]
 
                  ;clojure/clojurescript
-                 [prismatic/schema "1.0.5"]
+                 [prismatic/schema "1.1.1"]
                  [com.taoensso/timbre "4.3.1"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/core.match "0.3.0-alpha4"]
@@ -90,7 +90,7 @@
   :main ataru.system
 
   :cljsbuild {:builds [{:id "dev"
-                        :source-paths ["src/cljs"]
+                        :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
@@ -101,7 +101,7 @@
                                    :source-map-timestamp true}}
 
                        {:id "test"
-                        :source-paths ["src/cljs" "test/cljs"]
+                        :source-paths ["src/cljs" "test/cljs" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
@@ -111,7 +111,7 @@
                                    :optimizations :none}}
 
                        {:id "min"
-                        :source-paths ["src/cljs"]
+                        :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main lomake-editori.core
                                    :output-to "resources/public/js/compiled/app.js"
                                    :optimizations :advanced

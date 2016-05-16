@@ -10,4 +10,8 @@
   (it "should be validated with soresu-form schema"
     (should (s/validate soresu/FormField (component/text-field)))))
 
+(describe "form-section"
+  (it "should be validated with soresu-form schema"
+    (should (s/validate soresu/WrapperElement (component/form-section)))))
+
 (run-specs)

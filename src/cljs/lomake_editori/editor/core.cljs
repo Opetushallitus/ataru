@@ -89,17 +89,17 @@
 
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
-    {"Lomakeosio"                dummy
-     "Tekstikenttä"              component/text-field
-     "Tekstialue"                dummy
-     "Lista, monta valittavissa" dummy
-     "Lista, yksi valittavissa"  dummy
-     "Pudotusvalikko"            dummy
-     "Vierekkäiset kentät"       dummy
-     "Liitetiedosto"             dummy
-     "Ohjeteksti"                info
-     "Linkki"                    link-info
-     "Väliotsikko"               dummy}))
+    {"Lomakeosio"                component/form-section
+     "Tekstikenttä"              component/text-field}))
+     ;"Tekstialue"                dummy
+     ;"Lista, monta valittavissa" dummy
+     ;"Lista, yksi valittavissa"  dummy
+     ;"Pudotusvalikko"            dummy
+     ;"Vierekkäiset kentät"       dummy
+     ;"Liitetiedosto"             dummy
+     ;"Ohjeteksti"                info
+     ;"Linkki"                    link-info
+     ;"Väliotsikko"               dummy
 
 (defn component-toolbar [path]
   (fn [path]
@@ -146,7 +146,7 @@
          :children   children}]
        (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                     [soresu->reagent child (conj path :children index)])
-                                  (into [:section.wrapper (when-let [n (-> content :params :name)]
+                                  (into [:section.wrapper (when-let [n (-> content :label)]
                                                             [:h1 n])]))]
          (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 
@@ -166,7 +166,7 @@
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
-        content (reaction (take 3 (:content @form)))]
+        content (reaction (:content @form))]
     (fn []
       [:section.form
        (conj
