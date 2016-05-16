@@ -85,7 +85,7 @@
 (defroutes resource-routes
   (route/resources "/"))
 
-(def clerk-routes
+(def virkailija-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
               (GET "/" [] (redirect "/lomake-editori/"))
               (context "/lomake-editori" []
