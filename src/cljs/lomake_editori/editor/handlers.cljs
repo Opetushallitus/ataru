@@ -73,9 +73,12 @@
                          (coll? path)
                          path
                          [path])
-          element-path (into []
-                         (concat [:editor :forms form-id :content] path-vec))]
-      (assoc-in db element-path (generate-fn)))))
+          new-form (-> db
+                     (get-in [:editor :forms form-id :content])
+                     (assoc-in path-vec (generate-fn)))]
+      (-> db
+        (assoc-in [:editor :selected-form :content] new-form)
+        (assoc-in [:editor :forms form-id :content] new-form)))))
 
 (register-handler
   :editor/handle-user-info
