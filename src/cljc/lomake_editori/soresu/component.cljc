@@ -15,5 +15,5 @@
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
    :id         (str (gensym))
-   :label      "Osion nimi"
+   :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []})
