@@ -1,5 +1,6 @@
 (ns lomake-editori.editor.core
   (:require [lomake-editori.dev.lomake :as l]
+            [lomake-editori.editor.component :as ec]
             [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler register-sub]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
@@ -71,22 +72,6 @@
            [language lang]
            ])))))
 
-(defn form-field [path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
-    (fn [path]
-      (into [:div.form-field
-             [:p "Kentän nimi"]]
-            (for [lang @languages]
-              [:div
-               [:input {:value     (get-in @value [:label lang])
-                        :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]
-               [language lang]
-               #_[:p "Aputeksti"]
-               #_[:input {:value     (get-in @value [:helpText lang])
-                        :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :helpText lang])}]
-               #_[language lang]])))))
-
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                component/form-section
@@ -151,7 +136,7 @@
          (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
-       [form-field path]
+       [ec/form-field path]
 
        [{:fieldClass "infoElement"
          :fieldType  "link"}]
