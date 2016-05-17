@@ -1,6 +1,5 @@
-(ns ataru.virkailija.virkailija-server
+(ns ataru.http.server
   (:require [taoensso.timbre :refer [info]]
-            [ataru.virkailija.virkailija-routes :refer [clerk-routes]]
             [clojure.core.async :as a]
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -9,11 +8,11 @@
             [aleph.http :as http]
             [com.stuartsierra.component :as component]))
 
-(defn start-repl! []
+(defn start-repl! [repl-port]
   (when (:dev? env)
     (do
-      (start-server :port 3333 :handler cider-nrepl-handler)
-      (info "nREPL started on port 3333"))))
+      (start-server :port repl-port :handler cider-nrepl-handler)
+      (info "nREPL started on port" repl-port))))
 
 (defmacro ^:private try-f
   [& form]
@@ -22,23 +21,26 @@
 (defrecord Server []
   component/Lifecycle
 
-  (start [component]
-    (let [port    8350
-          handler (if (:dev? env)
-                    (wrap-reload (var clerk-routes))
-                    clerk-routes)
-          server  (http/start-server handler {:port port})]
+  (start [this]
+    (let [server-setup (-> this :server-setup)
+          port         (:port server-setup)
+          repl-port    (:repl-port server-setup)
+          routes       (:routes server-setup)
+          handler      (if (:dev? env)
+                         (wrap-reload routes)
+                         routes)
+          server       (http/start-server handler {:port port})]
       (do
-        (a/go (start-repl!)))
+        (a/go (start-repl! repl-port)))
       (info (str "Started server on port " port))
-      (assoc component :server server)))
+      (assoc this :server server)))
 
-  (stop [component]
+  (stop [this]
     (info "Stopping server")
-    (try-f (let [server (:server component)]
+    (try-f (let [server (:server this)]
             (.close server)))
     (info "Stopped server")
-    (assoc component :server nil)))
+    (assoc this :server nil)))
 
 (defn new-server
   []

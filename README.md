@@ -48,28 +48,16 @@ Give it a password `oph`
 
 ### Run application:
 
-```
-lein clean
-lein with-profile figwheel-standalone figwheel dev
-```
-
-Figwheel will automatically push cljs changes to the browser.
-
-Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
-
-### Preferred way to run application
-
-This way is preferred because you can shutdown the server and frontend separately from each other.
-
 This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
 
 ```
-lein with-profile dev run
+lein virkailija-dev
 (in another terminal)
-lein with-profile dev figwheel dev
+lein figwheel dev
 ```
+Figwheel will automatically push cljs changes to the browser.
 
-Browse to [http://localhost:3450](http://localhost:3450).
+Browse to [http://localhost:8350](http://localhost:8350).
 
 ### Browser tests:
 
@@ -78,8 +66,8 @@ Browser tests can be run by invoking
 ```
 npm install
 
-# In one terminal window, run the actual application:
-lein with-profile dev run
+# In one terminal window, run the actual application, for example:
+lein virkailija-dev
 
 # In second window, you'll want to run figwheel in dev profile as normally:
 lein figwheel dev

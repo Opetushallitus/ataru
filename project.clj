@@ -90,7 +90,7 @@
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
-  :main ataru.system
+  :main ataru.core
 
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -165,7 +165,9 @@
                        :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"] "resource"]
                        :resource-paths ["resources"]}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
-                                              :server-port 3449}}})
+                                              :server-port 3449}}}
+  :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
+            "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
 
 
 
