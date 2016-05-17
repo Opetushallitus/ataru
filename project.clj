@@ -101,7 +101,7 @@
                                    :source-map-timestamp true}}
 
                        {:id "test"
-                        :source-paths ["src/cljs" "test/cljs" "src/cljc"]
+                        :source-paths ["src/cljs" "test/cljs/browser" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
