@@ -102,7 +102,7 @@
 
                        {:id "browser-test"
                         :source-paths ["src/cljs" "test/cljs/browser" "src/cljc"]
-                        :compiler {:output-to "resources/public/js/test/test.js"
+                        :compiler {:output-to "resources/public/js/test/browser-test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
                                    :main lomake-editori.runner
