@@ -3,6 +3,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [compojure.api.sweet :as api]
+            [ataru.schema :as ataru-schema]
             [schema.core :as s]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
@@ -58,15 +59,10 @@
         (selmer/render-file "templates/test.html" {})
         (not-found "Not found"))))
 
-(s/defschema Form
-  {(s/optional-key :id) (s/maybe s/Int)
-   :name s/Str
-   s/Any s/Any})
-
 (def api-routes
   (api/api
-    {:swagger {:spec "/lomake-editori/swagger.json"
-               :ui "/lomake-editori/api-docs"
+    {:swagger {:spec "/swagger.json"
+               :ui "/api-docs"
                :data {:info {:version "1.0.0"
                              :title "Ataru Clerk API"
                              :description "Specifies the clerk API for Ataru"}}
@@ -76,10 +72,12 @@
                  (api/GET "/user-info" {session :session}
                           (ok {:username (-> session :identity :username)}))
                  (api/GET "/forms" []
+                          :summary "Return all forms."
                           (ok
                            {:forms (form-store/get-forms)}))
                  (api/POST "/form" []
-                           :body [form Form]
+                           :body [form ataru-schema/Form]
+                           :summary "Persist changed form."
                            (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes

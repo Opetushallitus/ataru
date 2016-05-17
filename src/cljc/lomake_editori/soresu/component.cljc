@@ -5,7 +5,7 @@
   {:fieldClass "formField"
    :label      {:fi "", :sv ""}
    :id         (str (gensym))
-   :required   true
+   :required   false
    :fieldType  "textField"})
 
 (defn form-section
