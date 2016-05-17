@@ -6,7 +6,7 @@
     [:div.language
      [:div (clojure.string/upper-case (name lang))]]))
 
-(defn form-field [path]
+(defn text-field [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
