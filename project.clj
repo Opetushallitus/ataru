@@ -67,12 +67,15 @@
   :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.3"]
+            [lein-doo "0.1.6"]
             [lein-figwheel "0.5.0-6"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
             [lein-resource "15.10.2"]
             [speclj "3.3.0"]]
+
+  :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
   :eastwood {:namespaces [:source-paths]
              :exclude-linters [:local-shadows-var]}
@@ -101,11 +104,19 @@
                                    :source-map-timestamp true}}
 
                        {:id "test"
-                        :source-paths ["src/cljs" "test/cljs" "src/cljc"]
+                        :source-paths ["src/cljs" "test/cljs/unit" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
+                                   :main ataru.unit-runner
+                                   :foreign-libs [{:file ~soresu
+                                                   :provides ["oph.lib.soresu"]}]
+                                   :optimizations :none}}
+
+                       {:id "browser-test"
+                        :source-paths ["src/cljs" "test/cljs/browser" "src/cljc"]
+                        :compiler {:output-to "resources/public/js/test/browser-test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
-                                   :main lomake-editori.runner
+                                   :main lomake-editori.browser-runner
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}

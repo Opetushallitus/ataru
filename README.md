@@ -85,7 +85,7 @@ lein with-profile dev run
 lein figwheel dev
 
 # And in the third window, run cljsbuild for tests to automatically recompile test.js
-lein cljsbuild auto test
+lein cljsbuild auto browser-test
 ```
 
 After this you can run tests by navigating to http://localhost:8350/lomake-editori/test.html .
@@ -99,6 +99,12 @@ lein spec
 ```
 
 To run them automatically whenever code changes, use `-a`.
+
+### ClojureScript unit tests
+
+```
+lein doo phantom test [once|auto]
+```
 
 ### Clojure linter
 

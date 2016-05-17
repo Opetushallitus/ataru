@@ -65,20 +65,21 @@
       (dispatch [:editor/select-form active-form])
       mdb)))
 
-(register-handler
-  :generate-component
-  (fn [db [_ generate-fn path]]
-    (let [form-id  (get-in db [:editor :selected-form :id])
-          path-vec (if
-                     (coll? path)
-                     path
-                     [path])
-          new-form (-> db
-                     (get-in [:editor :forms form-id :content])
-                     (assoc-in path-vec (generate-fn)))]
-      (-> db
-        (assoc-in [:editor :selected-form :content] new-form)
-        (assoc-in [:editor :forms form-id :content] new-form)))))
+(defn generate-component
+  [db [_ generate-fn path]]
+  (let [form-id  (get-in db [:editor :selected-form :id])
+        path-vec (if
+                   (coll? path)
+                   path
+                   [path])
+        new-form (-> db
+                   (get-in [:editor :forms form-id :content])
+                   (assoc-in path-vec (generate-fn)))]
+    (-> db
+      (assoc-in [:editor :selected-form :content] new-form)
+      (assoc-in [:editor :forms form-id :content] new-form))))
+
+(register-handler :generate-component generate-component)
 
 (register-handler
   :editor/handle-user-info
