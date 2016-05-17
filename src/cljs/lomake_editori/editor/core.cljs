@@ -30,27 +30,6 @@
   (fn [db]
     (reaction [:fi :sv])))
 
-(defn language [lang]
-  (fn [lang]
-    [:div.language
-     [:div (clojure.string/upper-case (name lang))]]))
-
-(defn info [{:keys [params] :as content} path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path :text])]
-    (fn [{:keys [params] :as content} path]
-      (into
-        [:div.info
-         [:p "Ohjeteksti"]]
-        (for [lang @languages]
-          [:div
-           [:input
-            {:value       (get @value lang)
-             :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
-             :placeholder "Ohjetekstin sisältö"}]
-           [language lang]
-           ])))))
-
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                component/form-section
@@ -122,7 +101,7 @@
        [ec/link-info content path]
 
        [{:fieldClass "infoElement"}]
-       [info content path]
+       [ec/info content path]
 
        :else (do
                (error content)

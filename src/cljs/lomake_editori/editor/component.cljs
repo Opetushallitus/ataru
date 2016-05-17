@@ -41,3 +41,19 @@
                     :value       (get-in @value [:text lang])
                     :placeholder "Otsikko"}]
            [language lang]])))))
+
+(defn info [{:keys [params] :as content} path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path :text])]
+    (fn [{:keys [params] :as content} path]
+      (into
+        [:div.info
+         [:p "Ohjeteksti"]]
+        (for [lang @languages]
+          [:div
+           [:input
+            {:value       (get @value lang)
+             :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
+             :placeholder "Ohjetekstin sisältö"}]
+           [language lang]
+           ])))))
