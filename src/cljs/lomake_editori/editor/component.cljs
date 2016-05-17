@@ -21,3 +21,23 @@
            #_[:input {:value     (get-in @value [:helpText lang])
                       :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :helpText lang])}]
            #_[language lang]])))))
+
+(defn link-info [{:keys [params] :as content} path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn [{:keys [params] :as content} path]
+      (into
+        [:div.link-info
+         [:p "Linkki"]]
+        (for [lang @languages]
+          [:div
+           [:p "Osoite"]
+           [:input {:value       (get-in @value [:params :href lang])
+                    :type        "url"
+                    :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :params :href lang])
+                    :placeholder "http://"}]
+           [language lang]
+           [:input {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                    :value       (get-in @value [:text lang])
+                    :placeholder "Otsikko"}]
+           [language lang]])))))

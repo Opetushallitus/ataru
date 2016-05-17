@@ -35,27 +35,6 @@
     [:div.language
      [:div (clojure.string/upper-case (name lang))]]))
 
-
-(defn link-info [{:keys [params] :as content} path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
-    (fn [{:keys [params] :as content} path]
-      (into
-        [:div.link-info
-         [:p "Linkki"]]
-        (for [lang @languages]
-          [:div
-           [:p "Osoite"]
-           [:input {:value       (get-in @value [:params :href lang])
-                    :type        "url"
-                    :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :params :href lang])
-                    :placeholder "http://"}]
-           [language lang]
-           [:input {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
-                    :value       (get-in @value [:text lang])
-                    :placeholder "Otsikko"}]
-           [language lang]])))))
-
 (defn info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path :text])]
@@ -140,7 +119,7 @@
 
        [{:fieldClass "infoElement"
          :fieldType  "link"}]
-       [link-info content path]
+       [ec/link-info content path]
 
        [{:fieldClass "infoElement"}]
        [info content path]
