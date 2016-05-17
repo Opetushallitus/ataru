@@ -100,6 +100,12 @@ lein spec
 
 To run them automatically whenever code changes, use `-a`.
 
+### ClojureScript unit tests
+
+```
+lein doo phantom test [once|auto]
+```
+
 ### Clojure linter
 
 ```
