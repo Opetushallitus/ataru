@@ -26,6 +26,10 @@ test-clojure() {
     ./bin/lein spec
 }
 
+test-clojurescript() {
+    ./bin/lein doo phantom test once
+}
+
 lint-clojure() {
     ./bin/lein eastwood
 }
@@ -41,6 +45,9 @@ case "$command" in
         ;;
     "lint-clojure" )
         lint-clojure
+        ;;
+    "test-clojurescript" )
+        test-clojurescript
         ;;
     "package" )
         package
