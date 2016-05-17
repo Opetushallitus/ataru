@@ -1,4 +1,4 @@
-(ns lomake-editori.runner
+(ns lomake-editori.browser-runner
     (:require [cljs.test :refer-macros [run-all-tests]]
               [lomake-editori.core-test]))
 

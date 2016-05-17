@@ -105,7 +105,7 @@
                         :compiler {:output-to "resources/public/js/test/browser-test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
-                                   :main lomake-editori.runner
+                                   :main lomake-editori.browser-runner
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
