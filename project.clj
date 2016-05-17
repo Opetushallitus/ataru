@@ -100,7 +100,7 @@
                                                    :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
-                       {:id "test"
+                       {:id "browser-test"
                         :source-paths ["src/cljs" "test/cljs/browser" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
                                    :output-dir "resources/public/js/test/out"
