@@ -18,3 +18,16 @@
       2 (count new-content)
       {:some :component} (first new-content)
       {:fake :component} (second new-content))))
+
+(deftest generate-component-adds-to-child
+  (let [form-id 1234
+        initial-form {:id form-id
+                      :content [{:children [{:child :component}]}]}
+        new-children (-> {:editor {:selected-form initial-form
+                                   :forms         {form-id initial-form}}}
+                         (h/generate-component [:generate-component generate-fn [0 :children 1]])
+                         (get-in [:editor :forms form-id :content 0 :children]))]
+    (are [x y] (= x y)
+      2 (count new-children)
+      {:child :component} (first new-children)
+      {:fake :component} (second new-children))))
