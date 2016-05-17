@@ -1,5 +1,16 @@
 (ns ataru.test-utils
-  (:require [speclj.core :refer :all]))
+  (:require [ataru.virkailija.virkailija-routes :as clerk]
+            [ring.mock.request :as mock]
+            [speclj.core :refer :all]))
+
+(defn login []
+  (-> (mock/request :get "/lomake-editori/auth/cas")
+      (clerk/clerk-routes)
+      :headers
+      (get "Set-Cookie")
+      first
+      (clojure.string/split #";")
+      first))
 
 (defn should-have-header
   [header expected-val resp]

@@ -1,28 +1,18 @@
 (ns ataru.clerk-routes-spec
   (:require [ataru.virkailija.virkailija-routes :as clerk]
-            [ataru.test-utils :refer [should-have-header]]
+            [ataru.test-utils :refer [login should-have-header]]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [taoensso.timbre :refer [spy debug]]))
 
 (defmacro with-static-resource
   [name path]
   `(with ~name (-> (mock/request :get ~path)
-                   (clerk/clerk-routes))))
-
-(describe "GET /lomake-editori"
-  (with-static-resource resp "/lomake-editori")
-
-  (it "should not return nil"
-    (should-not-be-nil @resp))
-
-  (it "should return HTTP 302"
-    (should= 302 (:status @resp)))
-
-  (it "should redirect to /lomake-editori/"
-    (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
+                   (update-in [:headers] assoc "cookie" (login))
+                   clerk/clerk-routes)))
 
 (describe "GET /lomake-editori/"
-  (with-static-resource resp "/lomake-editori/")
+  (with-static-resource resp "/lomake-editori")
 
   (it "should not return nil"
     (should-not-be-nil @resp))
