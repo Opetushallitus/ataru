@@ -88,6 +88,12 @@
 (def virkailija-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
               (GET "/" [] (redirect "/lomake-editori/"))
+              ;; NOTE: This is now needed because of the way web-server is
+              ;; Set up on test and other environments. If you want
+              ;; to remove this, test the setup with some local web server
+              ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
+              ;; and verify that it works on test environment as well.
+              (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
               (context "/lomake-editori" []
                 resource-routes
                 app-routes
