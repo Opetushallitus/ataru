@@ -6,7 +6,6 @@
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
-            [lomake-editori.soresu.component :as component]
             [taoensso.timbre :refer-macros [spy debug error]]))
 
 (register-sub
@@ -30,57 +29,6 @@
   (fn [db]
     (reaction [:fi])))
 
-(def toolbar-elements
-  (let [dummy [:div "ei vielä toteutettu.."]]
-    {"Lomakeosio"                component/form-section
-     "Tekstikenttä"              component/text-field}))
-     ;"Tekstialue"                dummy
-     ;"Lista, monta valittavissa" dummy
-     ;"Lista, yksi valittavissa"  dummy
-     ;"Pudotusvalikko"            dummy
-     ;"Vierekkäiset kentät"       dummy
-     ;"Liitetiedosto"             dummy
-     ;"Ohjeteksti"                info
-     ;"Linkki"                    link-info
-     ;"Väliotsikko"               dummy
-
-(defn component-toolbar [path]
-  (fn [path]
-    (into [:ul]
-          (for [[component-name generate-fn] toolbar-elements]
-            [:li {:on-click #(dispatch [:generate-component generate-fn path])}
-             component-name]))))
-
-(defn delayed-trigger [timeout-ms on-trigger]
-  (let [latch (atom nil)]
-    [(fn [] (reset! latch nil))
-     (fn [event]
-       (let [local-latch (atom nil)
-             handle      (js/setTimeout (fn []
-                                          (when (= @latch @local-latch)
-                                            (on-trigger event)))
-                                        timeout-ms)]
-         (do
-           (reset! local-latch handle)
-           (reset! latch handle))))]))
-
-(defn add-component [path]
-  (let [show-bar? (reaction nil)
-        [toolbar-abort-trigger
-         toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
-        [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
-    (fn [path]
-      (if @show-bar?
-        [:div.component-toolbar
-         {:on-mouse-leave toolbar-delayed-trigger
-          :on-mouse-enter toolbar-abort-trigger}
-         [component-toolbar path]]
-        [:div.form__add-component-toolbar
-         {:on-mouse-enter plus-delayed-trigger
-          :on-mouse-leave plus-abort-trigger}
-         [:div.plus-component
-          [:span "+"]]]))))
-
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:section.component
@@ -91,7 +39,7 @@
                                     [soresu->reagent child (conj path :children index)])
                                   (into [:div.form__wrapper-element (when-let [n (-> content :label)]
                                                                              [:h1 n])]))]
-         (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
+         (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
        [ec/text-field path]
@@ -117,4 +65,4 @@
            (for [[index json-blob] (zipmap (range) @content)
                  :when             (not-empty @content)]
              [soresu->reagent json-blob [index]]))
-         [add-component (count @content)])])))
+         [ec/add-component (count @content)])])))

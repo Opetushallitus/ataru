@@ -1,5 +1,7 @@
 (ns lomake-editori.editor.component
-  (:require [re-frame.core :refer [subscribe dispatch]]))
+  (:require [lomake-editori.soresu.component :as component]
+            [reagent.ratom :refer-macros [reaction]]
+            [re-frame.core :refer [subscribe dispatch]]))
 
 (defn language [lang]
   (fn [lang]
@@ -57,3 +59,54 @@
              :placeholder "Ohjetekstin sisältö"}]
            [language lang]
            ])))))
+
+(defn ^:private delayed-trigger [timeout-ms on-trigger]
+  (let [latch (atom nil)]
+    [(fn [] (reset! latch nil))
+     (fn [event]
+       (let [local-latch (atom nil)
+             handle      (js/setTimeout (fn []
+                                          (when (= @latch @local-latch)
+                                            (on-trigger event)))
+                           timeout-ms)]
+         (do
+           (reset! local-latch handle)
+           (reset! latch handle))))]))
+
+(def ^:private toolbar-elements
+  (let [dummy [:div "ei vielä toteutettu.."]]
+    {"Lomakeosio"                component/form-section
+     "Tekstikenttä"              component/text-field}))
+;"Tekstialue"                dummy
+;"Lista, monta valittavissa" dummy
+;"Lista, yksi valittavissa"  dummy
+;"Pudotusvalikko"            dummy
+;"Vierekkäiset kentät"       dummy
+;"Liitetiedosto"             dummy
+;"Ohjeteksti"                info
+;"Linkki"                    link-info
+;"Väliotsikko"               dummy
+
+(defn ^:private component-toolbar [path]
+  (fn [path]
+    (into [:ul]
+      (for [[component-name generate-fn] toolbar-elements]
+        [:li {:on-click #(dispatch [:generate-component generate-fn path])}
+         component-name]))))
+
+(defn add-component [path]
+  (let [show-bar? (reaction nil)
+        [toolbar-abort-trigger
+         toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
+        [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
+    (fn [path]
+      (if @show-bar?
+        [:div.component-toolbar
+         {:on-mouse-leave toolbar-delayed-trigger
+          :on-mouse-enter toolbar-abort-trigger}
+         [component-toolbar path]]
+        [:div.form__add-component-toolbar
+         {:on-mouse-enter plus-delayed-trigger
+          :on-mouse-leave plus-abort-trigger}
+         [:div.plus-component
+          [:span "+"]]]))))
