@@ -70,15 +70,20 @@
     (api/context "/api" []
                  :tags ["form-api"]
                  (api/GET "/user-info" {session :session}
-                          (ok {:username (-> session :identity :username)}))
+                   (ok {:username (-> session :identity :username)}))
                  (api/GET "/forms" []
-                          :summary "Return all forms."
-                          (ok
-                           {:forms (form-store/get-forms)}))
+                   :summary "Return all forms."
+                   :return [ataru-schema/Form]
+                   (ok
+                     {:forms (form-store/get-forms)}))
+                 (api/GET "/forms/content/:id" []
+                   :path-params [id :- Long]
+                   :return ataru-schema/FormWithContent
+                   :summary "Get content for form")
                  (api/POST "/form" []
-                           :body [form ataru-schema/Form]
-                           :summary "Persist changed form."
-                           (trying #(form-store/upsert-form form))))))
+                   :body [form ataru-schema/FormWithContent]
+                   :summary "Persist changed form."
+                   (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
   (route/resources "/"))

@@ -94,27 +94,37 @@
     db))
 
 (register-handler
+  :editor/fetch-form-content
+  (fn [db [_ selected-form-id]]
+    (http :get (str "/lomake-editori/api/forms/content/"
+                    selected-form-id)
+          (fn [db response _]
+            (update-in db [:editor :forms selected-form] assoc :content (:content response))))))
+
+(register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
-    (let [previous-form (-> db :editor :selected-form)
-          clicked-form-with-content (merge clicked-form dev/placeholder-content)]
-      (when (not= (:id previous-form) (:id clicked-form))
-       (autosave/stop-autosave! (-> db :editor :autosave)))
+    (let [previous-form (-> db :editor :selected-form)]
+      (do
+        (when (not= (:id previous-form) (:id clicked-form))
+          (autosave/stop-autosave! (-> db :editor :autosave)))
 
-      (-> db
-          (assoc-in [:editor :forms (:id clicked-form)] clicked-form-with-content)
-          (assoc-in [:editor :selected-form] clicked-form-with-content)
-          (assoc-in [:editor :autosave]
-                    (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
-                                             :changed-predicate
-                                             (fn [current prev]
-                                               (not=
-                                                 (dissoc prev :modified-time)
-                                                 (dissoc current :modified-time)))
-                                             :handler
-                                             (fn [form previous-autosave-form]
-                                               (dispatch [:editor/save-form form]))
-                                             :initial clicked-form-with-content}))))))
+        (dispatch [:editor/fetch-form-content (:id clicked-form)])
+
+        (-> db
+            (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
+            (assoc-in [:editor :selected-form] clicked-form)
+            (assoc-in [:editor :autosave]
+                      (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
+                                               :changed-predicate
+                                               (fn [current prev]
+                                                 (not=
+                                                   (dissoc prev :modified-time)
+                                                   (dissoc current :modified-time)))
+                                               :handler
+                                               (fn [form previous-autosave-form]
+                                                 (dispatch [:editor/save-form form]))
+                                               :initial        clicked-form})))))))
 
 (defn- callback-after-post [db new-or-updated-form]
   (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
