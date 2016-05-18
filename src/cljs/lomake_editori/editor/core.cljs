@@ -75,7 +75,7 @@
          {:on-mouse-leave toolbar-delayed-trigger
           :on-mouse-enter toolbar-abort-trigger}
          [component-toolbar path]]
-        [:div.add-component
+        [:div.form__add-component-toolbar
          {:on-mouse-enter plus-delayed-trigger
           :on-mouse-leave plus-abort-trigger}
          [:div.plus-component
@@ -89,8 +89,8 @@
          :children   children}]
        (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                     [soresu->reagent child (conj path :children index)])
-                                  (into [:section.wrapper (when-let [n (-> content :label)]
-                                                            [:h1 n])]))]
+                                  (into [:div.form__wrapper-element (when-let [n (-> content :label)]
+                                                                             [:h1 n])]))]
          (conj wrapper-element [add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
