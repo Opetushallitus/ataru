@@ -6,5 +6,7 @@
 (def hakija-routes
   (-> (routes
         (context "/hakemus" []
-           (GET "/" [] (ok "<h1>Hakija ui placeholder</h1>")))
+           (GET "/" [] {:status 200
+                        :headers {"Content-Type" "text/html"}
+                        :body "<h1>Hakija ui placeholder</h1>"}))
         (route/not-found "<h1>Page not found</h1>"))))
