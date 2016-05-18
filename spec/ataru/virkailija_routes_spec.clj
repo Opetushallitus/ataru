@@ -11,6 +11,18 @@
                    (update-in [:headers] assoc "cookie" (login))
                    v/virkailija-routes)))
 
+(describe "GET /lomake-editori"
+  (with-static-resource resp "/lomake-editori/")
+
+  (it "should not return nil"
+    (should-not-be-nil @resp))
+
+  (it "should return HTTP 302"
+    (should= 302 (:status @resp)))
+
+  (it "should redirect to /lomake-editori/"
+    (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
+
 (describe "GET /lomake-editori/"
   (with-static-resource resp "/lomake-editori/")
 

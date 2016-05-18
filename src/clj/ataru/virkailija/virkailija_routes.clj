@@ -83,7 +83,7 @@
 (defroutes resource-routes
   (route/resources "/"))
 
-(def virkailija-routes
+(def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
               (GET "/" [] (redirect "/lomake-editori/"))
               ;; NOTE: This is now needed because of the way web-server is
