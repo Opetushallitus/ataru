@@ -28,7 +28,7 @@
 (register-sub
   :editor/languages
   (fn [db]
-    (reaction [:fi :sv])))
+    (reaction [:fi])))
 
 (def toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
