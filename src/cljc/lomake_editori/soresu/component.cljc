@@ -6,9 +6,7 @@
    :label      {:fi "", :sv ""}
    :id         (str (gensym))
    :required   true
-   :fieldType  "textField"
-   :helpText   {:fi "Aputeksti"
-                :sv "Hjälptext"}})
+   :fieldType  "textField"})
 
 (defn form-section
   []
