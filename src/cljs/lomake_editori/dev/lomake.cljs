@@ -37,9 +37,4 @@
        :label      {:fi "Etunimi", :sv "Förnamn"}
        :id         "applicant-surname"
        :required   true
-       :fieldType  "textField"}]}
-    {:fieldClass "formField"
-     :label      {:fi "Etunimi", :sv "Förnamn"}
-     :id         "applicant-surname"
-     :required   true
-     :fieldType  "textField"}]})
+       :fieldType  "textField"}]}]})
