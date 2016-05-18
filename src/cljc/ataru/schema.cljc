@@ -31,8 +31,9 @@
          (s/maybe :en) s/Str})
 
 (s/defschema Form
-  {(s/optional-key :id) s/Str
+  {(s/optional-key :id) s/Int
    :name                s/Str
+   :modified-by         s/Str
    s/Any                s/Any})
 
 (s/defschema FormWithContent

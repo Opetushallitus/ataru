@@ -73,13 +73,14 @@
                    (ok {:username (-> session :identity :username)}))
                  (api/GET "/forms" []
                    :summary "Return all forms."
-                   :return [ataru-schema/Form]
+                   :return {:forms [ataru-schema/Form]}
                    (ok
                      {:forms (form-store/get-forms)}))
                  (api/GET "/forms/content/:id" []
                    :path-params [id :- Long]
                    :return ataru-schema/FormWithContent
-                   :summary "Get content for form")
+                   :summary "Get content for form"
+                   (trying #(form-store/fetch-form id)))
                  (api/POST "/form" []
                    :body [form ataru-schema/FormWithContent]
                    :summary "Persist changed form."
