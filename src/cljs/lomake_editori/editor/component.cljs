@@ -13,13 +13,13 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       (-> [:div.form__form-element
-           [:h1.form__form-element--header "Tekstikenttä"]
-           [:p.form__form-element--help-text "Otsikko"]]
+           [:h1.form__form-element--header "Tekstikenttä"]]
           (into
-            (for [lang @languages]
-              [:div
-               [:input.form__input {:value     (get-in @value [:label lang])
-                                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]]))))))
+            [[:div
+              [:p.form__form-element--help-text "Otsikko"]
+              (for [lang @languages]
+                [:input.form__input {:value     (get-in @value [:label lang])
+                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}])]])))))
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
