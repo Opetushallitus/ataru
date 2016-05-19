@@ -96,8 +96,8 @@
 (register-handler
   :editor/fetch-form-content
   (fn [db [_ selected-form-id]]
-    (http :get (str "/lomake-editori/api/forms/content/"
-                    selected-form-id)
+    (http :get
+          (str "/lomake-editori/api/forms/content/" selected-form-id)
           (fn [db response _]
             (update-in db [:editor :forms selected-form] assoc :content (:content response))))))
 

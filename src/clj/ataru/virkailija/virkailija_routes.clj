@@ -83,7 +83,7 @@
                    :return ataru-schema/FormWithContent
                    :summary "Get content for form"
                    (trying #(form-store/fetch-form id)))
-                 (api/POST "/form" []
+                 (api/POST "/form" {session :session}
                    :body [form ataru-schema/FormWithContent]
                    :summary "Persist changed form."
                    (trying #(form-store/upsert-form form))))))

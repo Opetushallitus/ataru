@@ -14,7 +14,7 @@
   (->> (if (some? (when id
                     (first (exec :db form-exists-query form))))
          (do
-           (jdbc/with-db-transaction [conn {:connection {:datasource (get-datasource :db)}}]
+           (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
              (update-form-query! form conn)
              (first (get-by-id {:id (:id form)} conn))))
          (exec :db add-form-query<! form))
