@@ -1,6 +1,6 @@
 (ns lomake-editori.editor.component
   (:require [lomake-editori.soresu.component :as component]
-            [reagent.ratom :refer-macros [reaction]]
+            [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]))
 
 (defn language [lang]
@@ -95,7 +95,7 @@
          component-name]))))
 
 (defn add-component [path]
-  (let [show-bar? (reaction nil)
+  (let [show-bar? (r/atom nil)
         [toolbar-abort-trigger
          toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
         [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
