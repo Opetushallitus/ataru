@@ -15,11 +15,20 @@
       (-> [:div.form__form-element
            [:header.form__form-element--header "Tekstikenttä"]]
           (into
-            [[:div
-              [:p.form__form-element--help-text "Otsikko"]
-              (for [lang @languages]
-                [:input.form__input {:value     (get-in @value [:label lang])
-                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}])]])))))
+            [[:div.form__entity-container
+              [:header.form__entity-header "Otsikko"]
+              [:div.form__element-container
+              (doall
+                (for [lang @languages]
+                  [:input.form__input {:value     (get-in @value [:label lang])
+                                       :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]])
+          (into
+            [[:div.form__entity-container
+              [:header.form__entity-header "Koko"]
+              [:div.form__element-container
+               [:span.form__size-button "S"]
+               [:span.form__size-button "M"]
+               [:span.form__size-button "L"]]]])))))
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])

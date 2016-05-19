@@ -82,6 +82,36 @@
   border: 1px solid @section-gray-border;
   margin-top: 18px;
   margin-bottom: 18px;
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.form__entity-container {
+  display: flex;
+  flex-flow: row wrap;
+  flex: 0 1 362px;
+}
+
+.form__entity-header {
+  color: @blue-text-color;
+  font-size: 14px;
+  margin: 11px 13px 0px;
+}
+
+.form__element-container {
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  flex: 0 1 362px;
+}
+
+.form__size-button {
+  color: @white;
+  background-color: @section-header-text;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 1 72px;
 }
 
 .form__form-element--header {
@@ -92,20 +122,15 @@
   text-transform: uppercase;
   margin: 0px;
   padding: 10px 11px 8px 11px;
-}
-
-.form__form-element--help-text {
-  color: @blue-text-color;
-  font-size: 14px;
-  margin: 11px 13px 0px;
+  flex: 0 1 100%;
 }
 
 .form__input {
   color: @text-color;
   font-size: 16px;
   border: 1px solid @section-header-text;
-  margin: 10px 14px;
   padding: 10px 14px 11px;
+  flex: 0 1 362px;
 }
 
 .form__add-component-toolbar {
