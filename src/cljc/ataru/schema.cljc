@@ -31,10 +31,11 @@
          (s/maybe :en) s/Str})
 
 (s/defschema Form
-  {(s/optional-key :id) s/Int
-   :name                s/Str
-   :modified-by         s/Str
-   s/Any                s/Any})
+  {(s/optional-key :id)            s/Int
+   :name                           s/Str
+   :modified-by                    s/Str
+   (s/optional-key :modified-time) org.joda.time.DateTime
+   s/Any                           s/Any})
 
 (s/defschema FormWithContent
   (merge Form

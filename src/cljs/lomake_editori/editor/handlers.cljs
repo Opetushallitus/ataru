@@ -3,6 +3,7 @@
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [lomake-editori.autosave :as autosave]
+            [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.dev.lomake :as dev]
             [lomake-editori.handlers :refer [http post]]
             [lomake-editori.temporal :refer [coerce-timestamp]]
@@ -99,7 +100,11 @@
     (http :get
           (str "/lomake-editori/api/forms/content/" selected-form-id)
           (fn [db response _]
-            (update-in db [:editor :forms selected-form-id] assoc :content (:content response))))
+            (update-in db
+              [:editor :forms selected-form-id]
+              merge
+              (-> (update-in response [:modified-time] coerce-timestamp)
+                  (select-keys [:content :modified-by :modified-time])))))
     db))
 
 (register-handler

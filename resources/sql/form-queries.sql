@@ -4,7 +4,7 @@ select id, name, modified_by, modified_time from forms order by modified_time de
 
 -- name: add-form-query<!
 -- Add form
-insert into forms (name, content, modified_by) values (:name, :content, :modified-by);
+insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
 
 -- name: form-exists-query
 -- Get single form
@@ -18,6 +18,6 @@ select * from forms where id = :id;
 update forms set
   name = :name,
   modified_time = now(),
-  modified_by = :modified-by,
-  content = :content,
+  modified_by = :modified_by,
+  content = cast(:content as jsonb)
   where id = :id;
