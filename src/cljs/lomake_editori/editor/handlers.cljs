@@ -99,7 +99,8 @@
     (http :get
           (str "/lomake-editori/api/forms/content/" selected-form-id)
           (fn [db response _]
-            (update-in db [:editor :forms selected-form] assoc :content (:content response))))))
+            (update-in db [:editor :forms selected-form-id] assoc :content (:content response))))
+    db))
 
 (register-handler
   :editor/select-form
