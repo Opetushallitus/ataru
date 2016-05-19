@@ -13,7 +13,7 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       (-> [:div.form__form-element
-           [:h1.form__form-element--header "Tekstikenttä"]]
+           [:header.form__form-element--header "Tekstikenttä"]]
           (into
             [[:div
               [:p.form__form-element--help-text "Otsikko"]
