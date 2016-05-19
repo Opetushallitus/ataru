@@ -32,7 +32,9 @@
 ;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
 
 (defn trying [f]
-  (try (ok (f))
+  (try (if-let [result (f)]
+         (ok result)
+         (not-found))
        (catch Exception e
          (error e)
          (internal-server-error))))
