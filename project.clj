@@ -103,6 +103,17 @@
                                                    :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
+                       {:id "hakija-dev"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :figwheel {:on-jsload "ataru.hakija.core/mount-root"}
+                        :compiler {:main ataru.hakija.core
+                                   :output-to "resources/public/js/compiled/hakija-app.js"
+                                   :output-dir "resources/public/js/compiled/hakija-out"
+                                   :asset-path "js/compiled/hakija-out"
+                                   :foreign-libs [{:file ~soresu
+                                                   :provides ["oph.lib.soresu"]}]
+                                   :source-map-timestamp true}}
+
                        {:id "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
