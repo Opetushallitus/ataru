@@ -3,12 +3,10 @@
 (defn text-field
   []
   {:fieldClass "formField"
-   :label      {:fi "Tekstikenttä", :sv "Textfält"}
+   :label      {:fi "", :sv ""}
    :id         (str (gensym))
    :required   true
-   :fieldType  "textField"
-   :helpText   {:fi "Aputeksti"
-                :sv "Hjälptext"}})
+   :fieldType  "textField"})
 
 (defn form-section
   []

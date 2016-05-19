@@ -73,38 +73,42 @@
   margin-left: 10px;
 }
 
-section.component {
-  color: @section-header-text;
-  p { margin: 0; }
-  input {
-    padding: 0.5em;
-    border: 1px solid @section-header-text;
-    border-radius: 2px;
-    padding-right: 6em;
-    width: 33%;
-    margin: 0.5em 0;
-  }
-  div.language {
-    display: inline-block;
-    width: 0;
-    & >div {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      color: @section-gray-border;
-      font-size: 80%;
-      position: relative;
-      left: -1em;
-    }
-  }
+.form__wrapper-element {
+  border: 1px solid @section-gray-border;
+  padding: 0px 11px;
 }
 
-section.wrapper {
-  border: 1px solid @section-gray-border; 
-  padding: 1em;
+.form__form-element {
+  border: 1px solid @section-gray-border;
+  margin-top: 18px;
+  margin-bottom: 18px;
 }
 
-.add-component {
+.form__form-element--header {
+  background-color: @element-header-background;
+  color: @blue-text-color;
+  font-size: 16px;
+  font-weight: normal;
+  text-transform: uppercase;
+  margin: 0px;
+  padding: 10px 11px 8px 11px;
+}
+
+.form__form-element--help-text {
+  color: @blue-text-color;
+  font-size: 14px;
+  margin: 11px 13px 0px;
+}
+
+.form__input {
+  color: @text-color;
+  font-size: 16px;
+  border: 1px solid @section-header-text;
+  margin: 10px 14px;
+  padding: 10px 14px 11px;
+}
+
+.form__add-component-toolbar {
   @transition: 0.2s;
   &:hover {
      .plus-component {
@@ -123,7 +127,8 @@ section.wrapper {
   background-color: #F7F7F7;
   transition: background-color @transition ease;
   width: 100%;
-  margin: 1em 0;
+  margin-top: 21px;
+  margin-bottom: 14px;
   padding: 0.5em;
   .plus-component {
     background-color: @selected-blue;
@@ -145,7 +150,8 @@ section.wrapper {
 .component-toolbar {
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
-  margin: 1em 0;
+  margin-top: 21px;
+  margin-bottom: 14px;
   padding: 0.5em;
   ul { margin: 0; }
   li {
