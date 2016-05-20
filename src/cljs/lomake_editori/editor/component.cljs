@@ -20,6 +20,7 @@
               [:div.form__element-container
               (doall
                 (for [lang @languages]
+                  ^{:key lang}
                   [:input.form__input {:value     (get-in @value [:label lang])
                                        :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]])
           (into
