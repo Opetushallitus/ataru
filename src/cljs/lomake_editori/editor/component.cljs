@@ -12,7 +12,7 @@
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
-      (-> [:div.form__form-element
+      (-> [:div.editor-form__component-wrapper
            [:header.form__form-element--header "Tekstikenttä"]]
           (into
             [[:div.form__entity-container
