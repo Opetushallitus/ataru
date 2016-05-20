@@ -31,7 +31,6 @@
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
-    [:section.editor-form__component
      (match [content]
        [{:fieldClass "wrapperElement"
          :children   children}]
@@ -53,7 +52,7 @@
 
        :else (do
                (error content)
-               (throw "error" content)))]))
+               (throw "error" content)))))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
