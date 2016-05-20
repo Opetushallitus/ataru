@@ -10,6 +10,6 @@
   (-> (routes
         (context "/hakemus" []
           (route/resources "/")
-          (GET "/" []
-            (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint})))
-        (route/not-found "<h1>Page not found</h1>"))))
+          (GET "/:hakemus-id" []
+            (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))
+        (route/not-found "<h1>Page not found</h1>")))))

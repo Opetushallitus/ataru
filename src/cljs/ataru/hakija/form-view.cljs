@@ -1,4 +1,9 @@
 (ns ataru.hakija.form-view
-  (:require [ataru.hakija.banner :refer [banner]]))
+  (:require [ataru.hakija.banner :refer [banner]]
+            [clojure.string :as str]))
 
-(defn form-view [] [banner])
+(defn- application-id []
+  (last (str/split (-> js/window .-location .-pathname) #"/")))
+
+(defn form-view []
+  [banner])
