@@ -33,11 +33,11 @@
             (let [id (str (gensym))]
               [[:div.editor-form__checkbox-wrapper
                 [:div.editor-form__checkbox-container
-                 [:input {:type "checkbox"
+                 [:input.editor-form__checkbox {:type "checkbox"
                                          :id (str id "_mandatory_choice")}]
                  [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
                 [:div.editor-form__checkbox-container
-                 [:input {:type "checkbox"
+                 [:input.editor-form__checkbox {:type "checkbox"
                                          :id (str id "_multiple_choices")}]
                  [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
