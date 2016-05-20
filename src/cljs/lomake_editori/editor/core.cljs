@@ -36,7 +36,7 @@
          :children   children}]
        (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                     [soresu->reagent child (conj path :children index)])
-                                  (into [:div.editor-form__component-wrapper (when-let [n (-> content :label)]
+                                  (into [:div.editor-form__section_wrapper (when-let [n (-> content :label)]
                                                                              [:h1 n])]))]
          (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
