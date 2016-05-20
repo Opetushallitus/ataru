@@ -28,7 +28,18 @@
               [:div.form__element-container
                [:span.form__size-button "S"]
                [:span.form__size-button "M"]
-               [:span.form__size-button "L"]]]])))))
+               [:span.form__size-button "L"]]]])
+          (into
+            (let [id (str (gensym))]
+              [[:div.form__checkbox-group
+                [:div.form__checkbox-container
+                 [:input.form__checkbox {:type "checkbox"
+                                         :id (str id "_mandatory_choice")}]
+                 [:label.form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
+                [:div.form__checkbox-container
+                 [:input.form__checkbox {:type "checkbox"
+                                         :id (str id "_multiple_choices")}]
+                 [:label.form__checkbox-label {:for (str id "_mandatory_choice")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
