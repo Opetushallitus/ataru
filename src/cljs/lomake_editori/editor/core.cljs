@@ -31,7 +31,7 @@
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
-    [:section.component
+    [:section.editor-form__component
      (match [content]
        [{:fieldClass "wrapperElement"
          :children   children}]
@@ -59,7 +59,7 @@
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
-      [:section.form
+      [:section.editor-form
        (conj
          (into [:form]
            (for [[index json-blob] (zipmap (range) @content)
