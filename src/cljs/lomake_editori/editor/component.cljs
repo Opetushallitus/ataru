@@ -13,34 +13,33 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       (-> [:div.editor-form__component-wrapper
-           [:header.form__form-element--header "Tekstikenttä"]]
+           [:header.editor-form__component-header "Tekstikenttä"]]
           (into
-            [[:div.form__entity-container
-              [:header.form__entity-header "Otsikko"]
-              [:div.form__element-container
+            [[:div.editor-form__text-field-wrapper
+              [:header.editor-form__component-item-header "Otsikko"]
               (doall
                 (for [lang @languages]
                   ^{:key lang}
-                  [:input.form__input {:value     (get-in @value [:label lang])
-                                       :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]])
+                  [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                       :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])
           (into
-            [[:div.form__entity-container
-              [:header.form__entity-header "Koko"]
-              [:div.form__element-container
-               [:span.form__size-button "S"]
-               [:span.form__size-button "M"]
-               [:span.form__size-button "L"]]]])
+            [[:div.editor-form__size-button-wrapper
+              [:header.editor-form__component-item-header "Koko"]
+              [:div.editor-form__size-button-group
+               [:span.editor-form__size-button.editor-form__size-button--not-selected "S"]
+               [:span.editor-form__size-button.editor-form__size-button--selected "M"]
+               [:span.editor-form__size-button.editor-form__size-button--not-selected "L"]]]])
           (into
             (let [id (str (gensym))]
-              [[:div.form__checkbox-group
-                [:div.form__checkbox-container
-                 [:input.form__checkbox {:type "checkbox"
+              [[:div.editor-form__checkbox-wrapper
+                [:div.editor-form__checkbox-container
+                 [:input {:type "checkbox"
                                          :id (str id "_mandatory_choice")}]
-                 [:label.form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
-                [:div.form__checkbox-container
-                 [:input.form__checkbox {:type "checkbox"
+                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
+                [:div.editor-form__checkbox-container
+                 [:input {:type "checkbox"
                                          :id (str id "_multiple_choices")}]
-                 [:label.form__checkbox-label {:for (str id "_mandatory_choice")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
+                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
@@ -119,11 +118,11 @@
         [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
     (fn [path]
       (if @show-bar?
-        [:div.component-toolbar
+        [:div.editor-form__component-toolbar
          {:on-mouse-leave toolbar-delayed-trigger
           :on-mouse-enter toolbar-abort-trigger}
          [component-toolbar path]]
-        [:div.form__add-component-toolbar
+        [:div.editor-form__add-component-toolbar
          {:on-mouse-enter plus-delayed-trigger
           :on-mouse-leave plus-abort-trigger}
          [:div.plus-component
