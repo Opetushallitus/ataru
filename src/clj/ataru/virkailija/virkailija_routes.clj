@@ -3,7 +3,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [compojure.api.sweet :as api]
-            [ataru.schema :as ataru-schema]
+            [ataru.schema.clj-schema :as ataru-schema]
             [schema.core :as s]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
