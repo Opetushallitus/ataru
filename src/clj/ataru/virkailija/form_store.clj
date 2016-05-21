@@ -30,7 +30,9 @@
                                             nil))))]
         (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
           (update-form-query! f {:connection conn})
-          (first (get-by-id f {:connection conn})))))
+          (transform-keys
+            ->kebab-case-keyword
+            (first (get-by-id f {:connection conn}))))))
     (execute :db add-form-query<! form)))
 
 (defn fetch-form [id]

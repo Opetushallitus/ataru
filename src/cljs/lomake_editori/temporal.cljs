@@ -25,7 +25,7 @@
   (first (for [formatter formatters]
            (try (f/parse formatter timestamp-value)
                 (catch :default _
-                  (warn "Could not parse " timestamp-value)
+                  (warn "Could not parse" timestamp-value)
                   nil)))))
 
 (defn coerce-timestamp [kw]
@@ -38,3 +38,21 @@
        (f/unparse time-formatter)
        (str (with-dow google-date)
             "na ")))
+
+(defonce iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
+
+(defn date? [date-str]
+  (when (and date-str (string? date-str))
+    (re-matches iso-date-pattern date-str)))
+
+(defn parse-times [expr]
+  (let [f (fn [[k v]]
+            (if (date? v)
+              [k (str->googdate v)]
+              [k v]))]
+    (clojure.walk/postwalk
+      (fn [x]
+        (if (map? x)
+          (into {} (map f x))
+          x))
+      expr)))

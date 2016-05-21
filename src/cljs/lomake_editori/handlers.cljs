@@ -2,7 +2,7 @@
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
-              [lomake-editori.temporal :refer [coerce-timestamp]]
+              [lomake-editori.temporal :as temporal]
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [cljs.core.match :refer-macros [match]]
@@ -33,19 +33,21 @@
                                                                       :put "tallennettaessa."
                                                                       :delete "poistettaessa."))
                                                       :detail %}])
-               :handler         (fn [response]
-                                  (dispatch [:flasher {:loading? false
-                                                       :message
-                                                       (match [method]
-                                                              [:post] "Kaikki muutokset tallennettu"
-                                                              [:delete] "Tiedot poistettu"
-                                                              :else nil)}])
-                                  (match [handler-or-dispatch]
-                                         [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
-                                         :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))}
+               :handler         (comp (fn [response]
+                                        (dispatch [:flasher {:loading? false
+                                                             :message
+                                                             (match [method]
+                                                                    [:post] "Kaikki muutokset tallennettu"
+                                                                    [:delete] "Tiedot poistettu"
+                                                                    :else nil)}])
+                                        (match [handler-or-dispatch]
+                                               [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
+                                               [nil] nil
+                                               :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
+                                      temporal/parse-times)}
               override-args))))
 
-(defn post [path params handler-or-dispatch]
+(defn post [path params & [handler-or-dispatch]]
   (http :post path handler-or-dispatch :override-args {:params params}))
 
 (register-handler

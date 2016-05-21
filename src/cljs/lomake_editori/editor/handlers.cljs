@@ -3,10 +3,8 @@
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [lomake-editori.autosave :as autosave]
-            [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.dev.lomake :as dev]
             [lomake-editori.handlers :refer [http post]]
-            [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -49,8 +47,7 @@
   :handle-get-forms
   (fn [db [_ forms-response selected-form-id]]
     (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                                              :id (mapv (comp with-author
-                                                                              (coerce-timestamp :modified-time))
+                                                              :id (mapv with-author
                                                                         (:forms forms-response)))
                                                             (sorted-by-time)))
                           (update-in [:editor] dissoc :selected-form))
@@ -103,8 +100,7 @@
             (update-in db
               [:editor :forms selected-form-id]
               merge
-              (-> (update-in response [:modified-time] coerce-timestamp)
-                  (select-keys [:content :modified-by :modified-time])))))
+              (select-keys response [:content :modified-by :modified-time]))))
     db))
 
 (register-handler
@@ -132,18 +128,10 @@
                                                  (dispatch [:editor/save-form form]))
                                                :initial        clicked-form})))))))
 
-(defn- callback-after-post [db new-or-updated-form]
-  (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
-                           (assoc :author {:last  "Testaaja" ;; placeholder
-                                           :first "Teppo"}))]
-    (assoc-in db [:editor :forms (:id form-with-time)] form-with-time)))
-
 (register-handler
   :editor/save-form
   (fn [db [_ form]]
-    (post "/lomake-editori/api/form"
-          form
-          callback-after-post)
+    (post "/lomake-editori/api/form" form)
     db))
 
 (register-handler
