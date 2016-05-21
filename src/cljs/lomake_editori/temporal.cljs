@@ -22,11 +22,13 @@
 
 (defn str->googdate [timestamp-value]
   {:pre [(some? timestamp-value)]}
-  (first (for [formatter formatters]
+  (->> (for [formatter formatters]
            (try (f/parse formatter timestamp-value)
                 (catch :default _
                   (warn "Could not parse" timestamp-value)
-                  nil)))))
+                  nil)))
+       (filter some?)
+       first))
 
 (defn coerce-timestamp [kw]
   (fn [element]
