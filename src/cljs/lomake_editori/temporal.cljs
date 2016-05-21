@@ -18,7 +18,7 @@
 (defn with-dow [google-date]
   (days-finnish (.getDay google-date)))
 
-(def formatters (mapv f/formatters [:date-time-no-ms :date-time]))
+(defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
 (defn str->googdate [timestamp-value]
   {:pre [(some? timestamp-value)]}

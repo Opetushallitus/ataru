@@ -8,7 +8,7 @@
               [cljs.core.match :refer-macros [match]]
               [taoensso.timbre :refer-macros [spy debug]]))
 
-(def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
+(defonce formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
