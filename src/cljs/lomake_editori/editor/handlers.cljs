@@ -131,7 +131,8 @@
 (register-handler
   :editor/save-form
   (fn [db [_ form]]
-    (post "/lomake-editori/api/form" form)
+    (post "/lomake-editori/api/form"
+          (dissoc form :modified-time))
     db))
 
 (register-handler
