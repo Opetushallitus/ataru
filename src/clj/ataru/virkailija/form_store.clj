@@ -24,10 +24,10 @@
                (first (execute :db form-exists-query form))))
     (do
       (let [f (-> (transform-keys ->snake_case form)
-                  (update-in [:content] (fn [content]
-                                          (if (not-empty content)
-                                            content
-                                            nil))))]
+                  (update :content (fn [content]
+                                     (if (not-empty content)
+                                       content
+                                       nil))))]
         (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
           (update-form-query! f {:connection conn})
           (transform-keys
