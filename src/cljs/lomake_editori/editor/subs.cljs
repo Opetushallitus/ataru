@@ -6,4 +6,4 @@
   :editor/selected-form
   (fn [db _]
     (reaction
-      (get-in @db [:editor :forms (get-in @db [:editor :selected-form :id])]))))
+      (get-in @db [:editor :forms (get-in @db [:editor :selected-form-id])]))))

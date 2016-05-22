@@ -50,7 +50,7 @@
                                                               :id (mapv with-author
                                                                         (:forms forms-response)))
                                                             (sorted-by-time)))
-                          (update-in [:editor] dissoc :selected-form))
+                          (update :editor dissoc :selected-form-id))
           forms       (-> mdb :editor :forms)
           active-form (or
                         (->> forms
@@ -65,17 +65,15 @@
 
 (defn generate-component
   [db [_ generate-fn path]]
-  (let [form-id  (get-in db [:editor :selected-form :id])
-        path-vec (if
-                   (coll? path)
-                   path
-                   [path])
-        new-form (-> db
-                   (get-in [:editor :forms form-id :content])
-                   (assoc-in path-vec (generate-fn)))]
+  (let [form-id       (get-in db [:editor :selected-form-id])
+        path-vec      (if (coll? path)
+                        path
+                        [path])
+        new-component (-> db
+                          (get-in [:editor :forms form-id :content])
+                          (assoc-in path-vec (generate-fn)))]
     (-> db
-      (assoc-in [:editor :selected-form :content] new-form)
-      (assoc-in [:editor :forms form-id :content] new-form))))
+      (assoc-in [:editor :forms form-id :content] new-component))))
 
 (register-handler :generate-component generate-component)
 
@@ -106,16 +104,16 @@
 (register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
-    (let [previous-form (-> db :editor :selected-form)]
+    (let [previous-form-id (-> db :editor :selected-form-id)]
       (do
-        (when (not= (:id previous-form) (:id clicked-form))
+        (when (not= previous-form-id (:id clicked-form))
           (autosave/stop-autosave! (-> db :editor :autosave)))
 
         (dispatch [:editor/fetch-form-content (:id clicked-form)])
 
         (-> db
             (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
-            (assoc-in [:editor :selected-form] clicked-form)
+            (assoc-in [:editor :selected-form-id] (:id clicked-form))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
                                                :changed-predicate
@@ -151,7 +149,7 @@
 (register-handler
   :editor/change-form-name
   (fn [db [_ new-form-name]]
-    (let [selected-form (-> db :editor :selected-form)]
-      (update-in db [:editor :forms (:id selected-form)]
+    (let [selected-form-id (-> db :editor :selected-form-id)]
+      (update-in db [:editor :forms selected-form-id]
                  assoc :name
                  new-form-name))))

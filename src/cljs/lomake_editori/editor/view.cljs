@@ -12,7 +12,7 @@
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form :id]])]
+        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
       (into [:div.editor-form__list]
             (for [form (vals @forms)]
