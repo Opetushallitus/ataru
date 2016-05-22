@@ -1,24 +1,24 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
+  (:require [ataru.middleware.cache-control :as cache-control]
+            [ataru.middleware.session-store :refer [create-store]]
+            [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
+            [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ataru.virkailija.form-store :as form-store]
+            [compojure.api.sweet :as api]
+            [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
-            [compojure.api.sweet :as api]
-            [ataru.schema.clj-schema :as ataru-schema]
-            [schema.core :as s]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
-            [ataru.virkailija.form-store :as form-store]
-            [ataru.middleware.cache-control :as cache-control]
-            [ataru.middleware.session-store :refer [create-store]]
-            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
-            [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.response :refer [response]]
-            [taoensso.timbre :refer [spy error]]
-            [selmer.parser :as selmer])
+            [schema.core :as s]
+            [selmer.parser :as selmer]
+            [taoensso.timbre :refer [spy debug error]])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
