@@ -71,13 +71,6 @@
         db)))
 
 (register-handler
-  :handle-error
-  (fn [db [_ error]]
-    ;; TODO make a generic error message panel in UI which is shown when
-    ;; :error-message exists and has a control for emptying it
-    (assoc db :error-message "Lomakelistan hakeminen epäonnistui")))
-
-(register-handler
  :set-active-panel
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
