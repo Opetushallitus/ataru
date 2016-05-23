@@ -6,7 +6,8 @@
             [lomake-editori.editor.handlers]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.hakija.form-view :refer [form-view]]
-            [ataru.hakija.application-handlers]
+            [ataru.hakija.application-handlers] ;; required although no explicit dependency
+            [ataru.hakija.subs] ;; required although no explicit dependency
             [clojure.string :as str]))
 
 (enable-console-print!)
