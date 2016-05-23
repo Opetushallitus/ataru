@@ -19,21 +19,26 @@
 (defn get-forms []
   (execute :db get-forms-query {}))
 
+(defn- restructure-form-with-content
+  "Unwraps form :content wrapper and transforms all other keys
+   to kebab-case"
+  [form]
+  (assoc (transform-keys ->kebab-case-keyword (dissoc form :content))
+         :content (-> form :content :content)))
+
 (defn upsert-form [{:keys [id] :as form}]
-  (if (some? (when id
-               (first (execute :db form-exists-query form))))
-    (do
-      (let [f (-> (transform-keys ->snake_case form)
-                  (update :content (fn [content]
-                                     (if (not-empty content)
-                                       content
-                                       nil))))]
-        (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
-          (update-form-query! f {:connection conn})
-          (transform-keys
-            ->kebab-case-keyword
-            (first (get-by-id f {:connection conn}))))))
-    (execute :db add-form-query<! form)))
+  (let [content {:content (or (not-empty (:content form))
+                              [])}
+        f       (-> (transform-keys ->snake_case (dissoc form :content))
+                    (assoc :content content))]
+    (restructure-form-with-content
+      (if (some? (when id
+                   (first (execute :db form-exists-query f))))
+        (do
+          (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
+            (update-form-query! f {:connection conn})
+            (first (get-by-id f {:connection conn}))))
+        (exec :db add-form-query<! f)))))
 
 (defn fetch-form [id]
-  (first (execute :db get-by-id {:id id})))
+  (restructure-form-with-content (first (exec :db get-by-id {:id id}))))
