@@ -1,4 +1,4 @@
-(ns ataru.clerk-routes-spec
+(ns ataru.virkailija-routes-spec
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.test-utils :refer [login should-have-header]]
             [ring.mock.request :as mock]
