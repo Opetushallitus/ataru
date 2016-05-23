@@ -45,7 +45,7 @@
 
        [{:fieldClass "infoElement"
          :fieldType  "link"}]
-       [ec/link-info content path]
+       [ec/render-link-info content path]
 
        [{:fieldClass "infoElement"}]
        [ec/info content path]

@@ -45,7 +45,7 @@
                                                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :multiple-answers])}]
                  [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
-(defn link-info [{:keys [params] :as content} path]
+(defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [{:keys [params] :as content} path]
