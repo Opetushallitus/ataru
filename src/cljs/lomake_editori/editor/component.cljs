@@ -39,7 +39,7 @@
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
                                          :id (str id "_multiple_choices")}]
-                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
+                 [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
 (defn link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
