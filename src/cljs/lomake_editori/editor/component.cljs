@@ -34,11 +34,11 @@
               [[:div.editor-form__checkbox-wrapper
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
-                                         :id (str id "_mandatory_choice")}]
+                                                :id (str id "_mandatory_choice")}]
                  [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
-                                         :id (str id "_multiple_choices")}]
+                                                :id (str id "_multiple_choices")}]
                  [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
 (defn link-info [{:keys [params] :as content} path]
