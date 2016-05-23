@@ -30,20 +30,21 @@
                [:span.editor-form__size-button.editor-form__size-button--selected "M"]
                [:span.editor-form__size-button.editor-form__size-button--not-selected "L"]]]])
           (into
-            (let [id (str (gensym))]
-              [[:div.editor-form__checkbox-wrapper
+            [[:div.editor-form__checkbox-wrapper
+              (let [id (str (gensym))]
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
                                                 :id (str id "_mandatory_choice")
                                                 :checked (:required initial-content)
                                                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :required])}]
-                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
+                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]])
+              (let [id (str (gensym))]
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
                                                 :id (str id "_multiple_choices")
                                                 :checked (:multiple-answers initial-content)
                                                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :multiple-answers])}]
-                 [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
+                 [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]])]])))))
 
 (defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
