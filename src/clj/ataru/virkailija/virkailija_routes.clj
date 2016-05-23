@@ -84,8 +84,8 @@
                    :summary "Get content for form"
                    (trying #(form-store/fetch-form id)))
                  (api/POST "/form" {session :session}
-                   :body [form ataru-schema/FormWithContent]
                    :summary "Persist changed form."
+                   :body [form ataru-schema/FormWithContent]
                    (trying #(form-store/upsert-form form))))))
 
 (defroutes resource-routes
