@@ -140,6 +140,15 @@
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false
                                    :foreign-libs [{:file ~soresu
+                                                   :provides ["oph.lib.soresu"]}]}}
+                       {:id "hakija-min"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :compiler {:main ataru.hakija.core
+                                   :output-to "resources/public/js/compiled/hakija-app.js"
+                                   :optimizations :advanced
+                                   :closure-defines {goog.DEBUG false}
+                                   :pretty-print false
+                                   :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
@@ -173,7 +182,11 @@
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
-                       :prep-tasks [["less" "once"] "compile" ["cljsbuild" "once" "min"] "resource"]
+                       :prep-tasks [["less" "once"]
+                                    "compile"
+                                    ["cljsbuild" "once" "min"]
+                                    ["cljsbuild" "once" "hakija-min"]
+                                    "resource"]
                        :resource-paths ["resources"]}
              :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
                                               :server-port 3449}}}
