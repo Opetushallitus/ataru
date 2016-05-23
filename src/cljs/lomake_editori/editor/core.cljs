@@ -31,13 +31,12 @@
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
-    [:section.component
      (match [content]
        [{:fieldClass "wrapperElement"
          :children   children}]
        (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                     [soresu->reagent child (conj path :children index)])
-                                  (into [:div.form__wrapper-element (when-let [n (-> content :label)]
+                                  (into [:div.editor-form__section_wrapper (when-let [n (-> content :label)]
                                                                              [:h1 n])]))]
          (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
@@ -53,13 +52,13 @@
 
        :else (do
                (error content)
-               (throw "error" content)))]))
+               (throw "error" content)))))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
-      [:section.form
+      [:section.editor-form
        (conj
          (into [:form]
            (for [[index json-blob] (zipmap (range) @content)
