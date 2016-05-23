@@ -11,7 +11,7 @@
 (def ^:private checkbox-metadata
   {:required {:id-suffix "_required"
               :label "Pakollinen tieto"}
-   :multiple-answers {:id-suffix "_multiple_choices"
+   :multiple-answers {:id-suffix "_multiple_answers"
                       :label "Vastaaja voi lisätä useita vastauksia"}})
 
 (defn ^:private render-checkbox
