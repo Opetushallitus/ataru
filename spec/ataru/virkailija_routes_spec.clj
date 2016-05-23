@@ -12,7 +12,7 @@
                    v/virkailija-routes)))
 
 (describe "GET /lomake-editori/"
-  (with-static-resource resp "/lomake-editori")
+  (with-static-resource resp "/lomake-editori/")
 
   (it "should not return nil"
     (should-not-be-nil @resp))
