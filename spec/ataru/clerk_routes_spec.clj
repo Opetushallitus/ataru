@@ -1,5 +1,5 @@
 (ns ataru.clerk-routes-spec
-  (:require [ataru.virkailija.virkailija-routes :as clerk]
+  (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.test-utils :refer [login should-have-header]]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
@@ -9,7 +9,7 @@
   [name path]
   `(with ~name (-> (mock/request :get ~path)
                    (update-in [:headers] assoc "cookie" (login))
-                   clerk/clerk-routes)))
+                   v/virkailija-routes)))
 
 (describe "GET /lomake-editori/"
   (with-static-resource resp "/lomake-editori")

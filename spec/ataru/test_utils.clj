@@ -1,11 +1,11 @@
 (ns ataru.test-utils
-  (:require [ataru.virkailija.virkailija-routes :as clerk]
+  (:require [ataru.virkailija.virkailija-routes :as v]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 
 (defn login []
   (-> (mock/request :get "/lomake-editori/auth/cas")
-      (clerk/clerk-routes)
+      (v/virkailija-routes)
       :headers
       (get "Set-Cookie")
       first
