@@ -8,7 +8,7 @@
     [:div.language
      [:div (clojure.string/upper-case (name lang))]]))
 
-(defn text-field [initial-content path]
+(defn render-text-field [initial-content path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [initial-content path]

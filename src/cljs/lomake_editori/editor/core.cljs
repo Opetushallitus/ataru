@@ -41,7 +41,7 @@
          (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
        [{:fieldClass "formField"}]
-       [ec/text-field content path]
+       [ec/render-text-field content path]
 
        [{:fieldClass "infoElement"
          :fieldType  "link"}]
