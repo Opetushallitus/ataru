@@ -95,7 +95,7 @@
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
-                        :compiler {:main lomake-editori.core
+                        :compiler {:main "lomake-editori.core"
                                    :output-to "resources/public/js/compiled/app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
@@ -106,7 +106,7 @@
                        {:id "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsload "ataru.hakija.core/mount-root"}
-                        :compiler {:main ataru.hakija.core
+                        :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
                                    :output-dir "resources/public/js/compiled/hakija-out"
                                    :asset-path "js/compiled/hakija-out"
@@ -117,7 +117,7 @@
                        {:id "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
-                                   :main ataru.unit-runner
+                                   :main "ataru.unit-runner"
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
@@ -127,14 +127,14 @@
                         :compiler {:output-to "resources/public/js/test/browser-test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
-                                   :main lomake-editori.browser-runner
+                                   :main "lomake-editori.browser-runner"
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
                        {:id "min"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main lomake-editori.core
+                        :compiler {:main "lomake-editori.core"
                                    :output-to "resources/public/js/compiled/app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
@@ -143,7 +143,7 @@
                                                    :provides ["oph.lib.soresu"]}]}}
                        {:id "hakija-min"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main ataru.hakija.core
+                        :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
