@@ -34,6 +34,10 @@ lint-clojure() {
     ./bin/lein eastwood
 }
 
+run-migrations() {
+    ./bin/lein with-profile dev run -m manual-migrations/migrate
+}
+
 command="$1"
 
 case "$command" in
@@ -48,6 +52,9 @@ case "$command" in
         ;;
     "test-clojurescript" )
         test-clojurescript
+        ;;
+    "run-migrations" )
+        run-migrations
         ;;
     "package" )
         package
