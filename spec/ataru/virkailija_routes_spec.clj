@@ -81,8 +81,6 @@
     (should= "DEVELOPER" (-> @resp :body :modified-by)))
 
   (it "Should have :content with it"
-     (should= (:content fixtures/form-with-content) (-> @resp :body :content)))
-
-  (run-specs))
+     (should= (:content fixtures/form-with-content) (-> @resp :body :content))))
 
 (run-specs)

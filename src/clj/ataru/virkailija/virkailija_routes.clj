@@ -86,7 +86,8 @@
                  (api/POST "/form" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(form-store/upsert-form form))))))
+                   (trying #(form-store/upsert-form
+                              (assoc form :modified-by (-> session :identity :username))))))))
 
 (defroutes resource-routes
   (route/resources "/"))
