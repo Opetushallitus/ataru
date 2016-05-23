@@ -65,7 +65,7 @@
                     :placeholder "Otsikko"}]
            [language lang]])))))
 
-(defn info [{:keys [params] :as content} path]
+(defn render-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path :text])]
     (fn [{:keys [params] :as content} path]

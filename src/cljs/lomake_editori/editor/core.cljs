@@ -48,7 +48,7 @@
        [ec/render-link-info content path]
 
        [{:fieldClass "infoElement"}]
-       [ec/info content path]
+       [ec/render-info content path]
 
        :else (do
                (error content)
