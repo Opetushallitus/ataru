@@ -41,6 +41,7 @@
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
                                                 :id (str id "_multiple_choices")
+                                                :checked (:multiple-answers initial-content)
                                                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :multiple-answers])}]
                  [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]]]]))))))
 
