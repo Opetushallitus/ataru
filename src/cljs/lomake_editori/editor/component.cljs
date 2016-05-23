@@ -8,6 +8,24 @@
     [:div.language
      [:div (clojure.string/upper-case (name lang))]]))
 
+(def ^:private checkbox-metadata
+  {:required {:id-suffix "_required"
+              :label "Pakollinen tieto"}
+   :multiple-answers {:id-suffix "_multiple_choices"
+                      :label "Vastaaja voi lisätä useita vastauksia"}})
+
+(defn ^:private render-checkbox
+  [path initial-content metadata-kwd]
+  (let [metadata (get checkbox-metadata metadata-kwd)
+        id (str (gensym) (:id-suffix metadata))
+        label (:label metadata)]
+    [:div.editor-form__checkbox-container
+     [:input.editor-form__checkbox {:type "checkbox"
+                                    :id id
+                                    :checked (true? (get initial-content metadata-kwd))
+                                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
+     [:label.editor-form__checkbox-label {:for id} label]]))
+
 (defn render-text-field [initial-content path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
@@ -31,20 +49,8 @@
                [:span.editor-form__size-button.editor-form__size-button--not-selected "L"]]]])
           (into
             [[:div.editor-form__checkbox-wrapper
-              (let [id (str (gensym))]
-                [:div.editor-form__checkbox-container
-                 [:input.editor-form__checkbox {:type "checkbox"
-                                                :id (str id "_mandatory_choice")
-                                                :checked (:required initial-content)
-                                                :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :required])}]
-                 [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]])
-              (let [id (str (gensym))]
-                [:div.editor-form__checkbox-container
-                 [:input.editor-form__checkbox {:type "checkbox"
-                                                :id (str id "_multiple_choices")
-                                                :checked (:multiple-answers initial-content)
-                                                :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :multiple-answers])}]
-                 [:label.editor-form__checkbox-label {:for (str id "_multiple_choices")} "Vastaaja voi lisätä useita vastauksia"]])]])))))
+              (render-checkbox path initial-content :required)
+              (render-checkbox path initial-content :multiple-answers)]])))))
 
 (defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
