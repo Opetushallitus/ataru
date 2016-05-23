@@ -26,9 +26,15 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
+(defn log [& args]
+  (.apply js/console.log js/console (to-array args)))
+
 (defn render-text-field [initial-content path]
   (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
+        value     (subscribe [:editor/get-component-value path])
+        field-id  (gensym)
+        radio-group-id (str field-id "-size")
+        radio-ids {:s (str radio-group-id "-s") :m (str radio-group-id "-m") :l (str radio-group-id "-l")}]
     (fn [initial-content path]
       (-> [:div.editor-form__component-wrapper
            [:header.editor-form__component-header "Tekstikenttä"]]
@@ -43,10 +49,14 @@
           (into
             [[:div.editor-form__size-button-wrapper
               [:header.editor-form__component-item-header "Koko"]
-              [:div.editor-form__size-button-group
-               [:span.editor-form__size-button.editor-form__size-button--not-selected "S"]
-               [:span.editor-form__size-button.editor-form__size-button--selected "M"]
-               [:span.editor-form__size-button.editor-form__size-button--not-selected "L"]]]])
+              [:div.editor-form__size-button-group {:on-change #(log "wutwut" (-> % .-target .-value))}
+               [:input.editor-form__size-button.editor-form__size-button {:type "radio" :value "S" :name radio-group-id :id (:s radio-ids)}]
+               [:label {:for (:s radio-ids)} [:span "S"]]
+               [:input.editor-form__size-button.editor-form__size-button {:type "radio" :value "M" :name radio-group-id :id (:m radio-ids)}]
+               [:label {:for (:m radio-ids)} [:span "M"]]
+               [:input.editor-form__size-button.editor-form__size-button {:type "radio" :value "L" :name radio-group-id :id (:l radio-ids)}]
+               [:label {:for (:l radio-ids)} [:span "L"]]]]]
+            )
           (into
             [[:div.editor-form__checkbox-wrapper
               (render-checkbox path initial-content :required)

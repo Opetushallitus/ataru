@@ -112,26 +112,30 @@
   margin-right: 61px;
 }
 
-.editor-form__size-button--selected {
-  color: @white;
-  background-color: @section-header-text;
-}
-
-.editor-form__size-button--not-selected {
-  background-color: @not-selected-button-background;
-  color: @not-selected-button-text;
-}
-
 .editor-form__size-button-group {
   display: flex;
 }
 
 .editor-form__size-button {
+  visibility: hidden;
+}
+
+.editor-form__size-button + label {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 43px;
   width: 72px;
+}
+
+.editor-form__size-button + label{
+  background-color: @not-selected-button-background;
+  color: @not-selected-button-text;
+}
+
+.editor-form__size-button:checked + label {
+  color: @white;
+  background-color: @section-header-text;
 }
 
 .editor-form__checkbox {
