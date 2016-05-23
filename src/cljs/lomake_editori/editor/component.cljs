@@ -34,7 +34,8 @@
               [[:div.editor-form__checkbox-wrapper
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
-                                                :id (str id "_mandatory_choice")}]
+                                                :id (str id "_mandatory_choice")
+                                                :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path :required])}]
                  [:label.editor-form__checkbox-label {:for (str id "_mandatory_choice")} "Pakollinen tieto"]]
                 [:div.editor-form__checkbox-container
                  [:input.editor-form__checkbox {:type "checkbox"
