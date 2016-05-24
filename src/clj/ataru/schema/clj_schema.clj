@@ -38,8 +38,8 @@
      (intern 'oph.soresu.form.schema
              'LocalizedString
              {:fi           s/Str
-              (s/maybe :sv) s/Str
-              (s/maybe :en) s/Str})
+              (s/optional-key :sv) s/Str
+              (s/optional-key :en) s/Str})
 
      (intern 'oph.soresu.form.schema
              'FormField
