@@ -11,10 +11,10 @@
   [name path]
   `(with ~name (-> (mock/request :get ~path)
                    (update-in [:headers] assoc "cookie" (login))
-                   v/virkailija-routes)))
+                   v/clerk-routes)))
 
 (describe "GET /lomake-editori"
-  (with-static-resource resp "/lomake-editori/")
+  (with-static-resource resp "/lomake-editori")
 
   (it "should not return nil"
     (should-not-be-nil @resp))
@@ -62,7 +62,7 @@
                             (json/generate-string fixtures/form-with-content))
               (update-in [:headers] assoc "cookie" (login))
               (mock/content-type "application/json")
-              clerk/clerk-routes
+              v/clerk-routes
               (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
   (before

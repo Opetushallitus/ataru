@@ -7,7 +7,7 @@
   "Generate ring-session=abcdefgh cookie"
   []
   (-> (mock/request :get "/lomake-editori/auth/cas")
-      clerk/clerk-routes
+      v/clerk-routes
       :headers
       (get "Set-Cookie")
       first
