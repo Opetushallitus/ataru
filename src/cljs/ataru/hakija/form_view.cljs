@@ -25,9 +25,12 @@
     (mapv render-field (:content form-data))
     nil))
 
+(defn application-header []
+  [:h1.application__header "Lomakkeen nimi"])
+
 (defn application-contents []
   (let [form (subscribe [:state-query [:form]])]
-    (fn [] (into [:div] (render-fields @form)))))
+    (fn [] (into [:div.application__form-content-area [application-header]] (render-fields @form)))))
 
 (defn form-view []
   [:div
