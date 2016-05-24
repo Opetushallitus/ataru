@@ -9,7 +9,12 @@
 
 (def placeholder-content
   {:content
-   [{:fieldClass "wrapperElement"
+   [{:fieldClass "formField"
+     :label      {:fi "Ikä", :sv "ålder"}
+     :id         "applicant-age"
+     :required   true
+     :fieldType  "textField"}
+    {:fieldClass "wrapperElement"
      :id         "applicant-fieldset"
      :children
                  [{:fieldClass "formField"
@@ -24,7 +29,24 @@
                    :label      {:fi "Etunimi", :sv "Förnamn"}
                    :id         "applicant-surname"
                    :required   true
-                   :fieldType  "textField"}]}]})
+                   :fieldType  "textField"}]}
+    {:fieldClass "wrapperElement"
+     :id         "applicant-fieldset"
+     :children
+     [{:fieldClass "wrapperElement"
+       :id         "applicant-fieldset"
+       :children
+                   [{:fieldClass "formField"
+                     :label      {:fi "X", :sv "Z"}
+                     :id         "applicant-x"
+                     :required   true
+                     :fieldType  "textField"}
+                    {:fieldClass "formField"
+                     :label      {:fi "A", :sv "B"}
+                     :id         "applicant-a"
+                     :required   true
+                     :fieldType  "textField"}]
+       }]}]})
 
 (def api-routes
   (api/api
