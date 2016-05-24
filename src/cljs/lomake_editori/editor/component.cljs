@@ -42,7 +42,7 @@
                 (for [lang @languages]
                   ^{:key lang}
                   [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                       :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])
+                                                   :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])
           (into
             (let [radio-group-id (str "form-size-" (gensym))
                   radio-buttons ["S" "M" "L"]
@@ -51,11 +51,11 @@
                 [:header.editor-form__component-item-header "Koko"]
                 [:div.editor-form__size-button-group {:on-change #(do)}
                  (map #(seq (let [btn-name (key %)
-                                       btn-id (val %)]
-                                   [[:input.editor-form__size-button.editor-form__size-button
-                                     {:type "radio" :value btn-name :name radio-group-id :id btn-id :key (str btn-id "-radio")}]
-                                    [:label
-                                     {:for btn-id :key (str btn-id "-label")} [:span btn-name]]])) radio-button-ids)]]]))
+                                  btn-id (val %)]
+                              [[:input.editor-form__size-button.editor-form__size-button
+                                {:type "radio" :value btn-name :name radio-group-id :id btn-id :key (str btn-id "-radio")}]
+                               [:label
+                                {:for btn-id :key (str btn-id "-label")} [:span btn-name]]])) radio-button-ids)]]]))
           (into
             [[:div.editor-form__checkbox-wrapper
               (render-checkbox path initial-content :required)
