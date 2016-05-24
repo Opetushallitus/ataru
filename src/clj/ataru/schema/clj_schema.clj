@@ -1,6 +1,7 @@
 (ns ataru.schema.clj-schema
   (:require [ataru.schema :as schema]
             [schema.core :as s]
+            [schema-tools.core :as st]
             [oph.soresu.form.schema :as soresu]))
 
 (soresu/create-form-schema [] [] [])
@@ -31,7 +32,13 @@
          (s/maybe :sv) s/Str
          (s/maybe :en) s/Str})
 
-(def Form schema/Form)
+(intern 'oph.soresu.form.schema
+        'FormField
+        (-> soresu/FormField
+            (st/dissoc :helpText)
+            (st/assoc (s/optional-key :helpText) soresu/LocalizedString)))
+
+(s/defschema Form schema/Form)
 
 (s/defschema FormWithContent
   (merge Form
