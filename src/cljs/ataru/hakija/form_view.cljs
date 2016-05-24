@@ -4,7 +4,9 @@
             [cljs.core.match :refer-macros [match]]))
 
 (defn text-field [content]
-  [:div.application__form-field [:label (-> content :label :fi)]])
+  [:div.application__form-field
+   [:label (-> content :label :fi)]
+   [:input.application__form-text-input {:type "text"}]])
 
 (declare render-field)
 
