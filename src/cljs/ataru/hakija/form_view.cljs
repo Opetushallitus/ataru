@@ -13,13 +13,12 @@
 
 (defn render-fields [form-data]
   (if form-data
-    (let [rendered (mapv render-field (:content form-data))]
-      (into [:div] rendered))
+    (mapv render-field (:content form-data))
     nil))
 
 (defn application-contents []
   (let [form (subscribe [:state-query [:form]])]
-    [:div "form contents" (render-fields @form)]))
+    (into [:div] (render-fields @form))))
 
 (defn form-view []
   [:div
