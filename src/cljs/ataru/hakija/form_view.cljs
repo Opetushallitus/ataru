@@ -4,12 +4,11 @@
             [cljs.core.match :refer-macros [match]]))
 
 (defn render-field
-  ([content] (render-field content [:div]))
-  ([content result]
+  [content]
    (match [content]
           [{:fieldClass "wrapperElement"
-            :children   children}] (into result (mapv #(render-field % [:div]) children))
-          [{:fieldClass "formField" :fieldType "textField"}] [:label (-> content :label :fi)])))
+            :children   children}] (into [:div.application__wrapper] (mapv render-field children))
+          [{:fieldClass "formField" :fieldType "textField"}] [:div.application__form-field [:label (-> content :label :fi)]]))
 
 (defn render-fields [form-data]
   (if form-data
