@@ -14,7 +14,6 @@
   get-form)
 
 (defn handle-form [db [_ form]]
-  (println  "form " form)
   (assoc db :form form))
 
 (register-handler
