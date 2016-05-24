@@ -5,7 +5,6 @@
             [lomake-editori.autosave :as autosave]
             [lomake-editori.dev.lomake :as dev]
             [lomake-editori.handlers :refer [http post]]
-            [lomake-editori.temporal :refer [coerce-timestamp]]
             [lomake-editori.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -48,11 +47,10 @@
   :handle-get-forms
   (fn [db [_ forms-response selected-form-id]]
     (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                                              :id (mapv (comp with-author
-                                                                              (coerce-timestamp :modified-time))
+                                                              :id (mapv with-author
                                                                         (:forms forms-response)))
                                                             (sorted-by-time)))
-                          (update-in [:editor] dissoc :selected-form))
+                          (update :editor dissoc :selected-form-id))
           forms       (-> mdb :editor :forms)
           active-form (or
                         (->> forms
@@ -67,17 +65,11 @@
 
 (defn generate-component
   [db [_ generate-fn path]]
-  (let [form-id  (get-in db [:editor :selected-form :id])
-        path-vec (if
-                   (coll? path)
-                   path
-                   [path])
-        new-form (-> db
-                   (get-in [:editor :forms form-id :content])
-                   (assoc-in path-vec (generate-fn)))]
-    (-> db
-      (assoc-in [:editor :selected-form :content] new-form)
-      (assoc-in [:editor :forms form-id :content] new-form))))
+  (let [form-id       (get-in db [:editor :selected-form-id])
+        path-vec      (flatten [:editor :forms form-id :content [path]])]
+    (if (zero? (last path-vec))
+      (assoc-in db (butlast path-vec) [(generate-fn)])
+      (assoc-in db path-vec (generate-fn)))))
 
 (register-handler :generate-component generate-component)
 
@@ -94,40 +86,47 @@
     db))
 
 (register-handler
+  :editor/fetch-form-content
+  (fn [db [_ selected-form-id]]
+    (http :get
+          (str "/lomake-editori/api/forms/content/" selected-form-id)
+          (fn [db response _]
+            (update-in db
+              [:editor :forms selected-form-id]
+              merge
+              (select-keys response [:content :modified-by :modified-time]))))
+    db))
+
+(register-handler
   :editor/select-form
   (fn [db [_ clicked-form]]
-    (let [previous-form (-> db :editor :selected-form)
-          clicked-form-with-content (merge clicked-form dev/placeholder-content)]
-      (when (not= (:id previous-form) (:id clicked-form))
-       (autosave/stop-autosave! (-> db :editor :autosave)))
+    (let [previous-form-id (-> db :editor :selected-form-id)]
+      (do
+        (when (not= previous-form-id (:id clicked-form))
+          (autosave/stop-autosave! (-> db :editor :autosave)))
 
-      (-> db
-          (assoc-in [:editor :forms (:id clicked-form)] clicked-form-with-content)
-          (assoc-in [:editor :selected-form] clicked-form-with-content)
-          (assoc-in [:editor :autosave]
-                    (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
-                                             :changed-predicate
-                                             (fn [current prev]
-                                               (not=
-                                                 (dissoc prev :modified-time :content)
-                                                 (dissoc current :modified-time :content)))
-                                             :handler
-                                             (fn [form previous-autosave-form]
-                                               (dispatch [:editor/save-form form]))
-                                             :initial clicked-form-with-content}))))))
+        (dispatch [:editor/fetch-form-content (:id clicked-form)])
 
-(defn- callback-after-post [db new-or-updated-form]
-  (let [form-with-time (-> ((coerce-timestamp :modified-time) new-or-updated-form)
-                           (assoc :author {:last  "Testaaja" ;; placeholder
-                                           :first "Teppo"}))]
-    (assoc-in db [:editor :forms (:id form-with-time)] form-with-time)))
+        (-> db
+            (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
+            (assoc-in [:editor :selected-form-id] (:id clicked-form))
+            (assoc-in [:editor :autosave]
+                      (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
+                                               :changed-predicate
+                                               (fn [current prev]
+                                                 (not=
+                                                   (dissoc prev :modified-time)
+                                                   (dissoc current :modified-time)))
+                                               :handler
+                                               (fn [form previous-autosave-form]
+                                                 (dispatch [:editor/save-form form]))
+                                               :initial        clicked-form})))))))
 
 (register-handler
   :editor/save-form
   (fn [db [_ form]]
     (post "/lomake-editori/api/form"
-          form
-          callback-after-post)
+          (dissoc form :modified-time))
     db))
 
 (register-handler
@@ -146,7 +145,7 @@
 (register-handler
   :editor/change-form-name
   (fn [db [_ new-form-name]]
-    (let [selected-form (-> db :editor :selected-form)]
-      (update-in db [:editor :forms (:id selected-form)]
+    (let [selected-form-id (-> db :editor :selected-form-id)]
+      (update-in db [:editor :forms selected-form-id]
                  assoc :name
                  new-form-name))))

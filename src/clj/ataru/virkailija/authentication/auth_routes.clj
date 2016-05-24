@@ -2,6 +2,7 @@
   (:require [ataru.virkailija.authentication.auth :refer [login logout cas-initiated-logout]]
             [compojure.core :refer [GET POST routes context]]
             [environ.core :refer [env]]
+            [taoensso.timbre :refer [spy debug]]
             [clojure.core.match :refer [match]]))
 
 (def auth-routes

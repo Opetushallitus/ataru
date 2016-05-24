@@ -2,13 +2,13 @@
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
               [ajax.core :refer [GET POST PUT DELETE]]
               [lomake-editori.db :as db]
-              [lomake-editori.temporal :refer [coerce-timestamp]]
+              [lomake-editori.temporal :as temporal]
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [cljs.core.match :refer-macros [match]]
               [taoensso.timbre :refer-macros [spy debug]]))
 
-(def formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
+(defonce formatter (f/formatter "EEEE dd.MM.yyyy HH:mm"))
 
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
@@ -33,19 +33,21 @@
                                                                       :put "tallennettaessa."
                                                                       :delete "poistettaessa."))
                                                       :detail %}])
-               :handler         (fn [response]
-                                  (dispatch [:flasher {:loading? false
-                                                       :message
-                                                       (match [method]
-                                                              [:post] "Kaikki muutokset tallennettu"
-                                                              [:delete] "Tiedot poistettu"
-                                                              :else nil)}])
-                                  (match [handler-or-dispatch]
-                                         [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
-                                         :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))}
+               :handler         (comp (fn [response]
+                                        (dispatch [:flasher {:loading? false
+                                                             :message
+                                                             (match [method]
+                                                                    [:post] "Kaikki muutokset tallennettu"
+                                                                    [:delete] "Tiedot poistettu"
+                                                                    :else nil)}])
+                                        (match [handler-or-dispatch]
+                                               [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
+                                               [nil] nil
+                                               :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
+                                      temporal/parse-times)}
               override-args))))
 
-(defn post [path params handler-or-dispatch]
+(defn post [path params & [handler-or-dispatch]]
   (http :post path handler-or-dispatch :override-args {:params params}))
 
 (register-handler
@@ -67,13 +69,6 @@
   (fn [db [_ f]]
     (or (f db)
         db)))
-
-(register-handler
-  :handle-error
-  (fn [db [_ error]]
-    ;; TODO make a generic error message panel in UI which is shown when
-    ;; :error-message exists and has a control for emptying it
-    (assoc db :error-message "Lomakelistan hakeminen epäonnistui")))
 
 (register-handler
  :set-active-panel

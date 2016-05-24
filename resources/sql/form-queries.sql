@@ -1,10 +1,10 @@
 -- name: get-forms-query
--- Get all stored forms
-select id, name, modified_time from forms order by modified_time desc;
+-- Get all stored forms, without content
+select id, name, modified_by, modified_time from forms order by modified_time desc;
 
 -- name: add-form-query<!
 -- Add form
-insert into forms (name) values (:name);
+insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
 
 -- name: form-exists-query
 -- Get single form
@@ -16,5 +16,8 @@ select * from forms where id = :id;
 -- name: update-form-query!
 -- Update form
 update forms set
-  name = :name, modified_time = now()
+  name = :name,
+  modified_time = now(),
+  modified_by = :modified_by,
+  content = cast(:content as jsonb)
   where id = :id;

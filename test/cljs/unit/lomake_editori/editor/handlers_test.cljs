@@ -10,7 +10,7 @@
   (let [form-id 1234
         initial-form {:id form-id
                       :content [{:some :component}]}
-        new-content (-> {:editor {:selected-form initial-form
+        new-content (-> {:editor {:selected-form-id form-id
                                   :forms {form-id initial-form}}}
                         (h/generate-component [:generate-component generate-fn 1])
                         (get-in [:editor :forms form-id :content]))]
@@ -23,7 +23,7 @@
   (let [form-id 1234
         initial-form {:id form-id
                       :content [{:children [{:child :component}]}]}
-        new-children (-> {:editor {:selected-form initial-form
+        new-children (-> {:editor {:selected-form-id form-id
                                    :forms         {form-id initial-form}}}
                          (h/generate-component [:generate-component generate-fn [0 :children 1]])
                          (get-in [:editor :forms form-id :content 0 :children]))]

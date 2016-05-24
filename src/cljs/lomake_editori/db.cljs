@@ -14,6 +14,6 @@
                                  :state {:description "Käsittelemättä"}}]}
    :editor {:forms nil
             :autosave nil ; autosave stop function, see autosave.cljs
-            :selected-form nil}
+            :selected-form-id nil}
    ; Initial active panel on page load.
    :active-panel :editor})

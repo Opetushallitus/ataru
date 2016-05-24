@@ -1,19 +1,44 @@
 (ns ataru.virkailija.form-store
-  (:require [yesql.core :refer [defqueries]]
-            [oph.soresu.common.db :refer [exec]]
+  (:require [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
+            [ataru.db.extensions] ; don't remove, timestamp coercion
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [camel-snake-kebab.core :refer [->kebab-case-keyword]]))
+            [clojure.java.jdbc :as jdbc]
+            [oph.soresu.common.db :refer [exec get-datasource]]
+            [yesql.core :refer [defqueries]]
+            [taoensso.timbre :refer [spy debug]]))
 
 (defqueries "sql/form-queries.sql")
 
+(defn execute [db query params]
+  (->> params
+       (transform-keys ->snake_case)
+       (exec db query)
+       (transform-keys ->kebab-case-keyword)
+       vec))
+
 (defn get-forms []
-  (transform-keys ->kebab-case-keyword (exec :db get-forms-query {})))
+  (execute :db get-forms-query {}))
+
+(defn- restructure-form-with-content
+  "Unwraps form :content wrapper and transforms all other keys
+   to kebab-case"
+  [form]
+  (assoc (transform-keys ->kebab-case-keyword (dissoc form :content))
+         :content (-> form :content :content)))
 
 (defn upsert-form [{:keys [id] :as form}]
-  (->> (if (some? (when id
-                    (first (exec :db form-exists-query {:id id}))))
-         (do (exec :db update-form-query! form) ; transaction required
-             (first (exec :db get-by-id {:id (:id form)})))
-         (exec :db add-form-query<! form))
-       (transform-keys ->kebab-case-keyword)))
+  (let [content {:content (or (not-empty (:content form))
+                              [])}
+        f       (-> (transform-keys ->snake_case (dissoc form :content))
+                    (assoc :content content))]
+    (restructure-form-with-content
+      (if (some? (when id
+                   (first (execute :db form-exists-query f))))
+        (do
+          (jdbc/with-db-transaction [conn {:datasource (get-datasource :db)}]
+            (update-form-query! f {:connection conn})
+            (first (get-by-id f {:connection conn}))))
+        (exec :db add-form-query<! f)))))
 
+(defn fetch-form [id]
+  (restructure-form-with-content (first (exec :db get-by-id {:id id}))))

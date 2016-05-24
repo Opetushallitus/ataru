@@ -18,15 +18,17 @@
 (defn with-dow [google-date]
   (days-finnish (.getDay google-date)))
 
-(def formatters (mapv f/formatters [:date-time-no-ms :date-time]))
+(defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
 (defn str->googdate [timestamp-value]
   {:pre [(some? timestamp-value)]}
-  (first (for [formatter formatters]
+  (->> (for [formatter formatters]
            (try (f/parse formatter timestamp-value)
                 (catch :default _
-                  (warn "Could not parse " timestamp-value)
-                  nil)))))
+                  (warn "Could not parse" timestamp-value)
+                  nil)))
+       (filter some?)
+       first))
 
 (defn coerce-timestamp [kw]
   (fn [element]
@@ -38,3 +40,21 @@
        (f/unparse time-formatter)
        (str (with-dow google-date)
             "na ")))
+
+(defonce iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
+
+(defn date? [date-str]
+  (when (and date-str (string? date-str))
+    (re-matches iso-date-pattern date-str)))
+
+(defn parse-times [expr]
+  (let [f (fn [[k v]]
+            (if (date? v)
+              [k (str->googdate v)]
+              [k v]))]
+    (clojure.walk/postwalk
+      (fn [x]
+        (if (map? x)
+          (into {} (map f x))
+          x))
+      expr)))

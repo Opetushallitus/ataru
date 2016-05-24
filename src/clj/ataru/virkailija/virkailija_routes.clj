@@ -1,23 +1,24 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
+  (:require [ataru.middleware.cache-control :as cache-control]
+            [ataru.middleware.session-store :refer [create-store]]
+            [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
+            [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ataru.virkailija.form-store :as form-store]
+            [compojure.api.sweet :as api]
+            [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
-            [compojure.api.sweet :as api]
-            [schema.core :as s]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
-            [ataru.virkailija.form-store :as form-store]
-            [ataru.middleware.cache-control :as cache-control]
-            [ataru.middleware.session-store :refer [create-store]]
-            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
-            [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.response :refer [response]]
-            [taoensso.timbre :refer [spy error]]
-            [selmer.parser :as selmer])
+            [schema.core :as s]
+            [selmer.parser :as selmer]
+            [taoensso.timbre :refer [spy debug error]])
   (:import  [manifold.deferred.Deferred]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
@@ -31,7 +32,9 @@
 ;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
 
 (defn trying [f]
-  (try (ok (f))
+  (try (if-let [result (f)]
+         (ok result)
+         (not-found))
        (catch Exception e
          (error e)
          (internal-server-error))))
@@ -58,15 +61,10 @@
         (selmer/render-file "templates/test.html" {})
         (not-found "Not found"))))
 
-(s/defschema Form
-  {(s/optional-key :id) (s/maybe s/Int)
-   :name s/Str
-   s/Any s/Any})
-
 (def api-routes
   (api/api
-    {:swagger {:spec "/lomake-editori/swagger.json"
-               :ui "/lomake-editori/api-docs"
+    {:swagger {:spec "/swagger.json"
+               :ui "/api-docs"
                :data {:info {:version "1.0.0"
                              :title "Ataru Clerk API"
                              :description "Specifies the clerk API for Ataru"}}
@@ -74,18 +72,27 @@
     (api/context "/api" []
                  :tags ["form-api"]
                  (api/GET "/user-info" {session :session}
-                          (ok {:username (-> session :identity :username)}))
+                   (ok {:username (-> session :identity :username)}))
                  (api/GET "/forms" []
-                          (ok
-                           {:forms (form-store/get-forms)}))
-                 (api/POST "/form" []
-                           :body [form Form]
-                           (trying #(form-store/upsert-form form))))))
+                   :summary "Return all forms."
+                   :return {:forms [ataru-schema/Form]}
+                   (ok
+                     {:forms (form-store/get-forms)}))
+                 (api/GET "/forms/content/:id" []
+                   :path-params [id :- Long]
+                   :return ataru-schema/FormWithContent
+                   :summary "Get content for form"
+                   (trying #(form-store/fetch-form id)))
+                 (api/POST "/form" {session :session}
+                   :summary "Persist changed form."
+                   :body [form ataru-schema/FormWithContent]
+                   (trying #(form-store/upsert-form
+                              (assoc form :modified-by (-> session :identity :username))))))))
 
 (defroutes resource-routes
   (route/resources "/"))
 
-(def virkailija-routes
+(def clerk-routes
   (-> (routes (wrap-routes dev-routes wrap-dev-only)
               (GET "/" [] (redirect "/lomake-editori/"))
               ;; NOTE: This is now needed because of the way web-server is
