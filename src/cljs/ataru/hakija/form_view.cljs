@@ -5,13 +5,13 @@
 
 (defn text-field [content]
   [:div.application__form-field
-   [:label (-> content :label :fi)]
+   [:label.application_form-field-label (-> content :label :fi)]
    [:input.application__form-text-input {:type "text"}]])
 
 (declare render-field)
 
 (defn wrapper-field [children]
-  (into [:div.application__wrapper-element] (mapv render-field children)))
+  (into [:div.application__wrapper-element [:h2.application__wrapper-heading "Lomakeosio"]] (mapv render-field children)))
 
 (defn render-field
   [content]
