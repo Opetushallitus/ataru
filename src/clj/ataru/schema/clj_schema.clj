@@ -6,6 +6,10 @@
 
 (soresu/create-form-schema [] [] [])
 
+(s/defschema OptionalHelpText
+  {(s/optional-key :helpText) soresu/LocalizedString})
+
+
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
 ;    /.__, ._  -=- _ "`    Y
@@ -26,21 +30,27 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-(intern 'oph.soresu.form.schema
-        'LocalizedString
-        {:fi s/Str
-         (s/maybe :sv) s/Str
-         (s/maybe :en) s/Str})
+; memoized function, runs only once -
+; it overwrites some of soresus schemas with little changes
+((memoize
+   (fn []
 
-(intern 'oph.soresu.form.schema
-        'FormField
-        (-> soresu/FormField
-            (st/dissoc :helpText)
-            (st/assoc (s/optional-key :helpText) soresu/LocalizedString)))
+     (intern 'oph.soresu.form.schema
+             'LocalizedString
+             {:fi           s/Str
+              (s/maybe :sv) s/Str
+              (s/maybe :en) s/Str})
+
+     (intern 'oph.soresu.form.schema
+             'FormField
+             (-> soresu/FormField
+                 (st/dissoc :helpText)
+                 (st/merge OptionalHelpText)))
+
+     nil)))
 
 (s/defschema Form schema/Form)
 
 (s/defschema FormWithContent
   (merge Form
          {:content [(s/if (comp some? :children) soresu/WrapperElement soresu/FormField)]}))
-
