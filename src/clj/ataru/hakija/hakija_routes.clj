@@ -9,49 +9,9 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
-(def placeholder-content
-  {:content
-   [{:fieldClass "formField"
-     :label      {:fi "Ikä", :sv "ålder"}
-     :id         "applicant-age"
-     :required   true
-     :fieldType  "textField"}
-    {:fieldClass "wrapperElement"
-     :id         "applicant-fieldset"
-     :children
-                 [{:fieldClass "formField"
-                   :helpText
-                               {:fi "Yhteyshenkilöllä tarkoitetaan hankkeen vastuuhenkilöä."
-                                :sv "Med kontaktperson avses den projektansvariga i sökandeorganisationen."}
-                   :label      {:fi "Sukunimi", :sv "Efternamn"}
-                   :id         "applicant-firstname"
-                   :required   true
-                   :fieldType  "textField"}
-                  {:fieldClass "formField"
-                   :label      {:fi "Etunimi", :sv "Förnamn"}
-                   :id         "applicant-surname"
-                   :required   true
-                   :fieldType  "textField"}]}
-    {:fieldClass "wrapperElement"
-     :id         "applicant-fieldset"
-     :children
-     [{:fieldClass "wrapperElement"
-       :id         "applicant-fieldset"
-       :children
-                   [{:fieldClass "formField"
-                     :label      {:fi "X", :sv "Z"}
-                     :id         "applicant-x"
-                     :required   true
-                     :fieldType  "textField"}
-                    {:fieldClass "formField"
-                     :label      {:fi "A", :sv "B"}
-                     :id         "applicant-a"
-                     :required   true
-                     :fieldType  "textField"}]
-       }]}]})
-
 (defn- fetch-form [id]
   (let [form (form-store/fetch-form id)]
+    (println "form on server" form)
     (if form
       (ok form)
       (not-found form))))
