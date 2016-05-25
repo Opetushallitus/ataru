@@ -33,7 +33,12 @@
   (let [form (subscribe [:state-query [:form]])]
     (fn [] (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
 
+(defn error-display []
+  (let [error-message (subscribe [:state-query [:error-message]])]
+    (fn [] [:div.application__error-display @error-message])))
+
 (defn form-view []
   [:div
    [banner]
+   [error-display]
    [application-contents]])
