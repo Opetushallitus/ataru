@@ -1,7 +1,9 @@
 (ns ataru.hakija.hakija-routes
-  (:require [compojure.core :refer [routes defroutes wrap-routes context GET]]
+  (:require [ataru.forms.form-store :as form-store]
+            [compojure.core :refer [routes defroutes wrap-routes context GET]]
+            [schema.core :as s]
             [compojure.api.sweet :as api]
-            [ring.util.http-response :refer [ok]]
+            [ring.util.http-response :refer [ok not-found]]
             [compojure.route :as route]
             [selmer.parser :as selmer]))
 
@@ -48,6 +50,12 @@
                      :fieldType  "textField"}]
        }]}]})
 
+(defn- fetch-form [id]
+  (let [form (form-store/fetch-form id)]
+    (if form
+      (ok form)
+      (not-found form))))
+
 (def api-routes
   (api/api
     {:swagger {:spec "/hakemus/swagger.json"
@@ -58,8 +66,10 @@
                :tags [{:name "application-api" :description "Application handling"}]}}
     (api/context "/api" []
                  :tags ["application-api"]
-                 (api/GET "/form/:id" [id]
-                          (ok placeholder-content)))))
+                 (api/GET "/form/:id" []
+                          :path-params [id :- Long]
+                          :return s/Any
+                          (ok (fetch-form id))))))
 
 (def hakija-routes
   (-> (routes

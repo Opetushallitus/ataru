@@ -4,7 +4,7 @@
             [ataru.schema.clj-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
-            [ataru.virkailija.form-store :as form-store]
+            [ataru.forms.form-store :as form-store]
             [compojure.api.sweet :as api]
             [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
