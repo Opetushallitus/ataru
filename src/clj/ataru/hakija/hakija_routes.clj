@@ -11,7 +11,6 @@
 
 (defn- fetch-form [id]
   (let [form (form-store/fetch-form id)]
-    (println "form on server" form)
     (if form
       (ok form)
       (not-found form))))
