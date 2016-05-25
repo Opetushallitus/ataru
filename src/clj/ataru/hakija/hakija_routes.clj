@@ -28,7 +28,7 @@
                  (api/GET "/form/:id" []
                           :path-params [id :- Long]
                           :return s/Any
-                          (ok (fetch-form id))))))
+                          (fetch-form id)))))
 
 (def hakija-routes
   (-> (routes
