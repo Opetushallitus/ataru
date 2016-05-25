@@ -10,9 +10,7 @@
 
 (def ^:private checkbox-metadata
   {:required {:id-suffix "_required"
-              :label "Pakollinen tieto"}
-   :multiple-answers {:id-suffix "_multiple_answers"
-                      :label "Vastaaja voi lisätä useita vastauksia"}})
+              :label "Pakollinen tieto"}})
 
 (defn- render-checkbox
   [path initial-content metadata-kwd]
@@ -55,8 +53,7 @@
                               {:for btn-id :key (str btn-id "-label")} btn-name]])) radio-button-ids)]]])
           (into
             [[:div.editor-form__checkbox-wrapper
-              (render-checkbox path initial-content :required)
-              (render-checkbox path initial-content :multiple-answers)]])))))
+              (render-checkbox path initial-content :required)]])))))
 
 (defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
