@@ -2,6 +2,7 @@
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
             [goog.date :as gd]
+            [clojure.walk :refer [postwalk]]
             [taoensso.timbre :refer-macros [spy warn]]))
 
 (def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
@@ -52,7 +53,7 @@
             (if (date? v)
               [k (str->googdate v)]
               [k v]))]
-    (clojure.walk/postwalk
+    (postwalk
       (fn [x]
         (if (map? x)
           (into {} (map f x))
