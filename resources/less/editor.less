@@ -75,9 +75,12 @@
 
 .editor-form__section_wrapper {
   border: 1px solid @section-gray-border;
-  margin-top: 1em;
-  padding-right: 11px;
-  padding-left: 11px;
+  margin-top: 1.5em;
+}
+
+.editor-form__section_wrapper div:first-child {
+  border: none;
+  margin: 0;
 }
 
 .editor-form__component-wrapper {
@@ -85,8 +88,7 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin-bottom: 17px;
-  margin-top: 17px;
+  margin: 17px 11px;
 }
 
 .editor-form__text-field-wrapper {
@@ -202,9 +204,8 @@
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
   transition: background-color @transition ease;
-  width: 100%;
-  margin-top: 21px;
-  margin-bottom: 14px;
+  width: 98;
+  margin: 21px 11px 14px;
   padding: 0.5em;
   .plus-component {
     background-color: @selected-blue;
@@ -226,8 +227,7 @@
 .editor-form__component-toolbar {
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
-  margin-top: 21px;
-  margin-bottom: 14px;
+  margin: 21px 11px 14px;
   padding: 0.5em;
   ul { margin: 0; }
   li {
