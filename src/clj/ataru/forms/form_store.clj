@@ -41,4 +41,6 @@
         (exec :db add-form-query<! f)))))
 
 (defn fetch-form [id]
-  (restructure-form-with-content (first (exec :db get-by-id {:id id}))))
+  (if-let [form (first (exec :db get-by-id {:id id}))]
+    (restructure-form-with-content form)
+    nil))
