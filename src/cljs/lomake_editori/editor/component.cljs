@@ -14,7 +14,7 @@
    :multiple-answers {:id-suffix "_multiple_answers"
                       :label "Vastaaja voi lisätä useita vastauksia"}})
 
-(defn ^:private render-checkbox
+(defn- render-checkbox
   [path initial-content metadata-kwd]
   (let [metadata (get checkbox-metadata metadata-kwd)
         id (str (gensym) (:id-suffix metadata))
@@ -144,3 +144,18 @@
           :on-mouse-leave plus-abort-trigger}
          [:div.plus-component
           [:span "+"]]]))))
+
+(defn section-label [path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn []
+      (-> [:div.editor-form__component-wrapper
+           [:header.editor-form__component-header "Lomakeosio"]]
+          (into
+            [[:div.editor-form__text-field-wrapper
+              [:header.editor-form__component-item-header "Osion nimi"]
+              (doall
+                (for [lang @languages]
+                  ^{:key lang}
+                  [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                                   :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])))))
