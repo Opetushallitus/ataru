@@ -15,7 +15,6 @@
   get-form)
 
 (defn handle-form [db [_ form-response]]
-  (println "response when not found" form-response)
   (assoc db :form form-response))
 
 (register-handler
