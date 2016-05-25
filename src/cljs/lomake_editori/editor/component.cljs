@@ -55,7 +55,7 @@
                             [[:input.editor-form__size-button.editor-form__size-button
                               {:type "radio" :value btn-name :name radio-group-id :id btn-id :key (str btn-id "-radio")}]
                              [:label
-                              {:for btn-id :key (str btn-id "-label")} [:span btn-name]]])) radio-button-ids)]]])
+                              {:for btn-id :key (str btn-id "-label")} btn-name]])) radio-button-ids)]]])
           (into
             [[:div.editor-form__checkbox-wrapper
               (render-checkbox path initial-content :required)
