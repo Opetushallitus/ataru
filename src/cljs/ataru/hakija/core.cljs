@@ -1,9 +1,6 @@
 (ns ataru.hakija.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            [lomake-editori.handlers]
-            [lomake-editori.subs]
-            [lomake-editori.editor.handlers]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.hakija.form-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
