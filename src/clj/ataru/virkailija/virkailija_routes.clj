@@ -85,7 +85,7 @@
                    (trying #(form-store/fetch-form id)))
                  (api/POST "/form" {session :session}
                    :summary "Persist changed form."
-                   :body [form ataru-schema/FormWithContent]
+                   :body [form s/Any] ;;TODO use a schema which works with the current editor output JSON
                    (trying #(form-store/upsert-form
                               (assoc form :modified-by (-> session :identity :username))))))))
 
