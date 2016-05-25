@@ -56,11 +56,12 @@
 
 (defn editor-panel []
   (let [form-name (reaction (:name @(subscribe [:editor/selected-form])))]
-    [:div.panel-content
-     [:div
-      [editor-name @form-name]]
-     [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
-     [c/editor]]))
+    (when @form-name ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
+      [:div.panel-content
+       [:div
+        [editor-name @form-name]]
+       [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
+       [c/editor]])))
 
 (defn editor []
     [:div
