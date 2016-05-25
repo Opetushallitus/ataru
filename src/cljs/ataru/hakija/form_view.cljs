@@ -22,9 +22,8 @@
           [{:fieldClass "formField" :fieldType "textField"}] [text-field content]))
 
 (defn render-fields [form-data]
-  (if form-data
-    (mapv render-field (:content form-data))
-    nil))
+  (when form-data
+    (mapv render-field (:content form-data))))
 
 (defn application-header [form-name]
   [:h1.application__header form-name])
