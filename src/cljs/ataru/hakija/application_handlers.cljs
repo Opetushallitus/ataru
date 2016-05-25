@@ -14,7 +14,7 @@
   get-form)
 
 (defn handle-form [db [_ form]]
-  (assoc db :form form))
+  (assoc db :form (:body form)))
 
 (register-handler
   :application/handle-form

@@ -10,14 +10,15 @@
 
 (declare render-field)
 
-(defn wrapper-field [children]
-  (into [:div.application__wrapper-element [:h2.application__wrapper-heading "Lomakeosio"]] (mapv render-field children)))
+(defn wrapper-field [content children]
+  (into [:div.application__wrapper-element [:h2.application__wrapper-heading (-> content :label :fi)]]
+        (mapv render-field children)))
 
 (defn render-field
   [content]
    (match [content]
           [{:fieldClass "wrapperElement"
-            :children   children}] [wrapper-field children]
+            :children   children}] [wrapper-field content children]
           [{:fieldClass "formField" :fieldType "textField"}] [text-field content]))
 
 (defn render-fields [form-data]
@@ -25,12 +26,12 @@
     (mapv render-field (:content form-data))
     nil))
 
-(defn application-header []
-  [:h1.application__header "Lomakkeen nimi"])
+(defn application-header [form-name]
+  [:h1.application__header form-name])
 
 (defn application-contents []
   (let [form (subscribe [:state-query [:form]])]
-    (fn [] (into [:div.application__form-content-area [application-header]] (render-fields @form)))))
+    (fn [] (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
 
 (defn form-view []
   [:div

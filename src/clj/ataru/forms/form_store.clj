@@ -1,4 +1,4 @@
-(ns ataru.virkailija.form-store
+(ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [ataru.db.extensions] ; don't remove, timestamp coercion
             [camel-snake-kebab.extras :refer [transform-keys]]
