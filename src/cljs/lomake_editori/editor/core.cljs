@@ -30,29 +30,27 @@
     (reaction [:fi])))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
-  (fn [{:keys [children] :as content} path]
-     (match [content]
-       [{:fieldClass "wrapperElement"
-         :children   children}]
-       (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
-                                    [soresu->reagent child (conj path :children index)])
-                                  (into [:div.editor-form__section_wrapper (when-let [n (-> content :label)]
-                                                                             [:h1 n])]))]
-         (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
+  (match [content]
+         [{:fieldClass "wrapperElement"
+           :children   children}]
+         (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
+                                      [soresu->reagent child (conj path :children index)])
+                                    (into [:div.editor-form__section_wrapper [ec/section-label path]]))]
+           (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
-       [{:fieldClass "formField"}]
-       [ec/render-text-field content path]
+         [{:fieldClass "formField"}]
+         [ec/render-text-field content path]
 
-       [{:fieldClass "infoElement"
-         :fieldType  "link"}]
-       [ec/render-link-info content path]
+         [{:fieldClass "infoElement"
+           :fieldType  "link"}]
+         [ec/render-link-info content path]
 
-       [{:fieldClass "infoElement"}]
-       [ec/render-info content path]
+         [{:fieldClass "infoElement"}]
+         [ec/render-info content path]
 
-       :else (do
-               (error content)
-               (throw "error" content)))))
+         :else (do
+                 (error content)
+                 (throw "error" content))))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
