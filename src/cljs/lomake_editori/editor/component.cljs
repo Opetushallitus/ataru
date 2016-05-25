@@ -43,7 +43,7 @@
                                                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])
           (into
             [[:div.editor-form__size-button-wrapper
-              [:header.editor-form__component-item-header "Koko"]
+              [:header.editor-form__component-item-header "Tekstikentän leveys"]
               [:div.editor-form__size-button-group {:on-change #(do)}
                (map #(seq (let [btn-name (key %)
                                 btn-id (val %)]
