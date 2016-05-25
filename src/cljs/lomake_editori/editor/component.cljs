@@ -26,9 +26,6 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
-(defn log [& args]
-  (.apply js/console.log js/console (to-array args)))
-
 (defn render-text-field [initial-content path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])
