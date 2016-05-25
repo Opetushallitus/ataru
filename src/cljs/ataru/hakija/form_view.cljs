@@ -34,8 +34,11 @@
     (fn [] (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
 
 (defn error-display []
-  (let [error-message (subscribe [:state-query [:error-message]])]
-    (fn [] [:div.application__error-display @error-message])))
+  (let [error-message (subscribe [:state-query [:flasher :message]])
+        detail (subscribe [:state-query [:flasher :detail]])]
+    (fn [] (if @error-message
+             [:div.application__error-display @error-message (str @detail)]
+             nil))))
 
 (defn form-view []
   [:div

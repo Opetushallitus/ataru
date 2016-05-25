@@ -16,9 +16,12 @@
 
 (defn handle-form [db [_ form-response]]
   (println "response when not found" form-response)
-  (match (:status form-response)
-         200 (assoc db :form (:body form-response))
-         other-status (assoc db :error-message (str "Hakulomaketta ei voitu hakea, virhekoodi: " other-status))))
+  (assoc db :form form-response))
+
+(register-handler
+  :flasher
+  (fn [db [_ flash]]
+    (assoc db :flasher flash)))
 
 (register-handler
   :application/handle-form
