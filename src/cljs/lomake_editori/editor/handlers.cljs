@@ -46,22 +46,24 @@
 (register-handler
   :handle-get-forms
   (fn [db [_ forms-response selected-form-id]]
-    (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                                              :id (mapv with-author
-                                                                        (:forms forms-response)))
-                                                            (sorted-by-time)))
-                          (update :editor dissoc :selected-form-id))
-          forms       (-> mdb :editor :forms)
-          active-form (or
-                        (->> forms
-                          (filter #(= selected-form-id (:id (second %))))
-                          first
-                          second)
-                        (->> forms
-                          first
-                          second))]
-      (dispatch [:editor/select-form active-form])
-      mdb)))
+    (if (seq (:forms forms-response))
+      (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
+                                                                :id (mapv with-author
+                                                                          (:forms forms-response)))
+                                                              (sorted-by-time)))
+                            (update :editor dissoc :selected-form-id))
+            forms       (-> mdb :editor :forms)
+            active-form (or
+                          (->> forms
+                            (filter #(= selected-form-id (:id (second %))))
+                            first
+                            second)
+                          (->> forms
+                            first
+                            second))]
+        (dispatch [:editor/select-form active-form])
+        mdb)
+      db)))
 
 (defn generate-component
   [db [_ generate-fn path]]
