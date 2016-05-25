@@ -55,12 +55,12 @@
                                                          (dispatch-sync [:editor/change-form-name (.-value (.-target %))]))}])})))
 
 (defn editor-panel []
-  (let [form-name (reaction (:name @(subscribe [:editor/selected-form])))]
-    (when @form-name ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
+  (let [form (subscribe [:editor/selected-form])]
+    (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
       [:div.panel-content
        [:div
-        [editor-name @form-name]]
-       [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href "#"} "Esikatsele lomake"]]
+        [editor-name (:name @form)]]
+       [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
        [c/editor]])))
 
 (defn editor []
