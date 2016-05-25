@@ -80,7 +80,7 @@
                      {:forms (form-store/get-forms)}))
                  (api/GET "/forms/content/:id" []
                    :path-params [id :- Long]
-                   :return ataru-schema/FormWithContent
+                   :return s/Any
                    :summary "Get content for form"
                    (trying #(form-store/fetch-form id)))
                  (api/POST "/form" {session :session}
