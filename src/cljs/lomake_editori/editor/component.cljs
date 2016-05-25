@@ -124,9 +124,13 @@
 (defn ^:private component-toolbar [path]
   (fn [path]
     (into [:ul]
-      (for [[component-name generate-fn] toolbar-elements]
-        [:li {:on-click #(dispatch [:generate-component generate-fn path])}
-         component-name]))))
+          (for [[component-name generate-fn] toolbar-elements
+                :when                        (not (and
+                                                    (vector? path)
+                                                    (= :children (second path))
+                                                    (= "Lomakeosio" component-name)))]
+            [:li {:on-click #(dispatch [:generate-component generate-fn path])}
+             component-name]))))
 
 (defn add-component [path]
   (let [show-bar? (r/atom nil)
