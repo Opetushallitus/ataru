@@ -53,7 +53,7 @@ This will also allow you to connect to the nREPL servers of the jvm processes in
 ```
 lein virkailija-dev
 (in another terminal)
-lein figwheel dev
+lein figwheel virkailija-dev
 ```
 Figwheel will automatically push cljs changes to the browser.
 
