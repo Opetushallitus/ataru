@@ -1,7 +1,7 @@
 (ns ataru.soresu.component-spec
   (:require [oph.soresu.form.schema :as soresu]
             [ataru.schema.clj-schema]
-            [lomake-editori.soresu.component :as component]
+            [ataru.virkailija.soresu.component :as component]
             [schema.core :as s]
             [speclj.core :refer :all]))
 
