@@ -1,4 +1,4 @@
-(ns ataru.virkailija.util)
+(ns ataru.util)
 
 (defn map-kv [m f]
   (reduce-kv #(assoc %1 %2 (f %3)) {} m))
