@@ -1,6 +1,6 @@
-(ns lomake-editori.editor.handlers-test
+(ns ataru.virkailija.editor.handlers-test
   (:require [cljs.test :refer-macros [deftest are]]
-            [lomake-editori.editor.handlers :as h]))
+            [ataru.virkailija.editor.handlers :as h]))
 
 (defn generate-fn
   []
