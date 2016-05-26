@@ -97,7 +97,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main "lomake-editori.core"
-                                   :output-to "resources/public/js/compiled/app.js"
+                                   :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
                                    :foreign-libs [{:file ~soresu
@@ -136,7 +136,7 @@
                        {:id "min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "lomake-editori.core"
-                                   :output-to "resources/public/js/compiled/app.js"
+                                   :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false
