@@ -15,13 +15,13 @@
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
       (into [:div.editor-form__list]
-            (for [form (vals @forms)]
-              [:div.editor-form__row
-               {:key      (:id form)
+            (for [form (sort-by :id (vals @forms))]
+              [:a.editor-form__row
+               {:href     (str "#/editor/" (:id form))
+                :key      (:id form)
                 :class    (when (= (:id form)
                                    @selected-form-id)
-                            "editor-form__selected-row")
-                :on-click #(dispatch [:editor/select-form form])}
+                            "editor-form__selected-row")}
                [:span.editor-form__list-form-name (:name form)]
                [:span.editor-form__list-form-time (time->str (:modified-time form))]
                [:span.editor-form__list-form-editor (let [a (:author form)]
