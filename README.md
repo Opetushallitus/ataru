@@ -50,6 +50,7 @@ Give it a password `oph`
 
 This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
 
+### Virkailija app
 ```
 lein virkailija-dev
 (in another terminal)
@@ -58,6 +59,19 @@ lein figwheel virkailija-dev
 Figwheel will automatically push cljs changes to the browser.
 
 Browse to [http://localhost:8350](http://localhost:8350).
+
+### Hakija app
+```
+lein hakija-dev
+(in another terminal)
+lein figwheel hakija-dev
+```
+Browse to [http://localhost:8351/hakemus/<id>](http://localhost:8351/hakemus/<id>).
+
+_Note: figwheel nrepl ports now conflict (they are the same and it's not easy to configure
+separate ports in project.clj), so you can run only either hakija/virkailija 
+figwheel process at once. You can still run both applications just fine, but the other
+ one will have to be either with lein cljsbuild once or auto <id>_
 
 ### Browser tests:
 
@@ -106,5 +120,5 @@ The above command assumes that you have [phantomjs](https://www.npmjs.com/packag
 
 ```
 lein clean
-lein cljsbuild once min
+lein cljsbuild once <app id>-min
 ```
