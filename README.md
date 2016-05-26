@@ -1,4 +1,6 @@
-# lomake-editori
+# ataru
+
+Ataru is a name for a service used to create forms.
 
 ## Development Mode
 
