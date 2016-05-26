@@ -9,7 +9,7 @@ export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
 export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 
 build-clojurescript() {
-    ./bin/lein cljsbuild once min
+    ./bin/lein cljsbuild once virkailija-min
 }
 
 package() {
