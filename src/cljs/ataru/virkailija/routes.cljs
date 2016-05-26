@@ -6,8 +6,10 @@
               [goog.history.EventType :as EventType]
               [re-frame.core :refer [dispatch]]))
 
+(defonce history (History.))
+
 (defn hook-browser-navigation! []
-  (doto (History.)
+  (doto history
     (events/listen
      EventType/NAVIGATE
      (fn [event]
@@ -16,7 +18,7 @@
 
 (defn set-history!
   [route]
-  (.setToken (History.) route))
+  (.setToken history route))
 
 (defn app-routes []
   (secretary/set-config! :prefix "#")
@@ -30,9 +32,14 @@
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms]))
 
+  (defroute #"/editor/(\d+)" [id]
+    (dispatch [:set-active-panel :editor])
+    (dispatch [:editor/refresh-forms (js/parseInt id 10)])
+    (dispatch [:editor/fetch-form-content (js/parseInt id 10)]))
+
   (defroute #"/editor/forms/(\d+)" [id]
     (dispatch [:set-active-panel :editor])
-    (dispatch [:editor/refresh-forms (js/parseInt id)]))
+    (dispatch [:editor/refresh-forms (js/parseInt id 10)]))
 
   (defroute "/application" []
     (dispatch [:set-active-panel :application]))

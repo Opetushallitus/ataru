@@ -1,6 +1,6 @@
-(ns lomake-editori.browser-runner
+(ns ataru.virkailija.browser-runner
     (:require [cljs.test :refer-macros [run-all-tests]]
-              [lomake-editori.core-test]))
+              [ataru.virkailija.core-test]))
 
 (defn ^:export run
   []

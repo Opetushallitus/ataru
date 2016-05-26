@@ -5,6 +5,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.handlers :refer [http post]]
+            [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -108,6 +109,7 @@
           (autosave/stop-autosave! (-> db :editor :autosave)))
 
         (dispatch [:editor/fetch-form-content (:id clicked-form)])
+        (set-history! (str "/editor/" (:id clicked-form)))
 
         (-> db
             (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
