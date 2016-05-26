@@ -1,9 +1,9 @@
-(ns lomake-editori.core-test
+(ns ataru.virkailija.core-test
   (:require [cljs.test :refer-macros [async deftest is testing use-fixtures]]
             [goog.dom :as dom]
             [goog.dom.DomHelper :as dh]
             [jayq.core :as jq]
-            [lomake-editori.core :as core]))
+            [ataru.virkailija.core :as core]))
 
 (defn app-frame
   []

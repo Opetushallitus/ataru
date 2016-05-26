@@ -128,7 +128,7 @@
                         :compiler {:output-to "resources/public/js/test/browser-test.js"
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
-                                   :main "lomake-editori.browser-runner"
+                                   :main "ataru.virkailija.browser-runner"
                                    :foreign-libs [{:file ~soresu
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
