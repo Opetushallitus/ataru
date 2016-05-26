@@ -108,6 +108,7 @@
           (autosave/stop-autosave! (-> db :editor :autosave)))
 
         (dispatch [:editor/fetch-form-content (:id clicked-form)])
+        (.replaceState js/history nil nil (str "#/editor/" (:id clicked-form)))
 
         (-> db
             (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
