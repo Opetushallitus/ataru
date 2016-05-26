@@ -8,6 +8,10 @@ echo $OLD_CWD
 export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
 export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 
+compile-less() {
+    ./bin/lein less once
+}
+
 build-clojurescript() {
     ./bin/lein cljsbuild once virkailija-min
 }
@@ -41,6 +45,9 @@ run-migrations() {
 command="$1"
 
 case "$command" in
+    "compile-less" )
+        compile-less
+        ;;
     "build-clojurescript" )
         build-clojurescript
         ;;
