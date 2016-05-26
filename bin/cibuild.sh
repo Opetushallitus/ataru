@@ -12,6 +12,10 @@ compile-less() {
     ./bin/lein less once
 }
 
+process-resources() {
+    ./bin/lein resource
+
+}
 build-clojurescript() {
     ./bin/lein cljsbuild once virkailija-min
 }
@@ -47,6 +51,9 @@ command="$1"
 case "$command" in
     "compile-less" )
         compile-less
+        ;;
+    "process-resources" )
+        process-resources
         ;;
     "build-clojurescript" )
         build-clojurescript
