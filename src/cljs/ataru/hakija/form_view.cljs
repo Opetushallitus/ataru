@@ -3,10 +3,17 @@
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]))
 
+(defn- text-field-size->class [size]
+  (match size
+         "S" "application__form-text-input__size-small"
+         "M" "application__form-text-input__size-medium"
+         "L" "application__form-text-input__size-large"))
+
 (defn text-field [content]
   [:div.application__form-field
    [:label.application_form-field-label (-> content :label :fi)]
-   [:input.application__form-text-input {:type "text"}]])
+   [:span "size: " (-> content :size)]
+   [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :size))}]])
 
 (declare render-field)
 

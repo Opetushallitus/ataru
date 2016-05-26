@@ -44,7 +44,7 @@
           (into
             [[:div.editor-form__size-button-wrapper
               [:header.editor-form__component-item-header "Tekstikentän leveys"]
-              [:div.editor-form__size-button-group {:on-change #(do)}
+              [:div.editor-form__size-button-group {:on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :size])}
                (map #(seq (let [btn-name (key %)
                                 btn-id (val %)]
                             [[:input.editor-form__size-button.editor-form__size-button
