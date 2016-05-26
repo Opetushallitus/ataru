@@ -60,7 +60,7 @@
       (go-loop []
         (when-let [[prev current] (<! change)]
           (do
-            (when-changed-save bounce prev current)
+            (when-changed-save bounce current prev)
             (recur)))
 
         ; save right before exiting loop

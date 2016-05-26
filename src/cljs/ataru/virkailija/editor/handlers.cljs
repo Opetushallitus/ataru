@@ -116,9 +116,15 @@
                       (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
                                                :changed-predicate
                                                (fn [current prev]
-                                                 (not=
-                                                   (dissoc prev :modified-time)
-                                                   (dissoc current :modified-time)))
+                                                 (match [current (merge {:content nil}
+                                                                        prev)]
+                                                        [_ {:content nil}]
+                                                        false
+
+                                                        :else
+                                                        (not=
+                                                          (dissoc prev :modified-time)
+                                                          (dissoc current :modified-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form form]))
