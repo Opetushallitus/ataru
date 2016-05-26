@@ -9,45 +9,61 @@
   (when stop-fn
     (stop-fn)))
 
-(defn save-and-close-autosave! [interval-ch]
-  (go
-    (>! interval-ch true)
-    (close! interval-ch)))
+(defn debounce
+  ([f] (debounce f 1000))
+  ([f timeout]
+   (let [id (atom nil)]
+     (fn [current prev]
+       (if (not (nil? @id))
+         (js/clearTimeout @id))
+       (reset! id (js/setTimeout
+                    (partial f current prev)
+                    timeout))))))
 
 (defn interval-loop [{:keys [interval-ms
                              subscribe-path
                              handler
-                             initial changed-predicate]
+                             ; extra predicate for changing whether a change should be
+                             ; propagated to the db
+                             changed-predicate]
                       :or   {interval-ms 2000
                              changed-predicate not=}}]
   {:pre [(integer? interval-ms)
          (vector? subscribe-path)]}
   (let [interval-ch        (chan (sliding-buffer 1))
-        previous           (atom initial)
         value-to-watch     (subscribe [:state-query subscribe-path])
+        previous           (atom @value-to-watch)
+        change             (chan (sliding-buffer 1))
+        watch              (fn [_ _ old new]
+                             (reset! previous old)
+                             (go (>! change [old new])))
+        stop?              (atom false)
         stop-fn            (fn [& [force?]]
                              (if force?
-                               (go (>! interval-ch true))
-                               (save-and-close-autosave! interval-ch))
+                               (swap! stop? true)
+                               (close! change))
                              true)
-        when-changed-save! (fn [current prev]
+        bounce             (debounce handler)
+        when-changed-save (fn [save-fn current prev]
                              (when (changed-predicate current prev)
-                               (do
-                                 (reset! previous current)
-                                 (handler current prev))))]
+                               (save-fn current prev)))]
     (do
+      (-add-watch value-to-watch :autosave watch)
+
       (go-loop []
-        (match [(alts! [interval-ch (timeout interval-ms)]) @value-to-watch @previous]
-               [_ nil _]
-               (info "Stopping autosave. Could not find current value for autosave at" subscribe-path)
+        (<! (timeout 500))
+        (if (and @value-to-watch
+                 (not @stop?))
+          (recur)
+          (info "Stopping autosave at" subscribe-path)))
 
-               ; interval-ch is closed, loop should stop
-               [[nil interval-ch] current prev]
-               (when-changed-save! current prev)
+      (go-loop []
+        (when-let [[prev current] (<! change)]
+          (do
+            (when-changed-save bounce prev current)
+            (recur)))
 
-               ; matched when interval-ms timeouts or _anything_ is sent to interval-ch
-               [_ current prev]
-               (do
-                 (when-changed-save! current prev)
-                 (recur))))
-      stop-fn)))
+        ; save right before exiting loop
+        (when-let [current @value-to-watch]
+          (when-changed-save handler current @previous))))
+      stop-fn))
