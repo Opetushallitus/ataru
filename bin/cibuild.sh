@@ -20,6 +20,10 @@ build-clojurescript() {
     ./bin/lein cljsbuild once virkailija-min
 }
 
+create-uberjar() {
+    ./bin/lein uberjar
+}
+
 package() {
     ./bin/lein do clean, uberjar
 }
@@ -57,6 +61,9 @@ case "$command" in
         ;;
     "build-clojurescript" )
         build-clojurescript
+        ;;
+    "create-uberjar" )
+        create-uberjar
         ;;
     "test-clojure" )
         test-clojure
