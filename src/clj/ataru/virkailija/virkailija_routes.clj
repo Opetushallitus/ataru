@@ -53,7 +53,7 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defroutes app-routes
-  (GET "/" [] (selmer/render-file "templates/index.html" {:cache-fingerprint cache-fingerprint})))
+  (GET "/" [] (selmer/render-file "templates/virkailija.html" {:cache-fingerprint cache-fingerprint})))
 
 (defroutes test-routes
   (GET "/test.html" []

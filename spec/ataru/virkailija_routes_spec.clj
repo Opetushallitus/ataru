@@ -36,7 +36,7 @@
 
   (it "should refer to the compiled app.js in response body"
     (let [body (:body @resp)]
-      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/app.js\?fingerprint=\d{13}\"></script>.*" body))))
+      (should-not-be-nil (re-matches #"(?s).*<script src=\"js/compiled/virkailija-app.js\?fingerprint=\d{13}\"></script>.*" body))))
 
   (it "should have text/html as content type"
     (should-have-header "Content-Type" "text/html; charset=utf-8" @resp))
@@ -45,7 +45,7 @@
     (should-have-header "Cache-Control" "no-cache" @resp)))
 
 (describe "Getting a static resource"
-  (with-static-resource resp "/lomake-editori/js/compiled/app.js")
+  (with-static-resource resp "/lomake-editori/js/compiled/virkailija-app.js")
 
   (it "should provide the resource found from the resources/ directory"
     (should-not-be-nil @resp))

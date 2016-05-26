@@ -93,11 +93,11 @@
 
   :main ataru.core
 
-  :cljsbuild {:builds [{:id "dev"
+  :cljsbuild {:builds [{:id "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "lomake-editori.core/mount-root"}
-                        :compiler {:main "lomake-editori.core"
-                                   :output-to "resources/public/js/compiled/app.js"
+                        :figwheel {:on-jsload "ataru.virkailija.core/mount-root"}
+                        :compiler {:main "ataru.virkailija.core"
+                                   :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
                                    :foreign-libs [{:file ~soresu
@@ -133,10 +133,10 @@
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
-                       {:id "min"
+                       {:id "virkailija-min"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main "lomake-editori.core"
-                                   :output-to "resources/public/js/compiled/app.js"
+                        :compiler {:main "ataru.virkailija.core"
+                                   :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false
@@ -185,12 +185,10 @@
              :uberjar {:aot :all
                        :prep-tasks [["less" "once"]
                                     "compile"
-                                    ["cljsbuild" "once" "min"]
+                                    ["cljsbuild" "once" "virkailija-min"]
                                     ["cljsbuild" "once" "hakija-min"]
                                     "resource"]
-                       :resource-paths ["resources"]}
-             :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
-                                              :server-port 3449}}}
+                       :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
             "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
 
