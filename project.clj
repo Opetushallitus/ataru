@@ -95,8 +95,8 @@
 
   :cljsbuild {:builds [{:id "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "lomake-editori.core/mount-root"}
-                        :compiler {:main "lomake-editori.core"
+                        :figwheel {:on-jsload "ataru.virkailija.core/mount-root"}
+                        :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :output-dir "resources/public/js/compiled/out"
                                    :asset-path "js/compiled/out"
@@ -135,7 +135,7 @@
 
                        {:id "virkailija-min"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main "lomake-editori.core"
+                        :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
@@ -188,9 +188,7 @@
                                     ["cljsbuild" "once" "virkailija-min"]
                                     ["cljsbuild" "once" "hakija-min"]
                                     "resource"]
-                       :resource-paths ["resources"]}
-             :figwheel-standalone {:figwheel {:ring-handler lomake-editori.handler/handler
-                                              :server-port 3449}}}
+                       :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
             "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
 

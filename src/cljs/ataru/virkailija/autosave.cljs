@@ -1,4 +1,4 @@
-(ns lomake-editori.autosave
+(ns ataru.virkailija.autosave
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]

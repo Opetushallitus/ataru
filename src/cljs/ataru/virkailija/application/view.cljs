@@ -1,4 +1,4 @@
-(ns lomake-editori.application.view
+(ns ataru.virkailija.application.view
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]))
 

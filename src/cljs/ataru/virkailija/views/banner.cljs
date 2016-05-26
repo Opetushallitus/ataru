@@ -1,4 +1,4 @@
-(ns lomake-editori.views.banner
+(ns ataru.virkailija.views.banner
   (:require-macros
             [reagent.ratom :refer [reaction]]
             [cljs.core.async.macros :refer [go]])

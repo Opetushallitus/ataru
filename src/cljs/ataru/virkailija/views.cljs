@@ -1,13 +1,13 @@
-(ns lomake-editori.views
+(ns ataru.virkailija.views
     (:require [re-frame.core :as re-frame]
               [reagent.core :as r]
-              [lomake-editori.views.banner :refer [top-banner]]
-              [lomake-editori.application.view :refer [application]]
-              [lomake-editori.dev.lomake :as l]
-              [lomake-editori.editor.view :refer [editor]]
-              [lomake-editori.soresu.form      :as f]
-              [lomake-editori.soresu.component :as component]
-              [lomake-editori.soresu.components :as components]
+              [ataru.virkailija.views.banner :refer [top-banner]]
+              [ataru.virkailija.application.view :refer [application]]
+              [ataru.virkailija.dev.lomake :as l]
+              [ataru.virkailija.editor.view :refer [editor]]
+              [ataru.virkailija.soresu.form      :as f]
+              [ataru.virkailija.soresu.component :as component]
+              [ataru.virkailija.soresu.components :as components]
               [taoensso.timbre :refer-macros [spy]]))
 
 (defmulti panels identity)

@@ -1,4 +1,4 @@
-(ns lomake-editori.soresu.components
+(ns ataru.virkailija.soresu.components
   (:require [reagent.core :as r :refer [adapt-react-class]]
             [cljs.core.match :refer-macros [match]]
             [camel-snake-kebab.core :as csk]

@@ -1,8 +1,8 @@
-(ns lomake-editori.handlers
+(ns ataru.virkailija.handlers
     (:require [re-frame.core :as re-frame :refer [register-handler dispatch]]
               [ajax.core :refer [GET POST PUT DELETE]]
-              [lomake-editori.db :as db]
-              [lomake-editori.temporal :as temporal]
+              [ataru.virkailija.db :as db]
+              [ataru.virkailija.temporal :as temporal]
               [cljs-time.core :as c]
               [cljs-time.format :as f]
               [cljs.core.match :refer-macros [match]]

@@ -1,12 +1,12 @@
-(ns lomake-editori.core
+(ns ataru.virkailija.core
     (:require [reagent.core :as reagent]
               [re-frame.core :as re-frame]
-              [lomake-editori.handlers]
-              [lomake-editori.subs]
-              [lomake-editori.routes :as routes]
-              [lomake-editori.views :as views]
-              [lomake-editori.config :as config]
-              [lomake-editori.editor.handlers]
+              [ataru.virkailija.handlers]
+              [ataru.virkailija.subs]
+              [ataru.virkailija.routes :as routes]
+              [ataru.virkailija.views :as views]
+              [ataru.virkailija.config :as config]
+              [ataru.virkailija.editor.handlers]
               [taoensso.timbre :refer-macros [spy info]]))
 
 (enable-console-print!)

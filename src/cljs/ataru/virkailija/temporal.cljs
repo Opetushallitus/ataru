@@ -1,4 +1,4 @@
-(ns lomake-editori.temporal
+(ns ataru.virkailija.temporal
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
             [goog.date :as gd]

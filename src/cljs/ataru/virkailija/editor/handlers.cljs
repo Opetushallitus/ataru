@@ -1,11 +1,11 @@
-(ns lomake-editori.editor.handlers
+(ns ataru.virkailija.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
-            [lomake-editori.autosave :as autosave]
-            [lomake-editori.dev.lomake :as dev]
-            [lomake-editori.handlers :refer [http post]]
-            [lomake-editori.util :as util]
+            [ataru.virkailija.autosave :as autosave]
+            [ataru.virkailija.dev.lomake :as dev]
+            [ataru.virkailija.handlers :refer [http post]]
+            [ataru.virkailija.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn refresh-forms

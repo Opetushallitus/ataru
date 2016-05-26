@@ -1,4 +1,4 @@
-(ns lomake-editori.soresu.component)
+(ns ataru.virkailija.soresu.component)
 
 (defn text-field
   []

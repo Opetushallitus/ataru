@@ -1,5 +1,5 @@
-(ns lomake-editori.soresu.form
-  (:require [lomake-editori.soresu.components :refer [form]]))
+(ns ataru.virkailija.soresu.form
+  (:require [ataru.virkailija.soresu.components :refer [form]]))
 
 (def form-form (:form form))
 (def form-container (:form-container form))

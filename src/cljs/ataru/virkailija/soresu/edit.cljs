@@ -1,5 +1,5 @@
-(ns lomake-editori.soresu.edit
-  (:require [lomake-editori.soresu.components :refer [edit]]
+(ns ataru.virkailija.soresu.edit
+  (:require [ataru.virkailija.soresu.components :refer [edit]]
             [taoensso.timbre :refer-macros [spy]]))
 
 (defonce form-edit (:form-edit edit))

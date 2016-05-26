@@ -1,5 +1,5 @@
-(ns lomake-editori.editor.component
-  (:require [lomake-editori.soresu.component :as component]
+(ns ataru.virkailija.editor.component
+  (:require [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]))
 

@@ -1,4 +1,4 @@
-(ns lomake-editori.dev.lomake)
+(ns ataru.virkailija.dev.lomake)
 
 (def translations {:translations #js {}})
 

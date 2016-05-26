@@ -1,6 +1,6 @@
-(ns lomake-editori.editor.core
-  (:require [lomake-editori.dev.lomake :as l]
-            [lomake-editori.editor.component :as ec]
+(ns ataru.virkailija.editor.core
+  (:require [ataru.virkailija.dev.lomake :as l]
+            [ataru.virkailija.editor.component :as ec]
             [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler register-sub]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]

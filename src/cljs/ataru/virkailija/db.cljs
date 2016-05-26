@@ -1,4 +1,4 @@
-(ns lomake-editori.db)
+(ns ataru.virkailija.db)
 
 (def default-db
   {:application {:degree-programme "Hierojan ammattitutkinto, koulutettu hieroja - Stadin Aikuisopisto"

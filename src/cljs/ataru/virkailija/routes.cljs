@@ -1,4 +1,4 @@
-(ns lomake-editori.routes
+(ns ataru.virkailija.routes
     (:require-macros [secretary.core :refer [defroute]])
     (:import goog.History)
     (:require [secretary.core :as secretary]

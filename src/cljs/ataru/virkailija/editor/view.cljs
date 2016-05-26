@@ -1,12 +1,12 @@
-(ns lomake-editori.editor.view
+(ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
-            [lomake-editori.dev.lomake :as l]
-            [lomake-editori.editor.core :as c]
-            [lomake-editori.editor.subs]
-            [lomake-editori.soresu.component :as component]
-            [lomake-editori.temporal :refer [time->str]]
+            [ataru.virkailija.dev.lomake :as l]
+            [ataru.virkailija.editor.core :as c]
+            [ataru.virkailija.editor.subs]
+            [ataru.virkailija.soresu.component :as component]
+            [ataru.virkailija.temporal :refer [time->str]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 
