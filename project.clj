@@ -93,7 +93,7 @@
 
   :main ataru.core
 
-  :cljsbuild {:builds [{:id "dev"
+  :cljsbuild {:builds [{:id "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel {:on-jsload "lomake-editori.core/mount-root"}
                         :compiler {:main "lomake-editori.core"
@@ -133,7 +133,7 @@
                                                    :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
-                       {:id "min"
+                       {:id "virkailija-min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "lomake-editori.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
@@ -185,7 +185,7 @@
              :uberjar {:aot :all
                        :prep-tasks [["less" "once"]
                                     "compile"
-                                    ["cljsbuild" "once" "min"]
+                                    ["cljsbuild" "once" "virkailija-min"]
                                     ["cljsbuild" "once" "hakija-min"]
                                     "resource"]
                        :resource-paths ["resources"]}

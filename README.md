@@ -69,8 +69,8 @@ npm install
 # In one terminal window, run the actual application, for example:
 lein virkailija-dev
 
-# In second window, you'll want to run figwheel in dev profile as normally:
-lein figwheel dev
+# In second window, you'll want to run figwheel in virkailija-dev profile as normally:
+lein figwheel virkailija-dev
 
 # And in the third window, run cljsbuild for tests to automatically recompile test.js
 lein cljsbuild auto browser-test
