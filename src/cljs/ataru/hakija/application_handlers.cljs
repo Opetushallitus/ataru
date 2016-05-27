@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
-            [ataru.virkailija.handlers :refer [http post]]
+            [ataru.ajax.http :refer [http post]]
             [cljs.core.match :refer-macros [match]]))
 
 (defn get-form [db [_ form-id]]
