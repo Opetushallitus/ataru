@@ -210,7 +210,8 @@ form > .editor-form__component-wrapper {
   background-color: #F7F7F7;
   transition: background-color @transition ease;
   width: 98;
-  margin: 21px 11px 14px;
+  margin-top: 21px;
+  margin-bottom: 14px;
   padding: 0.5em;
   .plus-component {
     background-color: @selected-blue;
@@ -229,10 +230,22 @@ form > .editor-form__component-wrapper {
   }
 }
 
+.editor-form__section_wrapper {
+  .editor-form__add-component-toolbar {
+    margin-left: 11px;
+    margin-right: 11px;
+  }
+  .editor-form__component-toolbar {
+    margin-left: 11px;
+    margin-right: 11px;
+  }
+}
+
 .editor-form__component-toolbar {
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
-  margin: 21px 11px 14px;
+  margin-top: 21px;
+  margin-bottom: 14px;
   padding: 0.5em;
   ul { margin: 0; }
   li {
