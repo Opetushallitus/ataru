@@ -7,7 +7,8 @@
   (match size
          "S" "application__form-text-input__size-small"
          "M" "application__form-text-input__size-medium"
-         "L" "application__form-text-input__size-large"))
+         "L" "application__form-text-input__size-large"
+         :else "application__form-text-input__size-medium"))
 
 (defn text-field [content]
   [:div.application__form-field
