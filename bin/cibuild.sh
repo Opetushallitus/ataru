@@ -12,6 +12,10 @@ compile-less() {
     ./bin/lein less once
 }
 
+npm-dependencies() {
+    npm install
+}
+
 process-resources() {
     ./bin/lein resource
 
@@ -55,6 +59,9 @@ command="$1"
 case "$command" in
     "compile-less" )
         compile-less
+        ;;
+    "npm-dependencies" )
+        npm-dependencies
         ;;
     "process-resources" )
         process-resources
