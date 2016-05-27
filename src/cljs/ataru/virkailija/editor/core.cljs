@@ -16,14 +16,6 @@
                                  [:editor :forms (-> @db :editor :selected-form-id) :content]
                                  path))))))
 
-(register-handler
-  :editor/set-component-value
-  (fn [db [_ value & path]]
-    (assoc-in db
-              (flatten (concat [:editor :forms (-> db :editor :selected-form-id) :content]
-                               path))
-              value)))
-
 (register-sub
   :editor/languages
   (fn [db]

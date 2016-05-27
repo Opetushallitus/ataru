@@ -45,6 +45,14 @@
         m))
 
 (register-handler
+  :editor/set-component-value
+  (fn [db [_ value & path]]
+    (assoc-in db
+              (flatten (concat [:editor :forms (-> db :editor :selected-form-id) :content]
+                               path))
+              value)))
+
+(register-handler
   :handle-get-forms
   (fn [db [_ forms-response selected-form-id]]
     (if (seq (:forms forms-response))
