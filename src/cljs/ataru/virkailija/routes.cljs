@@ -34,8 +34,7 @@
 
   (defroute #"/editor/(\d+)" [id]
     (dispatch [:set-active-panel :editor])
-    (dispatch [:editor/refresh-forms (js/parseInt id 10)])
-    (dispatch [:editor/fetch-form-content (js/parseInt id 10)]))
+    (dispatch [:editor/refresh-forms (js/parseInt id 10)]))
 
   (defroute #"/editor/forms/(\d+)" [id]
     (dispatch [:set-active-panel :editor])
