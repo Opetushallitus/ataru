@@ -9,16 +9,11 @@
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn refresh-forms
-  ([] (http
-        :get
-        "/lomake-editori/api/forms"
-        :handle-get-forms))
-  ([selected-form-id] (http
-                        :get
-                        "/lomake-editori/api/forms"
-                        :handle-get-forms
-                        :handler-args selected-form-id)))
+(defn refresh-forms []
+  (http
+    :get
+    "/lomake-editori/api/forms"
+    :handle-get-forms))
 
 (defn get-user-info [db _]
   (http
@@ -54,24 +49,10 @@
 
 (register-handler
   :handle-get-forms
-  (fn [db [_ forms-response selected-form-id]]
-    (if (seq (:forms forms-response))
-      (let [mdb         (-> (assoc-in db [:editor :forms] (-> (util/group-by-first
-                                                                :id (mapv with-author
-                                                                          (:forms forms-response)))
-                                                              (sorted-by-time)))
-                            (update :editor dissoc :selected-form-id))
-            forms       (-> mdb :editor :forms)
-            active-form (or
-                          (->> forms
-                            (filter #(= selected-form-id (:id (second %))))
-                            first
-                            second)
-                          (->> forms
-                            first
-                            second))]
-        (dispatch [:editor/select-form active-form])
-        mdb)
+  (fn [db [_ forms-response]]
+    (if-let [forms (not-empty (:forms forms-response))]
+      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
+                                        (sorted-by-time)))
       db)))
 
 (defn generate-component
@@ -91,9 +72,9 @@
 
 (register-handler
   :editor/refresh-forms
-  (fn [db [_ selected-form-id]]
+  (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
-    (refresh-forms selected-form-id)
+    (refresh-forms)
     db))
 
 (register-handler
@@ -110,20 +91,18 @@
 
 (register-handler
   :editor/select-form
-  (fn [db [_ clicked-form]]
+  (fn [db [_ form-id]]
     (let [previous-form-id (-> db :editor :selected-form-id)]
       (do
-        (when (not= previous-form-id (:id clicked-form))
+        (when (not= previous-form-id form-id)
           (autosave/stop-autosave! (-> db :editor :autosave)))
 
-        (dispatch [:editor/fetch-form-content (:id clicked-form)])
-        (set-history! (str "/editor/" (:id clicked-form)))
+        (dispatch [:editor/fetch-form-content form-id])
 
         (-> db
-            (assoc-in [:editor :forms (:id clicked-form)] clicked-form)
-            (assoc-in [:editor :selected-form-id] (:id clicked-form))
+            (assoc-in [:editor :selected-form-id] form-id)
             (assoc-in [:editor :autosave]
-                      (autosave/interval-loop {:subscribe-path [:editor :forms (:id clicked-form)]
+                      (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
                                                :changed-predicate
                                                (fn [current prev]
                                                  (match [current (merge {:content nil}
@@ -137,8 +116,7 @@
                                                           (dissoc current :modified-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
-                                                 (dispatch [:editor/save-form form]))
-                                               :initial        clicked-form})))))))
+                                                 (dispatch [:editor/save-form form]))})))))))
 
 (register-handler
   :editor/save-form
