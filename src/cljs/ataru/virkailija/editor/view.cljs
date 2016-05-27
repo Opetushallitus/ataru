@@ -24,11 +24,7 @@
                             "editor-form__selected-row")}
                [:span.editor-form__list-form-name (:name form)]
                [:span.editor-form__list-form-time (time->str (:modified-time form))]
-               [:span.editor-form__list-form-editor (let [a (:author form)]
-                                                      ;; Use this when there's real data:
-                                                      ;;(str (:last a) " " (:first a))
-                                                      ""
-                                                      )]])))))
+               [:span.editor-form__list-form-editor (:modified-by form)]])))))
 
 (defn add-form []
   [:div.editor-form__add-new
