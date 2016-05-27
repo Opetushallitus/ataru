@@ -2,6 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
+            [ataru.cljs-util :refer [debounce-subscribe]]
             [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
@@ -11,15 +12,15 @@
 
 
 (defn form-list []
-  (let [forms            (subscribe [:state-query [:editor :forms]])
+  (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
       (into [:div.editor-form__list]
-            (for [form (sort-by :id (vals @forms))]
+            (for [[id form] @forms]
               [:a.editor-form__row
-               {:href     (str "#/editor/" (:id form))
-                :key      (:id form)
-                :class    (when (= (:id form)
+               {:href     (str "#/editor/" id)
+                :key      id
+                :class    (when (= id
                                    @selected-form-id)
                             "editor-form__selected-row")}
                [:span.editor-form__list-form-name (:name form)]
