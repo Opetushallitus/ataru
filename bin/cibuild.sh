@@ -32,16 +32,6 @@ create-uberjar() {
     ./bin/lein uberjar
 }
 
-package() {
-    ./bin/lein do clean, uberjar
-}
-
-clean() {
-    ./bin/lein clean
-    rm -rf target
-    rm -rf node_modules
-}
-
 test-clojure() {
     ./bin/lein spec
 }
@@ -50,12 +40,14 @@ test-clojurescript() {
     ./bin/lein doo phantom test once
 }
 
-lint-clojure() {
-    ./bin/lein eastwood
-}
-
 run-migrations() {
     ./bin/lein with-profile dev run -m manual-migrations/migrate
+}
+
+clean() {
+    ./bin/lein clean
+    rm -rf target
+    rm -rf node_modules
 }
 
 command="$1"
@@ -82,17 +74,11 @@ case "$command" in
     "test-clojure" )
         test-clojure
         ;;
-    "lint-clojure" )
-        lint-clojure
-        ;;
     "test-clojurescript" )
         test-clojurescript
         ;;
     "run-migrations" )
         run-migrations
-        ;;
-    "package" )
-        package
         ;;
     "clean" )
         clean
