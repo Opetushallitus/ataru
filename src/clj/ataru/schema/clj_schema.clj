@@ -51,6 +51,15 @@
 
 (s/defschema Form schema/Form)
 
+(intern 'oph.soresu.form.schema
+        'FormField
+        (st/assoc soresu/WrapperElement
+                  :children
+                  [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                                  (s/recursive #'soresu/WrapperElement)
+                                  :else
+                                  soresu/BasicElement)]))
+
 (s/defschema FormWithContent
   (merge Form
          {:content [(s/if (comp some? :children) soresu/WrapperElement soresu/FormField)]}))

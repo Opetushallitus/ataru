@@ -80,12 +80,12 @@
                      {:forms (form-store/get-forms)}))
                  (api/GET "/forms/content/:id" []
                    :path-params [id :- Long]
-                   :return s/Any
+                   :return ataru-schema/FormWithContent
                    :summary "Get content for form"
                    (trying #(form-store/fetch-form id)))
                  (api/POST "/form" {session :session}
                    :summary "Persist changed form."
-                   :body [form s/Any] ;;TODO use a schema which works with the current editor output JSON
+                   :body [form ataru-schema/FormWithContent]
                    (trying #(form-store/upsert-form
                               (assoc form :modified-by (-> session :identity :username))))))))
 

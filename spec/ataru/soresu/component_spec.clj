@@ -1,9 +1,10 @@
 (ns ataru.soresu.component-spec
-  (:require [oph.soresu.form.schema :as soresu]
-            [ataru.schema.clj-schema]
+  (:require [ataru.fixtures.form :as fixtures]
+            [ataru.schema.clj-schema :as ataru-schema]
             [ataru.virkailija.soresu.component :as component]
             [schema.core :as s]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [oph.soresu.form.schema :as soresu]))
 
 (describe "text-field"
   (it "should be validated with soresu-form schema"
@@ -12,5 +13,12 @@
 (describe "form-section"
   (it "should be validated with ataru-form schema"
     (should-be-nil (s/check soresu/WrapperElement (component/form-section)))))
+
+(describe "fixture"
+  (it "must validate"
+      (should-be-nil
+        (s/check ataru-schema/FormWithContent fixtures/form-with-content)
+
+        )))
 
 (run-specs)
