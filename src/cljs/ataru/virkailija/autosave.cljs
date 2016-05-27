@@ -1,6 +1,7 @@
 (ns ataru.virkailija.autosave
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [re-frame.core :refer [subscribe]]
+            [ataru.cljs-util :refer [debounce]]
             [cljs.core.match :refer-macros [match]]
             [cljs.core.async :as a :refer  [chan <! >! close! alts! timeout sliding-buffer]]
             [taoensso.timbre :refer-macros [spy info debug]]))
@@ -8,17 +9,6 @@
 (defn stop-autosave! [stop-fn]
   (when stop-fn
     (stop-fn)))
-
-(defn debounce
-  ([f] (debounce f 1000))
-  ([f timeout]
-   (let [id (atom nil)]
-     (fn [current prev]
-       (if (not (nil? @id))
-         (js/clearTimeout @id))
-       (reset! id (js/setTimeout
-                    (partial f current prev)
-                    timeout))))))
 
 (defn interval-loop [{:keys [interval-ms
                              subscribe-path
