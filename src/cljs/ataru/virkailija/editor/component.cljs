@@ -25,35 +25,39 @@
      [:label.editor-form__checkbox-label {:for id} label]]))
 
 (defn render-text-field [initial-content path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])
-        radio-group-id (str "form-size-" (gensym))
-        radio-buttons ["S" "M" "L"]
-        radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)]
+  (let [languages        (subscribe [:editor/languages])
+        value            (subscribe [:editor/get-component-value path])
+        size             (subscribe [:editor/get-component-value path :size])
+        radio-group-id   (str "form-size-" (gensym))
+        radio-buttons    ["S" "M" "L"]
+        radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :size]))]
     (fn [initial-content path]
-      (-> [:div.editor-form__component-wrapper
-           [:header.editor-form__component-header "Tekstikenttä"]]
-          (into
-            [[:div.editor-form__text-field-wrapper
-              [:header.editor-form__component-item-header "Otsikko"]
-              (doall
-                (for [lang @languages]
-                  ^{:key lang}
-                  [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                                   :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])
-          (into
-            [[:div.editor-form__size-button-wrapper
-              [:header.editor-form__component-item-header "Tekstikentän leveys"]
-              [:div.editor-form__size-button-group {:on-change #(do)}
-               (map #(seq (let [btn-name (key %)
-                                btn-id (val %)]
-                            [[:input.editor-form__size-button.editor-form__size-button
-                              {:type "radio" :value btn-name :name radio-group-id :id btn-id :key (str btn-id "-radio")}]
-                             [:label
-                              {:for btn-id :key (str btn-id "-label")} btn-name]])) radio-button-ids)]]])
-          (into
-            [[:div.editor-form__checkbox-wrapper
-              (render-checkbox path initial-content :required)]])))))
+      [:div.editor-form__component-wrapper
+       [:header.editor-form__component-header "Tekstikenttä"]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Otsikko"]
+        (doall
+          (for [lang @languages]
+            [:input.editor-form__text-field {:key lang
+                                             :value     (get-in @value [:label lang])
+                                             :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+       [:div.editor-form__size-button-wrapper
+        [:header.editor-form__component-item-header "Tekstikentän leveys"]
+        [:div.editor-form__size-button-group
+         (doall (for [[btn-name btn-id] radio-button-ids]
+                  [:div {:key (str btn-id "-radio")}
+                    [:input.editor-form__size-button.editor-form__size-button
+                     {:type      "radio"
+                      :value     btn-name
+                      :checked   (= @size btn-name)
+                      :name      radio-group-id
+                      :id        btn-id
+                      :on-change (fn [] (size-change btn-name))}]
+                    [:label
+                     {:for btn-id} btn-name]]))]]
+       [:div.editor-form__checkbox-wrapper
+        (render-checkbox path initial-content :required)]])))
 
 (defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
