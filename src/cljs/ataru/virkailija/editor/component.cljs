@@ -39,14 +39,16 @@
         [:header.editor-form__component-item-header "Otsikko"]
         (doall
           (for [lang @languages]
-            [:input.editor-form__text-field {:key lang
+            ^{:key lang}
+            [:input.editor-form__text-field {
                                              :value     (get-in @value [:label lang])
                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
        [:div.editor-form__size-button-wrapper
         [:header.editor-form__component-item-header "Tekstikentän leveys"]
         [:div.editor-form__size-button-group
          (doall (for [[btn-name btn-id] radio-button-ids]
-                  [:div {:key (str btn-id "-radio")}
+                  ^{:key (str btn-id "-radio")}
+                  [:div
                     [:input.editor-form__size-button.editor-form__size-button
                      {:type      "radio"
                       :value     btn-name
