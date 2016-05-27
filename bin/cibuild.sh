@@ -18,10 +18,14 @@ npm-dependencies() {
 
 process-resources() {
     ./bin/lein resource
-
 }
-build-clojurescript() {
+
+build-clojurescript-virkailija() {
     ./bin/lein cljsbuild once virkailija-min
+}
+
+build-clojurescript-hakija() {
+    ./bin/lein cljsbuild once hakija-min
 }
 
 create-uberjar() {
@@ -66,8 +70,11 @@ case "$command" in
     "process-resources" )
         process-resources
         ;;
-    "build-clojurescript" )
-        build-clojurescript
+    "build-clojurescript-virkailija" )
+        build-clojurescript-virkailija
+        ;;
+    "build-clojurescript-hakija" )
+        build-clojurescript-hakija
         ;;
     "create-uberjar" )
         create-uberjar
