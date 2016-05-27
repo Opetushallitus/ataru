@@ -185,8 +185,7 @@
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
-                       :prep-tasks [["less" "once"]
-                                    "compile"
+                       :prep-tasks ["compile"
                                     "resource"]
                        :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
