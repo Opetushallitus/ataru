@@ -17,9 +17,9 @@
     (fn []
       (into [:div.editor-form__list]
             (for [[id form] @forms]
+              ^{:key id}
               [:a.editor-form__row
                {:href     (str "#/editor/" id)
-                :key      id
                 :class    (when (= id
                                    @selected-form-id)
                             "editor-form__selected-row")}
