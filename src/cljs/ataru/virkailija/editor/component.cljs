@@ -25,11 +25,13 @@
      [:label.editor-form__checkbox-label {:for id} label]]))
 
 (defn render-text-field [initial-content path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])
-        radio-group-id (str "form-size-" (gensym))
-        radio-buttons ["S" "M" "L"]
-        radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)]
+  (let [languages        (subscribe [:editor/languages])
+        value            (subscribe [:editor/get-component-value path])
+        size             (subscribe [:editor/get-component-value path :size])
+        radio-group-id   (str "form-size-" (gensym))
+        radio-buttons    ["S" "M" "L"]
+        radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :size]))]
     (fn [initial-content path]
       (-> [:div.editor-form__component-wrapper
            [:header.editor-form__component-header "Tekstikenttä"]]
@@ -44,13 +46,22 @@
           (into
             [[:div.editor-form__size-button-wrapper
               [:header.editor-form__component-item-header "Tekstikentän leveys"]
-              [:div.editor-form__size-button-group {:on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :size])}
-               (map #(seq (let [btn-name (key %)
-                                btn-id (val %)]
-                            [[:input.editor-form__size-button.editor-form__size-button
-                              {:type "radio" :value btn-name :name radio-group-id :id btn-id :key (str btn-id "-radio")}]
-                             [:label
-                              {:for btn-id :key (str btn-id "-label")} btn-name]])) radio-button-ids)]]])
+              [:div.editor-form__size-button-group
+               (doall
+                 (map
+                   #(seq
+                     (let [btn-name (key %)
+                           btn-id (val %)]
+                       [[:input.editor-form__size-button.editor-form__size-button
+                         {:type "radio"
+                          :value btn-name
+                          :checked (= @size btn-name)
+                          :name radio-group-id
+                          :id btn-id
+                          :key (str btn-id "-radio")
+                          :on-change (fn [] (size-change btn-name))}]
+                        [:label
+                         {:for btn-id :key (str btn-id "-label")} btn-name]])) radio-button-ids))]]])
           (into
             [[:div.editor-form__checkbox-wrapper
               (render-checkbox path initial-content :required)]])))))
