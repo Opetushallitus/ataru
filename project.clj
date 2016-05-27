@@ -85,6 +85,8 @@
                                     "test/js"
                                     "resources/public/js/test"]
 
+  :auto-clean false
+
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 3334}
 
@@ -183,11 +185,6 @@
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
              :uberjar {:aot :all
-                       :prep-tasks [["less" "once"]
-                                    "compile"
-                                    ["cljsbuild" "once" "virkailija-min"]
-                                    ["cljsbuild" "once" "hakija-min"]
-                                    "resource"]
                        :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
             "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
