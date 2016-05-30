@@ -50,9 +50,6 @@
   (it "should provide the resource found from the resources/ directory"
     (should-not-be-nil @resp))
 
-  (it "should return HTTP 200"
-    (should= 200 (:status @resp)))
-
   (it "should have Cache-Control: max-age=86400 header"
     (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
