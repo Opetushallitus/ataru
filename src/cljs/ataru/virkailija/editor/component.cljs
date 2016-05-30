@@ -34,7 +34,9 @@
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :size]))]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       [:header.editor-form__component-header "Tekstikenttä"]
+       [:div.editor-form__header-wrapper
+        [:header.editor-form__component-header "Tekstikenttä"]
+        [:a.editor-form__component-header-link "Poista"]]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Otsikko"]
         (doall
@@ -157,7 +159,9 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn []
       (-> [:div.editor-form__component-wrapper
-           [:header.editor-form__component-header "Lomakeosio"]]
+           [:div.editor-form__header-wrapper
+            [:header.editor-form__component-header "Lomakeosio"]
+            [:a.editor-form__component-header-link "Poista"]]]
           (into
             [[:div.editor-form__text-field-wrapper
               [:header.editor-form__component-item-header "Osion nimi"]

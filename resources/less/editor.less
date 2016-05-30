@@ -176,15 +176,29 @@ form > .editor-form__component-wrapper {
   margin-bottom: 10px;
 }
 
-.editor-form__component-header {
+.editor-form__header-wrapper {
+  width: 100%;
   background-color: @element-header-background;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.editor-form__component-header {
   color: @blue-text-color;
   font-size: 16px;
   font-weight: normal;
   text-transform: uppercase;
   margin: 0px;
   padding: 10px 11px 8px 11px;
-  width: 100%;
+}
+
+.editor-form__component-header-link {
+  color: @blue-text-color;
+  text-decoration: underline;
+  margin: 0px;
+  padding: 10px 11px 8px 11px;
+  font-size: 14px;
 }
 
 .editor-form__checkbox-label {
