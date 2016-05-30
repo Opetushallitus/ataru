@@ -27,11 +27,11 @@
 (defn render-text-field [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
-        size             (subscribe [:editor/get-component-value path :size])
+        size             (subscribe [:editor/get-component-value path :params :size])
         radio-group-id   (str "form-size-" (gensym))
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :size]))]
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        [:header.editor-form__component-header "Tekstikenttä"]
