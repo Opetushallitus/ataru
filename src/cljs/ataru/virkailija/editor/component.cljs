@@ -24,6 +24,14 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
+(defn- render-component-header
+  [label path]
+  [:div.editor-form__header-wrapper
+   [:header.editor-form__component-header label]
+   [:a.editor-form__component-header-link
+    {:on-click #(dispatch [:remove-component path])}
+    "Poista"]])
+
 (defn render-text-field [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -34,7 +42,7 @@
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       [:header.editor-form__component-header "Tekstikenttä"]
+       (render-component-header "Tekstikenttä" path)
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Otsikko"]
         (doall
@@ -157,7 +165,7 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn []
       (-> [:div.editor-form__component-wrapper
-           [:header.editor-form__component-header "Lomakeosio"]]
+           (render-component-header "Lomakeosio" path)]
           (into
             [[:div.editor-form__text-field-wrapper
               [:header.editor-form__component-item-header "Osion nimi"]
