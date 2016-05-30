@@ -5,8 +5,11 @@
             [ataru.virkailija.virkailija-routes :refer [clerk-routes]]))
 
 (defn new-system
-  []
-  (component/system-map
-    :server-setup {:routes clerk-routes :port 8350 :repl-port 3333}
-    :migration (migrations/new-migration)
-    :server (component/using (server/new-server) [:server-setup])))
+  ([http-port]
+   (println "start with port" http-port)
+   (component/system-map
+     :server-setup {:routes clerk-routes :port http-port :repl-port 3333}
+     :migration (migrations/new-migration)
+     :server (component/using (server/new-server) [:server-setup])))
+  ([]
+   (new-system 8350)))

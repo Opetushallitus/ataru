@@ -1,0 +1,2 @@
+{:server {:allow-db-clear? true}
+ :db {:database-name "ataru-test"}}
