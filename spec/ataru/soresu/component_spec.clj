@@ -17,8 +17,6 @@
 (describe "fixture"
   (it "must validate"
       (should-be-nil
-        (s/check ataru-schema/FormWithContent fixtures/form-with-content)
-
-        )))
+        (s/check ataru-schema/FormWithContent fixtures/form-with-content))))
 
 (run-specs)

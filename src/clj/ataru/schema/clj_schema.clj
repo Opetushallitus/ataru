@@ -2,7 +2,13 @@
   (:require [ataru.schema :as schema]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [oph.soresu.form.schema :as soresu]))
+            [oph.soresu.form.schema :as soresu]
+            [clojure.string :as str]))
+
+(s/defschema OptionalLocalizedString
+  {:fi                  s/Str
+   (s/optional-key :sv) s/Str
+   (s/optional-key :en) s/Str})
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -28,11 +34,17 @@
 ; it overwrites some of soresus schemas with little changes
 ((memoize
    (fn []
+
      (intern 'oph.soresu.form.schema
              'LocalizedString
-             {:fi           s/Str
-              (s/optional-key :sv) s/Str
-              (s/optional-key :en) s/Str})
+             OptionalLocalizedString)
+
+     (intern 'oph.soresu.form.schema
+             'Option
+             (st/assoc
+               soresu/Option
+               (s/optional-key :label) OptionalLocalizedString))
+
      nil)))
 
 (soresu/create-form-schema [] [] [])
