@@ -13,7 +13,7 @@
 (defn text-field [content]
   [:div.application__form-field
    [:label.application_form-field-label (-> content :label :fi)]
-   [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :size))}]])
+   [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :params :size))}]])
 
 (declare render-field)
 

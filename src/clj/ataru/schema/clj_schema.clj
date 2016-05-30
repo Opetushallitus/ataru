@@ -2,13 +2,13 @@
   (:require [ataru.schema :as schema]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [oph.soresu.form.schema :as soresu]))
+            [oph.soresu.form.schema :as soresu]
+            [clojure.string :as str]))
 
-(soresu/create-form-schema [] [] [])
-
-(s/defschema OptionalHelpText
-  {(s/optional-key :helpText) soresu/LocalizedString})
-
+(s/defschema OptionalLocalizedString
+  {:fi                  s/Str
+   (s/optional-key :sv) s/Str
+   (s/optional-key :en) s/Str})
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -37,17 +37,17 @@
 
      (intern 'oph.soresu.form.schema
              'LocalizedString
-             {:fi           s/Str
-              (s/optional-key :sv) s/Str
-              (s/optional-key :en) s/Str})
+             OptionalLocalizedString)
 
      (intern 'oph.soresu.form.schema
-             'FormField
-             (-> soresu/FormField
-                 (st/dissoc :helpText)
-                 (st/merge OptionalHelpText)))
+             'Option
+             (st/assoc
+               soresu/Option
+               (s/optional-key :label) OptionalLocalizedString))
 
      nil)))
+
+(soresu/create-form-schema [] [] [])
 
 (s/defschema Form schema/Form)
 

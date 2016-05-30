@@ -9,7 +9,7 @@
                  [re-com "0.8.0"]    ; reusable re-frame components
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [oph/soresu "0.1.1-SNAPSHOT"]
+                 [oph/soresu "0.1.2-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.4"]
 
