@@ -65,6 +65,21 @@
 
 (register-handler :generate-component generate-component)
 
+(defn remove-component
+  [db [_ path]]
+  (let [form-id      (get-in db [:editor :selected-form-id])
+        remove-index (last path)
+        path-vec     (-> [:editor :forms form-id :content [path]]
+                         flatten
+                         butlast)]
+    (->> (get-in db path-vec)
+         (keep-indexed (fn [index element]
+                         (when-not (= index remove-index) element)))
+         (into [])
+         (assoc-in db path-vec))))
+
+(register-handler :remove-component remove-component)
+
 (register-handler
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
