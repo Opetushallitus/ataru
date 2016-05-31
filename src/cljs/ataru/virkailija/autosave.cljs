@@ -20,23 +20,24 @@
                              changed-predicate not=}}]
   {:pre [(integer? interval-ms)
          (vector? subscribe-path)]}
-  (let [interval-ch        (chan (sliding-buffer 1))
-        value-to-watch     (subscribe [:state-query subscribe-path])
-        previous           (atom @value-to-watch)
-        change             (chan (sliding-buffer 1))
-        watch              (fn [_ _ old new]
-                             (reset! previous old)
-                             (go (>! change [old new])))
-        stop?              (atom false)
-        stop-fn            (fn [& [force?]]
-                             (if force?
-                               (swap! stop? true)
-                               (close! change))
-                             true)
-        bounce             (debounce handler)
+  (let [interval-ch       (chan (sliding-buffer 1))
+        value-to-watch    (subscribe [:state-query subscribe-path])
+        previous          (atom @value-to-watch)
+        change            (chan (sliding-buffer 1))
+        watch             (fn [_ _ old new]
+                            (do
+                              (reset! previous old)
+                              (go (>! change [old new]))))
+        stop?             (atom false)
+        stop-fn           (fn [& [force?]]
+                            (if force?
+                              (swap! stop? true)
+                              (close! change))
+                            true)
+        bounce            (debounce handler)
         when-changed-save (fn [save-fn current prev]
-                             (when (changed-predicate current prev)
-                               (save-fn current prev)))]
+                            (when (changed-predicate current prev)
+                              (save-fn current prev)))]
     (do
       (-add-watch value-to-watch :autosave watch)
 
