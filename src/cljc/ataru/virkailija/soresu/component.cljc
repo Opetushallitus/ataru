@@ -3,10 +3,15 @@
 (defn text-field
   []
   {:fieldClass "formField"
+   :fieldType  "textField"
    :label      {:fi "", :sv ""}
    :id         (str (gensym))
-   :required   false
-   :fieldType  "textField"})
+   :params     {}
+   :required   false})
+
+(defn text-area []
+  (assoc (text-field)
+         :fieldType "textArea"))
 
 (defn form-section
   []

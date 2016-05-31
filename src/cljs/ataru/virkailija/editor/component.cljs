@@ -24,7 +24,7 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
-(defn- render-component-header
+(defn- text-header
   [label path]
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
@@ -32,7 +32,7 @@
     {:on-click #(dispatch [:remove-component path])}
     "Poista"]])
 
-(defn render-text-field [initial-content path]
+(defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
         size             (subscribe [:editor/get-component-value path :params :size])
@@ -40,38 +40,43 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
-    (fn [initial-content path]
+    (fn [header initial-content path]
       [:div.editor-form__component-wrapper
-       (render-component-header "Tekstikenttä" path)
+       [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Otsikko"]
         (doall
           (for [lang @languages]
             ^{:key lang}
-            [:input.editor-form__text-field {
-                                             :value     (get-in @value [:label lang])
+            [:input.editor-form__text-field {:value     (get-in @value [:label lang])
                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
        [:div.editor-form__size-button-wrapper
-        [:header.editor-form__component-item-header "Tekstikentän leveys"]
+        [:header.editor-form__component-item-header size-label]
         [:div.editor-form__size-button-group
          (doall (for [[btn-name btn-id] radio-button-ids]
                   ^{:key (str btn-id "-radio")}
                   [:div
-                    [:input.editor-form__size-button.editor-form__size-button
-                     {:type      "radio"
-                      :value     btn-name
-                      :checked   (or
-                                   (= @size btn-name)
-                                   (and
-                                     (nil? @size)
-                                     (= "M" btn-name)))
-                      :name      radio-group-id
-                      :id        btn-id
-                      :on-change (fn [] (size-change btn-name))}]
-                    [:label
-                     {:for btn-id} btn-name]]))]]
+                   [:input.editor-form__size-button.editor-form__size-button
+                    {:type      "radio"
+                     :value     btn-name
+                     :checked   (or
+                                  (= @size btn-name)
+                                  (and
+                                    (nil? @size)
+                                    (= "M" btn-name)))
+                     :name      radio-group-id
+                     :id        btn-id
+                     :on-change (fn [] (size-change btn-name))}]
+                   [:label
+                    {:for btn-id} btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
         (render-checkbox path initial-content :required)]])))
+
+(defn text-field [initial-content path]
+  [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän leveys"])
+
+(defn text-area [initial-content path]
+  [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen leveys"])
 
 (defn render-link-info [{:keys [params] :as content} path]
   (let [languages (subscribe [:editor/languages])
@@ -112,8 +117,8 @@
 (def ^:private toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                component/form-section
-     "Tekstikenttä"              component/text-field}))
-;"Tekstialue"                dummy
+     "Tekstikenttä"              component/text-field
+     "Tekstialue"                component/text-area}))
 ;"Lista, monta valittavissa" dummy
 ;"Lista, yksi valittavissa"  dummy
 ;"Pudotusvalikko"            dummy
@@ -155,7 +160,7 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn []
       (-> [:div.editor-form__component-wrapper
-           (render-component-header "Lomakeosio" path)]
+           [text-header "Lomakeosio" path]]
           (into
             [[:div.editor-form__text-field-wrapper
               [:header.editor-form__component-item-header "Osion nimi"]
