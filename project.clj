@@ -87,8 +87,7 @@
 
   :auto-clean false
 
-  :figwheel {:css-dirs ["resources/public/css"]
-             :nrepl-port 3334}
+  :figwheel {:css-dirs ["resources/public/css"]}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
@@ -97,7 +96,6 @@
 
   :cljsbuild {:builds [{:id "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "ataru.virkailija.core/mount-root"}
                         :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :output-dir "resources/public/js/compiled/out"
@@ -108,7 +106,6 @@
 
                        {:id "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "ataru.hakija.core/mount-root"}
                         :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
                                    :output-dir "resources/public/js/compiled/hakija-out"
@@ -184,10 +181,19 @@
                    :source-paths ["dev/clj"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
+
+             :virkailija-dev [:dev {:figwheel {:on-jsload   "ataru.virkailija.core/mount-root"
+                                               :nrepl-port  3334
+                                               :server-port 3450}}]
+             :hakija-dev [:dev {:figwheel {:on-jsload   "ataru.hakija.core/mount-root"
+                                           :nrepl-port  3335
+                                           :server-port 3450}}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
-  :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
-            "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
+  :aliases {"virkailija-dev" ["with-profile" "virkailija-dev" "run" "virkailija"]
+            "hakija-dev" ["with-profile" "hakija-dev" "run" "hakija"]
+            "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
+            "figwheel-hakija" ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]})
 
 
 
