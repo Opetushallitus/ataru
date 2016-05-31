@@ -15,6 +15,11 @@
    [:label.application_form-field-label (-> content :label :fi)]
    [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :params :size))}]])
 
+(defn text-area [content]
+  [:div.application__form-field
+   [:label.application_form-field-label (-> content :label :fi)]
+   [:textarea.application__form-text-input {:class (text-field-size->class (-> content :params :size))}]])
+
 (declare render-field)
 
 (defn wrapper-field [content children]
@@ -23,10 +28,11 @@
 
 (defn render-field
   [content]
-   (match [content]
-          [{:fieldClass "wrapperElement"
-            :children   children}] [wrapper-field content children]
-          [{:fieldClass "formField" :fieldType "textField"}] [text-field content]))
+  (match content
+         {:fieldClass "wrapperElement"
+          :children   children} [wrapper-field content children]
+         {:fieldClass "formField" :fieldType "textField"} [text-field content]
+         {:fieldClass "formField" :fieldType "textArea"} [text-area content]))
 
 (defn render-fields [form-data]
   (when form-data
