@@ -3,7 +3,6 @@
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
             [ataru.cljs-util :refer [debounce-subscribe]]
-            [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.soresu.component :as component]
@@ -29,24 +28,36 @@
 
 (defn add-form []
   [:div.editor-form__add-new
-   [:a {:on-click (fn [evt] (.preventDefault evt) (dispatch [:editor/add-form])) :href "#"} "Luo uusi lomake"]])
+   [:a {:on-click (fn [evt]
+                    (.preventDefault evt)
+                    (dispatch [:editor/add-form]))
+        :href "#"}
+    "Luo uusi lomake"]])
 
-(defn editor-name [form-name]
-  (let [typing? (r/atom false)]
+(defn editor-name []
+  (let [form (subscribe [:editor/selected-form])
+        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
+        form-name (reaction (:name @form))
+        typing? (r/atom false)]
     (r/create-class
       {:display-name "editor-name"
        :component-did-update (fn [element]
-                               (when-not @typing?
-                                 (doto (r/dom-node element)
-                                   (.focus)
-                                   (.select))))
-       :reagent-render       (fn [form-name]
+                               (when (and (not @typing?)
+                                          (spy @new-form-created?))
+                                 (do
+                                   (doto (r/dom-node element)
+                                     (.focus)
+                                     (.select))
+                                   (dispatch [:set-state [:editor :new-form-created?] false]))))
+       :reagent-render       (fn []
                                [:input.editor-form__form-name-input
-                                {:type                "text"
-                                 :value               form-name
+                                {:key (:id @form) ; needed to trigger component-did-update
+                                 :type                "text"
+                                 :value               @form-name
                                  :placeholder         "Lomakkeen nimi"
-                                 :on-blur             #(do (reset! typing? false)
-                                                           nil)
+                                 :on-blur             #(do
+                                                         (reset! typing? false)
+                                                         nil)
                                  :on-change           #(do
                                                          (reset! typing? true)
                                                          (dispatch-sync [:editor/change-form-name (.-value (.-target %))]))}])})))
@@ -56,7 +67,7 @@
     (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
       [:div.panel-content
        [:div
-        [editor-name (:name @form)]]
+        [editor-name]]
        [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
        [c/editor]])))
 

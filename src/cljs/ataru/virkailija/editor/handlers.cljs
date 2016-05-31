@@ -149,7 +149,7 @@
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
             (secretary/dispatch! (str "/editor/" (:id new-or-updated-form)))
-            db))
+            (assoc-in db [:editor :new-form-created?] true)))
     db))
 
 (register-handler
