@@ -5,7 +5,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.ajax.http :refer [http post]]
-            [ataru.virkailija.routes :refer [set-history!]]
+            [secretary.core :as secretary]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -145,11 +145,10 @@
   (fn [db _]
     (post "/lomake-editori/api/form"
           {:name   "Uusi lomake"
-           :author {:last  "Testaaja" ;; placeholder
-                    :first "Teppo"}}
+           :content []}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
-            (refresh-forms)
+            (secretary/dispatch! (str "/editor/" (:id new-or-updated-form)))
             db))
     db))
 

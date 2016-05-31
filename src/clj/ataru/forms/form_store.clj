@@ -24,7 +24,8 @@
    to kebab-case"
   [form]
   (assoc (transform-keys ->kebab-case-keyword (dissoc form :content))
-         :content (-> form :content :content)))
+         :content (or (-> form :content :content)
+                      [])))
 
 (defn upsert-form [{:keys [id] :as form}]
   (let [content {:content (or (not-empty (:content form))
