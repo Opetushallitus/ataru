@@ -94,24 +94,26 @@
 
   :main ataru.core
 
-  :cljsbuild {:builds [{:id "virkailija-dev"
+  :cljsbuild {:builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main "ataru.virkailija.core"
-                                   :output-to "resources/public/js/compiled/virkailija-app.js"
-                                   :output-dir "resources/public/js/compiled/out"
-                                   :asset-path "js/compiled/out"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
-                                   :source-map-timestamp true}}
+                        :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
+                        :compiler     {:main                 "ataru.virkailija.core"
+                                       :output-to            "resources/public/js/compiled/virkailija-app.js"
+                                       :output-dir           "resources/public/js/compiled/out"
+                                       :asset-path           "js/compiled/out"
+                                       :foreign-libs         [{:file     ~soresu
+                                                               :provides ["oph.lib.soresu"]}]
+                                       :source-map-timestamp true}}
 
-                       {:id "hakija-dev"
+                       {:id           "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :compiler {:main "ataru.hakija.core"
-                                   :output-to "resources/public/js/compiled/hakija-app.js"
-                                   :output-dir "resources/public/js/compiled/hakija-out"
-                                   :asset-path "js/compiled/hakija-out"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
+                        :figwheel      {:on-jsload "ataru.hakija.core/mount-root"}
+                        :compiler {:main                 "ataru.hakija.core"
+                                   :output-to            "resources/public/js/compiled/hakija-app.js"
+                                   :output-dir           "resources/public/js/compiled/hakija-out"
+                                   :asset-path           "js/compiled/hakija-out"
+                                   :foreign-libs         [{:file     ~soresu
+                                                           :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
                        {:id "test"
@@ -182,11 +184,9 @@
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
 
-             :virkailija-dev [:dev {:figwheel {:on-jsload   "ataru.virkailija.core/mount-root"
-                                               :nrepl-port  3334
+             :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
                                                :server-port 3449}}]
-             :hakija-dev [:dev {:figwheel {:on-jsload   "ataru.hakija.core/mount-root"
-                                           :nrepl-port  3336
+             :hakija-dev [:dev {:figwheel {:nrepl-port  3336
                                            :server-port 3450}}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
