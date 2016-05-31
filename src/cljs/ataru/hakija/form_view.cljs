@@ -1,5 +1,6 @@
 (ns ataru.hakija.form-view
-  (:require [ataru.hakija.banner :refer [banner]]
+  (:require [clojure.string :refer [trim]]
+            [ataru.hakija.banner :refer [banner]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
@@ -10,20 +11,26 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
+(defn- answer-key [field-data]
+  (keyword (:id field-data)))
+
+(defn- text-field-change [text-field-data evt]
+  (let [value (-> evt .-target .-value)
+        valid (if (:required text-field-data) (not (empty? (trim value))) true)]
+    (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
+
 (defn text-field [text-field-data]
   (let [application (subscribe [:state-query [:application]])
-        answer-key (keyword (:id text-field-data))
         label (-> text-field-data :label :fi)
         required-hint (if (-> text-field-data :required) " *" "")]
-    (println "text field data" text-field-data)
     (fn [text-field-data]
       [:div.application__form-field
        [:label.application_form-field-label (str label required-hint)]
        [:input.application__form-text-input
         {:type "text"
          :class (text-field-size->class (-> text-field-data :params :size))
-         :value (answer-key (:answers @application))
-         :on-change #(dispatch [:application/set-application-field answer-key (-> % .-target .-value)])}]])))
+         :value (:value ((answer-key text-field-data) (:answers @application)))
+         :on-change (partial text-field-change text-field-data)}]])))
 
 (declare render-field)
 
