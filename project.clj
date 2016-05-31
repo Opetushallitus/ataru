@@ -184,9 +184,9 @@
 
              :virkailija-dev [:dev {:figwheel {:on-jsload   "ataru.virkailija.core/mount-root"
                                                :nrepl-port  3334
-                                               :server-port 3450}}]
+                                               :server-port 3449}}]
              :hakija-dev [:dev {:figwheel {:on-jsload   "ataru.hakija.core/mount-root"
-                                           :nrepl-port  3335
+                                           :nrepl-port  3336
                                            :server-port 3450}}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
