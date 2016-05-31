@@ -12,10 +12,13 @@
 
 (defn text-field [text-field-data]
   (let [application (subscribe [:state-query [:application]])
-        answer-key (keyword (:id text-field-data))]
+        answer-key (keyword (:id text-field-data))
+        label (-> text-field-data :label :fi)
+        required-hint (if (-> text-field-data :required) " *" "")]
+    (println "text field data" text-field-data)
     (fn [text-field-data]
       [:div.application__form-field
-       [:label.application_form-field-label (-> text-field-data :label :fi)]
+       [:label.application_form-field-label (str label required-hint)]
        [:input.application__form-text-input
         {:type "text"
          :class (text-field-size->class (-> text-field-data :params :size))
