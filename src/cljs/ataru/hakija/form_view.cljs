@@ -1,6 +1,6 @@
 (ns ataru.hakija.form-view
   (:require [ataru.hakija.banner :refer [banner]]
-            [re-frame.core :refer [subscribe]]
+            [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
 (defn- text-field-size->class [size]
@@ -10,10 +10,17 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
-(defn text-field [content]
-  [:div.application__form-field
-   [:label.application_form-field-label (-> content :label :fi)]
-   [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :params :size))}]])
+(defn text-field [text-field-data]
+  (let [application (subscribe [:state-query [:application]])
+        answer-key (keyword (:id text-field-data))]
+    (fn [text-field-data]
+      [:div.application__form-field
+       [:label.application_form-field-label (-> text-field-data :label :fi)]
+       [:input.application__form-text-input
+        {:type "text"
+         :class (text-field-size->class (-> text-field-data :params :size))
+         :value (answer-key (:answers @application))
+         :on-change #(dispatch [:application/set-application-field answer-key (-> % .-target .-value)])}]])))
 
 (declare render-field)
 
@@ -37,7 +44,8 @@
 
 (defn application-contents []
   (let [form (subscribe [:state-query [:form]])]
-    (fn [] (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
+    (fn []
+      (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:flasher :message]])

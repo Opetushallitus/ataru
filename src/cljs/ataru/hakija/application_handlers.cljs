@@ -25,3 +25,18 @@
 (register-handler
   :application/handle-form
   handle-form)
+
+(defn initialize-db [_ _]
+  {:form nil
+   :application {:answers {}}})
+
+(register-handler
+  :application/initialize-db
+  initialize-db)
+
+(defn set-application-field [db [_ key value]]
+  (assoc-in db [:application :answers key] value))
+
+(register-handler
+  :application/set-application-field
+  set-application-field)
