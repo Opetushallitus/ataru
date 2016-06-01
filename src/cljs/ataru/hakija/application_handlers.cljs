@@ -1,7 +1,8 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.ajax.http :refer [http post]]
-            [cljs.core.match :refer-macros [match]]))
+            [cljs.core.match :refer-macros [match]]
+            [ataru.hakija.application :refer [create-initial-answers]]))
 
 (defn get-form [db [_ form-id]]
   (http
@@ -13,23 +14,6 @@
 (register-handler
   :application/get-form
   get-form)
-
-(defn flatten-form-fields [fields]
-  (flatten
-    (for [field fields]
-      (match
-        [field] [{:fieldClass "wrapperElement"
-                  :children   children}] children
-        :else field))))
-
-(defn initial-valid-status [flattened-form-fields]
-  (into {}
-        (map
-          (fn [field]
-            [(keyword (:id field)) {:valid (not (:required field))}]) flattened-form-fields)))
-
-(defn- create-initial-answers [form]
-  (initial-valid-status (flatten-form-fields (:content form))))
 
 (defn handle-form [db [_ form]]
   (-> db
