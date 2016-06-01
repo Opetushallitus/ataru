@@ -20,3 +20,7 @@
   "Create initial answer structure based on form structure. Mainly validity for now."
   [form]
   (initial-valid-status (flatten-form-fields (:content form))))
+
+(defn answers->valid-status [answers]
+  (let [answer-validity (for [[_ answers] answers] (:valid answers))]
+    {:valid (if (empty? answer-validity) false (every? true? answer-validity))}))
