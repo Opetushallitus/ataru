@@ -1,6 +1,7 @@
 (ns ataru.hakija.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [register-sub]]))
+  (:require [re-frame.core :refer [register-sub]]
+            [ataru.hakija.application :refer [answers->valid-status]]))
 
 (register-sub
   :state-query
@@ -9,9 +10,7 @@
 
 (defn valid-status [db _]
   (reaction
-    (let [application (:application @db)
-          answer-validity (for [[_ answers] (:answers application)] (:valid answers))]
-      {:valid (if (empty? answer-validity) false (every? true? answer-validity))})))
+    (answers->valid-status (-> @db :application :answers))))
 
 (register-sub
   :application/valid-status
