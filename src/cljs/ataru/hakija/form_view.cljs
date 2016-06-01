@@ -15,10 +15,18 @@
    [:label.application_form-field-label (-> content :label :fi)]
    [:input.application__form-text-input {:type "text" :class (text-field-size->class (-> content :params :size))}]])
 
+(defn- text-area-size->class [size]
+  (match size
+         "S" "application__form-text-area__size-small"
+         "M" "application__form-text-area__size-medium"
+         "L" "application__form-text-area__size-large"
+         :else "application__form-text-area__size-medium"))
+
 (defn text-area [content]
   [:div.application__form-field
    [:label.application_form-field-label (-> content :label :fi)]
-   [:textarea.application__form-text-input {:class (text-field-size->class (-> content :params :size))}]])
+   [:textarea.application__form-text-input.application__form-text-area
+    {:class (text-area-size->class (-> content :params :size))}]])
 
 (declare render-field)
 
