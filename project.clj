@@ -87,34 +87,33 @@
 
   :auto-clean false
 
-  :figwheel {:css-dirs ["resources/public/css"]
-             :nrepl-port 3334}
+  :figwheel {:css-dirs ["resources/public/css"]}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
 
   :main ataru.core
 
-  :cljsbuild {:builds [{:id "virkailija-dev"
+  :cljsbuild {:builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "ataru.virkailija.core/mount-root"}
-                        :compiler {:main "ataru.virkailija.core"
-                                   :output-to "resources/public/js/compiled/virkailija-app.js"
-                                   :output-dir "resources/public/js/compiled/out"
-                                   :asset-path "js/compiled/out"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
-                                   :source-map-timestamp true}}
+                        :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
+                        :compiler     {:main                 "ataru.virkailija.core"
+                                       :output-to            "resources/public/js/compiled/virkailija-app.js"
+                                       :output-dir           "resources/public/js/compiled/out"
+                                       :asset-path           "js/compiled/out"
+                                       :foreign-libs         [{:file     ~soresu
+                                                               :provides ["oph.lib.soresu"]}]
+                                       :source-map-timestamp true}}
 
-                       {:id "hakija-dev"
+                       {:id           "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel {:on-jsload "ataru.hakija.core/mount-root"}
-                        :compiler {:main "ataru.hakija.core"
-                                   :output-to "resources/public/js/compiled/hakija-app.js"
-                                   :output-dir "resources/public/js/compiled/hakija-out"
-                                   :asset-path "js/compiled/hakija-out"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
+                        :figwheel      {:on-jsload "ataru.hakija.core/mount-root"}
+                        :compiler {:main                 "ataru.hakija.core"
+                                   :output-to            "resources/public/js/compiled/hakija-app.js"
+                                   :output-dir           "resources/public/js/compiled/hakija-out"
+                                   :asset-path           "js/compiled/hakija-out"
+                                   :foreign-libs         [{:file     ~soresu
+                                                           :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
                        {:id "test"
@@ -184,10 +183,17 @@
                    :source-paths ["dev/clj"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
+
+             :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
+                                               :server-port 3449}}]
+             :hakija-dev [:dev {:figwheel {:nrepl-port  3336
+                                           :server-port 3450}}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
-  :aliases {"virkailija-dev" ["with-profile" "dev" "run" "virkailija"]
-            "hakija-dev" ["with-profile" "dev" "run" "hakija"]})
+  :aliases {"virkailija-dev" ["with-profile" "virkailija-dev" "run" "virkailija"]
+            "hakija-dev" ["with-profile" "hakija-dev" "run" "hakija"]
+            "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
+            "figwheel-hakija" ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]})
 
 
 

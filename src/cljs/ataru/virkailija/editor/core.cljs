@@ -30,8 +30,11 @@
                                     (into [:div.editor-form__section_wrapper [ec/section-label path]]))]
            (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
-         [{:fieldClass "formField"}]
-         [ec/render-text-field content path]
+         [{:fieldClass "formField" :fieldType "textField"}]
+         [ec/text-field content path]
+
+         [{:fieldClass "formField" :fieldType "textArea"}]
+         [ec/text-area content path]
 
          [{:fieldClass "infoElement"
            :fieldType  "link"}]

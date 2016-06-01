@@ -32,6 +32,19 @@
          :value (:value ((answer-key text-field-data) (:answers @application)))
          :on-change (partial text-field-change text-field-data)}]])))
 
+(defn- text-area-size->class [size]
+  (match size
+         "S" "application__form-text-area__size-small"
+         "M" "application__form-text-area__size-medium"
+         "L" "application__form-text-area__size-large"
+         :else "application__form-text-area__size-medium"))
+
+(defn text-area [content]
+  [:div.application__form-field
+   [:label.application_form-field-label (-> content :label :fi)]
+   [:textarea.application__form-text-input.application__form-text-area
+    {:class (text-area-size->class (-> content :params :size))}]])
+
 (declare render-field)
 
 (defn wrapper-field [content children]
@@ -40,10 +53,11 @@
 
 (defn render-field
   [content]
-   (match [content]
-          [{:fieldClass "wrapperElement"
-            :children   children}] [wrapper-field content children]
-          [{:fieldClass "formField" :fieldType "textField"}] [text-field content]))
+  (match content
+         {:fieldClass "wrapperElement"
+          :children   children} [wrapper-field content children]
+         {:fieldClass "formField" :fieldType "textField"} [text-field content]
+         {:fieldClass "formField" :fieldType "textArea"} [text-area content]))
 
 (defn render-fields [form-data]
   (when form-data

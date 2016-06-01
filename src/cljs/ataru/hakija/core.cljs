@@ -16,7 +16,6 @@
   (reagent/render [form-view]
                   (.getElementById js/document "app")))
 
-
 (defn ^:export init []
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
