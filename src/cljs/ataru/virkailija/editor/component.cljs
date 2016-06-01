@@ -136,7 +136,7 @@
         hide-bar #(reset! show-bar? false)]
     (fn [path]
       (if @show-bar?
-        [:div.editor-form__component-toolbar
+        [:div.editor-form__add-component-toolbar
          {:on-mouse-leave hide-bar
           :on-mouse-enter show-bar}
          [component-toolbar path]]

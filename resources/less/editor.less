@@ -211,10 +211,23 @@ form > .editor-form__component-wrapper {
   justify-content: center; 
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
-  width: 98;
   margin-top: 21px;
   margin-bottom: 14px;
   padding: 0.5em;
+
+  ul { margin: 0; }
+
+  li {
+    list-style-type: none;
+    display: inline-block;
+    font-size: 80%;
+    margin: 0 0.5em;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   .plus-component {
     background-color: @selected-blue;
     border-radius: 50%;
@@ -234,28 +247,5 @@ form > .editor-form__component-wrapper {
   .editor-form__add-component-toolbar {
     margin-left: 11px;
     margin-right: 11px;
-  }
-  .editor-form__component-toolbar {
-    margin-left: 11px;
-    margin-right: 11px;
-  }
-}
-
-.editor-form__component-toolbar {
-  border: 1px dashed @section-gray-border;
-  background-color: #F7F7F7;
-  margin-top: 21px;
-  margin-bottom: 14px;
-  padding: 0.5em;
-  ul { margin: 0; }
-  li {
-    list-style-type: none;
-    display: inline-block;
-    font-size: 80%;
-    margin: 0 0.5em;
-    cursor: pointer;
-    &:hover {
-      text-decoration: underline;
-    }
   }
 }
