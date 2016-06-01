@@ -121,13 +121,13 @@
 
 (defn ^:private component-toolbar [path]
   (fn [path]
-    (into [:ul]
+    (into [:ul.form__add-component-toolbar--list]
           (for [[component-name generate-fn] toolbar-elements
                 :when                        (not (and
                                                     (vector? path)
                                                     (= :children (second path))
                                                     (= "Lomakeosio" component-name)))]
-            [:li {:on-click #(dispatch [:generate-component generate-fn path])}
+            [:li.form__add-component-toolbar--list-item {:on-click #(dispatch [:generate-component generate-fn path])}
              component-name]))))
 
 (defn add-component [path]
