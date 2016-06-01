@@ -19,4 +19,5 @@
 
 (defn ^:export init []
   (mount-root)
+  (re-frame/dispatch-sync [:application/initialize-db])
   (re-frame/dispatch [:application/get-form (form-id-from-url)]))

@@ -14,8 +14,27 @@
   :application/get-form
   get-form)
 
-(defn handle-form [db [_ form-response]]
-  (assoc db :form form-response))
+(defn flatten-form-fields [fields]
+  (flatten
+    (for [field fields]
+      (match
+        [field] [{:fieldClass "wrapperElement"
+                  :children   children}] children
+        :else field))))
+
+(defn initial-valid-status [flattened-form-fields]
+  (into {}
+        (map
+          (fn [field]
+            [(keyword (:id field)) {:valid (not (:required field))}]) flattened-form-fields)))
+
+(defn- create-initial-answers [form]
+  (initial-valid-status (flatten-form-fields (:content form))))
+
+(defn handle-form [db [_ form]]
+  (-> db
+    (assoc :form form)
+    (assoc :application {:answers (create-initial-answers form)})))
 
 (register-handler
   :flasher
@@ -25,3 +44,18 @@
 (register-handler
   :application/handle-form
   handle-form)
+
+(defn initialize-db [_ _]
+  {:form nil
+   :application {:answers {}}})
+
+(register-handler
+  :application/initialize-db
+  initialize-db)
+
+(defn set-application-field [db [_ key value]]
+  (assoc-in db [:application :answers key] value))
+
+(register-handler
+  :application/set-application-field
+  set-application-field)
