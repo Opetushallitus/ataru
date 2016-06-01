@@ -9,22 +9,31 @@
             [ataru.virkailija.temporal :refer [time->str]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(def wrap-scroll-to
+  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
+                                               (if (.-scrollIntoViewIfNeeded node)
+                                                 (.scrollIntoViewIfNeeded node)
+                                                 (.scrollIntoView node)))}))
+
+(defn form-row [form selected?]
+  [:a.editor-form__row
+   {:href  (str "#/editor/" (:id form))
+    :class (when selected? "editor-form__selected-row")}
+   [:span.editor-form__list-form-name (:name form)]
+   [:span.editor-form__list-form-time (time->str (:modified-time form))]
+   [:span.editor-form__list-form-editor (:modified-by form)]])
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
       (into [:div.editor-form__list]
-            (for [[id form] @forms]
+            (for [[id form] @forms
+                  :let [selected? (= id @selected-form-id)]]
               ^{:key id}
-              [:a.editor-form__row
-               {:href     (str "#/editor/" id)
-                :class    (when (= id
-                                   @selected-form-id)
-                            "editor-form__selected-row")}
-               [:span.editor-form__list-form-name (:name form)]
-               [:span.editor-form__list-form-time (time->str (:modified-time form))]
-               [:span.editor-form__list-form-editor (:modified-by form)]])))))
+              (if selected?
+                [wrap-scroll-to [form-row form selected?]]
+                [form-row form selected?]))))))
 
 (defn add-form []
   [:div.editor-form__add-new
