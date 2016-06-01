@@ -60,7 +60,11 @@
                     [:input.editor-form__size-button.editor-form__size-button
                      {:type      "radio"
                       :value     btn-name
-                      :checked   (= @size btn-name)
+                      :checked   (or
+                                   (= @size btn-name)
+                                   (and
+                                     (nil? @size)
+                                     (= "M" btn-name)))
                       :name      radio-group-id
                       :id        btn-id
                       :on-change (fn [] (size-change btn-name))}]
