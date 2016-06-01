@@ -43,7 +43,7 @@
       {:display-name "editor-name"
        :component-did-update (fn [element]
                                (when (and (not @typing?)
-                                          (spy @new-form-created?))
+                                          @new-form-created?)
                                  (do
                                    (doto (r/dom-node element)
                                      (.focus)

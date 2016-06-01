@@ -5,7 +5,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.ajax.http :refer [http post]]
-            [secretary.core :as secretary]
+            [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -23,9 +23,6 @@
   db)
 
 (register-handler :editor/get-user-info get-user-info)
-
-(defn with-author [form]
-  (assoc form :author {:last "Turtiainen" :first "Janne"}))
 
 (defn sorted-by-time [m]
   (into (sorted-map-by
@@ -148,7 +145,7 @@
            :content []}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
-            (secretary/dispatch! (str "/editor/" (:id new-or-updated-form)))
+            (set-history! (str "/editor/" (:id new-or-updated-form)))
             (assoc-in db [:editor :new-form-created?] true)))
     db))
 
