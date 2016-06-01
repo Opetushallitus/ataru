@@ -93,7 +93,8 @@
 }
 
 form > .editor-form__component-wrapper {
-  margin: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .editor-form__text-field-wrapper {
@@ -206,63 +207,23 @@ form > .editor-form__component-wrapper {
 }
 
 .editor-form__add-component-toolbar {
-  @transition: 0.2s;
-  &:hover {
-     .plus-component {
-      transition: background-color @transition ease;
-      background-color: #F7F7F7;
-      span {
-        transition: background-color @transition ease;
-        color: @selected-blue;
-      }
-    }
-  }
   cursor: pointer;
   display: flex;
   justify-content: center; 
   border: 1px dashed @section-gray-border;
   background-color: #F7F7F7;
-  transition: background-color @transition ease;
-  width: 98;
   margin-top: 21px;
   margin-bottom: 14px;
   padding: 0.5em;
-  .plus-component {
-    background-color: @selected-blue;
-    transition: background-color @transition ease;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    span {
-      color: #F7F7F7;
-      transition: background-color @transition ease;
-      display: flex;
-      justify-content: center; 
-      font-size: 125%;
-      align-items: center;
-    }
-  }
-}
+  height: 43px;
+  color: @selected-blue;
 
-.editor-form__section_wrapper {
-  .editor-form__add-component-toolbar {
-    margin-left: 11px;
-    margin-right: 11px;
+  .form__add-component-toolbar--list {
+    margin: 0;
+    padding: 0;
   }
-  .editor-form__component-toolbar {
-    margin-left: 11px;
-    margin-right: 11px;
-  }
-}
 
-.editor-form__component-toolbar {
-  border: 1px dashed @section-gray-border;
-  background-color: #F7F7F7;
-  margin-top: 21px;
-  margin-bottom: 14px;
-  padding: 0.5em;
-  ul { margin: 0; }
-  li {
+  .form__add-component-toolbar--list-item {
     list-style-type: none;
     display: inline-block;
     font-size: 80%;
@@ -271,5 +232,24 @@ form > .editor-form__component-wrapper {
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  .plus-component {
+    background-color: @selected-blue;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    color: #F7F7F7;
+    display: flex;
+    justify-content: center;
+    font-size: 125%;
+    align-items: center;
+  }
+}
+
+.editor-form__section_wrapper {
+  .editor-form__add-component-toolbar {
+    margin-left: 11px;
+    margin-right: 11px;
   }
 }

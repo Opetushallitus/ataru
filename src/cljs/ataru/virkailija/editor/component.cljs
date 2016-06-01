@@ -105,19 +105,6 @@
            [language lang]
            ])))))
 
-(defn ^:private delayed-trigger [timeout-ms on-trigger]
-  (let [latch (atom nil)]
-    [(fn [] (reset! latch nil))
-     (fn [event]
-       (let [local-latch (atom nil)
-             handle      (js/setTimeout (fn []
-                                          (when (= @latch @local-latch)
-                                            (on-trigger event)))
-                           timeout-ms)]
-         (do
-           (reset! local-latch handle)
-           (reset! latch handle))))]))
-
 (def ^:private toolbar-elements
   (let [dummy [:div "ei vielä toteutettu.."]]
     {"Lomakeosio"                component/form-section
@@ -134,29 +121,28 @@
 
 (defn ^:private component-toolbar [path]
   (fn [path]
-    (into [:ul]
+    (into [:ul.form__add-component-toolbar--list]
           (for [[component-name generate-fn] toolbar-elements
                 :when                        (not (and
                                                     (vector? path)
                                                     (= :children (second path))
                                                     (= "Lomakeosio" component-name)))]
-            [:li {:on-click #(dispatch [:generate-component generate-fn path])}
+            [:li.form__add-component-toolbar--list-item {:on-click #(dispatch [:generate-component generate-fn path])}
              component-name]))))
 
 (defn add-component [path]
   (let [show-bar? (r/atom nil)
-        [toolbar-abort-trigger
-         toolbar-delayed-trigger] (delayed-trigger 1000 #(reset! show-bar? false))
-        [plus-abort-trigger plus-delayed-trigger] (delayed-trigger 333 #(reset! show-bar? true))]
+        show-bar #(reset! show-bar? true)
+        hide-bar #(reset! show-bar? false)]
     (fn [path]
       (if @show-bar?
-        [:div.editor-form__component-toolbar
-         {:on-mouse-leave toolbar-delayed-trigger
-          :on-mouse-enter toolbar-abort-trigger}
+        [:div.editor-form__add-component-toolbar
+         {:on-mouse-leave hide-bar
+          :on-mouse-enter show-bar}
          [component-toolbar path]]
         [:div.editor-form__add-component-toolbar
-         {:on-mouse-enter plus-delayed-trigger
-          :on-mouse-leave plus-abort-trigger}
+         {:on-mouse-enter show-bar
+          :on-mouse-leave hide-bar}
          [:div.plus-component
           [:span "+"]]]))))
 
