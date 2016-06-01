@@ -14,23 +14,27 @@
 (defn- answer-key [field-data]
   (keyword (:id field-data)))
 
-(defn- text-field-change [text-field-data evt]
+(defn- required-hint [field-descriptor] (if (-> field-descriptor :required) " *" ""))
+
+(defn- textual-field-value [field-descriptor application]
+  (:value ((answer-key field-descriptor) (:answers application))))
+
+(defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
         valid (if (:required text-field-data) (not (empty? (trim value))) true)]
     (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
 
-(defn text-field [text-field-data]
+(defn text-field [field-descriptor]
   (let [application (subscribe [:state-query [:application]])
-        label (-> text-field-data :label :fi)
-        required-hint (if (-> text-field-data :required) " *" "")]
-    (fn [text-field-data]
+        label (-> field-descriptor :label :fi)]
+    (fn [field-descriptor]
       [:div.application__form-field
-       [:label.application_form-field-label (str label required-hint)]
+       [:label.application_form-field-label label (required-hint field-descriptor)]
        [:input.application__form-text-input
         {:type "text"
-         :class (text-field-size->class (-> text-field-data :params :size))
-         :value (:value ((answer-key text-field-data) (:answers @application)))
-         :on-change (partial text-field-change text-field-data)}]])))
+         :class (text-field-size->class (-> field-descriptor :params :size))
+         :value (textual-field-value field-descriptor @application)
+         :on-change (partial textual-field-change field-descriptor)}]])))
 
 (defn- text-area-size->class [size]
   (match size
@@ -39,11 +43,16 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
-(defn text-area [content]
-  [:div.application__form-field
-   [:label.application_form-field-label (-> content :label :fi)]
-   [:textarea.application__form-text-input.application__form-text-area
-    {:class (text-area-size->class (-> content :params :size))}]])
+(defn text-area [field-descriptor]
+  (let [application (subscribe [:state-query [:application]])
+        label (-> field-descriptor :label :fi)]
+    (fn [field-descriptor]
+      [:div.application__form-field
+       [:label.application_form-field-label label (required-hint field-descriptor)]
+       [:textarea.application__form-text-input.application__form-text-area
+        {:class (text-area-size->class (-> field-descriptor :params :size))
+         :value (textual-field-value field-descriptor @application)
+         :on-change (partial textual-field-change field-descriptor)}]])))
 
 (declare render-field)
 
