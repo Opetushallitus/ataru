@@ -1,6 +1,7 @@
 (ns ataru.cljs-util
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [subscribe]]
+  (:require [cljs.core.match :refer-macros [match]]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -37,3 +38,23 @@
   ([debounce-ms path]
    {:pre [(vector? path)]}
    (debounced-ratom debounce-ms (subscribe path))))
+
+(defn dispatch-after-state
+  [& {:keys [predicate handler]}]
+  {:pre [(not (nil? predicate))
+         (not (nil? handler))]}
+  (let [handler-ref (atom nil)
+        sanity-count (atom 0)
+        dispatcher (fn [db]
+                     (match [(swap! sanity-count inc) (predicate db)]
+                            [10 _] (js/clearInterval @handler-ref)
+                            [_ (result :guard (comp true? boolean))]
+                            (do
+                              (js/clearInterval @handler-ref)
+                              (handler result))
+                            :else nil))]
+    (reset!
+      handler-ref
+      (js/setInterval
+        #(dispatch [:state-update dispatcher])
+        200))))
