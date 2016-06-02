@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
+            [cljs.core.match :refer-macros [match]]
             [re-frame.core :refer [subscribe dispatch]]))
 
 (defn language [lang]
@@ -68,7 +69,12 @@
                      :id        btn-id
                      :on-change (fn [] (size-change btn-name))}]
                    [:label
-                    {:for btn-id} btn-name]]))]]
+                    {:for btn-id
+                     :class     (match btn-name
+                                       "S" "editor-form__size-button--left-edge"
+                                       "L" "editor-form__size-button--right-edge"
+                                       :else nil)}
+                    btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
         (render-checkbox path initial-content :required)]])))
 
