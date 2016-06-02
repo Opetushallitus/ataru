@@ -2,6 +2,7 @@
   (:require [ataru.forms.form-store :as form-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [schema.core :as s]
+            [ataru.schema.clj-schema :as ataru-schema]
             [compojure.api.sweet :as api]
             [ring.util.http-response :refer [ok not-found]]
             [compojure.route :as route]
@@ -27,8 +28,14 @@
                  :tags ["application-api"]
                  (api/GET "/form/:id" []
                           :path-params [id :- Long]
-                          :return s/Any
-                          (fetch-form id)))))
+                          :return ataru-schema/FormWithContent
+                          (fetch-form id))
+                 (api/POST "/application" []
+                           :summary "Submit application"
+                           :body [application ataru-schema/Application]
+                           (println "Got application:")
+                           (println application)
+                           (ok {})))))
 
 (def hakija-routes
   (-> (routes
