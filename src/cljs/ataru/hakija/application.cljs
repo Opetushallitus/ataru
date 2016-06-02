@@ -24,3 +24,24 @@
 (defn answers->valid-status [answers]
   (let [answer-validity (for [[_ answers] answers] (:valid answers))]
     {:valid (if (empty? answer-validity) false (every? true? answer-validity))}))
+
+(defn form->flat-form-map [form]
+  (into {}
+        (map
+         (fn [field] [(:id field) field])
+         (flatten-form-fields (:content form)))))
+
+(defn- create-answers-to-submit [answers form]
+  (for [[ans-key ans-map] answers
+        :let [ans-value (:value ans-map)
+              flat-form-map (form->flat-form-map form)
+              field-map (get flat-form-map (name ans-key))
+              field-type (:fieldType field-map)
+              label (:label field-map)]
+        :when (not-empty ans-value)]
+     {:key (name ans-key) :value ans-value :fieldType field-type :label label}))
+
+(defn create-application-to-submit [application form lang]
+  {:form (:id form)
+   :lang lang
+   :answers (create-answers-to-submit (:answers application) form)})
