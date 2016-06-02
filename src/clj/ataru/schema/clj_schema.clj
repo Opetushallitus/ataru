@@ -55,13 +55,13 @@
   (merge Form
          {:content [(s/if (comp some? :children) soresu/WrapperElement soresu/FormField)]}))
 
-
 (s/defschema Answer {:key s/Str,
                      :value (s/cond-pre s/Str
                                         s/Int
                                         [s/Str])
                      :fieldType (apply s/enum ["textField"
-                                               "textArea"])})
+                                               "textArea"])
+                     :label OptionalLocalizedString})
 
 (s/defschema Application {:form Long
                           :lang s/Str
