@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [schema.core :as s]
             [ataru.schema.clj-schema :as ataru-schema]
@@ -35,6 +36,7 @@
                            :body [application ataru-schema/Application]
                            (println "Got application:")
                            (println application)
+                           (application-store/insert-application application)
                            (ok {})))))
 
 (def hakija-routes
