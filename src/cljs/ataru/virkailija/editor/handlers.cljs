@@ -4,7 +4,7 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
-            [ataru.ajax.http :refer [http post]]
+            [ataru.virkailija.virkailija-ajax :refer [http post]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]))

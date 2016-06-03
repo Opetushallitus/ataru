@@ -1,4 +1,4 @@
-(ns ataru.ajax.http
+(ns ataru.virkailija.virkailija-ajax
   (:require [re-frame.core :refer [register-handler dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.temporal :as temporal]
