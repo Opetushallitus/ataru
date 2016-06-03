@@ -19,9 +19,7 @@
   get-form)
 
 (defn handle-submit [db _]
-  (-> db
-      (assoc-in [:application :application-submitting?] false)
-      (assoc-in [:application :application-submitted?] true)))
+  (assoc-in db [:application :submit-status] :submitted))
 
 (register-handler
   :application/handle-submit-response
@@ -31,7 +29,7 @@
   (post "/hakemus/api/application"
         (create-application-to-submit (:application db) (:form db) "fi")
         :application/handle-submit-response)
-  (assoc-in db [:application :application-submitting?] true))
+  (assoc-in db [:application :submit-status] :submitting))
 
 (register-handler
   :application/submit-form

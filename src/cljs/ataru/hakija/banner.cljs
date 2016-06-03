@@ -1,17 +1,24 @@
 (ns ataru.hakija.banner
-  (:require [re-frame.core :refer [subscribe dispatch]]))
+  (:require [re-frame.core :refer [subscribe dispatch]]
+            [cljs.core.match :refer-macros [match]]))
 
 (def logo
   [:div.logo
    [:img {:src "images/opintopolku_large-fi.png"
           :height "40px"}]])
 
-(defn apply-button []
-  (let [valid-status (subscribe [:application/valid-status])]
+(defn apply-controls []
+  (let [valid-status (subscribe [:application/valid-status])
+        submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
-      [:button.application__send-application-button
-       {:disabled (not (:valid @valid-status))
-        :on-click #(dispatch [:application/submit-form])}
-       "LÄHETÄ HAKEMUS"])))
+      [:div
+       [:button.application__send-application-button
+        {:disabled (not (:valid @valid-status))
+         :on-click #(dispatch [:application/submit-form])}
+        "LÄHETÄ HAKEMUS"]
+       (match @submit-status
+              :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
+              :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
+              :else nil)])))
 
-(defn banner [] [:div.top-banner.application-top-banner logo [apply-button]])
+(defn banner [] [:div.top-banner.application-top-banner logo [apply-controls]])
