@@ -81,8 +81,8 @@
       (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
 
 (defn error-display []
-  (let [error-message (subscribe [:state-query [:flasher :message]])
-        detail (subscribe [:state-query [:flasher :detail]])]
+  (let [error-message (subscribe [:state-query [:error :message]])
+        detail (subscribe [:state-query [:error :detail]])]
     (fn [] (if @error-message
              [:div.application__error-display @error-message (str @detail)]
              nil))))

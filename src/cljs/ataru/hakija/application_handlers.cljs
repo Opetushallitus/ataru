@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
-            [ataru.ajax.http :refer [http post]]
+            [ataru.hakija.hakija-ajax :refer [get post]]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers create-application-to-submit]]))
 
@@ -9,8 +9,7 @@
    :application {:answers {}}})
 
 (defn get-form [db [_ form-id]]
-  (http
-    :get
+  (get
     (str "/hakemus/api/form/" form-id)
     :application/handle-form)
   db)
@@ -19,13 +18,19 @@
   :application/get-form
   get-form)
 
+(defn handle-submit [db _]
+  (-> db
+      (assoc-in [:application :application-submitting?] false)
+      (assoc-in [:application :application-submitted?] true)))
+
+(register-handler
+  :application/handle-submit-response
+  handle-submit)
+
 (defn submit-application [db _]
   (post "/hakemus/api/application"
         (create-application-to-submit (:application db) (:form db) "fi")
-        (fn [db _]
-          (-> db
-              (assoc-in [:application :application-submitting?] false)
-              (assoc-in [:application :application-submitted?] true))))
+        :application/handle-submit-response)
   (assoc-in db [:application :application-submitting?] true))
 
 (register-handler
@@ -56,6 +61,13 @@
 (register-handler
   :application/set-application-field
   set-application-field)
+
+(defn default-error-handler [db [_ response]]
+  (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
+
+(register-handler
+  :application/default-handle-error
+  default-error-handler)
 
 (register-handler
   :state-update
