@@ -6,7 +6,6 @@
                  [org.clojure/clojurescript "1.7.170"]
                  [reagent "0.5.1"]   ; react in clojure
                  [re-frame "0.7.0"]  ; flux for re-agent
-                 [re-com "0.8.0"]    ; reusable re-frame components
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
                  [oph/soresu "0.1.2-SNAPSHOT"]
