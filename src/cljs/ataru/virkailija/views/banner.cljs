@@ -77,6 +77,9 @@
                 [:div.flasher {:style {"color" "crimson"}}
                  [:span message]]
 
+                [true {:message nil}]
+                [:div]
+
                 [true {:message message}]
                 [:div.flasher
                  [:span.animated.fadeOut message]]
