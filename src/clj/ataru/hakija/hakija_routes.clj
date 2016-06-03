@@ -7,7 +7,8 @@
             [compojure.api.sweet :as api]
             [ring.util.http-response :refer [ok not-found]]
             [compojure.route :as route]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer]
+            [taoensso.timbre :refer [info]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -16,6 +17,13 @@
     (if form
       (ok form)
       (not-found form))))
+
+(defn- handle-application [application]
+  (info "Received application:")
+  (info application)
+  (let [stored-app-id (application-store/insert-application application)]
+    (info "Stored application with id:" stored-app-id)
+    (ok {})))
 
 (def api-routes
   (api/api
@@ -34,10 +42,7 @@
                  (api/POST "/application" []
                            :summary "Submit application"
                            :body [application ataru-schema/Application]
-                           (println "Got application:")
-                           (println application)
-                           (application-store/insert-application application)
-                           (ok {})))))
+                           (handle-application application)))))
 
 (def hakija-routes
   (-> (routes
