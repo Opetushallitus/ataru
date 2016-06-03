@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [taoensso.timbre :refer-macros [spy info]]
-            [ataru.hakija.form-view :refer [form-view]]
+            [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
             [clojure.string :as str]))

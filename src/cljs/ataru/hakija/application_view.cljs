@@ -1,4 +1,4 @@
-(ns ataru.hakija.form-view
+(ns ataru.hakija.application-view
   (:require [clojure.string :refer [trim]]
             [ataru.hakija.banner :refer [banner]]
             [re-frame.core :refer [subscribe dispatch]]
