@@ -1,11 +1,14 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [schema.core :as s]
+            [ataru.schema.clj-schema :as ataru-schema]
             [compojure.api.sweet :as api]
             [ring.util.http-response :refer [ok not-found]]
             [compojure.route :as route]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer]
+            [taoensso.timbre :refer [info]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -14,6 +17,13 @@
     (if form
       (ok form)
       (not-found form))))
+
+(defn- handle-application [application]
+  (info "Received application:")
+  (info application)
+  (let [stored-app-id (application-store/insert-application application)]
+    (info "Stored application with id:" stored-app-id)
+    (ok {})))
 
 (def api-routes
   (api/api
@@ -27,8 +37,12 @@
                  :tags ["application-api"]
                  (api/GET "/form/:id" []
                           :path-params [id :- Long]
-                          :return s/Any
-                          (fetch-form id)))))
+                          :return ataru-schema/FormWithContent
+                          (fetch-form id))
+                 (api/POST "/application" []
+                           :summary "Submit application"
+                           :body [application ataru-schema/Application]
+                           (handle-application application)))))
 
 (def hakija-routes
   (-> (routes

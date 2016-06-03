@@ -1,5 +1,5 @@
 (ns ataru.hakija.banner
-  (:require [re-frame.core :refer [subscribe]]))
+  (:require [re-frame.core :refer [subscribe dispatch]]))
 
 (def logo
   [:div.logo
@@ -9,6 +9,9 @@
 (defn apply-button []
   (let [valid-status (subscribe [:application/valid-status])]
     (fn []
-      [:button.application__send-application-button {:disabled (not (:valid @valid-status))} "LÄHETÄ HAKEMUS"])))
+      [:button.application__send-application-button
+       {:disabled (not (:valid @valid-status))
+        :on-click #(dispatch [:application/submit-form])}
+       "LÄHETÄ HAKEMUS"])))
 
 (defn banner [] [:div.top-banner.application-top-banner logo [apply-button]])
