@@ -4,7 +4,7 @@
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.cljs-util :refer [set-global-error-handler!]]
             [ataru.hakija.hakija-ajax :refer [post]]
-            [ataru.hakija.form-view :refer [form-view]]
+            [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
             [clojure.string :as str]))
