@@ -68,7 +68,7 @@
         (fn [error-msg url line col error-obj]
           (let [user-agent (-> js/window .-navigator .-userAgent)
                 stack-string (.-stack error-obj)
-                error-details {:error-message "error-msg"
+                error-details {:error-message error-msg
                                :url url
                                :line line
                                :col col
