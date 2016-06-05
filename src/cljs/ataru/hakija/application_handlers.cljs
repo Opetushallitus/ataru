@@ -70,6 +70,10 @@
   default-error-handler)
 
 (register-handler
+ :application/default-http-ok-handler
+ (fn [db _] db))
+
+(register-handler
   :state-update
   (fn [db [_ f]]
     (or (f db)
