@@ -5,6 +5,7 @@
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.forms.form-store :as form-store]
+            [ataru.util.client-error :as client-error]
             [compojure.api.sweet :as api]
             [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
@@ -87,7 +88,12 @@
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
                    (trying #(form-store/upsert-form
-                              (assoc form :modified-by (-> session :identity :username))))))))
+                             (assoc form :modified-by (-> session :identity :username)))))
+                 (api/POST "/client-error" []
+                           :summary "Log client-side errors to server log"
+                           :body [error-details client-error/ClientError]
+                           (client-error/log-client-error error-details)
+                           (ok {})))))
 
 (defroutes resource-routes
   (route/resources "/"))
