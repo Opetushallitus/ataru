@@ -2,6 +2,12 @@
     (:require [cljs.test :refer-macros [run-all-tests]]
               [ataru.virkailija.core-test]))
 
+(defmethod cljs.test/report [:cljs.test/default :end-run-tests] [m]
+  (if (cljs.test/successful? m)
+    (println "*** TEST SUCCESS")
+    (println "*** TEST FAIL")))
+
 (defn ^:export run
   []
-  (run-all-tests #"lomake-editori.*-test"))
+  (enable-console-print!)
+  (run-all-tests #"ataru.virkailija.*-test"))
