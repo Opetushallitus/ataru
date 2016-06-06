@@ -66,6 +66,6 @@
          {:fieldClass "formField" :fieldType "textField"} [text-field content]
          {:fieldClass "formField" :fieldType "textArea"} [text-area content]))
 
-(defn render-fields [form-data]
+(defn render-editable-fields [form-data]
   (when form-data
     (mapv render-field (:content form-data))))
