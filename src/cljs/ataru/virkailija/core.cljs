@@ -3,6 +3,8 @@
               [re-frame.core :as re-frame]
               [ataru.virkailija.handlers]
               [ataru.virkailija.subs]
+              [ataru.cljs-util :refer [set-global-error-handler!]]
+              [ataru.virkailija.virkailija-ajax :refer [post]]
               [ataru.virkailija.routes :as routes]
               [ataru.virkailija.views :as views]
               [ataru.virkailija.config :as config]
@@ -19,6 +21,7 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
+  (set-global-error-handler! #(post "/lomake-editori/api/client-error" %))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
   (re-frame/dispatch [:editor/get-user-info])

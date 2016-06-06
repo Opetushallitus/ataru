@@ -4,6 +4,7 @@
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [schema.core :as s]
             [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.util.client-error :as client-error]
             [compojure.api.sweet :as api]
             [ring.util.http-response :refer [ok not-found]]
             [compojure.route :as route]
@@ -25,6 +26,10 @@
     (info "Stored application with id:" stored-app-id)
     (ok {})))
 
+(defn- handle-client-error [error-details]
+  (client-error/log-client-error error-details)
+  (ok {}))
+
 (def api-routes
   (api/api
     {:swagger {:spec "/hakemus/swagger.json"
@@ -42,7 +47,11 @@
                  (api/POST "/application" []
                            :summary "Submit application"
                            :body [application ataru-schema/Application]
-                           (handle-application application)))))
+                           (handle-application application))
+                 (api/POST "/client-error" []
+                           :summary "Log client-side errors to server log"
+                           :body [error-details client-error/ClientError]
+                           (handle-client-error error-details)))))
 
 (def hakija-routes
   (-> (routes

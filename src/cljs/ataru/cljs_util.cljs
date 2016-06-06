@@ -58,3 +58,25 @@
       (js/setInterval
         #(dispatch [:state-update dispatcher])
         200))))
+
+
+(defn set-global-error-handler!
+  "Sets the global error handler. Prints stack trace of uncaught
+   error"
+  [send-to-server-fn]
+  (set! (.-onerror js/window)
+        (fn [error-msg url line col error-obj]
+          (let [user-agent (-> js/window .-navigator .-userAgent)
+                stack-string (.-stack error-obj)
+                error-details {:error-message error-msg
+                               :url url
+                               :line line
+                               :col col
+                               :user-agent user-agent
+                               :stack stack-string}]
+            (send-to-server-fn error-details)
+            (when js/console
+              (.log js/console error-msg)
+              (.log js/console url)
+              (.log js/console (str "line: " line " col: " col))
+              (.log js/console (.-stack error-obj)))))))
