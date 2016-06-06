@@ -1,21 +1,14 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch]]
-            [cljs.core.match :refer-macros [match]]))
+            [cljs.core.match :refer-macros [match]]
+            [ataru.application-field-common :refer [answer-key required-hint textual-field-value]]))
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
          "M" "application__form-text-input__size-medium"
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
-
-(defn- answer-key [field-data]
-  (keyword (:id field-data)))
-
-(defn- required-hint [field-descriptor] (if (-> field-descriptor :required) " *" ""))
-
-(defn- textual-field-value [field-descriptor application]
-  (:value ((answer-key field-descriptor) (:answers application))))
 
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
