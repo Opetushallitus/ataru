@@ -6,7 +6,6 @@
 
 (defn new-system
   ([http-port]
-   (println "start with port" http-port)
    (component/system-map
      :server-setup {:routes clerk-routes :port http-port :repl-port 3333}
      :migration (migrations/new-migration)

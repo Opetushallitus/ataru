@@ -29,7 +29,6 @@
           handler      (if (:dev? env)
                          (wrap-reload routes)
                          routes)
-          _ (println "start with setup" server-setup)
           server       (http/start-server handler {:port port})]
       (do
         (a/go (start-repl! repl-port)))
@@ -45,5 +44,4 @@
 
 (defn new-server
   []
-  (println "new server")
   (->Server))
