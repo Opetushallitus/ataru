@@ -9,15 +9,18 @@
             [ataru.test-utils :refer [login]]
             [com.stuartsierra.component :as component]))
 
+(defn- run-specs-in-system
+  [specs]
+  (let [system (new-system)]
+    (try
+      (component/start-system system)
+      (specs)
+      (finally
+        (component/stop-system system)))))
+
 (describe "UI tests /"
           (tags :ui)
-          (around-all [spec]
-                      (let [system (new-system 9000)]
-                        (try
-                          (component/start-system system)
-                          (spec)
-                          (finally
-                            (component/stop-system system)))))
+          (around-all [specs] (run-specs-in-system specs))
 
           (it "are successful"
               (let [login-cookie-value (last (split (login) #"="))

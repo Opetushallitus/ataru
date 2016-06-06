@@ -11,7 +11,7 @@ phantom.addCookie({
 });
 
 global.testsSuccessful = undefined;
-var url = 'http://localhost:9000/lomake-editori/test.html';
+var url = 'http://localhost:8350/lomake-editori/test.html';
 var resultPrefix = '*** TEST';
 var successMsg = ' SUCCESS';
 var failMsg = ' FAIL';
