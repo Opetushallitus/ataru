@@ -15,6 +15,8 @@ var url = 'http://localhost:8350/lomake-editori/test.html';
 var resultPrefix = '*** TEST';
 var successMsg = ' SUCCESS';
 var failMsg = ' FAIL';
+var timeoutMs = 10 * 60 * 1000;
+var startTime = new Date().getTime();
 
 function startsWith(haystack, needle) {
   return haystack.substring(0, needle.length) === needle
@@ -41,7 +43,11 @@ page.open(url, function (status) {
   }
 
   function stopWhenFinished() {
-    if (typeof global.testsSuccessful === 'undefined') {
+    if (new Date().getTime() > startTime + timeoutMs) {
+      console.log('Tests timed out', timeoutMs)
+      phantom.exit(2);
+    }
+    else if (typeof global.testsSuccessful === 'undefined') {
       setTimeout(stopWhenFinished, 1000);
     } else {
       phantom.exit(global.testsSuccessful ? 0 : 1);
