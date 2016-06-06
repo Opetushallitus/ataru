@@ -48,8 +48,9 @@
 (declare render-field)
 
 (defn wrapper-field [content children]
-  (into [:div.application__wrapper-element [:h2.application__wrapper-heading (-> content :label :fi)]]
-        (mapv render-field children)))
+  [:div.application__wrapper-element
+   [:h2.application__wrapper-heading (-> content :label :fi)]
+   (into [:div.application__wrapper-contents] (mapv render-field children))])
 
 (defn render-field
   [content]

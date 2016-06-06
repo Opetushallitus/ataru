@@ -27,6 +27,7 @@
   text-align: center;
   width: 190px;
   font-size: 11px;
+  opacity: 0.65;
 }
 .application__header {
   font-size: 24px;
@@ -38,12 +39,17 @@
 .application__wrapper-element {
   border-top: solid #D7D7D7 1px;
   margin-bottom: 32px;
+  position: relative; /* So that we can make wrapper heading absolute */
 }
 .application__wrapper-heading {
   color: @blue-text-color;
   font-size: 16px;
   font-weight: normal;
   text-transform: uppercase;
+  position: absolute;
+}
+.application__wrapper-contents {
+  margin-top: 13px;
 }
 .application__form-content-area {
   margin-left: 70px;
