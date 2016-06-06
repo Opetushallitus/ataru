@@ -1,23 +1,14 @@
-(ns ataru.hakija.form-view
+(ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
-            [ataru.hakija.banner :refer [banner]]
             [re-frame.core :refer [subscribe dispatch]]
-            [cljs.core.match :refer-macros [match]]))
-
+            [cljs.core.match :refer-macros [match]]
+            [ataru.application-field-common :refer [answer-key required-hint textual-field-value]]))
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
          "M" "application__form-text-input__size-medium"
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
-
-(defn- answer-key [field-data]
-  (keyword (:id field-data)))
-
-(defn- required-hint [field-descriptor] (if (-> field-descriptor :required) " *" ""))
-
-(defn- textual-field-value [field-descriptor application]
-  (:value ((answer-key field-descriptor) (:answers application))))
 
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
@@ -68,27 +59,6 @@
          {:fieldClass "formField" :fieldType "textField"} [text-field content]
          {:fieldClass "formField" :fieldType "textArea"} [text-area content]))
 
-(defn render-fields [form-data]
+(defn render-editable-fields [form-data]
   (when form-data
     (mapv render-field (:content form-data))))
-
-(defn application-header [form-name]
-  [:h1.application__header form-name])
-
-(defn application-contents []
-  (let [form (subscribe [:state-query [:form]])]
-    (fn []
-      (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form)))))
-
-(defn error-display []
-  (let [error-message (subscribe [:state-query [:error :message]])
-        detail (subscribe [:state-query [:error :detail]])]
-    (fn [] (if @error-message
-             [:div.application__error-display @error-message (str @detail)]
-             nil))))
-
-(defn form-view []
-  [:div
-   [banner]
-   [error-display]
-   [application-contents]])
