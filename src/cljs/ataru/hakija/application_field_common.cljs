@@ -1,4 +1,4 @@
-(ns ataru.application-field-common)
+(ns ataru.hakija.application-field-common)
 
 (defn answer-key [field-data]
   (keyword (:id field-data)))

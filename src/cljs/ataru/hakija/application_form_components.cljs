@@ -2,7 +2,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.application-field-common :refer [answer-key required-hint textual-field-value]]))
+            [ataru.hakija.application-field-common :refer [answer-key required-hint textual-field-value]]))
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
