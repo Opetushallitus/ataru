@@ -13,7 +13,7 @@
     (fn []
       [:div
        [:button.application__send-application-button
-        {:disabled (not (:valid @valid-status))
+        {:disabled (or (not (:valid @valid-status)) (contains? #{:submitting :submitted} @submit-status))
          :on-click #(dispatch [:application/submit-form])}
         "LÄHETÄ HAKEMUS"]
        (match @submit-status
