@@ -1,15 +1,8 @@
 (ns ataru.hakija.application-readonly
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
-            [cljs.core.match :refer-macros [match]]))
-
-(defn- answer-key [field-data]
-  (keyword (:id field-data)))
-
-(defn- required-hint [field-descriptor] (if (-> field-descriptor :required) " *" ""))
-
-(defn- textual-field-value [field-descriptor application]
-  (:value ((answer-key field-descriptor) (:answers application))))
+            [cljs.core.match :refer-macros [match]]
+            [ataru.application-field-common :refer [answer-key required-hint textual-field-value]]))
 
 (defn text [field-descriptor]
   (let [application (subscribe [:state-query [:application]])
