@@ -134,15 +134,15 @@
         value     (subscribe [:editor/get-component-value path])]
     (r/create-class
       {:reagent-render
-    (fn [path]
-      (-> [:div.editor-form__component-wrapper
-           [text-header "Lomakeosio" path]]
-          (into
-            [[:div.editor-form__text-field-wrapper.editor-form__text-field--section
-              [:header.editor-form__component-item-header "Osion nimi"]
-              (doall
-                (for [lang @languages]
-                  ^{:key lang}
-                  [:input.editor-form__text-field
-                   {:value     (get-in @value [:label lang])
-                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])))})))
+       (fn [path]
+         (-> [:div.editor-form__component-wrapper
+              [text-header "Lomakeosio" path]]
+           (into
+             [[:div.editor-form__text-field-wrapper.editor-form__text-field--section
+               [:header.editor-form__component-item-header "Osion nimi"]
+               (doall
+                 (for [lang @languages]
+                   ^{:key lang}
+                   [:input.editor-form__text-field
+                    {:value     (get-in @value [:label lang])
+                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])))})))
