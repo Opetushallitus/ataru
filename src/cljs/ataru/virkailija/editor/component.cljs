@@ -129,13 +129,24 @@
          [:div.plus-component
           [:span "+"]]]))))
 
-(defn component-group [path children]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
+(defn component-group [content path children]
+  (let [languages  (subscribe [:editor/languages])
+        value      (subscribe [:editor/get-component-value path])
+        handler-fn (fn [_]
+                     (dispatch [:remove-component path]))]
     (r/create-class
-      {:reagent-render
-       (fn [path children]
+      {:component-did-mount
+       (fn [this]
+         (let [node   (r/dom-node this)
+               events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
+           (doseq [event events]
+             (.addEventListener node event handler-fn))))
+       :reagent-render
+       (fn [content path children]
          [:div.editor-form__section_wrapper
+          (when
+            (= "fading-out" (get-in content [:params :status]))
+            {:class "animated fadeOutUp"})
           [:div.editor-form__component-wrapper
            [text-header "Lomakeosio" path]
            [:div.editor-form__text-field-wrapper.editor-form__text-field--section

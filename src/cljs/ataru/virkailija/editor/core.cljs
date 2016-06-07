@@ -28,7 +28,7 @@
          (let [children (for [[index child] (zipmap (range) children)]
                           ^{:key index}
                           [soresu->reagent child (conj path :children index)])]
-           [ec/component-group path children])
+           [ec/component-group content path children])
 
          [{:fieldClass "formField" :fieldType "textField"}]
          [ec/text-field content path]
