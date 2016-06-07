@@ -41,6 +41,8 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
+    (r/create-class
+       {:reagent-render
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        [text-header header-label path]
@@ -77,6 +79,7 @@
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
         (render-checkbox path initial-content :required)]])))
+        (render-checkbox path initial-content :required)]])})))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän leveys"])
