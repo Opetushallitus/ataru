@@ -132,6 +132,8 @@
 (defn form-component-group [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
+    (r/create-class
+      {:reagent-render
     (fn [path]
       (-> [:div.editor-form__component-wrapper
            [text-header "Lomakeosio" path]]
@@ -143,4 +145,4 @@
                   ^{:key lang}
                   [:input.editor-form__text-field
                    {:value     (get-in @value [:label lang])
-                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])))))
+                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]])))})))
