@@ -89,8 +89,7 @@
   (route/resources "/"))
 
 (def clerk-routes
-  (-> (routes buildversion-routes
-              (GET "/" [] (redirect "/lomake-editori/"))
+  (-> (routes (GET "/" [] (redirect "/lomake-editori/"))
               ;; NOTE: This is now needed because of the way web-server is
               ;; Set up on test and other environments. If you want
               ;; to remove this, test the setup with some local web server
@@ -99,6 +98,7 @@
               (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
               (wrap-routes (routes
                              (context "/lomake-editori" []
+                               buildversion-routes
                                resource-routes
                                app-routes
                                test-routes

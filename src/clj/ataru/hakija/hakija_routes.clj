@@ -56,8 +56,8 @@
 
 (def hakija-routes
   (-> (routes
-        buildversion-routes
         (context "/hakemus" []
+          buildversion-routes
           api-routes
           (route/resources "/")
           (GET "/:id" []
