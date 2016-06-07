@@ -1,4 +1,5 @@
 @import "vars";
+@desktop-content-width: 981px;
 
 .top-banner.application-top-banner {
   display: flex;
@@ -54,7 +55,7 @@
 }
 .application__form-content-area {
   margin: auto;
-  width: 981px;
+  width: @desktop-content-width;
 }
 .application__form-field {
   margin-left: 245px;
@@ -99,8 +100,43 @@
   width: 610px;
   height: 400px;
 } 
-
 .application__error-display {
   color: red;
   font-weight: bold;
+}
+
+/* Smaller screens */
+
+@media only screen
+and (max-width: @desktop-content-width) {
+  .application-top-banner {
+    .logo {
+      display: none; /* Until we get smaller logo */
+    }
+    .application__send-application-button {
+      margin-left: 10px;
+    }
+  }
+  .application__header {
+    margin-left: 10px;
+    margin-top: 20px;
+  }
+  .application__form-content-area {
+    width: auto;
+  }
+  .application__form-field {
+    margin-left: 10px;
+  }
+  .application__wrapper-heading {
+    position: static;
+    margin-left: 10px;
+  }
+  .application__form-text-input__size-large,
+  .application__form-text-area__size-small,
+  .application__form-text-area__size-medium,
+  .application__form-text-area__size-large {
+    width: auto;
+    max-width: 610px;
+    margin-right: 10px;
+  }
 }
