@@ -129,7 +129,7 @@
          [:div.plus-component
           [:span "+"]]]))))
 
-(defn section-label [path]
+(defn form-component-group [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn []
