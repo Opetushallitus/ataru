@@ -5,6 +5,9 @@
 (def logo
   [:div.logo])
 
+(def logo-text
+  [:span.logo-text "Opintopolku.fi"])
+
 (defn apply-controls []
   (let [valid-status (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])]
@@ -19,4 +22,4 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
-(defn banner [] [:div.top-banner.application-top-banner logo [apply-controls]])
+(defn banner [] [:div.top-banner.application-top-banner logo logo-text [apply-controls]])

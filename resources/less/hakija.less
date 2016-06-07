@@ -14,6 +14,7 @@
     width: 225px;
     height: 40px;
   }
+  .logo-text { display: none; }
 }
 .application__send-application-button {
   background: none;
@@ -116,10 +117,19 @@
 and (max-width: @desktop-content-width) {
   .application-top-banner {
     .logo {
-      display: none; /* Until we get smaller logo */
+      margin-left: 10px;
+      margin-right: 0;
+      background: url(../../images/opintopolku_small-fi.png) no-repeat;
+      width: 40px;
+      height: 40px;
+    }
+    .logo-text {
+      display: inline-block;
+      font-size: 16px;
+      margin-top: 9px;
     }
     .application__send-application-button {
-      margin-left: 10px;
+      margin-right: 10px;
     }
   }
   .application__header {
