@@ -132,7 +132,7 @@
 (defn form-component-group [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
-    (fn []
+    (fn [path]
       (-> [:div.editor-form__component-wrapper
            [text-header "Lomakeosio" path]]
           (into
