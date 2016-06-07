@@ -2,11 +2,13 @@
   (:require [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
-(def logo
+(def logo-image
   [:div.logo])
 
 (def logo-text
   [:span.logo-text "Opintopolku.fi"])
+
+(def logo [:div.logo-elements logo-image logo-text])
 
 (defn apply-controls []
   (let [valid-status (subscribe [:application/valid-status])
@@ -22,4 +24,4 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
-(defn banner [] [:div.top-banner.application-top-banner logo logo-text [apply-controls]])
+(defn banner [] [:div.top-banner.application-top-banner logo [apply-controls]])
