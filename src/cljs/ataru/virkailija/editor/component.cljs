@@ -30,7 +30,7 @@
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
-    {:on-click #(dispatch [:remove-component path])}
+    {:on-click #(dispatch [:hide-component path])}
     "Poista"]])
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
@@ -40,9 +40,17 @@
         radio-group-id   (str "form-size-" (gensym))
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))
+        handler-fn       (fn [_]
+                           (dispatch [:remove-component path]))]
     (r/create-class
-       {:reagent-render
+      {:component-did-mount
+       (fn [this]
+         (let [node   (r/dom-node this)
+               events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
+           (doseq [event events]
+             (.addEventListener node event handler-fn))))
+       :reagent-render
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        [text-header header-label path]
