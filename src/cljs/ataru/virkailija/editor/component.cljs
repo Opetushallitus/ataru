@@ -97,55 +97,10 @@
 (defn text-area [initial-content path]
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen leveys"])
 
-(defn render-link-info [{:keys [params] :as content} path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path])]
-    (fn [{:keys [params] :as content} path]
-      (into
-        [:div.link-info
-         [:p "Linkki"]]
-        (for [lang @languages]
-          [:div
-           [:p "Osoite"]
-           [:input {:value       (get-in @value [:params :href lang])
-                    :type        "url"
-                    :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :params :href lang])
-                    :placeholder "http://"}]
-           [language lang]
-           [:input {:on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
-                    :value       (get-in @value [:text lang])
-                    :placeholder "Otsikko"}]
-           [language lang]])))))
-
-(defn render-info [{:keys [params] :as content} path]
-  (let [languages (subscribe [:editor/languages])
-        value     (subscribe [:editor/get-component-value path :text])]
-    (fn [{:keys [params] :as content} path]
-      (into
-        [:div.info
-         [:p "Ohjeteksti"]]
-        (for [lang @languages]
-          [:div
-           [:input
-            {:value       (get @value lang)
-             :on-change   #(dispatch [:editor/set-component-value (-> % .-target .-value) path :text lang])
-             :placeholder "Ohjetekstin sisältö"}]
-           [language lang]
-           ])))))
-
 (def ^:private toolbar-elements
-  (let [dummy [:div "ei vielä toteutettu.."]]
-    {"Lomakeosio"                component/form-section
-     "Tekstikenttä"              component/text-field
-     "Tekstialue"                component/text-area}))
-;"Lista, monta valittavissa" dummy
-;"Lista, yksi valittavissa"  dummy
-;"Pudotusvalikko"            dummy
-;"Vierekkäiset kentät"       dummy
-;"Liitetiedosto"             dummy
-;"Ohjeteksti"                info
-;"Linkki"                    link-info
-;"Väliotsikko"               dummy
+  {"Lomakeosio"                component/form-section
+   "Tekstikenttä"              component/text-field
+   "Tekstialue"                component/text-area})
 
 (defn ^:private component-toolbar [path]
   (fn [path]

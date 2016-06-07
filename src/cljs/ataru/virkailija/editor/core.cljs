@@ -36,13 +36,6 @@
          [{:fieldClass "formField" :fieldType "textArea"}]
          [ec/text-area content path]
 
-         [{:fieldClass "infoElement"
-           :fieldType  "link"}]
-         [ec/render-link-info content path]
-
-         [{:fieldClass "infoElement"}]
-         [ec/render-info content path]
-
          :else (do
                  (error content)
                  (throw "error" content))))
