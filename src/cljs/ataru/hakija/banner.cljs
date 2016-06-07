@@ -24,4 +24,6 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
-(defn banner [] [:div.top-banner.application-top-banner logo [apply-controls]])
+(defn banner [] [:div
+                 [:div.top-banner.application-top-banner logo [apply-controls]]
+                 [:div.application__wrapper-sections]])
