@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
+            [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.clj-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -39,17 +40,6 @@
        (catch Exception e
          (error e)
          (internal-server-error))))
-
-(defn wrap-dev-only [handler]
-  (fn [req]
-    (if (:dev? env)
-      (handler req)
-      (not-found "Not found"))))
-
-(defroutes dev-routes
-  (context "/dev-resources" []
-    (GET "/:file" [file]
-      (file-response file {:root "dev-resources"}))))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -99,7 +89,7 @@
   (route/resources "/"))
 
 (def clerk-routes
-  (-> (routes (wrap-routes dev-routes wrap-dev-only)
+  (-> (routes buildversion-routes
               (GET "/" [] (redirect "/lomake-editori/"))
               ;; NOTE: This is now needed because of the way web-server is
               ;; Set up on test and other environments. If you want
@@ -107,14 +97,15 @@
               ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
               ;; and verify that it works on test environment as well.
               (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
-              (context "/lomake-editori" []
-                resource-routes
-                app-routes
-                test-routes
-                api-routes
-                auth-routes)
-              (route/not-found "Not found"))
-      (auth-middleware/with-authentication)
+              (wrap-routes (routes
+                             (context "/lomake-editori" []
+                               resource-routes
+                               app-routes
+                               test-routes
+                               api-routes
+                               auth-routes)
+                             (route/not-found "Not found"))
+                           auth-middleware/with-authentication))
       (wrap-defaults (-> site-defaults
                          (update-in [:session] assoc :store (create-store))
                          (update-in [:security] dissoc :content-type-options)

@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes
-  (:require [ataru.forms.form-store :as form-store]
+  (:require [ataru.buildversion :refer [buildversion-routes]]
+            [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [schema.core :as s]
@@ -55,6 +56,7 @@
 
 (def hakija-routes
   (-> (routes
+        buildversion-routes
         (context "/hakemus" []
           api-routes
           (route/resources "/")
