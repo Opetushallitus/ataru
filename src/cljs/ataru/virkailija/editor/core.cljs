@@ -27,7 +27,11 @@
            :children   children}]
          (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
                                       [soresu->reagent child (conj path :children index)])
-                                    (into [:div.editor-form__section_wrapper [ec/form-component-group path]]))]
+                                    (into [:div.editor-form__section_wrapper
+                                           (when
+                                             (= "fading-out" (get-in content [:params :status]))
+                                             {:class "animated fadeOutUp"})
+                                           [ec/form-component-group path]]))]
            (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
 
          [{:fieldClass "formField" :fieldType "textField"}]
