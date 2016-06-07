@@ -3,9 +3,7 @@
             [cljs.core.match :refer-macros [match]]))
 
 (def logo
-  [:div.logo
-   [:img {:src "images/opintopolku_large-fi.png"
-          :height "40px"}]])
+  [:div.logo])
 
 (defn apply-controls []
   (let [valid-status (subscribe [:application/valid-status])
