@@ -25,14 +25,10 @@
   (match [content]
          [{:fieldClass "wrapperElement"
            :children   children}]
-         (let [wrapper-element (->> (for [[index child] (zipmap (range) children)]
-                                      [soresu->reagent child (conj path :children index)])
-                                    (into [:div.editor-form__section_wrapper
-                                           (when
-                                             (= "fading-out" (get-in content [:params :status]))
-                                             {:class "animated fadeOutUp"})
-                                           [ec/form-component-group path]]))]
-           (conj wrapper-element [ec/add-component (conj path :children (count (:children content)))]))
+         (let [children (for [[index child] (zipmap (range) children)]
+                          ^{:key index}
+                          [soresu->reagent child (conj path :children index)])]
+           [ec/component-group path children])
 
          [{:fieldClass "formField" :fieldType "textField"}]
          [ec/text-field content path]
@@ -55,3 +51,4 @@
                  :when             (not-empty @content)]
              [soresu->reagent json-blob [index]]))
          [ec/add-component (count @content)])])))
+
