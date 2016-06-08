@@ -4,7 +4,8 @@
                                               answers->valid-status
                                               create-application-to-submit
                                               flatten-form-fields
-                                              extract-wrapper-sections]]))
+                                              extract-wrapper-sections
+                                              wrapper-sections-with-validity]]))
 
 (def form1
   {:id 37,
@@ -141,5 +142,20 @@
         expected '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})]
     (is (= expected result))))
 
+(def
+  answers
+  {:G__2
+   {:valid false :wrapper-id "G__1"}
+   :G__14 {:valid true :wrapper-id "G__1"}
+   :G__25 {:valid true :wrapper-id nil}})
 
-
+(deftest wrapper-sections-with-validity-is-correctly-constructed
+  (let [wrapper-sections '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})
+        answers {:f1 {:valid true :wrapper-id "w1"}
+                 :f2 {:valid false :wrapper-id "w1"}
+                 :f3 {:valid true :wrapper-id "w2"}
+                 :f4 {:valid true :wrapper-id "w2"}
+                 :f5 {:valid true :wrapper-id nil}}
+        expected '({:id "w1" :valid false :label {:fi "osio1", :sv ""}} {:id "w2" :valid true :label {:fi "osio2", :sv ""}})
+        result (wrapper-sections-with-validity wrapper-sections answers)]
+    (is (= expected result))))
