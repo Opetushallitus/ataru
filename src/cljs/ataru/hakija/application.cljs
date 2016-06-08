@@ -47,3 +47,7 @@
   {:form (:id form)
    :lang lang
    :answers (create-answers-to-submit (:answers application) form)})
+
+(defn extract-wrapper-sections [form]
+  (map #(select-keys % [:id :label])
+       (filter #(= (:fieldClass %) "wrapperElement") (:content form))))

@@ -2,7 +2,9 @@
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.hakija.hakija-ajax :refer [get post]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.application :refer [create-initial-answers create-application-to-submit]]))
+            [ataru.hakija.application :refer [create-initial-answers
+                                              create-application-to-submit
+                                              extract-wrapper-sections]]))
 
 (defn initialize-db [_ _]
   {:form nil
@@ -38,7 +40,8 @@
 (defn handle-form [db [_ form]]
   (-> db
     (assoc :form form)
-    (assoc :application {:answers (create-initial-answers form)})))
+    (assoc :application {:answers (create-initial-answers form)})
+    (assoc :wrapper-sections (extract-wrapper-sections form))))
 
 (register-handler
   :flasher
