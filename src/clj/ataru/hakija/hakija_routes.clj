@@ -33,8 +33,8 @@
 
 (def api-routes
   (api/api
-    {:swagger {:spec "/hakemus/swagger.json"
-               :ui "/hakemus/api-docs"
+    {:swagger {:spec "/swagger.json"
+               :ui "/api-docs"
                :data {:info {:version "1.0.0"
                              :title "Ataru Hakija API"
                              :description "Specifies the Hakija API for Ataru"}}

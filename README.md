@@ -94,7 +94,7 @@ lein cljsbuild auto browser-test
 
 After this you can run tests by navigating to http://localhost:8350/lomake-editori/test.html .
 
-### Backend tests
+### Backend & browser tests
 
 To run tests once:
 
@@ -103,6 +103,14 @@ lein spec
 ```
 
 To run them automatically whenever code changes, use `-a`.
+
+### Browser tests
+
+To run only browser tests (using phantomJS):
+
+```
+lein spec -t ui
+```
 
 ### ClojureScript unit tests
 
@@ -124,3 +132,17 @@ The above command assumes that you have [phantomjs](https://www.npmjs.com/packag
 lein clean
 lein cljsbuild once <app id>-min
 ```
+
+## API documentation
+
+Swagger specs for the APIs can be found at the following locations:
+
+http://localhost:8351/hakemus/swagger.json
+http://localhost:8350/lomake-editori/swagger.json
+
+To view them in a more human-friendly format, you can use the UIs at:
+
+http://localhost:8351/hakemus/api-docs/index.html
+http://localhost:8350/lomake-editori/api-docs/index.html
+
+**Note!** To actually see the documentation, you need to manually set the locations of the respective spec files to the .json URLs given above!
