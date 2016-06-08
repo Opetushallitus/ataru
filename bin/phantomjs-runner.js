@@ -42,12 +42,16 @@ page.open(url, function (status) {
     phantom.exit(1);
   }
 
+  if (!ataru || !ataru.virkailija) {
+    console.log('Failed to load script');
+    phantom.exit(3);
+  }
+
   function stopWhenFinished() {
     if (new Date().getTime() > startTime + timeoutMs) {
-      console.log('Tests timed out', timeoutMs)
+      console.log('Tests timed out', timeoutMs);
       phantom.exit(2);
-    }
-    else if (typeof global.testsSuccessful === 'undefined') {
+    } else if (typeof global.testsSuccessful === 'undefined') {
       setTimeout(stopWhenFinished, 1000);
     } else {
       phantom.exit(global.testsSuccessful ? 0 : 1);
