@@ -54,7 +54,7 @@ page.open(url, function (status) {
   }
 
   page.evaluate(function() {
-    if (!!ataru) {
+    if (typeof ataru !== 'undefined' && !!ataru) {
       ataru.virkailija.browser_runner.run();
     } else {
       console.error("Error loading script");
