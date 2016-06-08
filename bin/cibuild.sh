@@ -24,6 +24,10 @@ build-clojurescript-virkailija() {
     ./bin/lein cljsbuild once virkailija-min
 }
 
+build-clojurescript-virkailija-browser-test() {
+    ./bin/lein cljsbuild once browser-test
+}
+
 build-clojurescript-hakija() {
     ./bin/lein cljsbuild once hakija-min
 }
@@ -64,6 +68,9 @@ case "$command" in
         ;;
     "build-clojurescript-virkailija" )
         build-clojurescript-virkailija
+        ;;
+    "build-clojurescript-virkailija-browser-test" )
+        build-clojurescript-virkailija-browser-test
         ;;
     "build-clojurescript-hakija" )
         build-clojurescript-hakija
