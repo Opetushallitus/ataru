@@ -21,7 +21,7 @@
 (defn -main [& args]
   (let [app-id (get-app-id args)
         system (get app-systems app-id)]
-    (info "Starting application" app-id)
+    (info "Starting application" app-id (if (:dev? env) "dev" ""))
     (when-not system
       (println "ERROR: No system map found for application" app-id "exiting")
       (System/exit 1))
