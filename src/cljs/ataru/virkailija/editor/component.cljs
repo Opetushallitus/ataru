@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.virkailija.soresu.component :as component]
+  (:require [ataru.virkailija.editor.component-macros :refer-macros [component-with-fade-effects]]
+            [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
             [re-frame.core :refer [subscribe dispatch]]))
@@ -52,10 +53,8 @@
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
     (fn [initial-content path & {:keys [header-label size-label]}]
+      (component-with-fade-effects [initial-content]
       [:div.editor-form__component-wrapper
-       (when
-         (= "fading-out" (get-in initial-content [:params :status]))
-         {:class "animated fadeOutUp"})
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Otsikko"]
@@ -89,7 +88,7 @@
                                   :else nil)}
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
-        (render-checkbox path initial-content :required)]])))
+        (render-checkbox path initial-content :required)]]))))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän leveys"])
@@ -133,10 +132,8 @@
   (let [languages  (subscribe [:editor/languages])
         value      (subscribe [:editor/get-component-value path])]
     (fn [content path children]
+      (component-with-fade-effects [content]
       [:div.editor-form__section_wrapper
-       (when
-         (= "fading-out" (get-in content [:params :status]))
-         {:class "animated fadeOutUp"})
        [:div.editor-form__component-wrapper
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section
@@ -148,4 +145,4 @@
               {:value     (get-in @value [:label lang])
                :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
        children
-       [add-component (conj path :children (count children))]])))
+       [add-component (conj path :children (count children))]]))))
