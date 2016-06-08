@@ -30,7 +30,17 @@
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
-    {:on-click #(dispatch [:hide-component path])}
+    {:on-click (fn [event]
+                 (let [target     (if-not
+                                    (some #(= :children %) path)
+                                    (-> event .-target .-parentNode .-parentNode)
+                                    (-> event .-target .-parentNode .-parentNode .-parentNode))
+                       events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
+                       handler-fn (fn [_]
+                                    (dispatch [:remove-component path]))]
+                   (doseq [event events]
+                     (.addEventListener target event handler-fn)))
+                 (dispatch [:hide-component path]))}
     "Poista"]])
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
@@ -40,17 +50,9 @@
         radio-group-id   (str "form-size-" (gensym))
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))
-        handler-fn       (fn [_]
-                           (dispatch [:remove-component path]))]
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
     (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (let [node   (r/dom-node this)
-               events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
-           (doseq [event events]
-             (.addEventListener node event handler-fn))))
-       :reagent-render
+      {:reagent-render
        (fn [initial-content path & {:keys [header-label size-label]}]
          [:div.editor-form__component-wrapper
           (when
@@ -131,17 +133,9 @@
 
 (defn component-group [content path children]
   (let [languages  (subscribe [:editor/languages])
-        value      (subscribe [:editor/get-component-value path])
-        handler-fn (fn [_]
-                     (dispatch [:remove-component path]))]
+        value      (subscribe [:editor/get-component-value path])]
     (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (let [node   (r/dom-node this)
-               events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
-           (doseq [event events]
-             (.addEventListener node event handler-fn))))
-       :reagent-render
+      {:reagent-render
        (fn [content path children]
          [:div.editor-form__section_wrapper
           (when
