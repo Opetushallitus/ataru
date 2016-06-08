@@ -26,15 +26,15 @@
      [:label.editor-form__checkbox-label {:for id} label]]))
 
 (defn- text-header
-  [label path]
+  [label path & {:keys [form-section?]}]
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
-                 (let [target     (if-not
-                                    (some #(= :children %) path)
-                                    (-> event .-target .-parentNode .-parentNode)
-                                    (-> event .-target .-parentNode .-parentNode .-parentNode))
+                 (let [target     (if
+                                    form-section?
+                                    (-> event .-target .-parentNode .-parentNode .-parentNode)
+                                    (-> event .-target .-parentNode .-parentNode))
                        events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
                        handler-fn (fn [_]
                                     (dispatch [:remove-component path]))]
@@ -138,7 +138,7 @@
          (= "fading-out" (get-in content [:params :status]))
          {:class "animated fadeOutUp"})
        [:div.editor-form__component-wrapper
-        [text-header "Lomakeosio" path]
+        [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section
          [:header.editor-form__component-item-header "Osion nimi"]
          (doall
