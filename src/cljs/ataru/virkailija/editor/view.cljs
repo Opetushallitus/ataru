@@ -46,13 +46,11 @@
 (defn editor-name []
   (let [form (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-name (reaction (:name @form))
-        typing? (r/atom false)]
+        form-name (reaction (:name @form))]
     (r/create-class
       {:display-name "editor-name"
-       :component-did-update (fn [element]
-                               (when (and (not @typing?)
-                                          @new-form-created?)
+       :component-did-mount (fn [element]
+                              (when @new-form-created?
                                  (do
                                    (doto (r/dom-node element)
                                      (.focus)
@@ -64,12 +62,7 @@
                                  :type                "text"
                                  :value               @form-name
                                  :placeholder         "Lomakkeen nimi"
-                                 :on-blur             #(do
-                                                         (reset! typing? false)
-                                                         nil)
-                                 :on-change           #(do
-                                                         (reset! typing? true)
-                                                         (dispatch-sync [:editor/change-form-name (.-value (.-target %))]))}])})))
+                                 :on-change           #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (defn editor-panel []
   (let [form (subscribe [:editor/selected-form])]
