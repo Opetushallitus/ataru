@@ -56,8 +56,10 @@
   :application/initialize-db
   initialize-db)
 
-(defn set-application-field [db [_ key value]]
-  (assoc-in db [:application :answers key] value))
+(defn set-application-field [db [_ key values]]
+  (let [path [:application :answers key]
+        current-answer-data (get-in db path)]
+    (assoc-in db path (merge current-answer-data values))))
 
 (register-handler
   :application/set-application-field
