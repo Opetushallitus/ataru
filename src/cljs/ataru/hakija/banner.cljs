@@ -28,11 +28,10 @@
   (let [wrapper-sections (subscribe [:application/wrapper-sections])]
         (fn []
           (when @wrapper-sections
-            (into [:div.application__wrapper-sections] (mapv (fn [ws]
-                                                               (println ws)
-                                                               [:span (str (-> ws :label :fi) (:valid ws))])
-                                                             @wrapper-sections))
-            ))))
+            (into [:div.application__wrapper-sections]
+                  (mapv (fn [ws]
+                          [:span (str (-> ws :label :fi) (:valid ws))])
+                        @wrapper-sections))))))
 
 (defn banner [] [:div
                  [:div.top-banner.application-top-banner logo [apply-controls]]
