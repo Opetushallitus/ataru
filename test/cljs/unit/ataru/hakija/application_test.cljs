@@ -137,6 +137,9 @@
               :fieldClass "formField"}]})
 
 (deftest wrappers-are-extracted-correctly
-  (let [result (set (extract-wrapper-sections form2))
-        expected #{{:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}}}]
+  (let [result (extract-wrapper-sections form2)
+        expected '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})]
     (is (= expected result))))
+
+
+
