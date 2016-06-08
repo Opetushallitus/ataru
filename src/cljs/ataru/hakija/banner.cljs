@@ -24,6 +24,13 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
+(defn wrapper-sections []
+  (let [wrapper-sections (subscribe [:application/wrapper-sections])]
+        (fn []
+          (when @wrapper-sections
+            (into [:div.application__wrapper-sections] (mapv #(-> % :label :fi) @wrapper-sections))
+            ))))
+
 (defn banner [] [:div
                  [:div.top-banner.application-top-banner logo [apply-controls]]
-                 [:div.application__wrapper-sections]])
+                 [wrapper-sections]])
