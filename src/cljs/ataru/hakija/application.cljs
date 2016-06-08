@@ -7,14 +7,16 @@
     (for [field fields]
       (match
         [field] [{:fieldClass "wrapperElement"
-                  :children   children}] children
+                  :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
         :else field))))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
         (map
           (fn [field]
-            [(keyword (:id field)) {:valid (not (:required field))}]) flattened-form-fields)))
+            [(keyword (:id field)) {:valid
+                                    (not (:required field))
+                                    :wrapper-id (:wrapper-id field)}]) flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Mainly validity for now."

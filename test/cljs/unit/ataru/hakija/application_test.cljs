@@ -1,6 +1,9 @@
 (ns ataru.hakija.application-test
   (:require [cljs.test :refer-macros [deftest is]]
-            [ataru.hakija.application :refer [create-initial-answers answers->valid-status create-application-to-submit]]))
+            [ataru.hakija.application :refer [create-initial-answers
+                                              answers->valid-status
+                                              create-application-to-submit
+                                              flatten-form-fields]]))
 
 (def form1
   {:id 37,
@@ -30,9 +33,33 @@
               :fieldType "textField",
               :fieldClass "formField"}]})
 
-(deftest correct-validity-for-nested-form
+(deftest flattens-correctly
+  (let [expected   #{{:id "G__2",
+                      :wrapper-id "G__1"
+                      :label {:fi "kenttä1", :sv ""},
+                      :params {:size "S"},
+                      :required true,
+                      :fieldType "textField",
+                      :fieldClass "formField"}
+                     {:id "G__14",
+                      :wrapper-id "G__1"
+                      :label {:fi "kenttä2", :sv ""},
+                      :params {:size "M"},
+                      :required false,
+                      :fieldType "textField",
+                      :fieldClass "formField"}
+                     {:id "G__25",
+                      :label {:fi "ulkokenttä", :sv ""},
+                      :params {:size "L"},
+                      :required false,
+                      :fieldType "textField",
+                      :fieldClass "formField"}}
+        actual (set (flatten-form-fields (:content form1)))]
+    (is (= expected actual))))
+
+(deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers form1)]
-    (is (= {:G__2 {:valid false}, :G__14 {:valid true}, :G__25 {:valid true}} initial-answers))))
+    (is (= {:G__2 {:valid false :wrapper-id "G__1"}, :G__14 {:valid true :wrapper-id "G__1"}, :G__25 {:valid true :wrapper-id nil}} initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
   (let [result (answers->valid-status {:one {:valid false}, :two {:valid true}, :three {:valid true}})]
