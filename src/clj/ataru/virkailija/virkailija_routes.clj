@@ -96,16 +96,17 @@
               ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
               ;; and verify that it works on test environment as well.
               (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
-              (wrap-routes (routes
-                             (context "/lomake-editori" []
-                               buildversion-routes
-                               resource-routes
-                               app-routes
-                               test-routes
-                               api-routes
-                               auth-routes)
-                             (route/not-found "Not found"))
-                           auth-middleware/with-authentication))
+              (context "/lomake-editori" []
+                buildversion-routes
+                test-routes)
+              (-> (context "/lomake-editori" []
+                    resource-routes
+                    app-routes
+                    api-routes
+                    auth-routes)
+                  routes
+                  (wrap-routes auth-middleware/with-authentication)) 
+              (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
                          (update-in [:session] assoc :store (create-store))
                          (update-in [:security] dissoc :content-type-options)
