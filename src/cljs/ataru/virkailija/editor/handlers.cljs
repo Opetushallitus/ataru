@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
+            [clojure.data :refer [diff]]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.autosave :as autosave]
@@ -37,12 +38,28 @@
                      :else (c/after? v1 v2)))))
         m))
 
+(defn- push-to-undo-stack [db-before db-after]
+  (let [undo-limit       999
+        selected-form-id (-> db-before :editor :selected-form-id)
+        form-before      (get-in db-before [:editor :forms selected-form-id])
+        form-after       (get-in db-after  [:editor :forms selected-form-id])]
+    (update-in db-after [:editor :form-undodata]
+               (comp
+                 #(do (debug (take 3 %)) %)
+                 #(take undo-limit %)
+                 (fn [undodata]
+                   (cons form-after (or undodata '()))))
+               form-after)))
+
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in db
-              (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-               value)))
+    (push-to-undo-stack
+      db
+      (assoc-in
+        db
+        (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+        value))))
 
 (register-handler
   :handle-get-forms
