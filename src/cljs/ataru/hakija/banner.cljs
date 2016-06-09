@@ -26,19 +26,19 @@
 
 (defn wrapper-section [ws]
   (if (:valid ws)
-    [:div.application__wrapper-section
-     [:img.application__wrapper-section-valid-img {:src "images/icon_check.png"}]
+    [:div.application__banner-wrapper-section
+     [:img.application__banner-wrapper-section-valid-img {:src "images/icon_check.png"}]
      (-> ws :label :fi)]
-    [:div.application__wrapper-section.application__wrapper-section-not-valid
+    [:div.application__banner-wrapper-section.application__banner-wrapper-section-not-valid
      (-> ws :label :fi)]))
 
 (defn wrapper-sections []
   (let [wrapper-sections (subscribe [:application/wrapper-sections])]
     (fn []
       (when @wrapper-sections
-        (into [:div.application__wrapper-sections-content]
+        (into [:div.application__banner-wrapper-sections-content]
               (mapv wrapper-section @wrapper-sections))))))
 
 (defn banner [] [:div
                  [:div.top-banner.application-top-banner logo [apply-controls]]
-                 [:div.application__wrapper-sections [wrapper-sections]]])
+                 [:div.application__banner-wrapper-sections [wrapper-sections]]])
