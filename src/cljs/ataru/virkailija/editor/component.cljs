@@ -91,10 +91,10 @@
           (render-checkbox path initial-content :required)]]))))
 
 (defn text-field [initial-content path]
-  [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän leveys"])
+  [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
 
 (defn text-area [initial-content path]
-  [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen leveys"])
+  [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                component/form-section
