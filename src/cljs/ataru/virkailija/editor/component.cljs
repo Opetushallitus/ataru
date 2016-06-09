@@ -55,6 +55,18 @@
                  (dispatch [:hide-component path]))}
     "Poista"]])
 
+(defn- component-with-fade-in-effect
+  [path component]
+  (r/create-class
+    {:component-did-mount
+     (fn [this]
+       (let [events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
+             handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
+             target     (r/dom-node this)]
+         (doseq [event events]
+           (.addEventListener target event handler-fn))))
+     :reagent-render component}))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -63,15 +75,7 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
-    (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (let [events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
-               handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
-               target     (r/dom-node this)]
-           (doseq [event events]
-             (.addEventListener target event handler-fn))))
-       :reagent-render
+    (component-with-fade-in-effect path
        (fn [initial-content path & {:keys [header-label size-label]}]
          (component-with-fade-effects [initial-content]
            [:div.editor-form__component-wrapper
@@ -108,7 +112,7 @@
                                        :else nil)}
                          btn-name]]))]]
             [:div.editor-form__checkbox-wrapper
-             (render-checkbox path initial-content :required)]]))})))
+             (render-checkbox path initial-content :required)]])))))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -151,15 +155,7 @@
 (defn component-group [content path children]
   (let [languages  (subscribe [:editor/languages])
         value      (subscribe [:editor/get-component-value path])]
-    (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (let [events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
-               handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
-               target     (r/dom-node this)]
-           (doseq [event events]
-             (.addEventListener target event handler-fn))))
-       :reagent-render
+    (component-with-fade-in-effect path
        (fn [content path children]
          (component-with-fade-effects [content]
            [:div.editor-form__section_wrapper
@@ -174,4 +170,4 @@
                    {:value     (get-in @value [:label lang])
                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
             children
-            [add-component (conj path :children (count children))]]))})))
+            [add-component (conj path :children (count children))]])))))
