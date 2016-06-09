@@ -139,23 +139,23 @@
 
 (defn- remove-params
   [components]
-  (let [update-child-fn (fn [components]
-                          (if
-                            (contains? components :children)
-                            (update components :children remove-params)
-                            components))]
+  (let [update-child (fn [components]
+                       (if
+                         (contains? components :children)
+                         (update components :children remove-params)
+                         components))]
     (into
       []
       (map
         (fn [component]
-          (let [remove-param-fn (fn [component]
-                                  (if
-                                    (contains? component :params)
-                                    (update-in component [:params] #(dissoc % :status))
-                                    component))
+          (let [remove-param (fn [component]
+                               (if
+                                 (contains? component :params)
+                                 (update-in component [:params] #(dissoc % :status))
+                                 component))
                 filtered (-> component
-                             remove-param-fn
-                             update-child-fn)]
+                           remove-param
+                           update-child)]
             filtered))
         components))))
 
