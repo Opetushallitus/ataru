@@ -72,43 +72,43 @@
            (doseq [event events]
              (.addEventListener target event handler-fn))))
        :reagent-render
-    (fn [initial-content path & {:keys [header-label size-label]}]
-      (component-with-fade-effects [initial-content]
-        [:div.editor-form__component-wrapper
-         [text-header header-label path]
-         [:div.editor-form__text-field-wrapper
-          [:header.editor-form__component-item-header "Kysymys"]
-          (doall
-            (for [lang @languages]
-              ^{:key lang}
-              [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                               :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
-         [:div.editor-form__size-button-wrapper
-          [:header.editor-form__component-item-header size-label]
-          [:div.editor-form__size-button-group
-           (doall (for [[btn-name btn-id] radio-button-ids]
-                    ^{:key (str btn-id "-radio")}
-                    [:div
-                     [:input.editor-form__size-button.editor-form__size-button
-                      {:type      "radio"
-                       :value     btn-name
-                       :checked   (or
-                                    (= @size btn-name)
-                                    (and
-                                      (nil? @size)
-                                      (= "M" btn-name)))
-                       :name      radio-group-id
-                       :id        btn-id
-                       :on-change (fn [] (size-change btn-name))}]
-                     [:label
-                      {:for btn-id
-                       :class     (match btn-name
-                                    "S" "editor-form__size-button--left-edge"
-                                    "L" "editor-form__size-button--right-edge"
-                                    :else nil)}
-                      btn-name]]))]]
-         [:div.editor-form__checkbox-wrapper
-          (render-checkbox path initial-content :required)]]))})))
+       (fn [initial-content path & {:keys [header-label size-label]}]
+         (component-with-fade-effects [initial-content]
+           [:div.editor-form__component-wrapper
+            [text-header header-label path]
+            [:div.editor-form__text-field-wrapper
+             [:header.editor-form__component-item-header "Kysymys"]
+             (doall
+               (for [lang @languages]
+                 ^{:key lang}
+                 [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                                  :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+            [:div.editor-form__size-button-wrapper
+             [:header.editor-form__component-item-header size-label]
+             [:div.editor-form__size-button-group
+              (doall (for [[btn-name btn-id] radio-button-ids]
+                       ^{:key (str btn-id "-radio")}
+                       [:div
+                        [:input.editor-form__size-button.editor-form__size-button
+                         {:type      "radio"
+                          :value     btn-name
+                          :checked   (or
+                                       (= @size btn-name)
+                                       (and
+                                         (nil? @size)
+                                         (= "M" btn-name)))
+                          :name      radio-group-id
+                          :id        btn-id
+                          :on-change (fn [] (size-change btn-name))}]
+                        [:label
+                         {:for btn-id
+                          :class     (match btn-name
+                                       "S" "editor-form__size-button--left-edge"
+                                       "L" "editor-form__size-button--right-edge"
+                                       :else nil)}
+                         btn-name]]))]]
+            [:div.editor-form__checkbox-wrapper
+             (render-checkbox path initial-content :required)]]))})))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -160,18 +160,18 @@
            (doseq [event events]
              (.addEventListener target event handler-fn))))
        :reagent-render
-    (fn [content path children]
-      (component-with-fade-effects [content]
-        [:div.editor-form__section_wrapper
-         [:div.editor-form__component-wrapper
-          [text-header "Lomakeosio" path :form-section? true]
-          [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-           [:header.editor-form__component-item-header "Osion nimi"]
-           (doall
-             (for [lang @languages]
-               ^{:key lang}
-               [:input.editor-form__text-field
-                {:value     (get-in @value [:label lang])
-                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
-         children
-         [add-component (conj path :children (count children))]]))})))
+       (fn [content path children]
+         (component-with-fade-effects [content]
+           [:div.editor-form__section_wrapper
+            [:div.editor-form__component-wrapper
+             [text-header "Lomakeosio" path :form-section? true]
+             [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+              [:header.editor-form__component-item-header "Osion nimi"]
+              (doall
+                (for [lang @languages]
+                  ^{:key lang}
+                  [:input.editor-form__text-field
+                   {:value     (get-in @value [:label lang])
+                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
+            children
+            [add-component (conj path :children (count children))]]))})))
