@@ -24,19 +24,20 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
+(defn wrapper-section [ws]
+  (if (:valid ws)
+    [:div.application__wrapper-section
+     [:img.application__wrapper-section-valid-img {:src "images/icon_check.png"}]
+     (-> ws :label :fi)]
+    [:div.application__wrapper-section.application__wrapper-section-not-valid
+     (-> ws :label :fi)]))
+
 (defn wrapper-sections []
   (let [wrapper-sections (subscribe [:application/wrapper-sections])]
-        (fn []
-          (when @wrapper-sections
-            (into [:div.application__wrapper-sections-content]
-                  (mapv (fn [ws]
-                          (if (:valid ws)
-                            [:div.application__wrapper-section
-                             [:img.application__wrapper-section-valid-img {:src "images/icon_check.png"}]
-                             (-> ws :label :fi)]
-                            [:div.application__wrapper-section.application__wrapper-section-not-valid
-                             (-> ws :label :fi)]))
-                        @wrapper-sections))))))
+    (fn []
+      (when @wrapper-sections
+        (into [:div.application__wrapper-sections-content]
+              (mapv wrapper-section @wrapper-sections))))))
 
 (defn banner [] [:div
                  [:div.top-banner.application-top-banner logo [apply-controls]]
