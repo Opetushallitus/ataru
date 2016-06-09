@@ -47,18 +47,20 @@
 
 (declare render-field)
 
-(defn wrapper-field [content children]
+(defn wrapper-field [field-descriptor children]
   [:div.application__wrapper-element
-   [:h2.application__wrapper-heading (-> content :label :fi)]
+   [:h2.application__wrapper-heading
+    {:id (str "wrapper-" (:id field-descriptor))}
+    (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
 (defn render-field
-  [content]
-  (match content
+  [field-descriptor]
+  (match field-descriptor
          {:fieldClass "wrapperElement"
-          :children   children} [wrapper-field content children]
-         {:fieldClass "formField" :fieldType "textField"} [text-field content]
-         {:fieldClass "formField" :fieldType "textArea"} [text-area content]))
+          :children   children} [wrapper-field field-descriptor children]
+         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
+         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]))
 
 (defn render-editable-fields [form-data]
   (when form-data

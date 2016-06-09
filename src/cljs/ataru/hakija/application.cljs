@@ -7,14 +7,16 @@
     (for [field fields]
       (match
         [field] [{:fieldClass "wrapperElement"
-                  :children   children}] children
+                  :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
         :else field))))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
         (map
           (fn [field]
-            [(keyword (:id field)) {:valid (not (:required field))}]) flattened-form-fields)))
+            [(keyword (:id field)) {:valid
+                                    (not (:required field))
+                                    :wrapper-id (:wrapper-id field)}]) flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Mainly validity for now."
@@ -45,3 +47,20 @@
   {:form (:id form)
    :lang lang
    :answers (create-answers-to-submit (:answers application) form)})
+
+(defn extract-wrapper-sections [form]
+  (map #(select-keys % [:id :label])
+       (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
+
+(defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
+
+(defn wrapper-section-ids-validity [answers]
+  (let [grouped (group-by :wrapper-id (vals answers))]
+    (into {} (for [[id answers] grouped] [id (bools-all-true (map :valid answers))]))))
+
+(defn wrapper-sections-with-validity [wrapper-sections answers]
+  (let [wrapper-section-id->valid (wrapper-section-ids-validity answers)]
+    (map
+      (fn [wrapper-section]
+        (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
+      wrapper-sections)))
