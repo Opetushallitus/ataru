@@ -1,6 +1,8 @@
 (ns ataru.virkailija.editor.handlers-test
-  (:require [cljs.test :refer-macros [deftest are]]
-            [ataru.virkailija.editor.handlers :as h]))
+  (:require [cljs.test :refer-macros [async deftest are is]]
+            [ataru.virkailija.editor.handlers :as h]
+            ;[ataru.virkailija.editor.handlers-test-macros :refer-macros [with-mock-fn]]
+            [ataru.virkailija.virkailija-ajax :as http :refer [post]]))
 
 (defn generate-fn
   []
@@ -55,3 +57,16 @@
     (are [expected actual] (= expected actual)
       1 (count new-children)
       {:first :component} (first new-children))))
+
+(deftest save-form-filters-unwanted-keys-from-data
+  (async done
+    (with-redefs [http/post (fn [_ data & _]
+                              (is
+                                (= data {:content [{:id 1
+                                                    :children [{:id 2}]}]}))
+                              (done))]
+      (h/save-form {} [:editor/save-form {:content [{:params {:foo :baz}
+                                                     :id 1
+                                                     :children [{:params {:biz :baz}
+                                                                 :id 2}]}]
+                                          :modified-time 3}]))))
