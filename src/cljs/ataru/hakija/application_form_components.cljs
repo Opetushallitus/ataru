@@ -2,7 +2,10 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.application-field-common :refer [answer-key required-hint textual-field-value]]))
+            [ataru.hakija.application-field-common :refer [answer-key
+                                                           required-hint
+                                                           textual-field-value
+                                                           wrapper-id]]))
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -50,7 +53,7 @@
 (defn wrapper-field [field-descriptor children]
   [:div.application__wrapper-element
    [:h2.application__wrapper-heading
-    {:id (str "wrapper-" (:id field-descriptor))}
+    {:id (wrapper-id field-descriptor)}
     (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 

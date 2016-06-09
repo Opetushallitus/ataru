@@ -7,3 +7,6 @@
 
 (defn textual-field-value [field-descriptor application]
   (:value ((answer-key field-descriptor) (:answers application))))
+
+(defn wrapper-id [field-descriptor]
+  (str "wrapper-" (:id field-descriptor)))

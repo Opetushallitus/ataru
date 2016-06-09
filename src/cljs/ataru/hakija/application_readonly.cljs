@@ -2,7 +2,10 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.application-field-common :refer [answer-key required-hint textual-field-value]]))
+            [ataru.hakija.application-field-common :refer [answer-key
+                                                           required-hint
+                                                           textual-field-value
+                                                           wrapper-id]]))
 
 (defn text [field-descriptor]
   (let [application (subscribe [:state-query [:application]])
@@ -15,7 +18,10 @@
 (declare field)
 
 (defn wrapper [content children]
-  (into [:div.application__wrapper-element [:h2.application__wrapper-heading (-> content :label :fi)]]
+  (into [:div.application__wrapper-element
+         [:h2.application__wrapper-heading
+          {:id (wrapper-id content)}
+          (-> content :label :fi)]]
         (mapv field children)))
 
 (defn field
