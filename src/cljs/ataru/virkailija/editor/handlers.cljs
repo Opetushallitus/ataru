@@ -85,6 +85,14 @@
       new-state)))
 
 (register-handler
+  :component-did-fade-in
+  (fn [db [_ path]]
+    (let [form-id   (get-in db [:editor :selected-form-id])
+          path-vec  (flatten [:editor :forms form-id :content [path] :params :status])
+          new-state (assoc-in db path-vec "ready")]
+      new-state)))
+
+(register-handler
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
