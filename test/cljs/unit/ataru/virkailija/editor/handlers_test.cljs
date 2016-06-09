@@ -62,16 +62,22 @@
   (async done
     ; Verify that
     ;  * :modified-time is removed from root of the form
-    ;  * :params is removed from each object in :content vector
+    ;  * :params {:status} is removed from each object in :content vector
     ;    and also from each object of each :children vector in
     ;    content vector's elements
     (with-redefs [http/post (fn [_ data & _]
                               (is
                                 (= data {:content [{:id 1
-                                                    :children [{:id 2}]}]}))
+                                                    :params {:size "L"}
+                                                    :children [{:id 2
+                                                                :params {:size "M"}}
+                                                               {:id 3}]}]}))
                               (done))]
-      (h/save-form {} [:editor/save-form {:content [{:params {:foo :baz}
+      (h/save-form {} [:editor/save-form {:content [{:params {:status "baz"
+                                                              :size "L"}
                                                      :id 1
-                                                     :children [{:params {:biz :baz}
-                                                                 :id 2}]}]
+                                                     :children [{:params {:status "biz"
+                                                                          :size "M"}
+                                                                 :id 2}
+                                                                {:id 3}]}]
                                           :modified-time 3}]))))

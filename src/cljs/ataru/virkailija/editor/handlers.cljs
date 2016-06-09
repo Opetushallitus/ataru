@@ -148,8 +148,13 @@
       []
       (map
         (fn [component]
-          (let [filtered (-> component
-                             (dissoc :params)
+          (let [remove-param-fn (fn [component]
+                                  (if
+                                    (contains? component :params)
+                                    (update-in component [:params] #(dissoc % :status))
+                                    component))
+                filtered (-> component
+                             remove-param-fn
                              update-child-fn)]
             filtered))
         components))))
