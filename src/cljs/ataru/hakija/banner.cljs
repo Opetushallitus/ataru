@@ -26,7 +26,8 @@
 
 (defn wrapper-section-link [ws]
   [:a.application__banner-wrapper-section-link
-   {:href "#" :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
+   {:href (str "#wrapper-" (:id ws))
+    :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
    (-> ws :label :fi)])
 
 (defn wrapper-section [ws]
