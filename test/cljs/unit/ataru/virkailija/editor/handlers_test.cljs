@@ -60,6 +60,11 @@
 
 (deftest save-form-filters-unwanted-keys-from-data
   (async done
+    ; Verify that
+    ;  * :modified-time is removed from root of the form
+    ;  * :params is removed from each object in :content vector
+    ;    and also from each object of each :children vector in
+    ;    content vector's elements
     (with-redefs [http/post (fn [_ data & _]
                               (is
                                 (= data {:content [{:id 1
