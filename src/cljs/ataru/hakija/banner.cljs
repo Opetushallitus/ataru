@@ -24,13 +24,18 @@
               :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
               :else nil)])))
 
+(defn wrapper-section-link [ws]
+  [:a.application__banner-wrapper-section-link
+   {:href "#" :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
+   (-> ws :label :fi)])
+
 (defn wrapper-section [ws]
   (if (:valid ws)
     [:div.application__banner-wrapper-section
      [:img.application__banner-wrapper-section-valid-img {:src "images/icon_check.png"}]
-     (-> ws :label :fi)]
+     [wrapper-section-link ws]]
     [:div.application__banner-wrapper-section.application__banner-wrapper-section-not-valid
-     (-> ws :label :fi)]))
+     [wrapper-section-link ws]]))
 
 (defn wrapper-sections []
   (let [wrapper-sections (subscribe [:application/wrapper-sections])]
