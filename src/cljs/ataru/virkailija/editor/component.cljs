@@ -14,6 +14,7 @@
   {:required {:id-suffix "_required"
               :label "Pakollinen tieto"}})
 
+
 (defn- render-checkbox
   [path initial-content metadata-kwd]
   (let [metadata (get checkbox-metadata metadata-kwd)
@@ -26,11 +27,13 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
+(def ^:private events
+  ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
+
 (defn- animation-did-end-handler
   [f]
   (let [handler-fn (fn [event]
-                     (let [target (.-target event)
-                           events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
+                     (let [target (.-target event)]
                        (doseq [event events]
                          (->> (js-arguments)
                               .-callee
@@ -48,7 +51,6 @@
                                     form-section?
                                     (-> event .-target .-parentNode .-parentNode .-parentNode)
                                     (-> event .-target .-parentNode .-parentNode))
-                       events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
                        handler-fn (animation-did-end-handler #(dispatch [:remove-component path]))]
                    (doseq [event events]
                      (.addEventListener target event handler-fn)))
@@ -60,8 +62,7 @@
   (r/create-class
     {:component-did-mount
      (fn [this]
-       (let [events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
-             handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
+       (let [handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
              target     (r/dom-node this)]
          (doseq [event events]
            (.addEventListener target event handler-fn))))
