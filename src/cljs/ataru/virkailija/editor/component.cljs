@@ -26,8 +26,8 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
-(defn- get-fade-out-did-end-handler
-  [path]
+(defn- animation-did-end-handler
+  [f]
   (let [handler-fn (fn [event]
                      (let [target (.-target event)
                            events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
@@ -35,7 +35,7 @@
                          (->> (js-arguments)
                               .-callee
                               (.removeEventListener target event)))
-                     (dispatch [:remove-component path])))]
+                       (f)))]
     handler-fn))
 
 (defn- text-header
@@ -49,7 +49,7 @@
                                     (-> event .-target .-parentNode .-parentNode .-parentNode)
                                     (-> event .-target .-parentNode .-parentNode))
                        events     ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]
-                       handler-fn (get-fade-out-did-end-handler path)]
+                       handler-fn (animation-did-end-handler #(dispatch [:remove-component path]))]
                    (doseq [event events]
                      (.addEventListener target event handler-fn)))
                  (dispatch [:hide-component path]))}
