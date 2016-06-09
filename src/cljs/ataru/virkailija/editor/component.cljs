@@ -28,8 +28,14 @@
 
 (defn- get-fade-out-did-end-handler
   [path]
-  (let [handler-fn (fn [_]
-                     (dispatch [:remove-component path]))]
+  (let [handler-fn (fn [event]
+                     (let [target (.-target event)
+                           events ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
+                       (doseq [event events]
+                         (->> (js-arguments)
+                              .-callee
+                              (.removeEventListener target event)))
+                     (dispatch [:remove-component path])))]
     handler-fn))
 
 (defn- text-header
