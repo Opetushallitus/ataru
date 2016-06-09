@@ -57,7 +57,7 @@
         [:div.editor-form__component-wrapper
          [text-header header-label path]
          [:div.editor-form__text-field-wrapper
-          [:header.editor-form__component-item-header "Otsikko"]
+          [:header.editor-form__component-item-header "Kysymys"]
           (doall
             (for [lang @languages]
               ^{:key lang}
