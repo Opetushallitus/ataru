@@ -21,7 +21,6 @@
 .application__wrapper-sections {
   height: 33px;
   background-color: #128AB3;
-  color: white;
   display: flex;
   align-items: center;
 }
@@ -29,11 +28,19 @@
   margin: auto;
   width: @desktop-content-width;
   overflow: hidden;
+  white-space: nowrap;
 }
 .application__wrapper-section {
   display: inline-block;
-  margin-right: 10px;
+  margin-right: 25px;
   font-size: 13px;
+  color: white;
+}
+.application__wrapper-section-not-valid {
+  opacity: 0.4;
+}
+.application__wrapper-section-valid-img {
+  margin-right: 5px;
 }
 .application__send-application-button {
   background: none;

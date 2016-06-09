@@ -30,7 +30,12 @@
           (when @wrapper-sections
             (into [:div.application__wrapper-sections-content]
                   (mapv (fn [ws]
-                          [:div.application__wrapper-section (str (-> ws :label :fi) (:valid ws))])
+                          (if (:valid ws)
+                            [:div.application__wrapper-section
+                             [:img.application__wrapper-section-valid-img {:src "images/icon_check.png"}]
+                             (-> ws :label :fi)]
+                            [:div.application__wrapper-section.application__wrapper-section-not-valid
+                             (-> ws :label :fi)]))
                         @wrapper-sections))))))
 
 (defn banner [] [:div
