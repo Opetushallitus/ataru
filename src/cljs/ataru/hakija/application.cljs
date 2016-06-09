@@ -16,16 +16,18 @@
           (fn [field]
             [(keyword (:id field)) {:valid
                                     (not (:required field))
-                                    :wrapper-id (:wrapper-id field)}]) flattened-form-fields)))
+                                    :wrapper-id (:wrapper-id field)
+                                    :label (:label field)}]) flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Mainly validity for now."
   [form]
   (initial-valid-status (flatten-form-fields (:content form))))
 
-(defn answers->valid-status [answers]
-  (let [answer-validity (for [[_ answers] answers] (:valid answers))]
-    {:valid (if (empty? answer-validity) false (every? true? answer-validity))}))
+(defn answers->valid-status [all-answers]
+  (let [answer-validity (for [[_ answers] all-answers] (:valid answers))]
+    {:valid (if (empty? answer-validity) false (every? true? answer-validity))
+     :invalid-fields (for [[_ answers] all-answers :when (not (:valid answers))] (select-keys answers [:label]))}))
 
 (defn form->flat-form-map [form]
   (into {}

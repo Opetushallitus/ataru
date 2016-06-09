@@ -10,11 +10,19 @@
 
 (def logo [:div.logo-elements logo-image logo-text])
 
-(defn apply-controls []
+(defn invalid-field-status [valid-status]
+  (let [invalid-fields (:invalid-fields valid-status)]
+    (when (seq invalid-fields)
+      [:div.application__invalid-field-status (str (count invalid-fields) " pakollista tietoa puuttuu")
+          (into [:div.application__invalid-fields]
+            (mapv (fn [field] [:div (-> field :label :fi)]) invalid-fields))])))
+
+(defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
-      [:div
+      [:div.application__status-controls
+       [invalid-field-status @valid-status]
        [:button.application__send-application-button
         {:disabled (or (not (:valid @valid-status)) (contains? #{:submitting :submitted} @submit-status))
          :on-click #(dispatch [:application/submit-form])}
@@ -46,5 +54,5 @@
               (mapv wrapper-section @wrapper-sections))))))
 
 (defn banner [] [:div
-                 [:div.top-banner.application-top-banner logo [apply-controls]]
+                 [:div.top-banner.application-top-banner logo [status-controls]]
                  [:div.application__banner-wrapper-sections [wrapper-sections]]])
