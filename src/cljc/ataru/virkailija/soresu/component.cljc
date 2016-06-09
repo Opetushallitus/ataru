@@ -6,7 +6,7 @@
    :fieldType  "textField"
    :label      {:fi "", :sv ""}
    :id         (str (gensym))
-   :params     {}
+   :params     {:status "fading-in"}
    :required   false})
 
 (defn text-area []
@@ -19,4 +19,5 @@
    :fieldType  "fieldset"
    :id         (str (gensym))
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
-   :children   []})
+   :children   []
+   :params     {:status "fading-in"}})
