@@ -40,7 +40,7 @@
                       :content [{:first :component} {:second :another-component}]}
         new-content (-> {:editor {:selected-form-id form-id
                                   :forms {form-id initial-form}}}
-                        (h/remove-component [:remove-component [0]])
+                        (h/remove-component [0])
                         (get-in [:editor :forms form-id :content]))]
     (are [expected actual] (= expected actual)
       1 (count new-content)
@@ -52,7 +52,7 @@
                       :content [{:children [{:first :component} {:second :another-component}]}]}
         new-children (-> {:editor {:selected-form-id form-id
                                    :forms {form-id initial-form}}}
-                         (h/remove-component [:remove-component [0 :children 1]])
+                         (h/remove-component [0 :children 1])
                          (get-in [:editor :forms form-id :content 0 :children]))]
     (are [expected actual] (= expected actual)
       1 (count new-children)

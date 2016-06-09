@@ -45,21 +45,37 @@
         form-after       (get-in db-after  [:editor :forms selected-form-id])]
     (update-in db-after [:editor :form-undodata]
                (comp
-                 #(do (debug (take 3 %)) %)
                  #(take undo-limit %)
                  (fn [undodata]
-                   (cons form-after (or undodata '()))))
-               form-after)))
+                   (cons form-after (or (when (= selected-form-id
+                                                 (:id form-after))
+                                          undodata)
+                                        '())))))))
+
+(register-handler
+  :editor/do
+  (fn [db-after [db-before]]
+    (push-to-undo-stack db-before db-after)))
+
+(register-handler
+  :editor/undo
+  (fn [db _]
+    (let [[form & xs]      (-> db :editor :form-undodata)
+          selected-form-id (-> db :editor :selected-form-id)]
+      (if (and (not-empty form)
+               (= selected-form-id (:id form)))
+        (-> db
+            (assoc-in [:editor :form-undodata] xs)
+            (assoc-in [:editor :forms selected-form-id] form))
+        db))))
 
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (push-to-undo-stack
+    (assoc-in
       db
-      (assoc-in
-        db
-        (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-        value))))
+      (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+      value)))
 
 (register-handler
   :handle-get-forms
@@ -80,7 +96,7 @@
 (register-handler :generate-component generate-component)
 
 (defn remove-component
-  [db [_ path]]
+  [db path]
   (let [form-id      (get-in db [:editor :selected-form-id])
         remove-index (last path)
         path-vec     (-> [:editor :forms form-id :content [path]]
@@ -92,7 +108,12 @@
          (into [])
          (assoc-in db path-vec))))
 
-(register-handler :remove-component remove-component)
+(register-handler
+  :remove-component
+  (fn [db [_ path]]
+    (do
+      (dispatch [:editor/do db])
+      (remove-component db path))))
 
 (defn- component-status-handler
   [status]
