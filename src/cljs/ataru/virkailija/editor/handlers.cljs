@@ -184,37 +184,12 @@
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form form]))})))))))
 
-(defn- remove-params
-  [components]
-  (let [update-child (fn [components]
-                       (if
-                         (contains? components :children)
-                         (update components :children remove-params)
-                         components))]
-    (into
-      []
-      (map
-        (fn [component]
-          (let [remove-param (fn [component]
-                               (if
-                                 (contains? component :params)
-                                 (update-in component [:params] #(dissoc % :status))
-                                 component))
-                filtered (-> component
-                           remove-param
-                           update-child)]
-            filtered))
-        components))))
-
 (defn save-form
   [db [_ form]]
-  (let [filtered-form (-> form
-                          (assoc :modified-time (temporal/time->iso-str (:modified-time form)))
-                          (update :content remove-params))]
-    (post "/lomake-editori/api/form" filtered-form
+  (let [with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form))))]
+    (post "/lomake-editori/api/form" with-iso-str-time
           (fn [db updated-form]
             (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
-  db)
 
 (register-handler :editor/save-form save-form)
 
