@@ -44,34 +44,41 @@
     "Luo uusi lomake"]])
 
 (defn editor-name []
-  (let [form (subscribe [:editor/selected-form])
+  (let [form              (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-name (reaction (:name @form))]
+        form-name         (reaction (:name @form))]
     (r/create-class
-      {:display-name "editor-name"
+      {:display-name        "editor-name"
        :component-did-mount (fn [element]
                               (when @new-form-created?
-                                 (do
-                                   (doto (r/dom-node element)
-                                     (.focus)
-                                     (.select))
-                                   (dispatch [:set-state [:editor :new-form-created?] false]))))
-       :reagent-render       (fn []
-                               [:input.editor-form__form-name-input
-                                {:key (:id @form) ; needed to trigger component-did-update
-                                 :type                "text"
-                                 :value               @form-name
-                                 :placeholder         "Lomakkeen nimi"
-                                 :on-change           #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}])})))
+                                (do
+                                  (doto (r/dom-node element)
+                                    (.focus)
+                                    (.select))
+                                  (dispatch [:set-state [:editor :new-form-created?] false]))))
+       :reagent-render      (fn []
+                              [:input.editor-form__form-name-input
+                               {:key         (:id @form) ; needed to trigger component-did-update
+                                :type        "text"
+                                :value       @form-name
+                                :placeholder "Lomakkeen nimi"
+                                :on-change   #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (defn editor-panel []
-  (let [form (subscribe [:editor/selected-form])]
-    (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
-      [:div.panel-content
-       [:div
-        [editor-name]]
-       [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
-       [c/editor]])))
+  (let [form            (subscribe [:editor/selected-form])
+        undo-available? (-> (spy @(subscribe [:state-query [:editor :form-undodata]]))
+                            first
+                            not-empty
+                            reaction)]
+    (fn []
+      (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
+        [:div.panel-content
+         [:div
+          [editor-name]]
+         [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
+         (when (spy @undo-available?)
+           [:div.editor-form__undo-link [:a {:on-click #(dispatch [:editor/undo])} "Peruuta poisto"]])
+         [c/editor]]))))
 
 (defn editor []
     [:div

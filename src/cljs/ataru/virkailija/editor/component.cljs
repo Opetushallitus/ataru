@@ -15,7 +15,6 @@
   {:required {:id-suffix "_required"
               :label "Pakollinen tieto"}})
 
-
 (defn- render-checkbox
   [path initial-content metadata-kwd]
   (let [metadata (get checkbox-metadata metadata-kwd)

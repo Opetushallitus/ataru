@@ -39,22 +39,26 @@
         m))
 
 (defn- push-to-undo-stack [db-before db-after]
-  (let [undo-limit       999
-        selected-form-id (-> db-before :editor :selected-form-id)
-        form-before      (get-in db-before [:editor :forms selected-form-id])
-        form-after       (get-in db-after  [:editor :forms selected-form-id])]
-    (update-in db-after [:editor :form-undodata]
-               (comp
-                 #(take undo-limit %)
+  (let [undo-limit              999
+        selected-form-id-before (-> db-before :editor :selected-form-id)
+        selected-form-id-after  (-> db-after :editor :selected-form-id)
+        form-before             (get-in db-before [:editor :forms selected-form-id-before])
+        form-after              (get-in db-after  [:editor :forms selected-form-id-after])]
+    (if (not= selected-form-id-before
+              selected-form-id-after)
+      (assoc-in db-after [:editor :form-undodata] '())
+      (update-in db-after [:editor :form-undodata]
                  (fn [undodata]
-                   (cons form-after (or (when (= selected-form-id
-                                                 (:id form-after))
-                                          undodata)
-                                        '())))))))
+                   (seq (eduction
+                          (comp (take undo-limit)
+                                (filter some?))
+                          (cons form-before
+                                (or undodata
+                                    '())))))))))
 
 (register-handler
-  :editor/do
-  (fn [db-after [db-before]]
+   :editor/do
+  (fn [db-after [_ db-before]]
     (push-to-undo-stack db-before db-after)))
 
 (register-handler
