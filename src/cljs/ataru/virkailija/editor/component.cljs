@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.editor.component-macros :refer-macros [animation-did-end-handler
-                                                                     component-with-fade-effects]]
+                                                                     component-with-fade-effects
+                                                                     component-with-fade-in-effect]]
             [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
@@ -47,18 +48,6 @@
                      (.addEventListener target event handler-fn)))
                  (dispatch [:hide-component path]))}
     "Poista"]])
-
-(defn- component-with-fade-in-effect
-  [path component]
-  (r/create-class
-    {:component-did-mount
-     (fn [this]
-       (let [handler-fn (animation-did-end-handler
-                          (dispatch [:component-did-fade-in path]))
-             target     (r/dom-node this)]
-         (doseq [event events]
-           (.addEventListener target event handler-fn))))
-     :reagent-render component}))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])

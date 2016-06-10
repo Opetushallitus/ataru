@@ -23,3 +23,15 @@
                                  (.removeEventListener target# event#)))
                           ~@body))]
      listener-fn#))
+
+(defmacro component-with-fade-in-effect
+  [path component]
+  `(reagent.core/create-class
+     {:component-did-mount
+                      (fn [this#]
+                        (let [handler-fn# (animation-did-end-handler
+                                            (re-frame.core/dispatch [:component-did-fade-in ~path]))
+                              target#     (reagent.core/dom-node this#)]
+                          (doseq [event# ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"]]
+                            (.addEventListener target# event# handler-fn#))))
+      :reagent-render ~component}))
