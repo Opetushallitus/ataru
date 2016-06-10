@@ -112,12 +112,24 @@
          (into [])
          (assoc-in db path-vec))))
 
+(def ^:private events
+  ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
+
 (register-handler
   :remove-component
-  (fn [db [_ path]]
+  (fn [db [_ path dom-node]]
     (do
-      (dispatch [:editor/do db])
-      (remove-component db path))))
+      (set! (.-className dom-node) (str (.-className dom-node) " animated fadeOutUp"))
+      (doseq [event events]
+        (.addEventListener
+          dom-node
+          event
+          #(do
+             (dispatch [:editor/do db])
+             (dispatch [:state-update
+                        (fn [db_]
+                          (remove-component db_ path))]))))
+      db)))
 
 (register-handler
   :editor/handle-user-info

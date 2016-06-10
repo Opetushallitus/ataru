@@ -26,15 +26,15 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
-(def ^:private events
-  ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
-
 (defn- text-header
   [label path & {:keys [form-section?]}]
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
-    {:on-click (fn [event] (dispatch [:remove-component path (.-target event)]))}
+    {:on-click (fn [event] (dispatch [:remove-component path
+                                      (if form-section?
+                                        (-> event .-target .-parentNode .-parentNode .-parentNode)
+                                        (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
