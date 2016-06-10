@@ -61,7 +61,10 @@
 
 (deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers form1)]
-    (is (= {:G__2 {:valid false :wrapper-id "G__1"}, :G__14 {:valid true :wrapper-id "G__1"}, :G__25 {:valid true :wrapper-id nil}} initial-answers))))
+    (is (= {:G__2 {:valid false, :wrapper-id "G__1", :label {:fi "kenttä1", :sv ""}}
+            :G__14 {:valid true, :wrapper-id "G__1", :label {:fi "kenttä2", :sv ""}}
+            :G__25 {:valid true, :wrapper-id nil, :label {:fi "ulkokenttä", :sv ""}}}
+           initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
   (let [result (answers->valid-status {:one {:valid false}, :two {:valid true}, :three {:valid true}})]
