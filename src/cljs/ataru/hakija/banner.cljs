@@ -19,8 +19,9 @@
          {:on-click #(do (reset! show-details (not @show-details)) nil)}
          (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")
           (when @show-details
-             (into [:div.application__invalid-fields]
-                (mapv (fn [field] [:div (-> field :label :fi)]) (:invalid-fields valid-status))))]))))
+             (into [:div.application__invalid-fields [:div.application__invalid-fields-arrow-up]]
+                (mapv (fn [field] [:div (-> field :label :fi)])
+                      (:invalid-fields valid-status))))]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
