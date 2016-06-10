@@ -18,12 +18,15 @@
         valid (if (:required text-field-data) (not (empty? (trim value))) true)]
     (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
 
+(defn- field-id [field-descriptor]
+  (str "field-" (:id field-descriptor)))
+
 (defn text-field [field-descriptor]
   (let [application (subscribe [:state-query [:application]])
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
       [:div.application__form-field
-       [:label.application_form-field-label label (required-hint field-descriptor)]
+       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:input.application__form-text-input
         {:type "text"
          :class (text-field-size->class (-> field-descriptor :params :size))
@@ -42,7 +45,7 @@
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
       [:div.application__form-field
-       [:label.application_form-field-label label (required-hint field-descriptor)]
+       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          :value (textual-field-value field-descriptor @application)

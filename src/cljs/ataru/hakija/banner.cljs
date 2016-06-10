@@ -1,5 +1,6 @@
 (ns ataru.hakija.banner
   (:require [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]))
 
 (def logo-image
@@ -10,19 +11,42 @@
 
 (def logo [:div.logo-elements logo-image logo-text])
 
-(defn apply-controls []
+(defn invalid-field-status [valid-status]
+  (let [show-details (r/atom false)
+        toggle-show-details #(do (reset! show-details (not @show-details)) nil)]
+    (fn [valid-status]
+      (when (seq (:invalid-fields valid-status))
+        [:div.application__invalid-field-status
+         [:span.application__invalid-field-status-title
+          {:on-click toggle-show-details}
+          (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")]
+          (when @show-details
+            [:div
+             [:div.application__invalid-fields-arrow-up]
+             (into [:div.application__invalid-fields
+                    [:span.application__close-invalid-fields
+                     {:on-click toggle-show-details}
+                     "x"]]
+                (mapv (fn [field] [:a {:href (str "#field-" (name (:key field)))} [:div (-> field :label :fi)]])
+                      (:invalid-fields valid-status)))])]))))
+
+(defn sent-indicator [submit-status]
+  (match submit-status
+         :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
+         :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
+         :else nil))
+
+(defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
-      [:div
+      [:div.application__status-controls
        [:button.application__send-application-button
         {:disabled (or (not (:valid @valid-status)) (contains? #{:submitting :submitted} @submit-status))
          :on-click #(dispatch [:application/submit-form])}
         "LÄHETÄ HAKEMUS"]
-       (match @submit-status
-              :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-              :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
-              :else nil)])))
+       [invalid-field-status @valid-status]
+       [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
   [:a.application__banner-wrapper-section-link
@@ -46,5 +70,5 @@
               (mapv wrapper-section @wrapper-sections))))))
 
 (defn banner [] [:div
-                 [:div.top-banner.application-top-banner logo [apply-controls]]
+                 [:div.top-banner.application-top-banner logo [status-controls]]
                  [:div.application__banner-wrapper-sections [wrapper-sections]]])
