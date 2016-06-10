@@ -4,7 +4,7 @@
 .top-banner.application-top-banner {
   display: flex;
   justify-content: space-between;
-  height: 77px;
+  height: 82px;
   padding-top: 19px;
 }
 .application-top-banner {
@@ -47,34 +47,37 @@
 .application__banner-wrapper-section-valid-img {
   margin-right: 5px;
 }
-.application__status-controls {
-  display: flex;
-  align-items: center;
-}
 .application__invalid-field-status {
+  font-size: 12px;
+  margin-top: 2px;
+  text-align: center;
+  width: 190px;
   position: relative;
   margin-right: 20px;
   cursor: pointer;
 }
 .application__invalid-fields {
+  z-index: 1; /* On mobile (narrow screen) section line is above this container without this */
   position: absolute;
+  top: 26px;
+  left: 17px;
+  text-align: start;
   background-color: white;
   color: @pale-blue;
   min-width: 170px;
   padding: 11px;
   box-shadow: 1px 2px 5px #b3b3b3;
-  top: 26px;
   font-size: 13px;
 }
 .application__invalid-fields-arrow-up {
+  position: absolute;
+  top: -9px;
+  left: 40px;
   width: 0;
   height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid white;
-  position: absolute;
-  top: -5px;
-  left: 76px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 9px solid white;
 }
 .application__send-application-button {
   background: none;
@@ -93,6 +96,7 @@
   opacity: 0.33;
 }
 .application__sent-indicator {
+  margin-top: 3px;
   text-align: center;
   width: 190px;
   font-size: 11px;
@@ -175,6 +179,8 @@
 
 /* Smaller screens */
 
+@send-button-width-mobile: 138px;
+
 @media only screen
 and (max-width: @desktop-content-width) {
   .application-top-banner {
@@ -193,10 +199,17 @@ and (max-width: @desktop-content-width) {
   .application__banner-wrapper-sections { display: none; }
   .application__send-application-button {
     margin-right: 10px;
-    width: 138px;
+    width: @send-button-width-mobile;
   }
   .application__sent-indicator {
-    width: 138px;
+    width: @send-button-width-mobile;
+  }
+  .application__invalid-field-status {
+    width: @send-button-width-mobile;
+    font-size: 10px;
+  }
+  .application__invalid-fields {
+    left: -29px;
   }
   .application__header {
     margin-left: 10px;

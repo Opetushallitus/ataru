@@ -23,20 +23,23 @@
                 (mapv (fn [field] [:div (-> field :label :fi)])
                       (:invalid-fields valid-status))))]))))
 
+(defn sent-indicator [submit-status]
+  (match submit-status
+         :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
+         :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
+         :else nil))
+
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
       [:div.application__status-controls
-       [invalid-field-status @valid-status]
        [:button.application__send-application-button
         {:disabled (or (not (:valid @valid-status)) (contains? #{:submitting :submitted} @submit-status))
          :on-click #(dispatch [:application/submit-form])}
         "LÄHETÄ HAKEMUS"]
-       (match @submit-status
-              :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-              :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
-              :else nil)])))
+       [invalid-field-status @valid-status]
+       [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
   [:a.application__banner-wrapper-section-link
