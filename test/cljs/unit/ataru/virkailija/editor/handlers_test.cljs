@@ -61,7 +61,7 @@
 (deftest save-form-filters-unwanted-keys-from-data
   (async done
     ; Verify that
-    ;  * :modified-time is removed from root of the form
+    ;  * :modified-time is formatted correctly
     ;  * :params {:status} is removed from each object in :content vector
     ;    and also from each object of each :children vector in
     ;    content vector's elements
@@ -71,13 +71,14 @@
                                                     :params {:size "L"}
                                                     :children [{:id 2
                                                                 :params {:size "M"}}
-                                                               {:id 3}]}]}))
+                                                               {:id 3}]}]
+                                         :modified-time "1903-01-01T00:00:00.000+02:00"}))
                               (done))]
-      (h/save-form {} [:editor/save-form {:content [{:params {:status "baz"
-                                                              :size "L"}
-                                                     :id 1
-                                                     :children [{:params {:status "biz"
-                                                                          :size "M"}
-                                                                 :id 2}
-                                                                {:id 3}]}]
-                                          :modified-time 3}]))))
+                 (h/save-form {} [:editor/save-form {:content [{:params {:status "baz"
+                                                                         :size "L"}
+                                                                :id 1
+                                                                :children [{:params {:status "biz"
+                                                                                     :size "M"}
+                                                                            :id 2}
+                                                                           {:id 3}]}]
+                                                     :modified-time 3}]))))
