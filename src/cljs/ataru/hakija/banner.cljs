@@ -16,8 +16,9 @@
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
-         {:on-click #(do (reset! show-details (not @show-details)) nil)}
-         (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")
+         [:span
+          {:on-click #(do (reset! show-details (not @show-details)) nil)}
+          (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")]
           (when @show-details
              (into [:div.application__invalid-fields [:div.application__invalid-fields-arrow-up]]
                 (mapv (fn [field] [:div (-> field :label :fi)])
