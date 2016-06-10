@@ -15,13 +15,17 @@
             [manifold.deferred :as d]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.util.http-response :refer [ok internal-server-error not-found content-type]]
+            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.response :refer [response]]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [spy debug error]])
-  (:import  [manifold.deferred.Deferred]))
+            [taoensso.timbre :refer [spy debug error warn]]
+            [schema.spec.core :as spec]
+            [clj-time.coerce :as time-coerce])
+  (:import [manifold.deferred.Deferred]
+           (org.joda.time DateTime)
+           (clojure.lang ExceptionInfo)))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -37,6 +41,8 @@
   (try (if-let [result (f)]
          (ok result)
          (not-found))
+       (catch ExceptionInfo e
+         (bad-request (-> e ex-data)))
        (catch Exception e
          (error e)
          (internal-server-error))))

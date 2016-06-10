@@ -7,7 +7,8 @@
             [ataru.virkailija.virkailija-ajax :refer [http post]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.virkailija.temporal :as temporal]))
 
 (defn refresh-forms []
   (http
@@ -165,10 +166,12 @@
 
 (defn save-form
   [db [_ form]]
-  (let [filtered-form  (-> form
-                         (dissoc :modified-time)
-                         (update :content remove-params))]
-    (post "/lomake-editori/api/form" filtered-form))
+  (let [filtered-form (-> form
+                          (assoc :modified-time (temporal/time->iso-str (:modified-time form)))
+                          (update :content remove-params))]
+    (post "/lomake-editori/api/form" filtered-form
+          (fn [db updated-form]
+            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
   db)
 
 (register-handler :editor/save-form save-form)

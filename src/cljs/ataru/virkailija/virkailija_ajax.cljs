@@ -4,6 +4,25 @@
             [ataru.virkailija.temporal :as temporal]
             [ajax.core :refer [GET POST PUT DELETE]]))
 
+(defn dispatch-flasher-error-msg
+  [method response]
+  (let [error-type (if (and (= 400 (:status response))
+                         (= (-> response :response :error) "form_updated_in_background"))
+                     :concurrent-edit
+                     :server-error)
+        message (case error-type
+                  :concurrent-edit "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
+                  :server-error (str "Virhe "
+                                     (case method
+                                       :get "haettaessa."
+                                       :post "tallennettaessa."
+                                       :put "tallennettaessa."
+                                       :delete "poistettaessa.")))]
+    (dispatch [:flasher {:loading? false
+                         :message  message
+                         :error-type error-type
+                         :detail   response}])))
+
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
             :get    GET
@@ -19,14 +38,7 @@
        (merge {:response-format :json
                :format          :json
                :keywords?       true
-               :error-handler   #(dispatch [:flasher {:loading? false
-                                                      :message (str "Virhe "
-                                                                    (case method
-                                                                      :get "haettaessa."
-                                                                      :post "tallennettaessa."
-                                                                      :put "tallennettaessa."
-                                                                      :delete "poistettaessa."))
-                                                      :detail %}])
+               :error-handler   (partial dispatch-flasher-error-msg method)
                :handler         (comp (fn [response]
                                         (dispatch [:flasher {:loading? false
                                                              :message

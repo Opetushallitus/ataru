@@ -35,6 +35,11 @@
   (fn [element]
     (update-in element [kw] str->googdate)))
 
+(defn time->iso-str [t]
+  (->> t
+       c/to-default-time-zone
+       (f/unparse (f/formatters :date-time))))
+
 (defn- time->str [google-date]
   (->> google-date
        c/to-default-time-zone
