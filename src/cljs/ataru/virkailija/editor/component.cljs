@@ -1,7 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.editor.component-macros :refer-macros [animation-did-end-handler
-                                                                     component-with-fade-effects
-                                                                     component-with-fade-in-effect]]
+                                                                     component-with-fade-effects]]
             [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
