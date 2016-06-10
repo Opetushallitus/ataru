@@ -66,7 +66,7 @@
 
 (defn editor-panel []
   (let [form            (subscribe [:editor/selected-form])
-        undo-available? (-> (spy @(subscribe [:state-query [:editor :form-undodata]]))
+        undo-available? (-> @(subscribe [:state-query [:editor :form-undodata]])
                             first
                             not-empty
                             reaction)]
@@ -76,7 +76,7 @@
          [:div
           [editor-name]]
          [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
-         (when (spy @undo-available?)
+         (when @undo-available?
            [:div.editor-form__undo-link [:a {:on-click #(dispatch [:editor/undo])} "Peruuta poisto"]])
          [c/editor]]))))
 

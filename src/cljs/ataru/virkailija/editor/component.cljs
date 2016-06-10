@@ -2,7 +2,8 @@
   (:require [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
-            [re-frame.core :refer [subscribe dispatch]]))
+            [re-frame.core :refer [subscribe dispatch]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn language [lang]
   (fn [lang]
@@ -33,16 +34,7 @@
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
-    {:on-click (fn [event]
-                 (let [target     (if
-                                    form-section?
-                                    (-> event .-target .-parentNode .-parentNode .-parentNode)
-                                    (-> event .-target .-parentNode .-parentNode))
-                       handler-fn (animation-did-end-handler
-                                    (dispatch [:remove-component path]))]
-                   (doseq [event events]
-                     (.addEventListener target event handler-fn)))
-                 (dispatch [:hide-component path]))}
+    {:on-click (fn [event] (dispatch [:remove-component path (.-target event)]))}
     "Poista"]])
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]

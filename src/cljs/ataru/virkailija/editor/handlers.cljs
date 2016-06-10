@@ -119,18 +119,6 @@
       (dispatch [:editor/do db])
       (remove-component db path))))
 
-(defn- component-status-handler
-  [status]
-  (fn [db [_ path]]
-    (let [form-id   (get-in db [:editor :selected-form-id])
-          path-vec  (flatten [:editor :forms form-id :content [path] :params :status])
-          new-state (assoc-in db path-vec status)]
-      new-state)))
-
-(register-handler :hide-component (component-status-handler "fading-out"))
-
-(register-handler :component-did-fade-in (component-status-handler "ready"))
-
 (register-handler
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
