@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.virkailija.editor.component-macros :refer-macros [component-with-fade-effects]]
+  (:require [ataru.virkailija.editor.component-macros :refer-macros [animation-did-end-handler
+                                                                     component-with-fade-effects]]
             [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
@@ -30,17 +31,6 @@
 (def ^:private events
   ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
 
-(defn- animation-did-end-handler
-  [f]
-  (let [handler-fn (fn [event]
-                     (let [target (.-target event)]
-                       (doseq [event events]
-                         (->> (js-arguments)
-                              .-callee
-                              (.removeEventListener target event)))
-                       (f)))]
-    handler-fn))
-
 (defn- text-header
   [label path & {:keys [form-section?]}]
   [:div.editor-form__header-wrapper
@@ -51,7 +41,8 @@
                                     form-section?
                                     (-> event .-target .-parentNode .-parentNode .-parentNode)
                                     (-> event .-target .-parentNode .-parentNode))
-                       handler-fn (animation-did-end-handler #(dispatch [:remove-component path]))]
+                       handler-fn (animation-did-end-handler
+                                    (dispatch [:remove-component path]))]
                    (doseq [event events]
                      (.addEventListener target event handler-fn)))
                  (dispatch [:hide-component path]))}
@@ -62,7 +53,8 @@
   (r/create-class
     {:component-did-mount
      (fn [this]
-       (let [handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
+       (let [handler-fn (animation-did-end-handler
+                          (dispatch [:component-did-fade-in path]))
              target     (r/dom-node this)]
          (doseq [event events]
            (.addEventListener target event handler-fn))))
