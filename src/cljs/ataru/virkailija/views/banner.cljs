@@ -72,6 +72,10 @@
       [:div
        (when @flasher
          (match [@loading? @flasher]
+                [false {:error-type :concurrent-edit
+                        :message message}]
+                [:div.flasher {:class "concurrent-edit-error animated flash"}
+                 [:span message]]
                 [false {:detail detailed-error
                         :message message}]
                 [:div.flasher {:style {"color" "crimson"}}
