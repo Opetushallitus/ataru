@@ -1,5 +1,6 @@
 (ns ataru.hakija.banner
   (:require [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]))
 
 (def logo-image
@@ -11,11 +12,15 @@
 (def logo [:div.logo-elements logo-image logo-text])
 
 (defn invalid-field-status [valid-status]
-  (let [invalid-fields (:invalid-fields valid-status)]
-    (when (seq invalid-fields)
-      [:div.application__invalid-field-status (str (count invalid-fields) " pakollista tietoa puuttuu")
-          (into [:div.application__invalid-fields]
-            (mapv (fn [field] [:div (-> field :label :fi)]) invalid-fields))])))
+  (let [show-details (r/atom false)]
+    (fn [valid-status]
+      (when (seq (:invalid-fields valid-status))
+        [:div.application__invalid-field-status
+         {:on-click #(do (reset! show-details (not @show-details)) nil)}
+         (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")
+          (when @show-details
+             (into [:div.application__invalid-fields]
+                (mapv (fn [field] [:div (-> field :label :fi)]) (:invalid-fields valid-status))))]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
