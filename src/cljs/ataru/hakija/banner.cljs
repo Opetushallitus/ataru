@@ -27,7 +27,7 @@
                     [:span.application__close-invalid-fields
                      {:on-click toggle-show-details}
                      "x"]]
-                (mapv (fn [field] [:div (-> field :label :fi)])
+                (mapv (fn [field] [:a {:href (str "#field-" (name (:key field)))} [:div (-> field :label :fi)]])
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]

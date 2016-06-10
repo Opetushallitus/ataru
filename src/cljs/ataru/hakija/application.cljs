@@ -27,7 +27,9 @@
 (defn answers->valid-status [all-answers]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))]
     {:valid (if (empty? answer-validity) false (every? true? answer-validity))
-     :invalid-fields (for [[_ answers] all-answers :when (not (:valid answers))] (select-keys answers [:label]))}))
+     :invalid-fields (for
+                       [[key answers] all-answers :when (not (:valid answers))]
+                       (assoc (select-keys answers [:label]) :key key))}))
 
 (defn form->flat-form-map [form]
   (into {}
