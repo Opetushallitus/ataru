@@ -1,5 +1,7 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.virkailija.editor.component-macros :refer-macros [component-with-fade-effects]]
+  (:require [ataru.virkailija.editor.component-macros :refer-macros [animation-did-end-handler
+                                                                     component-with-fade-effects
+                                                                     component-with-fade-in-effect]]
             [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
@@ -30,17 +32,6 @@
 (def ^:private events
   ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
 
-(defn- animation-did-end-handler
-  [f]
-  (let [handler-fn (fn [event]
-                     (let [target (.-target event)]
-                       (doseq [event events]
-                         (->> (js-arguments)
-                              .-callee
-                              (.removeEventListener target event)))
-                       (f)))]
-    handler-fn))
-
 (defn- text-header
   [label path & {:keys [form-section?]}]
   [:div.editor-form__header-wrapper
@@ -51,22 +42,12 @@
                                     form-section?
                                     (-> event .-target .-parentNode .-parentNode .-parentNode)
                                     (-> event .-target .-parentNode .-parentNode))
-                       handler-fn (animation-did-end-handler #(dispatch [:remove-component path]))]
+                       handler-fn (animation-did-end-handler
+                                    (dispatch [:remove-component path]))]
                    (doseq [event events]
                      (.addEventListener target event handler-fn)))
                  (dispatch [:hide-component path]))}
     "Poista"]])
-
-(defn- component-with-fade-in-effect
-  [path component]
-  (r/create-class
-    {:component-did-mount
-     (fn [this]
-       (let [handler-fn (animation-did-end-handler #(dispatch [:component-did-fade-in path]))
-             target     (r/dom-node this)]
-         (doseq [event events]
-           (.addEventListener target event handler-fn))))
-     :reagent-render component}))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
@@ -76,44 +57,43 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
-    (component-with-fade-in-effect path
+    (component-with-fade-effects [path]
       (fn [initial-content path & {:keys [header-label size-label]}]
-        (component-with-fade-effects [initial-content]
-          [:div.editor-form__component-wrapper
-           [text-header header-label path]
-           [:div.editor-form__text-field-wrapper
-            [:header.editor-form__component-item-header "Kysymys"]
-            (doall
-              (for [lang @languages]
-                ^{:key lang}
-                [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
-           [:div.editor-form__size-button-wrapper
-            [:header.editor-form__component-item-header size-label]
-            [:div.editor-form__size-button-group
-             (doall (for [[btn-name btn-id] radio-button-ids]
-                      ^{:key (str btn-id "-radio")}
-                      [:div
-                       [:input.editor-form__size-button.editor-form__size-button
-                        {:type      "radio"
-                         :value     btn-name
-                         :checked   (or
-                                      (= @size btn-name)
-                                      (and
-                                        (nil? @size)
-                                        (= "M" btn-name)))
-                         :name      radio-group-id
-                         :id        btn-id
-                         :on-change (fn [] (size-change btn-name))}]
-                       [:label
-                        {:for btn-id
-                         :class     (match btn-name
-                                      "S" "editor-form__size-button--left-edge"
-                                      "L" "editor-form__size-button--right-edge"
-                                      :else nil)}
-                        btn-name]]))]]
-           [:div.editor-form__checkbox-wrapper
-            (render-checkbox path initial-content :required)]])))))
+        [:div.editor-form__component-wrapper
+         [text-header header-label path]
+         [:div.editor-form__text-field-wrapper
+          [:header.editor-form__component-item-header "Kysymys"]
+          (doall
+            (for [lang @languages]
+              ^{:key lang}
+              [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                               :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+         [:div.editor-form__size-button-wrapper
+          [:header.editor-form__component-item-header size-label]
+          [:div.editor-form__size-button-group
+           (doall (for [[btn-name btn-id] radio-button-ids]
+                    ^{:key (str btn-id "-radio")}
+                    [:div
+                     [:input.editor-form__size-button.editor-form__size-button
+                      {:type      "radio"
+                       :value     btn-name
+                       :checked   (or
+                                    (= @size btn-name)
+                                    (and
+                                      (nil? @size)
+                                      (= "M" btn-name)))
+                       :name      radio-group-id
+                       :id        btn-id
+                       :on-change (fn [] (size-change btn-name))}]
+                     [:label
+                      {:for btn-id
+                       :class     (match btn-name
+                                    "S" "editor-form__size-button--left-edge"
+                                    "L" "editor-form__size-button--right-edge"
+                                    :else nil)}
+                      btn-name]]))]]
+         [:div.editor-form__checkbox-wrapper
+          (render-checkbox path initial-content :required)]]))))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -156,19 +136,18 @@
 (defn component-group [content path children]
   (let [languages  (subscribe [:editor/languages])
         value      (subscribe [:editor/get-component-value path])]
-    (component-with-fade-in-effect path
+    (component-with-fade-effects [path]
       (fn [content path children]
-        (component-with-fade-effects [content]
-          [:div.editor-form__section_wrapper
-           [:div.editor-form__component-wrapper
-            [text-header "Lomakeosio" path :form-section? true]
-            [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-             [:header.editor-form__component-item-header "Osion nimi"]
-             (doall
-               (for [lang @languages]
-                 ^{:key lang}
-                 [:input.editor-form__text-field
-                  {:value     (get-in @value [:label lang])
-                   :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
-           children
-           [add-component (conj path :children (count children))]])))))
+        [:div.editor-form__section_wrapper
+         [:div.editor-form__component-wrapper
+          [text-header "Lomakeosio" path :form-section? true]
+          [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+           [:header.editor-form__component-item-header "Osion nimi"]
+           (doall
+             (for [lang @languages]
+               ^{:key lang}
+               [:input.editor-form__text-field
+                {:value     (get-in @value [:label lang])
+                 :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
+         children
+         [add-component (conj path :children (count children))]]))))
