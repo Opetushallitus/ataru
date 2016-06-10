@@ -46,7 +46,7 @@
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
     (fn [initial-content path & {:keys [header-label size-label]}]
-      [:div.editor-form__component-wrapper
+      [:div.editor-form__component-wrapper.animated.fadeInUp
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
