@@ -186,10 +186,11 @@
 
 (defn save-form
   [db [_ form]]
-  (let [with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form))))]
+  (let [with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
     (post "/lomake-editori/api/form" with-iso-str-time
           (fn [db updated-form]
-            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
+            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
+    db))
 
 (register-handler :editor/save-form save-form)
 
