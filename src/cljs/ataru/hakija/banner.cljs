@@ -12,15 +12,20 @@
 (def logo [:div.logo-elements logo-image logo-text])
 
 (defn invalid-field-status [valid-status]
-  (let [show-details (r/atom false)]
+  (let [show-details (r/atom false)
+        toggle-show-details #(do (reset! show-details (not @show-details)) nil)]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
-         [:span
-          {:on-click #(do (reset! show-details (not @show-details)) nil)}
+         [:span.application__invalid-field-status-title
+          {:on-click toggle-show-details}
           (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")]
           (when @show-details
-             (into [:div.application__invalid-fields [:div.application__invalid-fields-arrow-up]]
+             (into [:div.application__invalid-fields
+                    [:div.application__invalid-fields-arrow-up]
+                    [:span.application__close-invalid-fields
+                     {:on-click toggle-show-details}
+                     "x"]]
                 (mapv (fn [field] [:div (-> field :label :fi)])
                       (:invalid-fields valid-status))))]))))
 
