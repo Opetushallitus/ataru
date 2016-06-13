@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
+            [clojure.data :refer [diff]]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.autosave :as autosave]
@@ -37,12 +38,48 @@
                      :else (c/after? v1 v2)))))
         m))
 
+(defn- push-to-undo-stack [db-before db-after]
+  (let [undo-limit              999
+        selected-form-id-before (-> db-before :editor :selected-form-id)
+        selected-form-id-after  (-> db-after :editor :selected-form-id)
+        form-before             (get-in db-before [:editor :forms selected-form-id-before])
+        form-after              (get-in db-after  [:editor :forms selected-form-id-after])]
+    (if (not= selected-form-id-before
+              selected-form-id-after)
+      (assoc-in db-after [:editor :form-undodata] '())
+      (update-in db-after [:editor :form-undodata]
+                 (fn [undodata]
+                   (seq (eduction
+                          (comp (take undo-limit)
+                                (filter some?))
+                          (cons form-before
+                                (or undodata
+                                    '())))))))))
+
+(register-handler
+   :editor/do
+  (fn [db-after [_ db-before]]
+    (push-to-undo-stack db-before db-after)))
+
+(register-handler
+  :editor/undo
+  (fn [db _]
+    (let [[form & xs]      (-> db :editor :form-undodata)
+          selected-form-id (-> db :editor :selected-form-id)]
+      (if (and (not-empty form)
+               (= selected-form-id (:id form)))
+        (-> db
+            (assoc-in [:editor :form-undodata] xs)
+            (assoc-in [:editor :forms selected-form-id] form))
+        db))))
+
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in db
-              (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-               value)))
+    (assoc-in
+      db
+      (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+      value)))
 
 (register-handler
   :handle-get-forms
@@ -63,7 +100,7 @@
 (register-handler :generate-component generate-component)
 
 (defn remove-component
-  [db [_ path]]
+  [db path]
   (let [form-id      (get-in db [:editor :selected-form-id])
         remove-index (last path)
         path-vec     (-> [:editor :forms form-id :content [path]]
@@ -75,19 +112,24 @@
          (into [])
          (assoc-in db path-vec))))
 
-(register-handler :remove-component remove-component)
+(def ^:private events
+  ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
 
-(defn- component-status-handler
-  [status]
-  (fn [db [_ path]]
-    (let [form-id   (get-in db [:editor :selected-form-id])
-          path-vec  (flatten [:editor :forms form-id :content [path] :params :status])
-          new-state (assoc-in db path-vec status)]
-      new-state)))
-
-(register-handler :hide-component (component-status-handler "fading-out"))
-
-(register-handler :component-did-fade-in (component-status-handler "ready"))
+(register-handler
+  :remove-component
+  (fn [db [_ path dom-node]]
+    (do
+      (set! (.-className dom-node) (str (.-className dom-node) " animated fadeOutUp"))
+      (doseq [event events]
+        (.addEventListener
+          dom-node
+          event
+          #(do
+             (dispatch [:editor/do db])
+             (dispatch [:state-update
+                        (fn [db_]
+                          (remove-component db_ path))]))))
+      db)))
 
 (register-handler
   :editor/handle-user-info
@@ -142,37 +184,13 @@
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form form]))})))))))
 
-(defn- remove-params
-  [components]
-  (let [update-child (fn [components]
-                       (if
-                         (contains? components :children)
-                         (update components :children remove-params)
-                         components))]
-    (into
-      []
-      (map
-        (fn [component]
-          (let [remove-param (fn [component]
-                               (if
-                                 (contains? component :params)
-                                 (update-in component [:params] #(dissoc % :status))
-                                 component))
-                filtered (-> component
-                           remove-param
-                           update-child)]
-            filtered))
-        components))))
-
 (defn save-form
   [db [_ form]]
-  (let [filtered-form (-> form
-                          (assoc :modified-time (temporal/time->iso-str (:modified-time form)))
-                          (update :content remove-params))]
-    (post "/lomake-editori/api/form" filtered-form
+  (let [with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
+    (post "/lomake-editori/api/form" with-iso-str-time
           (fn [db updated-form]
-            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
-  db)
+            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
+    db))
 
 (register-handler :editor/save-form save-form)
 
