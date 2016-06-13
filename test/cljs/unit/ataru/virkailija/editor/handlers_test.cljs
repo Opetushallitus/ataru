@@ -57,26 +57,3 @@
     (are [expected actual] (= expected actual)
       1 (count new-children)
       {:first :component} (first new-children))))
-
-(deftest save-form-filters-unwanted-keys-from-data
-  (async done
-    ; Verify that
-    ;  * :modified-time is formatted correctly
-    ;  * :params {:status} is removed from each object in :content vector
-    ;    and also from each object of each :children vector in
-    ;    content vector's elements
-    (with-redefs [http/post (fn [_ data & _]
-                              (is
-                                (= data {:content [{:id 1
-                                                    :params {:size "L"}
-                                                    :children [{:id 2
-                                                                :params {:size "M"}}
-                                                               {:id 3}]}]
-                                         :modified-time "1903-01-01T00:00:00.000+02:00"}))
-                              (done))]
-                 (h/save-form {} [:editor/save-form {:content [{:params {:size "L"}
-                                                                :id 1
-                                                                :children [{:params {:size "M"}
-                                                                            :id 2}
-                                                                           {:id 3}]}]
-                                                     :modified-time 3}]))))
