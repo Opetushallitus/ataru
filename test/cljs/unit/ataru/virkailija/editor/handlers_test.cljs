@@ -74,11 +74,9 @@
                                                                {:id 3}]}]
                                          :modified-time "1903-01-01T00:00:00.000+02:00"}))
                               (done))]
-                 (h/save-form {} [:editor/save-form {:content [{:params {:status "baz"
-                                                                         :size "L"}
+                 (h/save-form {} [:editor/save-form {:content [{:params {:size "L"}
                                                                 :id 1
-                                                                :children [{:params {:status "biz"
-                                                                                     :size "M"}
+                                                                :children [{:params {:size "M"}
                                                                             :id 2}
                                                                            {:id 3}]}]
                                                      :modified-time 3}]))))
