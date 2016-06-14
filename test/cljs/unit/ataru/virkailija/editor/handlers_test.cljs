@@ -57,3 +57,25 @@
     (are [expected actual] (= expected actual)
       1 (count new-children)
       {:first :component} (first new-children))))
+
+(def drag-component-1 {:id "G__2"
+                       :label {:fi "First question" :sv ""}})
+
+(def drag-component-2 {:id "G__5"
+                       :label {:fi "Second question" :sv ""}})
+
+(defn- as-form
+  [content]
+  (let [form-id 1234]
+    {:editor {:selected-form-id form-id
+              :forms {form-id {:content content}}}}))
+
+(deftest on-drop-moves-form-component
+  (let [target-path    [0]
+        source-path    [1]
+        state-before   (as-form [drag-component-1 drag-component-2])
+        expected-state (as-form [drag-component-2 drag-component-1])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))

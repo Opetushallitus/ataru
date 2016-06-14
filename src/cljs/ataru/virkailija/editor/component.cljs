@@ -38,6 +38,30 @@
                                         (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
+(defn- cljs->str
+  [data]
+  (->> data clj->js (.stringify js/JSON)))
+
+(defn- str->cljs
+  [str]
+  (->> str (.parse js/JSON) js->clj))
+
+(defn- on-drag-start
+  [path]
+  (fn [event]
+    (-> event .-dataTransfer (.setData "path" (cljs->str path)))))
+
+(defn- on-drop
+  [target-path]
+  (fn [event]
+    (.preventDefault event)
+    (let [source-path (-> event .-dataTransfer (.getData "path") str->cljs)]
+      (dispatch [:editor/move-component source-path target-path]))))
+
+(defn- prevent-default
+  [event]
+  (.preventDefault event))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -52,7 +76,11 @@
                                      nil))]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
+       {:draggable true
+        :on-drag-start (on-drag-start path)
+        :on-drop (on-drop path)
+        :on-drag-over prevent-default
+        :class @animation-effect}
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
@@ -135,7 +163,11 @@
                                      nil))]
     (fn [content path children]
       [:div.editor-form__section_wrapper
-       {:class @animation-effect}
+       {:draggable true
+        :on-drag-start (on-drag-start path)
+        :on-drop (on-drop path)
+        :on-drag-over prevent-default
+        :class @animation-effect}
        [:div.editor-form__component-wrapper
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section

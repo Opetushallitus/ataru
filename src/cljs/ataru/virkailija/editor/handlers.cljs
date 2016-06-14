@@ -223,3 +223,46 @@
       (update-in db [:editor :forms selected-form-id]
                  assoc :name
                  new-form-name))))
+
+(defn- remove-component-from-list
+  [db source-path]
+  (let [form-id             (get-in db [:editor :selected-form-id])
+        root-component-path [:editor :forms form-id :content]
+        component-list-path (if
+                              (= 1 (count source-path))
+                              root-component-path
+                              (concat root-component-path (butlast source-path)))
+        remove-idx          (last source-path)]
+    (update-in db component-list-path
+      (fn [components]
+        (vec
+          (concat
+            (subvec components 0 remove-idx)
+            (subvec components (inc remove-idx))))))))
+
+(defn- add-component-to-list
+  [db component target-path]
+  (let [form-id             (get-in db [:editor :selected-form-id])
+        root-component-path [:editor :forms form-id :content]
+        component-list-path (if
+                              (= 1 (count target-path))
+                              root-component-path
+                              (concat root-component-path (butlast target-path)))
+        add-idx             (last target-path)]
+    (update-in db component-list-path
+      (fn [components]
+        (vec
+          (concat
+            (subvec components 0 add-idx)
+            [component]
+            (subvec components add-idx)))))))
+
+(defn move-component
+  [db [_ source-path target-path]]
+  (let [form-id   (get-in db [:editor :selected-form-id])
+        component (get-in db (concat [:editor :forms form-id :content] source-path))]
+    (-> db
+        (remove-component-from-list source-path)
+        (add-component-to-list component target-path))))
+
+(register-handler :editor/move-component move-component)
