@@ -59,7 +59,9 @@
 (register-handler
    :editor/do
   (fn [db-after [_ db-before]]
-    (push-to-undo-stack db-before db-after)))
+    (-> (push-to-undo-stack db-before db-after)
+        ; Removes potential previously set undo boxes from ui
+        (update :editor dissoc :forms-meta))))
 
 (register-handler
   :editor/undo
@@ -70,8 +72,15 @@
                (= selected-form-id (:id form)))
         (-> db
             (assoc-in [:editor :form-undodata] xs)
+            (update :editor dissoc :forms-meta)
             (assoc-in [:editor :forms selected-form-id] form))
         db))))
+
+(register-handler
+  :editor/clear-undo
+  (fn [db _]
+    (-> (update db :editor dissoc :form-undodata)
+        (update :editor dissoc :forms-meta))))
 
 (register-handler
   :editor/set-component-value
@@ -128,7 +137,7 @@
              (dispatch [:state-update
                         (fn [db_]
                           (-> (remove-component db_ path)
-                              (update-in [:editor :forms-meta] dissoc path)))]))))
+                              (update-in [:editor :forms-meta] assoc path :removed)))]))))
 
       (assoc-in db [:editor :forms-meta path] :fade-out))))
 

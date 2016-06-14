@@ -21,24 +21,45 @@
   (fn [db]
     (reaction [:fi])))
 
+(defn undobox []
+  [:div.editor-form__undo-box
+   [:p]
+   [:p
+    [:span.editor-form__undo-box--gray "Sisältö poistettiin."]
+    [:a.editor-form__undo-box--blue
+     {:on-click #(dispatch [:editor/undo])} "Peruuta poisto?"]]
+   [:a.editor-form__undo-box--link
+    {:on-click #(dispatch [:editor/clear-undo])} "X"]])
+
+(defn undo [path]
+  (let [path-with-last-element-incremented (conj (vec (butlast path))
+                                                 (inc (last path))) 
+        form-meta                          (subscribe [:state-query [:editor :forms-meta path-with-last-element-incremented]])]
+    (when (= :removed @form-meta)
+      [undobox])))
+
 (defn soresu->reagent [{:keys [children] :as content} path]
-  (match [content]
-         [{:fieldClass "wrapperElement"
-           :children   children}]
-         (let [children (for [[index child] (zipmap (range) children)]
-                          ^{:key index}
-                          [soresu->reagent child (conj path :children index)])]
-           [ec/component-group content path children])
+  (fn [{:keys [children] :as content} path]
+    [:div
+     (match [content]
+            [{:fieldClass "wrapperElement"
+              :children   children}]
+            (let [children (for [[index child] (zipmap (range) children)]
+                             ^{:key index}
+                             [soresu->reagent child (conj path :children index)])]
+              [ec/component-group content path children])
 
-         [{:fieldClass "formField" :fieldType "textField"}]
-         [ec/text-field content path]
+            [{:fieldClass "formField" :fieldType "textField"}]
+            [ec/text-field content path]
 
-         [{:fieldClass "formField" :fieldType "textArea"}]
-         [ec/text-area content path]
+            [{:fieldClass "formField" :fieldType "textArea"}]
+            [ec/text-area content path]
 
-         :else (do
-                 (error content)
-                 (throw "error" content))))
+            :else (do
+                    (error content)
+                    (throw "error" content)))
+
+     [undo path]]))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])

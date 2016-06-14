@@ -89,7 +89,7 @@
   margin-top: 1.5em;
 }
 
-.editor-form__section_wrapper div:first-child {
+.editor-form__section_wrapper > .editor-form__component-wrapper:first-of-type {
   border: none;
   margin: 0;
 }
@@ -111,7 +111,7 @@
   flex-basis: 390px;
 }
 
-form > .editor-form__component-wrapper {
+form > div > .editor-form__component-wrapper {
   margin-left: 0;
   margin-right: 0;
 }
@@ -278,4 +278,21 @@ form > .editor-form__component-wrapper {
     margin-left: 11px;
     margin-right: 11px;
   }
+}
+
+.editor-form__undo-box {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px;
+  height: 48px;
+  border: 1px dashed @section-gray-border;
+  padding: 1em;
+  color: @selected-blue;
+  .editor-form__undo-box--blue {
+    color: @selected-blue;
+    padding-left: 5px;
+  }
+  .editor-form__undo-box--gray { color: gray; }
 }
