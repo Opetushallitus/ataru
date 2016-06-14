@@ -6,6 +6,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
+            [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]
@@ -226,13 +227,7 @@
 
 (defn- remove-component-from-list
   [db source-path]
-  (let [form-id             (get-in db [:editor :selected-form-id])
-        root-component-path [:editor :forms form-id :content]
-        component-list-path (if
-                              (= 1 (count source-path))
-                              root-component-path
-                              (concat root-component-path (butlast source-path)))
-        remove-idx          (last source-path)]
+  (with-path-and-index [db source-path component-list-path remove-idx]
     (update-in db component-list-path
       (fn [components]
         (vec
@@ -242,13 +237,7 @@
 
 (defn- add-component-to-list
   [db component target-path]
-  (let [form-id             (get-in db [:editor :selected-form-id])
-        root-component-path [:editor :forms form-id :content]
-        component-list-path (if
-                              (= 1 (count target-path))
-                              root-component-path
-                              (concat root-component-path (butlast target-path)))
-        add-idx             (last target-path)]
+  (with-path-and-index [db target-path component-list-path add-idx]
     (update-in db component-list-path
       (fn [components]
         (vec
