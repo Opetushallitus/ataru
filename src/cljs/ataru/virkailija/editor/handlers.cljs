@@ -93,6 +93,23 @@
       value)))
 
 (register-handler
+  :editor/add-dropdown-option
+  (fn [db [_ _ & path]]
+    (let [final-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path] :options])]
+      (update-in db final-path merge (ataru.virkailija.soresu.component/dropdown-option)))))
+
+(defn remove-nth
+  "remove nth elem in vector"
+  [v n]
+  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
+
+(register-handler
+  :editor/remove-dropdown-option
+  (fn [db [_ n & path]]
+    (let [final-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path] :options])]
+      (update-in db final-path remove-nth n))))
+
+(register-handler
   :handle-get-forms
   (fn [db [_ forms-response]]
     (if-let [forms (not-empty (:forms forms-response))]

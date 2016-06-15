@@ -21,3 +21,17 @@
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []
    :params     {}})
+
+(defn dropdown-option
+  []
+  {:value "" :label {:fi "" :sv ""}})
+
+(defn dropdown
+  []
+  {:fieldClass "formField"
+   :fieldType "dropdown"
+   :id (str (gensym))
+   :label {:fi "", :sv ""}
+   :params {}
+   :options [(dropdown-option)]
+   :required false})

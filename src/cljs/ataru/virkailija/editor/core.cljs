@@ -57,6 +57,9 @@
             [{:fieldClass "formField" :fieldType "textArea"}]
             [ec/text-area content path]
 
+            [{:fieldClass "formField" :fieldType "dropdown"}]
+            [ec/dropdown content path]
+
             :else (do
                     (error content)
                     (throw "error" content)))

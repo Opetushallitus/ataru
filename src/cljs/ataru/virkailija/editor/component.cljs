@@ -108,10 +108,40 @@
 (defn text-area [initial-content path]
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
+(defn dropdown [initial-content path]
+  (let [languages (subscribe [:editor/languages])
+        value            (subscribe [:editor/get-component-value path])]
+    (fn [initial-content]
+      [:div.editor-form__component-wrapper.animated.fadeInUp
+       [text-header "Pudotusvalikko" path]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Kysymys"]
+        (doall
+          (for [lang @languages]
+            ^{:key lang}
+            [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                             :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))
+        [:div.editor-form__checkbox-wrapper
+         (render-checkbox path initial-content :required)]]
+       (doall
+         (for [lang @languages
+               option-with-index (map vector (range (count (:options @value))) (:options @value))]
+           (let [[option-index option] option-with-index
+                 option-label (get-in option [:label lang])]
+             ^{:key (str "option-" lang "-" (gensym))}
+             [:div.editor-form__text-field-wrapper
+              [:input.editor-form__text-field {:value     option-label
+                                               :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :options option-index :label lang])}]
+              [:a {:on-click #(dispatch [:editor/remove-dropdown-option option-index path])} "x"]])))
+       [:div.editor-form__add-dropdown-item
+        [:a {:on-click #(dispatch [:editor/add-dropdown-option nil path])} "+"]]])))
+
+
 (def ^:private toolbar-elements
-  {"Lomakeosio"   component/form-section
-   "Tekstikenttä" component/text-field
-   "Tekstialue"   component/text-area})
+  {"Lomakeosio"     component/form-section
+   "Tekstikenttä"   component/text-field
+   "Tekstialue"     component/text-area
+   "Pudotusvalikko" component/dropdown})
 
 (defn ^:private component-toolbar [path]
   (fn [path]
