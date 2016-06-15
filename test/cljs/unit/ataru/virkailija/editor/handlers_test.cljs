@@ -89,3 +89,13 @@
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
+
+(deftest on-drop-moves-form-component-from-child-to-root-level
+  (let [target-path    [0]
+        source-path    [0 :children 0]
+        state-before   (as-form [{:children [drag-component-1 drag-component-2]}])
+        expected-state (as-form [drag-component-1 {:children [drag-component-2]}])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))
