@@ -7,3 +7,7 @@
     "[1]" [1]
     "[1 :children 0]" [1 :children 0]))
 
+(deftest parses-str-to-cljs
+  (are [expected str] (= expected (util/str->cljs str))
+    [1] "[1]"
+    [1 :children 0] "[1 :children 0]"))

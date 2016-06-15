@@ -1,6 +1,7 @@
 (ns ataru.cljs-util
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [cljs.core.match :refer-macros [match]]
+            [cljs.reader :as reader :refer [read-string]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -87,5 +88,4 @@
 
 (defn str->cljs
   [str]
-  (->> str (.parse js/JSON) js->clj))
-
+  (reader/read-string str))
