@@ -80,3 +80,12 @@
               (.log js/console url)
               (.log js/console (str "line: " line " col: " col))
               (.log js/console (.-stack error-obj)))))))
+
+(defn cljs->str
+  [data]
+  (->> data clj->js (.stringify js/JSON)))
+
+(defn str->cljs
+  [str]
+  (->> str (.parse js/JSON) js->clj))
+

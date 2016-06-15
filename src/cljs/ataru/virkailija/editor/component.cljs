@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.soresu.component :as component]
+            [ataru.cljs-util :as util :refer [cljs->str str->cljs]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
@@ -38,24 +39,16 @@
                                         (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
-(defn- cljs->str
-  [data]
-  (->> data clj->js (.stringify js/JSON)))
-
-(defn- str->cljs
-  [str]
-  (->> str (.parse js/JSON) js->clj))
-
 (defn- on-drag-start
   [path]
   (fn [event]
-    (-> event .-dataTransfer (.setData "path" (cljs->str path)))))
+    (-> event .-dataTransfer (.setData "path" (util/cljs->str path)))))
 
 (defn- on-drop
   [target-path]
   (fn [event]
     (.preventDefault event)
-    (let [source-path (-> event .-dataTransfer (.getData "path") str->cljs)]
+    (let [source-path (-> event .-dataTransfer (.getData "path") util/str->cljs)]
       (dispatch [:editor/move-component source-path target-path]))))
 
 (defn- prevent-default
