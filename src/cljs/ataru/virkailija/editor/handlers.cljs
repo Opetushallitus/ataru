@@ -247,22 +247,29 @@
             (subvec components add-idx)))))))
 
 (defn- recalculate-target-path
-  [source-path target-path]
-  (if (and
-        (= 1 (count source-path))
-        (< 1 (count target-path))
-        (< (source-path 0) (target-path 0)))
-      (into
-        [(dec (target-path 0))]
-        (rest target-path))
-      target-path))
+  [db source-path target-path]
+  (let [form-id          (get-in db [:editor :selected-form-id])
+        target-component (get-in db (concat [:editor :forms form-id :content] target-path))
+        target-path      (if (and
+                               (not (some #(= % :children) source-path))
+                               (= 1 (count target-path))
+                               (contains? target-component :children))
+                             (conj target-path :children 0)
+                             target-path)]
+    (if (and
+          (= 1 (count source-path))
+          (< 1 (count target-path))
+          (< (source-path 0) (target-path 0)))
+        (into
+          [(dec (target-path 0))]
+          (rest target-path))
+        target-path)))
 
 (defn move-component
   [db [_ source-path target-path]]
   (let [form-id                  (get-in db [:editor :selected-form-id])
         component                (get-in db (concat [:editor :forms form-id :content] source-path))
-        recalculated-target-path (recalculate-target-path source-path target-path)]
-    (println (str "move component, source path: " source-path ", target path: " recalculated-target-path))
+        recalculated-target-path (recalculate-target-path db source-path target-path)]
     (-> db
         (remove-component-from-list source-path)
         (add-component-to-list component recalculated-target-path))))

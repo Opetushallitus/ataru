@@ -162,6 +162,10 @@
         :on-drag-over prevent-default
         :class @animation-effect}
        [:div.editor-form__component-wrapper
+        {:draggable true
+         :on-drag-start (on-drag-start path)
+         :on-drop (on-drop path)
+         :on-drag-over prevent-default}
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section
          [:header.editor-form__component-item-header "Osion nimi"]
