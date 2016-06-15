@@ -28,12 +28,12 @@
     [:span.editor-form__undo-box--gray "Sisältö poistettiin."]
     [:a.editor-form__undo-box--blue
      {:on-click #(dispatch [:editor/undo])} "Peruuta poisto?"]]
-   [:a.editor-form__undo-box--link
-    {:on-click #(dispatch [:editor/clear-undo])} "X"]])
+   [:i.zmdi.zmdi-close.editor-form__undo-box--link
+    {:on-click #(dispatch [:editor/clear-undo])}]])
 
 (defn undo [path]
   (let [path-with-last-element-incremented (conj (vec (butlast path))
-                                                 (inc (last path))) 
+                                                 (inc (last path)))
         form-meta                          (subscribe [:state-query [:editor :forms-meta path-with-last-element-incremented]])]
     (when (= :removed @form-meta)
       [undobox])))

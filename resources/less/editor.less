@@ -278,6 +278,14 @@ form > div > .editor-form__component-wrapper {
     margin-left: 11px;
     margin-right: 11px;
   }
+
+  .editor-form__undo-box {
+    margin: 12px;
+  }
+}
+
+.editor-form__section_wrapper + .editor-form__undo-box {
+  margin-top: 1.5em;
 }
 
 .editor-form__undo-box {
@@ -285,7 +293,6 @@ form > div > .editor-form__component-wrapper {
   flex-flow: row nowrap;
   justify-content: space-between;
   align-items: center;
-  margin: 12px;
   height: 48px;
   border: 1px dashed @section-gray-border;
   padding: 1em;
@@ -295,4 +302,5 @@ form > div > .editor-form__component-wrapper {
     padding-left: 5px;
   }
   .editor-form__undo-box--gray { color: gray; }
+  .editor-form__undo-box--link { font-size: 20px; }
 }
