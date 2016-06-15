@@ -1,7 +1,6 @@
 (ns ataru.virkailija.editor.handlers-test
   (:require [cljs.test :refer-macros [async deftest are is]]
             [ataru.virkailija.editor.handlers :as h]
-            ;[ataru.virkailija.editor.handlers-test-macros :refer-macros [with-mock-fn]]
             [ataru.virkailija.virkailija-ajax :as http :refer [post]]))
 
 (defn generate-fn
