@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.soresu.component :as component]
             [reagent.core :as r]
+            [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
             [re-frame.core :refer [subscribe dispatch]]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -44,9 +45,14 @@
         radio-group-id   (str "form-size-" (gensym))
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))]
+        size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))
+        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
+                                     :fade-out "animated fadeOutUp"
+                                     :fade-in  "animated fadeInUp"
+                                     nil))]
     (fn [initial-content path & {:keys [header-label size-label]}]
-      [:div.editor-form__component-wrapper.animated.fadeInUp
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
@@ -121,10 +127,15 @@
           [:span "+"]]]))))
 
 (defn component-group [content path children]
-  (let [languages  (subscribe [:editor/languages])
-        value      (subscribe [:editor/get-component-value path])]
+  (let [languages        (subscribe [:editor/languages])
+        value            (subscribe [:editor/get-component-value path])
+        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
+                                     :fade-out "animated fadeOutUp"
+                                     :fade-in  "animated fadeInUp"
+                                     nil))]
     (fn [content path children]
       [:div.editor-form__section_wrapper
+       {:class @animation-effect}
        [:div.editor-form__component-wrapper
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section

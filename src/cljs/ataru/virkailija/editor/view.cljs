@@ -65,19 +65,13 @@
                                 :on-change   #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (defn editor-panel []
-  (let [form            (subscribe [:editor/selected-form])
-        undo-available? (-> @(subscribe [:state-query [:editor :form-undodata]])
-                            first
-                            not-empty
-                            reaction)]
+  (let [form            (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
          [:div
           [editor-name]]
-         [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]]
-         (when @undo-available?
-           [:div.editor-form__undo-link [:a {:on-click #(dispatch [:editor/undo])} "Peruuta poisto"]])
+         [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]] 
          [c/editor]]))))
 
 (defn editor []
