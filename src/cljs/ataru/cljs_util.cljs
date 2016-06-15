@@ -83,7 +83,7 @@
 
 (defn cljs->str
   [data]
-  (->> data clj->js (.stringify js/JSON)))
+  (str data))
 
 (defn str->cljs
   [str]
