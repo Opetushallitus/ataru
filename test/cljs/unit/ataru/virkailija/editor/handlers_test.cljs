@@ -70,11 +70,21 @@
     {:editor {:selected-form-id form-id
               :forms {form-id {:content content}}}}))
 
-(deftest on-drop-moves-form-component
+(deftest on-drop-moves-form-component-at-root-level
   (let [target-path    [0]
         source-path    [1]
         state-before   (as-form [drag-component-1 drag-component-2])
         expected-state (as-form [drag-component-2 drag-component-1])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))
+
+(deftest on-drop-moves-form-component-from-root-to-child-level
+  (let [target-path    [1 :children 0]
+        source-path    [0]
+        state-before   (as-form [drag-component-1 {:children [drag-component-2]}])
+        expected-state (as-form [{:children [drag-component-1 drag-component-2]}])
         actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)
