@@ -66,8 +66,8 @@
           [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]]))))
 
 (defn status []
-  (let [flasher          (subscribe [:state-query [:flasher]])
-        loading?         (subscribe [:state-query [:flasher :loading?]])]
+  (let [flasher  (subscribe [:state-query [:flasher]])
+        loading? (subscribe [:state-query [:flasher :loading?]])]
     (fn []
       [:div
        (when @flasher

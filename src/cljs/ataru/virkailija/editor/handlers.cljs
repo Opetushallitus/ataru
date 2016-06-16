@@ -53,8 +53,7 @@
                           (comp (take undo-limit)
                                 (filter some?))
                           (cons form-before
-                                (or undodata
-                                    '())))))))))
+                                undodata))))))))
 
 (register-handler
    :editor/do

@@ -21,7 +21,7 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (set-global-error-handler! #(post "/lomake-editori/api/client-error" %))
+  (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
   (re-frame/dispatch [:editor/get-user-info])

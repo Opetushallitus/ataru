@@ -21,7 +21,8 @@
     (dispatch [:flasher {:loading? false
                          :message  message
                          :error-type error-type
-                         :detail   response}])))
+                         :detail   response}])
+    response))
 
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
@@ -38,7 +39,9 @@
        (merge {:response-format :json
                :format          :json
                :keywords?       true
-               :error-handler   (partial dispatch-flasher-error-msg method)
+               :error-handler   (comp
+                                  (or (:error-handler override-args) identity)
+                                  (partial dispatch-flasher-error-msg method))
                :handler         (comp (fn [response]
                                         (dispatch [:flasher {:loading? false
                                                              :message
@@ -53,6 +56,7 @@
                                       temporal/parse-times)}
               override-args))))
 
-(defn post [path params & [handler-or-dispatch]]
-  (http :post path handler-or-dispatch :override-args {:params params}))
-
+(defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]
+  (http :post path handler-or-dispatch
+        :override-args (merge override-args {:params params})
+        :handler-args handler-args))
