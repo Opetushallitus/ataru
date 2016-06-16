@@ -156,11 +156,7 @@
                                      nil))]
     (fn [content path children]
       [:div.editor-form__section_wrapper
-       {:draggable true
-        :on-drag-start (on-drag-start path)
-        :on-drop (on-drop path)
-        :on-drag-over prevent-default
-        :class @animation-effect}
+       {:class @animation-effect}
        [:div.editor-form__component-wrapper
         {:draggable true
          :on-drag-start (on-drag-start path)
