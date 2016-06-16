@@ -276,6 +276,7 @@
         component                (get-in db (concat [:editor :forms form-id :content] source-path))
         recalculated-target-path (recalculate-target-path db source-path target-path)]
     (-> db
+        (update :editor dissoc :forms-meta) ; hides undo-box because we don't support global undo yet
         (remove-component-from-list source-path)
         (add-component-to-list component recalculated-target-path))))
 
