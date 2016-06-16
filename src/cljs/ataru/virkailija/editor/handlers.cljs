@@ -6,6 +6,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
+            [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]
@@ -227,3 +228,54 @@
       (update-in db [:editor :forms selected-form-id]
                  assoc :name
                  new-form-name))))
+
+(defn- remove-component-from-list
+  [db source-path]
+  (with-path-and-index [db source-path component-list-path remove-idx]
+    (update-in db component-list-path
+      (fn [components]
+        (vec
+          (concat
+            (subvec components 0 remove-idx)
+            (subvec components (inc remove-idx))))))))
+
+(defn- add-component-to-list
+  [db component target-path]
+  (with-path-and-index [db target-path component-list-path add-idx]
+    (update-in db component-list-path
+      (fn [components]
+        (vec
+          (concat
+            (subvec components 0 add-idx)
+            [component]
+            (subvec components add-idx)))))))
+
+(defn- recalculate-target-path
+  [db source-path target-path]
+  (let [form-id          (get-in db [:editor :selected-form-id])
+        target-component (get-in db (concat [:editor :forms form-id :content] target-path))
+        target-path      (if (and
+                               (not (some #(= % :children) source-path))
+                               (= 1 (count target-path))
+                               (contains? target-component :children))
+                             (conj target-path :children 0)
+                             target-path)]
+    (if (and
+          (= 1 (count source-path))
+          (< 1 (count target-path))
+          (< (source-path 0) (target-path 0)))
+        (into
+          [(dec (target-path 0))]
+          (rest target-path))
+        target-path)))
+
+(defn move-component
+  [db [_ source-path target-path]]
+  (let [form-id                  (get-in db [:editor :selected-form-id])
+        component                (get-in db (concat [:editor :forms form-id :content] source-path))
+        recalculated-target-path (recalculate-target-path db source-path target-path)]
+    (-> db
+        (remove-component-from-list source-path)
+        (add-component-to-list component recalculated-target-path))))
+
+(register-handler :editor/move-component move-component)

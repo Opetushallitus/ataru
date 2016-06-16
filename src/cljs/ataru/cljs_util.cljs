@@ -1,6 +1,7 @@
 (ns ataru.cljs-util
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [cljs.core.match :refer-macros [match]]
+            [cljs.reader :as reader :refer [read-string]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -80,3 +81,11 @@
               (.log js/console url)
               (.log js/console (str "line: " line " col: " col))
               (.log js/console (.-stack error-obj)))))))
+
+(defn cljs->str
+  [data]
+  (str data))
+
+(defn str->cljs
+  [str]
+  (reader/read-string str))
