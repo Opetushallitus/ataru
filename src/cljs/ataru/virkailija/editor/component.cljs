@@ -33,10 +33,11 @@
   [:div.editor-form__header-wrapper
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
-    {:on-click (fn [event] (dispatch [:remove-component path
-                                      (if form-section?
-                                        (-> event .-target .-parentNode .-parentNode .-parentNode)
-                                        (-> event .-target .-parentNode .-parentNode))]))}
+    {:on-click (fn [event]
+                 (dispatch [:remove-component path
+                            (if form-section?
+                              (-> event .-target .-parentNode .-parentNode .-parentNode)
+                              (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
 (defn- on-drag-start

@@ -135,6 +135,7 @@
           dom-node
           event
           #(do
+             (.removeEventListener (.-target %) event (-> (cljs.core/js-arguments) .-callee))
              (dispatch [:editor/do db])
              (dispatch [:state-update
                         (fn [db_]
