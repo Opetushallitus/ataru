@@ -66,10 +66,9 @@
         content (reaction (:content @form))]
     (fn []
       [:section.editor-form
-       (conj
-         (into [:form]
-           (for [[index json-blob] (zipmap (range) @content)
-                 :when             (not-empty @content)]
-             [soresu->reagent json-blob [index]]))
-         [ec/add-component (count @content)])])))
+       (-> (into [:form]
+             (for [[index json-blob] (zipmap (range) @content)
+                   :when             (not-empty @content)]
+               [soresu->reagent json-blob [index]]))
+           (conj [ec/add-component (count @content)]))])))
 
