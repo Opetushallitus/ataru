@@ -66,13 +66,15 @@
   :editor/undo
   (fn [db _]
     (let [[form & xs]      (-> db :editor :form-undodata)
-          selected-form-id (-> db :editor :selected-form-id)]
+          selected-form-id (-> db :editor :selected-form-id)
+          modified-time    (get-in db [:editor :forms selected-form-id :modified-time])]
       (if (and (not-empty form)
                (= selected-form-id (:id form)))
         (-> db
             (assoc-in [:editor :form-undodata] xs)
             (update :editor dissoc :forms-meta)
-            (assoc-in [:editor :forms selected-form-id] form))
+            (assoc-in [:editor :forms selected-form-id]
+                      (assoc form :modified-time modified-time)))
         db))))
 
 (register-handler
@@ -191,14 +193,17 @@
                                                           (dissoc current :modified-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
-                                                 (dispatch [:editor/save-form form]))})))))))
+                                                 (dispatch [:editor/save-form]))})))))))
 
 (defn save-form
-  [db [_ form]]
-  (let [with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
-    (post "/lomake-editori/api/form" with-iso-str-time
-          (fn [db updated-form]
-            (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
+  [db _]
+  (let [form              (get-in db [:editor :forms (-> db :editor :selected-form-id)])
+        with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
+    (post
+      "/lomake-editori/api/form"
+      with-iso-str-time
+      (fn [db updated-form]
+        (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
     db))
 
 (register-handler :editor/save-form save-form)

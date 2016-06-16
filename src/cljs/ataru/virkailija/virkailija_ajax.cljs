@@ -2,7 +2,8 @@
   (:require [re-frame.core :refer [register-handler dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.temporal :as temporal]
-            [ajax.core :refer [GET POST PUT DELETE]]))
+            [ajax.core :refer [GET POST PUT DELETE]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn dispatch-flasher-error-msg
   [method response]
