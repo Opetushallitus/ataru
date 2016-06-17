@@ -5,6 +5,7 @@
             [ataru.schema.clj-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
@@ -95,7 +96,12 @@
                            :summary "Log client-side errors to server log"
                            :body [error-details client-error/ClientError]
                            (client-error/log-client-error error-details)
-                           (ok {})))))
+                           (ok {}))
+                 (api/GET "/applications/:form-id" []
+                   :path-params [form-id :- ataru-schema/PositiveInteger]
+                   :summary "Return applications for form."
+                   :body [application-request ataru-schema/ApplicationRequest]
+                   (trying #(application-store/retrieve-applications application-request))))))
 
 (defroutes resource-routes
   (route/resources "/"))
