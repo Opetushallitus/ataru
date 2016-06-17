@@ -254,12 +254,12 @@
 
 (defn- alter-component-index?
   [target-path]
-  (let [target-index (last target-path)]
-    (let [fixed-target-path (if-not
-                              (= 0 target-index)
-                              (assoc target-path (dec (count target-path)) (dec target-index))
-                              target-path)]
-      fixed-target-path)))
+  (let [target-index (last target-path)
+        fixed-target-path (if-not
+                            (= 0 target-index)
+                            (assoc target-path (dec (count target-path)) (dec target-index))
+                            target-path)]
+      fixed-target-path))
 
 (defn- recalculate-target-path
   [source-path target-path]
