@@ -41,6 +41,8 @@
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div
+     [ec/drag-n-drop-spacer path content]
+
      (match [content]
             [{:fieldClass "wrapperElement"
               :children   children}]
@@ -66,10 +68,10 @@
         content (reaction (:content @form))]
     (fn []
       [:section.editor-form
-       (conj
-         (into [:form]
-           (for [[index json-blob] (zipmap (range) @content)
-                 :when             (not-empty @content)]
-             [soresu->reagent json-blob [index]]))
-         [ec/add-component (count @content)])])))
+       (-> (into [:form]
+             (for [[index json-blob] (zipmap (range) @content)
+                   :when             (not-empty @content)]
+               [soresu->reagent json-blob [index]]))
+           (conj [ec/drag-n-drop-spacer [(count @content)]])
+           (conj [ec/add-component (count @content)]))])))
 

@@ -86,7 +86,6 @@
 .editor-form__section_wrapper {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
-  margin-top: 1.5em;
 }
 
 .editor-form__section_wrapper > .editor-form__component-wrapper:first-of-type {
@@ -100,7 +99,7 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin: 17px 11px;
+  margin: 0px 11px;
 }
 
 .editor-form__text-field-wrapper {
@@ -238,7 +237,6 @@ form > div > .editor-form__component-wrapper {
   border: 1px dashed @section-gray-border;
   border-radius: 2px;
   background-color: #F7F7F7;
-  margin-top: 21px;
   margin-bottom: 14px;
   padding: 0.5em;
   height: 43px;
@@ -282,6 +280,11 @@ form > div > .editor-form__component-wrapper {
   .editor-form__undo-box {
     margin: 12px;
   }
+
+  .editor-form__drag_n_drop_spacer--dashbox-visible {
+    margin-left: 11px;
+    margin-right: 11px;
+  }
 }
 
 .editor-form__section_wrapper + .editor-form__undo-box {
@@ -306,4 +309,22 @@ form > div > .editor-form__component-wrapper {
     font-size: 20px;
     cursor: pointer;
   }
+}
+
+.editor-form__drag_n_drop_spacer_container_for_component {
+  padding-top: 17px;
+}
+
+.editor-form__drag_n_drop_spacer_container_for_component_group {
+  padding-top: 24px;
+}
+
+.editor-form__drag_n_drop_spacer--dashbox-hidden {
+  visibility: hidden;
+}
+
+.editor-form__drag_n_drop_spacer--dashbox-visible {
+  height: 100px;
+  margin: 14px 0px;
+  border: 1px dashed #cccccc;
 }

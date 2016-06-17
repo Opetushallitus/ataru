@@ -99,11 +99,41 @@
     (is (= (get-in actual-state content-path)
            (get-in expected-state content-path)))))
 
-(deftest on-drop-moves-form-component-from-root-to-child-when-empty-container
+(deftest on-drop-does-not-secretly-move-component-into-component-group
+  (let [target-path    [2]
+        source-path    [0]
+        state-before   (as-form [drag-component-1 drag-component-2 {:children []}])
+        expected-state (as-form [drag-component-2 drag-component-1 {:children []}])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))
+
+(deftest on-drop-does-not-secretly-change-component-order
   (let [target-path    [1]
         source-path    [0]
-        state-before   (as-form [drag-component-1 {:children []}])
-        expected-state (as-form [{:children [drag-component-1]}])
+        state-before   (as-form [drag-component-1 drag-component-2])
+        expected-state (as-form [drag-component-1 drag-component-2])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))
+
+(deftest on-drop-moves-component-to-end-of-the-form
+  (let [target-path    [2]
+        source-path    [0]
+        state-before   (as-form [drag-component-1 drag-component-2])
+        expected-state (as-form [drag-component-2 drag-component-1])
+        actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
+        content-path   [:editor :forms 1234 :content]]
+    (is (= (get-in actual-state content-path)
+           (get-in expected-state content-path)))))
+
+(deftest on-drop-moves-child-component-to-end-of-the-container
+  (let [target-path    [0 :children 2]
+        source-path    [0 :children 0]
+        state-before   (as-form [{:children [drag-component-1 drag-component-2]}])
+        expected-state (as-form [{:children [drag-component-2 drag-component-1]}])
         actual-state   (h/move-component state-before [:editor/move-component source-path target-path])
         content-path   [:editor :forms 1234 :content]]
     (is (= (get-in actual-state content-path)

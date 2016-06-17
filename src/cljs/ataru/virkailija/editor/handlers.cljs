@@ -251,30 +251,32 @@
             [component]
             (subvec components add-idx)))))))
 
+(defn- alter-component-index?
+  [target-path]
+  (let [target-index (last target-path)]
+    (let [fixed-target-path (if-not
+                              (= 0 target-index)
+                              (assoc target-path (dec (count target-path)) (dec target-index))
+                              target-path)]
+      fixed-target-path)))
+
 (defn- recalculate-target-path
-  [db source-path target-path]
-  (let [form-id          (get-in db [:editor :selected-form-id])
-        target-component (get-in db (concat [:editor :forms form-id :content] target-path))
-        target-path      (if (and
-                               (not (some #(= % :children) source-path))
-                               (= 1 (count target-path))
-                               (contains? target-component :children))
-                             (conj target-path :children 0)
-                             target-path)]
+  [source-path target-path]
+  (let [altered-target-path (alter-component-index? target-path)]
     (if (and
           (= 1 (count source-path))
-          (< 1 (count target-path))
-          (< (source-path 0) (target-path 0)))
+          (< 1 (count altered-target-path))
+          (< (source-path 0) (altered-target-path 0)))
         (into
-          [(dec (target-path 0))]
-          (rest target-path))
-        target-path)))
+          [(dec (altered-target-path 0))]
+          (rest altered-target-path))
+        altered-target-path)))
 
 (defn move-component
   [db [_ source-path target-path]]
   (let [form-id                  (get-in db [:editor :selected-form-id])
         component                (get-in db (concat [:editor :forms form-id :content] source-path))
-        recalculated-target-path (recalculate-target-path db source-path target-path)]
+        recalculated-target-path (recalculate-target-path source-path target-path)]
     (-> db
         (update :editor dissoc :forms-meta) ; hides undo-box because we don't support global undo yet
         (remove-component-from-list source-path)

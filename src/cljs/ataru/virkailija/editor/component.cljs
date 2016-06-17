@@ -45,13 +45,6 @@
   (fn [event]
     (-> event .-dataTransfer (.setData "path" (util/cljs->str path)))))
 
-(defn- on-drop
-  [target-path]
-  (fn [event]
-    (.preventDefault event)
-    (let [source-path (-> event .-dataTransfer (.getData "path") util/str->cljs)]
-      (dispatch [:editor/move-component source-path target-path]))))
-
 (defn- prevent-default
   [event]
   (.preventDefault event))
@@ -72,7 +65,6 @@
       [:div.editor-form__component-wrapper
        {:draggable true
         :on-drag-start (on-drag-start path)
-        :on-drop (on-drop path)
         :on-drag-over prevent-default
         :class @animation-effect}
        [text-header header-label path]
@@ -148,6 +140,33 @@
          [:div.plus-component
           [:span "+"]]]))))
 
+(defn drag-n-drop-spacer [path content]
+  (let [expanded? (r/atom false)]
+    (fn [path content]
+      [:div
+       {:on-drop (fn [event]
+                   (.preventDefault event)
+                   (reset! expanded? false)
+                   (let [source-path (-> event .-dataTransfer (.getData "path") util/str->cljs)]
+                     (dispatch [:editor/move-component source-path path])))
+        :on-drag-over (fn [event]
+                        (.preventDefault event)
+                        (reset! expanded? true)
+                        nil)
+        :on-drag-leave (fn [event]
+                         (.preventDefault event)
+                         (reset! expanded? false)
+                         nil)
+        :class (if (and
+                     (= 1 (count path))
+                     (contains? content :children))
+                   "editor-form__drag_n_drop_spacer_container_for_component_group"
+                   "editor-form__drag_n_drop_spacer_container_for_component")}
+       [:div
+        {:class (if @expanded?
+                  "editor-form__drag_n_drop_spacer--dashbox-visible"
+                  "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
+
 (defn component-group [content path children]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -161,7 +180,6 @@
        [:div.editor-form__component-wrapper
         {:draggable true
          :on-drag-start (on-drag-start path)
-         :on-drop (on-drop path)
          :on-drag-over prevent-default}
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section
@@ -173,4 +191,5 @@
               {:value     (get-in @value [:label lang])
                :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
        children
+       [drag-n-drop-spacer (conj path :children (count children))]
        [add-component (conj path :children (count children))]])))
