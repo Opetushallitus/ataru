@@ -256,7 +256,7 @@
       fixed-target-path)))
 
 (defn- recalculate-target-path
-  [db source-path target-path]
+  [source-path target-path]
   (let [altered-target-path (alter-component-index? target-path)]
     (if (and
           (= 1 (count source-path))
@@ -271,7 +271,7 @@
   [db [_ source-path target-path]]
   (let [form-id                  (get-in db [:editor :selected-form-id])
         component                (get-in db (concat [:editor :forms form-id :content] source-path))
-        recalculated-target-path (recalculate-target-path db source-path target-path)]
+        recalculated-target-path (recalculate-target-path source-path target-path)]
     (-> db
         (remove-component-from-list source-path)
         (add-component-to-list component recalculated-target-path))))
