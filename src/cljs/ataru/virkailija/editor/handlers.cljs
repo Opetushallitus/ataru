@@ -85,6 +85,15 @@
         (update :editor dissoc :forms-meta))))
 
 (register-handler
+  :editor/set-dropdown-option-value
+  (fn [db [_ value & path]]
+    (let [label-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+          value-path (flatten [(drop-last 2 label-path) :value])]
+      (-> db
+          (assoc-in label-path value)
+          (assoc-in value-path value)))))
+
+(register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
     (assoc-in

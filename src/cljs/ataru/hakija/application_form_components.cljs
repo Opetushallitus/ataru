@@ -60,13 +60,26 @@
     (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
+(defn dropdown
+  [field-descriptor]
+  (let [application (subscribe [:state-query [:application]])
+        label (-> field-descriptor :label :fi)]
+    (fn [field-descriptor]
+      [:div.application__form-dropdown
+       [:label.application_form_field_label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+       [:select
+        (for [option (:options field-descriptor)]
+          ^{:key (:value option)}
+          [:option {:value (:value option)} (-> option :label :fi)])]])))
+
 (defn render-field
   [field-descriptor]
   (match field-descriptor
          {:fieldClass "wrapperElement"
           :children   children} [wrapper-field field-descriptor children]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]))
+         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]))
 
 (defn render-editable-fields [form-data]
   (when form-data
