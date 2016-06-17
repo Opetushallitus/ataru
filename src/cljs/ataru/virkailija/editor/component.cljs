@@ -142,7 +142,7 @@
 (defn drag-n-drop-spacer [path]
   (let [expanded? (r/atom false)]
     (fn [path]
-      [:div
+      [:div.editor-form__drag_n_drop_spacer_container
        {:on-drop (fn [event]
                    (.preventDefault event)
                    (reset! expanded? false)
@@ -155,10 +155,11 @@
         :on-drag-leave (fn [event]
                          (.preventDefault event)
                          (reset! expanded? false)
-                         nil)
-        :class (if @expanded?
-                 "editor-form__drag_n_drop_spacer--expanded"
-                 "editor-form__drag_n_drop_spacer--shrinked")}])))
+                         nil)}
+       [:div
+        {:class (if @expanded?
+                  "editor-form__drag_n_drop_spacer--dashbox-visible"
+                  "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
 
 (defn component-group [content path children]
   (let [languages        (subscribe [:editor/languages])
