@@ -60,7 +60,8 @@
                                         s/Int
                                         [s/Str])
                      :fieldType (apply s/enum ["textField"
-                                               "textArea"])
+                                               "textArea"
+                                               "dropdown"])
                      :label OptionalLocalizedString})
 
 (s/defschema Application {:form Long

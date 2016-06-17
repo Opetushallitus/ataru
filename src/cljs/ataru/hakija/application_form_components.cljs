@@ -62,12 +62,12 @@
 
 (defn dropdown
   [field-descriptor]
-  (let [application (subscribe [:state-query [:application]])
-        label (-> field-descriptor :label :fi)]
+  (let [label (-> field-descriptor :label :fi)
+        update-fn (partial textual-field-change field-descriptor)]
     (fn [field-descriptor]
       [:div.application__form-dropdown
        [:label.application_form_field_label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
-       [:select
+       [:select.application__form-select
         (for [option (:options field-descriptor)]
           ^{:key (:value option)}
           [:option {:value (:value option)} (-> option :label :fi)])]])))
