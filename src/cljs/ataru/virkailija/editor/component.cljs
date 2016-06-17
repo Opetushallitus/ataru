@@ -139,10 +139,10 @@
          [:div.plus-component
           [:span "+"]]]))))
 
-(defn drag-n-drop-spacer [path]
+(defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
-    (fn [path]
-      [:div.editor-form__drag_n_drop_spacer_container
+    (fn [path content]
+      [:div
        {:on-drop (fn [event]
                    (.preventDefault event)
                    (reset! expanded? false)
@@ -155,7 +155,12 @@
         :on-drag-leave (fn [event]
                          (.preventDefault event)
                          (reset! expanded? false)
-                         nil)}
+                         nil)
+        :class (if (and
+                     (= 1 (count path))
+                     (contains? content :children))
+                   "editor-form__drag_n_drop_spacer_container_for_component_group"
+                   "editor-form__drag_n_drop_spacer_container_for_component")}
        [:div
         {:class (if @expanded?
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
