@@ -6,6 +6,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
+            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.util :as util]
@@ -67,15 +68,15 @@
 (register-handler
   :editor/undo
   (fn [db _]
-    (let [[form & xs]      (-> db :editor :form-undodata)
-          selected-form-id (-> db :editor :selected-form-id)]
-      (if (and (not-empty form)
-               (= selected-form-id (:id form)))
-        (-> db
-            (assoc-in [:editor :form-undodata] xs)
-            (update :editor dissoc :forms-meta)
-            (assoc-in [:editor :forms selected-form-id] form))
-        db))))
+    (with-form-id [db selected-form-id]
+      (let [[form & xs]      (-> db :editor :form-undodata)]
+        (if (and (not-empty form)
+              (= selected-form-id (:id form)))
+          (-> db
+              (assoc-in [:editor :form-undodata] xs)
+              (update :editor dissoc :forms-meta)
+              (assoc-in [:editor :forms selected-form-id] form))
+          db)))))
 
 (register-handler
   :editor/clear-undo
@@ -101,26 +102,27 @@
 
 (defn generate-component
   [db [_ generate-fn path]]
-  (let [form-id       (get-in db [:editor :selected-form-id])
-        path-vec      (flatten [:editor :forms form-id :content [path]])]
-    (if (zero? (last path-vec))
-      (assoc-in db (butlast path-vec) [(generate-fn)])
-      (assoc-in db path-vec (generate-fn)))))
+  (with-form-id [db form-id]
+    (let [form-id       (get-in db [:editor :selected-form-id])
+          path-vec      (flatten [:editor :forms form-id :content [path]])]
+      (if (zero? (last path-vec))
+        (assoc-in db (butlast path-vec) [(generate-fn)])
+        (assoc-in db path-vec (generate-fn))))))
 
 (register-handler :generate-component generate-component)
 
 (defn remove-component
   [db path]
-  (let [form-id      (get-in db [:editor :selected-form-id])
-        remove-index (last path)
-        path-vec     (-> [:editor :forms form-id :content [path]]
+  (with-form-id [db form-id]
+    (let [remove-index (last path)
+          path-vec     (-> [:editor :forms form-id :content [path]]
                          flatten
                          butlast)]
-    (->> (get-in db path-vec)
-         (keep-indexed (fn [index element]
-                         (when-not (= index remove-index) element)))
-         (into [])
-         (assoc-in db path-vec))))
+      (->> (get-in db path-vec)
+           (keep-indexed (fn [index element]
+                           (when-not (= index remove-index) element)))
+           (into [])
+           (assoc-in db path-vec)))))
 
 (def ^:private events
   ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
@@ -169,7 +171,7 @@
 (register-handler
   :editor/select-form
   (fn [db [_ form-id]]
-    (let [previous-form-id (-> db :editor :selected-form-id)]
+    (with-form-id [db previous-form-id]
       (do
         (when (not= previous-form-id form-id)
           (autosave/stop-autosave! (-> db :editor :autosave)))
@@ -220,7 +222,7 @@
 (register-handler
   :editor/change-form-name
   (fn [db [_ new-form-name]]
-    (let [selected-form-id (-> db :editor :selected-form-id)]
+    (with-form-id [db selected-form-id]
       (update-in db [:editor :forms selected-form-id]
                  assoc :name
                  new-form-name))))
@@ -269,11 +271,11 @@
 
 (defn move-component
   [db [_ source-path target-path]]
-  (let [form-id                  (get-in db [:editor :selected-form-id])
-        component                (get-in db (concat [:editor :forms form-id :content] source-path))
-        recalculated-target-path (recalculate-target-path source-path target-path)]
-    (-> db
+  (with-form-id [db form-id]
+    (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
+          recalculated-target-path (recalculate-target-path source-path target-path)]
+      (-> db
         (remove-component-from-list source-path)
-        (add-component-to-list component recalculated-target-path))))
+        (add-component-to-list component recalculated-target-path)))))
 
 (register-handler :editor/move-component move-component)
