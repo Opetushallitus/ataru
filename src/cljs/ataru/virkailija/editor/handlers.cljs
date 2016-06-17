@@ -246,43 +246,26 @@
             [component]
             (subvec components add-idx)))))))
 
-(defn- convert-to-child-path?
-  [target-path source-path target-component]
-  (if (and
-        (not (some #(= % :children) source-path))
-        (= 1 (count target-path))
-        (contains? target-component :children))
-    (conj target-path :children 0)
-    target-path))
-
 (defn- alter-component-index?
-  [target-path db]
-  (let [form-id      (get-in db [:editor :selected-form-id])
-        target-list  (get-in db (concat [:editor :forms form-id :content] (butlast target-path)))
-        target-index (last target-path)]
-    (let [fixed-target-path (if
-                              (and
-                                (not (= 0 target-index))
-                                (> target-index (dec (count target-list))))
-                              (assoc target-path (dec (count target-path)) (dec (count target-list)))
+  [target-path]
+  (let [target-index (last target-path)]
+    (let [fixed-target-path (if-not
+                              (= 0 target-index)
+                              (assoc target-path (dec (count target-path)) (dec target-index))
                               target-path)]
       fixed-target-path)))
 
 (defn- recalculate-target-path
   [db source-path target-path]
-  (let [form-id          (get-in db [:editor :selected-form-id])
-        target-component (get-in db (concat [:editor :forms form-id :content] target-path))
-        target-path      (-> target-path
-                             (convert-to-child-path? source-path target-component)
-                             (alter-component-index? db))]
+  (let [altered-target-path (alter-component-index? target-path)]
     (if (and
           (= 1 (count source-path))
-          (< 1 (count target-path))
-          (< (source-path 0) (target-path 0)))
+          (< 1 (count altered-target-path))
+          (< (source-path 0) (altered-target-path 0)))
         (into
-          [(dec (target-path 0))]
-          (rest target-path))
-        target-path)))
+          [(dec (altered-target-path 0))]
+          (rest altered-target-path))
+        altered-target-path)))
 
 (defn move-component
   [db [_ source-path target-path]]
