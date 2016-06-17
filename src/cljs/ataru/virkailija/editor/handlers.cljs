@@ -44,8 +44,7 @@
   (let [undo-limit              999
         selected-form-id-before (-> db-before :editor :selected-form-id)
         selected-form-id-after  (-> db-after :editor :selected-form-id)
-        form-before             (get-in db-before [:editor :forms selected-form-id-before])
-        form-after              (get-in db-after  [:editor :forms selected-form-id-after])]
+        form-before             (get-in db-before [:editor :forms selected-form-id-before])]
     (if (not= selected-form-id-before
               selected-form-id-after)
       (assoc-in db-after [:editor :form-undodata] '())
