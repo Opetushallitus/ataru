@@ -41,6 +41,8 @@
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div
+     [ec/drag-n-drop-spacer path]
+
      (match [content]
             [{:fieldClass "wrapperElement"
               :children   children}]
@@ -70,5 +72,6 @@
              (for [[index json-blob] (zipmap (range) @content)
                    :when             (not-empty @content)]
                [soresu->reagent json-blob [index]]))
+           (conj [ec/drag-n-drop-spacer [(count @content)]])
            (conj [ec/add-component (count @content)]))])))
 

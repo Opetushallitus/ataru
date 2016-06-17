@@ -86,7 +86,6 @@
 .editor-form__section_wrapper {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
-  margin-top: 1.5em;
 }
 
 .editor-form__section_wrapper > .editor-form__component-wrapper:first-of-type {
@@ -100,7 +99,7 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin: 17px 11px;
+  margin: 0px 11px;
 }
 
 .editor-form__text-field-wrapper {
@@ -303,4 +302,15 @@ form > div > .editor-form__component-wrapper {
   }
   .editor-form__undo-box--gray { color: gray; }
   .editor-form__undo-box--link { font-size: 20px; }
+}
+
+.editor-form__drag_n_drop_spacer--shrinked {
+  height: 17px;
+  margin: 0px;
+}
+
+.editor-form__drag_n_drop_spacer--expanded {
+  height: 100px;
+  margin: 14px 0px;
+  border: 1px dashed #cccccc;
 }
