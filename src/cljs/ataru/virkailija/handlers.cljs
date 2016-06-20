@@ -1,6 +1,7 @@
 (ns ataru.virkailija.handlers
     (:require [re-frame.core :refer [register-handler dispatch]]
               [ataru.virkailija.db :as db]
+              [ataru.virkailija.autosave :as autosave]
               [taoensso.timbre :refer-macros [spy debug]]))
 
 (register-handler
@@ -26,6 +27,7 @@
 (register-handler
  :set-active-panel
  (fn [db [_ active-panel]]
+   (autosave/stop-autosave! (-> db :editor :autosave))
    (assoc db :active-panel active-panel)))
 
 (register-handler

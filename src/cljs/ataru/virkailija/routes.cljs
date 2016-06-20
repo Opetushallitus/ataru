@@ -46,7 +46,8 @@
     (dispatch [:editor/refresh-forms])
     (dispatch [:editor/select-form (js/parseInt id 10)]))
 
-  (defroute "/application" []
+  (defroute #"/application/(\d+)" [form-id]
+    (dispatch [:set-state [:application :selected-form-id] form-id])
     (dispatch [:set-active-panel :application]))
 
   ;; --------------------
