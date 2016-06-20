@@ -84,14 +84,40 @@
     (-> (update db :editor dissoc :form-undodata)
         (update :editor dissoc :forms-meta))))
 
+(defn- empty-options-in-select?
+  [options]
+  (some #(clojure.string/blank? (:value %)) options))
+
+(defn- remove-nth
+  "remove nth elem in vector"
+  [v n]
+  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
+
+(defn- remove-option
+  [db path]
+  (update-in db (drop-last path) remove-nth (last path)))
+
+(defn- add-option
+  [db path]
+  (update-in db path merge (ataru.virkailija.soresu.component/dropdown-option)))
+
 (register-handler
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
     (let [label-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-          value-path (flatten [(drop-last 2 label-path) :value])]
-      (-> db
-          (assoc-in label-path value)
-          (assoc-in value-path value)))))
+          this-option-path (drop-last 2 label-path)
+          options-path (drop-last 3 label-path)
+          value-path (flatten [this-option-path :value])
+          option-updated-db (-> db
+                                (assoc-in label-path value)
+                                (assoc-in value-path value))
+          blank-removed-db (if (clojure.string/blank? (:value (get-in option-updated-db this-option-path)))
+                             (remove-option option-updated-db this-option-path)
+                             option-updated-db)
+          blank-added-db (if (not (empty-options-in-select? (get-in blank-removed-db options-path)))
+                           (add-option blank-removed-db options-path)
+                           blank-removed-db)]
+      blank-added-db)))
 
 (register-handler
   :editor/set-component-value
@@ -100,23 +126,6 @@
       db
       (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
       value)))
-
-(register-handler
-  :editor/add-dropdown-option
-  (fn [db [_ _ & path]]
-    (let [final-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path] :options])]
-      (update-in db final-path merge (ataru.virkailija.soresu.component/dropdown-option)))))
-
-(defn remove-nth
-  "remove nth elem in vector"
-  [v n]
-  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
-
-(register-handler
-  :editor/remove-dropdown-option
-  (fn [db [_ n & path]]
-    (let [final-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path] :options])]
-      (update-in db final-path remove-nth n))))
 
 (register-handler
   :handle-get-forms
