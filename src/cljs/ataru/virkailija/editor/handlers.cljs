@@ -253,17 +253,19 @@
             (subvec components add-idx)))))))
 
 (defn- alter-component-index?
-  [target-path]
-  (let [target-index (last target-path)]
-    (let [fixed-target-path (if-not
+  [source-path target-path]
+  (let [target-index (last target-path)
+        fixed-target-path (if-not
+                            (or
                               (= 0 target-index)
-                              (assoc target-path (dec (count target-path)) (dec target-index))
-                              target-path)]
-      fixed-target-path)))
+                              (< 1 (count source-path)))
+                            (assoc target-path (dec (count target-path)) (dec target-index))
+                            target-path)]
+      fixed-target-path))
 
 (defn- recalculate-target-path
   [source-path target-path]
-  (let [altered-target-path (alter-component-index? target-path)]
+  (let [altered-target-path (alter-component-index? source-path target-path)]
     (if (and
           (= 1 (count source-path))
           (< 1 (count altered-target-path))
