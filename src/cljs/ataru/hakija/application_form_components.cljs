@@ -15,19 +15,19 @@
          :else "application__form-text-input__size-medium"))
 
 (defn- field-value-valid?
-  [field-value]
-  (if (:required field-value) (not (empty? (trim field-value))) true))
+  [field-data value]
+  (if (:required field-data) (not (clojure.string/blank? value)) true))
 
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
-        valid (field-value-valid? value)]
+        valid (field-value-valid? text-field-data value)]
     (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
 
 (defn- init-dropdown-value
   [dropdown-data this]
   (let [select (-> (r/dom-node this) (.querySelector "select"))
         value (-> select .-value)
-        valid (field-value-valid? value)]
+        valid (field-value-valid? dropdown-data value)]
     (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])))
 
 (defn- field-id [field-descriptor]
@@ -81,10 +81,11 @@
                               [:div.application__form-dropdown
                                {:on-change (partial textual-field-change field-descriptor)}
                                [:label.application_form_field_label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
-                               [:select.application__form-select
-                                (for [option (:options field-descriptor)]
-                                  ^{:key (:value option)}
-                                  [:option {:value (:value option)} (-> option :label :fi)])]])})))
+                               [:div.application__form-select-wrapper
+                                [:select.application__form-select
+                                 (for [option (:options field-descriptor)]
+                                   ^{:key (:value option)}
+                                   [:option {:value (:value option)} (-> option :label :fi)])]]])})))
 
 (defn render-field
   [field-descriptor]
