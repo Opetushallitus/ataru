@@ -113,6 +113,7 @@
         value (subscribe [:editor/get-component-value path])]
     (fn [initial-content]
       [:div.editor-form__component-wrapper.animated.fadeInUp
+       {:draggable true}
        [text-header "Pudotusvalikko" path]
        [:div.editor-form__multi-question-wrapper
         [:div.editor-form__text-field-wrapper
