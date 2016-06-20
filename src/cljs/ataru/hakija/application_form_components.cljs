@@ -80,8 +80,9 @@
        :reagent-render      (fn [field-descriptor]
                               [:div.application__form-dropdown
                                {:on-change (partial textual-field-change field-descriptor)}
-                               [:label.application_form_field_label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+                               [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
                                [:div.application__form-select-wrapper
+                                [:span.application__form-select-arrow]
                                 [:select.application__form-select
                                  (for [option (:options field-descriptor)]
                                    ^{:key (:value option)}
