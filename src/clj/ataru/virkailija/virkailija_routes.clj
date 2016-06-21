@@ -18,12 +18,13 @@
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.logger :refer [wrap-with-logger]]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
             [ring.util.response :refer [file-response resource-response redirect]]
             [ring.util.response :refer [response]]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [spy debug error warn]]
+            [taoensso.timbre :refer [spy debug error warn info]]
             [schema.spec.core :as spec]
             [clj-time.coerce :as time-coerce])
   (:import [manifold.deferred.Deferred]
@@ -133,12 +134,17 @@
                     api-routes
                     auth-routes)
                   routes
-                  (wrap-routes auth-middleware/with-authentication)) 
+                  (wrap-routes auth-middleware/with-authentication))
               (route/not-found "Not found"))
       (wrap-defaults (-> site-defaults
                          (update-in [:session] assoc :store (create-store))
                          (update-in [:security] dissoc :content-type-options)
                          (update-in [:security] dissoc :anti-forgery)
                          (update-in [:responses] dissoc :content-types)))
+      (wrap-with-logger
+        :debug identity
+        :info  identity
+        :warn  (fn [x] (warn x))
+        :error (fn [x] (error x)))
       (wrap-gzip)
       (cache-control/wrap-cache-control)))
