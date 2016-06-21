@@ -260,10 +260,14 @@
           (:content form))]
     (merge form {:content new-content})))
 
+(defn- set-modified-time
+  [form]
+  (assoc-in form [:modified-time] (temporal/time->iso-str (:modified-time form))))
+
 (defn save-form
   [db _]
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
-                 (assoc :modified-time (temporal/time->iso-str (:modified-time form)))
+                 (set-modified-time)
                  (update-dropdown-field-options))]
     (post
       "/lomake-editori/api/form"
