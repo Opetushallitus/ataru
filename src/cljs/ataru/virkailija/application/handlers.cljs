@@ -6,6 +6,11 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (register-handler
+  :application/select-application
+  (fn [db [_ application-key]]
+    (assoc-in db [:application :selected] application-key)))
+
+(register-handler
   :application/fetch-applications
   (fn [db [_ form-id]]
     (ajax/http
