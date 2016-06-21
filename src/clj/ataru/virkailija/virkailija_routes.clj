@@ -95,8 +95,9 @@
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
                            :body [error-details client-error/ClientError]
-                           (client-error/log-client-error error-details)
-                           (ok {}))
+                           (do
+                             (client-error/log-client-error error-details)
+                             (ok {})))
                  (api/GET "/applications/:form-id" []
                    :path-params [form-id :- ataru-schema/PositiveInteger]
                    :return {:form ataru-schema/Form
