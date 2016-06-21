@@ -67,9 +67,11 @@
                                                "dropdown"])
                      :label OptionalLocalizedString})
 
-(s/defschema Application {:form Long
-                          :lang s/Str
-                          :answers [Answer]})
+(s/defschema Application
+  {:form                           Long
+   :lang                           s/Str
+   :answers                        [Answer]
+   (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (s/defschema ApplicationRequest
   {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
