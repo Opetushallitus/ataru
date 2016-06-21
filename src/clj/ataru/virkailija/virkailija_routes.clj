@@ -99,9 +99,18 @@
                            (ok {}))
                  (api/GET "/applications/:form-id" []
                    :path-params [form-id :- ataru-schema/PositiveInteger]
-                   :summary "Return applications for form."
+                   :return {:form ataru-schema/Form
+                            :applications [ataru-schema/Application]}
+                   :summary "Return form and applications."
                    :body [application-request ataru-schema/ApplicationRequest]
-                   (trying #(application-store/retrieve-applications application-request))))))
+                   (try
+                     (let [form         (form-store/fetch-form form-id)
+                           applications (application-store/retrieve-applications application-request)]
+                       (ok {:form         form
+                            :applications applications}))
+                     (catch Exception e
+                       (error e)
+                       (internal-server-error)))))))
 
 (defroutes resource-routes
   (route/resources "/"))
