@@ -12,4 +12,6 @@
       :get
       (str "/lomake-editori/api/applications/" form-id)
       (fn [db form-and-applications]
-        (update db :application assoc :form form :applications applications)))))
+        (update db :application
+                merge (select-keys form-and-applications [:form :applications]))))
+    db))

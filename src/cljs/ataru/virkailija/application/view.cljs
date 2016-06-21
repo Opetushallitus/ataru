@@ -1,13 +1,14 @@
 (ns ataru.virkailija.application.view
-  (:require [re-frame.core :as re-frame]
-            [ataru.virkailija.application.handlers]
-            [reagent.core :as r]))
+  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
+            [reagent.core :as r]
+            [ataru.virkailija.application.handlers]))
 
 (defn applications []
   (let [applications (subscribe [:state-query [:application :applications]])]
     (into [:div.application__list]
           (for [application @applications]
-            (:modified-time)))))
+            (:modified-time application)))))
 
 
 (defn application-list []
