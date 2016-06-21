@@ -1,8 +1,10 @@
 (ns ataru.virkailija.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [clojure.data :refer [diff]]
+            [clojure.walk :as walk]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.soresu.component :as component]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
@@ -233,13 +235,39 @@
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form]))})))))))
 
+(defn- remove-empty-options
+  [options]
+  (vec (remove #(clojure.string/blank? (:value %)) options)))
+
+(defn- add-empty-option
+  [options]
+  (into [(component/dropdown-option)] options))
+
+(defn- update-options-in-dropdown-field
+  [dropdown-field]
+  (let [updated-options (-> (:options dropdown-field)
+                            (remove-empty-options)
+                            (add-empty-option))]
+    (merge dropdown-field {:options updated-options})))
+
+(defn- update-dropdown-field-options
+  [form]
+  (let [new-content
+        (walk/prewalk
+          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
+            (update-options-in-dropdown-field %)
+            %)
+          (:content form))]
+    (merge form {:content new-content})))
+
 (defn save-form
   [db _]
-  (let [form              (get-in db [:editor :forms (-> db :editor :selected-form-id)])
-        with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
+  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
+                 (assoc :modified-time (temporal/time->iso-str (:modified-time form)))
+                 (update-dropdown-field-options))]
     (post
       "/lomake-editori/api/form"
-      with-iso-str-time
+      form
       (fn [db updated-form]
         (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
     db))
