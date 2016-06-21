@@ -100,14 +100,12 @@
                              (client-error/log-client-error error-details)
                              (ok {})))
                  (api/GET "/applications/:form-id" []
-                   :path-params [form-id :- ataru-schema/PositiveInteger]
-                   :return {:form ataru-schema/Form
-                            :applications [ataru-schema/Application]}
+                   :path-params [form-id :- Long]
                    :summary "Return form and applications."
-                   :body [application-request ataru-schema/ApplicationRequest]
+                   :body [application-request (s/maybe ataru-schema/ApplicationRequest)]
                    (try
                      (let [form         (form-store/fetch-form form-id)
-                           applications (application-store/retrieve-applications application-request)]
+                           applications (application-store/retrieve-applications form-id application-request)]
                        (ok {:form         form
                             :applications applications}))
                      (catch Exception e

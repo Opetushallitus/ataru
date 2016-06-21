@@ -22,15 +22,22 @@
                 :content {:answers (:answers application)}
                 :state "received"})))
 
-(defn unwrap-application [application]
+(defn unwrap-application [{:keys [lang]} application]
   (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
-         :answers (-> application :content :answers)))
+         :answers
+         (mapv (fn [answer]
+                 (update answer :label select-keys (keyword lang)))
+               (-> application :content :answers))))
 
 (s/defn retrieve-applications :- [schema/Application]
-  [application-request :- schema/ApplicationRequest]
-  (mapv unwrap-application
+  [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
+  (mapv (partial unwrap-application application-request)
         (exec :db (case (:sort application-request)
                     :by-date application-query-by-modified
                     application-query-by-modified)
-              (dissoc (transform-keys ->snake_case (merge default-application-request application-request))
+              (dissoc (transform-keys ->snake_case
+                                      (merge
+                                        {:form-id form-id}
+                                        default-application-request
+                                        application-request))
                       :sort))))
