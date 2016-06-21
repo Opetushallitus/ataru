@@ -26,18 +26,18 @@
   (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
          :answers
          (mapv (fn [answer]
-                 (update answer :label select-keys (keyword lang)))
+                 (update answer :label (keyword lang)))
                (-> application :content :answers))))
 
 (s/defn retrieve-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
-  (mapv (partial unwrap-application application-request)
-        (exec :db (case (:sort application-request)
-                    :by-date application-query-by-modified
-                    application-query-by-modified)
-              (dissoc (transform-keys ->snake_case
-                                      (merge
-                                        {:form-id form-id}
-                                        default-application-request
-                                        application-request))
-                      :sort))))
+  (let [request (merge
+                  {:form-id form-id}
+                  default-application-request
+                  application-request)]
+    (mapv (partial unwrap-application request)
+          (exec :db (case (:sort request)
+                      :by-date application-query-by-modified
+                      application-query-by-modified)
+                (dissoc (transform-keys ->snake_case request)
+                        :sort)))))
