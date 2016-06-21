@@ -9,4 +9,5 @@
  :authentication {:opintopolku-login-url "{{ataru_authentication_opintopolku_login_url}}"
                   :opintopolku-logout-url  "{{ataru_authentication_opintopolku_logout_url}}"
                   :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
-                  :cas-client-url "{{ataru_authentication_cas_client_url}}"}}
+                  :cas-client-url "{{ataru_authentication_cas_client_url}}"}
+ :email {:email_service_url "{{ataru_email_service_url}}"}}
