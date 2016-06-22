@@ -65,10 +65,13 @@
                      :fieldType (apply s/enum ["textField"
                                                "textArea"
                                                "dropdown"])
-                     :label OptionalLocalizedString})
+                     :label (s/cond-pre
+                              OptionalLocalizedString
+                              s/Str)})
 
 (s/defschema Application
-  {:form                           Long
+  {(s/optional-key :key)           s/Str
+   :form                           Long
    :lang                           s/Str
    :answers                        [Answer]
    (s/optional-key :modified-time) org.joda.time.DateTime})

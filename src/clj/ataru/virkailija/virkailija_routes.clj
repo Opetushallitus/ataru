@@ -99,18 +99,30 @@
                            (do
                              (client-error/log-client-error error-details)
                              (ok {})))
-                 (api/GET "/applications/:form-id" []
-                   :path-params [form-id :- Long]
-                   :summary "Return form and applications."
-                   :body [application-request (s/maybe ataru-schema/ApplicationRequest)]
-                   (try
-                     (let [form         (form-store/fetch-form form-id)
-                           applications (application-store/retrieve-applications form-id application-request)]
-                       (ok {:form         form
-                            :applications applications}))
-                     (catch Exception e
-                       (error e)
-                       (internal-server-error)))))))
+                 (api/context "/applications" []
+                   :tags ["applications-api"]
+                   (api/GET "/:form-id" []
+                     :path-params [form-id :- Long]
+                     :summary "Return form and applications."
+                     :return {:form ataru-schema/Form
+                              :applications [ataru-schema/Application]}
+                     :body [application-request (s/maybe ataru-schema/ApplicationRequest)]
+                     (try
+                       (let [form         (form-store/fetch-form form-id)
+                             applications (application-store/fetch-applications form-id application-request)]
+                         (ok {:form         form
+                              :applications applications}))
+                       (catch Exception e
+                         (error e)
+                         (internal-server-error))))
+
+                   (api/GET "/:form-id/counts" []
+                     :path-params [form-id :- Long]
+                     :summary "Return count of applications with given form-id"
+                     :return {:form-id Long
+                              :count Long}
+                     (ok (merge {:form-id form-id}
+                                (application-store/fetch-application-counts form-id))))))))
 
 (defroutes resource-routes
   (route/resources "/"))

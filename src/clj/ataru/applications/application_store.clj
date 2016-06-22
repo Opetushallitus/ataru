@@ -15,7 +15,7 @@
    :lang "fi"})
 
 (defn insert-application [application]
-  (first (exec :db add-application-query<!
+  (first (exec :db yesql-add-application-query<!
                {:form_id (:form application)
                 :key (str (java.util.UUID/randomUUID))
                 :lang (:lang application)
@@ -29,7 +29,7 @@
                  (update answer :label (keyword lang)))
                (-> application :content :answers))))
 
-(s/defn retrieve-applications :- [schema/Application]
+(s/defn fetch-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
   (let [request (merge
                   {:form-id form-id}
@@ -37,7 +37,10 @@
                   application-request)]
     (mapv (partial unwrap-application request)
           (exec :db (case (:sort request)
-                      :by-date application-query-by-modified
-                      application-query-by-modified)
+                      :by-date yesql-application-query-by-modified
+                      yesql-application-query-by-modified)
                 (dissoc (transform-keys ->snake_case request)
                         :sort)))))
+
+(defn fetch-application-counts [form-id]
+  (first (exec :db yesql-fetch-application-counts {:form_id form-id})))
