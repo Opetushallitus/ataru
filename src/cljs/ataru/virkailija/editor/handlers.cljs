@@ -7,19 +7,13 @@
             [ataru.virkailija.soresu.component :as component]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
-            [ataru.virkailija.virkailija-ajax :refer [http post]]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
+            [ataru.virkailija.virkailija-ajax :refer [http post]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]))
-
-(defn refresh-forms []
-  (http
-    :get
-    "/lomake-editori/api/forms"
-    :handle-get-forms))
 
 (defn get-user-info [db _]
   (http
@@ -129,14 +123,6 @@
       (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
       value)))
 
-(register-handler
-  :handle-get-forms
-  (fn [db [_ forms-response]]
-    (if-let [forms (not-empty (:forms forms-response))]
-      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
-                                        (sorted-by-time)))
-      db)))
-
 (defn generate-component
   [db [_ generate-fn path]]
   (with-form-id [db form-id]
@@ -186,6 +172,14 @@
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
+
+(defn refresh-forms []
+  (http
+    :get
+    "/lomake-editori/api/forms"
+    (fn [db {:keys [forms]}]
+      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
+                                        (sorted-by-time))))))
 
 (register-handler
   :editor/refresh-forms
