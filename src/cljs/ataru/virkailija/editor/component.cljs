@@ -149,7 +149,7 @@
                   nil
                   ^{:key (str "option-" lang "-" option-index)}
                   [:div.editor-form__multi-option-wrapper
-                   [:div.editor-form__text-field-wrapper
+                   [:div.editor-form__text-field-wrapper__option
                     [:input.editor-form__text-field
                      {:value       option-label
                       :placeholder "Lisää..."
