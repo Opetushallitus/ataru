@@ -186,32 +186,17 @@
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms)
-    db))
+    (update db :editor dissoc :forms)))
 
-(register-handler
-  :editor/fetch-form-content
-  (fn [db [_ selected-form-id]]
-    (http :get
-          (str "/lomake-editori/api/forms/content/" selected-form-id)
-          (fn [db response _]
+(defn fetch-form-content! [form-id]
+  (http :get
+        (str "/lomake-editori/api/forms/content/" form-id)
+        (fn [db response _]
+          (->
             (update-in db
-              [:editor :forms selected-form-id]
-              merge
-              (select-keys response [:content :modified-by :modified-time]))))
-    db))
-
-(register-handler
-  :editor/select-form
-  (fn [db [_ form-id]]
-    (with-form-id [db previous-form-id]
-      (do
-        (when (not= previous-form-id form-id)
-          (autosave/stop-autosave! (-> db :editor :autosave)))
-
-        (dispatch [:editor/fetch-form-content form-id])
-
-        (-> db
-            (assoc-in [:editor :selected-form-id] form-id)
+                       [:editor :forms form-id]
+                       merge
+                       (select-keys response [:content :modified-by :modified-time]))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
                                                :changed-predicate
@@ -227,7 +212,24 @@
                                                           (dissoc current :modified-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
-                                                 (dispatch [:editor/save-form]))})))))))
+                                                 (dispatch [:editor/save-form]))}))))))
+
+(register-handler
+  :editor/fetch-form-content
+  (fn [db [_ selected-form-id]]
+    (fetch-form-content! selected-form-id)
+    db))
+
+(register-handler
+  :editor/select-form
+  (fn [db [_ form-id]]
+    (with-form-id [db previous-form-id]
+      (do
+        (when (not= previous-form-id form-id)
+          (autosave/stop-autosave! (-> db :editor :autosave)))
+        (fetch-form-content! form-id)
+        (fetch-application-counts! form-id)
+        (assoc-in db [:editor :selected-form-id] form-id)))))
 
 (defn- remove-empty-options
   [options]
@@ -263,11 +265,12 @@
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
                  (set-modified-time)
                  (update-dropdown-field-options))]
-    (post
-      "/lomake-editori/api/form"
-      form
-      (fn [db updated-form]
-        (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
+    (when (not-empty (:content form))
+      (post
+        "/lomake-editori/api/form"
+        form
+        (fn [db updated-form]
+          (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
     db))
 
 (register-handler :editor/save-form save-form)
