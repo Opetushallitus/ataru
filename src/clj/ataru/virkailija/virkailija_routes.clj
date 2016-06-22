@@ -116,7 +116,7 @@
                          (error e)
                          (internal-server-error))))
 
-                   (api/GET "/:form-id/counts" []
+                   (api/GET "/:form-id/count" []
                      :path-params [form-id :- Long]
                      :summary "Return count of applications with given form-id"
                      :return {:form-id Long
