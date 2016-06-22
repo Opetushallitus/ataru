@@ -29,9 +29,9 @@
                               (reset! previous old)
                               (go (>! change [old new]))))
         stop?             (atom false)
-        stop-fn           (fn [& [force?]]
-                            (if force?
-                              (swap! stop? true)
+        stop-fn           (fn []
+                            (do
+                              (reset! stop? true)
                               (close! change))
                             true)
         bounce            (debounce handler)
