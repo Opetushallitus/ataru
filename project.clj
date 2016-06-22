@@ -77,9 +77,6 @@
 
   :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
-  :eastwood {:namespaces [:source-paths]
-             :exclude-linters [:local-shadows-var]}
-
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"
                                     "resources/public/js/test"]
@@ -175,8 +172,7 @@
                                   [ring/ring-mock "0.3.0"]
                                   [speclj "3.3.2"]
                                   [speclj-junit "0.0.10"]]
-                   :plugins [[jonase/eastwood "0.2.3" :exclusions [org.clojure/clojure]]
-                             [refactor-nrepl "2.2.0"]
+                   :plugins [[refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.12.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.1"]]
                    :source-paths ["dev/clj"]
