@@ -49,6 +49,13 @@
   [event]
   (.preventDefault event))
 
+(defn- fade-out-effect
+  [path]
+  (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
+              :fade-out "animated fadeOutUp"
+              :fade-in  "animated fadeInUp"
+              nil)))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -57,10 +64,7 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))
-        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-                                     :fade-out "animated fadeOutUp"
-                                     :fade-in  "animated fadeInUp"
-                                     nil))]
+        animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:draggable true
@@ -110,10 +114,14 @@
 
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
-        value (subscribe [:editor/get-component-value path])]
+        value (subscribe [:editor/get-component-value path])
+        animation-effect (fade-out-effect path)]
     (fn [initial-content]
       [:div.editor-form__component-wrapper.animated.fadeInUp
-       {:draggable true}
+       {:draggable true
+        :on-drag-start (on-drag-start path)
+        :on-drag-over prevent-default
+        :class @animation-effect}
        [text-header "Pudotusvalikko" path]
        [:div.editor-form__multi-question-wrapper
         [:div.editor-form__text-field-wrapper
@@ -205,10 +213,7 @@
 (defn component-group [content path children]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
-        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-                                     :fade-out "animated fadeOutUp"
-                                     :fade-in  "animated fadeInUp"
-                                     nil))]
+        animation-effect (fade-out-effect path)]
     (fn [content path children]
       [:div.editor-form__section_wrapper
        {:class @animation-effect}
