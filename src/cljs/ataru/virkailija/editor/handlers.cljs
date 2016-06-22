@@ -9,6 +9,7 @@
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
+            [ataru.virkailija.handlers :refer [fetch-application-counts!]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
             [ataru.util :as util]
