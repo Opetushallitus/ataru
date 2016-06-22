@@ -16,6 +16,8 @@
 
 (describe "sending email"
   (it "sends email using the /ryhmasahkoposti-service/email/firewall API call"
+    (tags :unit)
+
     (with-mock-api (fn [uri request]
                      (should= uri "https://itest-virkailija.oph.ware.fi/ryhmasahkoposti-service/email/firewall")
                      (should= (get-in request [:headers "content-type"]) "application/json")

@@ -96,13 +96,19 @@ After this you can run tests by navigating to http://localhost:8350/lomake-edito
 
 ### Backend & browser tests
 
-To run tests once:
+To run all tests once:
 
 ```
 lein spec
 ```
 
 To run them automatically whenever code changes, use `-a`.
+
+### Backend unit tests
+
+```
+lein spec -t unit
+```
 
 ### Browser tests
 

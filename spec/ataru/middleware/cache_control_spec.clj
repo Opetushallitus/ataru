@@ -17,6 +17,8 @@
      ~@body))
 
 (describe "cache-control middleware"
+  (tags :unit)
+
   (it "should add Cache-Control: max-age=86400 header for static resources"
     (with-resp [resp "/lomake-editori/static-resource.js"]
       (should-not-be-nil resp)
