@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.buildversion :refer [buildversion-routes]]
+            [ataru.hakija.email :as email]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
@@ -25,6 +26,7 @@
   (info application)
   (let [stored-app-id (application-store/insert-application application)]
     (info "Stored application with id:" stored-app-id)
+    (email/send-email-verification application)
     (ok {})))
 
 (defn- handle-client-error [error-details]
