@@ -49,6 +49,13 @@
   [event]
   (.preventDefault event))
 
+(defn- fade-out-effect
+  [path]
+  (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
+              :fade-out "animated fadeOutUp"
+              :fade-in  "animated fadeInUp"
+              nil)))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -57,10 +64,7 @@
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))
-        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-                                     :fade-out "animated fadeOutUp"
-                                     :fade-in  "animated fadeInUp"
-                                     nil))]
+        animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:draggable true
@@ -108,10 +112,54 @@
 (defn text-area [initial-content path]
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
+(defn dropdown [initial-content path]
+  (let [languages (subscribe [:editor/languages])
+        value (subscribe [:editor/get-component-value path])
+        animation-effect (fade-out-effect path)]
+    (fn [initial-content]
+      [:div.editor-form__component-wrapper.animated.fadeInUp
+       {:draggable true
+        :on-drag-start (on-drag-start path)
+        :on-drag-over prevent-default
+        :class @animation-effect}
+       [text-header "Pudotusvalikko" path]
+       [:div.editor-form__multi-question-wrapper
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Kysymys"]
+         (doall
+           (for [lang @languages]
+             ^{:key lang}
+             [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+        [:div.editor-form__checkbox-wrapper
+         (render-checkbox path initial-content :required)]]
+       [:div.editor-form__multi-options_wrapper
+        [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+        (doall
+          (let [options-raw (:options @value)
+                options (if (clojure.string/blank? (:value (last options-raw)))
+                          options-raw
+                          (into options-raw [(component/dropdown-option)]))
+                options-count (count options)]
+            (for [lang @languages
+                  option-with-index (map vector (range options-count) options)]
+              (let [[option-index option] option-with-index
+                    option-label (get-in option [:label lang])]
+                (if (and (clojure.string/blank? option-label) (= option-index 0) (not= options-count 1))
+                  nil
+                  ^{:key (str "option-" lang "-" option-index)}
+                  [:div.editor-form__multi-option-wrapper
+                   [:div.editor-form__text-field-wrapper__option
+                    [:input.editor-form__text-field
+                     {:value       option-label
+                      :placeholder "Lisää..."
+                      :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])}]]])))))]])))
+
 (def ^:private toolbar-elements
-  {"Lomakeosio"   component/form-section
-   "Tekstikenttä" component/text-field
-   "Tekstialue"   component/text-area})
+  {"Lomakeosio"     component/form-section
+   "Tekstikenttä"   component/text-field
+   "Tekstialue"     component/text-area
+   "Pudotusvalikko" component/dropdown})
 
 (defn ^:private component-toolbar [path]
   (fn [path]
@@ -170,10 +218,7 @@
 (defn component-group [content path children]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
-        animation-effect (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-                                     :fade-out "animated fadeOutUp"
-                                     :fade-in  "animated fadeInUp"
-                                     nil))]
+        animation-effect (fade-out-effect path)]
     (fn [content path children]
       [:div.editor-form__section_wrapper
        {:class @animation-effect}

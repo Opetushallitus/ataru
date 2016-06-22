@@ -5,7 +5,8 @@
             [ataru.hakija.application-field-common :refer [answer-key
                                                            required-hint
                                                            textual-field-value
-                                                           wrapper-id]]))
+                                                           wrapper-id]]
+            [reagent.core :as r]))
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -13,10 +14,21 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
+(defn- field-value-valid?
+  [field-data value]
+  (if (:required field-data) (not (clojure.string/blank? value)) true))
+
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
-        valid (if (:required text-field-data) (not (empty? (trim value))) true)]
+        valid (field-value-valid? text-field-data value)]
     (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
+
+(defn- init-dropdown-value
+  [dropdown-data this]
+  (let [select (-> (r/dom-node this) (.querySelector "select"))
+        value (-> select .-value)
+        valid (field-value-valid? dropdown-data value)]
+    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -60,13 +72,30 @@
     (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
+(defn dropdown
+  [field-descriptor]
+  (let [label (-> field-descriptor :label :fi)]
+    (r/create-class
+      {:component-did-mount (partial init-dropdown-value field-descriptor)
+       :reagent-render      (fn [field-descriptor]
+                              [:div.application__form-dropdown
+                               {:on-change (partial textual-field-change field-descriptor)}
+                               [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+                               [:div.application__form-select-wrapper
+                                [:span.application__form-select-arrow]
+                                [:select.application__form-select
+                                 (for [option (:options field-descriptor)]
+                                   ^{:key (:value option)}
+                                   [:option {:value (:value option)} (-> option :label :fi)])]]])})))
+
 (defn render-field
   [field-descriptor]
   (match field-descriptor
          {:fieldClass "wrapperElement"
           :children   children} [wrapper-field field-descriptor children]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]))
+         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]))
 
 (defn render-editable-fields [form-data]
   (when form-data

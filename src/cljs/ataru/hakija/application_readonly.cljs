@@ -27,9 +27,8 @@
 (defn field
   [content]
   (match content
-         {:fieldClass "wrapperElement"
-          :children   children} [wrapper content children]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text content]))
+         {:fieldClass "wrapperElement" :children children} [wrapper content children]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown")} [text content]))
 
 (defn render-readonly-fields [form-data]
   (when form-data

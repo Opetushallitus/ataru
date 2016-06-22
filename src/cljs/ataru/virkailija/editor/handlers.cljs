@@ -1,8 +1,10 @@
 (ns ataru.virkailija.editor.handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [clojure.data :refer [diff]]
+            [clojure.walk :as walk]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.soresu.component :as component]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.virkailija-ajax :refer [http post]]
@@ -83,6 +85,41 @@
   (fn [db _]
     (-> (update db :editor dissoc :form-undodata)
         (update :editor dissoc :forms-meta))))
+
+(defn- empty-options-in-select?
+  [options]
+  (some #(clojure.string/blank? (:value %)) options))
+
+(defn- remove-nth
+  "remove nth elem in vector"
+  [v n]
+  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
+
+(defn- remove-option
+  [db path]
+  (update-in db (drop-last path) remove-nth (last path)))
+
+(defn- add-option
+  [db path]
+  (update-in db path into (ataru.virkailija.soresu.component/dropdown-option)))
+
+(register-handler
+  :editor/set-dropdown-option-value
+  (fn [db [_ value & path]]
+    (let [label-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+          this-option-path (drop-last 2 label-path)
+          options-path (drop-last 3 label-path)
+          value-path (flatten [this-option-path :value])
+          option-updated-db (-> db
+                                (assoc-in label-path value)
+                                (assoc-in value-path value))
+          blank-removed-db (if (clojure.string/blank? (:value (get-in option-updated-db this-option-path)))
+                             (remove-option option-updated-db this-option-path)
+                             option-updated-db)
+          blank-added-db (if (not (empty-options-in-select? (get-in blank-removed-db options-path)))
+                           (add-option blank-removed-db options-path)
+                           blank-removed-db)]
+      blank-added-db)))
 
 (register-handler
   :editor/set-component-value
@@ -198,13 +235,43 @@
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form]))})))))))
 
+(defn- remove-empty-options
+  [options]
+  (vec (remove #(clojure.string/blank? (:value %)) options)))
+
+(defn- add-empty-option
+  [options]
+  (into [(component/dropdown-option)] options))
+
+(defn- update-options-in-dropdown-field
+  [dropdown-field]
+  (let [updated-options (-> (:options dropdown-field)
+                            (remove-empty-options)
+                            (add-empty-option))]
+    (merge dropdown-field {:options updated-options})))
+
+(defn- update-dropdown-field-options
+  [form]
+  (let [new-content
+        (walk/prewalk
+          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
+            (update-options-in-dropdown-field %)
+            %)
+          (:content form))]
+    (merge form {:content new-content})))
+
+(defn- set-modified-time
+  [form]
+  (assoc-in form [:modified-time] (temporal/time->iso-str (:modified-time form))))
+
 (defn save-form
   [db _]
-  (let [form              (get-in db [:editor :forms (-> db :editor :selected-form-id)])
-        with-iso-str-time (assoc form :modified-time (temporal/time->iso-str (:modified-time form)))]
+  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
+                 (set-modified-time)
+                 (update-dropdown-field-options))]
     (post
       "/lomake-editori/api/form"
-      with-iso-str-time
+      form
       (fn [db updated-form]
         (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
     db))
