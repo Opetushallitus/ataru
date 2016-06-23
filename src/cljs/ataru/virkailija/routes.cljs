@@ -52,7 +52,8 @@
         (dispatch [:editor/select-form (js/parseInt id 10)]))))
 
   (defroute #"/application/(\d+)" [form-id]
-    (dispatch [:application/fetch-applications form-id])
+    (dispatch [:editor/select-form (js/parseInt form-id 10)])
+    (dispatch [:application/fetch-applications (js/parseInt form-id 10)])
     (dispatch [:set-active-panel :application]))
 
   ;; --------------------
