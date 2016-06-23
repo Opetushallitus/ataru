@@ -9,15 +9,24 @@
 (defn applications []
   (let [applications (subscribe [:state-query [:application :applications]])
         selected-key (subscribe [:state-query [:application :selected]])]
-    (into [:div.editor-form__list]
+    (into [:div.application-list
+           [:div.application-list__header.application-list__row
+            [:span.application-list__row--applicant "Hakija"]
+            [:span.application-list__row--time "Saapunut"]
+            [:span.application-list__row--state "Tila"]]]
           (for [application @applications
-                :let        [key (:key application)
-                             time (t/time->str (:modified-time application))]]
-            [:div.editor-form__row
-             {:class    (when (= @selected-key key)
-                          "editor-form__selected-row")
-              :on-click #(dispatch [:application/select-application (:key application)])}
-             "Hakemus jätetty " time]))))
+                :let        [key       (:key application)
+                             time      (t/time->str (:modified-time application))
+                             applicant (:applicant application)
+                             state     (:state application)]]
+            [:div.application-list__row
+             {:on-click #(dispatch [:application/select-application (:key application)])
+              :class    (when (= @selected-key key)
+                          "application-list__row--selected")}
+             [:span.application-list__row--applicant
+              (or applicant [:span.application-list__row--applicant-unknown "Tuntematon"])]
+             [:span.application-list__row--time time]
+             [:span.application-list__row--state "Saapunut"]]))))
 
 (defn selected-application []
   [:div.panel-content
