@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.soresu.component :as component]
-            [ataru.cljs-util :as util :refer [cljs->str str->cljs]]
+            [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
@@ -19,7 +19,7 @@
 (defn- render-checkbox
   [path initial-content metadata-kwd]
   (let [metadata (get checkbox-metadata metadata-kwd)
-        id (str (gensym) (:id-suffix metadata))
+        id (util/new-uuid)
         label (:label metadata)]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
@@ -60,7 +60,7 @@
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
         size             (subscribe [:editor/get-component-value path :params :size])
-        radio-group-id   (str "form-size-" (gensym))
+        radio-group-id   (util/new-uuid)
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         size-change      (fn [new-size] (dispatch [:editor/set-component-value new-size path :params :size]))

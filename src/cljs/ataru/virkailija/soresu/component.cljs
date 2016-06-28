@@ -1,11 +1,12 @@
-(ns ataru.virkailija.soresu.component)
+(ns ataru.virkailija.soresu.component
+  (:require [ataru.cljs-util :as util]))
 
 (defn text-field
   []
   {:fieldClass "formField"
    :fieldType  "textField"
    :label      {:fi "", :sv ""}
-   :id         (str (gensym))
+   :id         (util/new-uuid)
    :params     {}
    :required   false})
 
@@ -17,7 +18,7 @@
   []
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
-   :id         (str (gensym))
+   :id         (util/new-uuid)
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []
    :params     {}})
@@ -30,7 +31,7 @@
   []
   {:fieldClass "formField"
    :fieldType "dropdown"
-   :id (str (gensym))
+   :id (util/new-uuid)
    :label {:fi "", :sv ""}
    :params {}
    :options [(dropdown-option)]
