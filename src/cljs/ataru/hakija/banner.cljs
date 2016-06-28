@@ -69,6 +69,6 @@
         (into [:div.application__banner-wrapper-sections-content]
               (mapv wrapper-section @wrapper-sections))))))
 
-(defn banner [] [:div
+(defn banner [] [:div.application__banner-container
                  [:div.top-banner.application-top-banner logo [status-controls]]
                  [:div.application__banner-wrapper-sections [wrapper-sections]]])

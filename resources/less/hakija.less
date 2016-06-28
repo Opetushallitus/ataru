@@ -1,11 +1,16 @@
 @import "vars";
 @desktop-content-width: 981px;
+@banner-height: 33px;
 
 .top-banner.application-top-banner {
   display: flex;
   justify-content: space-between;
   height: 82px;
   padding-top: 19px;
+}
+.application__banner-container {
+  height: @banner-height;
+  display: inline-block;
 }
 .application-top-banner {
   .logo {
@@ -19,7 +24,7 @@
   .logo-text { display: none; }
 }
 .application__banner-wrapper-sections {
-  height: 33px;
+  height: @banner-height;
   background-color: #128AB3;
   display: flex;
   align-items: center;
@@ -290,6 +295,7 @@ and (max-width: @desktop-content-width) {
     margin-top: 20px;
   }
   .application__form-content-area {
+    margin-top: 65px;
     width: auto;
   }
   .application__form-field {
