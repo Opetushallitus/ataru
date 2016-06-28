@@ -78,7 +78,7 @@
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor)
        :reagent-render      (fn [field-descriptor]
-                              [:div.application__form-dropdown
+                              [:div.application__form-field
                                {:on-change (partial textual-field-change field-descriptor)}
                                [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
                                [:div.application__form-select-wrapper
