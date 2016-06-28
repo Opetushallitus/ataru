@@ -1,5 +1,6 @@
 (ns ataru.virkailija.core
-    (:require [reagent.core :as reagent]
+    (:require [devtools.core :as devtools]
+              [reagent.core :as reagent]
               [re-frame.core :as re-frame]
               [ataru.virkailija.handlers]
               [ataru.virkailija.subs]
@@ -14,7 +15,8 @@
 (enable-console-print!)
 
 (when config/debug?
-  (info "dev mode"))
+  (info "dev mode")
+  (devtools/install!))
 
 (defn mount-root []
   (reagent/render [views/main-panel]
