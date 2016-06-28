@@ -21,9 +21,9 @@
     (tags :unit)
 
     (with-mock-api (fn [uri request]
-                     (should= uri "https://itest-virkailija.oph.ware.fi/ryhmasahkoposti-service/email/firewall")
-                     (should= (get-in request [:headers "content-type"]) "application/json")
+                     (should= "https://itest-virkailija.oph.ware.fi/ryhmasahkoposti-service/email/firewall" uri)
+                     (should= "application/json" (get-in request [:headers "content-type"]))
                      (let [body (json/parse-string (:body request) true)]
-                       (should= (get-in body [:email :from]) "no-reply@opintopolku.fi")
-                       (should= (get-in body [:email :subject]) "Hakemus vastaanotettu")))
+                       (should= "no-reply@opintopolku.fi" (get-in body [:email :from]))
+                       (should= "Hakemus vastaanotettu" (get-in body [:email :subject]))))
       (email/send-email-verification {}))))
