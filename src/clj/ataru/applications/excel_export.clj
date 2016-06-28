@@ -4,6 +4,7 @@
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
             [clj-time.format :as f]
+            [clojure.string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
@@ -17,14 +18,24 @@
   (when-let [v (not-empty (trim (str value)))]
     (-> (.getRow sheet row)
         (.getCell column)
-        (.setCellValue value)))
+        (.setCellValue v)))
   sheet)
 
-(defn export-all-applications [form-id & {:keys [language] :or {:language :fi}}]
-  (let [applications (application-store/fetch-applications form-id {:limit 1000})
-        form (form-store/fetch-form form-id)
-        wb (application-workbook)]))
+(defn- write-form! [wb form]
+  )
 
-;(count (store/fetch-applications 703 {:limit 1}))
+(defn- write-application! [wb application]
+  )
+
+(defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
+  (with-open [wb (application-workbook)]
+    (let [form (form-store/fetch-form form-id)]
+      (write-form! wb form)
+      (when-let [applications (and (not-empty form)
+                                   (application-store/fetch-applications
+                                     form-id
+                                     {:limit 1 :lang language}))]
+        (doseq [application applications]
+          (write-application! wb application))))))
 
 
