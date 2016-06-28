@@ -2,6 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader :refer [read-string]]
+            [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -89,3 +90,6 @@
 (defn str->cljs
   [str]
   (reader/read-string str))
+
+(defn new-uuid []
+  (uuid/uuid-string (uuid/make-random-uuid)))
