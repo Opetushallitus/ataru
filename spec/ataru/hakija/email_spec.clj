@@ -15,6 +15,8 @@
          (should @api-called?#)))))
 
 (describe "sending email"
+  (tags :unit)
+
   (it "sends email using the /ryhmasahkoposti-service/email/firewall API call"
     (with-mock-api (fn [uri request]
                      (should= uri "https://itest-virkailija.oph.ware.fi/ryhmasahkoposti-service/email/firewall")

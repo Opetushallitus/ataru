@@ -14,6 +14,8 @@
                    v/clerk-routes)))
 
 (describe "GET /lomake-editori"
+  (tags :unit)
+
   (with-static-resource resp "/lomake-editori")
 
   (it "should not return nil"
@@ -26,6 +28,8 @@
     (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
 
 (describe "GET /lomake-editori/"
+  (tags :unit)
+
   (with-static-resource resp "/lomake-editori/")
 
   (it "should not return nil"
@@ -45,6 +49,8 @@
     (should-have-header "Cache-Control" "no-cache" @resp)))
 
 (describe "Getting a static resource"
+  (tags :unit)
+
   (with-static-resource resp "/lomake-editori/js/compiled/virkailija-app.js")
 
   (it "should provide the resource found from the resources/ directory"
@@ -54,6 +60,8 @@
     (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
 (describe "Storing a form"
+  (tags :unit)
+  
     (with resp
           (-> (mock/request :post "/lomake-editori/api/form"
                             (json/generate-string fixtures/form-with-content))
