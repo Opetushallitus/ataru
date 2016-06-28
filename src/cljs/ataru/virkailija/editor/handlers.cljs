@@ -101,7 +101,7 @@
 
 (defn- add-option
   [db path]
-  (update-in db path into (ataru.virkailija.soresu.component/dropdown-option)))
+  (update-in db path into [(ataru.virkailija.soresu.component/dropdown-option)]))
 
 (register-handler
   :editor/set-dropdown-option-value
