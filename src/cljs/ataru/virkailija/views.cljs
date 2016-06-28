@@ -5,9 +5,6 @@
               [ataru.virkailija.application.view :refer [application]]
               [ataru.virkailija.dev.lomake :as l]
               [ataru.virkailija.editor.view :refer [editor]]
-              [ataru.virkailija.soresu.form      :as f]
-              [ataru.virkailija.soresu.component :as component]
-              [ataru.virkailija.soresu.components :as components]
               [taoensso.timbre :refer-macros [spy]]))
 
 (defmulti panels identity)

@@ -1,4 +1,3 @@
-(load-file "soresu.clj")
 (defproject ataru "0.1.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.8.0"]
 
@@ -97,8 +96,6 @@
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/out"
                                        :asset-path           "js/compiled/out"
-                                       :foreign-libs         [{:file     ~soresu
-                                                               :provides ["oph.lib.soresu"]}]
                                        :source-map-timestamp true}}
 
                        {:id           "hakija-dev"
@@ -108,16 +105,12 @@
                                    :output-to            "resources/public/js/compiled/hakija-app.js"
                                    :output-dir           "resources/public/js/compiled/hakija-out"
                                    :asset-path           "js/compiled/hakija-out"
-                                   :foreign-libs         [{:file     ~soresu
-                                                           :provides ["oph.lib.soresu"]}]
                                    :source-map-timestamp true}}
 
                        {:id "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc"]
                         :compiler {:output-to "resources/public/js/test/test.js"
                                    :main "ataru.unit-runner"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
                        {:id "browser-test"
@@ -126,8 +119,6 @@
                                    :output-dir "resources/public/js/test/out"
                                    :asset-path "js/test/out"
                                    :main "ataru.virkailija.browser-runner"
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]
                                    :optimizations :none}}
 
                        {:id "virkailija-min"
@@ -136,18 +127,14 @@
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
-                                   :pretty-print false
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]}}
+                                   :pretty-print false}}
                        {:id "hakija-min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
-                                   :pretty-print false
-                                   :foreign-libs [{:file ~soresu
-                                                   :provides ["oph.lib.soresu"]}]}}]}
+                                   :pretty-print false}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]
                  :init (set! *print-length* 50)
