@@ -11,4 +11,5 @@
                {:form_id (:form application)
                 :key (str (java.util.UUID/randomUUID))
                 :lang (:lang application)
-                :content {:answers (:answers application)}})))
+                :content {:answers (:answers application)}
+                :state "received"})))
