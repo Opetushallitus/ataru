@@ -5,29 +5,29 @@
             [speclj.core :refer :all]
             [oph.soresu.common.db :as db]
             [oph.soresu.common.config :refer [config]]
-            [ataru.virkailija.virkailija-system :refer [new-system]]
             [ataru.test-utils :refer [login]]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [ataru.virkailija.virkailija-system :as virkailija-system]))
 
 (defn- run-specs-in-system
   [specs]
-  (let [system (new-system)]
+  (let [system (virkailija-system/new-system)]
     (try
       (component/start-system system)
-      (specs)
+      (with-redefs [ataru.virkailija.authentication.auth/logged-in? (constantly true)]
+        (specs))
       (finally
         (component/stop-system system)))))
 
 (describe "UI tests /"
           (tags :ui)
-          (around-all [specs] (run-specs-in-system specs))
-
-          (it "are successful"
-              (let [login-cookie-value (last (split (login) #"="))
-                    _ (println "cookie" login-cookie-value)
-                    results (sh "node_modules/phantomjs-prebuilt/bin/phantomjs"
+          (around-all [specs]
+                      (db/clear-db! :db (-> config :db :schema))
+                      (run-specs-in-system specs))
+          (it "browser tests"
+              (let [results (sh "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
-                                "bin/phantomjs-runner.js" login-cookie-value)
+                                "bin/phantomjs-runner.js" "fakecookie")
                     output (:out results)
                     test-report-path "target/tests-output.txt"]
                 (println "Tests exit code" (:exit results))

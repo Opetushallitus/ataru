@@ -1,0 +1,8 @@
+{:server {:allow-db-clear? true}
+ :db {:database-name "ataru-test"
+      :pool-name "ataru-pool"
+      :username "oph"
+      :password "oph"
+      :server-name "localhost"
+      :port-number 5432
+      :schema "public"}}
