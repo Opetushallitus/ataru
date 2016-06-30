@@ -25,7 +25,7 @@
     (let [server-setup (:server-setup this)
           port         (:port server-setup)
           repl-port    (:repl-port server-setup)
-          routes       (:routes server-setup)
+          routes       (get-in this [:handler :routes])
           handler      (if (:dev? env)
                          (wrap-reload routes)
                          routes)
