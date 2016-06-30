@@ -9,6 +9,8 @@
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
 
+(def ^:private row-offset 9)
+
 (defn- application-workbook []
   (WorkbookFactory/create
     (input-stream
@@ -21,21 +23,41 @@
         (.setCellValue v)))
   sheet)
 
-(defn- write-form! [wb form]
-  )
+(defn- make-writer [sheet offset]
+  (let [local-offset (atom (dec offset))]
+    (fn [column value]
+      (do
+        (update-row-cell!
+          sheet
+          (swap! local-offset inc)
+          column
+          value)
+        @local-offset))))
 
-(defn- write-application! [wb application]
-  )
+(defn- write-form! [writer form]
+  (when (not-empty form)
+    (do
+      (writer 1 "foo"))))
+
+(defn- write-application! [writer application]
+  (writer 1 "bar"))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
-  (with-open [wb (application-workbook)]
-    (let [form (form-store/fetch-form form-id)]
-      (write-form! wb form)
-      (when-let [applications (and (not-empty form)
-                                   (application-store/fetch-applications
-                                     form-id
-                                     {:limit 1 :lang language}))]
-        (doseq [application applications]
-          (write-application! wb application))))))
+  (with-open [workbook (application-workbook)]
+    (do
+      (let [form             (form-store/fetch-form form-id)
+            sheet            (.getSheetAt workbook 0)
+            local-row-offset (write-form! (make-writer sheet row-offset) form)
+            application-row-offset (atom local-row-offset)]
+        (doseq [application (and (not-empty form)
+                                 (application-store/fetch-applications
+                                   form-id
+                                   {:limit 1 :lang language}))
+                :let        []]
+          (reset! application-row-offset
+                  (write-application! (make-writer sheet @application-row-offset) application))))
+      (with-open [stream (java.io.ByteArrayOutputStream.)]
+        (.write workbook stream)
+        (.getBytes stream)))))
 
 
