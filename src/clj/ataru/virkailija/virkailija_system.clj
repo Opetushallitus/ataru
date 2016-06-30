@@ -8,7 +8,9 @@
 (defn new-system
   ([http-port]
    (component/system-map
-     :handler        (handler/new-handler)
+     :handler        (component/using
+                       (handler/new-handler)
+                       [:person-service])
 
      :server-setup   {:port http-port :repl-port 3333}
 
