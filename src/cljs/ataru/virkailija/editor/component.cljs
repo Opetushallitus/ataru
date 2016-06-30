@@ -198,6 +198,7 @@
                    (reset! expanded? false)
                    (let [source-path (-> event .-dataTransfer (.getData ie-compatible-drag-data-attibute-name) util/str->cljs)]
                      (dispatch [:editor/move-component source-path path])))
+        :on-drag-enter (fn [event] (.preventDefault event)) ;; IE needs this, otherwise on-drag-over doesn't occur
         :on-drag-over (fn [event]
                         (.preventDefault event)
                         (reset! expanded? true)
