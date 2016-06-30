@@ -22,7 +22,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn]]
             [schema.spec.core :as spec]
-            [clj-time.coerce :as time-coerce])
+            [clj-time.coerce :as time-coerce]
+            [com.stuartsierra.component :as component])
   (:import [manifold.deferred.Deferred]
            (org.joda.time DateTime)
            (clojure.lang ExceptionInfo)))
@@ -94,29 +95,40 @@
 (defroutes resource-routes
   (route/resources "/"))
 
-(def clerk-routes
-  (-> (routes (GET "/" [] (redirect "/lomake-editori/"))
-              ;; NOTE: This is now needed because of the way web-server is
-              ;; Set up on test and other environments. If you want
-              ;; to remove this, test the setup with some local web server
-              ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
-              ;; and verify that it works on test environment as well.
-              (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
-              (context "/lomake-editori" []
-                buildversion-routes
-                test-routes)
-              (-> (context "/lomake-editori" []
-                    resource-routes
-                    app-routes
-                    api-routes
-                    auth-routes)
-                  routes
-                  (wrap-routes auth-middleware/with-authentication)) 
-              (route/not-found "Not found"))
-      (wrap-defaults (-> site-defaults
-                         (update-in [:session] assoc :store (create-store))
-                         (update-in [:security] dissoc :content-type-options)
-                         (update-in [:security] dissoc :anti-forgery)
-                         (update-in [:responses] dissoc :content-types)))
-      (wrap-gzip)
-      (cache-control/wrap-cache-control)))
+(defrecord Handler []
+  component/Lifecycle
+
+  (start [this]
+    (assoc this :routes (-> (routes (GET "/" [] (redirect "/lomake-editori/"))
+                              ;; NOTE: This is now needed because of the way web-server is
+                              ;; Set up on test and other environments. If you want
+                              ;; to remove this, test the setup with some local web server
+                              ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
+                              ;; and verify that it works on test environment as well.
+                              (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
+                              (context "/lomake-editori" []
+                                buildversion-routes
+                                test-routes)
+                              (-> (context "/lomake-editori" []
+                                    resource-routes
+                                    app-routes
+                                    api-routes
+                                    auth-routes)
+                                  routes
+                                  (wrap-routes auth-middleware/with-authentication))
+                              (route/not-found "Not found"))
+                            (wrap-defaults (-> site-defaults
+                                               (update-in [:session] assoc :store (create-store))
+                                               (update-in [:security] dissoc :content-type-options)
+                                               (update-in [:security] dissoc :anti-forgery)
+                                               (update-in [:responses] dissoc :content-types)))
+                            (wrap-gzip)
+                            (cache-control/wrap-cache-control))))
+
+  (stop [this]
+    (when
+      (contains? this :routes)
+      (assoc this :routes nil))))
+
+(defn new-handler []
+  (->Handler))
