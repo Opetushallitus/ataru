@@ -22,7 +22,7 @@
   component/Lifecycle
 
   (start [this]
-    (let [server-setup (-> this :server-setup)
+    (let [server-setup (:server-setup this)
           port         (:port server-setup)
           repl-port    (:repl-port server-setup)
           routes       (:routes server-setup)
