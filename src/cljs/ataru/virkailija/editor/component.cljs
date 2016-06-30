@@ -16,6 +16,10 @@
   {:required {:id-suffix "_required"
               :label "Pakollinen tieto"}})
 
+; IE only allows this data attribute name for drag event dataTransfer
+; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
+(def ^:private ie-compatible-drag-data-attibute-name "Text")
+
 (defn- render-checkbox
   [path initial-content metadata-kwd]
   (let [metadata (get checkbox-metadata metadata-kwd)
@@ -31,7 +35,7 @@
 (defn- on-drag-start
   [path]
   (fn [event]
-    (-> event .-dataTransfer (.setData "path" (util/cljs->str path)))))
+    (-> event .-dataTransfer (.setData ie-compatible-drag-data-attibute-name (util/cljs->str path)))))
 
 (defn- prevent-default
   [event]
@@ -192,7 +196,7 @@
        {:on-drop (fn [event]
                    (.preventDefault event)
                    (reset! expanded? false)
-                   (let [source-path (-> event .-dataTransfer (.getData "path") util/str->cljs)]
+                   (let [source-path (-> event .-dataTransfer (.getData ie-compatible-drag-data-attibute-name) util/str->cljs)]
                      (dispatch [:editor/move-component source-path path])))
         :on-drag-over (fn [event]
                         (.preventDefault event)
