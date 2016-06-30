@@ -14,7 +14,7 @@
   :application/fetch-applications
   (fn [db [_ form-id]]
     (ajax/http
-      :get
+      :post
       (str "/lomake-editori/api/applications/" form-id)
       (fn [db form-and-applications]
         (update db :application

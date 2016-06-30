@@ -101,7 +101,7 @@
                              (ok {})))
                  (api/context "/applications" []
                    :tags ["applications-api"]
-                   (api/GET "/:form-id" []
+                   (api/POST "/:form-id" []
                      :path-params [form-id :- Long]
                      :summary "Return form and applications."
                      :return {:form ataru-schema/Form
