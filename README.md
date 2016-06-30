@@ -20,33 +20,11 @@ lein less auto
 
 ### Create database
 
-Install PostgreSQL
-
-Init Postgres database files to a desired location (this will create a subdir here)
+Just use the postgres Docker (9.4) image:
 
 ```
-initdb -d atarudb
+docker run -d --name oph -p 5432:5432 -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.4
 ```
-
-Run the server
-
-```
-postgres -D atarudb
-```
-
-In another shell, create the DB:
-
-```
-createdb ataru
-```
-
-Create user for the db:
-
-```
-createuser -s oph -P
-```
-
-Give it a password `oph`
 
 ### Run application:
 
