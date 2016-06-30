@@ -8,9 +8,10 @@
 (defn new-system
   ([http-port]
    (component/system-map
-     :server-setup {:routes clerk-routes :port http-port :repl-port 3333}
+     :handler {:routes clerk-routes}
+     :server-setup {:port http-port :repl-port 3333}
      :migration (migrations/new-migration)
      :person-service (person-service/new-client)
-     :server (component/using (server/new-server) [:server-setup])))
+     :server (component/using (server/new-server) [:server-setup :handler])))
   ([]
    (new-system 8350)))
