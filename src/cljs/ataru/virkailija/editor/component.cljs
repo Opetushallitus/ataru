@@ -28,18 +28,6 @@
                                     :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
      [:label.editor-form__checkbox-label {:for id} label]]))
 
-(defn- text-header
-  [label path & {:keys [form-section?]}]
-  [:div.editor-form__header-wrapper
-   [:header.editor-form__component-header label]
-   [:a.editor-form__component-header-link
-    {:on-click (fn [event]
-                 (dispatch [:remove-component path
-                            (if form-section?
-                              (-> event .-target .-parentNode .-parentNode .-parentNode)
-                              (-> event .-target .-parentNode .-parentNode))]))}
-    "Poista"]])
-
 (defn- on-drag-start
   [path]
   (fn [event]
@@ -56,6 +44,21 @@
               :fade-in  "animated fadeInUp"
               nil)))
 
+(defn- text-header
+  [label path & {:keys [form-section?]}]
+  [:div.editor-form__header-wrapper
+   {:draggable true
+    :on-drag-start (on-drag-start path)
+    :on-drag-over prevent-default}
+   [:header.editor-form__component-header label]
+   [:a.editor-form__component-header-link
+    {:on-click (fn [event]
+                 (dispatch [:remove-component path
+                            (if form-section?
+                              (-> event .-target .-parentNode .-parentNode .-parentNode)
+                              (-> event .-target .-parentNode .-parentNode))]))}
+    "Poista"]])
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         value            (subscribe [:editor/get-component-value path])
@@ -67,10 +70,7 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-       {:draggable true
-        :on-drag-start (on-drag-start path)
-        :on-drag-over prevent-default
-        :class @animation-effect}
+       {:class @animation-effect}
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
@@ -118,10 +118,7 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content]
       [:div.editor-form__component-wrapper.animated.fadeInUp
-       {:draggable true
-        :on-drag-start (on-drag-start path)
-        :on-drag-over prevent-default
-        :class @animation-effect}
+       {:class @animation-effect}
        [text-header "Pudotusvalikko" path]
        [:div.editor-form__multi-question-wrapper
         [:div.editor-form__text-field-wrapper
@@ -223,9 +220,6 @@
       [:div.editor-form__section_wrapper
        {:class @animation-effect}
        [:div.editor-form__component-wrapper
-        {:draggable true
-         :on-drag-start (on-drag-start path)
-         :on-drag-over prevent-default}
         [text-header "Lomakeosio" path :form-section? true]
         [:div.editor-form__text-field-wrapper.editor-form__text-field--section
          [:header.editor-form__component-item-header "Osion nimi"]
