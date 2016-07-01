@@ -7,12 +7,14 @@
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [cheshire.core :as json]
             [compojure.api.sweet :as api]
             [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
             [manifold.deferred :as d]
+            [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
@@ -50,7 +52,11 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defroutes app-routes
-  (GET "/" [] (selmer/render-file "templates/virkailija.html" {:cache-fingerprint cache-fingerprint})))
+  (GET "/" [] (selmer/render-file "templates/virkailija.html"
+                {:cache-fingerprint cache-fingerprint
+                 :config (-> config
+                           :public-config
+                           json/generate-string)})))
 
 (defroutes test-routes
   (GET "/test.html" []

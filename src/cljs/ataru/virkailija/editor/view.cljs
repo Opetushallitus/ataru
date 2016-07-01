@@ -71,7 +71,10 @@
         [:div.panel-content
          [:div
           [editor-name]]
-         [:div.editor-form__preview-link-row [:a.editor-form__preview-link {:href (str "#/editor/" (:id @form))} "Esikatsele lomake"]] 
+         [:div.editor-form__preview-link-row [:a.editor-form__preview-link
+                                              {:href (str js/config.applicant.service_url "/hakemus/" (:id @form))
+                                               :target "_blank"}
+                                              "Esikatsele lomake"]]
          [c/editor]]))))
 
 (defn editor []

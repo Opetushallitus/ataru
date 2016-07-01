@@ -4,4 +4,6 @@
        :password "oph"
        :server-name "localhost"
        :port-number 5432
-       :schema "public"}}
+       :schema "public"}
+ :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
+ :public-config {:applicant {:service_url "http://localhost:8351"}}}
