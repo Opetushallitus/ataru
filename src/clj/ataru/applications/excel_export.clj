@@ -59,7 +59,7 @@
             application-row-offset (atom 7)
             applications           (application-store/fetch-applications
                                      form-id
-                                     {:limit 1 :lang language})]
+                                     {:limit 100 :lang (name language)})]
         (update-row-cell! sheet 0 2 (t/now)) ; timestamp the excel sheet
         (when (and (not-empty form) (not-empty applications))
           (do
