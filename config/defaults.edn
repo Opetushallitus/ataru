@@ -5,4 +5,4 @@
        :server-name "localhost"
        :port-number 5432
        :schema "public"}
- :person-service {:person-service-url "https://itest-virkailija.oph.ware.fi"}}
+ :person-service {:url "https://itest-virkailija.oph.ware.fi"}}
