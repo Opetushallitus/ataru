@@ -33,36 +33,42 @@
       value)
     [sheet offset row column value]))
 
-(defn- write-form! [writer form]
+(defn- write-form! [writer {:keys [id name modified-by modified-time content] :as form}]
   (when (not-empty form)
     (do
-      (writer 0 1 "foo")
-      (writer 0 2 "column")
-      (writer 1 1 "bar")
-      (writer 1 2 "column")))
-  1)
+      (writer 0 2 name)
+      (writer 1 2 id)
+      (writer 2 2 modified-time)
+      (writer 3 2 modified-by)))
+  3)
+
+(defn- write-headers! [writer applications]
+  (doseq [[column label] (zipmap (range) (map :label (:answers (first applications))))]
+    (writer 0 column label)))
 
 (defn- write-application! [writer application]
-  (do
-    (writer 0 1 "bar")
-    1))
+  (doseq [[column value] (zipmap (range) (map :value (:answers application)))]
+    (writer 0 column value)))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
   (with-open [workbook (application-workbook)]
     (do
-      (let [form             (form-store/fetch-form form-id)
-            sheet            (.getSheetAt workbook 0)
-            local-row-offset (write-form! (make-writer sheet row-offset) form)
-            application-row-offset (atom local-row-offset)]
-        (doseq [application (and (not-empty form)
-                                 (application-store/fetch-applications
-                                   form-id
-                                   {:limit 1 :lang language}))
-                :let        []]
-          (reset! application-row-offset
-                  (write-application! (make-writer sheet @application-row-offset) application))))
+      (let [form                   (form-store/fetch-form form-id)
+            sheet                  (.getSheetAt workbook 0)
+            local-row-offset       (write-form! (make-writer sheet 2) form)
+            application-row-offset (atom 7)
+            applications           (application-store/fetch-applications
+                                     form-id
+                                     {:limit 1 :lang language})]
+        (update-row-cell! sheet 0 2 (t/now)) ; timestamp the excel sheet
+        (when (and (not-empty form) (not-empty applications))
+          (do
+            (write-headers! (make-writer sheet (swap! application-row-offset inc))
+                            applications)
+            (doseq [application applications]
+              (write-application! (make-writer sheet (swap! application-row-offset inc)) application)))))
       (with-open [stream (java.io.ByteArrayOutputStream.)]
         (.write workbook stream)
-        (.getBytes stream)))))
+        (.toByteArray stream)))))
 
 
