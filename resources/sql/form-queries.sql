@@ -1,19 +1,19 @@
--- name: get-forms-query
+-- name: yesql-get-forms-query
 -- Get all stored forms, without content
 select id, name, modified_by, modified_time from forms order by modified_time desc;
 
--- name: add-form-query<!
+-- name: yesql-add-form-query<!
 -- Add form
 insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
 
--- name: form-exists-query
+-- name: yesql-form-exists-query
 -- Get single form
 select id from forms where id = :id;
 
--- name: get-by-id
+-- name: yesql-get-by-id
 select * from forms where id = :id;
 
--- name: update-form-query!
+-- name: yesql-update-form-query!
 -- Update form
 update forms set
   name = :name,
