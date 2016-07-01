@@ -23,11 +23,12 @@
                 :state "received"})))
 
 (defn unwrap-application [{:keys [lang]} application]
-  (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
-         :answers
-         (mapv (fn [answer]
-                 (update answer :label (keyword lang)))
-               (-> application :content :answers))))
+  (-> (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
+               :answers
+               (mapv (fn [answer]
+                       (update answer :label (keyword lang)))
+                     (-> application :content :answers)))
+      (update :state keyword)))
 
 (s/defn fetch-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
