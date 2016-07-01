@@ -11,4 +11,5 @@
                   :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
                   :cas-client-url "{{ataru_authentication_cas_client_url}}"}
  :email {:email_service_url "{{ataru_email_service_url}}"}
- :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}}}
+ :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}}
+ :person-service {:person-service-url "{{ataru_person_service_url}}"}}
