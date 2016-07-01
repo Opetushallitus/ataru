@@ -17,7 +17,7 @@
        vec))
 
 (defn get-forms []
-  (execute :db get-forms-query {}))
+  (execute :db yesql-get-forms-query {}))
 
 (defn- restructure-form-with-content
   "Unwraps form :content wrapper and transforms all other keys
@@ -32,8 +32,8 @@
   (with-db-transaction [conn {:datasource (get-datasource :db)}]
                        (if (= (:modified-time existing-form) modified-time)
                          (do
-                           (update-form-query! form {:connection conn})
-                           (first (get-by-id form {:connection conn})))
+                           (yesql-update-form-query! form {:connection conn})
+                           (first (yesql-get-by-id form {:connection conn})))
                          (throw (ex-info "form updated in background" {:error "form_updated_in_background"})))))
 
 (defn upsert-form [{:keys [id] :as form-with-modified-time}]
@@ -44,12 +44,12 @@
         f       (-> (transform-keys ->snake_case (dissoc form :content))
                     (assoc :content content))]
     (restructure-form-with-content
-      (let [existing-form (when id (first (execute :db get-by-id f)))]
+      (let [existing-form (when id (first (execute :db yesql-get-by-id f)))]
         (if (some? existing-form)
           (update-existing-form existing-form modified-time f)
-          (exec :db add-form-query<! f))))))
+          (exec :db yesql-add-form-query<! f))))))
 
 (defn fetch-form [id]
-  (if-let [form (first (exec :db get-by-id {:id id}))]
+  (if-let [form (first (exec :db yesql-get-by-id {:id id}))]
     (restructure-form-with-content form)
     nil))

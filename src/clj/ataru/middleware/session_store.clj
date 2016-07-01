@@ -7,18 +7,18 @@
 (defqueries "sql/session-queries.sql")
 
 (defn read-data [key]
-  (:data (first  (exec :db get-session-query {:key key}))))
+  (:data (first  (exec :db yesql-get-session-query {:key key}))))
 
 (defn add-data [key data]
-  (exec :db add-session-query! {:key key :data data})
+  (exec :db yesql-add-session-query! {:key key :data data})
   key)
 
 (defn save-data [key data]
-  (exec :db update-session-query! {:key key :data data})
+  (exec :db yesql-update-session-query! {:key key :data data})
   key)
 
 (defn delete-data [key]
-  (exec :db delete-session-query! {:key key})
+  (exec :db yesql-delete-session-query! {:key key})
   key)
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))

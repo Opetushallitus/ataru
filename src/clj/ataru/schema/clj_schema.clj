@@ -5,6 +5,9 @@
             [oph.soresu.form.schema :as soresu]
             [clojure.string :as str]))
 
+(s/defschema PositiveInteger
+  (s/both (s/pred pos? 'pos?) s/Int))
+
 (s/defschema OptionalLocalizedString
   {:fi                  s/Str
    (s/optional-key :sv) s/Str
@@ -62,8 +65,20 @@
                      :fieldType (apply s/enum ["textField"
                                                "textArea"
                                                "dropdown"])
-                     :label OptionalLocalizedString})
+                     :label (s/cond-pre
+                              OptionalLocalizedString
+                              s/Str)})
 
-(s/defschema Application {:form Long
-                          :lang s/Str
-                          :answers [Answer]})
+(s/defschema Application
+  {(s/optional-key :key)           s/Str
+   :form                           Long
+   :lang                           s/Str
+   :answers                        [Answer]
+   :state                          (s/enum :received)
+   (s/optional-key :modified-time) org.joda.time.DateTime})
+
+(s/defschema ApplicationRequest
+  ; limit number of applications returned
+  {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
+   (s/optional-key :sort) (s/enum :by-date)
+   (s/optional-key :lang) s/Str})

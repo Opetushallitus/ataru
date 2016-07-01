@@ -14,41 +14,36 @@
            :height "40px"}]])
 
 (defn applications []
-  (let [applications (subscribe [:state-query [:application :applications]])
-        count-applications (reaction (count @applications))]
-    (fn []
-      [:div.applications-count.display-flex
-       [:span @count-applications]])))
+  (let [application-count (subscribe [:state-query [:application :count]])]
+    [:div.applications-count.display-flex
+     [:span @application-count]]))
 
 (def panels
-  {:editor "Lomake-editori"
-   :application "Hakemukset"})
+  {:editor      {:text "Lomake-editori" :href #(str "#/editor/" %)}
+   :application {:text "Hakemukset" :href #(str "#/application/" %)}})
 
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
 
 (defn section-link [panel-kw]
-  (let [active-panel         (subscribe [:active-panel])
-        active?              (reaction (= @active-panel
-                                          panel-kw))]
+  (let [active-panel     (subscribe [:active-panel])
+        active?          (reaction (= @active-panel panel-kw))
+        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
       [:div.section-link
        (if @active?
-                [:span.active-section
-                 active-section-arrow
-                 (panel-kw panels)]
-                [:a {:href (str "#/" (name panel-kw))}
-                 (panel-kw panels)])])))
+         [:span.active-section
+          active-section-arrow
+          (-> panels panel-kw :text)]
+         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-id))}
+          (-> panels panel-kw :text)])])))
 
 (defn title []
   (fn []
     [:div.title
-     [section-link :editor]
-     ;;
-     ;; Hidden until the tab contains something real
-     ;;
-     ;;      [:div.divider]
-     ;;      [section-link :application]
-     ;;      [:div [applications]]
+     [section-link :editor "#/editor/"]
+     [:div.divider]
+     [section-link :application "#/application/"]
+     [:div [applications]]
      ]))
 
 (defn profile []

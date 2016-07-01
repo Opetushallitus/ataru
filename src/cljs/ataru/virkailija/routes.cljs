@@ -44,9 +44,18 @@
   (defroute #"/editor/(\d+)" [id]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
-    (dispatch [:editor/select-form (js/parseInt id 10)]))
+    (when-let [parsed-id (js/Number id)]
+      (dispatch-after-state
+        :predicate
+        (fn [db] (not-empty (get-in db [:editor :forms])))
+        :handler
+        (fn [forms]
+          (dispatch [:editor/select-form parsed-id])))))
 
-  (defroute "/application" []
+  (defroute #"/application/(\d+)" [form-id]
+    (let [parsed-id (js/Number form-id)]
+      (dispatch [:editor/select-form parsed-id])
+      (dispatch [:application/fetch-applications parsed-id]))
     (dispatch [:set-active-panel :application]))
 
   ;; --------------------
