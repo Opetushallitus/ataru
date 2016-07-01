@@ -77,6 +77,7 @@
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (s/defschema ApplicationRequest
+  ; limit number of applications returned
   {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
