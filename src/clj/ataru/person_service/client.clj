@@ -3,24 +3,16 @@
             [com.stuartsierra.component :as component]
             [oph.soresu.common.config :refer [config]]))
 
+(defprotocol PersonService
+  (resolve-person-oids [client username]))
+
 (defrecord PersonServiceClient []
-  component/Lifecycle
+  PersonService
 
-  (start [this]
-    (let [person-service-url (str (get-in config [:person-service :person-service-url]) "/authentication-service")
-          username           (get-in config [:cas :username])
-          password           (get-in config [:cas :password])
-          cas-url            (get-in config [:authentication :cas-client-url])
-          cas-params         (cas/cas-params person-service-url username password)
-          cas-client         (cas/cas-client cas-url)]
-      (-> this
-          (assoc :cas-client cas-client)
-          (assoc :cas-params cas-params))))
-
-  (stop [this]
-    (-> this
-        (assoc :cas-client nil)
-        (assoc :cas-params nil))))
+  (resolve-person-oids [client username]
+    {:totalCount 2
+     :results [{:oidHenkilo "1.2.246.562.24.00000000001"}
+               {:oidHenkilo "1.2.246.562.24.00000000002"}]}))
 
 (defn new-client []
   (->PersonServiceClient))
