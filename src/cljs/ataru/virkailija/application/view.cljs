@@ -26,7 +26,10 @@
              [:span.application-list__row--applicant
               (or applicant [:span.application-list__row--applicant-unknown "Tuntematon"])]
              [:span.application-list__row--time time]
-             [:span.application-list__row--state "Saapunut"]]))))
+             [:span.application-list__row--state
+              (case (:state application)
+                "received" "Saapunut"
+                "Tuntematon")]]))))
 
 (defn selected-application []
   [:div.panel-content
