@@ -19,7 +19,9 @@
 
      :cas-client     (cas/new-client)
 
-     :person-service (person-service/new-client)
+     :person-service (component/using
+                       (person-service/new-client)
+                       [:cas-client])
 
      :server         (component/using
                        (server/new-server)
