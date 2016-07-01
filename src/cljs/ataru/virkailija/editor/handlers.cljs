@@ -148,26 +148,20 @@
            (into [])
            (assoc-in db path-vec)))))
 
-(def ^:private events
-  ["webkitAnimationEnd" "mozAnimationEnd" "MSAnimationEnd" "oanimationend" "animationend"])
-
 (register-handler
   :remove-component
   (fn [db [_ path dom-node]]
-    (do
-      (doseq [event events]
-        (.addEventListener
-          dom-node
-          event
-          #(do
-             (.removeEventListener (.-target %) event (-> (cljs.core/js-arguments) .-callee))
-             (dispatch [:editor/do db])
-             (dispatch [:state-update
-                        (fn [db_]
-                          (-> (remove-component db_ path)
-                              (update-in [:editor :forms-meta] assoc path :removed)))]))))
-
-      (assoc-in db [:editor :forms-meta path] :fade-out))))
+    (.addEventListener
+      dom-node
+      "animationend"
+      #(do
+         (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
+         (dispatch [:editor/do db])
+         (dispatch [:state-update
+                    (fn [db_]
+                      (-> (remove-component db_ path)
+                          (update-in [:editor :forms-meta] assoc path :removed)))])))
+    (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (register-handler
   :editor/handle-user-info
