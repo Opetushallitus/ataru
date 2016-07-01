@@ -1,5 +1,5 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel WorkbookFactory])
+  (:import [org.apache.poi.ss.usermodel WorkbookFactory Row])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
@@ -16,31 +16,36 @@
     (input-stream
       "resources/templates/application-export-template.xlsx")))
 
-(defn update-row-cell! [sheet row column value]
+(defn- update-row-cell! [sheet row column value]
   (when-let [v (not-empty (trim (str value)))]
-    (-> (.getRow sheet row)
-        (.getCell column)
+    (-> (or (.getRow sheet row)
+            (.createRow sheet row))
+        (.getCell column Row/CREATE_NULL_AS_BLANK)
         (.setCellValue v)))
   sheet)
 
 (defn- make-writer [sheet offset]
-  (let [local-offset (atom (dec offset))]
-    (fn [column value]
-      (do
-        (update-row-cell!
-          sheet
-          (swap! local-offset inc)
-          column
-          value)
-        @local-offset))))
+  (fn [row column value]
+    (update-row-cell!
+      sheet
+      (+ offset row)
+      column
+      value)
+    [sheet offset row column value]))
 
 (defn- write-form! [writer form]
   (when (not-empty form)
     (do
-      (writer 1 "foo"))))
+      (writer 0 1 "foo")
+      (writer 0 2 "column")
+      (writer 1 1 "bar")
+      (writer 1 2 "column")))
+  1)
 
 (defn- write-application! [writer application]
-  (writer 1 "bar"))
+  (do
+    (writer 0 1 "bar")
+    1))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
   (with-open [workbook (application-workbook)]
