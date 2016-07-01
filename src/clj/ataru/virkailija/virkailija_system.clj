@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
+            [ataru.cas.client :as cas]
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
             [ataru.person-service.client :as person-service]
@@ -15,6 +16,8 @@
      :server-setup   {:port http-port :repl-port 3333}
 
      :migration      (migrations/new-migration)
+
+     :cas-client     (cas/new-client)
 
      :person-service (person-service/new-client)
 
