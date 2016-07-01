@@ -7,4 +7,4 @@
        :schema "public"}
  :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
  :public-config {:applicant {:service_url "http://localhost:8351"}}
- :person-service {:person-service-url "https://itest-virkailija.oph.ware.fi"}}
+ :person-service {:url "https://itest-virkailija.oph.ware.fi"}}
