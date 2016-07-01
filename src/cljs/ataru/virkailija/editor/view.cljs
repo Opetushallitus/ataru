@@ -62,7 +62,7 @@
                                 :type        "text"
                                 :value       @form-name
                                 :placeholder "Lomakkeen nimi"
-                                :on-change   #(dispatch-sync [:editor/change-form-name (.-value (.-target %))])}])})))
+                                :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (defn editor-panel []
   (let [form            (subscribe [:editor/selected-form])]

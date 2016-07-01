@@ -173,24 +173,19 @@
                                                     (vector? path)
                                                     (= :children (second path))
                                                     (= "Lomakeosio" component-name)))]
-            [:li.form__add-component-toolbar--list-item {:on-click #(dispatch [:generate-component generate-fn path])}
-             component-name]))))
+            [:li.form__add-component-toolbar--list-item
+             [:a {:href     "#"
+                  :on-click (fn [evt]
+                              (.preventDefault evt)
+                              (dispatch [:generate-component generate-fn path]))}
+              component-name]]))))
 
 (defn add-component [path]
-  (let [show-bar? (r/atom nil)
-        show-bar #(reset! show-bar? true)
-        hide-bar #(reset! show-bar? false)]
-    (fn [path]
-      (if @show-bar?
-        [:div.editor-form__add-component-toolbar
-         {:on-mouse-leave hide-bar
-          :on-mouse-enter show-bar}
-         [component-toolbar path]]
-        [:div.editor-form__add-component-toolbar
-         {:on-mouse-enter show-bar
-          :on-mouse-leave hide-bar}
-         [:div.plus-component
-          [:span "+"]]]))))
+  (fn [path]
+    [:div.editor-form__add-component-toolbar
+     [component-toolbar path]
+     [:div.plus-component
+      [:span "+"]]]))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]

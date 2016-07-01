@@ -117,14 +117,6 @@
                                    :main "ataru.unit-runner"
                                    :optimizations :none}}
 
-                       {:id "browser-test"
-                        :source-paths ["src/cljs" "test/cljs/browser" "src/cljc"]
-                        :compiler {:output-to "resources/public/js/test/browser-test.js"
-                                   :output-dir "resources/public/js/test/out"
-                                   :asset-path "js/test/out"
-                                   :main "ataru.virkailija.browser-runner"
-                                   :optimizations :none}}
-
                        {:id "virkailija-min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.virkailija.core"
@@ -133,6 +125,7 @@
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false}}
+
                        {:id "hakija-min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.hakija.core"
