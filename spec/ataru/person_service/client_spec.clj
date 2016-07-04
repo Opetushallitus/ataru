@@ -9,7 +9,7 @@
             [oph.soresu.common.config :refer [config]]
             [ring.util.http-response :as response]
             [speclj.core :refer :all])
-  (:import (fi.vm.sade.utils.cas CasClient CasParams)
+  (:import (fi.vm.sade.utils.cas CasClient)
            (scalaz.concurrent Task)
            (java.io ByteArrayInputStream)))
 
