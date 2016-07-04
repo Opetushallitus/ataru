@@ -4,6 +4,10 @@
             [com.stuartsierra.component :as component]
             [oph.soresu.common.config :refer [config]]))
 
+(defn- read-body
+  [resp]
+  (-> resp :body slurp (json/parse-string true)))
+
 (defprotocol PersonService
   (resolve-person-oids [client username]))
 
@@ -27,8 +31,8 @@
           (= 302 (:status resp))
           (do
             (reset! session-id (.run (.fetchCasSession cas-client cas-params)))
-            (-> @(http/get url params) :body slurp (json/parse-string true)))
-          (-> resp :body slurp (json/parse-string true))))))
+            (read-body @(http/get url params)))
+          (read-body resp)))))
 
   (start [this]
     (assoc this :cas-session-id (atom nil)))
