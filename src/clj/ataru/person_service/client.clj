@@ -1,5 +1,6 @@
 (ns ataru.person-service.client
   (:require [aleph.http :as http]
+            [cheshire.core :as json]
             [clj-util.cas :as cas]
             [com.stuartsierra.component :as component]
             [oph.soresu.common.config :refer [config]]))
@@ -27,8 +28,8 @@
           (= 302 (:status resp))
           (do
             (reset! session-id (.run (.fetchCasSession cas-client cas-params)))
-            @(http/get url params))
-          resp))))
+            (-> @(http/get url params) :body slurp (json/parse-string true)))
+          (-> resp :body slurp (json/parse-string true))))))
 
   (start [this]
     (assoc this :cas-session-id (atom nil)))
