@@ -17,7 +17,8 @@
           url        (str (get-in config [:person-service :url]) "/authentication-service/resources/henkilo")
           session-id (.run (.fetchCasSession cas-client cas-params))]
       @(http/get url {:query-params {"q" username}
-                      :headers {"Cookie" (str "JSESSIONID=" session-id)}})))
+                      :headers {"Cookie" (str "JSESSIONID=" session-id)}
+                      :follow-redirects false})))
 
   (start [this]
     (assoc this :cas-session-id (atom nil)))
