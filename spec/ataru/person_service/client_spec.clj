@@ -1,14 +1,17 @@
 (ns ataru.person-service.client-spec
   (:require [aleph.http :as http]
             [ataru.person-service.client :as client]
+            [cheshire.core :as json]
             [clj-util.cas :as cas-util]
             [clj-util.client :as client-util]
             [com.stuartsierra.component :as component]
             [manifold.deferred :as d]
             [oph.soresu.common.config :refer [config]]
+            [ring.util.http-response :as response]
             [speclj.core :refer :all])
   (:import (fi.vm.sade.utils.cas CasClient CasParams)
-           (scalaz.concurrent Task)))
+           (scalaz.concurrent Task)
+           (java.io ByteArrayInputStream)))
 
 (def person-search-response
   {:totalCount 2
@@ -44,8 +47,13 @@
          ~(first bindings) (:person-service system#)]
      (with-redefs [http/get (fn [& args#]
                               (apply ~(second bindings) args#)
-                              (let [ret# (d/deferred)]
-                                (d/success! ret# person-search-response)
+                              (let [ret#  (d/deferred)
+                                    resp# {:status 200
+                                           :body   (-> person-search-response
+                                                       json/generate-string
+                                                       .getBytes
+                                                       ByteArrayInputStream.)}]
+                                (d/success! ret# resp#)
                                 ret#))]
        ~@body)))
 
