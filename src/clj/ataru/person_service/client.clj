@@ -10,9 +10,9 @@
   PersonService
 
   (resolve-person-oids [client username]
-    {:totalCount 2
-     :results [{:oidHenkilo "1.2.246.562.24.00000000001"}
-               {:oidHenkilo "1.2.246.562.24.00000000002"}]}))
+    (let [cas-client (get-in client [:cas-client :client])
+          cas-params (get-in client [:cas-client :params])]
+      (.run (.fetchCasSession cas-client cas-params)))))
 
 (defn new-client []
   (->PersonServiceClient))
