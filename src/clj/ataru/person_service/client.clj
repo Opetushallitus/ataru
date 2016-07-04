@@ -1,7 +1,6 @@
 (ns ataru.person-service.client
   (:require [aleph.http :as http]
             [cheshire.core :as json]
-            [clj-util.cas :as cas]
             [com.stuartsierra.component :as component]
             [oph.soresu.common.config :refer [config]]))
 
