@@ -9,6 +9,12 @@
   (-> resp :body slurp (json/parse-string true)))
 
 (defprotocol PersonService
+  "Resolve all OIDs that belong to a given username. Please note that the
+   username might have multiple OIDs.
+
+   This API call also initializes new CAS session if one doesn't yet
+   exist. Also a new CAS session is initialized (once) in case the old
+   one is not valid anymore."
   (resolve-person-oids [client username]))
 
 (defrecord PersonServiceClient []
