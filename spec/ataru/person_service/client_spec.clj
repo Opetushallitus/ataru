@@ -1,9 +1,12 @@
 (ns ataru.person-service.client-spec
-  (:require [ataru.person-service.client :as client]
+  (:require [aleph.http :as http]
+            [ataru.person-service.client :as client]
             [clj-util.cas :as cas-util]
             [clj-util.client :as client-util]
             [com.stuartsierra.component :as component]
+            [manifold.deferred :as d]
             [oph.soresu.common.config :refer [config]]
+            [ring.util.request :as request]
             [speclj.core :refer :all])
   (:import (fi.vm.sade.utils.cas CasClient CasParams)
            (scalaz.concurrent Task)))
@@ -26,8 +29,12 @@
                    (fetchCasSession [_]
                      (Task/now cas-session-id))))
 
-(defmacro with-client
-  [client & body]
+(def person-service-url (get-in config [:person-service :url]))
+
+(def username "test-user")
+
+(defmacro with-mock-api
+  [bindings & body]
   `(let [system# (component/start-system
                    (component/system-map
                      :cas-client {:client mock-client
@@ -35,13 +42,21 @@
                      :person-service (component/using
                                        (client/new-client)
                                        [:cas-client])))
-         ~client (:person-service system#)]
-     ~@body))
+         ~(first bindings) (:person-service system#)]
+     (with-redefs [http/get (fn [& args#]
+                              (apply ~(second bindings) args#)
+                              (let [ret# (d/deferred)]
+                                (d/success! ret# person-search-response)
+                                ret#))]
+       ~@body)))
 
 (describe "PersonServiceClient"
   (tags :unit)
 
   (it "should fetch OIDs for a person"
-    (with-client client
+    (with-mock-api [client (fn [url {:keys [query-params headers]}]
+                             (should= (str person-service-url "/authentication-service/resources/henkilo") url)
+                             (should= {"q" username} query-params)
+                             (should= {"Cookie" (str "JSESSIONID=" cas-session-id)} headers))]
       (let [oid-resp (.resolve-person-oids client "test-user")]
-        (should= cas-session-id oid-resp)))))
+        (should= person-search-response oid-resp)))))
