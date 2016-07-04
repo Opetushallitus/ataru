@@ -6,7 +6,6 @@
             [com.stuartsierra.component :as component]
             [manifold.deferred :as d]
             [oph.soresu.common.config :refer [config]]
-            [ring.util.request :as request]
             [speclj.core :refer :all])
   (:import (fi.vm.sade.utils.cas CasClient CasParams)
            (scalaz.concurrent Task)))
