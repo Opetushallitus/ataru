@@ -82,7 +82,8 @@
           (for [lang @languages]
             ^{:key lang}
             [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                             :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+                                             :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
+                                             :on-drop prevent-default}]))]
        [:div.editor-form__size-button-wrapper
         [:header.editor-form__component-item-header size-label]
         [:div.editor-form__size-button-group
@@ -120,7 +121,7 @@
   (let [languages (subscribe [:editor/languages])
         value (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
-    (fn [initial-content]
+    (fn [initial-content path]
       [:div.editor-form__component-wrapper.animated.fadeInUp
        {:class @animation-effect}
        [text-header "Pudotusvalikko" path]
@@ -131,7 +132,8 @@
            (for [lang @languages]
              ^{:key lang}
              [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]
+                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
+                                              :on-drop prevent-default}]))]
         [:div.editor-form__checkbox-wrapper
          (render-checkbox path initial-content :required)]]
        [:div.editor-form__multi-options_wrapper
@@ -154,7 +156,8 @@
                     [:input.editor-form__text-field
                      {:value       option-label
                       :placeholder "Lisää..."
-                      :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])}]]])))))]])))
+                      :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])
+                      :on-drop prevent-default}]]])))))]])))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"     component/form-section
@@ -233,7 +236,8 @@
              ^{:key lang}
              [:input.editor-form__text-field
               {:value     (get-in @value [:label lang])
-               :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])}]))]]
+               :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
+               :on-drop prevent-default}]))]]
        children
        [drag-n-drop-spacer (conj path :children (count children))]
        [add-component (conj path :children (count children))]])))
