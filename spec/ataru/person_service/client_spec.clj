@@ -46,13 +46,12 @@
                                        [:cas-client])))
          ~(first bindings) (:person-service system#)]
      (with-redefs [http/get (fn [& args#]
-                              (apply ~(second bindings) args#)
-                              (let [ret#  (d/deferred)
-                                    resp# {:status 200
-                                           :body   (-> person-search-response
-                                                       json/generate-string
-                                                       .getBytes
-                                                       ByteArrayInputStream.)}]
+                              (let [resp# (-> (apply ~(second bindings) args#)
+                                              (update :body #(-> %
+                                                                 json/generate-string
+                                                                 .getBytes
+                                                                 ByteArrayInputStream.)))
+                                    ret# (d/deferred)]
                                 (d/success! ret# resp#)
                                 ret#))]
        ~@body)))
@@ -64,6 +63,7 @@
     (with-mock-api [client (fn [url {:keys [query-params headers]}]
                              (should= (str person-service-url "/authentication-service/resources/henkilo") url)
                              (should= {"q" username} query-params)
-                             (should= {"Cookie" (str "JSESSIONID=" cas-session-id)} headers))]
+                             (should= {"Cookie" (str "JSESSIONID=" cas-session-id)} headers)
+                             (response/ok person-search-response))]
       (let [oid-resp (.resolve-person-oids client "test-user")]
         (should= person-search-response oid-resp)))))
