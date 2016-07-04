@@ -338,9 +338,12 @@
   [db [_ source-path target-path]]
   (with-form-id [db form-id]
     (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
-          recalculated-target-path (recalculate-target-path source-path target-path)]
-      (-> db
-        (remove-component-from-list source-path)
-        (add-component-to-list component recalculated-target-path)))))
+          recalculated-target-path (recalculate-target-path source-path target-path)
+          result-is-nested-component-group (and (contains? (set recalculated-target-path) :children) (= "wrapperElement" (:fieldClass component)))]
+      (if result-is-nested-component-group
+        db ; Nesting is not allowed/supported
+        (-> db
+          (remove-component-from-list source-path)
+          (add-component-to-list component recalculated-target-path))))))
 
 (register-handler :editor/move-component move-component)
