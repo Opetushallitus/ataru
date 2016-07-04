@@ -72,4 +72,17 @@
                              (should= {"Cookie" (str "JSESSIONID=" cas-session-id-1)} headers)
                              (response/ok person-search-response))]
       (let [oid-resp (.resolve-person-oids client "test-user")]
+        (should= person-search-response oid-resp))))
+
+  (it "should initialize new CAS session once if first one is invalid"
+    (with-mock-api [client (fn [url {:keys [query-params headers]}]
+                             (if
+                               (= {"Cookie" (str "JSESSIONID=" cas-session-id-1)} headers)
+                               (response/found "about:blank")
+                               (do
+                                 (should= (str person-service-url "/authentication-service/resources/henkilo") url)
+                                 (should= {"q" username} query-params)
+                                 (should= {"Cookie" (str "JSESSIONID=" cas-session-id-2)} headers)
+                                 (response/ok person-search-response))))]
+      (let [oid-resp (.resolve-person-oids client "test-user")]
         (should= person-search-response oid-resp)))))
