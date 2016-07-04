@@ -14,11 +14,21 @@
   (resolve-person-oids [client username]
     (let [cas-client (get-in client [:cas-client :client])
           cas-params (get-in client [:cas-client :params])
-          url        (str (get-in config [:person-service :url]) "/authentication-service/resources/henkilo")
-          session-id (.run (.fetchCasSession cas-client cas-params))]
-      @(http/get url {:query-params {"q" username}
-                      :headers {"Cookie" (str "JSESSIONID=" session-id)}
-                      :follow-redirects false})))
+          session-id (:cas-session-id client)]
+      (when
+        (nil? @session-id)
+        (reset! session-id (.run (.fetchCasSession cas-client cas-params))))
+      (let [url    (str (get-in config [:person-service :url]) "/authentication-service/resources/henkilo")
+            params {:query-params {"q" username}
+                    :headers {"Cookie" (str "JSESSIONID=" @session-id)}
+                    :follow-redirects false}
+            resp    @(http/get url params)]
+        (if
+          (= 302 (:status resp))
+          (do
+            (reset! session-id (.run (.fetchCasSession cas-client cas-params)))
+            @(http/get url params))
+          resp))))
 
   (start [this]
     (assoc this :cas-session-id (atom nil)))
