@@ -129,6 +129,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
+                                   :externs ["resources/virkailija-externs.js"]
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
                                    :pretty-print false}}
