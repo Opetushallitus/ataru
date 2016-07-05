@@ -1,6 +1,6 @@
 (ns ataru.virkailija-routes-spec
   (:require [ataru.virkailija.virkailija-routes :as v]
-            [ataru.test-utils :refer [login should-have-header]]
+            [ataru.test-utils :refer [login should-have-header virkailija-routes]]
             [ring.mock.request :as mock]
             [ataru.fixtures.form :as fixtures]
             [speclj.core :refer :all]
@@ -11,7 +11,7 @@
   [name path]
   `(with ~name (-> (mock/request :get ~path)
                    (update-in [:headers] assoc "cookie" (login))
-                   v/clerk-routes)))
+                   virkailija-routes)))
 
 (describe "GET /lomake-editori"
   (tags :unit)
@@ -67,7 +67,7 @@
                             (json/generate-string fixtures/form-with-content))
               (update-in [:headers] assoc "cookie" (login))
               (mock/content-type "application/json")
-              v/clerk-routes
+              virkailija-routes
               (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
   (before

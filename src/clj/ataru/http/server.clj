@@ -22,13 +22,11 @@
   component/Lifecycle
 
   (start [this]
-    (let [server-setup (-> this :server-setup)
+    (let [server-setup (:server-setup this)
           port         (:port server-setup)
           repl-port    (:repl-port server-setup)
-          routes       (:routes server-setup)
-          handler      (if (:dev? env)
-                         (wrap-reload routes)
-                         routes)
+          handler      (cond-> (get-in this [:handler :routes])
+                         (:dev? env) wrap-reload)
           server       (http/start-server handler {:port port})]
       (do
         (a/go (start-repl! repl-port)))

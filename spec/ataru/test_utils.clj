@@ -3,11 +3,15 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 
+(def virkailija-routes (-> (v/new-handler)
+                        .start
+                        :routes))
+
 (defn login
   "Generate ring-session=abcdefgh cookie"
   []
   (-> (mock/request :get "/lomake-editori/auth/cas")
-      v/clerk-routes
+      virkailija-routes
       :headers
       (get "Set-Cookie")
       first
