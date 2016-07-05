@@ -3,7 +3,8 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.fixtures.application :as fixtures]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all])
+  (:import (java.io FileOutputStream)))
 
 (describe "writing form"
   (tags :unit)
@@ -21,4 +22,4 @@
                   form-store/fetch-form                (fn [& _] fixtures/form)]
 
       (->> (j2ee/export-all-applications 99999999)
-        (.write (java.io.FileOutputStream. "/tmp/foo.xlsx"))))))
+        (.write (FileOutputStream. "/tmp/foo.xlsx"))))))
