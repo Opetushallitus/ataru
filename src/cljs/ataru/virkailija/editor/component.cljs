@@ -122,7 +122,7 @@
         value (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
-      [:div.editor-form__component-wrapper.animated.fadeInUp
+      [:div.editor-form__component-wrapper
        {:class @animation-effect}
        [text-header "Pudotusvalikko" path]
        [:div.editor-form__multi-question-wrapper
