@@ -1,5 +1,5 @@
 (ns ataru.applications.excel-export-spec
-  (:require [ataru.applications.excel-export-spec :as j2ee]
+  (:require [ataru.applications.excel-export :as j2ee]
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.fixtures.application :as fixtures]
