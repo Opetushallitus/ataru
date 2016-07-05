@@ -50,6 +50,7 @@
 (defn create-application-to-submit [application form lang]
   {:form (:id form)
    :lang lang
+   :state :received
    :answers (create-answers-to-submit (:answers application) form)})
 
 (defn extract-wrapper-sections [form]
