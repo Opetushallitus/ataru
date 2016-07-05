@@ -4,6 +4,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
+            [com.stuartsierra.component :as component]
             [schema.core :as s]
             [ataru.schema.clj-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
@@ -56,12 +57,21 @@
                            :body [error-details client-error/ClientError]
                            (handle-client-error error-details)))))
 
-(def hakija-routes
-  (-> (routes
-        (context "/hakemus" []
-          buildversion-routes
-          api-routes
-          (route/resources "/")
-          (GET "/:id" []
-            (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint})))
-        (route/not-found "<h1>Page not found</h1>"))))
+(defrecord Handler []
+  component/Lifecycle
+
+  (start [this]
+    (assoc this :routes (routes
+                          (context "/hakemus" []
+                            buildversion-routes
+                            api-routes
+                            (route/resources "/")
+                            (GET "/:id" []
+                              (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint})))
+                          (route/not-found "<h1>Page not found</h1>"))))
+
+  (stop [this]
+    this))
+
+(defn new-handler []
+  (->Handler))
