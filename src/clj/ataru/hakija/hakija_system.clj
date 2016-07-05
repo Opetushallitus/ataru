@@ -8,6 +8,10 @@
   []
   (component/system-map
     :handler      (handler/new-handler)
+
     :server-setup {:port 8351 :repl-port 3335}
-    :migration (migrations/new-migration)
-    :server (component/using (server/new-server) [:server-setup :handler])))
+
+    :migration    (migrations/new-migration)
+    :server       (component/using
+                    (server/new-server)
+                    [:server-setup :handler])))
