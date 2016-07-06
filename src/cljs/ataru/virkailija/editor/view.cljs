@@ -76,12 +76,7 @@
            [:span [:a.editor-form__preview-link
                                                 {:href   (str js/config.applicant.service_url "/hakemus/" (:id @form))
                                                  :target "_blank"}
-                                                "Esikatsele lomake"]]
-
-           [:span.editor-form__link-row--divider "|"]
-           [:span
-            [:a.editor-form__preview-link
-             {:href (str "#/application/" (:id @form))} "Selaa lomakkeen hakemuksia"]]]]
+                                                "Esikatsele lomake"]]]]
          [c/editor]]))))
 
 (defn editor []
