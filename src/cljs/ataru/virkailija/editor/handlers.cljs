@@ -114,8 +114,7 @@
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update
                     (fn [db_]
-                      (-> (remove-component db_ path)
-                          (update-in [:editor :forms-meta] assoc path :removed)))])))
+                      (remove-component db_ path))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (register-handler
