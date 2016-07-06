@@ -43,7 +43,8 @@
      [section-link :editor "#/editor/"]
      [:div.divider]
      [section-link :application "#/application/"]
-     [:div [applications]]
+     ; Use after we have multiple states representing new vs handled applications:
+     ; [:div [applications]]
      ]))
 
 (defn profile []
