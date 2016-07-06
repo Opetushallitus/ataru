@@ -37,50 +37,6 @@
                      :else (c/after? v1 v2)))))
         m))
 
-(defn- push-to-undo-stack [db-before db-after]
-  (let [undo-limit              999
-        selected-form-id-before (-> db-before :editor :selected-form-id)
-        selected-form-id-after  (-> db-after :editor :selected-form-id)
-        form-before             (get-in db-before [:editor :forms selected-form-id-before])]
-    (if (not= selected-form-id-before
-              selected-form-id-after)
-      (assoc-in db-after [:editor :form-undodata] '())
-      (update-in db-after [:editor :form-undodata]
-                 (fn [undodata]
-                   (seq (eduction
-                          (comp (take undo-limit)
-                                (filter some?))
-                          (cons form-before
-                                undodata))))))))
-
-(register-handler
-   :editor/do
-  (fn [db-after [_ db-before]]
-    (-> (push-to-undo-stack db-before db-after)
-        ; Removes potential previously set undo boxes from ui
-        (update :editor dissoc :forms-meta))))
-
-(register-handler
-  :editor/undo
-  (fn [db _]
-    (with-form-id [db selected-form-id]
-      (let [[form & xs]      (-> db :editor :form-undodata)
-            modified-time    (get-in db [:editor :forms selected-form-id :modified-time])]
-        (if (and (not-empty form)
-              (= selected-form-id (:id form)))
-          (-> db
-              (assoc-in [:editor :form-undodata] xs)
-              (update :editor dissoc :forms-meta)
-              (assoc-in [:editor :forms selected-form-id]
-                (assoc form :modified-time modified-time)))
-          db)))))
-
-(register-handler
-  :editor/clear-undo
-  (fn [db _]
-    (-> (update db :editor dissoc :form-undodata)
-        (update :editor dissoc :forms-meta))))
-
 (defn- empty-options-in-select?
   [options]
   (some #(clojure.string/blank? (:value %)) options))
@@ -156,11 +112,9 @@
       "animationend"
       #(do
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
-         (dispatch [:editor/do db])
          (dispatch [:state-update
                     (fn [db_]
-                      (-> (remove-component db_ path)
-                          (update-in [:editor :forms-meta] assoc path :removed)))])))
+                      (remove-component db_ path))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (register-handler
