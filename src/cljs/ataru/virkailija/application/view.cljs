@@ -36,15 +36,18 @@
     [:div
      [:h1.application__name
       (:name @form)]
-     [applications]]))
+     ; Show when we have "henkilötiedot-moduuli", when we can rely on the applicant's name to be there
+     ;[applications]
+     ]))
 
 (defn application []
   [:div
    [:div.editor-form__container.panel-content
     [application-list]
-    [:p [:a {:href
-             (str
-               "/lomake-editori/api/applications/"
-               @(subscribe [:state-query [:application :form :id]])
-               "/excel")}
+    [:p [:a
+         {:href
+           (str
+             "/lomake-editori/api/applications/"
+             @(subscribe [:state-query [:application :form :id]])
+             "/excel")}
          "Lataa kaikki hakemukset Excel -tiedostona"]]]])
