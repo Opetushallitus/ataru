@@ -20,7 +20,7 @@
   (let [row (iterator-seq (.cellIterator (.getRow sheet row-num)))
         values (map #(.getStringCellValue %) (take 6 row))]
     (should= expected-values values)
-    (should (every? nil? (nthrest values 6)))))
+    (should (every? nil? (nthrest values (count expected-values))))))
 
 (describe "writing excel"
   (tags :excel)
