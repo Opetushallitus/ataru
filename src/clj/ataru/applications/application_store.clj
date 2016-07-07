@@ -4,7 +4,6 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [schema.core :as s]
             [oph.soresu.common.db :as db]
-            [taoensso.timbre :refer [spy debug]]
             [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/application-queries.sql")
