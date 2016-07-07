@@ -15,6 +15,13 @@
     (let [book (#'j2ee/application-workbook)]
       (should= 3 (#'j2ee/write-form! (#'j2ee/make-writer (.getSheetAt book 0) 0) fixtures/form)))))
 
+(defn- verify-row
+  [sheet row-num expected-values]
+  (let [row (iterator-seq (.cellIterator (.getRow sheet row-num)))
+        values (map #(.getStringCellValue %) (take 6 row))]
+    (should= expected-values values)
+    (should (every? nil? (nthrest values 6)))))
+
 (describe "writing excel"
   (tags :excel)
 
@@ -29,15 +36,8 @@
           (with-open [output (FileOutputStream. (.getPath file))]
             (->> (j2ee/export-all-applications 99999999)
                  (.write output)))
-          (let [sheet      (-> file WorkbookFactory/create (.getSheetAt 0))
-                header-row (iterator-seq (.cellIterator (.getRow sheet 8)))
-                headers    (map #(.getStringCellValue %) (take 6 header-row))]
-            (should= (nth headers 0) "Eka kysymys")
-            (should= (nth headers 1) "Toka kysymys")
-            (should= (nth headers 2) "Kolmas kysymys")
-            (should= (nth headers 3) "Neljas kysymys")
-            (should= (nth headers 4) "Viides kysymys")
-            (should= (nth headers 5) "Kuudes kysymys")
-            (should (every? nil? (nthrest headers 6))))
+          (let [sheet (-> file WorkbookFactory/create (.getSheetAt 0))]
+            (verify-row sheet 8
+              ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys"]))
           (finally
             (.delete file))))))
