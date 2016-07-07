@@ -12,36 +12,36 @@
     :form-id 703
     :state :received
     :answers
-    [{:key "G__19", :label "tekstiä", :value "1", :fieldType "textField"}
-     {:key "G__17", :label "a", :value "2", :fieldType "textField"}
-     {:key "G__24", :label "gg", :value "3", :fieldType "textField"}
-     {:key "G__36", :label "c", :value "4", :fieldType "textField"}
-     {:key "G__14", :label "aef", :value "5", :fieldType "textField"}
-     {:key "G__47", :label "freFD", :value "6", :fieldType "textField"}]}
+    [{:key "G__19", :label "Eka kysymys", :value "1", :fieldType "textField"}
+     {:key "G__17", :label "Toka kysymys", :value "2", :fieldType "textField"}
+     {:key "G__24", :label "Kolmas kysymys", :value "3", :fieldType "textField"}
+     {:key "G__36", :label "Neljas kysymys", :value "4", :fieldType "textField"}
+     {:key "G__14", :label "Viides kysymys", :value "5", :fieldType "textField"}
+     {:key "G__47", :label "Kuudes kysymys", :value "6", :fieldType "textField"}]}
    {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
     :lang "fi",
     :modified-time (get-in fixtures/applications [1 :modified-time])
     :form-id 703
     :state :received
     :answers
-    [{:key "G__19", :label "tekstiä", :value "Vastaus", :fieldType "textField"}
-     {:key "G__17", :label "a", :value "lomakkeeseen", :fieldType "textField"}
-     {:key "G__24", :label "gg", :value "asiallinen", :fieldType "textField"}
-     {:key "G__36", :label "c", :value "vastaus", :fieldType "textField"}
-     {:key "G__14", :label "aef", :value "joo", :fieldType "textField"}
-     {:key "G__47", :label "freFD", :value "jee", :fieldType "textField"}]}
+    [{:key "G__19", :label "Eka kysymys", :value "Vastaus", :fieldType "textField"}
+     {:key "G__17", :label "Toka kysymys", :value "lomakkeeseen", :fieldType "textField"}
+     {:key "G__24", :label "Kolmas kysymys", :value "asiallinen", :fieldType "textField"}
+     {:key "G__36", :label "Neljas kysymys", :value "vastaus", :fieldType "textField"}
+     {:key "G__14", :label "Viides kysymys", :value "joo", :fieldType "textField"}
+     {:key "G__47", :label "Kuudes kysymys", :value "jee", :fieldType "textField"}]}
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
     :lang "fi",
     :modified-time (get-in fixtures/applications [2 :modified-time])
     :form-id 703
     :state :received
     :answers
-    [{:key "G__19", :label "tekstiä", :value "a", :fieldType "textField"}
-     {:key "G__17", :label "a", :value "b", :fieldType "textField"}
-     {:key "G__24", :label "gg", :value "d", :fieldType "textField"}
-     {:key "G__36", :label "c", :value "e", :fieldType "textField"}
-     {:key "G__14", :label "aef", :value "f", :fieldType "textField"}
-     {:key "G__47", :label "freFD", :value "g", :fieldType "textField"}]}])
+    [{:key "G__19", :label "Eka kysymys", :value "a", :fieldType "textField"}
+     {:key "G__17", :label "Toka kysymys", :value "b", :fieldType "textField"}
+     {:key "G__24", :label "Kolmas kysymys", :value "d", :fieldType "textField"}
+     {:key "G__36", :label "Neljas kysymys", :value "e", :fieldType "textField"}
+     {:key "G__14", :label "Viides kysymys", :value "f", :fieldType "textField"}
+     {:key "G__47", :label "Kuudes kysymys", :value "g", :fieldType "textField"}]}])
 
 (describe "fetch-applications"
   (tags :unit)

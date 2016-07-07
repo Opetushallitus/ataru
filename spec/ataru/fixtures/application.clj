@@ -63,12 +63,12 @@
   :state "received"
   :content
     {:answers
-     [{:key "G__19", :label {:fi "tekstiä"}, :value "1", :fieldType "textField"}
-      {:key "G__17", :label {:fi "a"}, :value "2", :fieldType "textField"}
-      {:key "G__24", :label {:fi "gg"}, :value "3", :fieldType "textField"}
-      {:key "G__36", :label {:fi "c"}, :value "4", :fieldType "textField"}
-      {:key "G__14", :label {:fi "aef"}, :value "5", :fieldType "textField"}
-      {:key "G__47", :label {:fi "freFD"}, :value "6", :fieldType "textField"}]}}
+     [{:key "G__19", :label {:fi "Eka kysymys"}, :value "1", :fieldType "textField"}
+      {:key "G__17", :label {:fi "Toka kysymys"}, :value "2", :fieldType "textField"}
+      {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "3", :fieldType "textField"}
+      {:key "G__36", :label {:fi "Neljas kysymys"}, :value "4", :fieldType "textField"}
+      {:key "G__14", :label {:fi "Viides kysymys"}, :value "5", :fieldType "textField"}
+      {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "6", :fieldType "textField"}]}}
  {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
   :lang "fi",
   :modified-time (c/now)
@@ -76,12 +76,12 @@
   :state "received"
   :content
     {:answers
-     [{:key "G__19", :label {:fi "tekstiä"}, :value "Vastaus", :fieldType "textField"}
-      {:key "G__17", :label {:fi "a"}, :value "lomakkeeseen", :fieldType "textField"}
-      {:key "G__24", :label {:fi "gg"}, :value "asiallinen", :fieldType "textField"}
-      {:key "G__36", :label {:fi "c"}, :value "vastaus", :fieldType "textField"}
-      {:key "G__14", :label {:fi "aef"}, :value "joo", :fieldType "textField"}
-      {:key "G__47", :label {:fi "freFD"}, :value "jee", :fieldType "textField"}]}}
+     [{:key "G__19", :label {:fi "Eka kysymys"}, :value "Vastaus", :fieldType "textField"}
+      {:key "G__17", :label {:fi "Toka kysymys"}, :value "lomakkeeseen", :fieldType "textField"}
+      {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "asiallinen", :fieldType "textField"}
+      {:key "G__36", :label {:fi "Neljas kysymys"}, :value "vastaus", :fieldType "textField"}
+      {:key "G__14", :label {:fi "Viides kysymys"}, :value "joo", :fieldType "textField"}
+      {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "jee", :fieldType "textField"}]}}
  {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
   :lang "fi",
   :modified-time (c/now)
@@ -89,9 +89,9 @@
   :state "received"
   :content
     {:answers
-     [{:key "G__19", :label {:fi "tekstiä"}, :value "a", :fieldType "textField"}
-      {:key "G__17", :label {:fi "a"}, :value "b", :fieldType "textField"}
-      {:key "G__24", :label {:fi "gg"}, :value "d", :fieldType "textField"}
-      {:key "G__36", :label {:fi "c"}, :value "e", :fieldType "textField"}
-      {:key "G__14", :label {:fi "aef"}, :value "f", :fieldType "textField"}
-      {:key "G__47", :label {:fi "freFD"}, :value "g", :fieldType "textField"}]}}])
+     [{:key "G__19", :label {:fi "Eka kysymys"}, :value "a", :fieldType "textField"}
+      {:key "G__17", :label {:fi "Toka kysymys"}, :value "b", :fieldType "textField"}
+      {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "d", :fieldType "textField"}
+      {:key "G__36", :label {:fi "Neljas kysymys"}, :value "e", :fieldType "textField"}
+      {:key "G__14", :label {:fi "Viides kysymys"}, :value "f", :fieldType "textField"}
+      {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
