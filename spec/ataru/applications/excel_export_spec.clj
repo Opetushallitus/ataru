@@ -9,7 +9,7 @@
            (org.apache.poi.ss.usermodel WorkbookFactory)))
 
 (describe "writing form"
-  (tags :unit)
+  (tags :excel)
 
   (it "writes the form"
     (let [book (#'j2ee/application-workbook)]
