@@ -3,7 +3,7 @@
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [schema.core :as s]
-            [oph.soresu.common.db :refer [exec]]
+            [oph.soresu.common.db :as db]
             [taoensso.timbre :refer [spy debug]]
             [yesql.core :refer [defqueries]]))
 
@@ -37,11 +37,11 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-          (exec :db (case (:sort request)
+          (db/exec :db (case (:sort request)
                       :by-date yesql-application-query-by-modified
                       yesql-application-query-by-modified)
                 (dissoc (transform-keys ->snake_case request)
                         :sort)))))
 
 (defn fetch-application-counts [form-id]
-  (first (exec :db yesql-fetch-application-counts {:form_id form-id})))
+  (first (db/exec :db yesql-fetch-application-counts {:form_id form-id})))
