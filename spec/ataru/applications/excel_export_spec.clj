@@ -4,7 +4,8 @@
             [ataru.forms.form-store :as form-store]
             [ataru.fixtures.application :as fixtures]
             [speclj.core :refer :all])
-  (:import (java.io FileOutputStream)))
+  (:import (java.io FileOutputStream File)
+           (java.util UUID)))
 
 (describe "writing form"
   (tags :unit)
@@ -20,6 +21,10 @@
 
     (with-redefs [application-store/fetch-applications (fn [& _] fixtures/applications)
                   form-store/fetch-form                (fn [& _] fixtures/form)]
-
-      (->> (j2ee/export-all-applications 99999999)
-        (.write (FileOutputStream. "/tmp/foo.xlsx"))))))
+      (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
+        (try
+          (with-open [output (FileOutputStream. (.getPath file))]
+            (->> (j2ee/export-all-applications 99999999)
+                 (.write output)))
+          (finally
+            (.delete file)))))))
