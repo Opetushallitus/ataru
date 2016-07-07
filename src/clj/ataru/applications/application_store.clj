@@ -13,8 +13,12 @@
    :sort :by-date
    :lang "fi"})
 
+(defn- exec-db
+  [ds-key query params]
+  (db/exec ds-key query params))
+
 (defn insert-application [application]
-  (first (exec :db yesql-add-application-query<!
+  (first (exec-db :db yesql-add-application-query<!
                {:form_id (:form application)
                 :key (str (java.util.UUID/randomUUID))
                 :lang (:lang application)
@@ -36,11 +40,11 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-          (db/exec :db (case (:sort request)
-                      :by-date yesql-application-query-by-modified
-                      yesql-application-query-by-modified)
-                (dissoc (transform-keys ->snake_case request)
-                        :sort)))))
+      (exec-db :db (case (:sort request)
+                     :by-date yesql-application-query-by-modified
+                     yesql-application-query-by-modified)
+        (dissoc (transform-keys ->snake_case request)
+          :sort)))))
 
 (defn fetch-application-counts [form-id]
-  (first (db/exec :db yesql-fetch-application-counts {:form_id form-id})))
+  (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))
