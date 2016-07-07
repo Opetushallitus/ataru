@@ -17,14 +17,16 @@
 (describe "writing excel"
   (tags :unit)
 
-  (it "writes excel"
-
+  (around [spec]
     (with-redefs [application-store/fetch-applications (fn [& _] fixtures/applications)
                   form-store/fetch-form                (fn [& _] fixtures/form)]
+      (spec)))
+
+  (it "writes excel"
       (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
             (->> (j2ee/export-all-applications 99999999)
                  (.write output)))
           (finally
-            (.delete file)))))))
+            (.delete file))))))
