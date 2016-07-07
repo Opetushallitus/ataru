@@ -1,7 +1,6 @@
 (ns ataru.fixtures.application
   (:require [clj-time.core :as c]))
 
-
 (def form {
  :id 703,
  :name "Test fixture what is this",
