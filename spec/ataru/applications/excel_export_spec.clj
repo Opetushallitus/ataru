@@ -9,7 +9,7 @@
            (org.apache.poi.ss.usermodel WorkbookFactory)))
 
 (describe "writing form"
-  (tags :excel)
+  (tags :unit)
 
   (it "writes the form"
     (let [book (#'j2ee/application-workbook)]
@@ -17,13 +17,17 @@
 
 (defn- verify-row
   [sheet row-num expected-values]
-  (let [row (iterator-seq (.cellIterator (.getRow sheet row-num)))
-        values (map #(.getStringCellValue %) (take 6 row))]
-    (should= expected-values values)
-    (should (every? nil? (nthrest values (count expected-values))))))
+  (let [row   (.getRow sheet row-num)]
+    (should-not-be-nil row)
+    (doseq [col-idx (range (count expected-values))]
+      (let [cell (.getCell row col-idx)
+            expected (nth expected-values col-idx)]
+        (if-not (nil? expected)
+          (should= (nth expected-values col-idx) (.getStringCellValue cell))
+          (should-be-nil cell))))))
 
 (describe "writing excel"
-  (tags :excel)
+  (tags :unit)
 
   (around [spec]
     (with-redefs [application-store/exec-db (fn [& _] fixtures/applications)
@@ -38,12 +42,12 @@
                  (.write output)))
           (let [sheet (-> file WorkbookFactory/create (.getSheetAt 0))]
             (verify-row sheet 8
-              ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys"])
+              ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "kuudes kysymys"])
             (verify-row sheet 9
               ["1" "2" "3" "4" "5" "6"])
             (verify-row sheet 10
-              ["Vastaus" "lomakkeeseen" "asiallinen" "vastaus" "joo" "jee"])
+              ["Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee"])
             (verify-row sheet 11
-              ["a" "b" "d" "e" "f" "g"]))
+              ["a" "b" "d" "e" nil nil "f" "g"]))
           (finally
             (.delete file))))))

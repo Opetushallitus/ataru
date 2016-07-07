@@ -42,13 +42,30 @@
       (writer 3 2 modified-by)))
   3)
 
-(defn- write-headers! [writer applications]
-  (doseq [[column label] (zipmap (range) (map :label (:answers (first applications))))]
-    (writer 0 column label)))
+(defn- write-headers! [writer headers]
+  (doseq [header headers]
+    (writer 0 (:column header) (:header header))))
 
-(defn- write-application! [writer application]
-  (doseq [[column value] (zipmap (range) (map :value (:answers application)))]
-    (writer 0 column value)))
+(defn- write-application! [writer application headers]
+  (doseq [answer (:answers application)]
+    (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
+          value  (:value answer)]
+      (writer 0 column value))))
+
+(defn- extract-headers
+  [applications]
+  (->> (reduce
+         (fn [form-headers application]
+           (into form-headers
+             (reduce
+               (fn [application-headers answer]
+                 (conj application-headers (:label answer)))
+               []
+               (:answers application))))
+         []
+         applications)
+       distinct
+       (map-indexed (fn [idx header] {:header header :column idx}))))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
   (with-open [workbook (application-workbook)]
@@ -59,14 +76,15 @@
             application-row-offset (atom 7)
             applications           (application-store/fetch-applications
                                      form-id
-                                     {:limit 100 :lang (name language)})]
+                                     {:limit 100 :lang (name language)})
+            headers                (extract-headers applications)]
         (update-row-cell! sheet 0 2 (t/now)) ; timestamp the excel sheet
         (when (and (not-empty form) (not-empty applications))
           (do
             (write-headers! (make-writer sheet (swap! application-row-offset inc))
-                            applications)
+                            headers)
             (doseq [application applications]
-              (write-application! (make-writer sheet (swap! application-row-offset inc)) application)))))
+              (write-application! (make-writer sheet (swap! application-row-offset inc)) application headers)))))
       (with-open [stream (java.io.ByteArrayOutputStream.)]
         (.write workbook stream)
         (.toByteArray stream)))))

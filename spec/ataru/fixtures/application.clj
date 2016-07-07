@@ -79,7 +79,6 @@
       {:key "G__17", :label {:fi "Toka kysymys"}, :value "lomakkeeseen", :fieldType "textField"}
       {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "asiallinen", :fieldType "textField"}
       {:key "G__36", :label {:fi "Neljas kysymys"}, :value "vastaus", :fieldType "textField"}
-      {:key "G__14", :label {:fi "Viides kysymys"}, :value "joo", :fieldType "textField"}
       {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "jee", :fieldType "textField"}]}}
  {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
   :lang "fi",
@@ -92,5 +91,5 @@
       {:key "G__17", :label {:fi "Toka kysymys"}, :value "b", :fieldType "textField"}
       {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "d", :fieldType "textField"}
       {:key "G__36", :label {:fi "Neljas kysymys"}, :value "e", :fieldType "textField"}
-      {:key "G__14", :label {:fi "Viides kysymys"}, :value "f", :fieldType "textField"}
-      {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
+      {:key "G__14", :label {:fi "Seitsemas kysymys"}, :value "f", :fieldType "textField"}
+      {:key "G__47", :label {:fi "kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
