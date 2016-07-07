@@ -38,6 +38,12 @@
                  (.write output)))
           (let [sheet (-> file WorkbookFactory/create (.getSheetAt 0))]
             (verify-row sheet 8
-              ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys"]))
+              ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys"])
+            (verify-row sheet 9
+              ["1" "2" "3" "4" "5" "6"])
+            (verify-row sheet 10
+              ["Vastaus" "lomakkeeseen" "asiallinen" "vastaus" "joo" "jee"])
+            (verify-row sheet 11
+              ["a" "b" "d" "e" "f" "g"]))
           (finally
             (.delete file))))))
