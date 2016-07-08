@@ -19,6 +19,15 @@
           (should= (nth expected-values col-idx) (.getStringCellValue cell))
           (should-be-nil cell))))))
 
+(defn- verify-pane-information
+  [sheet]
+  (let [info (.getPaneInformation sheet)]
+    (should (.isFreezePane info))
+    (should= 1 (.getHorizontalSplitPosition info))
+    (should= 0 (.getVerticalSplitPosition info))
+    (should= 1 (.getHorizontalSplitTopRow info))
+    (should= 0 (.getVerticalSplitLeftColumn info))))
+
 (describe "writing excel"
   (tags :unit)
 
@@ -41,6 +50,7 @@
             (verify-row sheet 2
               ["Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee"])
             (verify-row sheet 3
-              ["a" "b" "d" "e" nil nil "f" "g"]))
+              ["a" "b" "d" "e" nil nil "f" "g"])
+            (verify-pane-information sheet))
           (finally
             (.delete file))))))

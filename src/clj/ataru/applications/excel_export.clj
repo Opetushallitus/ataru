@@ -68,7 +68,8 @@
                  (fn [idx application]
                    (let [writer (make-writer sheet (inc idx))]
                      (write-application! writer application headers)))
-                 applications))))
+                 applications))
+        (.createFreezePane sheet 0 1 0 1)))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
