@@ -54,23 +54,23 @@
        (map-indexed (fn [idx header] {:header header :column idx}))))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
-      (let [workbook               (XSSFWorkbook.)
-            form                   (form-store/fetch-form form-id)
-            sheet                  (.createSheet workbook "Hakemukset")
-            applications           (application-store/fetch-applications
-                                     form-id
-                                     {:limit 100 :lang (name language)})
-            headers                (extract-headers applications)]
-        (when (and (not-empty form) (not-empty applications))
-          (do
-            (write-headers! (make-writer sheet 0) headers)
-            (dorun (map-indexed
-                     (fn [idx application]
-                       (let [writer (make-writer sheet (inc idx))]
-                         (write-application! writer application headers)))
-                     applications))))
-      (with-open [stream (ByteArrayOutputStream.)]
-        (.write workbook stream)
-        (.toByteArray stream))))
+  (let [workbook               (XSSFWorkbook.)
+        form                   (form-store/fetch-form form-id)
+        sheet                  (.createSheet workbook "Hakemukset")
+        applications           (application-store/fetch-applications
+                                 form-id
+                                 {:limit 100 :lang (name language)})
+        headers                (extract-headers applications)]
+    (when (and (not-empty form) (not-empty applications))
+      (do
+        (write-headers! (make-writer sheet 0) headers)
+        (dorun (map-indexed
+                 (fn [idx application]
+                   (let [writer (make-writer sheet (inc idx))]
+                     (write-application! writer application headers)))
+                 applications))))
+    (with-open [stream (ByteArrayOutputStream.)]
+      (.write workbook stream)
+      (.toByteArray stream))))
 
 
