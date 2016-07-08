@@ -1,5 +1,6 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel WorkbookFactory Row])
+  (:import [org.apache.poi.ss.usermodel WorkbookFactory Row]
+           [java.io ByteArrayOutputStream])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
@@ -84,7 +85,7 @@
                             headers)
             (doseq [application applications]
               (write-application! (make-writer sheet (swap! application-row-offset inc)) application headers)))))
-      (with-open [stream (java.io.ByteArrayOutputStream.)]
+      (with-open [stream (ByteArrayOutputStream.)]
         (.write workbook stream)
         (.toByteArray stream)))))
 
