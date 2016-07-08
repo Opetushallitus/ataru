@@ -72,7 +72,6 @@
     (do
       (let [form                   (form-store/fetch-form form-id)
             sheet                  (.getSheetAt workbook 0)
-            local-row-offset       (write-form! (make-writer sheet 2) form)
             application-row-offset (atom 7)
             applications           (application-store/fetch-applications
                                      form-id
