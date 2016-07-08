@@ -57,17 +57,18 @@
       (let [workbook               (XSSFWorkbook.)
             form                   (form-store/fetch-form form-id)
             sheet                  (.createSheet workbook "Hakemukset")
-            application-row-offset (atom -1)
             applications           (application-store/fetch-applications
                                      form-id
                                      {:limit 100 :lang (name language)})
             headers                (extract-headers applications)]
         (when (and (not-empty form) (not-empty applications))
           (do
-            (write-headers! (make-writer sheet (swap! application-row-offset inc))
-                            headers)
-            (doseq [application applications]
-              (write-application! (make-writer sheet (swap! application-row-offset inc)) application headers))))
+            (write-headers! (make-writer sheet 0) headers)
+            (dorun (map-indexed
+                     (fn [idx application]
+                       (let [writer (make-writer sheet (inc idx))]
+                         (write-application! writer application headers)))
+                     applications))))
       (with-open [stream (ByteArrayOutputStream.)]
         (.write workbook stream)
         (.toByteArray stream))))
