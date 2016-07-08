@@ -1,7 +1,7 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel WorkbookFactory Row]
+  (:import [org.apache.poi.ss.usermodel Row]
            [java.io ByteArrayOutputStream]
-           (org.apache.poi.xssf.usermodel XSSFWorkbook$SheetIterator XSSFWorkbook))
+           [org.apache.poi.xssf.usermodel XSSFWorkbook])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
