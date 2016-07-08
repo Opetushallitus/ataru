@@ -28,15 +28,6 @@
       value)
     [sheet offset row column value]))
 
-(defn- write-form! [writer {:keys [id name modified-by modified-time content] :as form}]
-  (when (not-empty form)
-    (do
-      (writer 0 2 name)
-      (writer 1 2 id)
-      (writer 2 2 modified-time)
-      (writer 3 2 modified-by)))
-  3)
-
 (defn- write-headers! [writer headers]
   (doseq [header headers]
     (writer 0 (:column header) (:header header))))
