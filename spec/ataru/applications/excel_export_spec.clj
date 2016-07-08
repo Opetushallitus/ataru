@@ -8,13 +8,6 @@
            (java.util UUID)
            (org.apache.poi.ss.usermodel WorkbookFactory)))
 
-(describe "writing form"
-  (tags :unit)
-
-  (it "writes the form"
-    (let [book (#'j2ee/application-workbook)]
-      (should= 3 (#'j2ee/write-form! (#'j2ee/make-writer (.getSheetAt book 0) 0) fixtures/form)))))
-
 (defn- verify-row
   [sheet row-num expected-values]
   (let [row   (.getRow sheet row-num)]
@@ -41,13 +34,13 @@
             (->> (j2ee/export-all-applications 99999999)
                  (.write output)))
           (let [sheet (-> file WorkbookFactory/create (.getSheetAt 0))]
-            (verify-row sheet 8
+            (verify-row sheet 0
               ["Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "kuudes kysymys"])
-            (verify-row sheet 9
+            (verify-row sheet 1
               ["1" "2" "3" "4" "5" "6"])
-            (verify-row sheet 10
+            (verify-row sheet 2
               ["Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee"])
-            (verify-row sheet 11
+            (verify-row sheet 3
               ["a" "b" "d" "e" nil nil "f" "g"]))
           (finally
             (.delete file))))))

@@ -1,6 +1,7 @@
 (ns ataru.applications.excel-export
   (:import [org.apache.poi.ss.usermodel WorkbookFactory Row]
-           [java.io ByteArrayOutputStream])
+           [java.io ByteArrayOutputStream]
+           (org.apache.poi.xssf.usermodel XSSFWorkbook$SheetIterator XSSFWorkbook))
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
@@ -9,13 +10,6 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
-
-(def ^:private row-offset 9)
-
-(defn- application-workbook []
-  (WorkbookFactory/create
-    (input-stream
-      "resources/templates/application-export-template.xlsx")))
 
 (defn- update-row-cell! [sheet row column value]
   (when-let [v (not-empty (trim (str value)))]
@@ -69,24 +63,22 @@
        (map-indexed (fn [idx header] {:header header :column idx}))))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
-  (with-open [workbook (application-workbook)]
-    (do
-      (let [form                   (form-store/fetch-form form-id)
-            sheet                  (.getSheetAt workbook 0)
-            application-row-offset (atom 7)
+      (let [workbook               (XSSFWorkbook.)
+            form                   (form-store/fetch-form form-id)
+            sheet                  (.createSheet workbook "Hakemukset")
+            application-row-offset (atom -1)
             applications           (application-store/fetch-applications
                                      form-id
                                      {:limit 100 :lang (name language)})
             headers                (extract-headers applications)]
-        (update-row-cell! sheet 0 2 (t/now)) ; timestamp the excel sheet
         (when (and (not-empty form) (not-empty applications))
           (do
             (write-headers! (make-writer sheet (swap! application-row-offset inc))
                             headers)
             (doseq [application applications]
-              (write-application! (make-writer sheet (swap! application-row-offset inc)) application headers)))))
+              (write-application! (make-writer sheet (swap! application-row-offset inc)) application headers))))
       (with-open [stream (ByteArrayOutputStream.)]
         (.write workbook stream)
-        (.toByteArray stream)))))
+        (.toByteArray stream))))
 
 
