@@ -31,13 +31,6 @@
                 "received" "Saapunut"
                 "Tuntematon")]]))))
 
-(defn selected-application []
-  [:div.panel-content
-   [:h2 "Valitse hakemus listalta"]
-   [:p [:a {:href "#"
-            :on-click #()}
-        "Lataa Excel -tiedostona"]]])
-
 (defn application-list []
   (let [form (subscribe [:state-query [:application :form]])]
     [:div
@@ -51,5 +44,4 @@
     [application-list]
     [:p [:a {:href     "#"
              :on-click #()}
-         "Lataa kaikki hakemukset Excel -tiedostona"]]]
-   [selected-application]])
+         "Lataa kaikki hakemukset Excel -tiedostona"]]]])
