@@ -53,25 +53,6 @@ separate ports in project.clj), so you can run only either hakija/virkailija
 figwheel process at once. You can still run both applications just fine, but the other
  one will have to be either with lein cljsbuild once or auto <id>_
 
-### Browser tests:
-
-Browser tests can be run by invoking
-
-```
-npm install
-
-# In one terminal window, run the actual application, for example:
-lein virkailija-dev
-
-# In second window, you'll want to run figwheel in virkailija-dev profile as normally:
-lein figwheel virkailija-dev
-
-# And in the third window, run cljsbuild for tests to automatically recompile test.js
-lein cljsbuild auto browser-test
-```
-
-After this you can run tests by navigating to http://localhost:8350/lomake-editori/test.html .
-
 ### Backend & browser tests
 
 To run all tests once:
@@ -88,13 +69,26 @@ To run them automatically whenever code changes, use `-a`.
 lein spec -t unit
 ```
 
-### Browser tests
+### Browser integration tests
 
-To run only browser tests (using phantomJS):
+To run only browser tests (headless, using phantomJS):
 
 ```
-lein spec -t ui
+CONFIG=config/test.edn lein spec -t ui
 ```
+
+### Running integration tests on your browser
+
+* Start the development server
+* Navigate to [http://localhost:8350/lomake-editori/test.html](http://localhost:8350/lomake-editori/test.html)
+
+Note that this assumes a blank database on which to run and create new data to! In other words, you might want to:
+
+* Create a test database (see `config/test.edn` for details)
+* Run your development server with the test profile: `CONFIG=config/test.edn lein virkailija-dev`
+* Wipe the test db between each test run (`lein spec -t ui` will do this automatically).
+
+Alternatively, you can e.g. use Mocha's grep utility to run only the desired tests.
 
 ### ClojureScript unit tests
 
