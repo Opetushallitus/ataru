@@ -274,6 +274,20 @@ form > div > .editor-form__component-wrapper {
   color: @selected-blue;
 
   .form__add-component-toolbar--list {
+    display: none;
+  }
+
+  &:hover {
+    .form__add-component-toolbar--list {
+      display: block;
+    }
+
+    .plus-component {
+      display: none;
+    }
+  }
+
+  .form__add-component-toolbar--list {
     margin: 0;
     padding: 0;
   }

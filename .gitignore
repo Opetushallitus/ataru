@@ -18,4 +18,5 @@ node_modules
 resources/public/buildversion.txt
 config/docker.edn
 config/speclj.edn
+config/ui-test.edn
 .swp

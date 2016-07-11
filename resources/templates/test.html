@@ -1,17 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-    <meta charset="UTF-8"/>
-    <title>UI tests</title>
+  <meta charset="UTF-8"/>
+  <title>UI tests</title>
 </head>
 <body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chai/2.2.0/chai.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/jquery.xpath/0.2.5/jquery.xpath.min.js"></script>
-<script src="/lomake-editori/js/test/browser-test.js"></script>
 <iframe id="test"></iframe>
+<div id="mocha" class="foo"></div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/mocha/2.5.3/mocha.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/q.js/1.4.1/q.min.js"></script>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<link rel="stylesheet" href="/css/compiled/mocha.css">
 <script>
-    // ataru.virkailija.browser_runner.run()
+  mocha.ui('bdd')
+  mocha.reporter('html')
+  mocha.useColors(false)
+  mocha.bail(true)
+  mocha.timeout(30000)
+</script>
+
+<script src="/lomake-editori/spec/util.js"></script>
+<script src="/lomake-editori/spec/virkailijaSpec.js"></script>
+
+<script>
+  var runner = mocha.run()
+  var failed = 0
+  $(document).keyup(function (e) {
+    if (e.keyCode == 27) {
+      runner._abort = true
+    }
+  })
+
+  runner.on('fail', function(t, err) {
+    failed++
+  })
+
+  runner.on('end', function() {
+    if (failed > 0) {
+      console.log("*** TEST FAIL", failed)
+    } else {
+      console.log("*** TEST SUCCESS")
+    }
+  })
+
 </script>
 </body>
 </html>

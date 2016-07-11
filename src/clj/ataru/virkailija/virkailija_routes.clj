@@ -61,11 +61,17 @@
                            :public-config
                            json/generate-string)})))
 
+(defn- render-file-in-dev
+  [filename]
+  (if (:dev? env)
+    (selmer/render-file filename {})
+    (not-found "Not found")))
+
 (defroutes test-routes
   (GET "/test.html" []
-    (if (:dev? env)
-        (selmer/render-file "templates/test.html" {})
-        (not-found "Not found"))))
+    (render-file-in-dev "templates/test.html"))
+  (GET "/spec/:filename.js" [filename]
+    (render-file-in-dev (str "spec/" filename ".js"))))
 
 (def api-routes
   (api/api

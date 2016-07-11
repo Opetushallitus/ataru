@@ -15,7 +15,8 @@ var url = 'http://localhost:8350/lomake-editori/test.html';
 var resultPrefix = '*** TEST';
 var successMsg = ' SUCCESS';
 var failMsg = ' FAIL';
-var timeoutMs = 10 * 60 * 1000;
+var TIMEOUT_MINS = 5
+var timeoutMs = TIMEOUT_MINS * 60 * 1000;
 var startTime = new Date().getTime();
 
 function startsWith(haystack, needle) {
@@ -52,16 +53,6 @@ page.open(url, function (status) {
       phantom.exit(global.testsSuccessful ? 0 : 1);
     }
   }
-
-  page.evaluate(function() {
-    if (typeof ataru !== 'undefined' && !!ataru) {
-      ataru.virkailija.browser_runner.run();
-    } else {
-      console.error("Error loading script");
-      phantom.exit(3);
-    }
-
-  });
 
   stopWhenFinished();
 });
