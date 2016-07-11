@@ -33,7 +33,7 @@ create-uberjar() {
 }
 
 test-clojure() {
-    ./bin/lein spec -t -ui
+    ./bin/lein spec -t ~ui
 }
 
 test-clojurescript() {
