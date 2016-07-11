@@ -67,7 +67,12 @@
   [path lang]
   (let [value (subscribe [:editor/get-component-value path])]
     (r/create-class
-      {:reagent-render
+      {:component-did-mount
+       (fn [component]
+         (when (:focus? @value)
+           (let [dom-node (r/dom-node component)]
+             (.focus dom-node))))
+       :reagent-render
        (fn [path lang]
          [:input.editor-form__text-field {:value     (get-in @value [:label lang])
                                           :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
