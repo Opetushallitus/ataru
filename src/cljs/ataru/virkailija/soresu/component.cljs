@@ -8,7 +8,8 @@
    :label      {:fi "", :sv ""}
    :id         (util/new-uuid)
    :params     {}
-   :required   false})
+   :required   false
+   :focus?     true})
 
 (defn text-area []
   (assoc (text-field)
@@ -21,7 +22,8 @@
    :id         (util/new-uuid)
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []
-   :params     {}})
+   :params     {}
+   :focus?     true})
 
 (defn dropdown-option
   []
