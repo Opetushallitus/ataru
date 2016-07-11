@@ -3,8 +3,7 @@
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [schema.core :as s]
-            [oph.soresu.common.db :refer [exec]]
-            [taoensso.timbre :refer [spy debug]]
+            [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/application-queries.sql")
@@ -14,8 +13,12 @@
    :sort :by-date
    :lang "fi"})
 
+(defn- exec-db
+  [ds-key query params]
+  (db/exec ds-key query params))
+
 (defn insert-application [application]
-  (first (exec :db yesql-add-application-query<!
+  (first (exec-db :db yesql-add-application-query<!
                {:form_id (:form application)
                 :key (str (java.util.UUID/randomUUID))
                 :lang (:lang application)
@@ -37,11 +40,11 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-          (exec :db (case (:sort request)
-                      :by-date yesql-application-query-by-modified
-                      yesql-application-query-by-modified)
-                (dissoc (transform-keys ->snake_case request)
-                        :sort)))))
+      (exec-db :db (case (:sort request)
+                     :by-date yesql-application-query-by-modified
+                     yesql-application-query-by-modified)
+        (dissoc (transform-keys ->snake_case request)
+          :sort)))))
 
 (defn fetch-application-counts [form-id]
-  (first (exec :db yesql-fetch-application-counts {:form_id form-id})))
+  (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))

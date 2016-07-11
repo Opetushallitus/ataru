@@ -3,6 +3,7 @@
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.applications.application-store :as application-store]
@@ -129,7 +130,15 @@
                      :return {:form-id Long
                               :count Long}
                      (ok (merge {:form-id form-id}
-                                (application-store/fetch-application-counts form-id))))))))
+                                (application-store/fetch-application-counts form-id))))
+
+                   (api/GET "/:form-id/excel" []
+                     :path-params [form-id :- Long]
+                     :summary "Return Excel export of the form and applications for it."
+                     {:status 200
+                      :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "Content-Disposition" (str "attachment; filename=form_" form-id "_applications.xlsx")}
+                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))})))))
 
 (defroutes resource-routes
   (route/resources "/"))

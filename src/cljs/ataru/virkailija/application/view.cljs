@@ -42,6 +42,9 @@
   [:div
    [:div.editor-form__container.panel-content
     [application-list]
-    [:p [:a {:href     "#"
-             :on-click #()}
+    [:p [:a {:href
+             (str
+               "/lomake-editori/api/applications/"
+               @(subscribe [:state-query [:application :form :id]])
+               "/excel")}
          "Lataa kaikki hakemukset Excel -tiedostona"]]]])
