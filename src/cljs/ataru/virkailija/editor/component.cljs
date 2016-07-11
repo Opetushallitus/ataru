@@ -63,9 +63,18 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
+(defn input-field
+  [path lang]
+  (let [value (subscribe [:editor/get-component-value path])]
+    (r/create-class
+      {:reagent-render
+       (fn [path lang]
+         [:input.editor-form__text-field {:value     (get-in @value [:label lang])
+                                          :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
+                                          :on-drop prevent-default}])})))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
-        value            (subscribe [:editor/get-component-value path])
         size             (subscribe [:editor/get-component-value path :params :size])
         radio-group-id   (util/new-uuid)
         radio-buttons    ["S" "M" "L"]
@@ -81,9 +90,7 @@
         (doall
           (for [lang @languages]
             ^{:key lang}
-            [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                             :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
-                                             :on-drop prevent-default}]))]
+            [input-field path lang]))]
        [:div.editor-form__size-button-wrapper
         [:header.editor-form__component-item-header size-label]
         [:div.editor-form__size-button-group
