@@ -55,7 +55,7 @@
     :on-drag-start (on-drag-start path)
     :on-drag-over prevent-default}
    [:header.editor-form__component-header label]
-   [:i.zmdi.zmdi-menu.editor-form__draggable-indicator]
+   [:img.editor-form__draggable-indicator {:src "images/drag_handle.png"}]
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
                  (dispatch [:remove-component path
