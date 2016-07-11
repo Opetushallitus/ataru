@@ -8,7 +8,6 @@
 (def expected-applications
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
     :lang "fi",
-    :modified-time (get-in fixtures/applications [0 :modified-time])
     :form-id 703
     :state :received
     :answers
@@ -20,7 +19,6 @@
      {:key "G__47", :label "Kuudes kysymys", :value "6", :fieldType "textField"}]}
    {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
     :lang "fi",
-    :modified-time (get-in fixtures/applications [1 :modified-time])
     :form-id 703
     :state :received
     :answers
@@ -31,7 +29,6 @@
      {:key "G__47", :label "Kuudes kysymys", :value "jee", :fieldType "textField"}]}
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
     :lang "fi",
-    :modified-time (get-in fixtures/applications [2 :modified-time])
     :form-id 703
     :state :received
     :answers
@@ -54,4 +51,6 @@
       (spec)))
 
   (it "should return all applications belonging to a form"
-    (should= expected-applications (store/fetch-applications form-id {}))))
+    (should= expected-applications (map
+                                     #(dissoc % :modified-time)
+                                     (store/fetch-applications form-id {})))))
