@@ -37,4 +37,5 @@
    :label {:fi "", :sv ""}
    :params {}
    :options [(dropdown-option)]
-   :required false})
+   :required false
+   :focus? true})

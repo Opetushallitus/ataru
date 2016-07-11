@@ -143,9 +143,7 @@
          (doall
            (for [lang @languages]
              ^{:key lang}
-             [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                              :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
-                                              :on-drop prevent-default}]))]
+             [input-field path lang]))]
         [:div.editor-form__checkbox-wrapper
          (render-checkbox path initial-content :required)]]
        [:div.editor-form__multi-options_wrapper
