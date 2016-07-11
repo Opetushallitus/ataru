@@ -24,10 +24,6 @@ build-clojurescript-virkailija() {
     ./bin/lein cljsbuild once virkailija-min
 }
 
-build-clojurescript-virkailija-browser-test() {
-    ./bin/lein cljsbuild once browser-test
-}
-
 build-clojurescript-hakija() {
     ./bin/lein cljsbuild once hakija-min
 }
@@ -37,11 +33,15 @@ create-uberjar() {
 }
 
 test-clojure() {
-    ./bin/lein spec
+    ./bin/lein spec -t -ui
 }
 
 test-clojurescript() {
     ./bin/lein doo phantom test once
+}
+
+test-integration() {
+    ./bin/lein spec -t ui
 }
 
 run-migrations() {
@@ -69,9 +69,6 @@ case "$command" in
     "build-clojurescript-virkailija" )
         build-clojurescript-virkailija
         ;;
-    "build-clojurescript-virkailija-browser-test" )
-        build-clojurescript-virkailija-browser-test
-        ;;
     "build-clojurescript-hakija" )
         build-clojurescript-hakija
         ;;
@@ -83,6 +80,9 @@ case "$command" in
         ;;
     "test-clojurescript" )
         test-clojurescript
+        ;;
+    "test-integration" )
+        test-integration
         ;;
     "run-migrations" )
         run-migrations
