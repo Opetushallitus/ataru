@@ -42,15 +42,15 @@
   [v n]
   (vec (concat (subvec v 0 n) (subvec v (inc n)))))
 
-(register-handler
-  :editor/remove-dropdown-option
-  (fn [db [_ & path]]
-    (let [option-path (current-form-path db [path])]
-      (update-in db (drop-last option-path) remove-nth (last option-path)))))
-
 (defn- current-form-content-path
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-id) :content [further-path]]))
+
+(register-handler
+  :editor/remove-dropdown-option
+  (fn [db [_ & path]]
+    (let [option-path (current-form-content-path db [path])]
+      (update-in db (drop-last option-path) remove-nth (last option-path)))))
 
 (register-handler
   :editor/add-dropdown-option
@@ -185,7 +185,9 @@
 
 (defn- update-options-in-dropdown-field
   [dropdown-field]
-  (let [updated-options (remove-empty-options (:options dropdown-field))]
+  (let [updated-options (-> (:options dropdown-field)
+                            (remove-empty-options)
+                            (add-empty-option))]
     (merge dropdown-field {:options updated-options})))
 
 (defn- update-dropdown-field-options
