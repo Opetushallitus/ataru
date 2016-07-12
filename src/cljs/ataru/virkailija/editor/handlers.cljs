@@ -37,10 +37,6 @@
                      :else (c/after? v1 v2)))))
         m))
 
-(defn- empty-options-in-select?
-  [options]
-  (some #(clojure.string/blank? (:value %)) options))
-
 (defn- remove-nth
   "remove nth elem in vector"
   [v n]
@@ -52,20 +48,20 @@
     (let [option-path (current-form-path db [path])]
       (update-in db (drop-last option-path) remove-nth (last option-path)))))
 
-(defn- current-form-path
+(defn- current-form-content-path
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-id) :content [further-path]]))
 
 (register-handler
   :editor/add-dropdown-option
   (fn [db [_ & path]]
-    (let [dropdown-path (current-form-path db [path :options])]
+    (let [dropdown-path (current-form-content-path db [path :options])]
       (update-in db dropdown-path into [(ataru.virkailija.soresu.component/dropdown-option)]))))
 
 (register-handler
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
-    (let [label-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+    (let [label-path (current-form-content-path db [path])
           this-option-path (drop-last 2 label-path)
           value-path (flatten [this-option-path :value])
           option-updated-db (-> db
@@ -76,16 +72,13 @@
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in
-      db
-      (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-      value)))
+    (assoc-in db (current-form-content-path db [path]) value)))
 
 (defn generate-component
   [db [_ generate-fn path]]
   (with-form-id [db form-id]
     (let [form-id       (get-in db [:editor :selected-form-id])
-          path-vec      (flatten [:editor :forms form-id :content [path]])]
+          path-vec      (current-form-content-path db [path])]
       (if (zero? (last path-vec))
         (assoc-in db (butlast path-vec) [(generate-fn)])
         (assoc-in db path-vec (generate-fn))))))
