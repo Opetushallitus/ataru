@@ -133,15 +133,27 @@ function autosaveSuccessful() {
           clickElement(function() { return formSections().eq(0).find('.form__add-component-toolbar--list li a:contains("Tekstialue")') }),
           clickElement(function() { return formSections().eq(0).find('.editor-form__checkbox-wrapper label')}),
           setTextFieldValue(function() { return formSections().eq(0).find('.editor-form__text-field').eq(1) }, 'Osiokysymys'),
-          clickElement(function() { return formSections().eq(0).find('.editor-form__size-button-group div:eq(0) label')}),
-          wait.until(autosaveSuccessful)
+          clickElement(function() { return formSections().eq(0).find('.editor-form__size-button-group div:eq(0) label')})
         )
         it('has expected contents', function() {
+          expect(formComponents()).to.have.length(5)
           expect(formSections().eq(0).find('.editor-form__text-field').eq(0).val()).to.equal('Testiosio')
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
           expect(formSections().eq(0).find('.editor-form__size-button-group input:checked').val()).to.equal('S')
           expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
+      })
+    })
+
+    describe('clicking remove element', function() {
+      before(
+        clickElement(function() { return formComponents().eq(1).find('a.editor-form__component-header-link') }),
+        wait.until(function() {
+          return formComponents().length === 4
+        })
+      )
+      it('removes element', function() {
+        expect(formComponents().eq(1).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
       })
     })
   })
