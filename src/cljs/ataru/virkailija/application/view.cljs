@@ -40,10 +40,36 @@
      ;[applications]
      ]))
 
+(defn form-list-row [form selected?]
+  [:div (:name form)])
+
+(defn form-list-opened [forms selected-form-id open?-atom]
+  (into [:div.editor-form__list {:on-click #(reset! open?-atom false)}]
+        (for [[id form] forms
+              :let [selected? (= id (:id selected-form-id))]]
+          ^{:key id}
+          [form-list-row form selected?])))
+
+(defn form-list-closed [selected-form open?-atom]
+  [:div
+   {:on-click #(reset! open?-atom true)}
+   (:name selected-form)])
+
+(defn form-list []
+  (let [forms            (subscribe [:state-query [:editor :forms]])
+        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
+        selected-form    (subscribe [:editor/selected-form])
+        open?            (r/atom false)]
+    (fn []
+      (println "open? " @open?)
+      (if @open?
+        [form-list-opened @forms @selected-form-id open?]
+        [form-list-closed @selected-form open?]))))
+
 (defn application []
   [:div
    [:div.editor-form__container.panel-content
-    [application-list]
+    [form-list]
     [:p [:a
          {:href
            (str
