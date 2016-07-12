@@ -149,25 +149,36 @@
        [:div.editor-form__multi-options_wrapper
         [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
         (doall
-          (let [options-raw (:options @value)
-                options (if (clojure.string/blank? (:value (last options-raw)))
-                          options-raw
-                          (into options-raw [(component/dropdown-option)]))
-                options-count (count options)]
-            (for [lang @languages
-                  option-with-index (map vector (range options-count) options)]
-              (let [[option-index option] option-with-index
-                    option-label (get-in option [:label lang])]
-                (if (and (clojure.string/blank? option-label) (= option-index 0) (not= options-count 1))
-                  nil
-                  ^{:key (str "option-" lang "-" option-index)}
-                  [:div.editor-form__multi-option-wrapper
-                   [:div.editor-form__text-field-wrapper__option
-                    [:input.editor-form__text-field
-                     {:value       option-label
-                      :placeholder "Lisää..."
-                      :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])
-                      :on-drop prevent-default}]]])))))]])))
+          (let [options (:options @value)
+                options-count (count options)
+                option-fields
+                (for [lang @languages
+                      option-with-index (map vector (range options-count) options)]
+                  (let [[option-index option] option-with-index
+                        option-label (get-in option [:label lang])]
+                    (if (and (clojure.string/blank? option-label) (= option-index 0) (not= options-count 1))
+                      nil
+                      ^{:key (str "option-" lang "-" option-index)}
+                      [:div.editor-form__multi-option-wrapper
+                       [:div.editor-form__text-field-wrapper__option
+                        [:input.editor-form__text-field
+                         {:value       option-label
+                          ;:placeholder "Lisää..."
+                          :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])
+                          :on-drop     prevent-default}]
+                        [:a {:href "#"
+                             :on-click (fn [evt]
+                                         (.preventDefault evt)
+                                         (dispatch [:editor/remove-dropdown-option path :options option-index]))}
+                         " X"]]])))]
+            (remove nil? option-fields)))]
+       [:div.editor-form__add-dropdown-item
+        [:a
+         {:href "#"
+          :on-click (fn [evt]
+                      (.preventDefault evt)
+                      (dispatch [:editor/add-dropdown-option path]))}
+         [:img {:src "/images/add_row.png"}] " Lisää"]]])))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"     component/form-section
