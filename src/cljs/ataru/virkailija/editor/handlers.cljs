@@ -210,11 +210,21 @@
   [form]
   (assoc-in form [:modified-time] (temporal/time->iso-str (:modified-time form))))
 
+(defn- remove-focus
+  [form]
+  (clojure.walk/prewalk
+    (fn [x]
+      (if (map? x)
+        (dissoc x :focus?)
+        x))
+    form))
+
 (defn save-form
   [db _]
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
                  (set-modified-time)
-                 (update-dropdown-field-options))]
+                 (update-dropdown-field-options)
+                 (remove-focus))]
     (when (not-empty (:content form))
       (post
         "/lomake-editori/api/form"
