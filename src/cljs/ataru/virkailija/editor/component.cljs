@@ -168,7 +168,7 @@
                              :on-click (fn [evt]
                                          (.preventDefault evt)
                                          (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-                         " X"]]])))]
+                         [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])))]
             (remove nil? option-fields)))]
        [:div.editor-form__add-dropdown-item
         [:a
