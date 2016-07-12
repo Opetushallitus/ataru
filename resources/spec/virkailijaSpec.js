@@ -108,8 +108,11 @@ function autosaveSuccessful() {
           clickComponentMenuItem('Pudotusvalikko'),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field').eq(0)}, 'Kolmas kysymys'),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__multi-options_wrapper .editor-form__text-field:last')}, 'Ensimmäinen vaihtoehto'),
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') }),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__multi-options_wrapper .editor-form__text-field:last')}, 'Toinen vaihtoehto'),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__multi-options_wrapper .editor-form__text-field:last')}, 'Kolmas vaihtoehto')
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__multi-options_wrapper .editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') })
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(3)
