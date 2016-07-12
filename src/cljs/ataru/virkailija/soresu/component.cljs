@@ -27,7 +27,9 @@
 
 (defn dropdown-option
   []
-  {:value "" :label {:fi "" :sv ""}})
+  {:value ""
+   :label {:fi "" :sv ""}
+   :focus? true})
 
 (defn dropdown
   []

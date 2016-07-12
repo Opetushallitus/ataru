@@ -64,19 +64,20 @@
     "Poista"]])
 
 (defn input-field
-  [path lang]
-  (let [value (subscribe [:editor/get-component-value path])]
-    (r/create-class
-      {:component-did-mount
-       (fn [component]
-         (when (:focus? @value)
-           (let [dom-node (r/dom-node component)]
-             (.focus dom-node))))
-       :reagent-render
-       (fn [path lang]
-         [:input.editor-form__text-field {:value     (get-in @value [:label lang])
-                                          :on-change #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])
-                                          :on-drop prevent-default}])})))
+  ([path lang]
+   (input-field path lang #(dispatch [:editor/set-component-value (-> % .-target .-value) path :label lang])))
+  ([path lang dispatch-fn]
+   (let [value (subscribe [:editor/get-component-value path])]
+     (r/create-class
+       {:component-did-mount (fn [component]
+                               (when (:focus? @value)
+                                 (let [dom-node (r/dom-node component)]
+                                   (.focus dom-node))))
+        :reagent-render      (fn [path lang]
+                               [:input.editor-form__text-field
+                                {:value     (get-in @value [:label lang])
+                                 :on-change dispatch-fn
+                                 :on-drop   prevent-default}])}))))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
@@ -155,17 +156,14 @@
                 (for [lang @languages
                       option-with-index (map vector (range options-count) options)]
                   (let [[option-index option] option-with-index
-                        option-label (get-in option [:label lang])]
+                        option-label (get-in option [:label lang])
+                        option-path [path :options option-index]]
                     (if (and (clojure.string/blank? option-label) (= option-index 0) (not= options-count 1))
                       nil
                       ^{:key (str "option-" lang "-" option-index)}
                       [:div.editor-form__multi-option-wrapper
                        [:div.editor-form__text-field-wrapper__option
-                        [:input.editor-form__text-field
-                         {:value       option-label
-                          ;:placeholder "Lisää..."
-                          :on-change   #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) path :options option-index :label lang])
-                          :on-drop     prevent-default}]
+                        [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])]
                         [:a {:href "#"
                              :on-click (fn [evt]
                                          (.preventDefault evt)
