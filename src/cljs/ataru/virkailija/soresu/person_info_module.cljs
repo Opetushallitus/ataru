@@ -1,0 +1,15 @@
+(ns ataru.virkailija.soresu.person-info-module
+  (:require [ataru.virkailija.soresu.component :as component]))
+
+(def ^:private first-name-component
+  (merge (component/text-field) {:label {:fi "Etunimet" :sv "Förnamn"} :required true}))
+
+(def ^:private person-info-section
+  {:label {:fi "Henkilötiedot"
+           :sv "Personlig information"}
+   :children [first-name-component]
+   :focus? false})
+
+(defn person-info-module
+  []
+  (merge (component/form-section) person-info-section))
