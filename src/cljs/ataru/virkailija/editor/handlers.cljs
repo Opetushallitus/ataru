@@ -37,54 +37,48 @@
                      :else (c/after? v1 v2)))))
         m))
 
-(defn- empty-options-in-select?
-  [options]
-  (some #(clojure.string/blank? (:value %)) options))
-
 (defn- remove-nth
   "remove nth elem in vector"
   [v n]
   (vec (concat (subvec v 0 n) (subvec v (inc n)))))
 
-(defn- remove-option
-  [db path]
-  (update-in db (drop-last path) remove-nth (last path)))
+(defn- current-form-content-path
+  [db further-path]
+  (flatten [:editor :forms (-> db :editor :selected-form-id) :content [further-path]]))
 
-(defn- add-option
-  [db path]
-  (update-in db path into [(ataru.virkailija.soresu.component/dropdown-option)]))
+(register-handler
+  :editor/remove-dropdown-option
+  (fn [db [_ & path]]
+    (let [option-path (current-form-content-path db [path])]
+      (update-in db (drop-last option-path) remove-nth (last option-path)))))
+
+(register-handler
+  :editor/add-dropdown-option
+  (fn [db [_ & path]]
+    (let [dropdown-path (current-form-content-path db [path :options])]
+      (update-in db dropdown-path into [(ataru.virkailija.soresu.component/dropdown-option)]))))
 
 (register-handler
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
-    (let [label-path (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
+    (let [label-path (current-form-content-path db [path])
           this-option-path (drop-last 2 label-path)
-          options-path (drop-last 3 label-path)
           value-path (flatten [this-option-path :value])
           option-updated-db (-> db
                                 (assoc-in label-path value)
-                                (assoc-in value-path value))
-          blank-removed-db (if (clojure.string/blank? (:value (get-in option-updated-db this-option-path)))
-                             (remove-option option-updated-db this-option-path)
-                             option-updated-db)
-          blank-added-db (if (not (empty-options-in-select? (get-in blank-removed-db options-path)))
-                           (add-option blank-removed-db options-path)
-                           blank-removed-db)]
-      blank-added-db)))
+                                (assoc-in value-path value))]
+      option-updated-db)))
 
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in
-      db
-      (flatten [:editor :forms (-> db :editor :selected-form-id) :content [path]])
-      value)))
+    (assoc-in db (current-form-content-path db [path]) value)))
 
 (defn generate-component
   [db [_ generate-fn path]]
   (with-form-id [db form-id]
     (let [form-id       (get-in db [:editor :selected-form-id])
-          path-vec      (flatten [:editor :forms form-id :content [path]])]
+          path-vec      (current-form-content-path db [path])]
       (if (zero? (last path-vec))
         (assoc-in db (butlast path-vec) [(generate-fn)])
         (assoc-in db path-vec (generate-fn))))))
