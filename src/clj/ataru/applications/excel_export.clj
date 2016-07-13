@@ -56,19 +56,13 @@
       (writer 0 (+ column (count application-meta-fields)) value))))
 
 (defn- extract-headers
-  [applications]
-  (->> (reduce
-         (fn [form-headers application]
-           (into form-headers
-             (reduce
-               (fn [application-headers answer]
-                 (conj application-headers (:label answer)))
-               []
-               (:answers application))))
-         []
-         applications)
-       distinct
-       (map-indexed (fn [idx header] {:header header :column idx}))))
+  [applications form]
+  (let [labels-in-form (map #(get-in % [:label :fi]) (:content form))
+        labels-in-applications (mapcat #(map :label (:answers %)) applications)
+        all-labels (distinct (concat labels-in-form labels-in-applications))]
+    (map-indexed (fn [idx header]
+                   {:header header :column idx})
+                 all-labels)))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
   (let [workbook               (XSSFWorkbook.)
@@ -77,7 +71,7 @@
         applications           (application-store/fetch-applications
                                  form-id
                                  {:limit 100 :lang (name language)})
-        headers                (extract-headers applications)]
+        headers                (extract-headers applications form)]
     (when (and (not-empty form) (not-empty applications))
       (do
         (write-headers! (make-writer sheet 0) headers)
