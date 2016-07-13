@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.soresu.component :as component]
+            [ataru.virkailija.soresu.person-info-module :as pm]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
@@ -170,7 +171,8 @@
                       :on-drop prevent-default}]]])))))]])))
 
 (def ^:private toolbar-elements
-  {"Lomakeosio"     component/form-section
+  {"Henkilötiedot"  pm/person-info-module
+   "Lomakeosio"     component/form-section
    "Tekstikenttä"   component/text-field
    "Tekstialue"     component/text-area
    "Pudotusvalikko" component/dropdown})
