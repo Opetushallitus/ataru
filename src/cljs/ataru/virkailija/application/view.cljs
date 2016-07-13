@@ -51,12 +51,14 @@
     :on-click #(reset! open?-atom true)}])
 
 (defn form-list-row [form selected?]
-  [:div (:name form)])
+  [:div
+   {:class (if selected? "application-handling__form-list-selected-row" "")}
+   (:name form)])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
   (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
         (for [[id form] forms
-              :let [selected? (= id (:id selected-form-id))]]
+              :let [selected? (= id selected-form-id)]]
           ^{:key id}
           [form-list-row form selected?])))
 
