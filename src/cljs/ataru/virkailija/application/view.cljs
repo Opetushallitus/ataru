@@ -51,14 +51,16 @@
     :on-click #(reset! open?-atom true)}])
 
 (defn form-list-row [form selected? open?-atom]
-  [:div
-   {:class (if selected? "application-handling__form-list-selected-row" "")
-    :on-click (if (not selected?)
-                #(do
-                  (reset! open?-atom false)
-                  (dispatch [:editor/select-form (:id form)]))
-                #(reset! open?-atom false))}
-   (:name form)])
+  [:a
+    {:href  (str "#/applications/" (:id form))}
+    [:div
+     {:class (if selected? "application-handling__form-list-selected-row" "")
+      :on-click (if (not selected?)
+                  #(do
+                    (reset! open?-atom false)
+                    (dispatch [:editor/select-form (:id form)]))
+                  #(reset! open?-atom false))}
+     (:name form)]])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
   (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
