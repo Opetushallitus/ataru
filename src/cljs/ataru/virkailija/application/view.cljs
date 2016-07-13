@@ -50,9 +50,14 @@
    {:dangerouslySetInnerHTML {:__html "&#x2304;"}
     :on-click #(reset! open?-atom true)}])
 
-(defn form-list-row [form selected?]
+(defn form-list-row [form selected? open?-atom]
   [:div
-   {:class (if selected? "application-handling__form-list-selected-row" "")}
+   {:class (if selected? "application-handling__form-list-selected-row" "")
+    :on-click (if (not selected?)
+                #(do
+                  (reset! open?-atom false)
+                  (dispatch [:editor/select-form (:id form)]))
+                #(reset! open?-atom false))}
    (:name form)])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
@@ -60,7 +65,7 @@
         (for [[id form] forms
               :let [selected? (= id selected-form-id)]]
           ^{:key id}
-          [form-list-row form selected?])))
+          [form-list-row form selected? open?-atom])))
 
 (defn form-list-closed [selected-form open?-atom]
   [:div.application-handling__form-list-closed
