@@ -40,20 +40,31 @@
      ;[applications]
      ]))
 
+(defn form-list-arrow-up [open?-atom]
+  [:span.application-handling__form-list-arrow-up
+   {:dangerouslySetInnerHTML {:__html "&#x2303;"}
+    :on-click #(reset! open?-atom false)}])
+
+(defn form-list-arrow-down [open?-atom]
+  [:span.application-handling__form-list-arrow-down
+   {:dangerouslySetInnerHTML {:__html "&#x2304;"}
+    :on-click #(reset! open?-atom true)}])
+
 (defn form-list-row [form selected?]
   [:div (:name form)])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
-  (into [:div.editor-form__list {:on-click #(reset! open?-atom false)}]
+  (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
         (for [[id form] forms
               :let [selected? (= id (:id selected-form-id))]]
           ^{:key id}
           [form-list-row form selected?])))
 
 (defn form-list-closed [selected-form open?-atom]
-  [:div
+  [:div.application-handling__form-list-closed
    {:on-click #(reset! open?-atom true)}
-   (:name selected-form)])
+   (:name selected-form)
+   [form-list-arrow-down open?-atom]])
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])
