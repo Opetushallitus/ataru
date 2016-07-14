@@ -1,6 +1,5 @@
 (ns ataru.schema.clj-schema
-  (:require [ataru.schema :as schema]
-            [ataru.schema.soresu-schema :as soresu]
+  (:require [ataru.schema.soresu-schema :as soresu]
             [schema.core :as s]
             [schema-tools.core :as st]
             [clojure.string :as str]))
@@ -52,7 +51,12 @@
 
 (soresu/create-form-schema [] [] [])
 
-(s/defschema Form schema/Form)
+(s/defschema Form {(s/optional-key :id)            s/Int
+                   :name                           s/Str
+                   (s/optional-key :modified-by)   s/Str
+                   (s/optional-key :modified-time) #?(:clj org.joda.time.DateTime
+                                                      :cljs s/Str)
+                   s/Any                           s/Any})
 
 (s/defschema FormWithContent
   (merge Form
