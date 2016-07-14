@@ -23,12 +23,19 @@ function startsWith(haystack, needle) {
   return haystack.substring(0, needle.length) === needle
 }
 
+function takeScreenshot() {
+  var filename = '/tmp/ataru-fail-' + new Date().getTime() + '.png'
+  console.log('Taking screenshot', filename)
+  page.render(filename)
+}
+
 page.onConsoleMessage = function (message) {
   console.log(message);
   if (startsWith(message, resultPrefix)) {
     if (startsWith(message, resultPrefix + successMsg)) {
       global.testsSuccessful = true;
     } else if (startsWith(message, resultPrefix + failMsg)) {
+      takeScreenshot()
       global.testsSuccessful = false;
     } else {
       console.log("Unknown result:", message);

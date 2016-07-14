@@ -60,7 +60,6 @@ var wait = {
           deferred.resolve()
         } else if (remaining === 0) {
           const errorStr = "timeout of " + maxWaitMs + "ms in wait.until for condition:\n" + condition
-          takeScreenshot()
           console.error(new Error(errorStr))
           deferred.reject(errorStr)
         } else {
@@ -88,15 +87,6 @@ var wait = {
     return wait.until(function() {
       return elementExists(elementQueryFn())
     })
-  }
-};
-
-function takeScreenshot() {
-  if (window.callPhantom) {
-    var date = new Date()
-    var filename = "/tmp/" + date.getTime()
-    console.log("Taking screenshot " + filename)
-    callPhantom({'screenshot': filename})
   }
 }
 
