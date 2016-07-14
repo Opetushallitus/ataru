@@ -65,3 +65,11 @@
   {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
+
+(s/defschema SubmissionValidationError
+  {:error s/Str
+   (s/optional-key :info) s/Any})
+
+(s/defschema SubmissionValidationErrors
+  "Submission validation errors contain a mapping from field id to list of validation errors"
+  {s/Keyword [SubmissionValidationError]})
