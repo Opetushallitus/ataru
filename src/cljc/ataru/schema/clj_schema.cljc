@@ -7,11 +7,6 @@
 (s/defschema PositiveInteger
   (s/both (s/pred pos? 'pos?) s/Int))
 
-(s/defschema OptionalLocalizedString
-  {:fi                  s/Str
-   (s/optional-key :sv) s/Str
-   (s/optional-key :en) s/Str})
-
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
 ;    /.__, ._  -=- _ "`    Y
@@ -54,7 +49,7 @@
                                                "textArea"
                                                "dropdown"])
                      :label (s/cond-pre
-                              OptionalLocalizedString
+                              soresu/LocalizedString
                               s/Str)})
 
 (s/defschema Application
