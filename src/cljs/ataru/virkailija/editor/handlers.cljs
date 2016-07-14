@@ -4,7 +4,7 @@
             [clojure.walk :as walk]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
-            [ataru.virkailija.soresu.component :as component]
+            [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
@@ -56,7 +56,7 @@
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])]
-      (update-in db dropdown-path into [(ataru.virkailija.soresu.component/dropdown-option)]))))
+      (update-in db dropdown-path into [(ataru.virkailija.component-data.component/dropdown-option)]))))
 
 (register-handler
   :editor/set-dropdown-option-value

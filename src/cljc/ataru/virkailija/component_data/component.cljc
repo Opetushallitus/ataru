@@ -1,4 +1,4 @@
-(ns ataru.virkailija.soresu.component
+(ns ataru.virkailija.component-data.component
   #?(:cljs (:require [ataru.cljs-util :as util])
      :clj  (:import (java.util UUID))))
 

@@ -1,5 +1,5 @@
-(ns ataru.virkailija.soresu.person-info-module
-  (:require [ataru.virkailija.soresu.component :as component]))
+(ns ataru.virkailija.component-data.person-info-module
+  (:require [ataru.virkailija.component-data.component :as component]))
 
 (def ^:private first-name-component
   (merge (component/text-field) {:label {:fi "Etunimet" :sv "Förnamn"} :required true}))
