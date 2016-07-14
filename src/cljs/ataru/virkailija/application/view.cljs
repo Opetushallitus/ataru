@@ -63,11 +63,12 @@
      (:name form)]])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
-  (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
+  [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
+   (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
         (for [[id form] forms
               :let [selected? (= id selected-form-id)]]
           ^{:key id}
-          [form-list-row form selected? open?-atom])))
+          [form-list-row form selected? open?-atom]))])
 
 (defn form-list-closed [selected-form open?-atom]
   [:div.application-handling__form-list-closed
