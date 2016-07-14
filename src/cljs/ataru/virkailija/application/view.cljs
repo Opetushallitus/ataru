@@ -51,9 +51,9 @@
     :on-click #(reset! open?-atom true)}])
 
 (defn form-list-row [form selected? open?-atom]
-  [:a
+  [:a.application-handling__form-list-row-link
     {:href  (str "#/applications/" (:id form))}
-    [:div
+    [:div.application-handling__form-list-row
      {:class (if selected? "application-handling__form-list-selected-row" "")
       :on-click (if (not selected?)
                   #(do
@@ -88,7 +88,7 @@
 
 (defn application []
   [:div
-   [:div.editor-form__container.panel-content
+   [:div.application-handling__container.panel-content
     [form-list]
     [:p [:a
          {:href
