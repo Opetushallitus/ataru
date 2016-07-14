@@ -176,7 +176,7 @@
           :on-click (fn [evt]
                       (.preventDefault evt)
                       (dispatch [:editor/add-dropdown-option path]))}
-         [:img {:src "/images/add_row.png"}] " Lisää"]]])))
+         [:img {:src "/lomake-editori/images/add_row.png"}] " Lisää"]]])))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"     component/form-section
