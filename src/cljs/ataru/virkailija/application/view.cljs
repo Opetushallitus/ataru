@@ -73,7 +73,7 @@
 (defn form-list-closed [selected-form open?-atom]
   [:div.application-handling__form-list-closed
    {:on-click #(reset! open?-atom true)}
-   (:name selected-form)
+   [:div.application-handling__form-list-row.application-handling__form-list-selected-row (:name selected-form)]
    [form-list-arrow-down open?-atom]])
 
 (defn form-list []
