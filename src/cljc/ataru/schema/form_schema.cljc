@@ -66,6 +66,13 @@
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
 
+(s/defschema Submission {:id Long
+                         :created_at s/Inst
+                         :form Long
+                         :version Long
+                         :version_closed (s/maybe s/Inst)
+                         :answers soresu/Answers})
+
 (s/defschema SubmissionValidationError
   {:error s/Str
    (s/optional-key :info) s/Any})

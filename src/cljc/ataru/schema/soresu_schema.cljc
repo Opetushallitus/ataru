@@ -101,11 +101,4 @@
 
   (s/defschema Answers
     "Answers consists of a key (String) value pairs, where value may be String or an array of more answers"
-    { :value [Answer] })
-
-  (s/defschema Submission {:id Long
-                           :created_at s/Inst
-                           :form Long
-                           :version Long
-                           :version_closed (s/maybe s/Inst)
-                           :answers Answers}))
+    { :value [Answer] }))
