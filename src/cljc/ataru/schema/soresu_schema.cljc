@@ -73,28 +73,4 @@
                                                              BasicElement)]
                                  (s/optional-key :params) s/Any
                                  (s/optional-key :label)  LocalizedString
-                                 (s/optional-key :helpText) LocalizedString})
-
-    (s/defschema Answer {:key s/Str,
-                         :value (s/either s/Str
-                                  s/Int
-                                  [s/Str]
-                                  [(s/recursive #'Answer)])
-                         :fieldType (apply s/enum all-answer-element-types)}))
-
-
-  (s/defschema Content [(s/conditional #(= "wrapperElement" (:fieldClass %))
-                          (s/recursive #'WrapperElement)
-                          :else
-                          BasicElement)])
-
-  (s/defschema Rule {:type s/Str
-                     :triggerId s/Str
-                     :targetIds [s/Str]
-                     (s/optional-key :params) s/Any})
-
-  (s/defschema Rules [Rule])
-
-  (s/defschema Form {:content Content,
-                     :rules Rules,
-                     :created_at s/Inst}))
+                                 (s/optional-key :helpText) LocalizedString})))

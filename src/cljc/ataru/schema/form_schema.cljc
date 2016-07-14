@@ -65,22 +65,3 @@
   {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
-
-(s/defschema Answers
-  "Answers consists of a key (String) value pairs, where value may be String or an array of more answers"
-  { :value [soresu/Answer] })
-
-(s/defschema Submission {:id Long
-                         :created_at s/Inst
-                         :form Long
-                         :version Long
-                         :version_closed (s/maybe s/Inst)
-                         :answers Answers})
-
-(s/defschema SubmissionValidationError
-  {:error s/Str
-   (s/optional-key :info) s/Any})
-
-(s/defschema SubmissionValidationErrors
-  "Submission validation errors contain a mapping from field id to list of validation errors"
-  {s/Keyword [SubmissionValidationError]})
