@@ -1,6 +1,5 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.schema.soresu-schema :as soresu]
-            [schema.core :as s]
+  (:require [schema.core :as s]
             [schema-tools.core :as st]
             [clojure.string :as str]))
 
