@@ -48,17 +48,24 @@
   [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow
    {:on-click #(reset! open?-atom true)}])
 
+(def wrap-scroll-to
+  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
+                                              (if (.-scrollIntoViewIfNeeded node)
+                                                (.scrollIntoViewIfNeeded node)
+                                                (.scrollIntoView node)))}))
+
 (defn form-list-row [form selected? open?-atom]
   [:a.application-handling__form-list-row-link
     {:href  (str "#/applications/" (:id form))}
-    [:div.application-handling__form-list-row
-     {:class (if selected? "application-handling__form-list-selected-row" "")
-      :on-click (if (not selected?)
-                  #(do
-                    (reset! open?-atom false)
-                    (dispatch [:editor/select-form (:id form)]))
-                  #(reset! open?-atom false))}
-     (:name form)]])
+   (let [row-element [:div.application-handling__form-list-row
+                      {:class (if selected? "application-handling__form-list-selected-row" "")
+                       :on-click (if (not selected?)
+                                   #(do
+                                     (reset! open?-atom false)
+                                     (dispatch [:editor/select-form (:id form)]))
+                                   #(reset! open?-atom false))}
+                      (:name form)]]
+     (if selected? [wrap-scroll-to row-element] row-element))])
 
 (defn form-list-opened [forms selected-form-id open?-atom]
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
