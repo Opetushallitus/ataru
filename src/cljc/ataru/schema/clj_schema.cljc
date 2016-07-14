@@ -1,8 +1,8 @@
 (ns ataru.schema.clj-schema
   (:require [ataru.schema :as schema]
+            [ataru.schema.soresu-schema :as soresu]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [oph.soresu.form.schema :as soresu]
             [clojure.string :as str]))
 
 (s/defschema PositiveInteger
@@ -38,11 +38,11 @@
 ((memoize
    (fn []
 
-     (intern 'oph.soresu.form.schema
+     (intern 'ataru.schema.soresu-schema
              'LocalizedString
              OptionalLocalizedString)
 
-     (intern 'oph.soresu.form.schema
+     (intern 'ataru.schema.soresu-schema
              'Option
              (st/assoc
                soresu/Option
