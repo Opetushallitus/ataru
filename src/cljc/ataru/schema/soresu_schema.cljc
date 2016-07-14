@@ -1,8 +1,9 @@
 (ns ataru.schema.soresu-schema
   (:require [schema.core :as s]))
 
-(s/defschema LocalizedString {:fi s/Str
-                              :sv s/Str})
+(s/defschema LocalizedString {:fi                  s/Str
+                              (s/optional-key :sv) s/Str
+                              (s/optional-key :en) s/Str})
 
 (s/defschema Option {:value                  s/Str
                      (s/optional-key :label) LocalizedString})

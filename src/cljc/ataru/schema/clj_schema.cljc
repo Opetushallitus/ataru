@@ -32,22 +32,6 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-; memoized function, runs only once -
-; it overwrites some of soresus schemas with little changes
-((memoize
-   (fn []
-
-     (intern 'ataru.schema.soresu-schema
-             'LocalizedString
-             OptionalLocalizedString)
-
-     (intern 'ataru.schema.soresu-schema
-             'Option
-             (st/assoc
-               soresu/Option
-               (s/optional-key :label) OptionalLocalizedString))
-
-     nil)))
 
 (soresu/create-form-schema [] [] [])
 
