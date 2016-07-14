@@ -11,8 +11,13 @@
 
 (defn person-info-module
   []
-  (merge (component/form-section) {:label {:fi "Henkilötiedot"
-                                           :sv "Personlig information"}
-                                   :children [(first-name-component)
-                                              (last-name-component)]
-                                   :focus? false}))
+  (clojure.walk/prewalk
+    (fn [x]
+      (if (map? x)
+        (dissoc x :focus?)
+        x))
+    (merge (component/form-section) {:label {:fi "Henkilötiedot"
+                                             :sv "Personlig information"}
+                                     :children [(first-name-section)
+                                                (last-name-component)]
+                                     :focus? false})))
