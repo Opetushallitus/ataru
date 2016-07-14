@@ -57,7 +57,7 @@
 (def applications
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
   :lang "fi",
-  :modified-time (c/now)
+  :modified-time (c/date-time 2016 6 15 12 30 55)
   :form_id 703
   :state "received"
   :content
@@ -70,7 +70,7 @@
       {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "6", :fieldType "textField"}]}}
  {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
   :lang "fi",
-  :modified-time (c/now)
+  :modified-time (c/date-time 2016 6 15 14 30 55)
   :form_id 703
   :state "received"
   :content
@@ -82,7 +82,7 @@
       {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "jee", :fieldType "textField"}]}}
  {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
   :lang "fi",
-  :modified-time (c/now)
+  :modified-time (c/date-time 2016 6 16 6 0 0)
   :form_id 703
   :state "received"
   :content

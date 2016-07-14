@@ -55,9 +55,17 @@
           value (:value answer)]
       (writer 0 (+ column (count application-meta-fields)) value))))
 
+
+(defn- pick-labels
+  [form-content]
+  (mapcat #(if (:children %)
+            (pick-labels %)
+            (get-in % [:label :fi]))
+          form-content))
+
 (defn- extract-headers
   [applications form]
-  (let [labels-in-form (map #(get-in % [:label :fi]) (:content form))
+  (let [labels-in-form (mapcat pick-labels (:content form))
         labels-in-applications (mapcat #(map :label (:answers %)) applications)
         all-labels (distinct (concat labels-in-form labels-in-applications))]
     (map-indexed (fn [idx header]
