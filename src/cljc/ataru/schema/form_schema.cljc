@@ -28,8 +28,6 @@
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
 
-(soresu/create-form-schema [] [] [])
-
 (s/defschema Form {(s/optional-key :id)            s/Int
                    :name                           s/Str
                    (s/optional-key :modified-by)   s/Str
@@ -37,9 +35,73 @@
                                                       :cljs s/Str)
                    s/Any                           s/Any})
 
+(s/defschema LocalizedString {:fi                  s/Str
+                              (s/optional-key :sv) s/Str
+                              (s/optional-key :en) s/Str})
+
+(s/defschema Option {:value                  s/Str
+                     (s/optional-key :label) LocalizedString})
+
+(s/defschema Button {:fieldClass              (s/eq "button")
+                     :id                      s/Str
+                     (s/optional-key :label)  LocalizedString
+                     (s/optional-key :params) s/Any
+                     :fieldType               s/Keyword})
+
+(s/defschema FormField {:fieldClass (s/eq "formField")
+                        :id s/Str
+                        :required s/Bool
+                        (s/optional-key :label) LocalizedString
+                        (s/optional-key :helpText) LocalizedString
+                        (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
+                        (s/optional-key :params) s/Any
+                        (s/optional-key :options) [Option]
+                        :fieldType (apply s/enum ["textField"
+                                                  "textArea"
+                                                  "nameField"
+                                                  "emailField"
+                                                  "moneyField"
+                                                  "finnishBusinessIdField"
+                                                  "iban"
+                                                  "bic"
+                                                  "dropdown"
+                                                  "radioButton"
+                                                  "checkboxButton"
+                                                  "namedAttachment"
+                                                  "koodistoField"])})
+
+(s/defschema InfoElement {:fieldClass (s/eq "infoElement")
+                          :id s/Str
+                          :fieldType (apply s/enum ["h1"
+                                                    "h3"
+                                                    "link"
+                                                    "p"
+                                                    "bulletList"
+                                                    "dateRange"
+                                                    "endOfDateRange"])
+                          (s/optional-key :params) s/Any
+                          (s/optional-key :label) LocalizedString
+                          (s/optional-key :text) LocalizedString})
+
+(s/defschema BasicElement (s/conditional
+                            #(= "formField" (:fieldClass %)) FormField
+                            #(= "button" (:fieldClass %)) Button
+                            :else InfoElement))
+
+(s/defschema WrapperElement {:fieldClass              (s/eq "wrapperElement")
+                             :id                      s/Str
+                             :fieldType               (apply s/enum ["theme" "fieldset" "growingFieldset" "growingFieldsetChild" ])
+                             :children                [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                                                         (s/recursive #'WrapperElement)
+                                                         :else
+                                                         BasicElement)]
+                             (s/optional-key :params) s/Any
+                             (s/optional-key :label)  LocalizedString
+                             (s/optional-key :helpText) LocalizedString})
+
 (s/defschema FormWithContent
   (merge Form
-         {:content [(s/if (comp some? :children) soresu/WrapperElement soresu/FormField)]}))
+         {:content [(s/if (comp some? :children) WrapperElement FormField)]}))
 
 (s/defschema Answer {:key s/Str,
                      :value (s/cond-pre s/Str
@@ -49,7 +111,7 @@
                                                "textArea"
                                                "dropdown"])
                      :label (s/cond-pre
-                              soresu/LocalizedString
+                              LocalizedString
                               s/Str)})
 
 (s/defschema Application
