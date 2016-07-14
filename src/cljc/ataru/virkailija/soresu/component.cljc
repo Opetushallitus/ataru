@@ -1,12 +1,14 @@
 (ns ataru.virkailija.soresu.component
-  (:require [ataru.cljs-util :as util]))
+  #?(:cljs (:require [ataru.cljs-util :as util])
+     :clj  (:import (java.util UUID))))
 
 (defn text-field
   []
   {:fieldClass "formField"
    :fieldType  "textField"
    :label      {:fi "", :sv ""}
-   :id         (util/new-uuid)
+   :id         #?(:cljs (util/new-uuid)
+                  :clj  (str (UUID/randomUUID)))
    :params     {}
    :required   false
    :focus?     true})
@@ -19,7 +21,8 @@
   []
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
-   :id         (util/new-uuid)
+   :id         #?(:cljs (util/new-uuid)
+                  :clj  (str (UUID/randomUUID)))
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []
    :params     {}
@@ -35,7 +38,8 @@
   []
   {:fieldClass "formField"
    :fieldType "dropdown"
-   :id (util/new-uuid)
+   :id #?(:cljs (util/new-uuid)
+          :clj  (str (UUID/randomUUID)))
    :label {:fi "", :sv ""}
    :params {}
    :options [(dropdown-option)]
