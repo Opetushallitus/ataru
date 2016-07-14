@@ -10,7 +10,7 @@
 
 (defn- verify-row
   [sheet row-num expected-values]
-  (let [row   (.getRow sheet row-num)]
+  (let [row (.getRow sheet row-num)]
     (should-not-be-nil row)
     (doseq [col-idx (range (count expected-values))]
       (let [cell (.getCell row col-idx)
@@ -28,7 +28,7 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
-(describe "writing excel"
+(describe "excel export"
   (tags :unit)
 
   (around [spec]
@@ -36,7 +36,7 @@
                   form-store/fetch-form (fn [& _] fixtures/form)]
       (spec)))
 
-  (it "writes excel"
+  (it "has expected values"
       (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
@@ -44,13 +44,13 @@
                  (.write output)))
           (let [sheet (-> file WorkbookFactory/create (.getSheetAt 0))]
             (verify-row sheet 0
-              ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "kuudes kysymys"])
+              ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys"])
             (verify-row sheet 1
-              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 12:30:55" "1" "2" "3" "4" "5" "6"])
+              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 12:30:55" "1" "2" "3" "4" "5" "6" nil])
             (verify-row sheet 2
               ["956ae57b-8bd2-42c5-90ac-82bd0a4fd31f" "2016-06-15 14:30:55" "Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee"])
             (verify-row sheet 3
-              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 06:00:00" "a" "b" "d" "e" nil nil "f" "g"])
+              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 06:00:00" "a" "b" "d" "e" nil "g" "f"])
             (verify-pane-information sheet))
           (finally
             (.delete file))))))

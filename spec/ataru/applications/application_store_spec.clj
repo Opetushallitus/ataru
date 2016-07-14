@@ -37,7 +37,7 @@
      {:key "G__24", :label "Kolmas kysymys", :value "d", :fieldType "textField"}
      {:key "G__36", :label "Neljas kysymys", :value "e", :fieldType "textField"}
      {:key "G__14", :label "Seitsemas kysymys", :value "f", :fieldType "textField"}
-     {:key "G__47", :label "kuudes kysymys", :value "g", :fieldType "textField"}]}])
+     {:key "G__47", :label "Kuudes kysymys", :value "g", :fieldType "textField"}]}])
 
 (describe "fetch-applications"
   (tags :unit)

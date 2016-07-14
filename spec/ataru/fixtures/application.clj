@@ -11,30 +11,24 @@
    :label {:fi "Osion nimi joo on", :sv "Avsnitt namn"},
    :children
    [{:id "G__19",
-     :label {:fi "tekstiä", :sv ""},
+     :label {:fi "Eka kysymys", :sv ""},
      :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__17",
-     :label {:fi "ghj", :sv ""},
-     :params {},
-     :required false,
-     :fieldType "textField",
-     :fieldClass "formField"}
-    {:id "G__17",
-     :label {:fi "a", :sv ""},
+     :label {:fi "Toka kysymys", :sv ""},
      :params {},
      :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__24",
-     :label {:fi "gg", :sv ""},
+     :label {:fi "Kolmas kysymys", :sv ""},
      :params {},
      :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__36",
-     :label {:fi "c", :sv ""},
+     :label {:fi "Neljas kysymys", :sv ""},
      :params {},
      :required false,
      :fieldType "textField",
@@ -42,13 +36,13 @@
    :fieldType "fieldset",
    :fieldClass "wrapperElement"}
   {:id "G__14",
-   :label {:fi "aef", :sv ""},
+   :label {:fi "Viides kysymys", :sv ""},
    :params {},
    :required false,
    :fieldType "textField",
    :fieldClass "formField"}
   {:id "G__47",
-   :label {:fi "freFD", :sv ""},
+   :label {:fi "Kuudes kysymys", :sv ""},
    :params {},
    :required false,
    :fieldType "textField",
@@ -92,4 +86,4 @@
       {:key "G__24", :label {:fi "Kolmas kysymys"}, :value "d", :fieldType "textField"}
       {:key "G__36", :label {:fi "Neljas kysymys"}, :value "e", :fieldType "textField"}
       {:key "G__14", :label {:fi "Seitsemas kysymys"}, :value "f", :fieldType "textField"}
-      {:key "G__47", :label {:fi "kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
+      {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])

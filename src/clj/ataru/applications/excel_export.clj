@@ -55,7 +55,6 @@
           value (:value answer)]
       (writer 0 (+ column (count application-meta-fields)) value))))
 
-
 (defn pick-form-labels
   [form-content]
   (flatten
@@ -85,14 +84,13 @@
                                  {:limit 100 :lang (name language)})
         headers                (extract-headers applications form)]
     (when (and (not-empty form) (not-empty applications))
-      (do
-        (write-headers! (make-writer sheet 0) headers)
-        (dorun (map-indexed
-                 (fn [idx application]
-                   (let [writer (make-writer sheet (inc idx))]
-                     (write-application! writer application headers)))
-                 applications))
-        (.createFreezePane sheet 0 1 0 1)))
+      (write-headers! (make-writer sheet 0) headers)
+      (dorun (map-indexed
+               (fn [idx application]
+                 (let [writer (make-writer sheet (inc idx))]
+                   (write-application! writer application headers)))
+               applications))
+      (.createFreezePane sheet 0 1 0 1))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
