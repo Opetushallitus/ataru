@@ -66,12 +66,16 @@
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
 
+(s/defschema Answers
+  "Answers consists of a key (String) value pairs, where value may be String or an array of more answers"
+  { :value [soresu/Answer] })
+
 (s/defschema Submission {:id Long
                          :created_at s/Inst
                          :form Long
                          :version Long
                          :version_closed (s/maybe s/Inst)
-                         :answers soresu/Answers})
+                         :answers Answers})
 
 (s/defschema SubmissionValidationError
   {:error s/Str
