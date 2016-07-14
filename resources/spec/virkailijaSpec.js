@@ -42,9 +42,6 @@ function autosaveSuccessful() {
 (function() {
   afterEach(function() {
     expect(window.uiError || null).to.be.null
-    if (this.currentTest.state == 'failed') {
-      takeScreenshot()
-    }
   })
 
   describe('Editor', function() {
