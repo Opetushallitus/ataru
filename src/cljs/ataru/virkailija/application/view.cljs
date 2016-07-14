@@ -41,14 +41,12 @@
      ]))
 
 (defn form-list-arrow-up [open?-atom]
-  [:span.application-handling__form-list-arrow-up
-   {:dangerouslySetInnerHTML {:__html "&#x2303;"}
-    :on-click #(reset! open?-atom false)}])
+  [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
+   {:on-click #(reset! open?-atom false)}])
 
 (defn form-list-arrow-down [open?-atom]
-  [:span.application-handling__form-list-arrow-down
-   {:dangerouslySetInnerHTML {:__html "&#x2304;"}
-    :on-click #(reset! open?-atom true)}])
+  [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow
+   {:on-click #(reset! open?-atom true)}])
 
 (defn form-list-row [form selected? open?-atom]
   [:a.application-handling__form-list-row-link
