@@ -62,7 +62,8 @@
 
 (defn form-list-opened [forms selected-form-id open?-atom]
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
-   (into [:div.application-handling__form-list-open [form-list-arrow-up open?-atom]]
+   [form-list-arrow-up open?-atom]
+   (into [:div.application-handling__form-list-open]
         (for [[id form] forms
               :let [selected? (= id selected-form-id)]]
           ^{:key id}
@@ -85,14 +86,18 @@
         [form-list-opened @forms @selected-form-id open?]
         [form-list-closed @selected-form open?])])))
 
+(defn excel-download-link []
+  [:a.application-handling__excel-download-link
+   {:href
+    (str
+      "/lomake-editori/api/applications/"
+      @(subscribe [:state-query [:application :form :id]])
+      "/excel")}
+   "Lataa hakemukset Excel-muodossa"])
+
 (defn application []
   [:div
    [:div.application-handling__container.panel-content
-    [form-list]
-    [:p [:a
-         {:href
-           (str
-             "/lomake-editori/api/applications/"
-             @(subscribe [:state-query [:application :form :id]])
-             "/excel")}
-         "Lataa kaikki hakemukset Excel -tiedostona"]]]])
+    [:div.application-handling__header
+      [form-list]
+      [excel-download-link]]]])

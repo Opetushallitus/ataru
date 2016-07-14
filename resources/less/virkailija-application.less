@@ -42,8 +42,19 @@
   display: inline-block;
 }
 
+.application-handling__header {
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #E6E6E6;
+}
+
 .application-handling__form-list-wrapper {
   position: relative;
+  display: inline-block;
+  width: 100%;
+  margin-right: 20px;
+  min-width: 300px;
 }
 
 .application-handling__form-list-open, .application-handling__form-list-closed {
@@ -93,4 +104,18 @@
   font-size: 30px;
   right: 15px;
   top: 3px;
+  z-index: 1;
+}
+
+.application-handling__excel-download-link {
+  font-size: 14px;
+  white-space: nowrap;
+  margin-top: 12px;
+}
+
+@media only screen
+and (max-width: 1000px;) {
+  .application-handling__header {
+    flex-wrap: wrap;
+  }
 }
