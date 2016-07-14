@@ -12,6 +12,13 @@
     (debug "Wrapped Debug " args)
     (apply f args)))
 
+(def wrap-scroll-to
+  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
+                                              (if (.-scrollIntoViewIfNeeded node)
+                                                (.scrollIntoViewIfNeeded node)
+                                                (.scrollIntoView node)))}))
+
+
 (defn debounce
   ([f] (debounce f 1000))
   ([f timeout]

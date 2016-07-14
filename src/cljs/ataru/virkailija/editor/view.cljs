@@ -2,18 +2,12 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [reagent.core :as r]
-            [ataru.cljs-util :refer [debounce-subscribe]]
+            [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.soresu.component :as component]
             [ataru.virkailija.temporal :refer [time->str]]
             [taoensso.timbre :refer-macros [spy debug]]))
-
-(def wrap-scroll-to
-  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
-                                               (if (.-scrollIntoViewIfNeeded node)
-                                                 (.scrollIntoViewIfNeeded node)
-                                                 (.scrollIntoView node)))}))
 
 (defn form-row [form selected?]
   [:a.editor-form__row

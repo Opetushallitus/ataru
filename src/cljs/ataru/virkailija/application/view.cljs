@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
+            [ataru.cljs-util :refer [wrap-scroll-to]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn applications []
@@ -47,12 +48,6 @@
 (defn form-list-arrow-down [open?-atom]
   [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow
    {:on-click #(reset! open?-atom true)}])
-
-(def wrap-scroll-to
-  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
-                                              (if (.-scrollIntoViewIfNeeded node)
-                                                (.scrollIntoViewIfNeeded node)
-                                                (.scrollIntoView node)))}))
 
 (defn form-list-row [form selected? open?-atom]
   [:a.application-handling__form-list-row-link
