@@ -88,7 +88,7 @@ var wait = {
       return elementExists(elementQueryFn())
     })
   }
-}
+};
 
 (function improveMocha() {
   var origBefore = before
