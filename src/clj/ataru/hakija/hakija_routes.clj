@@ -6,7 +6,7 @@
             [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [com.stuartsierra.component :as component]
             [schema.core :as s]
-            [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
             [compojure.api.sweet :as api]
             [ring.util.http-response :refer [ok not-found]]

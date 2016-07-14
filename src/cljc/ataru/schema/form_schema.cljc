@@ -1,4 +1,4 @@
-(ns ataru.schema.clj-schema
+(ns ataru.schema.form-schema
   (:require [ataru.schema.soresu-schema :as soresu]
             [schema.core :as s]
             [schema-tools.core :as st]
