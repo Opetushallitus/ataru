@@ -56,16 +56,20 @@
       (writer 0 (+ column (count application-meta-fields)) value))))
 
 
-(defn- pick-labels
+(defn pick-form-labels
   [form-content]
-  (mapcat #(if (:children %)
-            (pick-labels %)
-            (get-in % [:label :fi]))
-          form-content))
+  (flatten
+    (reduce
+      (fn [acc form-element]
+        (if (< 0 (count (:children form-element)))
+          (into acc [(pick-form-labels (:children form-element))])
+          (into acc [(-> form-element :label :fi)])))
+      []
+      form-content)))
 
 (defn- extract-headers
   [applications form]
-  (let [labels-in-form (mapcat pick-labels (:content form))
+  (let [labels-in-form (pick-form-labels (:content form))
         labels-in-applications (mapcat #(map :label (:answers %)) applications)
         all-labels (distinct (concat labels-in-form labels-in-applications))]
     (map-indexed (fn [idx header]
