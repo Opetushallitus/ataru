@@ -80,10 +80,10 @@
         selected-form    (subscribe [:editor/selected-form])
         open?            (r/atom false)]
     (fn []
-      (println "open? " @open?)
-      (if @open?
+      [:div.application-handling__form-list-wrapper
+       (if @open?
         [form-list-opened @forms @selected-form-id open?]
-        [form-list-closed @selected-form open?]))))
+        [form-list-closed @selected-form open?])])))
 
 (defn application []
   [:div
