@@ -8,6 +8,7 @@
       (match
         [field]
         [{:fieldClass "wrapperElement"
+          :fieldType  "fieldset"
           :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
         :else field))))
 
