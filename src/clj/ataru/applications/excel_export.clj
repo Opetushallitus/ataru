@@ -135,6 +135,6 @@
                            (string/replace #"[\s]+" "-")
                            (string/replace #"[^\w-]+" ""))
         time (f/unparse filename-time-format (:last-modified form))]
-    (str form-id "-" sanitized-name "-" time ".xlsx")))
+    (str form-id "_" sanitized-name "_" time ".xlsx")))
 
 
