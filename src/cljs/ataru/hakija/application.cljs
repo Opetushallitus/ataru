@@ -7,9 +7,11 @@
     (for [field fields]
       (match
         [field]
+
         [{:fieldClass "wrapperElement"
           :fieldType  "fieldset"
           :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
+
         :else field))))
 
 (defn- initial-valid-status [flattened-form-fields]
