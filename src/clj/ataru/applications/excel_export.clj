@@ -30,7 +30,7 @@
    {:label "Viimeksi muokattu"
     :field :modified-time
     :format-fn time-formatter}
-   {:label "Viime muokkaaja"
+   {:label "Viimeinen muokkaaja"
     :field :modified-by}])
 
 (def ^:private application-meta-fields
@@ -76,14 +76,14 @@
   (doseq [header headers]
     (writer 0 (+ (:column header) (count meta-fields)) (:header header))))
 
-(defn- write-application! [writer application headers]
-  (doseq [meta-field (indexed-meta-fields application-meta-fields)]
+(defn- write-application! [writer application headers application-meta-fields]
+  (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value (:value answer)]
-      (writer 0 (+ column (count indexed-meta-fields)) value))))
+      (writer 0 (+ column (count application-meta-fields)) value))))
 
 (defn pick-form-labels
   [form-content]
@@ -113,14 +113,15 @@
         applications (application-store/fetch-applications
                        form-id
                        {:lang (name language)})
+        application-meta-fields (indexed-meta-fields application-meta-fields)
         headers (extract-headers applications form)]
     (when (not-empty form)
       (write-form-meta! (make-writer form-meta-sheet 0) form (indexed-meta-fields form-meta-fields))
-      (write-headers! (make-writer applications-sheet 0) headers (indexed-meta-fields application-meta-fields))
+      (write-headers! (make-writer applications-sheet 0) headers application-meta-fields)
       (dorun (map-indexed
                (fn [idx application]
                  (let [writer (make-writer applications-sheet (inc idx))]
-                   (write-application! writer application headers)))
+                   (write-application! writer application headers application-meta-fields)))
                applications))
       (.createFreezePane applications-sheet 0 1 0 1))
     (with-open [stream (ByteArrayOutputStream.)]

@@ -5,7 +5,7 @@
  :id 703,
  :name "Test fixture what is this",
  :modified-by "DEVELOPER",
- :modified-time (c/now)
+ :modified-time (c/date-time 2016 6 14 12 34 56)
  :content
  [{:id "G__31",
    :label {:fi "Osion nimi joo on", :sv "Avsnitt namn"},
