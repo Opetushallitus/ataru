@@ -41,3 +41,11 @@
    :options [(dropdown-option)]
    :required false
    :focus? true})
+
+(defn row-section
+  [child-components]
+  {:fieldClass "wrapperElement"
+   :fieldType  "rowcontainer"
+   :id         (util/component-id)
+   :children   child-components
+   :params     {}})

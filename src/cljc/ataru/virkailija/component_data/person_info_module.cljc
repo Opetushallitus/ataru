@@ -5,6 +5,15 @@
   []
   (merge (component/text-field) {:label {:fi "Etunimet" :sv "Förnamn"} :required true}))
 
+(defn ^:private referrer-name-component
+  []
+  (merge (component/text-field) {:label {:fi "Kutsumanimi" :sv "Smeknamn"} :required true}))
+
+(defn ^:private first-name-section
+  []
+  (component/row-section [(first-name-component)
+                          (referrer-name-component)]))
+
 (defn ^:private last-name-component
   []
   (merge (component/text-field) {:label {:fi "Sukunimi" :sv "Efternamn"} :required true}))
@@ -20,4 +29,5 @@
                                              :sv "Personlig information"}
                                      :children [(first-name-section)
                                                 (last-name-component)]
-                                     :focus? false})))
+                                     :focus? false
+                                     :module :person-info})))

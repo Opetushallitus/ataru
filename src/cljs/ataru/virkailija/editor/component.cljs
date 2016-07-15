@@ -256,3 +256,11 @@
        children
        [drag-n-drop-spacer (conj path :children (count children))]
        [add-component (conj path :children (count children))]])))
+
+(defn module [path]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
+    (fn [path]
+      [:div.editor-form__module-wrapper (clojure.string/join ", "
+                                          (doall (for [lang @languages]
+                                                   (get-in @value [:label lang]))))])))
