@@ -73,7 +73,7 @@
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
 (defn row-wrapper [children]
-  (into [:div.application__form-field]
+  (into [:div.application__row-field-wrapper]
     (mapv #(render-field % :div-kwd :div.application__row-field) children)))
 
 (defn dropdown
