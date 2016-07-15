@@ -10,7 +10,8 @@
 
         [{:fieldClass "wrapperElement"
           :fieldType  "fieldset"
-          :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
+          :children   children}]
+        (map #(assoc % :wrapper-id (:id field)) children)
 
         :else field))))
 
