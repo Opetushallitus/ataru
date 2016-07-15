@@ -33,11 +33,11 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
-(defn text-field [field-descriptor]
+(defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         label (-> field-descriptor :label :fi)]
-    (fn [field-descriptor]
-      [:div.application__form-field
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+      [div-kwd
        [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:input.application__form-text-input
         {:type "text"
@@ -72,6 +72,10 @@
     (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
+(defn row-wrapper [children]
+  (into [:div.application__form-field]
+    (mapv #(render-field % :div-kwd :div.application__row-field) children)))
+
 (defn dropdown
   [field-descriptor]
   (let [label (-> field-descriptor :label :fi)]
@@ -89,13 +93,18 @@
                                    [:option {:value (:value option)} (-> option :label :fi)])]]])})))
 
 (defn render-field
-  [field-descriptor]
-  (match field-descriptor
-         {:fieldClass "wrapperElement"
-          :children   children} [wrapper-field field-descriptor children]
-         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]))
+  [field-descriptor & args]
+  (cond-> (match field-descriptor
+            {:fieldClass "wrapperElement"
+             :fieldType  "fieldset"
+             :children   children} [wrapper-field field-descriptor children]
+            {:fieldClass "wrapperElement"
+             :fieldType  "rowcontainer"
+             :children   children} [row-wrapper children]
+            {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
+            {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+            {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+    (not (contains? field-descriptor :children)) (into args)))
 
 (defn render-editable-fields [form-data]
   (when form-data
