@@ -43,6 +43,14 @@
    :focus? true})
 
 (defn row-section
+  "Creates a data structure that represents a row that has multiple form
+   components in it.
+
+   This component currently doesn't have any render implementation
+   in the editor side. If used WITHOUT a :module keyword associated to it,
+   the editor UI will fail at ataru.virkailija.editor.core/soresu->reagent.
+
+   Please see ataru.virkailija.component-data.person-info-module for example."
   [child-components]
   {:fieldClass "wrapperElement"
    :fieldType  "rowcontainer"
