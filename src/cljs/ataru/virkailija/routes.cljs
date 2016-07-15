@@ -52,8 +52,9 @@
         (fn [forms]
           (dispatch [:editor/select-form parsed-id])))))
 
-  (defroute #"/application/(\d+)" [form-id]
+  (defroute #"/applications/(\d+)" [form-id]
     (let [parsed-id (js/Number form-id)]
+      (dispatch [:editor/refresh-forms]) ;;Race select-formin kanssa, kato yltä kikkailu ^
       (dispatch [:editor/select-form parsed-id])
       (dispatch [:application/fetch-applications parsed-id]))
     (dispatch [:set-active-panel :application]))

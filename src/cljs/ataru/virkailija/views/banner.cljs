@@ -20,7 +20,7 @@
 
 (def panels
   {:editor      {:text "Lomake-editori" :href #(str "#/editor/" %)}
-   :application {:text "Hakemukset" :href #(str "#/application/" %)}})
+   :application {:text "Hakemukset" :href #(str "#/applications/" %)}})
 
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
 
@@ -42,8 +42,9 @@
     [:div.title
      [section-link :editor "#/editor/"]
      [:div.divider]
-     [section-link :application "#/application/"]
-     [:div [applications]]
+     [section-link :application "#/applications/"]
+     ; Use after we have multiple states representing new vs handled applications:
+     ; [:div [applications]]
      ]))
 
 (defn profile []

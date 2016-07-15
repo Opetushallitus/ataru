@@ -1,43 +1,79 @@
 @import "vars";
 
-.application-list {
-  cursor: pointer;
-  overflow: auto;
-  height: 150px;
-  margin-bottom: 15px;
+.application-handling__header {
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #E6E6E6;
 }
 
-.application-list__row {
-  padding: 0.5em;
-  margin: 0;
-  color: @blue-text-color;
-  display: block;
-
-  .application-list__row--applicant-unknown {
-    color: gray;
-  }
+.application-handling__form-list-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  min-width: 300px;
 }
 
-.application-list__header {
-  font-weight: bold;
-  color: black;
-}
-
-.application-list__row--selected {
+.application-handling__form-list-open, .application-handling__form-list-closed {
+  background-color: #FAFAFA;
+  box-shadow: 1px 2px 5px #b3b3b3;
   border-radius: 2px;
-  background-color: @selected-blue;
-  color: white;
+  border: solid 1px #E5E4E4;
 }
 
-.application-list__row--applicant {
-  width: 50%;
-  display: inline-block;
+.application-handling__form-list-open {
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow: auto;
 }
-.application-list__row--time {
-  width: 25%;
-  display: inline-block;
+
+.application-handling__form-list-open::-webkit-scrollbar {
+  width: 7px;
+  background-color: #f2f2f2;
 }
-.application-list__row--state {
-  width: 25%;
-  display: inline-block;
+
+.application-handling__form-list-open::-webkit-scrollbar-thumb {
+  background-color: #9B9B9B;
+  border-radius: 5px;
+}
+
+.application-handling__form-list-row-link {
+  text-decoration: none;
+}
+
+.application-handling__form-list-row {
+  cursor: pointer;
+  font-size: 16px;
+  color: @text-color;
+  line-height: 37px;
+  padding: 0 13px 0 13px;
+}
+
+.application-handling__form-list-selected-row {
+  background-color: #EEEEEE;
+}
+
+.application-handling__form-list-arrow {
+  color: #06526B;
+  position: absolute;
+  cursor: pointer;
+  font-size: 30px;
+  right: 20px;
+  top: 3px;
+  z-index: 1;
+}
+
+.application-handling__excel-download-link {
+  font-size: 14px;
+  white-space: nowrap;
+  margin-top: 12px;
+  margin-left: 20px;
+}
+
+@media only screen
+and (max-width: 1000px) {
+  .application-handling__header {
+    flex-wrap: wrap;
+  }
 }
