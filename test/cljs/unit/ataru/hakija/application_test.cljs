@@ -36,7 +36,7 @@
               :fieldClass "formField"}]})
 
 (deftest flattens-correctly
-  (let [expected   #{{:id "G__2",
+  (let [expected   [{:id "G__2",
                       :wrapper-id "G__1"
                       :label {:fi "kenttä1", :sv ""},
                       :params {:size "S"},
@@ -55,8 +55,8 @@
                       :params {:size "L"},
                       :required false,
                       :fieldType "textField",
-                      :fieldClass "formField"}}
-        actual (set (flatten-form-fields (:content form1)))]
+                      :fieldClass "formField"}]
+        actual (flatten-form-fields (:content form1))]
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
