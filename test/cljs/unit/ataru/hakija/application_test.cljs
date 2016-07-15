@@ -35,6 +35,54 @@
               :fieldType "textField",
               :fieldClass "formField"}]})
 
+(def person-info-form
+  {:id 22,
+   :name "Testilomake",
+   :modified-by "DEVELOPER",
+   :modified-time "2016-07-15T13:48:17.815+03:00",
+   :content
+   [{:fieldClass "wrapperElement",
+     :id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88",
+     :fieldType "fieldset",
+     :children
+                 [{:fieldClass "wrapperElement",
+                   :id "399d9123-f15f-402a-9ce9-2749d0578399",
+                   :fieldType "rowcontainer",
+                   :children
+                               [{:label {:fi "Etunimet", :sv "Förnamn"},
+                                 :fieldClass "formField",
+                                 :id "380913e2-8c93-494c-bd86-57000ed50ae8",
+                                 :params {},
+                                 :required true,
+                                 :fieldType "textField"}
+                                {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
+                                 :fieldClass "formField",
+                                 :id "7c8388f0-7ccb-4706-8630-15405b141552",
+                                 :params {:size "S"},
+                                 :required true,
+                                 :fieldType "textField"}],
+                   :params {}}
+                  {:label {:fi "Sukunimi", :sv "Efternamn"},
+                   :fieldClass "formField",
+                   :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
+                   :params {},
+                   :required true,
+                   :fieldType "textField"}],
+     :params {},
+     :label {:fi "Henkilötiedot", :sv "Personlig information"},
+     :module "person-info"}
+    {:fieldClass "wrapperElement",
+     :fieldType "fieldset",
+     :id "036a71bb-01dc-440e-8c05-80eea0ca9640",
+     :label {:fi "Osion nimi", :sv "Avsnitt namn"},
+     :children [{:fieldClass "formField",
+                   :fieldType "textField",
+                   :label {:fi "Random question", :sv ""},
+                   :id "839cb685-749a-46da-b215-842bc13ed542",
+                   :params {},
+                   :required false}],
+     :params {}}]})
+
 (deftest flattens-correctly
   (let [expected   [{:id "G__2",
                       :wrapper-id "G__1"
@@ -57,6 +105,38 @@
                       :fieldType "textField",
                       :fieldClass "formField"}]
         actual (flatten-form-fields (:content form1))]
+    (is (= expected actual))))
+
+(deftest flattens-row-container-answers
+  (let [expected [{:label {:fi "Etunimet", :sv "Förnamn"},
+                   :fieldClass "formField",
+                   :id "380913e2-8c93-494c-bd86-57000ed50ae8",
+                   :params {},
+                   :required true,
+                   :fieldType "textField"
+                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                  {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
+                   :fieldClass "formField",
+                   :id "7c8388f0-7ccb-4706-8630-15405b141552",
+                   :params {:size "S"},
+                   :required true,
+                   :fieldType "textField"
+                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                  {:label {:fi "Sukunimi", :sv "Efternamn"},
+                   :fieldClass "formField",
+                   :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
+                   :params {},
+                   :required true,
+                   :fieldType "textField"
+                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                  {:fieldClass "formField",
+                   :fieldType "textField",
+                   :label {:fi "Random question", :sv ""},
+                   :id "839cb685-749a-46da-b215-842bc13ed542",
+                   :params {},
+                   :required false
+                   :wrapper-id "036a71bb-01dc-440e-8c05-80eea0ca9640"}]
+        actual (flatten-form-fields (:content person-info-form))]
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
