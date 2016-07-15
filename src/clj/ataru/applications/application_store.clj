@@ -1,5 +1,5 @@
 (ns ataru.applications.application-store
-  (:require [ataru.schema.clj-schema :as schema]
+  (:require [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [schema.core :as s]

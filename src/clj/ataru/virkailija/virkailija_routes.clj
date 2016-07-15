@@ -2,7 +2,7 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
-            [ataru.schema.clj-schema :as ataru-schema]
+            [ataru.schema.form-schema :as ataru-schema]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
