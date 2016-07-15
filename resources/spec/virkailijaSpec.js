@@ -141,18 +141,5 @@ function autosaveSuccessful() {
         })
       })
     })
-
-    // skipped due to phantom.js weirdness
-    describe.skip('clicking remove element', function() {
-      before(
-        clickElement(function() { return formComponents().eq(1).find('a.editor-form__component-header-link') }),
-        wait.until(function() {
-          return formComponents().length === 4
-        })
-      )
-      it('removes element', function() {
-        expect(formComponents().eq(1).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
-      })
-    })
   })
 })();
