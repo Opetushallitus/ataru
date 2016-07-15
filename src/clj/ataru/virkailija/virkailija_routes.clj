@@ -137,7 +137,7 @@
                      :summary "Return Excel export of the form and applications for it."
                      {:status 200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                "Content-Disposition" (str "attachment; filename=form_" form-id "_applications.xlsx")}
+                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
                       :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))})))))
 
 (defroutes resource-routes

@@ -7,7 +7,7 @@
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clojure.string :refer [trim]]
+            [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
@@ -126,5 +126,14 @@
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
+
+(defn filename
+  [form-id]
+  (let [form (form-store/fetch-form form-id)
+        sanitized-name (-> (:name form)
+                           (string/replace #"[\s]+" "-")
+                           (string/replace #"[^\w-]+" ""))
+        time (f/unparse filename-time-format (:last-modified form))]
+    (str form-id "-" sanitized-name "-" time ".xlsx")))
 
 
