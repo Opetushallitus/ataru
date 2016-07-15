@@ -12,16 +12,37 @@
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
 
-(def ^:private modified-time-formatter
-  (DateTimeFormat/forPattern "yyyy-MM-dd HH:mm:ss"))
+(def ^:private modified-time-format
+  (f/formatter "yyyy-MM-dd HH:mm:ss"))
+
+(def ^:private filename-time-format
+  (f/formatter "yyyy-MM-dd_HHmm"))
+
+(defn time-formatter
+  [date-time]
+  (f/unparse modified-time-format date-time))
+
+(def ^:private form-meta-fields
+  [{:label "Nimi"
+    :field :name}
+   {:label "Id"
+    :field :id}
+   {:label "Viimeksi muokattu"
+    :field :modified-time
+    :format-fn time-formatter}
+   {:label "Viime muokkaaja"
+    :field :modified-by}])
 
 (def ^:private application-meta-fields
-  [{:label "Id" :field :key :format-fn str}
-   {:label "Lähetysaika" :field :modified-time :format-fn #(.print modified-time-formatter %)}])
+  [{:label "Id"
+    :field :key}
+   {:label "Lähetysaika"
+    :field :modified-time
+    :format-fn time-formatter}])
 
-(defn- indexed-application-meta-fields
-  []
-  (map-indexed (fn [idx field] (merge field {:column idx})) application-meta-fields))
+(defn- indexed-meta-fields
+  [fields]
+  (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
 (defn- update-row-cell! [sheet row column value]
   (when-let [v (not-empty (trim (str value)))]
@@ -40,20 +61,29 @@
       value)
     [sheet row-offset row column value]))
 
-(defn- write-headers! [writer headers]
-  (doseq [meta-field (indexed-application-meta-fields)]
+(defn- write-form-meta!
+  [writer form fields]
+  (doseq [meta-field fields]
+    (let [col (:column meta-field)
+          value ((:field meta-field) form)
+          formatter (or (:format-fn meta-field) identity)]
+      (writer 0 col (:label meta-field))
+      (writer 1 col (formatter value)))))
+
+(defn- write-headers! [writer headers meta-fields]
+  (doseq [meta-field meta-fields]
     (writer 0 (:column meta-field) (:label meta-field)))
   (doseq [header headers]
-    (writer 0 (+ (:column header) (count application-meta-fields)) (:header header))))
+    (writer 0 (+ (:column header) (count meta-fields)) (:header header))))
 
 (defn- write-application! [writer application headers]
-  (doseq [meta-field (indexed-application-meta-fields)]
-    (let [meta-value ((:format-fn meta-field) ((:field meta-field) application))]
+  (doseq [meta-field (indexed-meta-fields application-meta-fields)]
+    (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value (:value answer)]
-      (writer 0 (+ column (count application-meta-fields)) value))))
+      (writer 0 (+ column (count indexed-meta-fields)) value))))
 
 (defn pick-form-labels
   [form-content]
@@ -76,21 +106,23 @@
                  all-labels)))
 
 (defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
-  (let [workbook               (XSSFWorkbook.)
-        form                   (form-store/fetch-form form-id)
-        sheet                  (.createSheet workbook "Hakemukset")
-        applications           (application-store/fetch-applications
-                                 form-id
-                                 {:limit 100 :lang (name language)})
-        headers                (extract-headers applications form)]
-    (when (and (not-empty form) (not-empty applications))
-      (write-headers! (make-writer sheet 0) headers)
+  (let [workbook (XSSFWorkbook.)
+        form (form-store/fetch-form form-id)
+        form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
+        applications-sheet (.createSheet workbook "Hakemukset")
+        applications (application-store/fetch-applications
+                       form-id
+                       {:lang (name language)})
+        headers (extract-headers applications form)]
+    (when (not-empty form)
+      (write-form-meta! (make-writer form-meta-sheet 0) form (indexed-meta-fields form-meta-fields))
+      (write-headers! (make-writer applications-sheet 0) headers (indexed-meta-fields application-meta-fields))
       (dorun (map-indexed
                (fn [idx application]
-                 (let [writer (make-writer sheet (inc idx))]
+                 (let [writer (make-writer applications-sheet (inc idx))]
                    (write-application! writer application headers)))
                applications))
-      (.createFreezePane sheet 0 1 0 1))
+      (.createFreezePane applications-sheet 0 1 0 1))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
