@@ -7,39 +7,39 @@
             [ataru.cljs-util :refer [wrap-scroll-to]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn toggle-form-list-open [open?-atom]
-  (reset! open?-atom (not @open?-atom))
+(defn toggle-form-list-open [open]
+  (reset! open (not @open))
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
-(defn form-list-arrow-up [open?-atom]
+(defn form-list-arrow-up [open]
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
-   {:on-click #(toggle-form-list-open open?-atom)}])
+   {:on-click #(toggle-form-list-open open)}])
 
-(defn form-list-row [form selected? open?-atom]
+(defn form-list-row [form selected? open]
   [:a.application-handling__form-list-row-link
     {:href  (str "#/applications/" (:id form))}
    (let [row-element [:div.application-handling__form-list-row
                       {:class (if selected? "application-handling__form-list-selected-row" "")
                        :on-click (if (not selected?)
                                    #(do
-                                     (toggle-form-list-open open?-atom)
+                                     (toggle-form-list-open open)
                                      (dispatch [:editor/select-form (:id form)]))
-                                   #(toggle-form-list-open open?-atom))}
+                                   #(toggle-form-list-open open))}
                       (:name form)]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
-(defn form-list-opened [forms selected-form-id open?-atom]
+(defn form-list-opened [forms selected-form-id open]
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
-   [form-list-arrow-up open?-atom]
+   [form-list-arrow-up open]
    (into [:div.application-handling__form-list-open]
         (for [[id form] forms
               :let [selected? (= id selected-form-id)]]
           ^{:key id}
-          [form-list-row form selected? open?-atom]))])
+          [form-list-row form selected? open]))])
 
-(defn form-list-closed [selected-form open?-atom]
+(defn form-list-closed [selected-form open]
   [:div.application-handling__form-list-closed
-   {:on-click #(toggle-form-list-open open?-atom)}
+   {:on-click #(toggle-form-list-open open)}
    [:div.application-handling__form-list-row.application-handling__form-list-selected-row (:name selected-form)]
    [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow]])
 
@@ -47,12 +47,12 @@
   (let [forms            (subscribe [:state-query [:editor :forms]])
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
         selected-form    (subscribe [:editor/selected-form])
-        open?            (r/atom false)]
+        open             (r/atom false)]
     (fn []
       [:div.application-handling__form-list-wrapper
-       (if @open?
-        [form-list-opened @forms @selected-form-id open?]
-        [form-list-closed @selected-form open?])])))
+       (if @open
+        [form-list-opened @forms @selected-form-id open]
+        [form-list-closed @selected-form open])])))
 
 (defn excel-download-link []
   (let [application-count (subscribe [:state-query [:application :count]])]
