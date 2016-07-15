@@ -7,7 +7,7 @@
 
 (defn ^:private referrer-name-component
   []
-  (merge (component/text-field) {:label {:fi "Kutsumanimi" :sv "Smeknamn"} :required true}))
+  (merge (component/text-field) {:label {:fi "Kutsumanimi" :sv "Smeknamn"} :required true :params {:size "S"}}))
 
 (defn ^:private first-name-section
   []
