@@ -261,6 +261,5 @@
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
-      [:div.editor-form__module-wrapper (clojure.string/join ", "
-                                          (doall (for [lang @languages]
-                                                   (get-in @value [:label lang]))))])))
+      [:div.editor-form__module-wrapper
+       [:header.editor-form__component-header (get-in @value [:label :fi])]])))
