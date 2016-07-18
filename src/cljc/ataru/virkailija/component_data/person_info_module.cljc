@@ -18,6 +18,26 @@
   []
   (merge (component/text-field) {:label {:fi "Sukunimi" :sv "Efternamn"} :required true}))
 
+(defn ^:private dropdown-option
+  [value labels]
+  {:value value :label labels})
+
+(defn ^:private nationality-component
+  []
+  (merge (component/dropdown) {:label {:fi "Kansalaisuus" :sv "Nationalitet"}
+                               :required true
+                               :options [(dropdown-option "fi" {:fi "Suomi" :sv "Finland"})
+                                         (dropdown-option "sv" {:fi "Ruotsi" :sv "Sverige"})]}))
+
+(defn ^:private ssn-component
+  []
+  (merge (component/text-field) {:label {:fi "Henkilötunnus" :sv "Personnummer"} :required true :params {:size "S"}}))
+
+(defn ^:private identification-section
+  []
+  (component/row-section [(nationality-component)
+                          (ssn-component)]))
+
 (defn person-info-module
   []
   (clojure.walk/prewalk
@@ -28,6 +48,7 @@
     (merge (component/form-section) {:label {:fi "Henkilötiedot"
                                              :sv "Personlig information"}
                                      :children [(first-name-section)
-                                                (last-name-component)]
+                                                (last-name-component)
+                                                (identification-section)]
                                      :focus? false
                                      :module :person-info})))
