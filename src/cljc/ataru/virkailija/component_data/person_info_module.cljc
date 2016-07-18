@@ -42,6 +42,10 @@
   []
   (merge (component/text-field) {:label {:fi "Sähköpostiosoite" :sv "E-postadress"} :required true}))
 
+(defn ^:private phone-component
+  []
+  (merge (component/text-field) {:label {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :required true}))
+
 (defn person-info-module
   []
   (clojure.walk/prewalk
@@ -54,6 +58,7 @@
                                      :children [(first-name-section)
                                                 (last-name-component)
                                                 (identification-section)
-                                                (email-component)]
+                                                (email-component)
+                                                (phone-component)]
                                      :focus? false
                                      :module :person-info})))
