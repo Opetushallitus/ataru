@@ -5,6 +5,7 @@
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.component-data.person-info-module :as pm]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
@@ -235,7 +236,7 @@
   (fn [db _]
     (post "/lomake-editori/api/form"
           {:name   "Uusi lomake"
-           :content []}
+           :content [(pm/person-info-module)]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
             (set-history! (str "/editor/" (:id new-or-updated-form)))
