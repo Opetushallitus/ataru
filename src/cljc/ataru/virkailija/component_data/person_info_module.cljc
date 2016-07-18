@@ -70,6 +70,13 @@
   (component/row-section [(municipality-component)
                           (postal-code-component)]))
 
+(defn ^:private native-language-section
+  []
+  (merge (component/dropdown) {:label {:fi "Äidinkieli" :sv "Modersmål"}
+                               :required true
+                               :options [(dropdown-option "fi" {:fi "suomi" :sv "finska"})
+                                         (dropdown-option "sv" {:fi "ruotsi" :sv "svenska"})]}))
+
 (defn person-info-module
   []
   (clojure.walk/prewalk
@@ -86,6 +93,7 @@
                                                 (email-component)
                                                 (phone-component)
                                                 (street-address-component)
-                                                (municipality-section)]
+                                                (municipality-section)
+                                                (native-language-section)]
                                      :focus? false
                                      :module :person-info})))
