@@ -3,6 +3,10 @@
     return testFrame().find('.application-handling__form-list-closed')
   }
 
+  var form2OnList = function() {
+    return testFrame().find('[href="#/applications/2"] .application-handling__form-list-row')
+  }
+
   var downloadLink = function() {
     return testFrame().find('.application-handling__excel-download-link')
   }
@@ -20,7 +24,7 @@
   })
 
   describe('Application handling', function() {
-    describe('with form 1', function() {
+    describe('form 1', function() {
       before(
         navigateToApplicationHandlingForm1Selected,
         wait.until(closedFormListExists)
@@ -30,6 +34,21 @@
         expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (1)')
       })
     })
+    describe('form 2 (no applications)', function() {
+      before(
+        navigateToApplicationHandlingForm1Selected,
+        wait.until(closedFormListExists),
+        function() { closedFormList()[0].click() },
+        wait.until(function() {
+          return form2OnList().text() === 'Selaintestilomake2'
+        }),
+        function() { form2OnList()[0].click() },
+        wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })
+      )
+      it('has no applications', function() {
+        expect(closedFormList().text()).to.equal('Selaintestilomake2')
+        expect(downloadLink()).to.have.length(0)
+      })
+    })
   })
-
 })();

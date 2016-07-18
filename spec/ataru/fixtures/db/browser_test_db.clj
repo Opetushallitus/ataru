@@ -23,6 +23,22 @@
                             :fieldType "textField"}],
               :label {:fi "Jalat", :sv "Avsnitt namn"}}]})
 
+(def form2 {:id 2,
+            :name "Selaintestilomake2",
+            :modified-by "DEVELOPER",
+            :content
+            [{:fieldClass "wrapperElement",
+              :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
+              :fieldType "fieldset",
+              :children
+                          [{:label {:fi "Pään ympärys", :sv ""},
+                            :fieldClass "formField",
+                            :id "e257afce-ff30-40e1-ad6f-c224a1537d01",
+                            :params {},
+                            :required false,
+                            :fieldType "textField"}],
+              :label {:fi "Pää", :sv "Avsnitt namn"}}]})
+
 (def application1 {:form 1,
                    :lang "fi",
                    :answers
@@ -34,4 +50,5 @@
 
 (defn init-db-fixture []
   (form-store/upsert-form form1)
+  (form-store/upsert-form form2)
   (application-store/insert-application application1))
