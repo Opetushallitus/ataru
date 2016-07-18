@@ -52,11 +52,11 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
-(defn text-area [field-descriptor]
+(defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
-      [:div.application__form-field
+      [div-kwd
        [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
@@ -77,12 +77,12 @@
     (mapv #(render-field % :div-kwd :div.application__row-field) children)))
 
 (defn dropdown
-  [field-descriptor]
+  [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [label (-> field-descriptor :label :fi)]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor)
        :reagent-render      (fn [field-descriptor]
-                              [:div.application__form-field
+                              [div-kwd
                                {:on-change (partial textual-field-change field-descriptor)}
                                [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
                                [:div.application__form-select-wrapper
