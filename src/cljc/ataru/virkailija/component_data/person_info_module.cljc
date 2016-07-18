@@ -38,6 +38,10 @@
   (component/row-section [(nationality-component)
                           (ssn-component)]))
 
+(defn ^:private email-component
+  []
+  (merge (component/text-field) {:label {:fi "Sähköpostiosoite" :sv "E-postadress"} :required true}))
+
 (defn person-info-module
   []
   (clojure.walk/prewalk
@@ -49,6 +53,7 @@
                                              :sv "Personlig information"}
                                      :children [(first-name-section)
                                                 (last-name-component)
-                                                (identification-section)]
+                                                (identification-section)
+                                                (email-component)]
                                      :focus? false
                                      :module :person-info})))
