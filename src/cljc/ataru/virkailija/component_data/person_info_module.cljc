@@ -1,13 +1,20 @@
-(ns ataru.virkailija.component-data.person-info-module
+  (ns ataru.virkailija.component-data.person-info-module
   (:require [ataru.virkailija.component-data.component :as component]))
+
+(defn ^:private text-field
+  [labels & {:keys [size] :or {size "M"}}]
+  (-> (component/text-field)
+      (assoc :label labels)
+      (assoc :required true)
+      (assoc-in [:params :size] size)))
 
 (defn ^:private first-name-component
   []
-  (merge (component/text-field) {:label {:fi "Etunimet" :sv "Förnamn"} :required true}))
+  (text-field {:fi "Etunimet" :sv "Förnamn"}))
 
 (defn ^:private referrer-name-component
   []
-  (merge (component/text-field) {:label {:fi "Kutsumanimi" :sv "Smeknamn"} :required true :params {:size "S"}}))
+  (text-field {:fi "Kutsumanimi" :sv "Smeknamn"} :size "S"))
 
 (defn ^:private first-name-section
   []
@@ -16,7 +23,7 @@
 
 (defn ^:private last-name-component
   []
-  (merge (component/text-field) {:label {:fi "Sukunimi" :sv "Efternamn"} :required true}))
+  (text-field {:fi "Sukunimi" :sv "Efternamn"}))
 
 (defn ^:private dropdown-option
   [value labels]
@@ -31,7 +38,7 @@
 
 (defn ^:private ssn-component
   []
-  (merge (component/text-field) {:label {:fi "Henkilötunnus" :sv "Personnummer"} :required true :params {:size "S"}}))
+  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S"))
 
 (defn ^:private identification-section
   []
@@ -47,23 +54,23 @@
 
 (defn ^:private email-component
   []
-  (merge (component/text-field) {:label {:fi "Sähköpostiosoite" :sv "E-postadress"} :required true}))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"}))
 
 (defn ^:private phone-component
   []
-  (merge (component/text-field) {:label {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :required true}))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"}))
 
 (defn ^:private street-address-component
   []
-  (merge (component/text-field) {:label {:fi "Katuosoite" :sv "Adress"} :required true :params {:size "L"}}))
+  (text-field {:fi "Katuosoite" :sv "Adress"} :size "L"))
 
 (defn ^:private municipality-component
   []
-  (merge (component/text-field) {:label {:fi "Kotikunta" :sv "Bostadsort"} :required true}))
+  (text-field {:fi "Kotikunta" :sv "Bostadsort"}))
 
 (defn ^:private postal-code-component
   []
-  (merge (component/text-field) {:label {:fi "Postinumero" :sv "Postnummer"} :required true :params {:size "S"}}))
+  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S"))
 
 (defn ^:private municipality-section
   []
