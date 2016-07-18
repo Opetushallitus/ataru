@@ -38,6 +38,13 @@
   (component/row-section [(nationality-component)
                           (ssn-component)]))
 
+(defn ^:private gender-section
+  []
+  (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
+                               :required true
+                               :options [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
+                                         (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]}))
+
 (defn ^:private email-component
   []
   (merge (component/text-field) {:label {:fi "Sähköpostiosoite" :sv "E-postadress"} :required true}))
@@ -58,6 +65,7 @@
                                      :children [(first-name-section)
                                                 (last-name-component)
                                                 (identification-section)
+                                                (gender-section)
                                                 (email-component)
                                                 (phone-component)]
                                      :focus? false
