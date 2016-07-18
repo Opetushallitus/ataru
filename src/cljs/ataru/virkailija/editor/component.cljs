@@ -258,14 +258,8 @@
        [add-component (conj path :children (count children))]])))
 
 (defn module [path]
-  (let [languages        (subscribe [:editor/languages])
-        value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)]
+  (let [languages (subscribe [:editor/languages])
+        value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__module-wrapper
-       {:class @animation-effect}
-       [:header.editor-form__component-header (get-in @value [:label :fi])]
-       [:a.editor-form__component-header-link
-        {:on-click (fn [event]
-                     (dispatch [:remove-component path (-> event .-target .-parentNode .-parentNode .-parentNode)]))}
-        "Poista"]])))
+       [:header.editor-form__component-header (get-in @value [:label :fi])]])))
