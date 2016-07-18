@@ -29,7 +29,7 @@
         active?          (reaction (= @active-panel panel-kw))
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
-      [:div.section-link
+      [:div.section-link {:class (name panel-kw)}
        (if @active?
          [:span.active-section
           active-section-arrow
