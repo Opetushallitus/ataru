@@ -53,6 +53,23 @@
   []
   (merge (component/text-field) {:label {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :required true}))
 
+(defn ^:private street-address-component
+  []
+  (merge (component/text-field) {:label {:fi "Katuosoite" :sv "Adress"} :required true :params {:size "L"}}))
+
+(defn ^:private municipality-component
+  []
+  (merge (component/text-field) {:label {:fi "Kotikunta" :sv "Bostadsort"} :required true}))
+
+(defn ^:private postal-code-component
+  []
+  (merge (component/text-field) {:label {:fi "Postinumero" :sv "Postnummer"} :required true :params {:size "S"}}))
+
+(defn ^:private municipality-section
+  []
+  (component/row-section [(municipality-component)
+                          (postal-code-component)]))
+
 (defn person-info-module
   []
   (clojure.walk/prewalk
@@ -67,6 +84,8 @@
                                                 (identification-section)
                                                 (gender-section)
                                                 (email-component)
-                                                (phone-component)]
+                                                (phone-component)
+                                                (street-address-component)
+                                                (municipality-section)]
                                      :focus? false
                                      :module :person-info})))
