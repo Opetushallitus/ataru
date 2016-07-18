@@ -102,5 +102,4 @@
                                                 (street-address-component)
                                                 (municipality-section)
                                                 (native-language-section)]
-                                     :focus? false
                                      :module :person-info})))
