@@ -13,14 +13,14 @@
   []
   (text-field {:fi "Etunimet" :sv "Förnamn"} :id :first-name))
 
-(defn ^:private referrer-name-component
+(defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Smeknamn"} :size "S" :id :referrer-name))
+  (text-field {:fi "Kutsumanimi" :sv "Smeknamn"} :size "S" :id :preferred-name))
 
 (defn ^:private first-name-section
   []
   (component/row-section [(first-name-component)
-                          (referrer-name-component)]))
+                          (preferred-name-component)]))
 
 (defn ^:private last-name-component
   []
