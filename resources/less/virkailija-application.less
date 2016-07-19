@@ -1,5 +1,47 @@
 @import "vars";
 
+.application-handling__list {
+  cursor: pointer;
+  overflow: auto;
+  height: 150px;
+  margin-bottom: 15px;
+}
+
+.application-handling__list-row {
+  padding: 0.5em;
+  margin: 0;
+  color: @blue-text-color;
+  display: block;
+
+  .application-handling__list-row--applicant-unknown {
+    color: gray;
+  }
+}
+
+.application-handling__list-header {
+  font-weight: bold;
+  color: black;
+}
+
+.application-handling__list-row--selected {
+  border-radius: 2px;
+  background-color: @selected-blue;
+  color: white;
+}
+
+.application-handling__list-row--applicant {
+  width: 50%;
+  display: inline-block;
+}
+.application-handling__list-row--time {
+  width: 25%;
+  display: inline-block;
+}
+.application-handling__list-row--state {
+  width: 25%;
+  display: inline-block;
+}
+
 .application-handling__header {
   display: flex;
   align-items: flex-start;
