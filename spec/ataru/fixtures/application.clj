@@ -48,6 +48,8 @@
    :fieldType "textField",
    :fieldClass "formField"}]})
 
+;; NOTE: Unlike above, these are in database format, lowercase keys. This is converted in application-store to
+;; the format used in REST callls
 (def applications
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
   :lang "fi",
