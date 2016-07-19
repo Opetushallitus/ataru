@@ -4,6 +4,59 @@
             [cheshire.core :as json]
             [speclj.core :refer :all]))
 
+(def application {:form 44,
+                  :lang "fi",
+                  :state :received,
+                  :answers
+                  [{:key "ssn",
+                    :value "010101-123n",
+                    :fieldType "textField",
+                    :label {:fi "Henkilötunnus", :sv "Personnummer"}}
+                   {:key "phone",
+                    :value "050123123",
+                    :fieldType "textField",
+                    :label {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
+                   {:key "preferred-name",
+                    :value "Aku",
+                    :fieldType "textField",
+                    :label {:fi "Kutsumanimi", :sv "Smeknamn"}}
+                   {:key "municipality",
+                    :value "Ankkalinna",
+                    :fieldType "textField",
+                    :label {:fi "Kotikunta", :sv "Bostadsort"}}
+                   {:key "last-name",
+                    :value "Ankka",
+                    :fieldType "textField",
+                    :label {:fi "Sukunimi", :sv "Efternamn"}}
+                   {:key "first-name",
+                    :value "Aku Petteri",
+                    :fieldType "textField",
+                    :label {:fi "Etunimet", :sv "Förnamn"}}
+                   {:key "address",
+                    :value "Paratiisitie 13",
+                    :fieldType "textField",
+                    :label {:fi "Katuosoite", :sv "Adress"}}
+                   {:key "nationality",
+                    :value "fi",
+                    :fieldType "dropdown",
+                    :label {:fi "Kansalaisuus", :sv "Nationalitet"}}
+                   {:key "postal-code",
+                    :value "00013",
+                    :fieldType "textField",
+                    :label {:fi "Postinumero", :sv "Postnummer"}}
+                   {:key "language",
+                    :value "sv",
+                    :fieldType "dropdown",
+                    :label {:fi "Äidinkieli", :sv "Modersmål"}}
+                   {:key "gender",
+                    :value "female",
+                    :fieldType "dropdown",
+                    :label {:fi "Sukupuoli", :sv "Kön"}}
+                   {:key "email",
+                    :value "aku@ankkalinna.com",
+                    :fieldType "textField",
+                    :label {:fi "Sähköpostiosoite", :sv "E-postadress"}}]})
+
 (defmacro with-mock-api
   [eval-fn & body]
   `(let [api-called?# (atom false)]
@@ -25,5 +78,8 @@
                      (should= "application/json" (get-in request [:headers "content-type"]))
                      (let [body (json/parse-string (:body request) true)]
                        (should= "no-reply@opintopolku.fi" (get-in body [:email :from]))
-                       (should= "Hakemus vastaanotettu" (get-in body [:email :subject]))))
-      (email/send-email-verification {}))))
+                       (should= "Hakemus vastaanotettu" (get-in body [:email :subject]))
+                       (let [recipients (:recipient body)]
+                         (should= 1 (count recipients))
+                         (should= "aku@ankkalinna.com" (get-in recipients [0 :email])))))
+      (email/send-email-verification application))))

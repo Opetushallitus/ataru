@@ -9,10 +9,13 @@
   (let [url  (str
                (get-in config [:email :email_service_url])
                "/ryhmasahkoposti-service/email/firewall")
-        body (selmer/render-file "templates/email_confirmation_template.txt" {})]
+        body (selmer/render-file "templates/email_confirmation_template.txt" {})
+        recipient (-> (filter #(= "email" (:key %)) (:answers application))
+                      first
+                      :value)]
     (http/post url {:headers {"content-type" "application/json"}
                     :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
                                                          :subject "Hakemus vastaanotettu"
                                                          :isHtml true
                                                          :body body}
-                                                 :recipient [{:email "hakija@opintopolku.fi"}]})})))
+                                                 :recipient [{:email recipient}]})})))
