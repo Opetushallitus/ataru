@@ -101,8 +101,9 @@
 
 (defn application []
   [:div
-   [:div.application-handling__container.panel-content
-    [:div.application-handling__header
-      [form-list]
-      [excel-download-link]]
-    [application-list]]])
+   [:div.application-handling__overview
+    [:div.application-handling__container.panel-content
+      [:div.application-handling__header
+        [form-list]
+        [excel-download-link]]
+      [application-list]]]])
