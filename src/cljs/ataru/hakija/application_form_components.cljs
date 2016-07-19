@@ -74,7 +74,7 @@
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
-    (mapv #(render-field % :div-kwd :div.application__row-field) children)))
+    (mapv #(render-field % :div-kwd :div.application__row-field.application__form-field) children)))
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]

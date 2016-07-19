@@ -1,6 +1,7 @@
 @import "vars";
 @desktop-content-width: 981px;
 @banner-height: 33px;
+@field-margin-left: 245px;
 
 .application-top-banner {
   font-size: 14px;
@@ -161,19 +162,19 @@
   width: @desktop-content-width;
 }
 .application__form-field {
-  margin-left: 245px;
+  margin-left: @field-margin-left;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
 }
 .application__row-field-wrapper {
-  &:extend(.application__form-field);
+  margin-left: @field-margin-left;
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   margin-bottom: 0px;
 }
 .application__row-field {
-  &:extend(.application__form-field);
   margin-left: 0px;
   margin-right: 50px;
 }
