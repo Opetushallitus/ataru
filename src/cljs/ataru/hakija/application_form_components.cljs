@@ -33,21 +33,23 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
-(defn- label [field-descriptor]
+(defn- label [field-descriptor & [size-class]]
   [:label.application__form-field-label
-   {:id (field-id field-descriptor)}
+   {:id (field-id field-descriptor)
+    :class size-class}
    [:span (get-in field-descriptor [:label :fi]) (required-hint field-descriptor)]])
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      [div-kwd
-       [label field-descriptor]
-       [:input.application__form-text-input
-        {:type "text"
-         :class (text-field-size->class (-> field-descriptor :params :size))
-         :value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor)}]])))
+      (let [size-class (text-field-size->class (-> field-descriptor :params :size))]
+        [div-kwd
+         [label field-descriptor size-class]
+         [:input.application__form-text-input
+          {:type      "text"
+           :class     size-class
+           :value     (textual-field-value field-descriptor @application)
+           :on-change (partial textual-field-change field-descriptor)}]]))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -60,7 +62,7 @@
   (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor]
       [div-kwd
-       [label field-descriptor]
+       [label field-descriptor "application__form-text-area"]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          :value (textual-field-value field-descriptor @application)
@@ -86,7 +88,7 @@
      :reagent-render      (fn [field-descriptor]
                             [div-kwd
                              {:on-change (partial textual-field-change field-descriptor)}
-                             [label field-descriptor]
+                             [label field-descriptor "application__form-select-label"]
                              [:div.application__form-select-wrapper
                               [:span.application__form-select-arrow]
                               [:select.application__form-select

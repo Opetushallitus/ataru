@@ -186,14 +186,18 @@
   font-size: 14px;
   color: @blue-text-color;
   margin-bottom: 6px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
 }
-
 .application__form-select-wrapper {
   font-size: 16px;
   position: relative;
   display: inline-block;
 }
-
+.application__form-select-label {
+  width: @form-select-width;
+}
 .application__form-select {
   outline: none;
   -webkit-appearance: none;
