@@ -19,6 +19,8 @@
 
 (defn wrapper [content children]
   (into [:div.application__wrapper-element
+         (when (= "fieldset" (:fieldType content))
+           {:class "application__wrapper-element--border"})
          [:h2.application__wrapper-heading
           {:id (wrapper-id content)}
           (-> content :label :fi)]]
