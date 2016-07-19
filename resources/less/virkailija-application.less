@@ -1,14 +1,16 @@
 @import "vars";
+@bottom-separator-color: #E6E6E6;
 
 .application-handling__overview {
   background-color: @very-light-gray;
+  border-bottom: 1px solid @bottom-separator-color;
 }
 
 .application-handling__header {
   display: flex;
   align-items: flex-start;
   padding-bottom: 20px;
-  border-bottom: 1px solid #E6E6E6;
+  border-bottom: 1px solid @bottom-separator-color;
 }
 
 .application-handling__form-list-wrapper {
@@ -104,8 +106,8 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-header {
-  font-weight: bold;
-  color: black;
+  color: #5E5E5E;
+  font-size: 14px;
 }
 
 .application-handling__list-row--selected {
