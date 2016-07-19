@@ -16,7 +16,7 @@
                     :value "050123123",
                     :fieldType "textField",
                     :label {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
-                   {:key "referrer-name",
+                   {:key "preferred-name",
                     :value "Aku",
                     :fieldType "textField",
                     :label {:fi "Kutsumanimi", :sv "Smeknamn"}}
