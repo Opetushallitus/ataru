@@ -10,7 +10,7 @@
                (get-in config [:email :email_service_url])
                "/ryhmasahkoposti-service/email/firewall")
         body (selmer/render-file "templates/email_confirmation_template.txt" {})
-        recipient (-> (filter #(= "Sähköpostiosoite" (get-in % [:label :fi])) (:answers application))
+        recipient (-> (filter #(= "email" (:key %)) (:answers application))
                       first
                       :value)]
     (http/post url {:headers {"content-type" "application/json"}
