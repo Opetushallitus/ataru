@@ -37,12 +37,8 @@
                 "Tuntematon")]]))))
 
 (defn application-list []
-  (let [form (subscribe [:state-query [:application :form]])]
     [:div
-     [:h1.application__name
-      (:name @form)]
-     [applications]]))
-
+     [applications]])
 
 (defn form-list-arrow-up [open]
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
