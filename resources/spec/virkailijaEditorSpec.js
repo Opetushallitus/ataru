@@ -24,8 +24,7 @@ function formListItems(n) {
 
 function personInfoModule() {
   return testFrame()
-      .find('.editor-form__module-wrapper')
-      .find("header:contains('Henkilötiedot')");
+      .find(".editor-form__module-wrapper header:contains('Henkilötiedot')");
 }
 
 function formComponents() {
