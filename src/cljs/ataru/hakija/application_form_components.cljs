@@ -34,7 +34,7 @@
   (str "field-" (:id field-descriptor)))
 
 (defn- label [field-descriptor]
-  [:label.application_form-field-label
+  [:label.application__form-field-label
    {:id (field-id field-descriptor)}
    [:span (get-in field-descriptor [:label :fi]) (required-hint field-descriptor)]])
 
