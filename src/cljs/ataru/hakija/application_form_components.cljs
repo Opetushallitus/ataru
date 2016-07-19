@@ -37,7 +37,7 @@
   [:label.application__form-field-label
    {:id (field-id field-descriptor)
     :class size-class}
-   [:span (get-in field-descriptor [:label :fi]) (required-hint field-descriptor)]])
+   [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]])
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])]
