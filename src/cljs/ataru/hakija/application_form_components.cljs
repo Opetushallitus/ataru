@@ -33,12 +33,16 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
+(defn- label [field-descriptor]
+  [:label.application_form-field-label
+   {:id (field-id field-descriptor)}
+   (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))])
+
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        label (-> field-descriptor :label :fi)]
+  (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
+       [label field-descriptor]
        [:input.application__form-text-input
         {:type "text"
          :class (text-field-size->class (-> field-descriptor :params :size))
@@ -53,11 +57,10 @@
          :else "application__form-text-area__size-medium"))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        label (-> field-descriptor :label :fi)]
+  (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor]
       [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
+       [label field-descriptor]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          :value (textual-field-value field-descriptor @application)
@@ -78,19 +81,18 @@
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [label (-> field-descriptor :label :fi)]
-    (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor)
-       :reagent-render      (fn [field-descriptor]
-                              [div-kwd
-                               {:on-change (partial textual-field-change field-descriptor)}
-                               [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
-                               [:div.application__form-select-wrapper
-                                [:span.application__form-select-arrow]
-                                [:select.application__form-select
-                                 (for [option (:options field-descriptor)]
-                                   ^{:key (:value option)}
-                                   [:option {:value (:value option)} (-> option :label :fi)])]]])})))
+  (r/create-class
+    {:component-did-mount (partial init-dropdown-value field-descriptor)
+     :reagent-render      (fn [field-descriptor]
+                            [div-kwd
+                             {:on-change (partial textual-field-change field-descriptor)}
+                             [label field-descriptor]
+                             [:div.application__form-select-wrapper
+                              [:span.application__form-select-arrow]
+                              [:select.application__form-select
+                               (for [option (:options field-descriptor)]
+                                 ^{:key (:value option)}
+                                 [:option {:value (:value option)} (-> option :label :fi)])]]])}))
 
 (defn render-field
   [field-descriptor & args]
