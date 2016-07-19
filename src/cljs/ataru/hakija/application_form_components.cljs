@@ -38,7 +38,7 @@
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+       [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
        [:input.application__form-text-input
         {:type "text"
          :class (text-field-size->class (-> field-descriptor :params :size))
@@ -57,7 +57,7 @@
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
       [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+       [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          :value (textual-field-value field-descriptor @application)
@@ -84,7 +84,7 @@
        :reagent-render      (fn [field-descriptor]
                               [div-kwd
                                {:on-change (partial textual-field-change field-descriptor)}
-                               [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+                               [:label.application_form-field-label {:id (field-id field-descriptor)} (str label (required-hint field-descriptor))]
                                [:div.application__form-select-wrapper
                                 [:span.application__form-select-arrow]
                                 [:select.application__form-select
