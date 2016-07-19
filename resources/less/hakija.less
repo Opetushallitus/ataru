@@ -1,6 +1,7 @@
 @import "vars";
 @desktop-content-width: 981px;
 @banner-height: 33px;
+@field-margin-left: 245px;
 
 .application-top-banner {
   font-size: 14px;
@@ -139,9 +140,11 @@
   margin-top: 40px;
 }
 .application__wrapper-element {
-  border-top: solid #D7D7D7 1px;
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
+}
+.application__wrapper-element--border {
+  border-top: solid #D7D7D7 1px;
 }
 .application__wrapper-heading {
   color: @blue-text-color;
@@ -161,10 +164,21 @@
   width: @desktop-content-width;
 }
 .application__form-field {
-  margin-left: 245px;
+  margin-left: @field-margin-left;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+}
+.application__row-field-wrapper {
+  margin-left: @field-margin-left;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-bottom: 0px;
+}
+.application__row-field {
+  margin-left: 0px;
+  margin-right: 50px;
 }
 .application_form-field-label {
   font-weight: 600;
@@ -312,6 +326,9 @@ and (max-width: @desktop-content-width) {
   }
   .application__form-field {
     margin-left: 10px;
+  }
+  .application__row-field-wrapper {
+    margin: 0px;
   }
   .application__wrapper-heading {
     position: static;

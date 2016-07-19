@@ -22,6 +22,11 @@ function formListItems(n) {
   }
 }
 
+function personInfoModule() {
+  return testFrame()
+      .find(".editor-form__module-wrapper header:contains('Henkilötiedot')");
+}
+
 function formComponents() {
   return testFrame().find('.editor-form__component-wrapper')
 }
@@ -67,6 +72,9 @@ function autosaveSuccessful() {
       it('creates blank form', function () {
         expect(formTitleField().val()).to.equal('Testilomake')
         expect(formComponents()).to.have.length(0)
+      })
+      it('has person info module', function() {
+        expect(personInfoModule()).to.have.length(1)
       })
     })
 

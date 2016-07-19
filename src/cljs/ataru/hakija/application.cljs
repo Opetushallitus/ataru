@@ -6,8 +6,21 @@
   (flatten
     (for [field fields]
       (match
-        [field] [{:fieldClass "wrapperElement"
-                  :children   children}] (map #(assoc % :wrapper-id (:id field)) children)
+        [field]
+
+        [{:fieldClass "wrapperElement"
+          :fieldType  "fieldset"
+          :children   children}]
+        (flatten-form-fields
+          (map #(assoc % :wrapper-id (:id field)) children))
+
+        [{:fieldClass "wrapperElement"
+          :fieldType  "rowcontainer"
+          :children   children
+          :wrapper-id wrapper-id}]
+        (flatten-form-fields
+          (map #(assoc % :wrapper-id wrapper-id) children))
+
         :else field))))
 
 (defn- initial-valid-status [flattened-form-fields]

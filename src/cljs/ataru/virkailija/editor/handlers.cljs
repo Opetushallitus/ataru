@@ -4,7 +4,8 @@
             [clojure.walk :as walk]
             [cljs-time.core :as c]
             [cljs.core.match :refer-macros [match]]
-            [ataru.virkailija.soresu.component :as component]
+            [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.component-data.person-info-module :as pm]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
@@ -56,7 +57,7 @@
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])]
-      (update-in db dropdown-path into [(ataru.virkailija.soresu.component/dropdown-option)]))))
+      (update-in db dropdown-path into [(ataru.virkailija.component-data.component/dropdown-option)]))))
 
 (register-handler
   :editor/set-dropdown-option-value
@@ -78,10 +79,11 @@
   [db [_ generate-fn path]]
   (with-form-id [db form-id]
     (let [form-id       (get-in db [:editor :selected-form-id])
-          path-vec      (current-form-content-path db [path])]
+          path-vec      (current-form-content-path db [path])
+          component     (generate-fn)]
       (if (zero? (last path-vec))
-        (assoc-in db (butlast path-vec) [(generate-fn)])
-        (assoc-in db path-vec (generate-fn))))))
+        (assoc-in db (butlast path-vec) [component])
+        (assoc-in db path-vec component)))))
 
 (register-handler :generate-component generate-component)
 
@@ -234,7 +236,7 @@
   (fn [db _]
     (post "/lomake-editori/api/form"
           {:name   "Uusi lomake"
-           :content []}
+           :content [(pm/person-info-module)]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
             (set-history! (str "/editor/" (:id new-or-updated-form)))

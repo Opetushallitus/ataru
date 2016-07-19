@@ -38,6 +38,8 @@
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
 
+(s/defschema Module (s/enum :person-info))
+
 (s/defschema Option {:value                  s/Str
                      (s/optional-key :label) LocalizedString})
 
@@ -87,16 +89,17 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass              (s/eq "wrapperElement")
+(s/defschema WrapperElement {:fieldClass              (apply s/enum ["wrapperElement"])
                              :id                      s/Str
-                             :fieldType               (apply s/enum ["theme" "fieldset" "growingFieldset" "growingFieldsetChild" ])
+                             :fieldType               (apply s/enum ["theme" "fieldset" "growingFieldset" "growingFieldsetChild" "rowcontainer" ])
                              :children                [(s/conditional #(= "wrapperElement" (:fieldClass %))
                                                          (s/recursive #'WrapperElement)
                                                          :else
                                                          BasicElement)]
                              (s/optional-key :params) s/Any
                              (s/optional-key :label)  LocalizedString
-                             (s/optional-key :helpText) LocalizedString})
+                             (s/optional-key :helpText) LocalizedString
+                             (s/optional-key :module) Module})
 
 (s/defschema FormWithContent
   (merge Form

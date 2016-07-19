@@ -27,6 +27,9 @@
      [ec/drag-n-drop-spacer path content]
 
      (match [content]
+            [{:module module}]
+            [ec/module path]
+
             [{:fieldClass "wrapperElement"
               :children   children}]
             (let [children (for [[index child] (zipmap (range) children)]

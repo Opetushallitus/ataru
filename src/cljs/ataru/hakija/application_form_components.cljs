@@ -33,11 +33,11 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
-(defn text-field [field-descriptor]
+(defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         label (-> field-descriptor :label :fi)]
-    (fn [field-descriptor]
-      [:div.application__form-field
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+      [div-kwd
        [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:input.application__form-text-input
         {:type "text"
@@ -52,11 +52,11 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
-(defn text-area [field-descriptor]
+(defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
-      [:div.application__form-field
+      [div-kwd
        [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
@@ -66,19 +66,23 @@
 (declare render-field)
 
 (defn wrapper-field [field-descriptor children]
-  [:div.application__wrapper-element
+  [:div.application__wrapper-element.application__wrapper-element--border
    [:h2.application__wrapper-heading
     {:id (wrapper-id field-descriptor)}
     (-> field-descriptor :label :fi)]
    (into [:div.application__wrapper-contents] (mapv render-field children))])
 
+(defn row-wrapper [children]
+  (into [:div.application__row-field-wrapper]
+    (mapv #(render-field % :div-kwd :div.application__row-field.application__form-field) children)))
+
 (defn dropdown
-  [field-descriptor]
+  [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [label (-> field-descriptor :label :fi)]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor)
        :reagent-render      (fn [field-descriptor]
-                              [:div.application__form-field
+                              [div-kwd
                                {:on-change (partial textual-field-change field-descriptor)}
                                [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
                                [:div.application__form-select-wrapper
@@ -89,13 +93,18 @@
                                    [:option {:value (:value option)} (-> option :label :fi)])]]])})))
 
 (defn render-field
-  [field-descriptor]
-  (match field-descriptor
-         {:fieldClass "wrapperElement"
-          :children   children} [wrapper-field field-descriptor children]
-         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]))
+  [field-descriptor & args]
+  (cond-> (match field-descriptor
+            {:fieldClass "wrapperElement"
+             :fieldType  "fieldset"
+             :children   children} [wrapper-field field-descriptor children]
+            {:fieldClass "wrapperElement"
+             :fieldType  "rowcontainer"
+             :children   children} [row-wrapper children]
+            {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
+            {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+            {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+    (not (contains? field-descriptor :children)) (into args)))
 
 (defn render-editable-fields [form-data]
   (when form-data

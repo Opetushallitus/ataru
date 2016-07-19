@@ -18,11 +18,14 @@
 (declare field)
 
 (defn wrapper [content children]
-  (into [:div.application__wrapper-element
-         [:h2.application__wrapper-heading
-          {:id (wrapper-id content)}
-          (-> content :label :fi)]]
-        (mapv field children)))
+  (let [fieldset? (= "fieldset" (:fieldType content))]
+    [:div.application__wrapper-element
+     (when fieldset?
+       {:class "application__wrapper-element--border"})
+     [:h2.application__wrapper-heading
+      {:id (wrapper-id content)}
+      (-> content :label :fi)]
+     (into [:div (when fieldset? {:class "application__wrapper-contents"})] (mapv field children))]))
 
 (defn field
   [content]
