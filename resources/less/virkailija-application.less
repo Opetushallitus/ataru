@@ -54,6 +54,7 @@
   display: inline-block;
   width: 100%;
   min-width: 300px;
+  margin-right: 20px;
 }
 
 .application-handling__form-list-open, .application-handling__form-list-closed {
@@ -110,12 +111,14 @@
   font-size: 14px;
   white-space: nowrap;
   margin-top: 12px;
-  margin-left: 20px;
 }
 
 @media only screen
 and (max-width: 1000px) {
   .application-handling__header {
     flex-wrap: wrap;
+  }
+  .application-handling__form-list-wrapper {
+    margin-right: 0;
   }
 }
