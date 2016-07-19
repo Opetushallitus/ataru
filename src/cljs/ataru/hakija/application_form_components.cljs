@@ -66,7 +66,7 @@
 (declare render-field)
 
 (defn wrapper-field [field-descriptor children]
-  [:div.application__wrapper-element
+  [:div.application__wrapper-element.application__wrapper-element--border
    [:h2.application__wrapper-heading
     {:id (wrapper-id field-descriptor)}
     (-> field-descriptor :label :fi)]
