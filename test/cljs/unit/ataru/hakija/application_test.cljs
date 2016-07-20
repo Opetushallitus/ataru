@@ -17,13 +17,13 @@
               :children [{:id "G__2",
                           :label {:fi "kenttä1", :sv ""},
                           :params {:size "S"},
-                          :required true,
+                          :validators [:required]
                           :fieldType "textField",
                           :fieldClass "formField"}
                          {:id "G__14",
                           :label {:fi "kenttä2", :sv ""},
                           :params {:size "M"},
-                          :required false,
+                          :validators [:some-validator]
                           :fieldType "textField",
                           :fieldClass "formField"}],
               :fieldType "fieldset",
@@ -31,7 +31,6 @@
              {:id "G__25",
               :label {:fi "ulkokenttä", :sv ""},
               :params {:size "L"},
-              :required false,
               :fieldType "textField",
               :fieldClass "formField"}]})
 
@@ -88,20 +87,19 @@
                       :wrapper-id "G__1"
                       :label {:fi "kenttä1", :sv ""},
                       :params {:size "S"},
-                      :required true,
+                      :validators [:required]
                       :fieldType "textField",
                       :fieldClass "formField"}
                      {:id "G__14",
                       :wrapper-id "G__1"
                       :label {:fi "kenttä2", :sv ""},
                       :params {:size "M"},
-                      :required false,
+                      :validators [:some-validator]
                       :fieldType "textField",
                       :fieldClass "formField"}
                      {:id "G__25",
                       :label {:fi "ulkokenttä", :sv ""},
                       :params {:size "L"},
-                      :required false,
                       :fieldType "textField",
                       :fieldClass "formField"}]
         actual (flatten-form-fields (:content form1))]

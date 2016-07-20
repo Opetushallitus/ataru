@@ -27,8 +27,7 @@
   (into {}
         (map
           (fn [field]
-            [(keyword (:id field)) {:valid
-                                    (not (:required field))
+            [(keyword (:id field)) {:valid (not (some #(= % :required) (:validators field)))
                                     :wrapper-id (:wrapper-id field)
                                     :label (:label field)}]) flattened-form-fields)))
 
