@@ -20,7 +20,7 @@
 (defn- render-checkbox
   [path initial-content]
   (let [id           (util/new-uuid)
-        required?    (true? (some #(= % :required) (:validators initial-content)))]
+        required?    (true? (some #(= % "required") (:validators initial-content)))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
                                     :id id
@@ -29,7 +29,7 @@
                                                  (let [dispatch-kwd (if (-> event .-target .-checked)
                                                                      :editor/add-validator
                                                                      :editor/remove-validator)]
-                                                   (dispatch [dispatch-kwd :required path])))}]
+                                                   (dispatch [dispatch-kwd "required" path])))}]
      [:label.editor-form__checkbox-label {:for id} "Pakollinen tieto"]]))
 
 (defn- on-drag-start

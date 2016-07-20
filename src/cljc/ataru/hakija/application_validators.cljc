@@ -4,9 +4,9 @@
   [value]
   (not (clojure.string/blank? value)))
 
-(def validators {:required required})
+(def validators {"required" required})
 
 (defn validate
-  [validator-kwd value]
-  (when-let [validate-fn (validator-kwd validators)]
+  [validator value]
+  (when-let [validate-fn (get validators validator)]
     (validate-fn value)))

@@ -6,6 +6,7 @@
                                                            required-hint
                                                            textual-field-value
                                                            wrapper-id]]
+            [ataru.hakija.application-validators :as validator]
             [reagent.core :as r]))
 (defn- text-field-size->class [size]
   (match size
@@ -17,7 +18,7 @@
 (defn- field-value-valid?
   [field-data value]
   (if (not-empty (:validators field-data))
-    (every? true? (map #(% value) (:validators field-data)))
+    (every? true? (map #(validator/validate % value) (:validators field-data)))
     true))
 
 (defn- textual-field-change [text-field-data evt]

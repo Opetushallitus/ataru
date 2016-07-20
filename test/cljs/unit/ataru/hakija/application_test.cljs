@@ -17,13 +17,13 @@
               :children [{:id "G__2",
                           :label {:fi "kenttä1", :sv ""},
                           :params {:size "S"},
-                          :validators [:required]
+                          :validators ["required"]
                           :fieldType "textField",
                           :fieldClass "formField"}
                          {:id "G__14",
                           :label {:fi "kenttä2", :sv ""},
                           :params {:size "M"},
-                          :validators [:some-validator]
+                          :validators ["some-validator"]
                           :fieldType "textField",
                           :fieldClass "formField"}],
               :fieldType "fieldset",
@@ -87,14 +87,14 @@
                       :wrapper-id "G__1"
                       :label {:fi "kenttä1", :sv ""},
                       :params {:size "S"},
-                      :validators [:required]
+                      :validators ["required"]
                       :fieldType "textField",
                       :fieldClass "formField"}
                      {:id "G__14",
                       :wrapper-id "G__1"
                       :label {:fi "kenttä2", :sv ""},
                       :params {:size "M"},
-                      :validators [:some-validator]
+                      :validators ["some-validator"]
                       :fieldType "textField",
                       :fieldClass "formField"}
                      {:id "G__25",
