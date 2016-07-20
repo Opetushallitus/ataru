@@ -4,7 +4,8 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [schema.core :as s]
             [oph.soresu.common.db :as db]
-            [yesql.core :refer [defqueries]]))
+            [yesql.core :refer [defqueries]]
+            [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]))
 
 (defqueries "sql/application-queries.sql")
 
@@ -18,11 +19,15 @@
   (db/exec ds-key query params))
 
 (defn add-new-application [application]
-  (first (exec-db :db yesql-add-application-query<!
-               {:form_id (:form application)
-                :key (str (java.util.UUID/randomUUID))
-                :lang (:lang application)
-                :content {:answers (:answers application)}})))
+  (with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection           {:connection conn}
+          application-to-store {:form_id (:form application)
+                                :key (str (java.util.UUID/randomUUID))
+                                :lang (:lang application)
+                                :content {:answers (:answers application)}}
+          app-id               (first (yesql-add-application-query<! application-to-store connection))]
+      (yesql-add-application-event! {:application_id (second app-id) :event_type "received"} connection)
+      app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
   (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
