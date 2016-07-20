@@ -5,7 +5,7 @@
   [labels & {:keys [size id] :or {size "M"}}]
   (-> (component/text-field)
       (assoc :label labels)
-      (assoc :required true)
+      (assoc :validators ["required"])
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
@@ -33,7 +33,7 @@
 (defn ^:private nationality-component
   []
   (merge (component/dropdown) {:label {:fi "Kansalaisuus" :sv "Nationalitet"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "fi" {:fi "Suomi" :sv "Finland"})
                                          (dropdown-option "sv" {:fi "Ruotsi" :sv "Sverige"})]
                                :id :nationality}))
@@ -50,7 +50,7 @@
 (defn ^:private gender-section
   []
   (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                          (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]
                                :id :gender}))
@@ -83,7 +83,7 @@
 (defn ^:private native-language-section
   []
   (merge (component/dropdown) {:label {:fi "Äidinkieli" :sv "Modersmål"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "fi" {:fi "suomi" :sv "finska"})
                                          (dropdown-option "sv" {:fi "ruotsi" :sv "svenska"})]
                                :id :language}))

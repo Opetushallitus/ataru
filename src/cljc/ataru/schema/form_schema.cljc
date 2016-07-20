@@ -52,7 +52,6 @@
 
 (s/defschema FormField {:fieldClass (s/eq "formField")
                         :id s/Str
-                        :required s/Bool
                         (s/optional-key :validators) [(apply s/enum (keys validators/validators))]
                         (s/optional-key :label) LocalizedString
                         (s/optional-key :helpText) LocalizedString

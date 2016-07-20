@@ -12,25 +12,21 @@
    :children
    [{:id "G__19",
      :label {:fi "Eka kysymys", :sv ""},
-     :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__17",
      :label {:fi "Toka kysymys", :sv ""},
      :params {},
-     :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__24",
      :label {:fi "Kolmas kysymys", :sv ""},
      :params {},
-     :required false,
      :fieldType "textField",
      :fieldClass "formField"}
     {:id "G__36",
      :label {:fi "Neljas kysymys", :sv ""},
      :params {},
-     :required false,
      :fieldType "textField",
      :fieldClass "formField"}],
    :fieldType "fieldset",
@@ -38,13 +34,11 @@
   {:id "G__14",
    :label {:fi "Viides kysymys", :sv ""},
    :params {},
-   :required false,
    :fieldType "textField",
    :fieldClass "formField"}
   {:id "G__47",
    :label {:fi "Kuudes kysymys", :sv ""},
    :params {},
-   :required false,
    :fieldType "textField",
    :fieldClass "formField"}]})
 

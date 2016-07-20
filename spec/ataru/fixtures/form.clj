@@ -7,7 +7,6 @@
    [{:fieldClass "formField"
      :label      {:fi "tekstiä" :sv ""}
      :id         "G__19"
-     :required   false
      :fieldType  "textField"}
     {:fieldClass "wrapperElement"
      :fieldType  "fieldset"
@@ -17,5 +16,4 @@
      [{:fieldClass "formField"
        :label      {:fi "" :sv ""}
        :id         "G__32"
-       :required   false
        :fieldType  "textField"}]}]})

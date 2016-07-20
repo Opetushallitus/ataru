@@ -19,7 +19,6 @@
                             :fieldClass "formField",
                             :id "c2e4536c-1cdb-4450-b019-1b38856296ae",
                             :params {},
-                            :required false,
                             :fieldType "textField"}],
               :label {:fi "Jalat", :sv "Avsnitt namn"}}]})
 
@@ -35,7 +34,6 @@
                             :fieldClass "formField",
                             :id "e257afce-ff30-40e1-ad6f-c224a1537d01",
                             :params {},
-                            :required false,
                             :fieldType "textField"}],
               :label {:fi "Pää", :sv "Avsnitt namn"}}]})
 

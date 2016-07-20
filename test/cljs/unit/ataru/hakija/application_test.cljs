@@ -52,20 +52,20 @@
                                  :fieldClass "formField",
                                  :id "380913e2-8c93-494c-bd86-57000ed50ae8",
                                  :params {},
-                                 :required true,
+                                 :validators ["required"]
                                  :fieldType "textField"}
                                 {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
                                  :fieldClass "formField",
                                  :id "7c8388f0-7ccb-4706-8630-15405b141552",
                                  :params {:size "S"},
-                                 :required true,
+                                 :validators ["required"]
                                  :fieldType "textField"}],
                    :params {}}
                   {:label {:fi "Sukunimi", :sv "Efternamn"},
                    :fieldClass "formField",
                    :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
                    :params {},
-                   :required true,
+                   :validators ["required"]
                    :fieldType "textField"}],
      :params {},
      :label {:fi "Henkilötiedot", :sv "Personlig information"},
@@ -78,8 +78,7 @@
                    :fieldType "textField",
                    :label {:fi "Random question", :sv ""},
                    :id "839cb685-749a-46da-b215-842bc13ed542",
-                   :params {},
-                   :required false}],
+                   :params {}}],
      :params {}}]})
 
 (deftest flattens-correctly
@@ -110,29 +109,28 @@
                    :fieldClass "formField",
                    :id "380913e2-8c93-494c-bd86-57000ed50ae8",
                    :params {},
-                   :required true,
+                   :validators ["required"]
                    :fieldType "textField"
                    :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
                   {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
                    :fieldClass "formField",
                    :id "7c8388f0-7ccb-4706-8630-15405b141552",
                    :params {:size "S"},
-                   :required true,
+                   :validators ["required"]
                    :fieldType "textField"
                    :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
                   {:label {:fi "Sukunimi", :sv "Efternamn"},
                    :fieldClass "formField",
                    :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
                    :params {},
-                   :required true,
+                   :validators ["required"]
                    :fieldType "textField"
                    :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
                   {:fieldClass "formField",
                    :fieldType "textField",
                    :label {:fi "Random question", :sv ""},
                    :id "839cb685-749a-46da-b215-842bc13ed542",
-                   :params {},
-                   :required false
+                   :params {}
                    :wrapper-id "036a71bb-01dc-440e-8c05-80eea0ca9640"}]
         actual (flatten-form-fields (:content person-info-form))]
     (is (= expected actual))))
@@ -190,13 +188,12 @@
               :children [{:id "f1",
                           :label {:fi "kenttä1", :sv ""},
                           :params {:size "S"},
-                          :required true,
+                          :validators ["required"]
                           :fieldType "textField",
                           :fieldClass "formField"}
                          {:id "f2",
                           :label {:fi "kenttä2", :sv ""},
                           :params {:size "M"},
-                          :required false,
                           :fieldType "textField",
                           :fieldClass "formField"}],
               :fieldType "fieldset",
@@ -206,7 +203,7 @@
               :children [{:id "f3",
                           :label {:fi "kenttä3", :sv ""},
                           :params {:size "S"},
-                          :required true,
+                          :validators ["required"]
                           :fieldType "textField",
                           :fieldClass "formField"}],
               :fieldType "fieldset",
@@ -214,7 +211,6 @@
              {:id "f4",
               :label {:fi "ulkokenttä", :sv ""},
               :params {:size "L"},
-              :required false,
               :fieldType "textField",
               :fieldClass "formField"}]})
 
