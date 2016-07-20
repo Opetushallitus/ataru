@@ -13,25 +13,24 @@
     [:div.language
      [:div (clojure.string/upper-case (name lang))]]))
 
-(def ^:private checkbox-metadata
-  {:required {:id-suffix "_required"
-              :label "Pakollinen tieto"}})
-
 ; IE only allows this data attribute name for drag event dataTransfer
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
 (def ^:private ie-compatible-drag-data-attibute-name "Text")
 
 (defn- render-checkbox
-  [path initial-content metadata-kwd]
-  (let [metadata (get checkbox-metadata metadata-kwd)
-        id (util/new-uuid)
-        label (:label metadata)]
+  [path initial-content]
+  (let [id           (util/new-uuid)
+        required?    (true? (some #(= % :required) (:validators initial-content)))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
                                     :id id
-                                    :checked (true? (get initial-content metadata-kwd))
-                                    :on-change #(dispatch [:editor/set-component-value (-> % .-target .-checked) path metadata-kwd])}]
-     [:label.editor-form__checkbox-label {:for id} label]]))
+                                    :checked required?
+                                    :on-change (fn [event]
+                                                 (let [dispatch-kwd (if (-> event .-target .-checked)
+                                                                     :editor/add-validator
+                                                                     :editor/remove-validator)]
+                                                   (dispatch [dispatch-kwd :required path])))}]
+     [:label.editor-form__checkbox-label {:for id} "Pakollinen tieto"]]))
 
 (defn- on-drag-start
   [path]
@@ -123,7 +122,7 @@
                                    :else nil)}
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
-        (render-checkbox path initial-content :required)]])))
+        (render-checkbox path initial-content)]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -147,7 +146,7 @@
              ^{:key lang}
              [input-field path lang]))]
         [:div.editor-form__checkbox-wrapper
-         (render-checkbox path initial-content :required)]]
+         (render-checkbox path initial-content)]]
        [:div.editor-form__multi-options_wrapper
         [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
         (doall
