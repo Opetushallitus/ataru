@@ -12,7 +12,7 @@
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
       [:div.application__form-field
-       [:label.application__form-field-label label (required-hint field-descriptor)]
+       [:label.application__form-field-label (str label (required-hint field-descriptor))]
        [:div (textual-field-value field-descriptor @application)]])))
 
 (declare field)
