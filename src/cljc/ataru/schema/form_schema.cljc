@@ -121,7 +121,6 @@
    :form                           Long
    :lang                           s/Str
    :answers                        [Answer]
-   :state                          (s/enum :received)
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (s/defschema ApplicationRequest

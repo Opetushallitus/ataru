@@ -25,7 +25,7 @@
 (defn- handle-application [application]
   (info "Received application:")
   (info application)
-  (let [stored-app-id (application-store/insert-application application)]
+  (let [stored-app-id (application-store/add-new-application application)]
     (info "Stored application with id:" stored-app-id)
     (email/send-email-verification application)
     (ok {})))

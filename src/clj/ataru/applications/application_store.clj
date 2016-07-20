@@ -17,21 +17,19 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
-(defn insert-application [application]
+(defn add-new-application [application]
   (first (exec-db :db yesql-add-application-query<!
                {:form_id (:form application)
                 :key (str (java.util.UUID/randomUUID))
                 :lang (:lang application)
-                :content {:answers (:answers application)}
-                :state "received"})))
+                :content {:answers (:answers application)}})))
 
 (defn unwrap-application [{:keys [lang]} application]
-  (-> (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
-               :answers
-               (mapv (fn [answer]
-                       (update answer :label (keyword lang)))
-                     (-> application :content :answers)))
-      (update :state keyword)))
+  (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
+         :answers
+         (mapv (fn [answer]
+                 (update answer :label (keyword lang)))
+               (-> application :content :answers))))
 
 (s/defn fetch-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]

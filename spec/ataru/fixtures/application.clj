@@ -55,7 +55,6 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 15 12 30 55)
   :form_id 703
-  :state "received"
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "1", :fieldType "textField"}
@@ -68,7 +67,6 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 15 14 30 55)
   :form_id 703
-  :state "received"
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "Vastaus", :fieldType "textField"}
@@ -80,7 +78,6 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 16 6 0 0)
   :form_id 703
-  :state "received"
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "a", :fieldType "textField"}

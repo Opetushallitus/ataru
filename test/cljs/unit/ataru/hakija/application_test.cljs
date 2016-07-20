@@ -165,7 +165,6 @@
 
 (def expected-application {:form 37,
                            :lang "fi",
-                           :state :received
                            :answers '({:key "G__14",
                                        :value "Jorma",
                                        :fieldType "textField",
