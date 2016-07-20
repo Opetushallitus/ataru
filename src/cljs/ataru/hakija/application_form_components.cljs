@@ -16,7 +16,9 @@
 
 (defn- field-value-valid?
   [field-data value]
-  (if (:required field-data) (not (clojure.string/blank? value)) true))
+  (if (not-empty (:validators field-data))
+    (every? true? (map #(% value) (:validators field-data)))
+    true))
 
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
