@@ -155,3 +155,26 @@
     (is (= (count actual) 2))
     (is (some #(= % :some-validator) actual))
     (is (some #(= % :required) actual))))
+
+(deftest removes-validator-from-component
+  (let [path          [0 :children 0]
+        component     (assoc drag-component-1 :validators [:required :some-validator])
+        actual        (-> (as-form [{:children [component]}])
+                          (h/remove-validator [:editor/remove-validator :required path])
+                          (get-in [:editor :forms 1234 :content 0 :children 0 :validators]))]
+    (is (= actual [:some-validator]))))
+
+(deftest does-not-create-empty-validator-list-when-removing-validator
+  (let [path          [0 :children 0]
+        actual        (-> (as-form [{:children [drag-component-1]}])
+                          (h/remove-validator [:editor/remove-validator :required path])
+                          (get-in [:editor :forms 1234 :content 0 :children 0 :validators]))]
+    (is (nil? actual))))
+
+(deftest handles-removal-of-validator-that-does-not-exist
+  (let [path          [0 :children 0]
+        component     (assoc drag-component-1 :validators [:required])
+        actual        (-> (as-form [{:children [component]}])
+                        (h/remove-validator [:editor/remove-validator :some-validator path])
+                        (get-in [:editor :forms 1234 :content 0 :children 0 :validators]))]
+    (is (= actual [:required]))))
