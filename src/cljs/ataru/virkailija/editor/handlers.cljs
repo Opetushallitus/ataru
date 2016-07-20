@@ -70,6 +70,15 @@
                                 (assoc-in value-path value))]
       option-updated-db)))
 
+(defn add-validator
+  [db [_ validator & path]]
+  (let [path (current-form-content-path db [path :validators])]
+    (update-in db path (fn [validators]
+                         (when-not (some #(= % validator) validators)
+                           (conj validators validator))))))
+
+(register-handler :editor/add-validator add-validator)
+
 (register-handler
   :editor/set-component-value
   (fn [db [_ value & path]]
