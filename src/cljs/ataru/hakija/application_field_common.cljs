@@ -3,7 +3,7 @@
 (defn answer-key [field-data]
   (keyword (:id field-data)))
 
-(defn required-hint [field-descriptor] (if (-> field-descriptor :required) " *" ""))
+(defn required-hint [field-descriptor] (if (some #(= % :required) (:validators field-descriptor)) " *" ""))
 
 (defn textual-field-value [field-descriptor application]
   (:value ((answer-key field-descriptor) (:answers application))))
