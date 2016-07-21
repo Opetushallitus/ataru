@@ -2,10 +2,10 @@
   (:require [ataru.virkailija.component-data.component :as component]))
 
 (defn ^:private text-field
-  [labels & {:keys [size id] :or {size "M"}}]
+  [labels & {:keys [size id validators] :or {size "M" validators []}}]
   (-> (component/text-field)
       (assoc :label labels)
-      (assoc :validators ["required"])
+      (assoc :validators (conj validators "required"))
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
@@ -40,7 +40,7 @@
 
 (defn ^:private ssn-component
   []
-  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn))
+  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators ["ssn"]))
 
 (defn ^:private identification-section
   []
