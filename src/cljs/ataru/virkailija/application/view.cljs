@@ -15,10 +15,7 @@
   (let [applications (subscribe [:state-query [:application :applications]])
         selected-key (subscribe [:state-query [:application :selected]])]
     (into [:div.application-handling__list
-           [:div.application-handling__list-header.application-handling__list-row
-            [:span.application-handling__list-row--applicant "Hakija"]
-            [:span.application-handling__list-row--time "Saapunut"]
-            [:span.application-handling__list-row--state "Tila"]]]
+           ]
           (for [application @applications
                 :let        [key       (:key application)
                              time      (t/time->str (:modified-time application))
@@ -38,6 +35,10 @@
 
 (defn application-list []
     [:div
+     [:div.application-handling__list-header.application-handling__list-row
+      [:span.application-handling__list-row--applicant "Hakija"]
+      [:span.application-handling__list-row--time "Saapunut"]
+      [:span.application-handling__list-row--state "Tila"]]
      [applications]])
 
 (defn form-list-arrow-up [open]
