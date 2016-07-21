@@ -91,7 +91,7 @@
          {:href
           (str
             "/lomake-editori/api/applications/"
-            @(subscribe [:state-query [:application :form :id]])
+            @(subscribe [:state-query [:editor :selected-form-id]])
             "/excel")}
          (str "Lataa hakemukset Excel-muodossa (" @application-count ")")]))))
 

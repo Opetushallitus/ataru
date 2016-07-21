@@ -14,9 +14,9 @@
   :application/fetch-applications
   (fn [db [_ form-id]]
     (ajax/http
-      :post
-      (str "/lomake-editori/api/applications/" form-id)
+      :get
+      (str "/lomake-editori/api/forms/applications/" form-id)
       (fn [db form-and-applications]
         (update db :application
-                merge (select-keys form-and-applications [:form :applications]))))
+                merge form-and-applications)))
     db))

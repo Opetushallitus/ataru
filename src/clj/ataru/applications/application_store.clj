@@ -36,6 +36,14 @@
                  (update answer :label (keyword lang)))
                (-> application :content :answers))))
 
+(defn get-application-list
+  "Only list with header-level info, not answers"
+  [form-id]
+  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_id form-id})))
+
+(defn fetch-application-counts [form-id]
+  (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))
+
 (s/defn fetch-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
   (let [request (merge
@@ -43,11 +51,8 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-      (exec-db :db (case (:sort request)
-                     :by-date yesql-application-query-by-modified
-                     yesql-application-query-by-modified)
-        (dissoc (transform-keys ->snake_case request)
-          :sort)))))
-
-(defn fetch-application-counts [form-id]
-  (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))
+          (exec-db :db (case (:sort request)
+                         :by-date yesql-application-query-by-modified
+                         yesql-application-query-by-modified)
+                   (dissoc (transform-keys ->snake_case request)
+                           :sort)))))

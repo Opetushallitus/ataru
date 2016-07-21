@@ -116,6 +116,14 @@
                               LocalizedString
                               s/Str)})
 
+;; Header-level info about application, doesn't contain the actual answers
+(s/defschema ApplicationInfo
+  {:id                             Long
+   :key                            s/Str
+   :lang                           s/Str
+   :applicant-name                 s/Str
+   (s/optional-key :modified-time) org.joda.time.DateTime})
+
 (s/defschema Application
   {(s/optional-key :key)           s/Str
    :form                           Long
