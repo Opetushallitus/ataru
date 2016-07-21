@@ -37,7 +37,9 @@
   (str "field-" (:id field-descriptor)))
 
 (defn- label [field-descriptor & [size-class]]
-  (let [valid? (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :valid]])]
+  (let [id     (keyword (:id field-descriptor))
+        valid? (subscribe [:state-query [:application :answers id :valid]])
+        value  (subscribe [:state-query [:application :answers id :value]])]
     (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label
        {:id (field-id field-descriptor)
@@ -45,7 +47,8 @@
        [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
        (when (and
                (not @valid?)
-               (validator/validate "required" (:value field-descriptor)))
+               (some #(= % "required") (:validators field-descriptor))
+               (validator/validate "required" @value))
          [:span.application__form-field-error "Tarkista muoto"])])))
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
