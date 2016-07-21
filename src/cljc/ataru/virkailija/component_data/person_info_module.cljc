@@ -73,7 +73,7 @@
 
 (defn ^:private postal-code-component
   []
-  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code))
+  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators ["postal-code"]))
 
 (defn ^:private municipality-section
   []

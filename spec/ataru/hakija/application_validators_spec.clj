@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators-spec
   (:require [ataru.fixtures.email :as email]
+            [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]))
@@ -37,3 +38,14 @@
            (it (str "should validate " email)
              (should (pred actual)))))
        (keys email/email-list)))
+
+(describe "postal code validation"
+  (tags :unit)
+
+  (map (fn [postal-code]
+         (let [expected (get postal-code/postal-code-list postal-code)
+               pred     (if expected true? false?)
+               actual   (validator/validate "postal-code" postal-code)]
+           (it (str "should validate " postal-code)
+             (should (pred actual)))))
+    (keys postal-code/postal-code-list)))

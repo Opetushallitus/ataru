@@ -56,9 +56,17 @@
   (and (not (nil? (re-matches email-pattern value)))
        (nil? (re-find invalid-email-pattern value))))
 
-(def validators {"required" required
-                 "ssn"      ssn
-                 "email"    email})
+(def ^:private postal-code-pattern #"^\d{5}$")
+
+(defn ^:private postal-code
+  [value]
+  (and (not (nil? value))
+       (not (nil? (re-matches postal-code-pattern value)))))
+
+(def validators {"required"    required
+                 "ssn"         ssn
+                 "email"       email
+                 "postal-code" postal-code})
 
 (defn validate
   [validator value]
