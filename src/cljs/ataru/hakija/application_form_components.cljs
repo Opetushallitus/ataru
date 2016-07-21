@@ -37,19 +37,16 @@
   (str "field-" (:id field-descriptor)))
 
 (defn- label [field-descriptor & [size-class]]
-  (let [valid? (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :valid]])
-        initial-invalid? (r/atom (not @valid?))]
+  (let [valid? (subscribe [:state-query [:application :answers (keyword (:id field-descriptor)) :valid]])]
     (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label
        {:id (field-id field-descriptor)
         :class size-class}
        [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
-       (when (= "first-name" (:id field-descriptor))
-         (println (str "valid: " @valid? ", initial-invalid: " @initial-invalid?)))
-       (when (not @valid?)
-         (if @initial-invalid?
-           (reset! initial-invalid? false)
-           [:span.application__form-field-error "Tarkista muoto"]))])))
+       (when (and
+               (not @valid?)
+               (validator/validate "required" (:value field-descriptor)))
+         [:span.application__form-field-error "Tarkista muoto"])])))
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])]
