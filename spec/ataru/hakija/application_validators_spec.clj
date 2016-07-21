@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators-spec
-  (:require [ataru.hakija.application-validators :as validator]
+  (:require [ataru.fixtures.ssn :as ssn]
+            [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]))
 
 (describe "required validator"
@@ -16,3 +17,11 @@
 
   (it "should allow string with at least one character"
     (should (validator/validate "required" "a"))))
+
+(describe "ssn validator"
+  (tags :unit)
+
+  (map (fn [ssn]
+         (it (str "should validate " ssn)
+          (should (validator/validate "ssn" ssn))))
+       ssn/ssn-list))
