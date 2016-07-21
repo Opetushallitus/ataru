@@ -48,8 +48,15 @@
           check-char (get check-chars check-mod)]
       (= (clojure.string/upper-case check) check-char))))
 
+(def ^:private email-pattern #"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+(defn ^:private email
+  [value]
+  (not (nil? (re-matches email-pattern value))))
+
 (def validators {"required" required
-                 "ssn"      ssn})
+                 "ssn"      ssn
+                 "email"    email})
 
 (defn validate
   [validator value]

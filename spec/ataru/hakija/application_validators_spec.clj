@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators-spec
-  (:require [ataru.fixtures.ssn :as ssn]
+  (:require [ataru.fixtures.email :as email]
+            [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]))
 
@@ -25,3 +26,14 @@
          (it (str "should validate " ssn)
           (should (validator/validate "ssn" ssn))))
        ssn/ssn-list))
+
+(describe "email validator"
+  (tags :unit)
+
+  (map (fn [email]
+         (let [expected (get email/email-list email)
+               pred     (if expected true? false?)
+               actual   (validator/validate "email" email)]
+           (it (str "should validate " email)
+             (should (pred actual)))))
+       (keys email/email-list)))

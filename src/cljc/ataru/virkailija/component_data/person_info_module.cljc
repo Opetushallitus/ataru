@@ -57,7 +57,7 @@
 
 (defn ^:private email-component
   []
-  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email :validators ["email"]))
 
 (defn ^:private phone-component
   []
