@@ -1,5 +1,5 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.hakija.application-validators :as validators]
+  (:require [ataru.hakija.application-validators :as validator]
             [schema.core :as s]
             [schema-tools.core :as st]
             [clojure.string :as str]))
@@ -52,7 +52,7 @@
 
 (s/defschema FormField {:fieldClass (s/eq "formField")
                         :id s/Str
-                        (s/optional-key :validators) [(apply s/enum (keys validators/validators))]
+                        (s/optional-key :validators) [(apply s/enum (keys validator/validators))]
                         (s/optional-key :label) LocalizedString
                         (s/optional-key :helpText) LocalizedString
                         (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
