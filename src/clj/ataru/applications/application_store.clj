@@ -32,9 +32,6 @@
                                 :last_name (find-value-from-answers "last-name" answers)
                                 :content {:answers answers}}
           app-id               (first (yesql-add-application-query<! application-to-store connection))]
-      (println "storing:")
-      (println application-to-store)
-      (println "answers")
       (yesql-add-application-event! {:application_id (second app-id) :event_type "received"} connection)
       app-id)))
 

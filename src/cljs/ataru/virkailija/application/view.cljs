@@ -19,7 +19,7 @@
           (for [application @applications
                 :let        [key       (:key application)
                              time      (t/time->str (:modified-time application))
-                             applicant (:applicant application)
+                             applicant (:applicant-name application)
                              state     (:state application)]]
             [:div.application-handling__list-row
              {:on-click #(dispatch [:application/select-application (:key application)])
