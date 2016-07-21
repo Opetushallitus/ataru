@@ -53,7 +53,8 @@
 
 (defn ^:private email
   [value]
-  (and (not (nil? (re-matches email-pattern value)))
+  (and (not (nil? value))
+       (not (nil? (re-matches email-pattern value)))
        (nil? (re-find invalid-email-pattern value))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
