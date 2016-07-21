@@ -113,7 +113,7 @@
                                    :source-map-timestamp true}}
 
                        {:id "test"
-                        :source-paths ["src/cljs" "test/cljs/unit" "src/cljc"]
+                        :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler {:output-to "resources/public/js/test/test.js"
                                    :main "ataru.unit-runner"
                                    :optimizations :none}}
@@ -161,7 +161,7 @@
                    :plugins [[refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.13.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.1"]]
-                   :source-paths ["dev/clj"]
+                   :source-paths ["dev/clj" "test/cljc/unit"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
 
