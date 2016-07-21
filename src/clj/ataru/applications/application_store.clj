@@ -18,14 +18,23 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
+(defn- find-value-from-answers [key answers]
+  (:value (first (filter #(= key (:key %)) answers))))
+
 (defn add-new-application [application]
   (with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection           {:connection conn}
+          answers              (:answers application)
           application-to-store {:form_id (:form application)
                                 :key (str (java.util.UUID/randomUUID))
                                 :lang (:lang application)
-                                :content {:answers (:answers application)}}
+                                :preferred_name (find-value-from-answers "preferred-name" answers)
+                                :last_name (find-value-from-answers "last-name" answers)
+                                :content {:answers answers}}
           app-id               (first (yesql-add-application-query<! application-to-store connection))]
+      (println "storing:")
+      (println application-to-store)
+      (println "answers")
       (yesql-add-application-event! {:application_id (second app-id) :event_type "received"} connection)
       app-id)))
 

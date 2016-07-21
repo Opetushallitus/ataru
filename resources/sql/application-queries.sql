@@ -1,6 +1,6 @@
 -- name: yesql-add-application-query<!
 -- Add application
-insert into applications (form_id, key, content, lang) values (:form_id, :key, :content, :lang);
+insert into applications (form_id, key, content, lang, preferred_name, last_name) values (:form_id, :key, :content, :lang, :preferred_name, :last_name);
 
 -- name: yesql-get-application-list
 select a.id, a.key, a.lang, 'N/A' as applicant_name, a.modified_time, coalesce(ar.state, 'received') as state
