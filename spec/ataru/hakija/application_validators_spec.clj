@@ -24,8 +24,11 @@
   (tags :unit)
 
   (map (fn [ssn]
-         (it (str "should validate " ssn)
-          (should (validator/validate "ssn" ssn))))
+         (map (fn [century-char]
+                (let [ssn (str (:start ssn) century-char (:end ssn))]
+                  (it (str "should validate " ssn)
+                    (should (validator/validate "ssn" ssn)))))
+              ["+" "-" "A"]))
        ssn/ssn-list))
 
 (describe "email validator"
