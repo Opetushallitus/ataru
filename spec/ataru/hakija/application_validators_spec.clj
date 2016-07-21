@@ -29,7 +29,13 @@
                   (it (str "should validate " ssn)
                     (should (validator/validate "ssn" ssn)))))
               ["+" "-" "A"]))
-       ssn/ssn-list))
+       ssn/ssn-list)
+
+  (it "should validate nil"
+    (should-not (validator/validate "ssn" nil)))
+
+  (it "should validate empty string"
+    (should-not (validator/validate "ssn" ""))))
 
 (describe "email validator"
   (tags :unit)

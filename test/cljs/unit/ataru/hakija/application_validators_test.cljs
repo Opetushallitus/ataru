@@ -9,7 +9,10 @@
   (doseq [ssn ssn/ssn-list]
     (doseq [century-char ["+" "-" "A"]]
       (let [ssn (str (:start ssn) century-char (:end ssn))]
-        (is (validator/validate "ssn" ssn) (str "SSN " ssn " is not valid"))))))
+        (is (validator/validate "ssn" ssn) (str "SSN " ssn " is not valid")))))
+
+  (is (not (validator/validate "ssn" nil)))
+  (is (not (validator/validate "ssn" ""))))
 
 (deftest email-validation
   (doseq [email (keys email/email-list)]
