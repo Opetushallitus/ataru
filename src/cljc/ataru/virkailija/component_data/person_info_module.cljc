@@ -61,7 +61,7 @@
 
 (defn ^:private phone-component
   []
-  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone :validators ["phone"]))
 
 (defn ^:private street-address-component
   []

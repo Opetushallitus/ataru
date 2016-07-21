@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators-test
   (:require [ataru.fixtures.email :as email]
+            [ataru.fixtures.phone :as phone]
             [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
@@ -31,3 +32,12 @@
           message  (if expected "valid" "invalid")]
       (is (pred actual)
           (str "postal code " postal-code " was not " message)))))
+
+(deftest phone-number-validation
+  (doseq [number (keys phone/phone-list)]
+    (let [expected (get phone/phone-list number)
+          pred     (if expected true? false?)
+          actual   (validator/validate "phone" number)
+          message  (if expected "valid" "invalid")]
+      (is (pred actual)
+        (str "phone number " number " was not " message)))))

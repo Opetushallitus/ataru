@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators-spec
   (:require [ataru.fixtures.email :as email]
+            [ataru.fixtures.phone :as phone]
             [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
@@ -58,3 +59,15 @@
            (it (str "should validate " postal-code)
              (should (pred actual)))))
     (keys postal-code/postal-code-list)))
+
+(describe "phone number validation"
+  (tags :unit)
+
+  (map (fn [number]
+         (let [expected (get phone/phone-list number)
+               pred     (if expected true? false?)
+               actual   (validator/validate "phone" number)]
+           (println (str "phone: " number ", result: " actual))
+           (it (str "should validate " number)
+             (should (pred actual)))))
+       (keys phone/phone-list)))

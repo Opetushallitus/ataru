@@ -65,10 +65,21 @@
   (and (not (nil? value))
        (not (nil? (re-matches postal-code-pattern value)))))
 
+(def ^:private whitespace-pattern #"\s*")
+(def ^:private phone-pattern #"^\+?\d{6,}$")
+
+(defn ^:private phone
+  [value]
+  (if-not (nil? value)
+    (let [parsed (clojure.string/replace value whitespace-pattern "")]
+      (not (nil? (re-matches phone-pattern parsed))))
+    false))
+
 (def validators {"required"    required
                  "ssn"         ssn
                  "email"       email
-                 "postal-code" postal-code})
+                 "postal-code" postal-code
+                 "phone"       phone})
 
 (defn validate
   [validator value]
