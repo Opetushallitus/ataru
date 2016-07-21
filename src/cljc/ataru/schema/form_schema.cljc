@@ -121,6 +121,7 @@
   {:id                             Long
    :key                            s/Str
    :lang                           s/Str
+   :state                          s/Str
    :applicant-name                 s/Str
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
