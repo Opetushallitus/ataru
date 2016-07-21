@@ -110,7 +110,7 @@
         form (form-store/fetch-form form-id)
         form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
         applications-sheet (.createSheet workbook "Hakemukset")
-        applications (application-store/fetch-applications
+        applications (application-store/get-applications
                        form-id
                        {:lang (name language)})
         application-meta-fields (indexed-meta-fields application-meta-fields)
