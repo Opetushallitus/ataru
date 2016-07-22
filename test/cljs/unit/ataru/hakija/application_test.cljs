@@ -137,9 +137,9 @@
 
 (deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers form1)]
-    (is (= {:G__2 {:valid false, :wrapper-id "G__1", :label {:fi "kenttä1", :sv ""}}
-            :G__14 {:valid true, :wrapper-id "G__1", :label {:fi "kenttä2", :sv ""}}
-            :G__25 {:valid true, :wrapper-id nil, :label {:fi "ulkokenttä", :sv ""}}}
+    (is (= {:G__2 {:valid false, :wrapper-id "G__1", :label {:fi "kenttä1", :sv ""} :idx 0}
+            :G__14 {:valid true, :wrapper-id "G__1", :label {:fi "kenttä2", :sv ""} :idx 1}
+            :G__25 {:valid true, :wrapper-id nil, :label {:fi "ulkokenttä", :sv ""} :idx 2}}
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid

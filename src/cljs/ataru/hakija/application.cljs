@@ -25,11 +25,12 @@
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
-        (map
-          (fn [field]
+        (map-indexed
+          (fn [idx field]
             [(keyword (:id field)) {:valid (not (some #(= % "required") (:validators field)))
                                     :wrapper-id (:wrapper-id field)
-                                    :label (:label field)}]) flattened-form-fields)))
+                                    :label (:label field)
+                                    :order-idx idx}]) flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Mainly validity for now."
@@ -40,7 +41,8 @@
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))]
     {:valid (if (empty? answer-validity) false (every? true? answer-validity))
      :invalid-fields (for
-                       [[key answers] all-answers :when (not (:valid answers))]
+                       [[key answers] (sort-by (fn [[_ answers]]
+                                                 (:order-idx answers)) all-answers) :when (not (:valid answers))]
                        (assoc (select-keys answers [:label]) :key key))}))
 
 (defn form->flat-form-map [form]
