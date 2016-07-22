@@ -67,7 +67,6 @@
          (let [expected (get phone/phone-list number)
                pred     (if expected true? false?)
                actual   (validator/validate "phone" number)]
-           (println (str "phone: " number ", result: " actual))
            (it (str "should validate " number)
              (should (pred actual)))))
        (keys phone/phone-list)))
