@@ -44,7 +44,7 @@
     (when-let [[_ day month year _ individual check] (re-matches ssn-pattern value)]
       (let [check-str  (str day month year individual)
             check-num  #?(:clj (Integer/parseInt check-str)
-                          :cljs (js/parseInt check-str))
+                          :cljs (js/parseInt check-str 10))
             check-mod  (mod check-num 31)
             check-char (get check-chars check-mod)]
         (= (clojure.string/upper-case check) check-char)))))
