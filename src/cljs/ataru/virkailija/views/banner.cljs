@@ -13,11 +13,6 @@
     [:img {:src "images/opintopolku_large-fi.png"
            :height "40px"}]])
 
-(defn applications []
-  (let [application-count (subscribe [:state-query [:application :count]])]
-    [:div.applications-count.display-flex
-     [:span @application-count]]))
-
 (def panels
   {:editor      {:text "Lomake-editori" :href #(str "#/editor/" %)}
    :application {:text "Hakemukset" :href #(str "#/applications/" %)}})
@@ -42,10 +37,7 @@
     [:div.title
      [section-link :editor "#/editor/"]
      [:div.divider]
-     [section-link :application "#/applications/"]
-     ; Use after we have multiple states representing new vs handled applications:
-     ; [:div [applications]]
-     ]))
+     [section-link :application "#/applications/"]]))
 
 (defn profile []
   (let [username         (subscribe [:state-query [:editor :user-info :username]])]

@@ -35,17 +35,3 @@
   :flasher
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
-
-(defn fetch-application-counts! [form-id]
-  (http :get
-        (str "/lomake-editori/api/applications/" form-id "/count")
-        (fn [db response _]
-          (assoc-in db [:application :count]
-                    (when (= form-id (-> db :editor :selected-form-id))
-                      (:count response))))))
-
-(register-handler
-  :fetch-application-counts
-  (fn [db _]
-    (fetch-application-counts! (-> db :editor :selected-form-id))
-    (update db :application dissoc :count)))

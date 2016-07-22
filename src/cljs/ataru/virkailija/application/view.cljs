@@ -85,16 +85,13 @@
         [form-list-closed @selected-form open])])))
 
 (defn excel-download-link []
-  (let [application-count (subscribe [:state-query [:application :count]])]
+  (let [applications (subscribe [:state-query [:application :applications]])
+        form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
-      (when (> @application-count 0)
+      (when (> (count @applications) 0)
         [:a.application-handling__excel-download-link
-         {:href
-          (str
-            "/lomake-editori/api/applications/"
-            @(subscribe [:state-query [:editor :selected-form-id]])
-            "/excel")}
-         (str "Lataa hakemukset Excel-muodossa (" @application-count ")")]))))
+         {:href (str "/lomake-editori/api/applications/excel/" @form-id)}
+         (str "Lataa hakemukset Excel-muodossa (" (count @applications) ")")]))))
 
 (defn application []
   [:div
