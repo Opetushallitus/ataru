@@ -31,10 +31,10 @@
                     :sv "Med kontaktperson avses den projektansvariga i sökandeorganisationen."}
        :label      {:fi "Sukunimi", :sv "Efternamn"}
        :id         "applicant-firstname"
-       :required   true
+       :validators ["required"]
        :fieldType  "textField"}
       {:fieldClass "formField"
        :label      {:fi "Etunimi", :sv "Förnamn"}
        :id         "applicant-surname"
-       :required   true
+       :validators ["required"]
        :fieldType  "textField"}]}]})

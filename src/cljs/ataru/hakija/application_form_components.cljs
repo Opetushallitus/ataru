@@ -6,6 +6,7 @@
                                                            required-hint
                                                            textual-field-value
                                                            wrapper-id]]
+            [ataru.hakija.application-validators :as validator]
             [reagent.core :as r]))
 (defn- text-field-size->class [size]
   (match size
@@ -16,7 +17,9 @@
 
 (defn- field-value-valid?
   [field-data value]
-  (if (:required field-data) (not (clojure.string/blank? value)) true))
+  (if (not-empty (:validators field-data))
+    (every? true? (map #(validator/validate % value) (:validators field-data)))
+    true))
 
 (defn- textual-field-change [text-field-data evt]
   (let [value (-> evt .-target .-value)
@@ -33,17 +36,32 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
+(defn- label [field-descriptor & [size-class]]
+  (let [id     (keyword (:id field-descriptor))
+        valid? (subscribe [:state-query [:application :answers id :valid]])
+        value  (subscribe [:state-query [:application :answers id :value]])]
+    (fn [field-descriptor & [size-class]]
+      [:label.application__form-field-label
+       {:id (field-id field-descriptor)
+        :class size-class}
+       [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
+       (when (and
+               (not @valid?)
+               (some #(= % "required") (:validators field-descriptor))
+               (validator/validate "required" @value))
+         [:span.application__form-field-error "Tarkista muoto"])])))
+
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        label (-> field-descriptor :label :fi)]
+  (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
-       [:input.application__form-text-input
-        {:type "text"
-         :class (text-field-size->class (-> field-descriptor :params :size))
-         :value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor)}]])))
+      (let [size-class (text-field-size->class (-> field-descriptor :params :size))]
+        [div-kwd
+         [label field-descriptor size-class]
+         [:input.application__form-text-input
+          {:type      "text"
+           :class     size-class
+           :value     (textual-field-value field-descriptor @application)
+           :on-change (partial textual-field-change field-descriptor)}]]))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -53,11 +71,10 @@
          :else "application__form-text-area__size-medium"))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        label (-> field-descriptor :label :fi)]
+  (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor]
       [div-kwd
-       [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
+       [label field-descriptor "application__form-text-area"]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          :value (textual-field-value field-descriptor @application)
@@ -78,19 +95,18 @@
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [label (-> field-descriptor :label :fi)]
-    (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor)
-       :reagent-render      (fn [field-descriptor]
-                              [div-kwd
-                               {:on-change (partial textual-field-change field-descriptor)}
-                               [:label.application_form-field-label {:id (field-id field-descriptor)} label (required-hint field-descriptor)]
-                               [:div.application__form-select-wrapper
-                                [:span.application__form-select-arrow]
-                                [:select.application__form-select
-                                 (for [option (:options field-descriptor)]
-                                   ^{:key (:value option)}
-                                   [:option {:value (:value option)} (-> option :label :fi)])]]])})))
+  (r/create-class
+    {:component-did-mount (partial init-dropdown-value field-descriptor)
+     :reagent-render      (fn [field-descriptor]
+                            [div-kwd
+                             {:on-change (partial textual-field-change field-descriptor)}
+                             [label field-descriptor "application__form-select-label"]
+                             [:div.application__form-select-wrapper
+                              [:span.application__form-select-arrow]
+                              [:select.application__form-select
+                               (for [option (:options field-descriptor)]
+                                 ^{:key (:value option)}
+                                 [:option {:value (:value option)} (-> option :label :fi)])]]])}))
 
 (defn render-field
   [field-descriptor & args]

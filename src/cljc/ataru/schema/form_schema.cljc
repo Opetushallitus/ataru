@@ -1,10 +1,8 @@
 (ns ataru.schema.form-schema
-  (:require [schema.core :as s]
+  (:require [ataru.hakija.application-validators :as validator]
+            [schema.core :as s]
             [schema-tools.core :as st]
             [clojure.string :as str]))
-
-(s/defschema PositiveInteger
-  (s/both (s/pred pos? 'pos?) s/Int))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -51,7 +49,7 @@
 
 (s/defschema FormField {:fieldClass (s/eq "formField")
                         :id s/Str
-                        :required s/Bool
+                        (s/optional-key :validators) [(apply s/enum (keys validator/validators))]
                         (s/optional-key :label) LocalizedString
                         (s/optional-key :helpText) LocalizedString
                         (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
@@ -127,13 +125,13 @@
 
 (s/defschema Application
   {(s/optional-key :key)           s/Str
-   :form                           Long
+   :form                           s/Int
    :lang                           s/Str
    :answers                        [Answer]
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (s/defschema ApplicationRequest
   ; limit number of applications returned
-  {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
+  {(s/optional-key :limit) s/Int
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})

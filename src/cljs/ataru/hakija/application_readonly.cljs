@@ -12,16 +12,16 @@
         label (-> field-descriptor :label :fi)]
     (fn [field-descriptor]
       [:div.application__form-field
-       [:label.application_form-field-label label (required-hint field-descriptor)]
+       [:label.application__form-field-label (str label (required-hint field-descriptor))]
        [:div (textual-field-value field-descriptor @application)]])))
 
 (declare field)
 
 (defn wrapper [content children]
   (let [fieldset? (= "fieldset" (:fieldType content))]
-    [:div.application__wrapper-element
+    [:div
      (when fieldset?
-       {:class "application__wrapper-element--border"})
+       {:class "application__wrapper-element application__wrapper-element--border"})
      [:h2.application__wrapper-heading
       {:id (wrapper-id content)}
       (-> content :label :fi)]

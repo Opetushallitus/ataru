@@ -51,7 +51,7 @@
   (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))
 
 (s/defn get-applications :- [schema/Application]
-  [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
+  [form-id :- s/Int application-request :- schema/ApplicationRequest]
   (let [request (merge
                   {:form-id form-id}
                   default-application-request

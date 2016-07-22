@@ -2,10 +2,10 @@
   (:require [ataru.virkailija.component-data.component :as component]))
 
 (defn ^:private text-field
-  [labels & {:keys [size id] :or {size "M"}}]
+  [labels & {:keys [size id validators] :or {size "M" validators []}}]
   (-> (component/text-field)
       (assoc :label labels)
-      (assoc :required true)
+      (assoc :validators (conj validators "required"))
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
@@ -33,14 +33,14 @@
 (defn ^:private nationality-component
   []
   (merge (component/dropdown) {:label {:fi "Kansalaisuus" :sv "Nationalitet"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "fi" {:fi "Suomi" :sv "Finland"})
                                          (dropdown-option "sv" {:fi "Ruotsi" :sv "Sverige"})]
                                :id :nationality}))
 
 (defn ^:private ssn-component
   []
-  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn))
+  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators ["ssn"]))
 
 (defn ^:private identification-section
   []
@@ -50,18 +50,18 @@
 (defn ^:private gender-section
   []
   (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                          (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]
                                :id :gender}))
 
 (defn ^:private email-component
   []
-  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email :validators ["email"]))
 
 (defn ^:private phone-component
   []
-  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone :validators ["phone"]))
 
 (defn ^:private street-address-component
   []
@@ -73,7 +73,7 @@
 
 (defn ^:private postal-code-component
   []
-  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code))
+  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators ["postal-code"]))
 
 (defn ^:private municipality-section
   []
@@ -83,7 +83,7 @@
 (defn ^:private native-language-section
   []
   (merge (component/dropdown) {:label {:fi "Äidinkieli" :sv "Modersmål"}
-                               :required true
+                               :validators ["required"]
                                :options [(dropdown-option "fi" {:fi "suomi" :sv "finska"})
                                          (dropdown-option "sv" {:fi "ruotsi" :sv "svenska"})]
                                :id :language}))

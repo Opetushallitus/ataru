@@ -8,7 +8,6 @@
    :label      {:fi "", :sv ""}
    :id         (util/component-id)
    :params     {}
-   :required   false
    :focus?     true})
 
 (defn text-area []
@@ -39,7 +38,6 @@
    :label {:fi "", :sv ""}
    :params {}
    :options [(dropdown-option)]
-   :required false
    :focus? true})
 
 (defn row-section
