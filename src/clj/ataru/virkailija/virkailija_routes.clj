@@ -94,13 +94,13 @@
                    (ok
                      {:forms (form-store/get-forms)}))
 
-                 (api/GET "/forms/content/:id" []
+                 (api/GET "/forms/:id" []
                           :path-params [id :- Long]
                           :return ataru-schema/FormWithContent
                           :summary "Get content for form"
                           (trying #(form-store/fetch-form id)))
 
-                 (api/POST "/form" {session :session}
+                 (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
                    (trying #(form-store/upsert-form

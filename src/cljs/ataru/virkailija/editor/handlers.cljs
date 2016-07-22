@@ -136,7 +136,7 @@
 
 (defn fetch-form-content! [form-id]
   (http :get
-        (str "/lomake-editori/api/forms/content/" form-id)
+        (str "/lomake-editori/api/forms/" form-id)
         (fn [db response _]
           (->
             (update-in db
@@ -223,7 +223,7 @@
                  (remove-focus))]
     (when (not-empty (:content form))
       (post
-        "/lomake-editori/api/form"
+        "/lomake-editori/api/forms"
         form
         (fn [db updated-form]
           (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
@@ -234,7 +234,7 @@
 (register-handler
   :editor/add-form
   (fn [db _]
-    (post "/lomake-editori/api/form"
+    (post "/lomake-editori/api/forms"
           {:name   "Uusi lomake"
            :content [(pm/person-info-module)]}
           (fn [db new-or-updated-form]
