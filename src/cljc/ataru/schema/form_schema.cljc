@@ -4,9 +4,6 @@
             [schema-tools.core :as st]
             [clojure.string :as str]))
 
-(s/defschema PositiveInteger
-  (s/both (s/pred pos? 'pos?) s/Int))
-
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
 ;    /.__, ._  -=- _ "`    Y
@@ -135,6 +132,6 @@
 
 (s/defschema ApplicationRequest
   ; limit number of applications returned
-  {(s/optional-key :limit) (s/both PositiveInteger (s/pred (partial >= 100) 'less-than-one-hundred))
+  {(s/optional-key :limit) s/Int
    (s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
