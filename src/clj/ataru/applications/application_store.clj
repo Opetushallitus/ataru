@@ -5,7 +5,7 @@
             [schema.core :as s]
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
-            [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]))
+            [clojure.java.jdbc :as jdbc]))
 
 (defqueries "sql/application-queries.sql")
 
@@ -22,7 +22,7 @@
   (:value (first (filter #(= key (:key %)) answers))))
 
 (defn add-new-application [application]
-  (with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection           {:connection conn}
           answers              (:answers application)
           application-to-store {:form_id (:form application)

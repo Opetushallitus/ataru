@@ -12,6 +12,8 @@ create table application_reviews (
 );
 
 comment on column application_reviews.state is 'For example accepted, rejected, ...';
+-- application_reviews has a one-to-one relation with applications, let's enforce it:
+alter table application_reviews add constraint application_reviews_uniq_application_id unique (application_id);
 
 create table application_events (
   id              bigserial primary key,
