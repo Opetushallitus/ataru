@@ -11,6 +11,36 @@
   (reset! open (not @open))
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
+(defn applications []
+  (let [applications (subscribe [:state-query [:application :applications]])
+        selected-key (subscribe [:state-query [:application :selected]])]
+    (into [:div.application-handling__list
+           ]
+          (for [application @applications
+                :let        [key       (:key application)
+                             time      (t/time->str (:modified-time application))
+                             applicant (:applicant-name application)
+                             state     (:state application)]]
+            [:div.application-handling__list-row
+             {:on-click #(dispatch [:application/select-application (:key application)])
+              :class    (when (= @selected-key key)
+                          "application-handling__list-row--selected")}
+             [:span.application-handling__list-row--applicant
+              (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+             [:span.application-handling__list-row--time time]
+             [:span.application-handling__list-row--state
+              (case (:state application)
+                "received" "Saapunut"
+                "Tuntematon")]]))))
+
+(defn application-list []
+    [:div
+     [:div.application-handling__list-header.application-handling__list-row
+      [:span.application-handling__list-row--applicant "Hakija"]
+      [:span.application-handling__list-row--time "Saapunut"]
+      [:span.application-handling__list-row--state "Tila"]]
+     [applications]])
+
 (defn form-list-arrow-up [open]
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
    {:on-click #(toggle-form-list-open open)}])
@@ -62,13 +92,15 @@
          {:href
           (str
             "/lomake-editori/api/applications/"
-            @(subscribe [:state-query [:application :form :id]])
+            @(subscribe [:state-query [:editor :selected-form-id]])
             "/excel")}
          (str "Lataa hakemukset Excel-muodossa (" @application-count ")")]))))
 
 (defn application []
   [:div
-   [:div.application-handling__container.panel-content
-    [:div.application-handling__header
-      [form-list]
-      [excel-download-link]]]])
+   [:div.application-handling__overview
+    [:div.application-handling__container.panel-content
+      [:div.application-handling__header
+        [form-list]
+        [excel-download-link]]
+      [application-list]]]])

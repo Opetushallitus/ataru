@@ -45,10 +45,9 @@
                          [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value "47",
                            :fieldType "textField",
-                           :label {:fi "Kengännumero", :sv ""}}],
-                   :state :received})
+                           :label {:fi "Kengännumero", :sv ""}}]})
 
 (defn init-db-fixture []
   (form-store/upsert-form form1)
   (form-store/upsert-form form2)
-  (application-store/insert-application application1))
+  (application-store/add-new-application application1))

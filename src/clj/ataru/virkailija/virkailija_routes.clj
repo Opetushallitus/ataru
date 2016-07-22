@@ -84,53 +84,51 @@
                :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/api" []
                  :tags ["form-api"]
+
                  (api/GET "/user-info" {session :session}
                    (ok {:username (-> session :identity :username)}))
+
                  (api/GET "/forms" []
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
                    (ok
                      {:forms (form-store/get-forms)}))
+
                  (api/GET "/forms/content/:id" []
-                   :path-params [id :- Long]
-                   :return ataru-schema/FormWithContent
-                   :summary "Get content for form"
-                   (trying #(form-store/fetch-form id)))
+                          :path-params [id :- Long]
+                          :return ataru-schema/FormWithContent
+                          :summary "Get content for form"
+                          (trying #(form-store/fetch-form id)))
+
                  (api/POST "/form" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
                    (trying #(form-store/upsert-form
                              (assoc form :modified-by (-> session :identity :username)))))
+
+                 (api/GET "/forms/applications/:form-id" []
+                          :path-params [form-id :- Long]
+                          :summary "Return form and applications."
+                          :return {:applications [ataru-schema/ApplicationInfo]}
+                          (trying (fn [] {:applications (application-store/get-application-list form-id)})))
+
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
                            :body [error-details client-error/ClientError]
                            (do
                              (client-error/log-client-error error-details)
                              (ok {})))
+
                  (api/context "/applications" []
                    :tags ["applications-api"]
-                   (api/POST "/:form-id" []
-                     :path-params [form-id :- Long]
-                     :summary "Return form and applications."
-                     :return {:form ataru-schema/Form
-                              :applications [ataru-schema/Application]}
-                     :body [application-request (s/maybe ataru-schema/ApplicationRequest)]
-                     (try
-                       (let [form         (form-store/fetch-form form-id)
-                             applications (application-store/fetch-applications form-id application-request)]
-                         (ok {:form         form
-                              :applications applications}))
-                       (catch Exception e
-                         (error e)
-                         (internal-server-error))))
 
                    (api/GET "/:form-id/count" []
-                     :path-params [form-id :- Long]
-                     :summary "Return count of applications with given form-id"
-                     :return {:form-id Long
+                            :path-params [form-id :- Long]
+                            :summary "Return count of applications with given form-id"
+                            :return {:form-id Long
                               :count Long}
-                     (ok (merge {:form-id form-id}
-                                (application-store/fetch-application-counts form-id))))
+                            (ok (merge {:form-id form-id}
+                                       (application-store/get-application-counts form-id))))
 
                    (api/GET "/:form-id/excel" []
                      :path-params [form-id :- Long]

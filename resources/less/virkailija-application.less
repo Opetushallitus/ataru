@@ -1,10 +1,17 @@
 @import "vars";
+@bottom-separator-color: #E6E6E6;
+
+.application-handling__overview {
+  background-color: @very-light-gray;
+  border-bottom: 1px solid @bottom-separator-color;
+}
 
 .application-handling__header {
   display: flex;
   align-items: flex-start;
   padding-bottom: 20px;
-  border-bottom: 1px solid #E6E6E6;
+  border-bottom: 1px solid @bottom-separator-color;
+  margin-bottom: 10px;
 }
 
 .application-handling__form-list-wrapper {
@@ -12,6 +19,7 @@
   display: inline-block;
   width: 100%;
   min-width: 300px;
+  margin-right: 20px;
 }
 
 .application-handling__form-list-open, .application-handling__form-list-closed {
@@ -68,7 +76,6 @@
   font-size: 14px;
   white-space: nowrap;
   margin-top: 12px;
-  margin-left: 20px;
 }
 
 @media only screen
@@ -76,4 +83,49 @@ and (max-width: 1000px) {
   .application-handling__header {
     flex-wrap: wrap;
   }
+  .application-handling__form-list-wrapper {
+    margin-right: 0;
+  }
+}
+
+.application-handling__list {
+  cursor: pointer;
+  overflow: auto;
+  height: 150px;
+  margin-bottom: 15px;
+}
+
+.application-handling__list-row {
+  padding: 0.5em;
+  margin: 0;
+  color: @blue-text-color;
+  display: block;
+
+  .application-handling__list-row--applicant-unknown {
+    color: gray;
+  }
+}
+
+.application-handling__list-header {
+  color: #5E5E5E;
+  font-size: 14px;
+}
+
+.application-handling__list-row--selected {
+  border-radius: 2px;
+  background-color: @selected-blue;
+  color: white;
+}
+
+.application-handling__list-row--applicant {
+  width: 50%;
+  display: inline-block;
+}
+.application-handling__list-row--time {
+  width: 25%;
+  display: inline-block;
+}
+.application-handling__list-row--state {
+  width: 25%;
+  display: inline-block;
 }

@@ -9,7 +9,6 @@
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
     :lang "fi",
     :form-id 703
-    :state :received
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "1", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "2", :fieldType "textField"}
@@ -20,7 +19,6 @@
    {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
     :lang "fi",
     :form-id 703
-    :state :received
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "Vastaus", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "lomakkeeseen", :fieldType "textField"}
@@ -30,7 +28,6 @@
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
     :lang "fi",
     :form-id 703
-    :state :received
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "a", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "b", :fieldType "textField"}
@@ -39,10 +36,10 @@
      {:key "G__14", :label "Seitsemas kysymys", :value "f", :fieldType "textField"}
      {:key "G__47", :label "Kuudes kysymys", :value "g", :fieldType "textField"}]}])
 
-(describe "fetch-applications"
-  (tags :unit)
+(describe "get-applications"
+          (tags :unit)
 
-  (around [spec]
+          (around [spec]
     (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                   (should= :db ds-key)
                                   (should= "yesql-application-query-by-modified" (-> query-fn .meta :name))
@@ -50,7 +47,7 @@
                                   fixtures/applications)]
       (spec)))
 
-  (it "should return all applications belonging to a form"
-    (should= expected-applications (map
-                                     #(dissoc % :modified-time)
-                                     (store/fetch-applications form-id {})))))
+          (it "should return all applications belonging to a form"
+              (should= expected-applications (map
+                                               #(dissoc % :modified-time)
+                                               (store/get-applications form-id {})))))
