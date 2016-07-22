@@ -63,7 +63,7 @@
   (tags :unit)
   
     (with resp
-          (-> (mock/request :post "/lomake-editori/api/form"
+          (-> (mock/request :post "/lomake-editori/api/forms"
                             (json/generate-string fixtures/form-with-content))
               (update-in [:headers] assoc "cookie" (login))
               (mock/content-type "application/json")
