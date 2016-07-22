@@ -15,7 +15,7 @@
   (fn [db [_ form-id]]
     (ajax/http
       :get
-      (str "/lomake-editori/api/forms/applications/" form-id)
+      (str "/lomake-editori/api/applications/list?formId=" form-id)
       (fn [db form-and-applications]
         (update db :application
                 merge form-and-applications)))

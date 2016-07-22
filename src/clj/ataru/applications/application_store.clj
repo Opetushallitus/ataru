@@ -47,9 +47,6 @@
   [form-id]
   (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_id form-id})))
 
-(defn get-application-counts [form-id]
-  (first (exec-db :db yesql-fetch-application-counts {:form_id form-id})))
-
 (s/defn get-applications :- [schema/Application]
   [form-id :- schema/PositiveInteger application-request :- schema/ApplicationRequest]
   (let [request (merge

@@ -106,12 +106,6 @@
                    (trying #(form-store/upsert-form
                              (assoc form :modified-by (-> session :identity :username)))))
 
-                 (api/GET "/forms/applications/:form-id" []
-                          :path-params [form-id :- Long]
-                          :summary "Return form and applications."
-                          :return {:applications [ataru-schema/ApplicationInfo]}
-                          (trying (fn [] {:applications (application-store/get-application-list form-id)})))
-
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
                            :body [error-details client-error/ClientError]
@@ -122,15 +116,13 @@
                  (api/context "/applications" []
                    :tags ["applications-api"]
 
-                   (api/GET "/:form-id/count" []
-                            :path-params [form-id :- Long]
-                            :summary "Return count of applications with given form-id"
-                            :return {:form-id Long
-                              :count Long}
-                            (ok (merge {:form-id form-id}
-                                       (application-store/get-application-counts form-id))))
+                  (api/GET "/list" []
+                           :query-params [formId :- Long]
+                           :summary "Return applications header-level info for form"
+                           :return {:applications [ataru-schema/ApplicationInfo]}
+                           (trying (fn [] {:applications (application-store/get-application-list formId)})))
 
-                   (api/GET "/:form-id/excel" []
+                   (api/GET "/excel/:form-id" []
                      :path-params [form-id :- Long]
                      :summary "Return Excel export of the form and applications for it."
                      {:status 200
