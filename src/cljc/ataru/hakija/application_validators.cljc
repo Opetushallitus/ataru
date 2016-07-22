@@ -66,7 +66,7 @@
        (not (nil? (re-matches postal-code-pattern value)))))
 
 (def ^:private whitespace-pattern #"\s*")
-(def ^:private phone-pattern #"^\+?\d{6,}$")
+(def ^:private phone-pattern #"^\+?\d{4,}$")
 
 (defn ^:private phone
   [value]
