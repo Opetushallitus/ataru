@@ -125,7 +125,7 @@
 
 (s/defschema Application
   {(s/optional-key :key)           s/Str
-   :form                           Long
+   :form                           s/Int
    :lang                           s/Str
    :answers                        [Answer]
    (s/optional-key :modified-time) org.joda.time.DateTime})
