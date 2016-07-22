@@ -11,4 +11,5 @@
                  "invalid. email@example.com" false
                  "valid.email1@example.com,valid.email2@example.com" false
                  "invalid.em%0Ail@example.com" false
-                 "invalid.emäil@example.com" false})
+                 "invalid.emäil@example.com" false
+                 "last.part@short.c" false})

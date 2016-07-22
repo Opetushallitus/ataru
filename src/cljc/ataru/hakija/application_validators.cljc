@@ -49,7 +49,7 @@
             check-char (get check-chars check-mod)]
         (= (clojure.string/upper-case check) check-char)))))
 
-(def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9])+$")
+(def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9]){2,}$")
 (def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")
 
 (defn ^:private email
