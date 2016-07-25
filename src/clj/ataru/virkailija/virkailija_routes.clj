@@ -11,7 +11,6 @@
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
             [compojure.api.sweet :as api]
-            [compojure.core :as api-core]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -57,10 +56,10 @@
 
 (api/defroutes app-routes
   (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
-                {:cache-fingerprint cache-fingerprint
-                 :config (-> config
-                           :public-config
-                           json/generate-string)})))
+                                      {:cache-fingerprint cache-fingerprint
+                                       :config (-> config
+                                                   :public-config
+                                                   json/generate-string)})))
 
 (defn- render-file-in-dev
   [filename]
@@ -75,13 +74,6 @@
     (render-file-in-dev (str "spec/" filename ".js"))))
 
 (def api-routes
-  (api/api
-    {:swagger {:spec "/swagger.json"
-               :ui "/api-docs"
-               :data {:info {:version "1.0.0"
-                             :title "Ataru Clerk API"
-                             :description "Specifies the clerk API for Ataru"}}
-               :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -128,7 +120,7 @@
                      {:status 200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
-                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))})))))
+                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))))
 
 (api/defroutes resource-routes
   (route/resources "/"))
@@ -146,19 +138,27 @@
   component/Lifecycle
 
   (start [this]
-    (assoc this :routes (-> (api/routes
-                              redirect-routes
+    (assoc this :routes (-> (api/api
+                              {:swagger {:spec "/lomake-editori/swagger.json"
+                                         :ui "/lomake-editori/api-docs"
+                                         :data {:info {:version "1.0.0"
+                                                       :title "Ataru Clerk API"
+                                                       :description "Specifies the clerk API for Ataru"}}
+                                         :tags [{:name "form-api" :description "Form handling"}]}}
+                              (api/undocumented
+                                redirect-routes)
                               (api/context "/lomake-editori" []
-                                buildversion-routes
-                                test-routes)
-                              (-> (api/context "/lomake-editori" []
-                                    resource-routes
-                                    app-routes
-                                    api-routes
-                                    auth-routes)
-                                  api/routes
-                                  (api-core/wrap-routes auth-middleware/with-authentication))
-                              (route/not-found "Not found"))
+                                (api/undocumented
+                                  buildversion-routes
+                                  test-routes)
+                                (api/middleware [auth-middleware/with-authentication]
+                                  resource-routes
+                                  (api/undocumented
+                                    app-routes)
+                                  api-routes
+                                  auth-routes))
+                              (api/undocumented
+                                (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
                                                (update-in [:session] assoc :store (create-store))
                                                (update-in [:security] dissoc :content-type-options)
