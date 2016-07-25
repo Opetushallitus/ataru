@@ -32,6 +32,19 @@
    (assoc db :active-panel active-panel)))
 
 (register-handler
+  :drop-flash
+  (fn [db _]
+    (update db :flasher
+            (comp vec (fn [flashes] (vec (rest flashes)))))))
+
+(register-handler
   :flasher
-  (fn [db [_ flash]]
-    (assoc db :flasher flash)))
+  (do
+    (js/setInterval (fn [] (dispatch [:drop-flash])) 2000)
+    (fn [db [_ {:keys [message] :as flash}]]
+      (or (when message
+            (update
+              db
+              :flasher
+              (comp vec (fn [flashes] (conj flashes flash)))))
+          db))))
