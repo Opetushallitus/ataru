@@ -7,6 +7,7 @@
 
 (def auth-routes
   (api/context "/auth" []
+    (api/undocumented
            (api/GET "/cas" [ticket]
              (match [(login (if (:dev? env)
                               (str (System/currentTimeMillis))
@@ -17,4 +18,4 @@
            (api/POST "/cas" [logoutRequest]
                  (cas-initiated-logout logoutRequest))
            (api/GET "/logout" {session :session}
-                (logout session))))
+                (logout session)))))

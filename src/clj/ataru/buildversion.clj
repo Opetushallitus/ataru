@@ -4,6 +4,7 @@
 (defonce now (System/currentTimeMillis))
 
 (api/defroutes buildversion-routes
-  (api/GET "/buildversion.txt" []
-    {:status 200
-     :body (str now)}))
+  (api/undocumented
+    (api/GET "/buildversion.txt" []
+      {:status 200
+       :body (str now)})))

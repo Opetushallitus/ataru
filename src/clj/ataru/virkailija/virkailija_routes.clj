@@ -55,11 +55,12 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (api/defroutes app-routes
-  (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
-                                      {:cache-fingerprint cache-fingerprint
-                                       :config (-> config
-                                                   :public-config
-                                                   json/generate-string)})))
+  (api/undocumented
+    (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
+                                        {:cache-fingerprint cache-fingerprint
+                                         :config (-> config
+                                                     :public-config
+                                                     json/generate-string)}))))
 
 (defn- render-file-in-dev
   [filename]
@@ -68,10 +69,11 @@
     (not-found "Not found")))
 
 (api/defroutes test-routes
-  (api/GET "/test.html" []
-    (render-file-in-dev "templates/test.html"))
-  (api/GET "/spec/:filename.js" [filename]
-    (render-file-in-dev (str "spec/" filename ".js"))))
+  (api/undocumented
+    (api/GET "/test.html" []
+      (render-file-in-dev "templates/test.html"))
+    (api/GET "/spec/:filename.js" [filename]
+      (render-file-in-dev (str "spec/" filename ".js")))))
 
 (def api-routes
     (api/context "/api" []
@@ -123,16 +125,18 @@
                       :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))))
 
 (api/defroutes resource-routes
-  (route/resources "/"))
+  (api/undocumented
+    (route/resources "/")))
 
 (api/defroutes redirect-routes
-  (api/GET "/" [] (redirect "/lomake-editori/"))
-  ;; NOTE: This is now needed because of the way web-server is
-  ;; Set up on test and other environments. If you want
-  ;; to remove this, test the setup with some local web server
-  ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
-  ;; and verify that it works on test environment as well.
-  (api/GET "/lomake-editori" [] (redirect "/lomake-editori/")))
+  (api/undocumented
+    (api/GET "/" [] (redirect "/lomake-editori/"))
+    ;; NOTE: This is now needed because of the way web-server is
+    ;; Set up on test and other environments. If you want
+    ;; to remove this, test the setup with some local web server
+    ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
+    ;; and verify that it works on test environment as well.
+    (api/GET "/lomake-editori" [] (redirect "/lomake-editori/"))))
 
 (defrecord Handler []
   component/Lifecycle
@@ -145,19 +149,15 @@
                                                        :title "Ataru Clerk API"
                                                        :description "Specifies the clerk API for Ataru"}}
                                          :tags [{:name "form-api" :description "Form handling"}]}}
-                              (api/undocumented
-                                redirect-routes)
+                              redirect-routes
                               (api/context "/lomake-editori" []
-                                (api/undocumented
-                                  buildversion-routes
-                                  test-routes)
+                                buildversion-routes
+                                test-routes
                                 (api/middleware [auth-middleware/with-authentication]
-                                  (api/undocumented
-                                    resource-routes
-                                    app-routes)
+                                  resource-routes
+                                  app-routes
                                   api-routes
-                                  (api/undocumented
-                                    auth-routes)))
+                                  auth-routes))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
