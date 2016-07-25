@@ -11,7 +11,7 @@
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
             [compojure.api.sweet :as api]
-            [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
+            [compojure.core :as api-core]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -134,13 +134,13 @@
   (route/resources "/"))
 
 (api/defroutes redirect-routes
-  (GET "/" [] (redirect "/lomake-editori/"))
+  (api/GET "/" [] (redirect "/lomake-editori/"))
   ;; NOTE: This is now needed because of the way web-server is
   ;; Set up on test and other environments. If you want
   ;; to remove this, test the setup with some local web server
   ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
   ;; and verify that it works on test environment as well.
-  (GET "/lomake-editori" [] (redirect "/lomake-editori/")))
+  (api/GET "/lomake-editori" [] (redirect "/lomake-editori/")))
 
 (defrecord Handler []
   component/Lifecycle
@@ -156,8 +156,8 @@
                                     app-routes
                                     api-routes
                                     auth-routes)
-                                  routes
-                                  (wrap-routes auth-middleware/with-authentication))
+                                  api/routes
+                                  (api-core/wrap-routes auth-middleware/with-authentication))
                               (route/not-found "Not found"))
                             (wrap-defaults (-> site-defaults
                                                (update-in [:session] assoc :store (create-store))
