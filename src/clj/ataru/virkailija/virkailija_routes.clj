@@ -11,7 +11,6 @@
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
             [compojure.api.sweet :as api]
-            [compojure.core :refer [GET POST PUT defroutes context routes wrap-routes]]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -55,12 +54,13 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
-(defroutes app-routes
-  (GET "/" [] (selmer/render-file "templates/virkailija.html"
-                {:cache-fingerprint cache-fingerprint
-                 :config (-> config
-                           :public-config
-                           json/generate-string)})))
+(api/defroutes app-routes
+  (api/undocumented
+    (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
+                                        {:cache-fingerprint cache-fingerprint
+                                         :config (-> config
+                                                     :public-config
+                                                     json/generate-string)}))))
 
 (defn- render-file-in-dev
   [filename]
@@ -68,20 +68,14 @@
     (selmer/render-file filename {})
     (not-found "Not found")))
 
-(defroutes test-routes
-  (GET "/test.html" []
-    (render-file-in-dev "templates/test.html"))
-  (GET "/spec/:filename.js" [filename]
-    (render-file-in-dev (str "spec/" filename ".js"))))
+(api/defroutes test-routes
+  (api/undocumented
+    (api/GET "/test.html" []
+      (render-file-in-dev "templates/test.html"))
+    (api/GET "/spec/:filename.js" [filename]
+      (render-file-in-dev (str "spec/" filename ".js")))))
 
 (def api-routes
-  (api/api
-    {:swagger {:spec "/swagger.json"
-               :ui "/api-docs"
-               :data {:info {:version "1.0.0"
-                             :title "Ataru Clerk API"
-                             :description "Specifies the clerk API for Ataru"}}
-               :tags [{:name "form-api" :description "Form handling"}]}}
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -128,33 +122,44 @@
                      {:status 200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
-                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))})))))
+                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))))
 
-(defroutes resource-routes
-  (route/resources "/"))
+(api/defroutes resource-routes
+  (api/undocumented
+    (route/resources "/")))
+
+(api/defroutes redirect-routes
+  (api/undocumented
+    (api/GET "/" [] (redirect "/lomake-editori/"))
+    ;; NOTE: This is now needed because of the way web-server is
+    ;; Set up on test and other environments. If you want
+    ;; to remove this, test the setup with some local web server
+    ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
+    ;; and verify that it works on test environment as well.
+    (api/GET "/lomake-editori" [] (redirect "/lomake-editori/"))))
 
 (defrecord Handler []
   component/Lifecycle
 
   (start [this]
-    (assoc this :routes (-> (routes (GET "/" [] (redirect "/lomake-editori/"))
-                              ;; NOTE: This is now needed because of the way web-server is
-                              ;; Set up on test and other environments. If you want
-                              ;; to remove this, test the setup with some local web server
-                              ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
-                              ;; and verify that it works on test environment as well.
-                              (GET "/lomake-editori" [] (redirect "/lomake-editori/"))
-                              (context "/lomake-editori" []
+    (assoc this :routes (-> (api/api
+                              {:swagger {:spec "/lomake-editori/swagger.json"
+                                         :ui "/lomake-editori/api-docs"
+                                         :data {:info {:version "1.0.0"
+                                                       :title "Ataru Clerk API"
+                                                       :description "Specifies the clerk API for Ataru"}}
+                                         :tags [{:name "form-api" :description "Form handling"}]}}
+                              redirect-routes
+                              (api/context "/lomake-editori" []
                                 buildversion-routes
-                                test-routes)
-                              (-> (context "/lomake-editori" []
-                                    resource-routes
-                                    app-routes
-                                    api-routes
-                                    auth-routes)
-                                  routes
-                                  (wrap-routes auth-middleware/with-authentication))
-                              (route/not-found "Not found"))
+                                test-routes
+                                (api/middleware [auth-middleware/with-authentication]
+                                  resource-routes
+                                  app-routes
+                                  api-routes
+                                  auth-routes))
+                              (api/undocumented
+                                (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
                                                (update-in [:session] assoc :store (create-store))
                                                (update-in [:security] dissoc :content-type-options)

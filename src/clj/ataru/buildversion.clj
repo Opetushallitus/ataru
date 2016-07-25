@@ -1,9 +1,10 @@
 (ns ataru.buildversion
-  (:require [compojure.core :refer [GET defroutes routes]]))
+  (:require [compojure.api.sweet :as api]))
 
 (defonce now (System/currentTimeMillis))
 
-(defroutes buildversion-routes
-  (GET "/buildversion.txt" []
-    {:status 200
-     :body (str now)}))
+(api/defroutes buildversion-routes
+  (api/undocumented
+    (api/GET "/buildversion.txt" []
+      {:status 200
+       :body (str now)})))
