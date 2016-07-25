@@ -2,7 +2,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.application-field-common :refer [answer-key
+            [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
                                                            textual-field-value
                                                            wrapper-id]]
@@ -122,6 +122,6 @@
             {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
     (not (contains? field-descriptor :children)) (into args)))
 
-(defn render-editable-fields [form-data]
+(defn editable-fields [form-data]
   (when form-data
-    (mapv render-field (:content form-data))))
+    (into [:div] (mapv render-field (:content form-data)))))
