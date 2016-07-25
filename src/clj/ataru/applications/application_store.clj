@@ -47,6 +47,9 @@
   [form-id]
   (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_id form-id})))
 
+(defn get-application [application-id]
+  (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
+
 (s/defn get-applications :- [schema/Application]
   [form-id :- s/Int application-request :- schema/ApplicationRequest]
   (let [request (merge
