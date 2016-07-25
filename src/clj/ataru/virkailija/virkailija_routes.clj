@@ -55,8 +55,8 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
-(defroutes app-routes
-  (GET "/" [] (selmer/render-file "templates/virkailija.html"
+(api/defroutes app-routes
+  (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
                 {:cache-fingerprint cache-fingerprint
                  :config (-> config
                            :public-config
@@ -68,10 +68,10 @@
     (selmer/render-file filename {})
     (not-found "Not found")))
 
-(defroutes test-routes
-  (GET "/test.html" []
+(api/defroutes test-routes
+  (api/GET "/test.html" []
     (render-file-in-dev "templates/test.html"))
-  (GET "/spec/:filename.js" [filename]
+  (api/GET "/spec/:filename.js" [filename]
     (render-file-in-dev (str "spec/" filename ".js"))))
 
 (def api-routes
@@ -130,10 +130,10 @@
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
                       :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))})))))
 
-(defroutes resource-routes
+(api/defroutes resource-routes
   (route/resources "/"))
 
-(defroutes redirect-routes
+(api/defroutes redirect-routes
   (GET "/" [] (redirect "/lomake-editori/"))
   ;; NOTE: This is now needed because of the way web-server is
   ;; Set up on test and other environments. If you want
@@ -146,12 +146,12 @@
   component/Lifecycle
 
   (start [this]
-    (assoc this :routes (-> (routes
+    (assoc this :routes (-> (api/routes
                               redirect-routes
-                              (context "/lomake-editori" []
+                              (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes)
-                              (-> (context "/lomake-editori" []
+                              (-> (api/context "/lomake-editori" []
                                     resource-routes
                                     app-routes
                                     api-routes
