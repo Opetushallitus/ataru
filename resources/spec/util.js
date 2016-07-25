@@ -28,7 +28,6 @@ var clickElement = function(selectFn) {
   return wait.until(function () {
     $e = selectFn()
     if (elementExists($e)) {
-      $e.click()
       triggerEvent($e, 'click')
       return true
     }
