@@ -180,12 +180,6 @@
                                                  (dispatch [:editor/save-form]))}))))))
 
 (register-handler
-  :editor/fetch-form-content
-  (fn [db [_ selected-form-id]]
-    (fetch-form-content! selected-form-id)
-    db))
-
-(register-handler
   :editor/select-form
   (fn [db [_ form-id]]
     (with-form-id [db previous-form-id]
