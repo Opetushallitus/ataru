@@ -62,7 +62,7 @@
          (match [@loading? @flash]
                 [false {:error-type :concurrent-edit
                         :message message}]
-                [:div.flasher {:class "concurrent-edit-error animated flash"}
+                [:div.flasher.concurrent-edit-error.animated.flash
                  [:span message]]
 
                 [false {:detail detailed-error
