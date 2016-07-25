@@ -152,11 +152,12 @@
                                   buildversion-routes
                                   test-routes)
                                 (api/middleware [auth-middleware/with-authentication]
-                                  resource-routes
                                   (api/undocumented
+                                    resource-routes
                                     app-routes)
                                   api-routes
-                                  auth-routes))
+                                  (api/undocumented
+                                    auth-routes)))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
