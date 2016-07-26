@@ -12,34 +12,6 @@
   (reset! open (not @open))
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
-(defn applications []
-  (let [applications (subscribe [:state-query [:application :applications]])
-        selected-id (subscribe [:state-query [:application :selected-id]])]
-    (into [:div.application-handling__list
-           ]
-          (for [application @applications
-                :let        [id       (:id application)
-                             time      (t/time->str (:modified-time application))
-                             applicant (:applicant-name application)]]
-            [:div.application-handling__list-row
-             {:on-click #(dispatch [:application/select-application (:id application)])
-              :class    (when (= @selected-id id)
-                          "application-handling__list-row--selected")}
-             [:span.application-handling__list-row--applicant
-              (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-             [:span.application-handling__list-row--time time]
-             [:span.application-handling__list-row--state
-              (case (:state application)
-                "received" "Saapunut"
-                "Tuntematon")]]))))
-
-(defn application-list []
-    [:div
-     [:div.application-handling__list-header.application-handling__list-row
-      [:span.application-handling__list-row--applicant "Hakija"]
-      [:span.application-handling__list-row--time "Saapunut"]
-      [:span.application-handling__list-row--state "Tila"]]
-     [applications]])
 
 (defn form-list-arrow-up [open]
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
@@ -84,27 +56,59 @@
         [form-list-opened @forms @selected-form-id open]
         [form-list-closed @selected-form open])])))
 
-(defn excel-download-link []
-  (let [applications (subscribe [:state-query [:application :applications]])
-        form-id (subscribe [:state-query [:editor :selected-form-id]])]
-    (fn []
-      (when (> (count @applications) 0)
+(defn excel-download-link [applications]
+  (let [form-id (subscribe [:state-query [:editor :selected-form-id]])]
+    (fn [applications]
+      (when (> (count applications) 0)
         [:a.application-handling__excel-download-link
          {:href (str "/lomake-editori/api/applications/excel/" @form-id)}
-         (str "Lataa hakemukset Excel-muodossa (" (count @applications) ")")]))))
+         (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
-(defn application-contents []
-  (let [selected-form (subscribe [:editor/selected-form])
-        selected-application (subscribe [:state-query [:application :selected-application]])]
-    (fn []
-      (when @selected-application [readonly-contents/readonly-fields @selected-form @selected-application]))))
+(defn application-list-contents [applications]
+  (let [selected-id (subscribe [:state-query [:application :selected-id]])]
+    (fn [applications]
+      (into [:div.application-handling__list]
+        (for [application applications
+              :let        [id       (:id application)
+                           time      (t/time->str (:modified-time application))
+                           applicant (:applicant-name application)]]
+          [:div.application-handling__list-row
+           {:on-click #(dispatch [:application/select-application (:id application)])
+            :class    (when (= @selected-id id)
+                        "application-handling__list-row--selected")}
+           [:span.application-handling__list-row--applicant
+            (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+           [:span.application-handling__list-row--time time]
+           [:span.application-handling__list-row--state
+            (case (:state application)
+              "received" "Saapunut"
+              "Tuntematon")]])))))
+
+(defn application-list [applications]
+  [:div
+   [:div.application-handling__list-header.application-handling__list-row
+    [:span.application-handling__list-row--applicant "Hakija"]
+    [:span.application-handling__list-row--time "Saapunut"]
+    [:span.application-handling__list-row--state "Tila"]]
+   [application-list-contents applications]])
+
+(defn application-contents [applications]
+  (let [selected-form           (subscribe [:editor/selected-form])
+        selected-id             (subscribe [:state-query [:application :selected-id]])
+        selected-application    (subscribe [:state-query [:application :selected-application]])
+        belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
+    (fn [applications]
+      (when (belongs-to-current-form @selected-id applications)
+        [readonly-contents/readonly-fields @selected-form @selected-application]))))
 
 (defn application []
-  [:div
-   [:div.application-handling__overview
-    [:div.application-handling__container.panel-content
-      [:div.application-handling__header
-        [form-list]
-        [excel-download-link]]
-      [application-list]
-      [application-contents]]]])
+  (let [applications (subscribe [:state-query [:application :applications]])]
+    (fn []
+      [:div
+       [:div.application-handling__overview
+        [:div.application-handling__container.panel-content
+          [:div.application-handling__header
+            [form-list]
+            [excel-download-link @applications]]
+          [application-list @applications]
+          [application-contents @applications]]]])))

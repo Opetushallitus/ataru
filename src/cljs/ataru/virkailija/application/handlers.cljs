@@ -9,7 +9,9 @@
   :application/select-application
   (fn [db [_ application-id]]
     (dispatch [:application/fetch-application application-id])
-    (assoc-in db [:application :selected-id] application-id)))
+    (-> db
+        (assoc-in [:application :selected-id] application-id)
+        (assoc-in [:application :selected-application] nil))))
 
 (register-handler
   :application/fetch-applications
