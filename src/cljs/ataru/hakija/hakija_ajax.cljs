@@ -1,7 +1,8 @@
 (ns ataru.hakija.hakija-ajax
   (:require [re-frame.core :refer [register-handler dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST]]))
+            [ajax.core :refer [GET POST]])
+  (:refer-clojure :exclude [get]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 

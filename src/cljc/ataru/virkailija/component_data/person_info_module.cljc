@@ -1,5 +1,6 @@
   (ns ataru.virkailija.component-data.person-info-module
-  (:require [ataru.virkailija.component-data.component :as component]))
+    (:require [ataru.virkailija.component-data.component :as component]
+              [clojure.walk]))
 
 (defn ^:private text-field
   [labels & {:keys [size id validators] :or {size "M" validators []}}]

@@ -1,4 +1,5 @@
-(ns ataru.hakija.application-validators)
+(ns ataru.hakija.application-validators
+  (:require [clojure.string]))
 
 (defn ^:private required
   [value]

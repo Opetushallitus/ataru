@@ -116,7 +116,7 @@
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
-  {:id                              Long
+  {:id                              s/Int
    :key                             s/Str
    :lang                            s/Str
    :state                           s/Str
