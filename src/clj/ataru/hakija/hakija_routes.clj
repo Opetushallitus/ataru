@@ -3,7 +3,6 @@
             [ataru.hakija.email :as email]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
-            [compojure.core :refer [routes defroutes wrap-routes context GET]]
             [com.stuartsierra.component :as component]
             [schema.core :as s]
             [ataru.schema.form-schema :as ataru-schema]
@@ -61,12 +60,12 @@
   component/Lifecycle
 
   (start [this]
-    (assoc this :routes (routes
-                          (context "/hakemus" []
+    (assoc this :routes (api/routes
+                          (api/context "/hakemus" []
                             buildversion-routes
                             api-routes
                             (route/resources "/")
-                            (GET "/:id" []
+                            (api/GET "/:id" []
                               (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint})))
                           (route/not-found "<h1>Page not found</h1>"))))
 
