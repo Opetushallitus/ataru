@@ -21,6 +21,14 @@
         (assoc-in db [:application :applications] (:applications aplications-response))))
     db))
 
+(defn answers-indexed
+  "Convert the rest api version of application to a version which application
+  readonly-rendering can use (answers are indexed with key in a map)"
+  [application]
+  (let [answers    (:answers application)
+        answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
+    (assoc application :answers answer-map)))
+
 (register-handler
   :application/fetch-application
   (fn [db [_ application-id]]
@@ -28,5 +36,5 @@
       :get
       (str "/lomake-editori/api/applications/" application-id)
       (fn [db application]
-        (assoc-in db [:application :selected-application] application)))
+        (assoc-in db [:application :selected-application] (answers-indexed application))))
     db))
