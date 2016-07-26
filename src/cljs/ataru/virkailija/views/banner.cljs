@@ -54,34 +54,33 @@
           [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]]))))
 
 (defn status []
-  (let [flasher  (subscribe [:state-query [:flasher]])
-        loading? (subscribe [:state-query [:flasher :loading?]])]
+  (let [flash    (subscribe [:state-query [:flash]])
+        loading? (subscribe [:state-query [:flash :loading?]])
+        expired? (subscribe [:state-query [:flash :expired?]])]
     (fn []
       [:div
-       (when @flasher
-         (match [@loading? @flasher]
-                [false {:error-type :concurrent-edit
+       (when (spy @flash)
+         (match [@loading? @expired? @flash]
+                [false _ {:error-type :concurrent-edit
                         :message message}]
                 [:div.flasher.concurrent-edit-error.animated.flash
                  [:span message]]
-                [false {:detail detailed-error
+
+                [false _ {:detail detailed-error
                         :message message}]
                 [:div.flasher {:style {"color" "crimson"}}
                  [:span message]]
 
-                [true {:message nil}]
-                [:div]
-
-                [true {:message message}]
+                [_ false {:message (message :guard some?)}]
                 [:div.flasher
-                 [:span.animated.fadeOut message]]
+                 [:span message]]
 
-                [false {:message nil}]
-                [:div]
+                [_ true {:message (message :guard some?)}]
+                [:div.flasher.animated.fadeOut
+                 [:span message]]
 
-                [false {:message message}]
-                [:div.flasher
-                 [:span.animated.fadeIn message]]))])))
+                :else
+                [:div]))])))
 
 (defn top-banner []
   [:div.top-banner [:div.tabs logo [title]] [status] [profile]])
