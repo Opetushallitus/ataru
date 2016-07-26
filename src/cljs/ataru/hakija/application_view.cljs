@@ -1,24 +1,31 @@
 (ns ataru.hakija.application-view
   (:require [clojure.string :refer [trim]]
             [ataru.hakija.banner :refer [banner]]
-            [ataru.hakija.application-form-components :refer [render-editable-fields]]
-            [ataru.hakija.application-readonly :refer [render-readonly-fields]]
+            [ataru.hakija.application-form-components :refer [editable-fields]]
+            [ataru.application-common.application-readonly :as readonly-view]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
 (defn application-header [form-name]
   [:h1.application__header form-name])
 
+(defn readonly-fields [form]
+  (let [application (subscribe [:state-query [:application]])]
+    (fn [form]
+      [readonly-view/readonly-fields form @application])))
+
 (defn render-fields [form submit-status]
   (if (= :submitted submit-status)
-    (render-readonly-fields form)
-    (render-editable-fields form)))
+    [readonly-fields form]
+    [editable-fields form]))
 
 (defn application-contents []
   (let [form (subscribe [:state-query [:form]])
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
-      (into [:div.application__form-content-area [application-header (:name @form)]] (render-fields @form @submit-status)))))
+      [:div.application__form-content-area
+       [application-header (:name @form)]
+       [render-fields @form @submit-status]])))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])

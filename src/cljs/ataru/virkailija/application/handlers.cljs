@@ -7,8 +7,11 @@
 
 (register-handler
   :application/select-application
-  (fn [db [_ application-key]]
-    (assoc-in db [:application :selected] application-key)))
+  (fn [db [_ application-id]]
+    (dispatch [:application/fetch-application application-id])
+    (-> db
+        (assoc-in [:application :selected-id] application-id)
+        (assoc-in [:application :selected-application] nil))))
 
 (register-handler
   :application/fetch-applications
@@ -16,7 +19,24 @@
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?formId=" form-id)
-      (fn [db form-and-applications]
-        (update db :application
-                merge form-and-applications)))
+      (fn [db aplications-response]
+        (assoc-in db [:application :applications] (:applications aplications-response))))
+    db))
+
+(defn answers-indexed
+  "Convert the rest api version of application to a version which application
+  readonly-rendering can use (answers are indexed with key in a map)"
+  [application]
+  (let [answers    (:answers application)
+        answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
+    (assoc application :answers answer-map)))
+
+(register-handler
+  :application/fetch-application
+  (fn [db [_ application-id]]
+    (ajax/http
+      :get
+      (str "/lomake-editori/api/applications/" application-id)
+      (fn [db application]
+        (assoc-in db [:application :selected-application] (answers-indexed application))))
     db))

@@ -1,5 +1,4 @@
 @import "vars";
-@desktop-content-width: 981px;
 @banner-height: 33px;
 @field-margin-left: 245px;
 @form-select-width: 305px;
@@ -144,17 +143,6 @@
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
 }
-.application__wrapper-element--border {
-  border-top: solid #D7D7D7 1px;
-}
-.application__wrapper-heading {
-  color: @blue-text-color;
-  font-size: 16px;
-  font-weight: normal;
-  text-transform: uppercase;
-  position: absolute;
-  width: 245px;
-}
 .application__wrapper-contents {
   margin-top: 13px;
 }
@@ -163,12 +151,6 @@
   margin-right: auto;
   margin-left: auto;
   width: @desktop-content-width;
-}
-.application__form-field {
-  margin-left: @field-margin-left;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
 }
 .application__row-field-wrapper {
   margin-left: @field-margin-left;
@@ -180,16 +162,6 @@
 .application__row-field {
   margin-left: 0px;
   margin-right: 50px;
-}
-.application__form-field-label {
-  font-weight: 600;
-  font-size: 14px;
-  color: @blue-text-color;
-  margin-bottom: 6px;
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: space-between;
-  min-width: 230px;
 }
 .application__form-field-error {
   color: #E22070;
@@ -333,15 +305,8 @@ and (max-width: @desktop-content-width) {
     margin-top: 90px;
     width: auto;
   }
-  .application__form-field {
-    margin-left: 10px;
-  }
   .application__row-field-wrapper {
     margin: 0px;
-  }
-  .application__wrapper-heading {
-    position: static;
-    margin-left: 10px;
   }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,

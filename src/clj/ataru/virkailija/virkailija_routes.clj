@@ -116,6 +116,11 @@
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (trying (fn [] {:applications (application-store/get-application-list formId)})))
 
+                   (api/GET "/:application-id" []
+                            :path-params [application-id :- Long]
+                            :return ataru-schema/Application
+                            (trying #(application-store/get-application application-id)))
+
                    (api/GET "/excel/:form-id" []
                      :path-params [form-id :- Long]
                      :summary "Return Excel export of the form and applications for it."

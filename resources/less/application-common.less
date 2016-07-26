@@ -1,0 +1,51 @@
+/*
+  These styles are common between hakija and virkailija (virkailija displays
+  applications in read-only mode). If you change something here,
+  please remember to test virkailija and hakija-applications both!
+*/
+@import "vars";
+
+.application__form-field {
+  margin-left: 245px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.application__form-field-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: @blue-text-color;
+  margin-bottom: 6px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  min-width: 230px;
+}
+
+.application__wrapper-heading {
+  color: @blue-text-color;
+  font-size: 16px;
+  font-weight: normal;
+  text-transform: uppercase;
+  position: absolute;
+  width: 245px;
+}
+.application__wrapper-element--border {
+  border-top: solid #D7D7D7 1px;
+}
+
+@media only screen
+and (max-width: @desktop-content-width) {
+  .application__wrapper-heading {
+    position: static;
+    margin-left: 10px;
+  }
+  /*
+     Without this first selector, the rule will be dependent on include
+     order (for row fields) which seems to be pretty random
+   */
+  .application__row-field.application__form-field, .application__form-field {
+    margin-left: 10px;
+  }
+}
