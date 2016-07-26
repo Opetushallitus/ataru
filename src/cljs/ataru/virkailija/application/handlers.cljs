@@ -7,8 +7,9 @@
 
 (register-handler
   :application/select-application
-  (fn [db [_ application-key]]
-    (assoc-in db [:application :selected] application-key)))
+  (fn [db [_ application-id]]
+    (dispatch [:application/fetch-application application-id])
+    (assoc-in db [:application :selected-id] application-id)))
 
 (register-handler
   :application/fetch-applications
@@ -16,7 +17,16 @@
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?formId=" form-id)
-      (fn [db form-and-applications]
-        (update db :application
-                merge form-and-applications)))
+      (fn [db aplications-response]
+        (assoc-in db [:application :applications] (:applications aplications-response))))
+    db))
+
+(register-handler
+  :application/fetch-application
+  (fn [db [_ application-id]]
+    (ajax/http
+      :get
+      (str "/lomake-editori/api/applications/" application-id)
+      (fn [db application]
+        (assoc-in db [:application :selected-application] application)))
     db))

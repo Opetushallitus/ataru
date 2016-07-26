@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
+            [ataru.application-common.application-readonly :as readonly-contents]
             [ataru.cljs-util :refer [wrap-scroll-to]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -13,17 +14,16 @@
 
 (defn applications []
   (let [applications (subscribe [:state-query [:application :applications]])
-        selected-key (subscribe [:state-query [:application :selected]])]
+        selected-id (subscribe [:state-query [:application :selected-id]])]
     (into [:div.application-handling__list
            ]
           (for [application @applications
-                :let        [key       (:key application)
+                :let        [id       (:id application)
                              time      (t/time->str (:modified-time application))
-                             applicant (:applicant-name application)
-                             state     (:state application)]]
+                             applicant (:applicant-name application)]]
             [:div.application-handling__list-row
-             {:on-click #(dispatch [:application/select-application (:key application)])
-              :class    (when (= @selected-key key)
+             {:on-click #(dispatch [:application/select-application (:id application)])
+              :class    (when (= @selected-id id)
                           "application-handling__list-row--selected")}
              [:span.application-handling__list-row--applicant
               (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
@@ -93,6 +93,12 @@
          {:href (str "/lomake-editori/api/applications/excel/" @form-id)}
          (str "Lataa hakemukset Excel-muodossa (" (count @applications) ")")]))))
 
+(defn application-contents []
+  (let [selected-form (subscribe [:editor/selected-form])
+        selected-application (subscribe [:state-query [:application :selected-application]])]
+    (fn []
+      (when @selected-application [readonly-contents/readonly-fields @selected-form @selected-application]))))
+
 (defn application []
   [:div
    [:div.application-handling__overview
@@ -100,4 +106,5 @@
       [:div.application-handling__header
         [form-list]
         [excel-download-link]]
-      [application-list]]]])
+      [application-list]
+      [application-contents]]]])
