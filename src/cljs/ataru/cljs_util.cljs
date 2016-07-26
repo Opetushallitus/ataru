@@ -85,10 +85,11 @@
                                :stack stack-string}]
             (send-to-server-fn error-details)
             (when js/console
-              (.log js/console error-msg)
-              (.log js/console url)
-              (.log js/console (str "line: " line " col: " col))
-              (.log js/console (.-stack error-obj)))))))
+              (do
+                (.log js/console error-msg)
+                (.log js/console url)
+                (.log js/console (str "line: " line " col: " col))
+                (.log js/console (.-stack error-obj))))))))
 
 (defn cljs->str
   [data]
