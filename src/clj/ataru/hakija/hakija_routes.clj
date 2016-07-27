@@ -27,7 +27,7 @@
   (let [stored-app-id (application-store/add-new-application application)]
     (info "Stored application with id:" stored-app-id)
     (email/send-email-verification application)
-    (ok {})))
+    (ok {:id stored-app-id})))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
