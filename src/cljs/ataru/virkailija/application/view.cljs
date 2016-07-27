@@ -101,6 +101,14 @@
       (when (belongs-to-current-form @selected-id applications)
         [readonly-contents/readonly-fields @selected-form @selected-application]))))
 
+(defn application-review []
+  [:div.application-handling__review "Review controls placeholder"])
+
+(defn application-review-area [applications]
+  [:div.application-handling__review-area
+   [application-contents applications]
+   [application-review]])
+
 (defn application []
   (let [applications (subscribe [:state-query [:application :applications]])]
     (fn []
@@ -111,4 +119,4 @@
             [form-list]
             [excel-download-link @applications]]
           [application-list @applications]
-          [application-contents @applications]]]])))
+          [application-review-area @applications]]]])))

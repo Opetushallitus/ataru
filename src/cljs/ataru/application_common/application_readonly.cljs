@@ -33,4 +33,4 @@
 
 (defn readonly-fields [form-data application]
   (when form-data
-    (into [:div] (mapv #(field % application) (:content form-data)))))
+    (into [:div.application__readonly-container] (mapv #(field % application) (:content form-data)))))
