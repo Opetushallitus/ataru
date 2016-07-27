@@ -59,7 +59,7 @@
         expired? (subscribe [:state-query [:flash :expired?]])]
     (fn []
       [:div
-       (when (spy @flash)
+       (when @flash
          (match [@loading? @expired? @flash]
                 [false _ {:error-type :concurrent-edit
                         :message message}]
