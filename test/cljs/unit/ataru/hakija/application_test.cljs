@@ -3,9 +3,9 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               answers->valid-status
                                               create-application-to-submit
-                                              flatten-form-fields
                                               extract-wrapper-sections
-                                              wrapper-sections-with-validity]]))
+                                              wrapper-sections-with-validity]]
+            [ataru.util :as util]))
 
 (def form1
   {:id 37,
@@ -101,7 +101,7 @@
                       :params {:size "L"},
                       :fieldType "textField",
                       :fieldClass "formField"}]
-        actual (flatten-form-fields (:content form1))]
+        actual (util/flatten-form-fields (:content form1))]
     (is (= expected actual))))
 
 (deftest flattens-row-container-answers
@@ -132,7 +132,7 @@
                    :id "839cb685-749a-46da-b215-842bc13ed542",
                    :params {}
                    :wrapper-id "036a71bb-01dc-440e-8c05-80eea0ca9640"}]
-        actual (flatten-form-fields (:content person-info-form))]
+        actual (util/flatten-form-fields (:content person-info-form))]
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
