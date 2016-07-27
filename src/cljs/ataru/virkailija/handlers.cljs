@@ -34,11 +34,11 @@
 (register-handler
   :flasher
   (fn [db [_ flash]]
+    ; workaround css animation restart
     (js/setTimeout
       (fn []
         (dispatch [:state-update
                    (fn [db]
-                     (debug flash (:flash db))
                      (if (= flash (dissoc (:flash db) :expired?))
                        (update db :flash assoc :expired? true)))]))
       16)
