@@ -7,3 +7,6 @@
 var config = function(){};
 config.applicant = function(){};
 config.applicant.service_url = function(){};
+
+var StackTrace = function(){};
+StackTrace.fromError = function(){};
