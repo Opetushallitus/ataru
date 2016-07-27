@@ -105,7 +105,7 @@
         belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-id applications)
-        [:div.application-handling__review-area
+        [:div.application-handling__container.panel-content.application-handling__review-area
          [application-contents applications]
          [application-review]]))))
 
@@ -118,5 +118,5 @@
           [:div.application-handling__header
             [form-list]
             [excel-download-link @applications]]
-          [application-list @applications]
-          [application-review-area @applications]]]])))
+          [application-list @applications]]]
+       [application-review-area @applications]])))
