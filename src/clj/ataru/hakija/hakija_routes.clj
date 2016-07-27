@@ -8,7 +8,7 @@
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
             [compojure.api.sweet :as api]
-            [ring.util.http-response :refer [ok not-found]]
+            [ring.util.http-response :as response]
             [compojure.route :as route]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info]]))
@@ -18,8 +18,8 @@
 (defn- fetch-form [id]
   (let [form (form-store/fetch-form id)]
     (if form
-      (ok form)
-      (not-found form))))
+      (response/ok form)
+      (response/not-found form))))
 
 (defn- handle-application [application]
   (info "Received application:")
@@ -27,11 +27,11 @@
   (let [stored-app-id (application-store/add-new-application application)]
     (info "Stored application with id:" stored-app-id)
     (email/send-email-verification application)
-    (ok {:id stored-app-id})))
+    (response/ok {:id stored-app-id})))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
-  (ok {}))
+  (response/ok {}))
 
 (def api-routes
   (api/context "/api" []
