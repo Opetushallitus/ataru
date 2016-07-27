@@ -31,8 +31,7 @@
   (tags :hakija)
 
   (around [spec]
-    (with-redefs [;store/add-new-application (fn [_] application-id)
-                  email/send-email-verification (fn [_])]
+    (with-redefs [email/send-email-verification (fn [_])]
       (spec)))
 
   (before-all (db/init-db-fixture))
