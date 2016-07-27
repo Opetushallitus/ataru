@@ -92,7 +92,8 @@
 
   :main ataru.core
 
-  :cljsbuild {:builds [{:id           "virkailija-dev"
+  :cljsbuild {:jar true
+              :builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
                         :compiler     {:main                 "ataru.virkailija.core"
@@ -122,17 +123,24 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
+                                   :output-dir "resources/public/js/compiled/virkailija-app-out"
                                    :externs ["resources/virkailija-externs.js"]
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
+                                   :source-map "resources/public/js/compiled/virkailija-app.js.map"
+                                   :source-map-timestamp true
                                    :pretty-print false}}
 
                        {:id "hakija-min"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
+                                   :output-dir "resources/public/js/compiled/hakija-app-out"
+                                   :externs ["resources/hakija-externs.js"]
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
+                                   :source-map "resources/public/js/compiled/hakija-app.js.map"
+                                   :source-map-timestamp true
                                    :pretty-print false}}]}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]

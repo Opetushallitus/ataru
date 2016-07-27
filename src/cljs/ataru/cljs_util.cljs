@@ -76,20 +76,19 @@
   (set! (.-onerror js/window)
         (fn [error-msg url line col error-obj]
           (let [user-agent (-> js/window .-navigator .-userAgent)
-                stack-string (.-stack error-obj)
                 error-details {:error-message error-msg
                                :url url
                                :line line
                                :col col
-                               :user-agent user-agent
-                               :stack stack-string}]
-            (send-to-server-fn error-details)
-            (when js/console
-              (do
-                (.log js/console error-msg)
-                (.log js/console url)
-                (.log js/console (str "line: " line " col: " col))
-                (.log js/console (.-stack error-obj))))))))
+                               :user-agent user-agent}]
+            (-> ((.-fromError js/StackTrace) error-obj)
+                (.then (fn [frames]
+                         (->> (for [frame frames]
+                                (.toString frame))
+                              (interpose "\n")
+                              (apply str)
+                              (assoc error-details :stack)
+                              (send-to-server-fn)))))))))
 
 (defn cljs->str
   [data]
