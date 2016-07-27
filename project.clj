@@ -136,6 +136,7 @@
                         :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
                                    :output-dir "resources/public/js/compiled/hakija-app-out"
+                                   :externs ["resources/hakija-externs.js"]
                                    :optimizations :advanced
                                    :closure-defines {goog.DEBUG false}
                                    :source-map "resources/public/js/compiled/hakija-app.js.map"
