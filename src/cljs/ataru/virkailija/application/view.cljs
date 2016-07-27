@@ -98,7 +98,8 @@
     (fn [] [readonly-contents/readonly-fields @selected-form @selected-application])))
 
 (defn application-review []
-  [:div.application-handling__review "Review controls placeholder"])
+  [:div.application-handling__review
+   [:div.application-handling__review-header "Hakemuksen tila"]])
 
 (defn application-review-area [applications]
   (let [selected-id             (subscribe [:state-query [:application :selected-id]])
