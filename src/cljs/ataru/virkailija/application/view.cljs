@@ -92,10 +92,9 @@
     [:span.application-handling__list-row--state "Tila"]]
    [application-list-contents applications]])
 
-(defn application-contents []
-  (let [selected-form           (subscribe [:editor/selected-form])
-        selected-application    (subscribe [:state-query [:application :selected-application]])]
-    (fn [] [readonly-contents/readonly-fields @selected-form @selected-application])))
+(defn application-contents [selected-application]
+  (let [selected-form           (subscribe [:editor/selected-form])]
+    (fn [selected-application] [readonly-contents/readonly-fields @selected-form selected-application])))
 
 (defn application-review-events []
   [:div.application-handling__review-header "Tapahtumat"])
@@ -104,14 +103,24 @@
   [:div.application-handling__review
    [application-review-events]])
 
+(defn application-heading [application]
+  (let [answers (:answers application)
+        pref-name (-> answers :preferred-name :value)
+        last-name (-> answers :last-name :value)
+        ssn       (-> answers :ssn :value)]
+    [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
+
 (defn application-review-area [applications]
   (let [selected-id             (subscribe [:state-query [:application :selected-id]])
+        selected-application    (subscribe [:state-query [:application :selected-application]])
         belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-id applications)
-        [:div.application-handling__container.panel-content.application-handling__review-area
-         [application-contents applications]
-         [application-review]]))))
+        [:div.application-handling__container.panel-content
+         [application-heading @selected-application]
+         [:div.application-handling__review-area
+          [application-contents @selected-application]
+          [application-review]]]))))
 
 (defn application []
   (let [applications (subscribe [:state-query [:application :applications]])]
