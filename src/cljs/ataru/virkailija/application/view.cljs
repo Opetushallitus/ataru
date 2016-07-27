@@ -97,9 +97,12 @@
         selected-application    (subscribe [:state-query [:application :selected-application]])]
     (fn [] [readonly-contents/readonly-fields @selected-form @selected-application])))
 
+(defn application-review-events []
+  [:div.application-handling__review-header "Tapahtumat"])
+
 (defn application-review []
   [:div.application-handling__review
-   [:div.application-handling__review-header "Hakemuksen tila"]])
+   [application-review-events]])
 
 (defn application-review-area [applications]
   (let [selected-id             (subscribe [:state-query [:application :selected-id]])
