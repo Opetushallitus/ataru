@@ -116,10 +116,15 @@
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (trying (fn [] {:applications (application-store/get-application-list formId)})))
 
-                   (api/GET "/:application-id" []
-                            :path-params [application-id :- Long]
-                            :return ataru-schema/Application
-                            (trying #(application-store/get-application application-id)))
+                  (api/GET "/:application-id" []
+                           :path-params [application-id :- Long]
+                           :return ataru-schema/Application
+                           (trying #(application-store/get-application application-id)))
+
+                  (api/GET "/events/:application-id" []
+                           :path-params [application-id :- Long]
+                           :return s/Any
+                           (trying #(application-store/get-application-events application-id)))
 
                    (api/GET "/excel/:form-id" []
                      :path-params [form-id :- Long]

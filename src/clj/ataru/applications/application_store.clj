@@ -50,6 +50,9 @@
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
+(defn get-application-events [application-id]
+  (exec-db :db yesql-get-application-events {:application_id application-id}))
+
 (s/defn get-applications :- [schema/Application]
   [form-id :- s/Int application-request :- schema/ApplicationRequest]
   (let [request (merge
