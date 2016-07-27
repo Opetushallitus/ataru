@@ -92,22 +92,22 @@
     [:span.application-handling__list-row--state "Tila"]]
    [application-list-contents applications]])
 
-(defn application-contents [applications]
+(defn application-contents []
   (let [selected-form           (subscribe [:editor/selected-form])
-        selected-id             (subscribe [:state-query [:application :selected-id]])
-        selected-application    (subscribe [:state-query [:application :selected-application]])
-        belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
-    (fn [applications]
-      (when (belongs-to-current-form @selected-id applications)
-        [readonly-contents/readonly-fields @selected-form @selected-application]))))
+        selected-application    (subscribe [:state-query [:application :selected-application]])]
+    (fn [] [readonly-contents/readonly-fields @selected-form @selected-application])))
 
 (defn application-review []
   [:div.application-handling__review "Review controls placeholder"])
 
 (defn application-review-area [applications]
-  [:div.application-handling__review-area
-   [application-contents applications]
-   [application-review]])
+  (let [selected-id             (subscribe [:state-query [:application :selected-id]])
+        belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
+    (fn [applications]
+      (when (belongs-to-current-form @selected-id applications)
+        [:div.application-handling__review-area
+         [application-contents applications]
+         [application-review]]))))
 
 (defn application []
   (let [applications (subscribe [:state-query [:application :applications]])]
