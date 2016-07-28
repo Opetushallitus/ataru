@@ -15,7 +15,6 @@
                                (util/flatten-form-fields (:content form)))
           valid-field? (fn [answer]
                          (when-let [validators (get validators (:key answer))]
-                           (let [valid? (every? true? (map #(validator/validate % (:value answer)) validators))]
-                             valid?)))
+                           (every? true? (map #(validator/validate % (:value answer)) validators))))
           answers      (:answers application)]
       (every? valid-field? answers))))
