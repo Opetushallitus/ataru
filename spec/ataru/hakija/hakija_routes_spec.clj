@@ -16,6 +16,7 @@
 (def form-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
 (def form-invalid-phone-field (assoc-in application-fixtures/person-info-form-application [:answers 5 :value] "invalid phone number"))
 (def form-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 7 :value] "010101-123M"))
+(def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 10 :value] "0001"))
 
 (def handler (-> (routes/new-handler) .start :routes))
 
@@ -72,4 +73,6 @@
 
   (add-spec "should not validate form with invalid phone field" form-invalid-phone-field)
 
-  (add-spec "should not validate form with invalid ssn field" form-invalid-ssn-field))
+  (add-spec "should not validate form with invalid ssn field" form-invalid-ssn-field)
+
+  (add-spec "should not validate form with invalid postal code field" form-invalid-postal-code))
