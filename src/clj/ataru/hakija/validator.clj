@@ -13,7 +13,7 @@
                                   (fn [values option]
                                     (when-not (clojure.string/blank? (:value option))
                                       (concat values (vals (:label option)))))
-                           [])
+                                  [])
           validators     (reduce (fn [m field]
                                    (assoc m (:id field) (cond-> (select-keys field [:validators])
                                                           (= (:fieldType field) "dropdown") (assoc :allowed-values (allowed-values (:options field))))))
