@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.buildversion :refer [buildversion-routes]]
             [ataru.hakija.email :as email]
+            [ataru.hakija.validator :as validator]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [com.stuartsierra.component :as component]
@@ -24,10 +25,12 @@
 (defn- handle-application [application]
   (info "Received application:")
   (info application)
-  (let [stored-app-id (application-store/add-new-application application)]
-    (info "Stored application with id:" stored-app-id)
-    (email/send-email-verification application)
-    (response/ok {:id stored-app-id})))
+  (if (validator/valid-application application)
+    (let [stored-app-id (application-store/add-new-application application)]
+      (info "Stored application with id:" stored-app-id)
+      (email/send-email-verification application)
+      (response/ok {:id stored-app-id}))
+    (response/bad-request)))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
