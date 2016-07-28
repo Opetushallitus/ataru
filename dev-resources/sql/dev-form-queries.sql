@@ -10,6 +10,6 @@ delete from applications;
 -- Removes ALL forms
 delete from forms;
 
--- name: yesql-add-form-with-id-query<!
+-- name: yesql-set-form-id!
 -- Add form
-insert into forms (id, name, content, modified_by) values (:id, :name, :content, :modified_by);
+update forms set id = :new_id where id = :old_id

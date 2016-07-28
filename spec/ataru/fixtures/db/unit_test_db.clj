@@ -8,7 +8,8 @@
 (defqueries "sql/dev-form-queries.sql")
 
 (defn init-db-fixture []
-  (soresu-db/exec :db yesql-add-form-with-id-query<! form-fixtures/person-info-form))
+  (let [id (:id (form-store/upsert-form form-fixtures/person-info-form))]
+    (soresu-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id form-fixtures/person-info-form)})))
 
 (defn clear-database []
   (soresu-db/exec :db yesql-delete-all-application_events! {})
