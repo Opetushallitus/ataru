@@ -120,7 +120,7 @@
                            :path-params [application-id :- Long]
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
-                                    :events      s/Any}
+                                    :events      [ataru-schema/Event]}
                            (trying (fn []
                                      {:application (application-store/get-application application-id)
                                       :events      (application-store/get-application-events application-id)})))
