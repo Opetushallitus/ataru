@@ -31,8 +31,8 @@
                                 :preferred_name (find-value-from-answers "preferred-name" answers)
                                 :last_name (find-value-from-answers "last-name" answers)
                                 :content {:answers answers}}
-          app-id               (first (yesql-add-application-query<! application-to-store connection))]
-      (yesql-add-application-event! {:application_id (second app-id) :event_type "received"} connection)
+          app-id               (:id (yesql-add-application-query<! application-to-store connection))]
+      (yesql-add-application-event! {:application_id app-id :event_type "received"} connection)
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]

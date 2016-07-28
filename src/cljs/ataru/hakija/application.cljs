@@ -1,27 +1,6 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [cljs.core.match :refer-macros [match]]))
-
-(defn- flatten-form-fields [fields]
-  (flatten
-    (for [field fields]
-      (match
-        [field]
-
-        [{:fieldClass "wrapperElement"
-          :fieldType  "fieldset"
-          :children   children}]
-        (flatten-form-fields
-          (map #(assoc % :wrapper-id (:id field)) children))
-
-        [{:fieldClass "wrapperElement"
-          :fieldType  "rowcontainer"
-          :children   children
-          :wrapper-id wrapper-id}]
-        (flatten-form-fields
-          (map #(assoc % :wrapper-id wrapper-id) children))
-
-        :else field))))
+  (:require [ataru.util :as util]))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
@@ -35,7 +14,7 @@
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Mainly validity for now."
   [form]
-  (initial-valid-status (flatten-form-fields (:content form))))
+  (initial-valid-status (util/flatten-form-fields (:content form))))
 
 (defn answers->valid-status [all-answers]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))]
@@ -49,7 +28,7 @@
   (into {}
         (map
          (fn [field] [(:id field) field])
-         (flatten-form-fields (:content form)))))
+         (util/flatten-form-fields (:content form)))))
 
 (defn- create-answers-to-submit [answers form]
   (for [[ans-key ans-map] answers
