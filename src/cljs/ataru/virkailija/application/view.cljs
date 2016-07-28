@@ -114,10 +114,11 @@
 (defn application-review-notes []
   (let [notes (subscribe [:state-query [:application :review :notes]])]
     (fn []
-        [:div
-         [:div.application-handling__review-header "Muistiinpanot"]
-         [:textarea.application-handling__review-notes
-          {:value @notes}]])))
+      [:div
+       [:div.application-handling__review-header "Muistiinpanot"]
+       [:textarea.application-handling__review-notes
+        ; React doesn't like null, it leaves the previous value there, hence:
+        {:value (if @notes @notes "")}]])))
 
 (defn application-review []
   [:div.application-handling__review
