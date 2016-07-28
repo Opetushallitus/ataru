@@ -31,15 +31,22 @@
                    parse-body)]
      ~@body))
 
-(defn- have-application-in-db
-  [application-id]
-  (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
-    (= (:form application-fixtures/person-info-form-application) (:form actual))))
-
 (defn- have-any-application-in-db
   []
   (let [app-count (count (soresu-db/exec :db yesql-get-application-list {:form_id 15}))]
     (< 0 app-count)))
+
+(defmacro with-spec
+  [desc fixture]
+  `(it ~desc
+     (with-response resp# ~fixture
+       (should= 400 (:status resp#))
+       (should-not (have-any-application-in-db)))))
+
+(defn- have-application-in-db
+  [application-id]
+  (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
+    (= (:form application-fixtures/person-info-form-application) (:form actual))))
 
 (describe "POST /application"
   (tags :hakija)
@@ -57,11 +64,6 @@
       (should= 200 (:status resp))
       (should (have-application-in-db (get-in resp [:body :id])))))
 
-  (it "should not validate form with blank required field"
-    (with-response resp form-blank-required-field
-      (should= 400 (:status resp))
-      (should-not (have-any-application-in-db))))
+  (with-spec "should not validate form with blank required field" form-blank-required-field)
 
-  (it "should not validate form with invalid email field"
-    (with-response resp form-invalid-email-field
-      (should= 400 (:status resp)))))
+  (with-spec "should not validate form with invalid email field" form-invalid-email-field))
