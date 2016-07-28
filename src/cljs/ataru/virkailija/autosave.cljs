@@ -20,8 +20,7 @@
                              changed-predicate not=}}]
   {:pre [(integer? interval-ms)
          (vector? subscribe-path)]}
-  (let [interval-ch       (chan (sliding-buffer 1))
-        value-to-watch    (subscribe [:state-query subscribe-path])
+  (let [value-to-watch    (subscribe [:state-query subscribe-path])
         previous          (atom @value-to-watch)
         change            (chan (sliding-buffer 1))
         watch             (fn [_ _ old new]
