@@ -1,7 +1,9 @@
 (ns ataru.hakija.application-validators
   (:require [clojure.string]
-            [clj-time.core :as c]
-            [clj-time.format :as f]))
+            #?(:clj  [clj-time.core :as c]
+               :cljs [cljs-time.core :as c])
+            #?(:clj  [clj-time.format :as f]
+               :cljs [cljs-time.format :as f])))
 
 (defn ^:private required?
   [value]
@@ -40,8 +42,6 @@
                             28 "W"
                             29 "X"
                             30 "Y"})
-
-
 
 (defn ^:private ssn?
   [value]
@@ -87,15 +87,30 @@
     (->> (clojure.string/trim value)
          (re-matches date-pattern))))
 
-(def ^:private past-date?
-  (let [formatter  (f/formatter (c/time-zone-for-id "Europe/Helsinki") "ddMMYYYY" "dd.MM.YYYY")
-        parse-date (fn [d] (f/parse formatter d))]
-    (fn
-      [value]
-      (boolean
-        (and (date? value)
-             (some-> (parse-date value)
-                     (c/before? (c/today-at-midnight))))))))
+#?(:clj
+   (def parse-date
+     (let [formatter (f/formatter (c/time-zone-for-id "Europe/Helsinki")
+                                  "dd.MM.YYYY"
+                                  "ddMMYYYY")]
+       (fn [d]
+         (try
+           (f/parse formatter d)
+           (catch Exception _ nil)))))
+   :cljs
+   (def parse-date
+     (let [formatters (mapv f/formatter ["dd.MM.YYYY" "ddMMYYYY"])]
+       (fn [d]
+         (first
+           (filter some? (map
+                           #(try (f/parse % d)
+                                 (catch :default _ nil))
+                           formatters)))))))
+
+(defn ^:private past-date? [value]
+  (boolean
+    (and (date? value)
+         (some-> (parse-date value)
+                 (c/before? (c/today-at-midnight))))))
 
 (def validators {:required    required?
                  :ssn         ssn?
