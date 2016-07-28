@@ -36,7 +36,7 @@
   (let [app-count (count (soresu-db/exec :db yesql-get-application-list {:form_id 15}))]
     (< 0 app-count)))
 
-(defmacro with-spec
+(defmacro add-spec
   [desc fixture]
   `(it ~desc
      (with-response resp# ~fixture
@@ -64,6 +64,6 @@
       (should= 200 (:status resp))
       (should (have-application-in-db (get-in resp [:body :id])))))
 
-  (with-spec "should not validate form with blank required field" form-blank-required-field)
+  (add-spec "should not validate form with blank required field" form-blank-required-field)
 
-  (with-spec "should not validate form with invalid email field" form-invalid-email-field))
+  (add-spec "should not validate form with invalid email field" form-invalid-email-field))
