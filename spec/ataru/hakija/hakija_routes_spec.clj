@@ -53,7 +53,7 @@
     (= (:form application-fixtures/person-info-form-application) (:form actual))))
 
 (describe "POST /application"
-  (tags :hakija)
+  (tags :unit)
 
   (around [spec]
     (with-redefs [email/send-email-verification (fn [_])]
