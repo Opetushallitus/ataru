@@ -9,16 +9,26 @@
    against their associated validators."
   [application]
   (when-let [form (form-store/fetch-form (:form application))]
-    (let [validators   (reduce (fn [m field]
-                                 (assoc m (:id field) (:validators field)))
-                               {}
-                               (util/flatten-form-fields (:content form)))
-          valid-field? (fn [answer]
-                         (let [validators    (or
-                                               (get validators (:key answer))
-                                               [])
-                               valid-answer? (fn [validator]
-                                               (validator/validate validator (:value answer)))]
-                           (every? true? (map valid-answer? validators))))
-          answers      (:answers application)]
+    (let [allowed-values (partial reduce
+                                  (fn [values option]
+                                    (when-not (clojure.string/blank? (:value option))
+                                      (concat values (vals (:label option)))))
+                           [])
+          validators     (reduce (fn [m field]
+                                   (assoc m (:id field) (cond-> (select-keys field [:validators])
+                                                          (= (:fieldType field) "dropdown") (assoc :allowed-values (allowed-values (:options field))))))
+                                 {}
+                                 (util/flatten-form-fields (:content form)))
+          valid-field?   (fn [answer]
+                           (let [validators    (or
+                                                 (get validators (:key answer))
+                                                 [])
+                                 valid-answer? (fn [validator]
+                                                 (validator/validate validator (:value answer)))]
+                             (and
+                               (every? true? (map valid-answer? (:validators validators)))
+                               (or
+                                 (nil? (:allowed-values validators))
+                                 (some #(= (:value answer) %) (:allowed-values validators))))))
+          answers        (:answers application)]
       (every? valid-field? answers))))
