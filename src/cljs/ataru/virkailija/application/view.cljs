@@ -111,8 +111,17 @@
         [:div [:div.application-handling__review-header "Tapahtumat"]]
         (mapv #(event-row %) @events)))))
 
+(defn application-review-notes []
+  (let [notes (subscribe [:state-query [:application :notes]])]
+    (fn []
+        [:div
+         [:div.application-handling__review-header "Muistiinpanot"]
+         [:textarea.application-handling__review-notes
+          {:value @notes}]])))
+
 (defn application-review []
   [:div.application-handling__review
+   [application-review-notes]
    [application-review-events]])
 
 (defn application-heading [application]
