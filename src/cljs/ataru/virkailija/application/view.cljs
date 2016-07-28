@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
+            [cljs-time.format :as f]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
             [ataru.application-common.application-readonly :as readonly-contents]
@@ -92,14 +93,48 @@
     [:span.application-handling__list-row--state "Tila"]]
    [application-list-contents applications]])
 
-(defn application-contents [applications]
-  (let [selected-form           (subscribe [:editor/selected-form])
-        selected-id             (subscribe [:state-query [:application :selected-id]])
+(defn application-contents [selected-application]
+  (let [selected-form           (subscribe [:editor/selected-form])]
+    (fn [selected-application] [readonly-contents/readonly-fields @selected-form selected-application])))
+
+(def ^:private short-time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
+
+(defn event-row [event]
+  (let [time-str     (f/unparse short-time-formatter (:time event))
+        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
+    (case (:event-type event)
+      "received" (to-event-row "Hakemus saapunut")
+      "Tuntematon")))
+
+(defn application-review-events []
+  (let [events (subscribe [:state-query [:application :events]])]
+    (fn []
+      (into
+        [:div [:div.application-handling__review-header "Tapahtumat"]]
+        (mapv #(event-row %) @events)))))
+
+(defn application-review []
+  [:div.application-handling__review
+   [application-review-events]])
+
+(defn application-heading [application]
+  (let [answers (:answers application)
+        pref-name (-> answers :preferred-name :value)
+        last-name (-> answers :last-name :value)
+        ssn       (-> answers :ssn :value)]
+    [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
+
+(defn application-review-area [applications]
+  (let [selected-id             (subscribe [:state-query [:application :selected-id]])
         selected-application    (subscribe [:state-query [:application :selected-application]])
         belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-id applications)
-        [readonly-contents/readonly-fields @selected-form @selected-application]))))
+        [:div.application-handling__container.panel-content
+         [application-heading @selected-application]
+         [:div.application-handling__review-area
+          [application-contents @selected-application]
+          [application-review]]]))))
 
 (defn application []
   (let [applications (subscribe [:state-query [:application :applications]])]
@@ -110,5 +145,5 @@
           [:div.application-handling__header
             [form-list]
             [excel-download-link @applications]]
-          [application-list @applications]
-          [application-contents @applications]]]])))
+          [application-list @applications]]]
+       [application-review-area @applications]])))

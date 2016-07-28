@@ -121,11 +121,43 @@ and (max-width: 1000px) {
   width: 50%;
   display: inline-block;
 }
+
 .application-handling__list-row--time {
   width: 25%;
   display: inline-block;
 }
+
 .application-handling__list-row--state {
   width: 25%;
   display: inline-block;
+}
+
+.application-handling__review-area {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.application-handling__review {
+  color: #5E5E5E;
+  font-size: 14px;
+  background-color: @very-light-gray;
+  min-width: 407px;
+  border-top: solid #D7D7D7 1px;
+  padding: 21px;
+}
+
+.application-handling__review-area-main-heading {
+  color: @text-color;
+  font-weight: 600;
+}
+
+.application-handling__review-header {
+  color: @section-header-text;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.application-handling__event-timestamp {
+  display: inline-block;
+  width: 149px;
 }
