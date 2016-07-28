@@ -40,5 +40,6 @@
       (fn [db application-response]
         (-> db
             (assoc-in [:application :selected-application] (answers-indexed (:application application-response)))
-            (assoc-in [:application :events] (:events application-response)))))
+            (assoc-in [:application :events] (:events application-response))
+            (assoc-in [:application :review] (:review application-response)))))
     db))

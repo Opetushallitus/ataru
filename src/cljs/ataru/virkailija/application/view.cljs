@@ -112,7 +112,7 @@
         (mapv #(event-row %) @events)))))
 
 (defn application-review-notes []
-  (let [notes (subscribe [:state-query [:application :notes]])]
+  (let [notes (subscribe [:state-query [:application :review :notes]])]
     (fn []
         [:div
          [:div.application-handling__review-header "Muistiinpanot"]
