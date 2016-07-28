@@ -13,6 +13,7 @@
 (sql/defqueries "sql/application-queries.sql")
 
 (def form-blank-required-field (assoc-in application-fixtures/person-info-form-application [:answers 0 :value] ""))
+(def form-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
 
 (def handler (-> (routes/new-handler) .start :routes))
 
@@ -59,4 +60,8 @@
   (it "should not validate form with blank required field"
     (with-response resp form-blank-required-field
       (should= 400 (:status resp))
-      (should-not (have-any-application-in-db)))))
+      (should-not (have-any-application-in-db))))
+
+  (it "should not validate form with invalid email field"
+    (with-response resp form-invalid-email-field
+      (should= 400 (:status resp)))))
