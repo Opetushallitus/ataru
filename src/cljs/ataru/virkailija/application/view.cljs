@@ -99,9 +99,9 @@
 
 (def ^:private short-time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
-(defn even-row [event]
+(defn event-row [event]
   (let [time-str     (f/unparse short-time-formatter (:time event))
-        to-event-row (fn [caption] [:div (str time-str " " caption)])]
+        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
     (case (:event-type event)
       "received" (to-event-row "Hakemus saapunut")
       "Tuntematon")))
@@ -111,7 +111,7 @@
     (fn []
       (into
         [:div [:div.application-handling__review-header "Tapahtumat"]]
-        (mapv #(even-row %) @events)))))
+        (mapv #(event-row %) @events)))))
 
 (defn application-review []
   [:div.application-handling__review
