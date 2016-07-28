@@ -2,6 +2,7 @@
   (:require [yesql.core :refer [defqueries]]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.forms.form-store :as form-store]
+            [oph.soresu.common.config :refer [config]]
             [oph.soresu.common.db :as soresu-db]))
 
 (defqueries "sql/form-queries.sql")
@@ -12,6 +13,4 @@
     (soresu-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id form-fixtures/person-info-form)})))
 
 (defn clear-database []
-  (soresu-db/exec :db yesql-delete-all-application_events! {})
-  (soresu-db/exec :db yesql-delete-all-applications! {})
-  (soresu-db/exec :db yesql-delete-all-forms! {}))
+  (soresu-db/clear-db! :db (get-in config [:db :schema])))

@@ -5,6 +5,7 @@
             [ataru.hakija.email :as email]
             [ataru.hakija.hakija-routes :as routes]
             [cheshire.core :as json]
+            [manual-migrations :as migrations]
             [oph.soresu.common.db :as soresu-db]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
@@ -58,9 +59,10 @@
     (with-redefs [email/send-email-verification (fn [_])]
       (spec)))
 
-  (before (db/init-db-fixture))
-
-  (after (db/clear-database))
+  (before
+    (db/clear-database)
+    (migrations/migrate)
+    (db/init-db-fixture))
 
   (it "should validate application"
     (with-response resp application-fixtures/person-info-form-application
