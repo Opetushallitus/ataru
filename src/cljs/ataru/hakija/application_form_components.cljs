@@ -52,14 +52,17 @@
          [:span.application__form-field-error "Tarkista muoto"])])))
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])]
+  (let [application (subscribe [:state-query [:application]])
+        id (keyword (:id field-descriptor))
+        valid? (subscribe [:state-query [:application :answers id :valid]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
          [label field-descriptor size-class]
          [:input.application__form-text-input
           {:type      "text"
-           :class     size-class
+           :class     (cond-> size-class
+                        (not @valid?) (str " application__form-field-error "))
            :value     (textual-field-value field-descriptor @application)
            :on-change (partial textual-field-change field-descriptor)}]]))))
 
