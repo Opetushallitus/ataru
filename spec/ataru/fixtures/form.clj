@@ -99,7 +99,7 @@
                                               :children [{:label {:fi "Kotikunta", :sv "Bostadsort"},
                                                           :validators ["required"],
                                                           :fieldClass "formField",
-                                                          :id "municipality",
+                                                          :id "home-town",
                                                           :params {:size "M"},
                                                           :fieldType "textField"}
                                                          {:label {:fi "Postinumero", :sv "Postnummer"},

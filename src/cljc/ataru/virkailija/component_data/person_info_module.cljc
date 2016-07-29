@@ -68,7 +68,7 @@
   []
   (text-field {:fi "Katuosoite" :sv "Adress"} :size "L" :id :address))
 
-(defn ^:private municipality-component
+(defn ^:private home-town-component
   []
   (text-field {:fi "Kotikunta" :sv "Bostadsort"} :id :municipality))
 
@@ -76,9 +76,9 @@
   []
   (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators ["postal-code"]))
 
-(defn ^:private municipality-section
+(defn ^:private postal-office-section
   []
-  (component/row-section [(municipality-component)
+  (component/row-section [(home-town-component)
                           (postal-code-component)]))
 
 (defn ^:private native-language-section
@@ -105,6 +105,6 @@
                                                 (email-component)
                                                 (phone-component)
                                                 (street-address-component)
-                                                (municipality-section)
+                                                (postal-office-section)
                                                 (native-language-section)]
                                      :module :person-info})))

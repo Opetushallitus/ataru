@@ -20,7 +20,7 @@
                     :value "Aku",
                     :fieldType "textField",
                     :label {:fi "Kutsumanimi", :sv "Smeknamn"}}
-                   {:key "municipality",
+                   {:key "home-town",
                     :value "Ankkalinna",
                     :fieldType "textField",
                     :label {:fi "Kotikunta", :sv "Bostadsort"}}
