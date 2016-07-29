@@ -29,6 +29,7 @@
     (secretary/dispatch! "/editor"))
 
   (defroute "/editor" []
+    (println "## editor route")
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
@@ -42,6 +43,7 @@
           (dispatch [:editor/select-form id])))))
 
   (defroute #"/editor/(\d+)" [id]
+    (println "## editor id route")
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
     (when-let [parsed-id (js/Number id)]
@@ -53,6 +55,7 @@
           (dispatch [:editor/select-form parsed-id])))))
 
   (defroute #"/applications/(\d+)" [form-id]
+    (println "## applications id route")
     (let [parsed-id (js/Number form-id)]
       (dispatch [:editor/refresh-forms]) ;;Race select-formin kanssa, kato yltä kikkailu ^
       (dispatch [:editor/select-form parsed-id])

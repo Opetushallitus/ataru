@@ -112,13 +112,17 @@
         (mapv #(event-row %) @events)))))
 
 (defn application-review-notes []
-  (let [notes (subscribe [:state-query [:application :review :notes]])]
+  (let [review (subscribe [:state-query [:application :review]])
+        ; React doesn't like null, it leaves the previous value there, hence:
+        review->notes-str (fn [review] (let [notes (:notes @review)] (if notes notes "")))]
     (fn []
       [:div
        [:div.application-handling__review-header "Muistiinpanot"]
        [:textarea.application-handling__review-notes
-        ; React doesn't like null, it leaves the previous value there, hence:
-        {:value (if @notes @notes "")}]])))
+        {:value (review->notes-str review)
+         :on-change (fn [evt]
+                      (let [new-value (-> evt .-target .-value)]
+                        (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :notes new-value))])))}]])))
 
 (defn application-review []
   [:div.application-handling__review
