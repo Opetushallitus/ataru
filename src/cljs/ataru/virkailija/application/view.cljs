@@ -24,9 +24,7 @@
    (let [row-element [:div.application-handling__form-list-row
                       {:class (if selected? "application-handling__form-list-selected-row" "")
                        :on-click (if (not selected?)
-                                   #(do
-                                     (toggle-form-list-open open)
-                                     (dispatch [:editor/select-form (:id form)]))
+                                   #(toggle-form-list-open open)
                                    #(toggle-form-list-open open))}
                       (:name form)]]
      (if selected? [wrap-scroll-to row-element] row-element))])
