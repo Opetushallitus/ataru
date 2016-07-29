@@ -84,8 +84,10 @@
 (defn ^:private date?
   [value]
   (boolean
-    (->> (clojure.string/trim value)
-         (re-matches date-pattern))))
+    (some->>
+      value
+      clojure.string/trim
+      (re-matches date-pattern))))
 
 #?(:clj
    (def parse-date
