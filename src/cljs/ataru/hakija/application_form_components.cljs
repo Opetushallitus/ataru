@@ -61,8 +61,9 @@
          [label field-descriptor size-class]
          [:input.application__form-text-input
           {:type      "text"
-           :class     (cond-> size-class
-                        (not @valid?) (str " application__form-field-error "))
+           :class     (str size-class (if @valid?
+                                          " application__form-text-input--normal"
+                                          " application__form-field-error"))
            :value     (textual-field-value field-descriptor @application)
            :on-change (partial textual-field-change field-descriptor)}]]))))
 
