@@ -54,7 +54,7 @@
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (let [size-class (text-field-size->class (-> field-descriptor :params :size))]
+      (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
          [label field-descriptor size-class]
          [:input.application__form-text-input
