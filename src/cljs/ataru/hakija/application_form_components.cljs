@@ -22,9 +22,12 @@
     true))
 
 (defn- textual-field-change [text-field-data evt]
-  (let [value (-> evt .-target .-value)
-        valid (field-value-valid? text-field-data value)]
-    (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid}])))
+  (let [value  (-> evt .-target .-value)
+        valid? (field-value-valid? text-field-data value)]
+    (do
+      (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
+      (when-let [rules (and valid? (not-empty (:rules text-field-data)))]
+        (dispatch [:application/run-rules rules])))))
 
 (defn- init-dropdown-value
   [dropdown-data this]

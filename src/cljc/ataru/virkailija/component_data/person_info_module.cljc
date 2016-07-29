@@ -38,6 +38,7 @@
   (-> (component/dropdown)
       (merge {:label {:fi "Kansalaisuus" :sv "Nationalitet"}
               :validators [:required]
+              :rules [{rules/swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}]
               :id :nationality})
       (assoc :options [(dropdown-option "AFG" {:fi "Afganistan"})
                        (dropdown-option "ALA" {:fi "Ahvenanmaa"})

@@ -69,6 +69,11 @@
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
 
 (register-handler
+  :application/run-rules
+  (fn [db [_ rules]]
+    (rules/run-rules db rules)))
+
+(register-handler
   :application/default-handle-error
   default-error-handler)
 
