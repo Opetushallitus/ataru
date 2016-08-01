@@ -5,7 +5,8 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
-                                              extract-wrapper-sections]]))
+                                              extract-wrapper-sections]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn initialize-db [_ _]
   {:form nil
@@ -69,10 +70,25 @@
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
 
+(defn- extract-rules [content]
+  (->> (for [field content]
+         (if-let [children (:children field)]
+           (extract-rules children)
+           (:rules field)))
+       flatten
+       (filter not-empty)
+       vec))
+
 (register-handler
-  :application/run-rules
-  (fn [db [_ rules]]
-    (rules/run-rules db rules)))
+  :application/run-rule
+  (fn [db [_ rule]]
+    (if (not-empty rule)
+      (rules/run-rule rule db)
+      (reduce
+        (fn [db-accumulator rule]
+          (rules/run-rule rule db-accumulator))
+        db
+        (extract-rules (-> db :form :content))))))
 
 (register-handler
   :application/default-handle-error

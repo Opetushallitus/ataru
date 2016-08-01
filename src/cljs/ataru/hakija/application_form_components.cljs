@@ -7,7 +7,9 @@
                                                            textual-field-value
                                                            wrapper-id]]
             [ataru.hakija.application-validators :as validator]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [taoensso.timbre :refer-macros [spy debug]]))
+
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -94,11 +96,14 @@
    [:h2.application__wrapper-heading
     {:id (wrapper-id field-descriptor)}
     (-> field-descriptor :label :fi)]
-   (into [:div.application__wrapper-contents] (mapv render-field children))])
+   (into [:div.application__wrapper-contents]
+         (for [child children]
+           [render-field child]))])
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
-    (mapv #(render-field % :div-kwd :div.application__row-field.application__form-field) children)))
+        (for [child children]
+          [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -117,18 +122,21 @@
 
 (defn render-field
   [field-descriptor & args]
-  (cond-> (match field-descriptor
-            {:fieldClass "wrapperElement"
-             :fieldType  "fieldset"
-             :children   children} [wrapper-field field-descriptor children]
-            {:fieldClass "wrapperElement"
-             :fieldType  "rowcontainer"
-             :children   children} [row-wrapper children]
-            {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-            {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-            {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
-    (not (contains? field-descriptor :children)) (into args)))
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [field-descriptor & args]
+      (cond-> (match field-descriptor
+                     {:fieldClass "wrapperElement"
+                      :fieldType  "fieldset"
+                      :children   children} [wrapper-field field-descriptor children]
+                     {:fieldClass "wrapperElement"
+                      :fieldType  "rowcontainer"
+                      :children   children} [row-wrapper children]
+                     {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
+                     {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                     {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+        (not (contains? field-descriptor :children)) (into args)))))
 
 (defn editable-fields [form-data]
   (when form-data
-    (into [:div] (mapv render-field (:content form-data)))))
+    (into [:div] (for [content (:content form-data)]
+                   [render-field content]))))

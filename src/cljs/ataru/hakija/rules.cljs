@@ -1,21 +1,41 @@
 (ns ataru.hakija.rules
-  (:require [cljs.core.match :refer-macros [match]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+  (:require [cljs.core.match :refer-macros [match]]))
 
 (defn swap-ssn-birthdate-based-on-nationality
-  [fields-to-swap db])
+  [db _]
+  (let [nationality (-> db :application :answers :nationality)]
+    (when (:valid nationality)
+      (match (:value nationality)
+        "Suomi"
+        (-> db
+            (update-in [:application :answers :birth-date] dissoc :value)
+            (update-in [:application :ui :birth-date] assoc :visible? false)
+            (update-in [:application :ui :ssn] assoc :visible? true))
+
+        (_ :guard string?)
+        (-> db
+            (update-in [:application :answers :ssn] dissoc :value)
+            (update-in [:application :ui :ssn] assoc :visible? false)
+            (update-in [:application :ui :birth-date] assoc :visible? true))
+
+        nil
+        (-> db
+            (update-in [:application :answers :birth-date] dissoc :value)
+            (update-in [:application :answers :ssn] dissoc :value)
+            (update-in [:application :ui :birth-date] assoc :visible? false)
+            (update-in [:application :ui :ssn] assoc :visible? false))))))
 
 (defn- hakija-rule-to-fn [rule]
-  (match rule
+  (case rule
          :swap-ssn-birthdate-based-on-nationality
          swap-ssn-birthdate-based-on-nationality
-         :else nil))
+         nil))
 
-(defn run-rules
-  ([rules db]
-   (run-rules hakija-rule-to-fn rules db))
-  ([rule-to-fn rules db]
-   {:pre [(map? rules)
+(defn run-rule
+  ([rule db]
+   (run-rule hakija-rule-to-fn rule db))
+  ([rule-to-fn rule db]
+   {:pre [(map? rule)
           (map? db)]}
    (reduce-kv
      (fn [db-accumulator rule argument]
@@ -23,4 +43,4 @@
          (rule-fn db-accumulator argument)
          db-accumulator))
      db
-     rules)))
+     rule)))
