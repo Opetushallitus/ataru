@@ -38,13 +38,18 @@
       (assoc-in [:application :events] (:events application-response))
       (assoc-in [:application :review] (:review application-response))))
 
+(defn review-autosave-predicate [current prev]
+  (if (or (= current {}) (= prev {})) false ; Initial value before fetching
+      (not= current prev)))
+
 (defn start-application-review-autosave [db]
   (assoc-in
     db
     [:application :review-autosave]
     (autosave/interval-loop {:subscribe-path [:application :review]
+                             :changed-predicate review-autosave-predicate
                              :handler (fn [current prev]
-                                        (println "autosave current and preview:")
+                                        (println "autosave current and prev:")
                                         (.log js/console current)
                                         (.log js/console prev))})))
 
