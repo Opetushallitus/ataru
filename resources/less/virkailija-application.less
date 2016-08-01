@@ -1,5 +1,6 @@
 @import "vars";
 @bottom-separator-color: #E6E6E6;
+@review-separator-color: #D7D7D7;
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -142,7 +143,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   background-color: @very-light-gray;
   min-width: 407px;
-  border-top: solid #D7D7D7 1px;
+  border-top: solid @review-separator-color 1px;
   padding: 21px;
 }
 
@@ -155,6 +156,11 @@ and (max-width: 1000px) {
   color: @section-header-text;
   font-weight: 600;
   margin-bottom: 16px;
+}
+
+.application-handling__event-list {
+  border-top: solid @review-separator-color 1px;
+  padding-top: 9px;
 }
 
 .application-handling__event-timestamp {

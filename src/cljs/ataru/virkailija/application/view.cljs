@@ -108,7 +108,8 @@
   (let [events (subscribe [:state-query [:application :events]])]
     (fn []
       (into
-        [:div [:div.application-handling__review-header "Tapahtumat"]]
+        [:div.application-handling__event-list
+         [:div.application-handling__review-header "Tapahtumat"]]
         (mapv #(event-row %) @events)))))
 
 (defn application-review-notes []
