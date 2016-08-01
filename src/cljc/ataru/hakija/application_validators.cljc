@@ -72,7 +72,6 @@
 
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")
-(def ^:private date-pattern #"\d\d\.?\d\d\.?\d\d\d\d")
 
 (defn ^:private phone?
   [value]
@@ -80,14 +79,6 @@
     (let [parsed (clojure.string/replace value whitespace-pattern "")]
       (not (nil? (re-matches phone-pattern parsed))))
     false))
-
-(defn ^:private date?
-  [value]
-  (boolean
-    (some->>
-      value
-      clojure.string/trim
-      (re-matches date-pattern))))
 
 #?(:clj
    (def parse-date
@@ -107,6 +98,13 @@
                            #(try (f/parse % d)
                                  (catch :default _ nil))
                            formatters)))))))
+
+(defn ^:private date?
+  [value]
+  (boolean
+    (some->>
+      value
+      parse-date)))
 
 (defn ^:private past-date? [value]
   (boolean
