@@ -54,7 +54,7 @@
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           nil
-                                          :override-args {:params current}))})))
+                                          :override-args {:params (select-keys current [:id :notes :state])}))})))
 
 (register-handler
   :application/fetch-application

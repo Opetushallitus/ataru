@@ -120,7 +120,7 @@
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
-                                    :review      s/Any}
+                                    :review      ataru-schema/Review}
                            (trying (fn []
                                      {:application (application-store/get-application application-id)
                                       :events      (application-store/get-application-events application-id)
