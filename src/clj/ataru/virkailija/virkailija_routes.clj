@@ -119,10 +119,19 @@
                            :path-params [application-id :- Long]
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
-                                    :events      [ataru-schema/Event]}
+                                    :events      [ataru-schema/Event]
+                                    :review      ataru-schema/Review}
                            (trying (fn []
                                      {:application (application-store/get-application application-id)
-                                      :events      (application-store/get-application-events application-id)})))
+                                      :events      (application-store/get-application-events application-id)
+                                      :review      (application-store/get-application-review application-id)})))
+
+                   (api/PUT "/review" []
+                            :summary "Update existing application review"
+                            :body [review s/Any]
+                            (trying (fn []
+                                      (application-store/save-application-review review)
+                                      {})))
 
                    (api/GET "/excel/:form-id" []
                      :path-params [form-id :- Long]

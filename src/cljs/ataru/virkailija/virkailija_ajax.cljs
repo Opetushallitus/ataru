@@ -47,6 +47,7 @@
                                         (dispatch [:flasher {:loading? false
                                                              :message
                                                                        (match [method]
+                                                                              [:put] "Kaikki muutokset tallennettu"
                                                                               [:post] "Kaikki muutokset tallennettu"
                                                                               [:delete] "Tiedot poistettu"
                                                                               :else nil)}])

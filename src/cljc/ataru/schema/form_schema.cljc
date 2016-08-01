@@ -130,9 +130,17 @@
    :answers                        [Answer]
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
+(def application-states (s/enum "received" "accepted" "rejected"))
+
 (s/defschema Event
-  {:event-type (s/enum "received" "accepted" "rejected")
-  :time        org.joda.time.DateTime})
+  {:event-type  application-states
+   :time        org.joda.time.DateTime})
+
+(s/defschema Review
+  {:id                              s/Int
+   (s/optional-key :modified-time)  org.joda.time.DateTime
+   :state                           application-states
+   :notes                           (s/maybe s/Str)})
 
 (s/defschema ApplicationRequest
   ; limit number of applications returned

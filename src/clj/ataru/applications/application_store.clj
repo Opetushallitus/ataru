@@ -21,7 +21,9 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn add-new-application [application]
+(defn add-new-application
+  "Add application and also initial metadata (event for receiving application, and initial review record)"
+  [application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection           {:connection conn}
           answers              (:answers application)
@@ -33,6 +35,7 @@
                                 :content {:answers answers}}
           app-id               (:id (yesql-add-application-query<! application-to-store connection))]
       (yesql-add-application-event! {:application_id app-id :event_type "received"} connection)
+      (yesql-add-application-review! {:application_id app-id :state "received"} connection)
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
@@ -52,6 +55,12 @@
 
 (defn get-application-events [application-id]
   (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-events {:application_id application-id})))
+
+(defn get-application-review [application-id]
+  (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
+
+(defn save-application-review [review]
+  (exec-db :db yesql-save-application-review! (transform-keys ->snake_case review)))
 
 (s/defn get-applications :- [schema/Application]
   [form-id :- s/Int application-request :- schema/ApplicationRequest]

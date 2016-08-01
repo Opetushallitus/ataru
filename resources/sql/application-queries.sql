@@ -11,6 +11,9 @@ where a.form_id = :form_id order by a.modified_time desc;
 -- name: yesql-get-application-events
 select event_type, time from application_events where application_id = :application_id;
 
+-- name: yesql-get-application-review
+select id, modified_time, state, notes from application_reviews where application_id = :application_id;
+
 -- name: yesql-application-query-by-modified
 select key, lang, form_id as form, modified_time, content from applications where form_id = :form_id and lang = :lang order by modified_time desc limit :limit;
 
@@ -20,3 +23,11 @@ select key, lang, form_id as form, modified_time, content from applications wher
 -- name: yesql-add-application-event!
 -- Add application event
 insert into application_events (application_id, event_type) values (:application_id, :event_type);
+
+-- name: yesql-add-application-review!
+-- Add application review
+insert into application_reviews (application_id, state) values (:application_id, :state);
+
+-- name: yesql-save-application-review!
+-- Save modifications for existing review record
+update application_reviews set notes = :notes, modified_time = now() where id = :id;

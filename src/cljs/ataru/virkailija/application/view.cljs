@@ -108,11 +108,26 @@
   (let [events (subscribe [:state-query [:application :events]])]
     (fn []
       (into
-        [:div [:div.application-handling__review-header "Tapahtumat"]]
+        [:div.application-handling__event-list
+         [:div.application-handling__review-header "Tapahtumat"]]
         (mapv #(event-row %) @events)))))
+
+(defn application-review-notes []
+  (let [review (subscribe [:state-query [:application :review]])
+        ; React doesn't like null, it leaves the previous value there, hence:
+        review->notes-str (fn [review] (if-let [notes (:notes @review)] notes ""))]
+    (fn []
+      [:div
+       [:div.application-handling__review-header "Muistiinpanot"]
+       [:textarea.application-handling__review-notes
+        {:value (review->notes-str review)
+         :on-change (fn [evt]
+                      (let [new-value (-> evt .-target .-value)]
+                        (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :notes new-value))])))}]])))
 
 (defn application-review []
   [:div.application-handling__review
+   [application-review-notes]
    [application-review-events]])
 
 (defn application-heading [application]
