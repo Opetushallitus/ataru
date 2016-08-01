@@ -115,7 +115,7 @@
 (defn application-review-notes []
   (let [review (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
-        review->notes-str (fn [review] (let [notes (:notes @review)] (if notes notes "")))]
+        review->notes-str (fn [review] (if-let [notes (:notes @review)] notes ""))]
     (fn []
       [:div
        [:div.application-handling__review-header "Muistiinpanot"]
