@@ -126,6 +126,13 @@
                                       :events      (application-store/get-application-events application-id)
                                       :review      (application-store/get-application-review application-id)})))
 
+                   (api/PUT "/review" []
+                            :summary "Update existing application review"
+                            :body [review s/Any]
+                            (trying (fn []
+                                      (application-store/save-application-review review)
+                                      {})))
+
                    (api/GET "/excel/:form-id" []
                      :path-params [form-id :- Long]
                      :summary "Return Excel export of the form and applications for it."

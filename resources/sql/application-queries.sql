@@ -23,3 +23,11 @@ select key, lang, form_id as form, modified_time, content from applications wher
 -- name: yesql-add-application-event!
 -- Add application event
 insert into application_events (application_id, event_type) values (:application_id, :event_type);
+
+-- name: yesql-add-application-review!
+-- Add application review
+insert into application_reviews (application_id, state) values (:application_id, :state);
+
+-- name: yesql-save-application-review!
+-- Save modifications for existing review record
+update application_reviews set notes = :notes, modified_time = now() where id = :id;

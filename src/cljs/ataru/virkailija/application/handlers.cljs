@@ -48,10 +48,12 @@
     [:application :review-autosave]
     (autosave/interval-loop {:subscribe-path [:application :review]
                              :changed-predicate review-autosave-predicate
-                             :handler (fn [current prev]
-                                        (println "autosave current and prev:")
-                                        (.log js/console current)
-                                        (.log js/console prev))})))
+                             :handler (fn [current _]
+                                        (ajax/http
+                                          :put
+                                          "/lomake-editori/api/applications/review"
+                                          nil
+                                          :override-args {:params current}))})))
 
 (register-handler
   :application/fetch-application
