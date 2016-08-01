@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.hakija.hakija-ajax :refer [get post]]
+            [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
