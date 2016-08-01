@@ -39,8 +39,9 @@
       (assoc-in [:application :review] (:review application-response))))
 
 (defn review-autosave-predicate [current prev]
-  (if (or (= current {}) (= prev {})) false ; Initial value before fetching
-      (not= current prev)))
+  (if (not= (:id current) (:id prev))
+    false
+    (not= current prev)))
 
 (defn start-application-review-autosave [db]
   (assoc-in
