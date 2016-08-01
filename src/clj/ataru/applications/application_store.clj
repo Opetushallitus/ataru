@@ -35,7 +35,7 @@
                                 :content {:answers answers}}
           app-id               (:id (yesql-add-application-query<! application-to-store connection))]
       (yesql-add-application-event! {:application_id app-id :event_type "received"} connection)
-      (yesql-add-application-review! {:application_id app-id :state "received"})
+      (yesql-add-application-review! {:application_id app-id :state "received"} connection)
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
