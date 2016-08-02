@@ -145,3 +145,8 @@
 (s/defschema ApplicationRequest
   {(s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})
+
+(def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
+
+(s/defschema PostalCodes
+  {postal-code-key {s/Keyword s/Str}})
