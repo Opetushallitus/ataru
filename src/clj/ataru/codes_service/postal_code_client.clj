@@ -42,7 +42,7 @@
   PostalCodeService
 
   (get-postal-codes [this]
-    (let [url (str (get-in config [:codes-service :url]) "/koodisto-service/rest/posti/koodi")
+    (let [url (str (get-in config [:codes-service :url]) "/rest/posti/koodi")
           resp @(http/get url)]
       (->> resp
            :body

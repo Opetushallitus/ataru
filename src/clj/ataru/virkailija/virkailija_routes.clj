@@ -2,6 +2,7 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
+            [ataru.codes-service.postal-code-client :as postal-code-client]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
@@ -74,7 +75,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(def api-routes
+(defn api-routes [{:keys [postal-code-client]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -130,7 +131,15 @@
                      {:status 200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
-                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))))
+                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))
+
+                 (api/context "/postal-codes" []
+                   :tags ["postal-code-api"]
+
+                   (api/GET "/" []
+                     :summary "List all availble postal codes and postal office names"
+                     :return {:postal-codes ataru-schema/PostalCodes}
+                     (ok {:postal-codes (.get-postal-codes postal-code-client)})))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -157,7 +166,8 @@
                                                        :title "Ataru Clerk API"
                                                        :description "Specifies the clerk API for Ataru"}
                                                 :tags [{:name "form-api" :description "Form handling"}
-                                                       {:name "applications-api" :description "Application handling"}]}}}
+                                                       {:name "applications-api" :description "Application handling"}
+                                                       {:name "postal-code-api" :descriptino "Postal code service"}]}}}
                               redirect-routes
                               (api/context "/lomake-editori" []
                                 buildversion-routes
@@ -165,7 +175,7 @@
                                 (api/middleware [auth-middleware/with-authentication]
                                   resource-routes
                                   app-routes
-                                  api-routes
+                                  (api-routes this)
                                   auth-routes))
                               (api/undocumented
                                 (route/not-found "Not found")))
