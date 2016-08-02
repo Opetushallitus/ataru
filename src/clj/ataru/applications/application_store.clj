@@ -10,8 +10,7 @@
 (defqueries "sql/application-queries.sql")
 
 (defonce default-application-request
-  {:limit 100
-   :sort :by-date
+  {:sort :by-date
    :lang "fi"})
 
 (defn- exec-db

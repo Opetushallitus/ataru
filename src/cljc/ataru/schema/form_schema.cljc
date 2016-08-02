@@ -143,7 +143,5 @@
    :notes                           (s/maybe s/Str)})
 
 (s/defschema ApplicationRequest
-  ; limit number of applications returned
-  {(s/optional-key :limit) s/Int
-   (s/optional-key :sort) (s/enum :by-date)
+  {(s/optional-key :sort) (s/enum :by-date)
    (s/optional-key :lang) s/Str})

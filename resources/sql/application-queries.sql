@@ -15,7 +15,7 @@ select event_type, time from application_events where application_id = :applicat
 select id, modified_time, state, notes from application_reviews where application_id = :application_id;
 
 -- name: yesql-application-query-by-modified
-select key, lang, form_id as form, modified_time, content from applications where form_id = :form_id and lang = :lang order by modified_time desc limit :limit;
+select key, lang, form_id as form, modified_time, content from applications where form_id = :form_id and lang = :lang order by modified_time desc;
 
 -- name: yesql-get-application-by-id
 select key, lang, form_id as form, modified_time, content from applications where id = :application_id;
