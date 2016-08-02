@@ -3,7 +3,12 @@
 
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
-  (let [nationality (-> db :application :answers :nationality)]
+  (let [nationality (-> db :application :answers :nationality)
+        hide-both-fields #(-> db
+                             (update-in [:application :answers :birth-date] dissoc :value)
+                             (update-in [:application :answers :ssn] dissoc :value)
+                             (update-in [:application :ui :birth-date] assoc :visible? false)
+                             (update-in [:application :ui :ssn] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
         "Suomi"
@@ -16,12 +21,9 @@
         (-> db
             (update-in [:application :answers :ssn] dissoc :value)
             (update-in [:application :ui :ssn] assoc :visible? false)
-            (update-in [:application :ui :birth-date] assoc :visible? true)))
-      (-> db
-          (update-in [:application :answers :birth-date] dissoc :value)
-          (update-in [:application :answers :ssn] dissoc :value)
-          (update-in [:application :ui :birth-date] assoc :visible? false)
-          (update-in [:application :ui :ssn] assoc :visible? false)))))
+            (update-in [:application :ui :birth-date] assoc :visible? true))
+        :else (hide-both-fields))
+      (hide-both-fields))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
