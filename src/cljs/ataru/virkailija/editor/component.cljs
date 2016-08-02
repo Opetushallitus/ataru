@@ -268,7 +268,10 @@
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__module-wrapper
-       [:header.editor-form__component-header.editor-form__module-header (get-in @value [:label :fi])]
+       [:header.editor-form__module-header
+        [:span.editor-form__module-header-label (get-in @value [:label :fi])]
+        " "
+        [:span (get-in @value [:label-amendment :fi])]]
        [:div.editor-form__module-fields
         [:span.editor-form__module-fields-label "Sisältää kentät:"]
         " "

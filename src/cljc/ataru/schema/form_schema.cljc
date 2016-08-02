@@ -96,6 +96,7 @@
                                                          BasicElement)]
                              (s/optional-key :params) s/Any
                              (s/optional-key :label)  LocalizedString
+                             (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :helpText) LocalizedString
                              (s/optional-key :module) Module})
 
