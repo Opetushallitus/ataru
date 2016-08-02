@@ -28,8 +28,8 @@
         valid? (field-value-valid? text-field-data value)]
     (do
       (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
-      (when-let [rules (and valid? (not-empty (:rules text-field-data)))]
-        (dispatch [:application/run-rules rules])))))
+      (when-let [rules (not-empty (:rules text-field-data))]
+        (dispatch [:application/run-rule rules])))))
 
 (defn- init-dropdown-value
   [dropdown-data this]
