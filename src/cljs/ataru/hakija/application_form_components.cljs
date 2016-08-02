@@ -122,7 +122,9 @@
 
 (defn render-field
   [field-descriptor & args]
-  (let [ui (subscribe [:state-query [:application :ui]])]
+  (let [ui (subscribe [:state-query [:application :ui]])
+        visible? (fn [id]
+                   (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
       (cond-> (match field-descriptor
                      {:fieldClass "wrapperElement"
@@ -131,10 +133,14 @@
                      {:fieldClass "wrapperElement"
                       :fieldType  "rowcontainer"
                       :children   children} [row-wrapper children]
+                     {:fieldClass "formField"
+                      :id (_ :guard (complement visible?))} [:div]
+
                      {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
                      {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                      {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
-        (not (contains? field-descriptor :children)) (into args)))))
+        (and (empty? (:children field-descriptor))
+             (visible? (:id field-descriptor))) (into args)))))
 
 (defn editable-fields [form-data]
   (when form-data
