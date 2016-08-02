@@ -77,7 +77,10 @@
 
 (register-handler
   :application/run-rule
-  (fn [db [_ rule]] (application-run-rule db rule)))
+  (fn [db [_ rule]]
+    (if (#{:submitting :submitted} (-> db :application :submit-status))
+      db
+      (application-run-rule db rule))))
 
 (register-handler
   :application/default-handle-error
