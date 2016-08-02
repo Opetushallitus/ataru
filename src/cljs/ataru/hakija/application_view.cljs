@@ -20,7 +20,7 @@
       (if (= :submitted @submit-status)
         [readonly-fields form]
         (do
-          (dispatch [:application/run-rules])
+          (dispatch [:application/run-rule])
           [editable-fields form])))))
 
 (defn application-contents []

@@ -70,25 +70,14 @@
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
 
-(defn- extract-rules [content]
-  (->> (for [field content]
-         (if-let [children (:children field)]
-           (extract-rules children)
-           (:rules field)))
-       flatten
-       (filter not-empty)
-       vec))
+(defn application-run-rule [db rule]
+  (if (not-empty rule)
+    (rules/run-rule rule db)
+    (rules/run-all-rules db)))
 
 (register-handler
   :application/run-rule
-  (fn [db [_ rule]]
-    (if (not-empty rule)
-      (rules/run-rule rule db)
-      (reduce
-        (fn [db-accumulator rule]
-          (rules/run-rule rule db-accumulator))
-        db
-        (extract-rules (-> db :form :content))))))
+  (fn [db [_ rule]] (application-run-rule db rule)))
 
 (register-handler
   :application/default-handle-error
