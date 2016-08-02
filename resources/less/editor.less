@@ -96,7 +96,25 @@
   border: 1px solid @section-gray-border;
   border-radius: 2px;
   width: 100%;
+}
+
+.editor-form__module-header {
   background: @element-header-background;
+}
+
+/* Override component-header width */
+.editor-form__component-header.editor-form__module-header {
+  width: 100%;
+}
+
+.editor-form__module-fields {
+  font-size: 14px;
+  color: @blue-text-color;
+  margin: 15px;
+}
+
+.editor-form__module-fields-label {
+  font-weight: bold;
 }
 
 .editor-form__section_wrapper > .editor-form__component-wrapper:first-of-type {
