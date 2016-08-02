@@ -5,21 +5,23 @@
   [db _]
   (let [nationality (-> db :application :answers :nationality)
         hide-both-fields #(-> db
-                             (update-in [:application :answers :birth-date] dissoc :value)
-                             (update-in [:application :answers :ssn] dissoc :value)
+                             (update-in [:application :answers] dissoc :birth-date)
+                             (update-in [:application :answers] dissoc :ssn)
                              (update-in [:application :ui :birth-date] assoc :visible? false)
                              (update-in [:application :ui :ssn] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
         "Suomi"
         (-> db
-            (update-in [:application :answers :birth-date] dissoc :value)
+            (update-in [:application :answers] dissoc :birth-date)
+            (update-in [:application :answers] assoc :ssn {:value nil :valid false})
             (update-in [:application :ui :birth-date] assoc :visible? false)
             (update-in [:application :ui :ssn] assoc :visible? true))
 
         (_ :guard string?)
         (-> db
-            (update-in [:application :answers :ssn] dissoc :value)
+            (update-in [:application :answers] dissoc :ssn)
+            (update-in [:application :answers] assoc :birth-date {:value nil :valid false})
             (update-in [:application :ui :ssn] assoc :visible? false)
             (update-in [:application :ui :birth-date] assoc :visible? true))
         :else (hide-both-fields))
