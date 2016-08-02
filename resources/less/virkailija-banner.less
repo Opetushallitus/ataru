@@ -3,17 +3,32 @@
 @bar-height: 44px;
 
 .top-banner {
+  font-size: 14px;
+  justify-content: space-between;
+  width: 100%;
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 100px;
+  position: fixed;
+  top: 0;
+  flex-flow: row nowrap;
+  background-color: @pale-blue;
+  color: white;
+  z-index: 10;
+  .logo {
+    margin-left: 85px;
+    margin-right: 42px;
+  }
   .tabs {
     display: flex;
   }
-
   .title {
     display: flex;
     white-space: nowrap;
     .active-section {
       color: @paler-blue;
     }
-
     a { color: white; }
     a:hover {
       text-decoration: none;
