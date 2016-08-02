@@ -267,9 +267,6 @@
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
-      (println "module value")
-      (cljs.pprint/pprint @value)
-      (.log js/console @value)
       [:div.editor-form__module-wrapper
        [:header.editor-form__component-header.editor-form__module-header (get-in @value [:label :fi])]
        [:div.editor-form__module-fields
