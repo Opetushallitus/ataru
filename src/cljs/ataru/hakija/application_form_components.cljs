@@ -110,7 +110,7 @@
                               [:select.application__form-select
                                (for [option (:options field-descriptor)]
                                  ^{:key (:value option)}
-                                 [:option (get-in option [:label :fi])])]]])}))
+                                 [:option (select-keys option [:selected]) (get-in option [:label :fi])])]]])}))
 
 (defn render-field
   [field-descriptor & args]
