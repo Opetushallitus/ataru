@@ -1,7 +1,6 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [ataru.util :as util]
-            
+  (:require [ataru.util :as util]))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
