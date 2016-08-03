@@ -130,6 +130,7 @@
    :form                           s/Int
    :lang                           s/Str
    :answers                        [Answer]
+   (s/optional-key :id)            s/Int
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (def application-states (s/enum "received" "accepted" "rejected"))

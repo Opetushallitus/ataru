@@ -9,6 +9,7 @@
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
     :lang "fi",
     :form-id 703
+    :id 1
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "1", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "2", :fieldType "textField"}
@@ -19,6 +20,7 @@
    {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
     :lang "fi",
     :form-id 703
+    :id 2
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "Vastaus", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "lomakkeeseen", :fieldType "textField"}
@@ -28,6 +30,7 @@
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
     :lang "fi",
     :form-id 703
+    :id 3
     :answers
     [{:key "G__19", :label "Eka kysymys", :value "a", :fieldType "textField"}
      {:key "G__17", :label "Toka kysymys", :value "b", :fieldType "textField"}
