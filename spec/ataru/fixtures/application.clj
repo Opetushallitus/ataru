@@ -49,6 +49,7 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 15 12 30 55)
   :form_id 703
+  :id 1
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "1", :fieldType "textField"}
@@ -61,6 +62,7 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 15 14 30 55)
   :form_id 703
+  :id 2
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "Vastaus", :fieldType "textField"}
@@ -72,6 +74,7 @@
   :lang "fi",
   :modified-time (c/date-time 2016 6 16 6 0 0)
   :form_id 703
+  :id 3
   :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "a", :fieldType "textField"}
@@ -81,8 +84,14 @@
       {:key "G__14", :label {:fi "Seitsemas kysymys"}, :value "f", :fieldType "textField"}
       {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
 
+(def application-review
+  {:id 1,
+   :state "received",
+   :notes "Some notes about the applicant"})
+
 (def person-info-form-application {:form 15,
                                    :lang "fi",
+                                   :id 1
                                    :answers [{:key "b0839467-a6e8-4294-b5cc-830756bbda8a",
                                               :value "Vastaus tekstikysymykseen",
                                               :fieldType "textField",

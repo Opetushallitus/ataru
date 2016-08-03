@@ -33,7 +33,10 @@
 
   (around [spec]
     (with-redefs [application-store/exec-db (fn [& _] fixtures/applications)
-                  form-store/fetch-form (fn [& _] fixtures/form)]
+                  form-store/fetch-form (fn [& _] fixtures/form)
+                  application-store/get-application-review (fn [application-id]
+                                                             (when (= application-id 3)
+                                                               fixtures/application-review))]
       (spec)))
 
   (it "has expected values"
@@ -50,13 +53,13 @@
             (verify-row metadata-sheet 1
               ["Test fixture what is this" "703" "2016-06-14 12:34:56" "DEVELOPER"])
             (verify-row applications-sheet 0
-              ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys"])
+              ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "Muistiinpanot"])
             (verify-row applications-sheet 1
-              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 12:30:55" "1" "2" "3" "4" "5" "6" nil])
+              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 12:30:55" "1" "2" "3" "4" "5" "6" nil nil])
             (verify-row applications-sheet 2
-              ["956ae57b-8bd2-42c5-90ac-82bd0a4fd31f" "2016-06-15 14:30:55" "Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee"])
+              ["956ae57b-8bd2-42c5-90ac-82bd0a4fd31f" "2016-06-15 14:30:55" "Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee" nil])
             (verify-row applications-sheet 3
-              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 06:00:00" "a" "b" "d" "e" nil "g" "f"])
+              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 06:00:00" "a" "b" "d" "e" nil "g" "f" "Some notes about the applicant"])
             (verify-pane-information applications-sheet))
           (finally
             (.delete file))))))
