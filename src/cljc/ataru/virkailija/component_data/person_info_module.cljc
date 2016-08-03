@@ -29,7 +29,9 @@
 
 (defn ^:private dropdown-option
   [value labels & {:keys [default-value] :or {default-value false}}]
-  {:value value :label labels :default-value default-value})
+  (-> (component/dropdown-option)
+      (merge {:value value :label labels :default-value default-value})
+      (dissoc :focus?)))
 
 (defn ^:private nationality-component
   []
