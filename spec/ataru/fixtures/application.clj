@@ -86,7 +86,6 @@
 
 (def application-review
   {:id 1,
-   :modified-time #inst"2016-08-03T09:59:27.999874000-00:00",
    :state "received",
    :notes "Some notes about the applicant"})
 
