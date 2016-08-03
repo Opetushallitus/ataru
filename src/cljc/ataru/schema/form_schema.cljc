@@ -39,7 +39,8 @@
 (s/defschema Module (s/enum :person-info))
 
 (s/defschema Option {:value                  s/Str
-                     (s/optional-key :label) LocalizedString})
+                     (s/optional-key :label) LocalizedString
+                     (s/optional-key :default-value) (s/maybe s/Bool)})
 
 (s/defschema Button {:fieldClass              (s/eq "button")
                      :id                      s/Str
