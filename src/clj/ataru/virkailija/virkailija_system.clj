@@ -5,17 +5,23 @@
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
             [ataru.person-service.client :as person-service]
-            [ataru.virkailija.virkailija-routes :as handler]))
+            [ataru.virkailija.virkailija-routes :as handler]
+            [environ.core :refer [env]]))
 
 (defn new-system
-  ([http-port]
+  ([]
+   (new-system
+     (Integer/parseInt (get env :ataru-http-port "8350"))
+     (Integer/parseInt (get env :ataru-repl-port "3333"))))
+  ([http-port repl-port]
    (component/system-map
      :handler        (component/using
                        (handler/new-handler)
                        [:person-service
                         :postal-code-client])
 
-     :server-setup   {:port http-port :repl-port 3333}
+     :server-setup   {:port http-port
+                      :repl-port repl-port}
 
      :migration      (migrations/new-migration)
 
@@ -29,6 +35,4 @@
 
      :server         (component/using
                        (server/new-server)
-                       [:server-setup :handler])))
-  ([]
-   (new-system 8350)))
+                       [:server-setup :handler]))))

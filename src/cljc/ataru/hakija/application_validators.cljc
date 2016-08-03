@@ -1,7 +1,11 @@
 (ns ataru.hakija.application-validators
-  (:require [clojure.string]))
+  (:require [clojure.string]
+            #?(:clj  [clj-time.core :as c]
+               :cljs [cljs-time.core :as c])
+            #?(:clj  [clj-time.format :as f]
+               :cljs [cljs-time.format :as f])))
 
-(defn ^:private required
+(defn ^:private required?
   [value]
   (not (clojure.string/blank? value)))
 
@@ -39,7 +43,7 @@
                             29 "X"
                             30 "Y"})
 
-(defn ^:private ssn
+(defn ^:private ssn?
   [value]
   (when-not (nil? value)
     (when-let [[_ day month year _ individual check] (re-matches ssn-pattern value)]
@@ -53,7 +57,7 @@
 (def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9]){2,}$")
 (def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")
 
-(defn ^:private email
+(defn ^:private email?
   [value]
   (and (not (nil? value))
        (not (nil? (re-matches email-pattern value)))
@@ -61,7 +65,7 @@
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
-(defn ^:private postal-code
+(defn ^:private postal-code?
   [value]
   (and (not (nil? value))
        (not (nil? (re-matches postal-code-pattern value)))))
@@ -69,20 +73,55 @@
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")
 
-(defn ^:private phone
+(defn ^:private phone?
   [value]
   (if-not (nil? value)
     (let [parsed (clojure.string/replace value whitespace-pattern "")]
       (not (nil? (re-matches phone-pattern parsed))))
     false))
 
-(def validators {"required"    required
-                 "ssn"         ssn
-                 "email"       email
-                 "postal-code" postal-code
-                 "phone"       phone})
+#?(:clj
+   (def parse-date
+     (let [formatter (f/formatter (c/time-zone-for-id "Europe/Helsinki")
+                                  "dd.MM.YYYY"
+                                  "ddMMYYYY")]
+       (fn [d]
+         (try
+           (f/parse formatter d)
+           (catch Exception _ nil)))))
+   :cljs
+   (def parse-date
+     (let [formatters (mapv f/formatter ["d.M.YYYY" "ddMMYYYY"])]
+       (fn [d]
+         (first
+           (filter some? (map
+                           #(try (f/parse % d)
+                                 (catch :default _ nil))
+                           formatters)))))))
+
+(defn ^:private date?
+  [value]
+  (boolean
+    (some->>
+      value
+      parse-date)))
+
+(defn ^:private past-date? [value]
+  (boolean
+    (and (date? value)
+         (some-> (parse-date value)
+                 (c/before? (c/today-at-midnight))))))
+
+(def validators {:required    required?
+                 :ssn         ssn?
+                 :email       email?
+                 :postal-code postal-code?
+                 :phone       phone?
+                 :past-date   past-date?})
 
 (defn validate
   [validator value]
-  (when-let [validate-fn (get validators validator)]
+  (when-let [validate-fn (get validators (if (keyword? validator)
+                                           validator
+                                           (keyword validator)))]
     (validate-fn value)))

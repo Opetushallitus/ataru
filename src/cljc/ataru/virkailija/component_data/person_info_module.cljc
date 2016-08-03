@@ -6,7 +6,7 @@
   [labels & {:keys [size id validators] :or {size "M" validators []}}]
   (-> (component/text-field)
       (assoc :label labels)
-      (assoc :validators (conj validators "required"))
+      (assoc :validators (conj validators :required))
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
@@ -37,7 +37,8 @@
   []
   (-> (component/dropdown)
       (merge {:label {:fi "Kansalaisuus" :sv "Nationalitet"}
-              :validators ["required"]
+              :validators [:required]
+              :rules {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
               :id :nationality})
       (assoc :options [(dropdown-option "AFG" {:fi "Afganistan"})
                        (dropdown-option "ALA" {:fi "Ahvenanmaa"})
@@ -294,29 +295,34 @@
 
 (defn ^:private ssn-component
   []
-  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators ["ssn"]))
+  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators [:ssn]))
+
+(defn ^:private birthdate-component
+  []
+  (text-field {:fi "Syntymäaika" :sv "Födelsedag"} :size "S" :id :birth-date :validators [:past-date]))
 
 (defn ^:private identification-section
   []
   (component/row-section [(nationality-component)
-                          (ssn-component)]))
+                          (ssn-component)
+                          (birthdate-component)]))
 
 (defn ^:private gender-section
   []
   (-> (component/dropdown)
       (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
-                                   :validators ["required"]
+                                   :validators [:required]
                                    :id :gender})
       (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                    (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
 
 (defn ^:private email-component
   []
-  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email :validators ["email"]))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress"} :id :email :validators [:email]))
 
 (defn ^:private phone-component
   []
-  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone :validators ["phone"]))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"} :id :phone :validators [:phone]))
 
 (defn ^:private street-address-component
   []
@@ -328,7 +334,7 @@
 
 (defn ^:private postal-code-component
   []
-  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators ["postal-code"]))
+  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators [:postal-code]))
 
 (defn ^:private postal-office-component
   []
@@ -343,7 +349,7 @@
   []
   (-> (component/dropdown)
       (merge {:label {:fi "Äidinkieli" :sv "Modersmål"}
-              :validators ["required"]
+              :validators [:required]
               :id :language})
     (assoc :options [(dropdown-option "ab" {:fi "abhaasi"})
                      (dropdown-option "aa" {:fi "afar"})

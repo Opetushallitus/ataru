@@ -14,18 +14,21 @@
     (fn [form]
       [readonly-view/readonly-fields form @application])))
 
-(defn render-fields [form submit-status]
-  (if (= :submitted submit-status)
-    [readonly-fields form]
-    [editable-fields form]))
+(defn render-fields [form]
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
+    (fn [form]
+      (if (= :submitted @submit-status)
+        [readonly-fields form]
+        (do
+          (dispatch [:application/run-rule])
+          [editable-fields form])))))
 
 (defn application-contents []
-  (let [form (subscribe [:state-query [:form]])
-        submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [form (subscribe [:state-query [:form]])]
     (fn []
       [:div.application__form-content-area
        [application-header (:name @form)]
-       [render-fields @form @submit-status]])))
+       [render-fields @form]])))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])

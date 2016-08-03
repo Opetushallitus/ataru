@@ -1,10 +1,12 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.hakija.hakija-ajax :refer [get post]]
+            [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
-                                              extract-wrapper-sections]]))
+                                              extract-wrapper-sections]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn initialize-db [_ _]
   {:form nil
@@ -67,6 +69,18 @@
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
+
+(defn application-run-rule [db rule]
+  (if (not-empty rule)
+    (rules/run-rule rule db)
+    (rules/run-all-rules db)))
+
+(register-handler
+  :application/run-rule
+  (fn [db [_ rule]]
+    (if (#{:submitting :submitted} (-> db :application :submit-status))
+      db
+      (application-run-rule db rule))))
 
 (register-handler
   :application/default-handle-error

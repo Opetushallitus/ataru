@@ -27,7 +27,6 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [schema.spec.core :as spec]
-            [clj-time.coerce :as time-coerce]
             [com.stuartsierra.component :as component])
   (:import [manifold.deferred.Deferred]
            (org.joda.time DateTime)
