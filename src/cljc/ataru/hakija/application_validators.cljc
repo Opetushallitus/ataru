@@ -91,7 +91,7 @@
            (catch Exception _ nil)))))
    :cljs
    (def parse-date
-     (let [formatters (mapv f/formatter ["dd.MM.YYYY" "ddMMYYYY"])]
+     (let [formatters (mapv f/formatter ["d.M.YYYY" "ddMMYYYY"])]
        (fn [d]
          (first
            (filter some? (map

@@ -1,10 +1,11 @@
 (ns ataru.hakija.application-validators-test
   (:require [ataru.fixtures.email :as email]
+            [ataru.fixtures.date :as date]
             [ataru.fixtures.phone :as phone]
             [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
-            [cljs.test :refer-macros [deftest is]]))
+            [cljs.test :refer-macros [deftest is testing]]))
 
 (deftest ssn-validation
   (doseq [ssn ssn/ssn-list]
@@ -40,4 +41,10 @@
           actual   (validator/validate "phone" number)
           message  (if expected "valid" "invalid")]
       (is (pred actual)
-        (str "phone number " number " was not " message)))))
+          (str "phone number " number " was not " message)))))
+
+(deftest date-validation
+  (doall
+    (for [[input expected] date/date-list]
+      (testing (str input " = " expected)
+        (is (= expected (validator/validate :past-date input)))))))
