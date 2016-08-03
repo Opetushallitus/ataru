@@ -546,6 +546,8 @@
         x))
     (merge (component/form-section) {:label {:fi "Henkilötiedot"
                                              :sv "Personlig information"}
+                                     :label-amendment {:fi "(Osio lisätään automaattisesti lomakkeelle)"
+                                                       :sv "Partitionen automatiskt lägga formen"}
                                      :children [(first-name-section)
                                                 (last-name-component)
                                                 (identification-section)

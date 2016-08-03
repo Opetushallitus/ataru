@@ -256,9 +256,23 @@
        [drag-n-drop-spacer (conj path :children (count children))]
        [add-component (conj path :children (count children))]])))
 
+(defn get-leaf-component-labels [component lang]
+  (letfn [(recursively-get-labels [component]
+            (match (:fieldClass component)
+                   "wrapperElement" (map #(recursively-get-labels %) (:children component))
+                   :else (-> component :label lang)))]
+    (flatten (recursively-get-labels component))))
+
 (defn module [path]
   (let [languages (subscribe [:editor/languages])
         value     (subscribe [:editor/get-component-value path])]
     (fn [path]
       [:div.editor-form__module-wrapper
-       [:header.editor-form__component-header (get-in @value [:label :fi])]])))
+       [:header.editor-form__module-header
+        [:span.editor-form__module-header-label (get-in @value [:label :fi])]
+        " "
+        [:span (get-in @value [:label-amendment :fi])]]
+       [:div.editor-form__module-fields
+        [:span.editor-form__module-fields-label "Sisältää kentät:"]
+        " "
+        (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])))
