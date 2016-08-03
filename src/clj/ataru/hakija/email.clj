@@ -15,7 +15,7 @@
                       :value)]
     (http/post url {:headers {"content-type" "application/json"}
                     :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
-                                                         :subject "Hakemus vastaanotettu"
+                                                         :subject "Opintopolku.fi - Hakemuksesi on vastaanotettu"
                                                          :isHtml true
                                                          :body body}
                                                  :recipient [{:email recipient}]})})))
