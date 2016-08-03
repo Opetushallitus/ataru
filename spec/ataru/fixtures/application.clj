@@ -84,6 +84,12 @@
       {:key "G__14", :label {:fi "Seitsemas kysymys"}, :value "f", :fieldType "textField"}
       {:key "G__47", :label {:fi "Kuudes kysymys"}, :value "g", :fieldType "textField"}]}}])
 
+(def application-review
+  {:id 1,
+   :modified-time #inst"2016-08-03T09:59:27.999874000-00:00",
+   :state "received",
+   :notes "Some notes about the applicant"})
+
 (def person-info-form-application {:form 15,
                                    :lang "fi",
                                    :id 1

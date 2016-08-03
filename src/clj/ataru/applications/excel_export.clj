@@ -83,7 +83,11 @@
   (doseq [answer (:answers application)]
     (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value (:value answer)]
-      (writer 0 (+ column (count application-meta-fields)) value))))
+      (writer 0 (+ column (count application-meta-fields)) value)))
+  (when-let [notes (:notes (application-store/get-application-review (:id application)))]
+    (let [column (+ (apply max (map :column headers))
+                    (count application-meta-fields))]
+      (writer 0 column notes))))
 
 (defn pick-form-labels
   [form-content]
@@ -100,7 +104,7 @@
   [applications form]
   (let [labels-in-form (pick-form-labels (:content form))
         labels-in-applications (mapcat #(map :label (:answers %)) applications)
-        all-labels (distinct (concat labels-in-form labels-in-applications))]
+        all-labels (distinct (concat labels-in-form labels-in-applications ["Muistiinpanot"]))]
     (map-indexed (fn [idx header]
                    {:header header :column idx})
                  all-labels)))
