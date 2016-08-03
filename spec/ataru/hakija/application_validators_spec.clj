@@ -75,7 +75,7 @@
 
 (describe "birthdate validation"
   (tags :unit)
-  (for [[input expected] date/date-list]
-    (it (str "should validate past-date " input " to " expected)
-        (should= expected (validator/validate :past-date input))))
-  (run-specs))
+  (doall
+    (for [[input expected] date/date-list]
+      (it (str "should validate past-date " input " to " expected)
+          (should= expected (validator/validate :past-date input))))))
