@@ -4,7 +4,9 @@
             [ataru.hakija.validator :as validator]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
+            [environ.core :refer [env]]
             [schema.core :as s]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
@@ -36,6 +38,11 @@
   (client-error/log-client-error error-details)
   (response/ok {}))
 
+(api/defroutes james-routes
+  (api/undocumented
+    (api/GET "/favicon.ico" []
+      (-> "public/images/james.jpg" io/resource))))
+
 (def api-routes
   (api/context "/api" []
     :tags ["application-api"]
@@ -63,6 +70,7 @@
                                                    :title "Ataru Hakija API"
                                                    :description "Specifies the Hakija API for Ataru"}}
                                      :tags [{:name "application-api" :description "Application handling"}]}}
+                          (when (:dev? env) james-routes)
                           (api/routes
                             (api/context "/hakemus" []
                               buildversion-routes

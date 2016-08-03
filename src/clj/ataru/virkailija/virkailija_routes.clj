@@ -11,6 +11,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
+            [clojure.java.io :as io]
             [compojure.api.sweet :as api]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
@@ -154,6 +155,11 @@
   (api/undocumented
     (route/resources "/")))
 
+(api/defroutes rich-routes
+  (api/undocumented
+    (api/GET "/favicon.ico" []
+      (-> "public/images/rich.jpg" io/resource))))
+
 (api/defroutes redirect-routes
   (api/undocumented
     (api/GET "/" [] (redirect "/lomake-editori/"))
@@ -178,6 +184,7 @@
                                                        {:name "applications-api" :description "Application handling"}
                                                        {:name "postal-code-api" :descriptino "Postal code service"}]}}}
                               redirect-routes
+                              (when (:dev? env) rich-routes)
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
