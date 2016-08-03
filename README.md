@@ -58,7 +58,7 @@ figwheel process at once. You can still run both applications just fine, but the
 To run all tests once:
 
 ```
-lein spec
+CONFIG=config/test.edn lein spec
 ```
 
 To run them automatically whenever code changes, use `-a`.
@@ -66,7 +66,7 @@ To run them automatically whenever code changes, use `-a`.
 ### Backend unit tests
 
 ```
-lein spec -t unit
+CONFIG=config/test.edn lein spec -t unit
 ```
 
 ### Browser integration tests
