@@ -28,8 +28,8 @@
   (text-field {:fi "Sukunimi" :sv "Efternamn"} :id :last-name))
 
 (defn ^:private dropdown-option
-  [value labels & {:keys [selected] :or {selected false}}]
-  {:value value :label labels :selected selected})
+  [value labels & {:keys [default-value] :or {default-value false}}]
+  {:value value :label labels :default-value default-value})
 
 (defn ^:private nationality-component
   []
@@ -246,7 +246,7 @@
                        (dropdown-option "SOM" {:fi "Somalia"})
                        (dropdown-option "LKA" {:fi "Sri Lanka"})
                        (dropdown-option "SDN" {:fi "Sudan"})
-                       (dropdown-option "FIN" {:fi "Suomi"} :selected true)
+                       (dropdown-option "FIN" {:fi "Suomi"} :default-value true)
                        (dropdown-option "SUR" {:fi "Suriname"})
                        (dropdown-option "SJM" {:fi "Svalbard ja Jan Mayen"})
                        (dropdown-option "CHE" {:fi "Sveitsi"})
@@ -497,7 +497,7 @@
                      (dropdown-option "st" {:fi "sotho, sesotho"})
                      (dropdown-option "sw" {:fi "suahili"})
                      (dropdown-option "su" {:fi "sunda"})
-                     (dropdown-option "fi" {:fi "suomi"} :selected true)
+                     (dropdown-option "fi" {:fi "suomi"} :default-value true)
                      (dropdown-option "tg" {:fi "tadzikki"})
                      (dropdown-option "tl" {:fi "tagalog, pilipino"})
                      (dropdown-option "ty" {:fi "tahiti"})
