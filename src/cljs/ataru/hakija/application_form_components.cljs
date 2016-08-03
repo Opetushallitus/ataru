@@ -34,9 +34,17 @@
 (defn- init-dropdown-value
   [dropdown-data this]
   (let [select (-> (r/dom-node this) (.querySelector "select"))
-        value (-> select .-value)
-        valid (field-value-valid? dropdown-data value)]
-    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])))
+        value  (or (first
+                     (eduction
+                       (comp (filter :default-value)
+                             (map (comp :fi :label)))
+                       (:options dropdown-data)))
+                   (-> select .-value))
+        valid  (field-value-valid? dropdown-data value)]
+    (do
+      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])
+      (when-let [rules (not-empty (:rules dropdown-data))]
+        (dispatch [:application/run-rule rules])))))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -107,18 +115,20 @@
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (r/create-class
-    {:component-did-mount (partial init-dropdown-value field-descriptor)
-     :reagent-render      (fn [field-descriptor]
-                            [div-kwd
-                             {:on-change (partial textual-field-change field-descriptor)}
-                             [label field-descriptor "application__form-select-label"]
-                             [:div.application__form-select-wrapper
-                              [:span.application__form-select-arrow]
-                              [:select.application__form-select
-                               (for [option (:options field-descriptor)]
-                                 ^{:key (:value option)}
-                                 [:option {:selected (:default-value option)} (get-in option [:label :fi])])]]])}))
+  (let [application (subscribe [:state-query [:application]])]
+    (r/create-class
+      {:component-did-mount (partial init-dropdown-value field-descriptor)
+       :reagent-render      (fn [field-descriptor]
+                              [div-kwd
+                               {:on-change (partial textual-field-change field-descriptor)}
+                               [label field-descriptor "application__form-select-label"]
+                               [:div.application__form-select-wrapper
+                                [:span.application__form-select-arrow]
+                                [:select.application__form-select
+                                 {:value (textual-field-value field-descriptor @application)}
+                                 (for [option (:options field-descriptor)]
+                                   ^{:key (:value option)}
+                                   [:option (get-in option [:label :fi])])]]])})))
 
 (defn render-field
   [field-descriptor & args]
