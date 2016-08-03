@@ -301,11 +301,12 @@
 
 (defn ^:private gender-section
   []
-  (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
-                               :validators ["required"]
-                               :options [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
-                                         (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]
-                               :id :gender}))
+  (-> (component/dropdown)
+      (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
+                                   :validators ["required"]
+                                   :id :gender})
+      (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
+                                   (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
 
 (defn ^:private email-component
   []
