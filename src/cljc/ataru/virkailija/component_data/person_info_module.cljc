@@ -29,7 +29,9 @@
 
 (defn ^:private dropdown-option
   [value labels & {:keys [default-value] :or {default-value false}}]
-  {:value value :label labels :default-value default-value})
+  (-> (component/dropdown-option)
+      (merge {:value value :label labels :default-value default-value})
+      (dissoc :focus?)))
 
 (defn ^:private nationality-component
   []
@@ -301,11 +303,12 @@
 
 (defn ^:private gender-section
   []
-  (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
-                               :validators ["required"]
-                               :options [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
-                                         (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]
-                               :id :gender}))
+  (-> (component/dropdown)
+      (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
+                                   :validators ["required"]
+                                   :id :gender})
+      (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
+                                   (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
 
 (defn ^:private email-component
   []
