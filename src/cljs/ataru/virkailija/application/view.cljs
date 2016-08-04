@@ -134,7 +134,7 @@
   (let [answers (:answers application)
         pref-name (-> answers :preferred-name :value)
         last-name (-> answers :last-name :value)
-        ssn       (-> answers :ssn :value)]
+        ssn       (or (-> answers :ssn :value) (-> answers :birth-date :value))]
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
 (defn application-review-area [applications]
