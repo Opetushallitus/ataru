@@ -65,9 +65,7 @@
       :get
       (str "/lomake-editori/api/applications/" application-id)
       (fn [db application-response]
-        (println "got application response " application-response)
-        (let [updated-db (start-application-review-autosave (update-application-details db application-response))]
-             (println "selected application after autosave init")
-             (println (-> updated-db :application :selected-application))
-              updated-db)))
+        (-> db
+          (update-application-details application-response)
+          (start-application-review-autosave))))
     db))
