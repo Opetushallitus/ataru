@@ -5,7 +5,7 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       wrapper-id]]))
+                                                                       scroll-to-anchor]]))
 
 (defn text [application field-descriptor]
   [:div.application__form-field
@@ -22,9 +22,9 @@
         [:div
          (when fieldset?
            {:class "application__wrapper-element application__wrapper-element--border"})
-         [:h2.application__wrapper-heading
-          {:id (wrapper-id content)}
-          (-> content :label :fi)]
+         [:div.application__wrapper-heading
+          [:h2 (-> content :label :fi)]
+          [scroll-to-anchor content]]
          (into [:div (when fieldset? {:class "application__wrapper-contents"})]
                (for [child children
                      :when (get-in @ui [(keyword (:id child)) :visible?] true)]

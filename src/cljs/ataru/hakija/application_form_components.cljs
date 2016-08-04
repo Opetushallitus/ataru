@@ -100,8 +100,8 @@
 
 (defn wrapper-field [field-descriptor children]
   [:div.application__wrapper-element.application__wrapper-element--border
-   [:h2.application__wrapper-heading
-    (-> field-descriptor :label :fi)
+   [:div.application__wrapper-heading
+    [:h2 (-> field-descriptor :label :fi)]
     [scroll-to-anchor field-descriptor]]
    (into [:div.application__wrapper-contents]
          (for [child children]
