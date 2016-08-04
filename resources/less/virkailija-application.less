@@ -63,7 +63,8 @@
 .application-handling__form-list-closed .application-handling__form-list-row {
   font-size: 24px;
   font-weight: 600;
-  padding: 0;
+  padding: 0 10px 0 0;
+  display: inline-block;
 }
 
 .application-handling__form-list-closed .application-handling__form-list-row:hover {
@@ -72,12 +73,12 @@
 
 .application-handling__form-list-arrow {
   color: #06526B;
-  position: absolute;
   cursor: pointer;
-  font-size: 30px;
-  right: 20px;
-  top: 3px;
-  z-index: 1;
+  font-size: 26px;
+}
+
+.application-handling__form-list-open .application-handling__form-list-arrow {
+  display: none;
 }
 
 .application-handling__excel-download-link {
