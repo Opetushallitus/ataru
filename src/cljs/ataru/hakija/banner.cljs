@@ -27,7 +27,7 @@
                     [:span.application__close-invalid-fields
                      {:on-click toggle-show-details}
                      "x"]]
-                (mapv (fn [field] [:a {:href (str "#field-" (name (:key field)))} [:div (-> field :label :fi)]])
+                (mapv (fn [field] [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (-> field :label :fi)]])
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
@@ -50,7 +50,7 @@
 
 (defn wrapper-section-link [ws]
   [:a.application__banner-wrapper-section-link
-   {:href (str "#wrapper-" (:id ws))
+   {:href (str "#scroll-to-" (:id ws))
     :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
    (-> ws :label :fi)])
 

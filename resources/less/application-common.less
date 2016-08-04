@@ -4,6 +4,7 @@
   please remember to test virkailija and hakija-applications both!
 */
 @import "vars";
+@total-banner-height: 130px;
 
 .application__readonly-container {
   width: 100%;
@@ -27,12 +28,15 @@
 }
 
 .application__wrapper-heading {
-  color: @blue-text-color;
-  font-size: 16px;
-  font-weight: normal;
-  text-transform: uppercase;
   position: absolute;
   width: 245px;
+  h2 {
+    color: @blue-text-color;
+    font-size: 16px;
+    font-weight: normal;
+    text-transform: uppercase;
+    display: inline-block;
+  }
 }
 .application__wrapper-element--border {
   border-top: solid #D7D7D7 1px;
@@ -51,4 +55,10 @@ and (max-width: @desktop-content-width) {
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
   }
+}
+
+.application__scroll-to-anchor {
+  position: relative;
+  top: -@total-banner-height;
+  visibility: hidden;
 }

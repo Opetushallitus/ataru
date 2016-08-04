@@ -10,3 +10,7 @@
 
 (defn wrapper-id [field-descriptor]
   (str "wrapper-" (:id field-descriptor)))
+
+(defn scroll-to-anchor
+  [field-descriptor]
+  [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])
