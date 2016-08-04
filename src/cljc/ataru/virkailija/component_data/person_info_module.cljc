@@ -301,7 +301,13 @@
 
 (defn ^:private birthdate-component
   []
-  (text-field {:fi "Syntymäaika" :sv "Födelsedag"} :size "S" :id :birth-date :validators [:past-date]))
+  (merge-with merge
+    (text-field
+      {:fi "Syntymäaika" :sv "Födelsedag"}
+      :size "S"
+      :id :birth-date
+      :validators [:past-date])
+    {:params {:placeholder {:fi "pp.kk.vvvv"}}}))
 
 (defn ^:private identification-section
   []

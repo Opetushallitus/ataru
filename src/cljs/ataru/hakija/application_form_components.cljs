@@ -73,6 +73,8 @@
          [label field-descriptor size-class]
          [:input.application__form-text-input
           {:type      "text"
+           :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                          (:fi input-hint))
            :class     (str size-class (if @valid?
                                           " application__form-text-input--normal"
                                           " application__form-field-error"))
