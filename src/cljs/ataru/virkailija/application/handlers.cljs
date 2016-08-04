@@ -9,10 +9,12 @@
 (register-handler
   :application/select-application
   (fn [db [_ application-id]]
-    (dispatch [:application/fetch-application application-id])
-    (-> db
-        (assoc-in [:application :selected-id] application-id)
-        (assoc-in [:application :selected-application] nil))))
+    (if (not= application-id (get-in db [:application :selected-id]))
+      (do (dispatch [:application/fetch-application application-id])
+        (-> db
+            (assoc-in [:application :selected-id] application-id)
+            (assoc-in [:application :selected-application] nil)))
+      db)))
 
 (register-handler
   :application/fetch-applications
@@ -63,7 +65,9 @@
       :get
       (str "/lomake-editori/api/applications/" application-id)
       (fn [db application-response]
-        (-> db
-          (update-application-details application-response)
-          (start-application-review-autosave))))
+        (println "got application response " application-response)
+        (let [updated-db (start-application-review-autosave (update-application-details db application-response))]
+             (println "selected application after autosave init")
+             (println (-> updated-db :application :selected-application))
+              updated-db)))
     db))
