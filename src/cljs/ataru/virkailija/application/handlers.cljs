@@ -62,6 +62,8 @@
 (register-handler
   :application/fetch-application
   (fn [db [_ application-id]]
+    (when-let [autosave (get-in db [:application :review-autosave])]
+      (autosave/stop-autosave! autosave))
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/" application-id)
@@ -69,4 +71,4 @@
         (-> db
           (update-application-details application-response)
           (start-application-review-autosave))))
-    db))
+    (assoc db [:application :review-autosave] nil)))
