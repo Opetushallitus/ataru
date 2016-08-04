@@ -5,7 +5,7 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
                                                            textual-field-value
-                                                           wrapper-id]]
+                                                           scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -55,9 +55,8 @@
         value  (subscribe [:state-query [:application :answers id :value]])]
     (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label
-       {:id (field-id field-descriptor)
-        :class size-class}
        [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
+       [scroll-to-anchor field-descriptor]
        (when (and
                (not @valid?)
                (some #(= % "required") (:validators field-descriptor))
@@ -102,8 +101,8 @@
 (defn wrapper-field [field-descriptor children]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:h2.application__wrapper-heading
-    {:id (wrapper-id field-descriptor)}
-    (-> field-descriptor :label :fi)]
+    (-> field-descriptor :label :fi)
+    [scroll-to-anchor field-descriptor]]
    (into [:div.application__wrapper-contents]
          (for [child children]
            [render-field child]))])
