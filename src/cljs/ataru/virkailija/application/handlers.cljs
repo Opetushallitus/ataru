@@ -43,7 +43,8 @@
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
     false
-    (not= current prev)))
+    ;timestamp instances for same timestamp fetched via ajax are not equal :(
+    (not= (dissoc current :modified-time) (dissoc prev :modified-time))))
 
 (defn start-application-review-autosave [db]
   (assoc-in
