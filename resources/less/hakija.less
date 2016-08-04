@@ -70,6 +70,50 @@
 .application__banner-wrapper-section-valid-img {
   margin-right: 5px;
 }
+@send-button-width-mobile: 138px;
+
+.application__readonly-container {
+  width: 100%;
+}
+.application__wrapper-contents {
+  margin-top: 13px;
+}
+.application__form-field {
+  margin-left: 245px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.application__form-field-label {
+  font-size: 14px;
+  color: @blue-text-color;
+  margin-bottom: 6px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  min-width: 230px;
+}
+
+.application__wrapper-heading {
+  position: absolute;
+  width: 245px;
+  h2 {
+    color: @blue-text-color;
+    font-size: 16px;
+    font-weight: normal;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+}
+.application__wrapper-element--border {
+  border-top: solid #D7D7D7 1px;
+}
+.application__scroll-to-anchor {
+  position: relative;
+  top: -@total-banner-height;
+  visibility: hidden;
+}
 .application__invalid-field-status {
   font-size: 12px;
   margin-top: 2px;
@@ -263,12 +307,21 @@
   font-weight: bold;
 }
 
-/* Smaller screens */
 
-@send-button-width-mobile: 138px;
 
 @media only screen
 and (max-width: @desktop-content-width) {
+  .application__wrapper-heading {
+    position: static;
+    margin-left: 10px;
+  }
+  /*
+     Without this first selector, the rule will be dependent on include
+     order (for row fields) which seems to be pretty random
+   */
+  .application__row-field.application__form-field, .application__form-field {
+    margin-left: 10px;
+  }
   .application-top-banner {
     .logo {
       margin-left: 10px;
