@@ -57,7 +57,7 @@
   (tags :unit)
 
   (around [spec]
-    (with-redefs [email/send-email-verification (fn [_])]
+    (with-redefs [email/send-email-verification (fn [_ _])]
       (spec)))
 
   (before
@@ -67,7 +67,7 @@
 
   (it "should validate application"
     (with-response resp application-fixtures/person-info-form-application
-      (should= 200 (:status resp))
+      (should= 200  (:status resp))
       (should (have-application-in-db (get-in resp [:body :id])))))
 
   (add-spec "should not validate form with blank required field" form-blank-required-field)
