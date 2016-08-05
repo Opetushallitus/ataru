@@ -30,7 +30,7 @@
   (if (validator/valid-application application)
     (let [stored-app-id (application-store/add-new-application application)]
       (info "Stored application with id:" stored-app-id)
-      (email/send-email-verification application)
+      (email/send-email-verification application stored-app-id)
       (response/ok {:id stored-app-id}))
     (response/bad-request)))
 
