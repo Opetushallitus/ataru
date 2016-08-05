@@ -22,24 +22,30 @@
 
 (declare field)
 
+(defn child-fields [children application ui]
+  (for [child children
+        :when (get-in ui [(keyword (:id child)) :visible?] true)]
+    [field child application]))
+
 (defn wrapper [content application children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application children]
-      (let [fieldset? (= "fieldset" (:fieldType content))]
-        [:div
-         (when fieldset?
-           {:class "application__wrapper-element application__wrapper-element--border"})
+        [:div.application__wrapper-element.application__wrapper-element--border
          [:div.application__wrapper-heading
           [:h2 (-> content :label :fi)]
           [scroll-to-anchor content]]
-         (into [:div (when fieldset? {:class "application__wrapper-contents"})]
-               (for [child children
-                     :when (get-in @ui [(keyword (:id child)) :visible?] true)]
-                 [field child application]))]))))
+         (into [:div.application__wrapper-contents]
+               (child-fields children application @ui))])))
+
+(defn row-container [application children]
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [application children]
+      (into [:div] (child-fields children application @ui)))))
 
 (defn field [content application]
   (match content
-         {:fieldClass "wrapperElement" :children children} [wrapper content application children]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application children]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown")} (text application content)))
 
 (defn readonly-fields [form-data application]
