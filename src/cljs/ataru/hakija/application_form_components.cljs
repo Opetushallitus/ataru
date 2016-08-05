@@ -54,7 +54,7 @@
         valid? (subscribe [:state-query [:application :answers id :valid]])
         value  (subscribe [:state-query [:application :answers id :value]])]
     (fn [field-descriptor & [size-class]]
-      [:label.application__form-field-label
+      [:label.application__form-field-label {:class size-class}
        [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
        [scroll-to-anchor field-descriptor]
        (when (and
