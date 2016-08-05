@@ -188,6 +188,11 @@ and (max-width: 1000px) {
   color: #1A1919;
 }
 
+/*
+  Readonly application view selectors, different implementations than in hakija.less
+  because the layout is different
+*/
+
 .application__readonly-container {
   width: 100%;
 }
@@ -242,7 +247,5 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__scroll-to-anchor {
-  position: relative;
-  top: -@total-banner-height;
   visibility: hidden;
 }

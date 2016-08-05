@@ -1,3 +1,10 @@
+; Note: the css classes used below have different css implementations
+; for virkailija and hakija:
+; * virkailija-application.less
+; * hakija.less
+; This is on purpose, the UI layouts will differ
+; in the future and already do to some extent.
+
 (ns ataru.application-common.application-readonly
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
