@@ -180,6 +180,15 @@
   font-size: 11px;
   opacity: 0.65;
 }
+.application__sent-placeholder {
+  color: white;
+  font-weight: bold;
+}
+.application__sent-placeholder-text {
+  text-transform: uppercase;
+  font-weight: normal;
+  margin-left: 5px;
+}
 .application__header {
   font-size: 24px;
   font-weight: 400;
@@ -341,7 +350,10 @@ and (max-width: @desktop-content-width) {
     width: @send-button-width-mobile;
   }
   .application__sent-indicator {
-    width: @send-button-width-mobile;
+    width: 156px;
+  }
+  .application__sent-placeholder {
+    margin-right: 5px;
   }
   .application__invalid-field-status {
     width: @send-button-width-mobile;

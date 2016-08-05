@@ -33,18 +33,25 @@
 (defn sent-indicator [submit-status]
   (match submit-status
          :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-         :submitted [:div.application__sent-indicator "Hakemus lähetetty"]
+         :submitted [:div.application__sent-indicator "Saat vahvistuksen sähköpostiisi"]
          :else nil))
+
+(defn send-button-or-placeholder [valid-status submit-status]
+  (match submit-status
+         :submitted [:div.application__sent-placeholder
+                     [:i.zmdi.zmdi-check]
+                     [:span.application__sent-placeholder-text "Hakemus lähetetty"]]
+         :else      [:button.application__send-application-button
+                      {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
+                       :on-click #(dispatch [:application/submit-form])}
+                      "LÄHETÄ HAKEMUS"]))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn []
       [:div.application__status-controls
-       [:button.application__send-application-button
-        {:disabled (or (not (:valid @valid-status)) (contains? #{:submitting :submitted} @submit-status))
-         :on-click #(dispatch [:application/submit-form])}
-        "LÄHETÄ HAKEMUS"]
+       [send-button-or-placeholder @valid-status @submit-status]
        [invalid-field-status @valid-status]
        [sent-indicator @submit-status]])))
 
