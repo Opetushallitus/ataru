@@ -33,12 +33,12 @@
 (defn sent-indicator [submit-status]
   (match submit-status
          :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-         :submitted [:div.application__sent-indicator "Saat vahvistuksen sähköpostiisi"]
+         :submitted  [:div.application__sent-indicator.animated.fadeIn "Saat vahvistuksen sähköpostiisi"]
          :else nil))
 
 (defn send-button-or-placeholder [valid-status submit-status]
   (match submit-status
-         :submitted [:div.application__sent-placeholder
+         :submitted [:div.application__sent-placeholder.animated.fadeIn
                      [:i.zmdi.zmdi-check]
                      [:span.application__sent-placeholder-text "Hakemus lähetetty"]]
          :else      [:button.application__send-application-button
