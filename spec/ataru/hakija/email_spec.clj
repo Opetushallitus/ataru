@@ -1,5 +1,6 @@
 (ns ataru.hakija.email-spec
   (:require [aleph.http :as http]
+            [manifold.deferred :as d]
             [ataru.hakija.email :as email]
             [cheshire.core :as json]
             [speclj.core :refer :all]))
@@ -62,7 +63,8 @@
   `(let [api-called?# (atom false)]
      (with-redefs-fn {#'http/post (fn [& args#]
                                     (apply ~eval-fn args#)
-                                    (reset! api-called?# true))}
+                                    (reset! api-called?# true)
+                                    (d/success-deferred nil))}
        (fn []
          ~@body
          (should @api-called?#)))))
@@ -82,4 +84,4 @@
                        (let [recipients (:recipient body)]
                          (should= 1 (count recipients))
                          (should= "aku@ankkalinna.com" (get-in recipients [0 :email])))))
-      (email/send-email-verification application))))
+      (email/send-email-verification application 1))))
