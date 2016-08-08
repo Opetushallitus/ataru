@@ -7,14 +7,13 @@
             [taoensso.timbre :refer [info error]]))
 
 (defn send-email-verification
-  [application application-id]
+  [email-verification]
   (let [url       (str
                     (get-in config [:email :email_service_url])
                     "/ryhmasahkoposti-service/email/firewall")
         body      (selmer/render-file "templates/email_confirmation_template.txt" {})
-        recipient (-> (filter #(= "email" (:key %)) (:answers application))
-                      first
-                      :value)]
+        application-id (:application-id email-verification)
+        recipient (:recipient email-verification)]
     (info "sending email to viestintäpalvelu at address " url " for application " application-id)
     (let [reply (http/post url {:headers {"content-type" "application/json"}
                                 :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
