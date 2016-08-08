@@ -18,8 +18,8 @@
 
 (defn mark-email-delivered
   [confirmation-id]
-  (exec :db yesql-increment-delivery-attempt-count-and-mark-delivered {:id confirmation-id}))
+  (exec :db yesql-increment-delivery-attempt-count-and-mark-delivered! {:id confirmation-id}))
 
 (defn increment-delivery-attempt-count
   [confirmation-id]
-  (exec :db yesql-increment-delivery-attempt-count {:id confirmation-id}))
+  (exec :db yesql-increment-delivery-attempt-count! {:id confirmation-id}))

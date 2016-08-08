@@ -52,9 +52,9 @@
                     "/ryhmasahkoposti-service/email/firewall")
         body      (selmer/render-file "templates/email_confirmation_template.txt" {})
         id (:id email-verification)
-        application-id (:application-id email-verification)
+        application-id (:application_id email-verification)
         recipient (:recipient email-verification)]
-    (info "sending email to viestintäpalvelu at address " url " for application " application-id)
+    (info "sending email" id "to viestintäpalvelu at address" url "for application" application-id)
     (let [reply (http/post url {:headers {"content-type" "application/json"}
                                 :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
                                                              :subject "Opintopolku.fi - Hakemuksesi on vastaanotettu"
@@ -65,13 +65,9 @@
             reply
             (fn [_]
               (store/mark-email-delivered id)
-              (info "Successfully sent email to viestintäpalvelu for application " application-id))
+              (info "Successfully sent email" id "to viestintäpalvelu for application" application-id))
             (fn [error-details]
               (store/increment-delivery-attempt-count id)
-              (error "Sending email to viestintäpalvelu failed for application " application-id)
-              (error "email details:")
-              (error "recipient: " recipient)
-              (error "body:")
-              (error  body)
+              (error "Sending email" id "to viestintäpalvelu failed for application" application-id)
               (error "error details:")
               (error error-details))))))
