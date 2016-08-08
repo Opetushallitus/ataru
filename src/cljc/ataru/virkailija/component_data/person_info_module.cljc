@@ -297,7 +297,8 @@
 
 (defn ^:private ssn-component
   []
-  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators [:ssn]))
+  (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn)
+         :validators [:ssn :required]))
 
 (defn ^:private birthdate-component
   []
@@ -306,14 +307,16 @@
       {:fi "Syntymäaika" :sv "Födelsedag"}
       :size "S"
       :id :birth-date
-      :validators [:past-date])
+      :validators [:past-date :required])
     {:params {:placeholder {:fi "pp.kk.vvvv"}}}))
 
 (defn ^:private identification-section
   []
-  (component/row-section [(nationality-component)
-                          (ssn-component)
-                          (birthdate-component)]))
+  (assoc
+    (component/row-section [(nationality-component)
+                            (ssn-component)
+                            (birthdate-component)])
+    :child-validators [:or {:fields [:ssn :birth-date]}]))
 
 (defn ^:private gender-section
   []

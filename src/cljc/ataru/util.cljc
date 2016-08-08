@@ -19,18 +19,19 @@
   (flatten
     (for [field fields]
       (match
-        [field]
+        field
 
-        [{:fieldClass "wrapperElement"
-          :fieldType  "fieldset"
-          :children   children}]
+        {:fieldClass "wrapperElement"
+         :fieldType  "fieldset"
+         :children   children
+         :id         id}
         (flatten-form-fields
-          (map #(assoc % :wrapper-id (:id field)) children))
+          (map #(assoc % :wrapper-id id) children))
 
-        [{:fieldClass "wrapperElement"
-          :fieldType  "rowcontainer"
-          :children   children
-          :wrapper-id wrapper-id}]
+        {:fieldClass "wrapperElement"
+         :fieldType  "rowcontainer"
+         :children   children
+         :wrapper-id wrapper-id}
         (flatten-form-fields
           (map #(assoc % :wrapper-id wrapper-id) children))
 
