@@ -6,3 +6,6 @@ create table application_confirmation_emails (
   delivery_attempts bigint default 0,
   delivered_at      timestamp with time zone
 );
+
+create index application_confirmation_emails_idx on application_confirmation_emails (created_at);
+

@@ -34,7 +34,6 @@
     (info "Stopping emailer process")
     (let [emailer-future (:email this)]
       (future-cancel emailer-future)
-      (Thread/sleep 1000)
       (if (future-cancelled? emailer-future)
         (do
           (info "Stopped emailer process")
