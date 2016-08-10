@@ -8,6 +8,4 @@ update application_confirmation_emails set delivery_attempts = delivery_attempts
 update application_confirmation_emails set delivered_at = now(), delivery_attempts = delivery_attempts + 1 where id = :id;
 
 -- name: yesql-get-unsent-application-confirmation-emails
-select * from application_confirmation_emails where delivered_at is null order by created_at;
-
-
+select * from application_confirmation_emails where delivered_at is null order by created_at for update;

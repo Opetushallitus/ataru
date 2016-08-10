@@ -14,7 +14,7 @@
             [ring.util.http-response :as response]
             [compojure.route :as route]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info]]))
+            [taoensso.timbre :refer [info error]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -32,7 +32,9 @@
       (info "Stored application with id:" stored-app-id)
       (email-store/store-email-verification application stored-app-id)
       (response/ok {:id stored-app-id}))
-    (response/bad-request)))
+    (do
+      (error "Invalid application!")
+      (response/bad-request))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)

@@ -15,12 +15,8 @@
 (defn- emailer-loop
   []
   (while true
-    (let [unsent-emails (store/get-unsent-emails)]
-      (when (< 0 (count unsent-emails))
-        (info "Attempting to send" (count unsent-emails) "unsent application confirmation emails")
-        (doseq [email unsent-emails]
-          (send-email-verification email)))
-      (Thread/sleep email-poll-interval))))
+    (store/deliver-emails send-email-verification)
+    (Thread/sleep email-poll-interval)))
 
 (defrecord Emailer []
   component/Lifecycle
@@ -54,19 +50,9 @@
         application-id (:application_id email-verification)
         recipient (:recipient email-verification)]
     (info "sending email" id "to viestintäpalvelu at address" url "for application" application-id)
-    (let [reply (http/post url {:headers {"content-type" "application/json"}
-                                :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
-                                                             :subject "Opintopolku.fi - Hakemuksesi on vastaanotettu"
-                                                             :isHtml true
-                                                             :body body}
-                                                             :recipient [{:email recipient}]})})]
-          (deferred/on-realized
-            reply
-            (fn [_]
-              (store/mark-email-delivered id)
-              (info "Successfully sent email" id "to viestintäpalvelu for application" application-id))
-            (fn [error-details]
-              (store/increment-delivery-attempt-count id)
-              (error "Sending email" id "to viestintäpalvelu failed for application" application-id)
-              (error "error details:")
-              (error error-details))))))
+    (http/post url {:headers {"content-type" "application/json"}
+                    :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
+                                                         :subject "Opintopolku.fi - Hakemuksesi on vastaanotettu"
+                                                         :isHtml true
+                                                         :body body}
+                                                 :recipient [{:email recipient}]})})))
