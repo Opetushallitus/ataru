@@ -15,11 +15,23 @@
                       :value)]
     (exec :db yesql-add-application-confirmation-email<! {:application_id application-id :recipient recipient})))
 
+(defn- get-unsent-emails
+  [connection]
+  (yesql-get-unsent-application-confirmation-emails {} connection))
+
+(defn- increment-delivery-attempt-count
+  [connection email-id]
+  (yesql-increment-delivery-attempt-count! {:id email-id} connection))
+
+(defn- increment-delivery-attempt-count-and-mark-delivered
+  [connection email-id]
+  (yesql-increment-delivery-attempt-count-and-mark-delivered! {:id email-id} connection))
+
 (defn deliver-emails
   [send-email-fn]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection {:connection conn}
-          emails (yesql-get-unsent-application-confirmation-emails {} connection)
+          emails (get-unsent-emails connection)
           undelivered-emails (filter #(nil? (:delivered-at %)) emails)]
       (when (< 0 (count undelivered-emails))
         (info "Attempting to deliver" (count undelivered-emails) "application confirmation emails")
@@ -30,10 +42,10 @@
             (info "sent email with status" status (or error ""))
             (if (or error (not (= status 200)))
               (do
-                (yesql-increment-delivery-attempt-count! {:id email-id} connection)
+                (increment-delivery-attempt-count connection email-id)
                 (info "Sending email" email-id "to viestintäpalvelu failed for application" application-id)
                 (info "error details:")
                 (info error))
               (do
-                (yesql-increment-delivery-attempt-count-and-mark-delivered! {:id email-id} connection)
+                (increment-delivery-attempt-count-and-mark-delivered connection email-id)
                 (info "Successfully sent email" email-id "to viestintäpalvelu for application" application-id)))))))))
