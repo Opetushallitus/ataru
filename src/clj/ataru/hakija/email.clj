@@ -1,6 +1,5 @@
 (ns ataru.hakija.email
-  (:require [aleph.http :as http]
-            [manifold.deferred :as deferred]
+  (:require [org.httpkit.client :as http]
             [cheshire.core :as json]
             [oph.soresu.common.config :refer [config]]
             [selmer.parser :as selmer]
@@ -41,6 +40,7 @@
   (->Emailer))
 
 (defn- send-email-verification
+  "Synchronous call to keep DB transactions intact"
   [email-verification]
   (let [url       (str
                     (get-in config [:email :email_service_url])
@@ -50,7 +50,7 @@
         application-id (:application_id email-verification)
         recipient (:recipient email-verification)]
     (info "sending email" id "to viestintäpalvelu at address" url "for application" application-id)
-    (http/post url {:headers {"content-type" "application/json"}
+    @(http/post url {:headers {"content-type" "application/json"}
                     :body (json/generate-string {:email {:from "no-reply@opintopolku.fi"
                                                          :subject "Opintopolku.fi - Hakemuksesi on vastaanotettu"
                                                          :isHtml true

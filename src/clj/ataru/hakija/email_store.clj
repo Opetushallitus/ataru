@@ -24,16 +24,16 @@
       (when (< 0 (count undelivered-emails))
         (info "Attempting to deliver" (count undelivered-emails) "application confirmation emails")
         (doseq [email undelivered-emails]
-          (let [application-id (:application-id email)
+          (let [application-id (:application_id email)
                 email-id (:id email)
-                reply (send-email-fn email)]
-            (deferred/on-realized
-              reply
-              (fn [_]
-                (yesql-increment-delivery-attempt-count-and-mark-delivered! {:id email-id} connection)
-                (info "Successfully sent email" id "to viestintäpalvelu for application" application-id))
-              (fn [error-details]
+                {:keys [status error]} (send-email-fn email)]
+            (info "sent email with status" status (or error ""))
+            (if (or error (not (= status 200)))
+              (do
                 (yesql-increment-delivery-attempt-count! {:id email-id} connection)
-                (error "Sending email" id "to viestintäpalvelu failed for application" application-id)
-                (error "error details:")
-                (error error-details)))))))))
+                (info "Sending email" email-id "to viestintäpalvelu failed for application" application-id)
+                (info "error details:")
+                (info error))
+              (do
+                (yesql-increment-delivery-attempt-count-and-mark-delivered! {:id email-id} connection)
+                (info "Successfully sent email" email-id "to viestintäpalvelu for application" application-id)))))))))
