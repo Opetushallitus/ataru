@@ -7,7 +7,6 @@
         (map-indexed
           (fn [idx field]
             [(keyword (:id field)) {:valid (not (some #(= % "required") (:validators field)))
-                                    :wrapper-id (:wrapper-id field)
                                     :label (:label field)
                                     :order-idx idx}]) flattened-form-fields)))
 
@@ -52,11 +51,11 @@
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
 (defn wrapper-section-ids-validity [answers]
-  (let [grouped (group-by :wrapper-id (vals answers))]
+  (let [grouped (util/group-answers-by-wrapperelement answers)]
     (into {} (for [[id answers] grouped] [id (bools-all-true (map :valid answers))]))))
 
 (defn wrapper-sections-with-validity [wrapper-sections answers]
-  (let [wrapper-section-id->valid (wrapper-section-ids-validity answers)]
+  (let [wrapper-section-id->valid (wrapper-section-ids-validity wrapper-sections answers)]
     (map
       (fn [wrapper-section]
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))

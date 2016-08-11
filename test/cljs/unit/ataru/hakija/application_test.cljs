@@ -83,14 +83,12 @@
 
 (deftest flattens-correctly
   (let [expected   [{:id "G__2",
-                      :wrapper-id "G__1"
                       :label {:fi "kenttä1", :sv ""},
                       :params {:size "S"},
                       :validators ["required"]
                       :fieldType "textField",
                       :fieldClass "formField"}
                      {:id "G__14",
-                      :wrapper-id "G__1"
                       :label {:fi "kenttä2", :sv ""},
                       :params {:size "M"},
                       :validators ["some-validator"]
@@ -110,36 +108,32 @@
                    :id "380913e2-8c93-494c-bd86-57000ed50ae8",
                    :params {},
                    :validators ["required"]
-                   :fieldType "textField"
-                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                   :fieldType "textField"}
                   {:label {:fi "Kutsumanimi", :sv "Smeknamn"},
                    :fieldClass "formField",
                    :id "7c8388f0-7ccb-4706-8630-15405b141552",
                    :params {:size "S"},
                    :validators ["required"]
-                   :fieldType "textField"
-                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                   :fieldType "textField"}
                   {:label {:fi "Sukunimi", :sv "Efternamn"},
                    :fieldClass "formField",
                    :id "d2dc3e2e-c130-4fd4-8509-7c8fbf4d1c9e",
                    :params {},
                    :validators ["required"]
-                   :fieldType "textField"
-                   :wrapper-id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88"}
+                   :fieldType "textField"}
                   {:fieldClass "formField",
                    :fieldType "textField",
                    :label {:fi "Random question", :sv ""},
                    :id "839cb685-749a-46da-b215-842bc13ed542",
-                   :params {}
-                   :wrapper-id "036a71bb-01dc-440e-8c05-80eea0ca9640"}]
+                   :params {}}]
         actual (util/flatten-form-fields (:content person-info-form))]
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers form1)]
-    (is (= {:G__2 {:valid false, :wrapper-id "G__1", :label {:fi "kenttä1", :sv ""} :order-idx 0}
-            :G__14 {:valid true, :wrapper-id "G__1", :label {:fi "kenttä2", :sv ""} :order-idx 1}
-            :G__25 {:valid true, :wrapper-id nil, :label {:fi "ulkokenttä", :sv ""} :order-idx 2}}
+    (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""} :order-idx 0}
+            :G__14 {:valid true, :label {:fi "kenttä2", :sv ""} :order-idx 1}
+            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""} :order-idx 2}}
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
@@ -221,18 +215,17 @@
 
 (def
   answers
-  {:G__2
-   {:valid false :wrapper-id "G__1"}
-   :G__14 {:valid true :wrapper-id "G__1"}
-   :G__25 {:valid true :wrapper-id nil}})
+  {:G__2  {:valid false}
+   :G__14 {:valid true}
+   :G__25 {:valid true}})
 
 (deftest wrapper-sections-with-validity-is-correctly-constructed
   (let [wrapper-sections '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})
-        answers {:f1 {:valid true :wrapper-id "w1"}
-                 :f2 {:valid false :wrapper-id "w1"}
-                 :f3 {:valid true :wrapper-id "w2"}
-                 :f4 {:valid true :wrapper-id "w2"}
-                 :f5 {:valid true :wrapper-id nil}}
+        answers {:f1 {:valid true}
+                 :f2 {:valid false}
+                 :f3 {:valid true}
+                 :f4 {:valid true}
+                 :f5 {:valid true}}
         expected '({:id "w1" :valid false :label {:fi "osio1", :sv ""}} {:id "w2" :valid true :label {:fi "osio2", :sv ""}})
         result (wrapper-sections-with-validity wrapper-sections answers)]
     (is (= expected result))))

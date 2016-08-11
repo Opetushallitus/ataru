@@ -78,9 +78,6 @@
 
         :else results))))
 
-(defn answers-by-key [application]
-  (util/group-by-first (comp keyword :key) (:answers application)))
-
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
@@ -88,7 +85,7 @@
    (valid-application? application (form-store/fetch-form (:form application))))
   ([application form]
    {:pre [(not-empty form)]}
-   (let [answers-by-key (answers-by-key application)]
+   (let [answers-by-key (util/answers-by-key (:answers application))]
      (and
        (empty?
          (extra-answers-not-in-original-form
