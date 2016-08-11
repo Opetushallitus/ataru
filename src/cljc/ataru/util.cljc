@@ -31,6 +31,13 @@
         {:fieldClass "wrapperElement"
          :fieldType  "rowcontainer"
          :children   children
+         :id         id}
+        (flatten-form-fields
+          (map #(assoc % :wrapper-id id) children))
+
+        {:fieldClass "wrapperElement"
+         :fieldType  "rowcontainer"
+         :children   children
          :wrapper-id wrapper-id}
         (flatten-form-fields
           (map #(assoc % :wrapper-id wrapper-id) children))
