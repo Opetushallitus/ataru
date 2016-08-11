@@ -35,13 +35,16 @@
   (let [answers-by-key (answers-by-key answers)]
     (into {}
       (for [{:keys [id children] :as field} wrapper-fields
-            :let [top-level-children children]]
-        {id (map answers-by-key
-              (loop [acc []
-                    [{:keys [id children] :as field} & rest-of-fields] top-level-children]
-                (if (not-empty children)
-                  (recur acc children)
-                  ; this is the ANSWER id, NOT wrapper id
-                  (if id
-                    (recur (conj acc id) (spy rest-of-fields))
-                    acc))))}))))
+            :let [top-level-children children
+                  section-id id]]
+        {id (loop [acc []
+                   [{:keys [id children] :as field} & rest-of-fields] top-level-children]
+              (if (not-empty children)
+                (recur acc (concat children rest-of-fields))
+                                        ; this is the ANSWER id, NOT wrapper id
+                (if id
+                  (recur (conj acc
+                           {(keyword id)
+                            (get answers-by-key (keyword id))})
+                    rest-of-fields)
+                  acc)))}))))

@@ -45,14 +45,18 @@
    :answers (create-answers-to-submit (:answers application) form)})
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label])
+  (map #(select-keys % [:id :label :children])
        (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
 (defn wrapper-section-ids-validity [answers]
   (let [grouped (util/group-answers-by-wrapperelement answers)]
-    (into {} (for [[id answers] grouped] [id (bools-all-true (map :valid answers))]))))
+    (into {}
+      (for [[section-id answers] grouped]
+        [section-id (bools-all-true
+                      (mapv :valid
+                        (flatten (map (comp :valid vals) answers))))]))))
 
 (defn wrapper-sections-with-validity [wrapper-sections answers]
   (let [wrapper-section-id->valid (wrapper-section-ids-validity wrapper-sections answers)]
