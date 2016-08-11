@@ -30,6 +30,7 @@
 
   (defroute "/editor" []
     (dispatch [:set-active-panel :editor])
+    (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms]))
 
   (defroute #"/editor/(\d+)" [id]
