@@ -32,7 +32,7 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection {:connection conn}
           emails (get-unsent-emails connection)
-          undelivered-emails (filter #(nil? (:delivered-at %)) emails)]
+          undelivered-emails (filter #(nil? (:delivered_at %)) emails)]
       (when (< 0 (count undelivered-emails))
         (info "Attempting to deliver" (count undelivered-emails) "application confirmation emails")
         (doseq [email undelivered-emails]
