@@ -7,5 +7,5 @@ create table application_confirmation_emails (
   delivered_at      timestamp with time zone
 );
 
-create index application_confirmation_emails_idx on application_confirmation_emails (created_at);
+create index application_confirmation_emails_idx on application_confirmation_emails (delivered_at, created_at);
 
