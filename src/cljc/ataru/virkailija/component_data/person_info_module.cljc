@@ -2,6 +2,8 @@
     (:require [ataru.virkailija.component-data.component :as component]
               [clojure.walk]))
 
+; validators defined in ataru.hakija.application-validators
+
 (defn ^:private text-field
   [labels & {:keys [size id validators] :or {size "M" validators []}}]
   (-> (component/text-field)
@@ -312,18 +314,20 @@
 
 (defn ^:private identification-section
   []
-  (assoc
-    (component/row-section [(nationality-component)
-                            (ssn-component)
-                            (birthdate-component)])
-    :child-validators [:or {:fields [:ssn :birth-date]}]))
+  (component/row-section
+    [(nationality-component)
+     (assoc (component/row-section
+              [(ssn-component)
+               (birthdate-component)])
+            :child-validator :one-of
+            )]))
 
 (defn ^:private gender-section
   []
   (-> (component/dropdown)
-      (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
+      (merge (component/dropdown) {:label      {:fi "Sukupuoli" :sv "Kön"}
                                    :validators [:required]
-                                   :id :gender})
+                                   :id         :gender})
       (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                    (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
 

@@ -16,51 +16,67 @@
       []
       options)))
 
-(defn form-validators [form-content]
-  (reduce (fn [m field]
-            (assoc m
-                   (keyword (:id field))
-                   (cond-> (select-keys field [:validators])
-                     (= (:fieldType field) "dropdown")
-                     (assoc :allowed-values (allowed-values (:options field))))))
-          {}
-          (util/flatten-form-fields form-content)))
-
 (defn validator-keyword->fn [validator-keyword]
-  (case validator-keyword
-    :or
-    (fn [& answers]
+  (case (keyword validator-keyword)
+    :one-of ; one of the answers of a group of fields must validate to true
+    (fn [answers]
       (some true? answers))))
-
-(defn evaluate-child-validators [form-content validation-results]
-  (for [field form-content
-        :let  [child-validators (:child-validators field)
-               children         (:children field)]]
-    (concat
-      (for [[validator-keyword {:keys [fields]}] child-validators
-            :let [validation-fn (validator-keyword->fn validator-keyword)]]
-        (validation-fn (map (comp :answer validation-results keyword) fields)))
-      (child-validators children flattened-validators))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn validation-results [form-validators answers-by-key]
-  (into {}
-    (for [[form-key {:keys [validators allowed-values]}] form-validators
-          :let  [answer           (first (get answers-by-key form-key))
-                 valid-answer?    (fn [validator]
-                                    (validator/validate validator
-                                                        (:value answer)))]]
-      {form-key
-       {:answer         answer
-        :allowed-values allowed-values
-        :validators     validators
-        :passed?        (and
-                          (every? valid-answer? validators)
-                          (or
-                            (nil? allowed-values)
-                            (some? (allowed-values (:value answer)))))}})))
+(defn passed? [answer validators]
+  (every? (fn [validator]
+            (validator/validate validator answer))
+          validators))
+
+(defn build-results
+  [answers-by-key results [{:keys [id] :as field} & forms]]
+  (let [id     (keyword id)
+        answer (:value (get answers-by-key id))]
+    (into {}
+      (match field
+        {:fieldClass      "wrapperElement"
+         :children        children
+         :child-validator validation-keyword}
+        (build-results
+          answers-by-key
+          (concat results
+                  {id {:passed?
+                       ((validator-keyword->fn validation-keyword)
+                        (mapv (comp :passed? second)
+                              (build-results answers-by-key [] children)))}})
+          forms)
+
+        {:fieldClass "wrapperElement"
+         :children   children}
+        (build-results
+          answers-by-key
+          (concat results (build-results answers-by-key [] children))
+          forms)
+
+        {:fieldClass "formField"
+         :fieldType  "dropdown"
+         :validators validators
+         :options    options}
+        (let [allowed-values (allowed-values options)]
+          (build-results
+            answers-by-key
+            (concat results
+                    {id {:passed? (and (or (nil? allowed-values)
+                                           (some? (allowed-values answer)))
+                                       (passed? answer validators))}})
+            forms))
+
+        {:fieldClass "formField"
+         :validators validators}
+        (build-results
+          answers-by-key
+          (concat results
+                  {id {:passed? (passed? answer validators)}})
+          forms)
+
+        :else results))))
 
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
@@ -69,10 +85,10 @@
    (valid-application? application (form-store/fetch-form (:form application))))
   ([application form]
    {:pre [(not-empty form)]}
-   (let [form-validators          (form-validators (:content form))
-         answers-by-key           (group-by (comp keyword :key) (:answers application))
-         validation-results       (validation-results form-validators answers-by-key)
-         child-validation-results (evaluate-child-validators (:content form) validation-results)]
+   (let [answers-by-key (util/group-by-first (comp keyword :key) (:answers application))]
      (and
-       (empty? (extra-answers-not-in-original-form (keys form-validators) (keys answers-by-key)))
-       (empty? (validation-failures form-validators answers-by-key))))))
+       (empty? (extra-answers-not-in-original-form
+                 (map (comp keyword :id) (util/flatten-form-fields form))
+                 (keys answers-by-key)))
+       (empty? (build-results answers-by-key [] (:content form)))))))
+

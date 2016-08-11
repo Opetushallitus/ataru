@@ -96,7 +96,7 @@
                                                          (s/recursive #'WrapperElement)
                                                          :else
                                                          BasicElement)]
-                             (s/optional-key :child-validators) s/Any
+                             (s/optional-key :child-validator) (s/enum :one-of)
                              (s/optional-key :params) s/Any
                              (s/optional-key :label)  LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
