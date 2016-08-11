@@ -87,8 +87,10 @@
    {:pre [(not-empty form)]}
    (let [answers-by-key (util/group-by-first (comp keyword :key) (:answers application))]
      (and
-       (empty? (extra-answers-not-in-original-form
-                 (map (comp keyword :id) (util/flatten-form-fields form))
-                 (keys answers-by-key)))
-       (empty? (build-results answers-by-key [] (:content form)))))))
-
+       (empty?
+         (extra-answers-not-in-original-form
+           (map (comp keyword :id) (util/flatten-form-fields (:content form)))
+           (keys answers-by-key)))
+       (every?
+         #(:passed? (second %))
+         (build-results answers-by-key [] (:content form)))))))
