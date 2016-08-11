@@ -7,6 +7,7 @@
                                                            textual-field-value
                                                            scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
+            [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -112,7 +113,10 @@
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
-        (for [child children]
+        ; flatten fields here because 'rowcontainer' may
+        ; have nested fields because
+        ; of validation (for example :one-of validator)
+        (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
 (defn dropdown
