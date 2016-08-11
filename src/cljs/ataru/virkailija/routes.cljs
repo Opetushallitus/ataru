@@ -30,16 +30,7 @@
 
   (defroute "/editor" []
     (dispatch [:set-active-panel :editor])
-    (dispatch [:editor/refresh-forms])
-    (dispatch-after-state
-      :predicate
-      (fn [db] (not-empty (get-in db [:editor :forms])))
-      :handler
-      (fn [forms]
-        (let [id (-> forms first first)]
-          ; prevents dispatching :editor/refresh-form twice
-          (.replaceState js/history nil nil (str "#/editor/" id))
-          (dispatch [:editor/select-form id])))))
+    (dispatch [:editor/refresh-forms]))
 
   (defroute #"/editor/(\d+)" [id]
     (dispatch [:set-active-panel :editor])
