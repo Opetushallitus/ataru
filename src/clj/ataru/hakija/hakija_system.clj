@@ -3,6 +3,7 @@
             [ataru.db.migrations :as migrations]
             [ataru.hakija.hakija-routes :as handler]
             [ataru.http.server :as server]
+            [ataru.hakija.email :as email]
             [environ.core :refer [env]]))
 
 (defn new-system
@@ -18,6 +19,7 @@
                     :repl-port repl-port}
 
      :migration    (migrations/new-migration)
+     :email        (email/new-emailer)
      :server       (component/using
                      (server/new-server)
                      [:server-setup :handler]))))
