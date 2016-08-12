@@ -12,15 +12,19 @@
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy]]))
 
+(def tz (t/default-time-zone))
+
 (def ^:private modified-time-format
-  (f/formatter "yyyy-MM-dd HH:mm:ss"))
+  (f/formatter "yyyy-MM-dd HH:mm:ss" tz))
 
 (def ^:private filename-time-format
-  (f/formatter "yyyy-MM-dd_HHmm"))
+  (f/formatter "yyyy-MM-dd_HHmm" tz))
 
 (defn time-formatter
-  [date-time]
-  (f/unparse modified-time-format date-time))
+  ([date-time formatter]
+   (f/unparse formatter date-time))
+  ([date-time]
+    (time-formatter date-time modified-time-format)))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -138,7 +142,7 @@
         sanitized-name (-> (:name form)
                            (string/replace #"[\s]+" "-")
                            (string/replace #"[^\w-]+" ""))
-        time (f/unparse filename-time-format (:last-modified form))]
+        time (time-formatter (t/now) filename-time-format)]
     (str form-id "_" sanitized-name "_" time ".xlsx")))
 
 

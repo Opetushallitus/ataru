@@ -40,12 +40,15 @@
        c/to-default-time-zone
        (f/unparse (f/formatters :date-time))))
 
-(defn- time->str [google-date]
+(defn time->str [google-date]
+  (str (with-dow google-date)
+       "na "
+       (time->short-str google-date)))
+
+(defn time->short-str [google-date]
   (->> google-date
        c/to-default-time-zone
-       (f/unparse time-formatter)
-       (str (with-dow google-date)
-            "na ")))
+       (f/unparse time-formatter)))
 
 (defonce iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
 
