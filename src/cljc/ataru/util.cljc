@@ -31,20 +31,19 @@
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))
 
-(defn group-answers-by-wrapperelement [wrapper-fields answers]
-  (let [answers-by-key (answers-by-key answers)]
-    (into {}
-      (for [{:keys [id children] :as field} wrapper-fields
-            :let [top-level-children children
-                  section-id id]]
-        {id (loop [acc []
-                   [{:keys [id children] :as field} & rest-of-fields] top-level-children]
-              (if (not-empty children)
-                (recur acc (concat children rest-of-fields))
-                                        ; this is the ANSWER id, NOT wrapper id
-                (if id
-                  (recur (conj acc
-                           {(keyword id)
-                            (get answers-by-key (keyword id))})
-                    rest-of-fields)
-                  acc)))}))))
+(defn group-answers-by-wrapperelement [wrapper-fields answers-by-key]
+  (into {}
+    (for [{:keys [id children] :as field} wrapper-fields
+          :let [top-level-children children
+                section-id id]]
+      {id (loop [acc []
+                 [{:keys [id children] :as field} & rest-of-fields] top-level-children]
+            (if (not-empty children)
+              (recur acc (concat children rest-of-fields))
+              ; this is the ANSWER id, NOT section/wrapperElement id
+              (if id
+                (recur (conj acc
+                         {(keyword id)
+                          (get answers-by-key (keyword id))})
+                  rest-of-fields)
+                acc)))})))

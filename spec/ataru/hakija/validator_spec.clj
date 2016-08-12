@@ -3,7 +3,7 @@
             [speclj.core :refer :all]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
-            [ataru.fixtures.form :refer [form]]
+            [ataru.fixtures.person-info-form :refer [form]]
             [taoensso.timbre :refer [spy debug]]))
 
 (def f form)
@@ -16,8 +16,9 @@
     (should== false
       (validator/valid-application? extra-answers f))
     (should== #{:foo}
-      (validator/extra-answers-not-in-original-form (map (comp keyword :id) (util/flatten-form-fields (:content f)))
-        (keys (validator/answers-by-key extra-answers)))))
+      (validator/extra-answers-not-in-original-form
+        (map (comp keyword :id) (util/flatten-form-fields (:content f)))
+        (keys (util/answers-by-key extra-answers)))))
   (it "fails answers with missing answers"
     (should== false
       (validator/valid-application? (assoc a :answers []) f))

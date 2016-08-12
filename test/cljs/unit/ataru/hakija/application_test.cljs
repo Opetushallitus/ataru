@@ -210,7 +210,29 @@
 
 (deftest wrappers-are-extracted-correctly
   (let [result (extract-wrapper-sections form2)
-        expected '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})]
+        expected '({:id    "w1",
+                    :label {:fi "osio1", :sv ""},
+                    :children
+                    [{:id         "f1",
+                      :label      {:fi "kenttä1", :sv ""},
+                      :params     {:size "S"},
+                      :validators ["required"],
+                      :fieldType  "textField",
+                      :fieldClass "formField"}
+                     {:id         "f2",
+                      :label      {:fi "kenttä2", :sv ""},
+                      :params     {:size "M"},
+                      :fieldType  "textField",
+                      :fieldClass "formField"}]}
+                   {:id "w2",
+                    :label {:fi "osio2", :sv ""},
+                    :children
+                    [{:id "f3",
+                      :label {:fi "kenttä3", :sv ""},
+                      :params {:size "S"},
+                      :validators ["required"],
+                      :fieldType "textField",
+                      :fieldClass "formField"}]})]
     (is (= expected result))))
 
 (def
@@ -220,12 +242,26 @@
    :G__25 {:valid true}})
 
 (deftest wrapper-sections-with-validity-is-correctly-constructed
-  (let [wrapper-sections '({:id "w1" :label {:fi "osio1", :sv ""}} {:id "w2" :label {:fi "osio2", :sv ""}})
+  (let [wrapper-sections '({:id "w1"
+                            :label {:fi "osio1", :sv ""}
+                            :children [{:id :f1}
+                                       {:id :f2}]}
+                           {:id "w2"
+                            :label {:fi "osio2", :sv ""}
+                            :children [{:id :f3}
+                                       {:id :f4}
+                                       {:id :f5}]})
         answers {:f1 {:valid true}
                  :f2 {:valid false}
                  :f3 {:valid true}
                  :f4 {:valid true}
                  :f5 {:valid true}}
-        expected '({:id "w1" :valid false :label {:fi "osio1", :sv ""}} {:id "w2" :valid true :label {:fi "osio2", :sv ""}})
+        expected '({:id "w1" :valid false :label {:fi "osio1", :sv ""}
+                    :children [{:id :f1}
+                               {:id :f2}]}
+                   {:id "w2" :valid true :label {:fi "osio2", :sv ""}
+                    :children [{:id :f3}
+                               {:id :f4}
+                               {:id :f5}]})
         result (wrapper-sections-with-validity wrapper-sections answers)]
     (is (= expected result))))
