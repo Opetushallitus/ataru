@@ -21,7 +21,9 @@
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
         selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
     (fn []
-      (into [:div.editor-form__list]
+      (into (if @selected-form-id
+              [:div.editor-form__list]
+              [:div.editor-form__list.editor-form__list_expanded])
             (for [[id form] @forms
                   :let [selected? (= id @selected-form-id)]]
               ^{:key id}
