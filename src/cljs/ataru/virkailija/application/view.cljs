@@ -95,10 +95,8 @@
   (let [selected-form           (subscribe [:editor/selected-form])]
     (fn [selected-application] [readonly-contents/readonly-fields @selected-form selected-application])))
 
-(def ^:private short-time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
-
 (defn event-row [event]
-  (let [time-str     (f/unparse short-time-formatter (:time event))
+  (let [time-str     (t/time->short-str (:time event))
         to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
     (case (:event-type event)
       "received" (to-event-row "Hakemus saapunut")
