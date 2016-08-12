@@ -44,6 +44,19 @@
         (fn [forms]
           (dispatch [:editor/select-form parsed-id])))))
 
+  (defroute #"/applications/" []
+    (dispatch [:editor/refresh-forms])
+    (dispatch-after-state
+      :predicate
+      (fn [db] (not-empty (get-in db [:editor :forms])))
+      :handler
+      (fn [forms]
+        (let [id (-> forms first first)]
+          (.replaceState js/history nil nil (str "#/applications/" id))
+          (dispatch [:editor/select-form id])
+          (dispatch [:application/fetch-applications id])
+          (dispatch [:set-active-panel :application])))))
+
   (defroute #"/applications/(\d+)" [form-id]
     (let [parsed-id (js/Number form-id)]
       (dispatch [:editor/refresh-forms])
