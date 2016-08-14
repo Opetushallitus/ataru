@@ -93,7 +93,8 @@
 
 (defn application-contents [selected-application]
   (let [selected-form           (subscribe [:editor/selected-form])]
-    (fn [selected-application] [readonly-contents/readonly-fields @selected-form selected-application])))
+    (fn [selected-application]
+      [readonly-contents/readonly-fields @selected-form selected-application])))
 
 (def ^:private short-time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
