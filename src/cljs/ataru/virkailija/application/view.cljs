@@ -9,14 +9,14 @@
             [ataru.cljs-util :refer [wrap-scroll-to]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn toggle-form-list-open [open]
-  (reset! open (not @open))
+(defn toggle-form-list-open! [open]
+  (swap! open not)
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
 
 (defn form-list-arrow-up [open]
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
-   {:on-click #(toggle-form-list-open open)}])
+   {:on-click #(toggle-form-list-open! open)}])
 
 (defn form-list-row [form selected? open]
   [:a.application-handling__form-list-row-link
@@ -24,8 +24,8 @@
    (let [row-element [:div.application-handling__form-list-row
                       {:class (if selected? "application-handling__form-list-selected-row" "")
                        :on-click (if (not selected?)
-                                   #(toggle-form-list-open open)
-                                   #(toggle-form-list-open open))}
+                                   #(toggle-form-list-open! open)
+                                   #(toggle-form-list-open! open))}
                       (:name form)]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
@@ -40,7 +40,7 @@
 
 (defn form-list-closed [selected-form open]
   [:div.application-handling__form-list-closed
-   {:on-click #(toggle-form-list-open open)}
+   {:on-click #(toggle-form-list-open! open)}
    [:div.application-handling__form-list-row.application-handling__form-list-selected-row (:name selected-form)]
    [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow]])
 
