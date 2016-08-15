@@ -2,6 +2,8 @@
     (:require [ataru.virkailija.component-data.component :as component]
               [clojure.walk]))
 
+; validators defined in ataru.hakija.application-validators
+
 (defn ^:private text-field
   [labels & {:keys [size id validators] :or {size "M" validators []}}]
   (-> (component/text-field)
@@ -297,7 +299,8 @@
 
 (defn ^:private ssn-component
   []
-  (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn :validators [:ssn]))
+  (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn)
+         :validators [:ssn :required]))
 
 (defn ^:private birthdate-component
   []
@@ -306,21 +309,25 @@
       {:fi "Syntymäaika" :sv "Födelsedag"}
       :size "S"
       :id :birth-date
-      :validators [:past-date])
+      :validators [:past-date :required])
     {:params {:placeholder {:fi "pp.kk.vvvv"}}}))
 
 (defn ^:private identification-section
   []
-  (component/row-section [(nationality-component)
-                          (ssn-component)
-                          (birthdate-component)]))
+  (component/row-section
+    [(nationality-component)
+     (assoc (component/row-section
+              [(ssn-component)
+               (birthdate-component)])
+            :child-validator :one-of
+            )]))
 
 (defn ^:private gender-section
   []
   (-> (component/dropdown)
-      (merge (component/dropdown) {:label {:fi "Sukupuoli" :sv "Kön"}
+      (merge (component/dropdown) {:label      {:fi "Sukupuoli" :sv "Kön"}
                                    :validators [:required]
-                                   :id :gender})
+                                   :id         :gender})
       (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                    (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
 

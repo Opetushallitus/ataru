@@ -29,9 +29,9 @@
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
-         :swap-ssn-birthdate-based-on-nationality
-         swap-ssn-birthdate-based-on-nationality
-         nil))
+    :swap-ssn-birthdate-based-on-nationality
+    swap-ssn-birthdate-based-on-nationality
+    nil))
 
 (defn extract-rules [content]
   (->> (for [field content]

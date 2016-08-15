@@ -7,7 +7,6 @@
         (map-indexed
           (fn [idx field]
             [(keyword (:id field)) {:valid (not (some #(= % "required") (:validators field)))
-                                    :wrapper-id (:wrapper-id field)
                                     :label (:label field)
                                     :order-idx idx}]) flattened-form-fields)))
 
@@ -46,17 +45,27 @@
    :answers (create-answers-to-submit (:answers application) form)})
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label])
+  (map #(select-keys % [:id :label :children])
        (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
-(defn wrapper-section-ids-validity [answers]
-  (let [grouped (group-by :wrapper-id (vals answers))]
-    (into {} (for [[id answers] grouped] [id (bools-all-true (map :valid answers))]))))
+(defn wrapper-section-ids-validity [wrapper-sections answers]
+  (let [grouped (util/group-answers-by-wrapperelement wrapper-sections answers)]
+    (into {}
+      (for [[section-id answers] grouped]
+        (do
+          [section-id (bools-all-true
+                        (eduction
+                          (comp
+                            (map first)
+                            (map second)
+                            (filter some?)
+                            (map :valid))
+                          answers))])))))
 
 (defn wrapper-sections-with-validity [wrapper-sections answers]
-  (let [wrapper-section-id->valid (wrapper-section-ids-validity answers)]
+  (let [wrapper-section-id->valid (wrapper-section-ids-validity wrapper-sections answers)]
     (map
       (fn [wrapper-section]
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))

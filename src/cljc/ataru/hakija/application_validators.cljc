@@ -121,7 +121,9 @@
 
 (defn validate
   [validator value]
-  (when-let [validate-fn (get validators (if (keyword? validator)
-                                           validator
-                                           (keyword validator)))]
-    (validate-fn value)))
+  (boolean
+    (when-let [validator-fn (get validators
+                              (if (keyword? validator)
+                                validator
+                                (keyword validator)))]
+      (validator-fn value))))

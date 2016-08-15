@@ -5,8 +5,7 @@
             [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
             [ataru.hakija.application-validators :as validator]
-            [speclj.core :refer :all]
-            [taoensso.timbre :refer [spy debug]]))
+            [speclj.core :refer :all]))
 
 (describe "required validator"
   (tags :unit)

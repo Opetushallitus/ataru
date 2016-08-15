@@ -25,9 +25,8 @@
       (response/not-found form))))
 
 (defn- handle-application [application]
-  (info "Received application:")
-  (info application)
-  (if (validator/valid-application application)
+  (info "Received application:" application)
+  (if (validator/valid-application? application)
     (let [stored-app-id (application-store/add-new-application application)]
       (info "Stored application with id:" stored-app-id)
       (email-store/store-email-verification application stored-app-id)

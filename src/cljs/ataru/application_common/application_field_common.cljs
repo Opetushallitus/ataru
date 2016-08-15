@@ -8,9 +8,6 @@
 (defn textual-field-value [field-descriptor application]
   (:value ((answer-key field-descriptor) (:answers application))))
 
-(defn wrapper-id [field-descriptor]
-  (str "wrapper-" (:id field-descriptor)))
-
 (defn scroll-to-anchor
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])

@@ -1,7 +1,9 @@
 (ns ataru.util
   (:require #?(:cljs [ataru.cljs-util :as util])
             #?(:clj  [clojure.core.match :refer [match]]
-               :cljs [cljs.core.match :refer-macros [match]]))
+               :cljs [cljs.core.match :refer-macros [match]])
+            #?(:clj  [taoensso.timbre :refer [spy debug]]
+               :cljs [taoensso.timbre :refer-macros [spy debug]]))
   (:import #?(:clj [java.util UUID])))
 
 (defn map-kv [m f]
@@ -19,19 +21,29 @@
   (flatten
     (for [field fields]
       (match
-        [field]
-
-        [{:fieldClass "wrapperElement"
-          :fieldType  "fieldset"
-          :children   children}]
-        (flatten-form-fields
-          (map #(assoc % :wrapper-id (:id field)) children))
-
-        [{:fieldClass "wrapperElement"
-          :fieldType  "rowcontainer"
-          :children   children
-          :wrapper-id wrapper-id}]
-        (flatten-form-fields
-          (map #(assoc % :wrapper-id wrapper-id) children))
+        field
+        {:fieldClass "wrapperElement"
+         :children   children}
+        (flatten-form-fields children)
 
         :else field))))
+
+(defn answers-by-key [answers]
+  (group-by-first (comp keyword :key) answers))
+
+(defn group-answers-by-wrapperelement [wrapper-fields answers-by-key]
+  (into {}
+    (for [{:keys [id children] :as field} wrapper-fields
+          :let [top-level-children children
+                section-id id]]
+      {id (loop [acc []
+                 [{:keys [id children] :as field} & rest-of-fields] top-level-children]
+            (if (not-empty children)
+              (recur acc (concat children rest-of-fields))
+              ; this is the ANSWER id, NOT section/wrapperElement id
+              (if id
+                (recur (conj acc
+                         {(keyword id)
+                          (get answers-by-key (keyword id))})
+                  rest-of-fields)
+                acc)))})))
