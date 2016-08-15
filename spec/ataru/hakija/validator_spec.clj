@@ -9,7 +9,7 @@
 (def f form)
 (def a answer)
 (def extra-answers (update a :answers conj {:key "foo" :value "barbara"}))
-(def answers-by-key (util/answers-by-key a))
+(def answers-by-key (util/answers-by-key (:answers a)))
 
 (describe "application validation"
   (it "fails answers with extraneous keys"
@@ -18,7 +18,7 @@
     (should= #{:foo}
       (validator/extra-answers-not-in-original-form
         (map (comp keyword :id) (util/flatten-form-fields (:content f)))
-        (keys (util/answers-by-key extra-answers)))))
+        (keys (util/answers-by-key (:answers extra-answers))))))
   (it "fails answers with missing answers"
     (should= false
       (validator/valid-application? (assoc a :answers []) f))
@@ -29,7 +29,7 @@
     (should= true
       (validator/valid-application? a f))
     (should=
-      {:address                              {:passed? true},
+      {:address                              {:passed? true}
        :email                                {:passed? true}
        :preferred-name                       {:passed? true}
        :last-name                            {:passed? true}
