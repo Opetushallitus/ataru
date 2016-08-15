@@ -53,6 +53,6 @@
     (fn [form-data application]
       (when form-data
         (into [:div.application__readonly-container]
-              (for [content (:content form-data)
-                    :when   (get-in @ui [(keyword (:id content)) :visible?] true)]
+          (for [content (:content form-data)
+                :when   (get-in @ui [(keyword (:id content)) :visible?] true)]
                 [field content application]))))))
