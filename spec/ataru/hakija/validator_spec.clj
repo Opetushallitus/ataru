@@ -13,22 +13,22 @@
 
 (describe "application validation"
   (it "fails answers with extraneous keys"
-    (should== false
+    (should= false
       (validator/valid-application? extra-answers f))
-    (should== #{:foo}
+    (should= #{:foo}
       (validator/extra-answers-not-in-original-form
         (map (comp keyword :id) (util/flatten-form-fields (:content f)))
         (keys (util/answers-by-key extra-answers)))))
   (it "fails answers with missing answers"
-    (should== false
+    (should= false
       (validator/valid-application? (assoc a :answers []) f))
-    (should== false
+    (should= false
       (validator/valid-application? (update a :answers rest) f)))
 
   (it "passes validation"
-    (should== true
+    (should= true
       (validator/valid-application? a f))
-    (should==
+    (should=
       {:address                              {:passed? true},
        :email                                {:passed? true}
        :preferred-name                       {:passed? true}

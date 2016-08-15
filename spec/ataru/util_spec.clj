@@ -10,7 +10,7 @@
 
 (describe "grouping answers"
   (it "puts the answer in a group or else it gets the hose again"
-      (should==
+      (should=
         '(:first-name :preferred-name :last-name :nationality :ssn :birth-date :gender :email :phone :address :postal-office :postal-code :home-town :language)
         (->>
           (util/group-answers-by-wrapperelement (extract-wrapper-sections form) (util/answers-by-key (:answers answer)))
