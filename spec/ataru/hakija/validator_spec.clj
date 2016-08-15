@@ -12,6 +12,7 @@
 (def answers-by-key (util/answers-by-key (:answers a)))
 
 (describe "application validation"
+  (tags :unit)
   (it "fails answers with extraneous keys"
     (should= false
       (validator/valid-application? extra-answers f))

@@ -9,6 +9,7 @@
     (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
 
 (describe "grouping answers"
+  (tags :unit)
   (it "puts the answer in a group or else it gets the hose again"
       (should=
         '(:first-name :preferred-name :last-name :nationality :ssn :birth-date :gender :email :phone :address :postal-office :postal-code :home-town :language)
