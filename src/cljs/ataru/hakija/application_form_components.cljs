@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
-            [re-frame.core :refer [subscribe dispatch]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
@@ -29,7 +29,8 @@
   (let [value  (-> evt .-target .-value)
         valid? (field-value-valid? text-field-data value)]
     (do
-      (dispatch [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
+      ; dispatch-sync because we really really want the value to change NOW. Is a minor UI speed boost.
+      (dispatch-sync [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
       (when-let [rules (not-empty (:rules text-field-data))]
         (dispatch [:application/run-rule rules])))))
 
@@ -80,7 +81,10 @@
            :class     (str size-class (if @valid?
                                           " application__form-text-input--normal"
                                           " application__form-field-error"))
-           :value     (textual-field-value field-descriptor @application)
+
+           ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
+           ; dynamically made changes to the text-field value.
+           :default-value (textual-field-value field-descriptor @application)
            :on-change (partial textual-field-change field-descriptor)}]]))))
 
 (defn- text-area-size->class [size]
@@ -97,7 +101,9 @@
        [label field-descriptor "application__form-text-area"]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
-         :value (textual-field-value field-descriptor @application)
+         ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
+         ; dynamically made changes to the text-field value.
+         :default-value (textual-field-value field-descriptor @application)
          :on-change (partial textual-field-change field-descriptor)}]])))
 
 (declare render-field)

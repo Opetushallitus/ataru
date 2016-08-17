@@ -56,7 +56,7 @@
                               [:input.editor-form__form-name-input
                                {:key         (:id @form) ; needed to trigger component-did-update
                                 :type        "text"
-                                :value       @form-name
+                                :default-value @form-name
                                 :placeholder "Lomakkeen nimi"
                                 :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
