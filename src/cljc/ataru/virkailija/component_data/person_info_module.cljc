@@ -300,6 +300,7 @@
 (defn ^:private ssn-component
   []
   (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn)
+         :rules {:select-gender-based-on-ssn :gender}
          :validators [:ssn :required]))
 
 (defn ^:private birthdate-component

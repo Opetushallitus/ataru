@@ -11,7 +11,7 @@
                              (update-in [:application :ui :ssn] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        "Suomi"
+        "FIN"
         (-> db
             (update-in [:application :answers] dissoc :birth-date)
             (update-in [:application :answers] assoc :ssn {:value nil :valid false})
@@ -27,10 +27,20 @@
         :else (hide-both-fields))
       (hide-both-fields))))
 
+(defn- select-gender-based-on-ssn
+  [db _]
+  (when (-> db :application :answers :ssn :valid)
+    (let [ssn (-> db :application :answers :ssn :value)]
+      (when-let [gender-sign (when (= (count ssn) 11) (nth ssn 9))]
+        (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "female" "male"))]
+          (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :swap-ssn-birthdate-based-on-nationality
     swap-ssn-birthdate-based-on-nationality
+    :select-gender-based-on-ssn
+    select-gender-based-on-ssn
     nil))
 
 (defn extract-rules [content]

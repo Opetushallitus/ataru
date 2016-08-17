@@ -1,6 +1,5 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
-            [ataru.virkailija.component-data.person-info-module :as pm]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
