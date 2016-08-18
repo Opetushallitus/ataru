@@ -29,31 +29,44 @@
         value (:metadata koodi)]
     {key value}))
 
+(defn- parse-response
+  [response]
+  (->> response
+       :body
+       slurp
+       .getBytes
+       ByteArrayInputStream.
+       xml/parse
+       :content
+       (map parse-element)
+       (map filter-postal-codes)
+       (into {})))
+
+(defn- load-postal-codes
+  []
+  (parse-response @(http/get (str (get-in config [:codes-service :url]) "/rest/posti/koodi"))))
+
+(def ^:private memo-postal-codes
+  (memoize load-postal-codes))
+
 (defprotocol PostalCodeService
   "Get list of postal codes with their corresponding postal office names
    in every available translation. Response object will look like:
 
    {\"99400\" {:sv \"ENONTEKIÖ\" :fi \"ENONTEKIÖ\"}
     \"55120\" {:sv \"IMATRA\" :fi \"IMATRA\"}}"
-  (get-postal-codes [client]))
+  (get-postal-office-name [this postal-code])
+  (get-postal-codes [this]))
 
 (defrecord PostalCodeClient []
   component/Lifecycle
   PostalCodeService
 
   (get-postal-codes [this]
-    (let [url (str (get-in config [:codes-service :url]) "/rest/posti/koodi")
-          resp @(http/get url)]
-      (->> resp
-           :body
-           slurp
-           .getBytes
-           ByteArrayInputStream.
-           xml/parse
-           :content
-           (map parse-element)
-           (map filter-postal-codes)
-           (into {}))))
+    (memo-postal-codes))
+
+  (get-postal-office-name [this postal-code]
+    (get (get-postal-codes this) postal-code))
 
   (start [this]
     this)
