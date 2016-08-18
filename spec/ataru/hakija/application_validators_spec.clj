@@ -30,14 +30,25 @@
                 (let [ssn (str (:start ssn) century-char (:end ssn))]
                   (it (str "should validate " ssn)
                     (should (validator/validate :ssn ssn)))))
-              ["+" "-" "A"]))
+              ["A"]))
        ssn/ssn-list)
 
-  (it "should validate nil"
+  (it "should fail to validate nil"
     (should-not (validator/validate :ssn nil)))
 
-  (it "should validate empty string"
-    (should-not (validator/validate :ssn ""))))
+  (it "should fail to validate empty string"
+      (should-not (validator/validate :ssn "")))
+
+  (it "should fail to validate SSN with century - / + and year between 2000-current_year"
+      (let [fun (partial validator/validate :ssn)]
+        (doseq [experiment ["020202-0202"
+                            "020202+0202"
+                            "020200+020J"]]
+          (should-not (fun experiment)))
+        (doseq [experiment ["020202A0202"
+                            "020202A0202"
+                            "020200A020J"]]
+          (should (fun experiment))))))
 
 (describe "email validator"
   (tags :unit)
