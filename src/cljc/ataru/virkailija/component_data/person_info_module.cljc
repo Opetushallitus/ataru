@@ -358,8 +358,8 @@
 
 (defn ^:private postal-office-section
   []
-  (component/row-section [(postal-office-component)
-                          (postal-code-component)]))
+  (component/row-section [(postal-code-component)
+                          (postal-office-component)]))
 
 (defn ^:private native-language-section
   []
