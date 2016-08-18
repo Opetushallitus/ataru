@@ -44,7 +44,7 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
 
-(def api-routes
+(defn api-routes [{:keys [postal-code-client]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET "/form/:id" []
@@ -58,7 +58,13 @@
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]
-      (handle-client-error error-details))))
+      (handle-client-error error-details))
+    (api/GET "/postal-codes/:postal-code" [postal-code]
+      :summary "Get name of postal office by postal code"
+      :return ataru-schema/postal-office-name
+      (if-let [name (.get-postal-office-name postal-code-client postal-code)]
+        (response/ok name)
+        (response/not-found)))))
 
 (defrecord Handler []
   component/Lifecycle
@@ -75,7 +81,7 @@
                           (api/routes
                             (api/context "/hakemus" []
                               buildversion-routes
-                              api-routes
+                              (api-routes this)
                               (route/resources "/")
                               (api/undocumented
                                 (api/GET "/:id" []
