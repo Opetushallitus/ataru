@@ -3,6 +3,7 @@
             [ataru.hakija.rules :as rules]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+
 (deftest rule-runner
   (let [rule-fn                 (fn [db argument]
                                   (do

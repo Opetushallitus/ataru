@@ -3,7 +3,9 @@
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
             #?(:clj  [clj-time.format :as f]
-               :cljs [cljs-time.format :as f])))
+               :cljs [cljs-time.format :as f])
+            #?(:clj  [clojure.core.match :refer [match]]
+               :cljs [cljs.core.match :refer-macros [match]])))
 
 (defn ^:private required?
   [value]
@@ -43,16 +45,38 @@
                             29 "X"
                             30 "Y"})
 
-(defn ^:private ssn?
+(defn- ->int [thestr]
+  #?(:clj  (Integer/parseInt thestr)
+     :cljs (js/parseInt thestr 10)))
+
+(defn valid-year? [year century]
+  {:pre [(integer? year)]}
+  (let [current-year (c/year (c/now))]
+    (and
+      ; not (given year between 2000 and current-year)
+      (not
+        (and
+          (or (= "-" century)
+            (= "+" century))
+          (-> year (>= 2000))
+          (-> year (<= current-year))))
+      ; not (given century is A and year in future)
+      (not
+        (and
+          (or (= "A" century) (= "a" century))
+          (-> year (>= (+ current-year 1))))))))
+
+(defn- ssn?
   [value]
   (when-not (nil? value)
-    (when-let [[_ day month year _ individual check] (re-matches ssn-pattern value)]
+    (when-let [[_ day month year century individual check] (re-matches ssn-pattern value)]
       (let [check-str  (str day month year individual)
-            check-num  #?(:clj (Integer/parseInt check-str)
-                          :cljs (js/parseInt check-str 10))
+            check-num  (->int check-str) 
             check-mod  (mod check-num 31)
             check-char (get check-chars check-mod)]
-        (= (clojure.string/upper-case check) check-char)))))
+        (and
+          (valid-year? (+ 2000 (->int year)) century)
+          (= (clojure.string/upper-case check) check-char))))))
 
 (def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9]){2,}$")
 (def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")

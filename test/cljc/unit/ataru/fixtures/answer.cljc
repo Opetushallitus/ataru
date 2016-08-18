@@ -29,7 +29,7 @@
      :fieldType "dropdown",
      :label     {:fi "Kansalaisuus", :sv "Nationalitet"}}
     {:key       "ssn",
-     :value     "020202-0202",
+     :value     "020202A0202",
      :fieldType "textField",
      :label     {:fi "Henkilötunnus", :sv "Personnummer"}}
     {:key       "first-name",
