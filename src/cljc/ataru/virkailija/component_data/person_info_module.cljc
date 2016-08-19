@@ -5,8 +5,9 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators] :or {size "M" validators []}}]
+  [labels & {:keys [size id validators rules] :or {size "M" validators [] rules {}}}]
   (-> (component/text-field)
+      (assoc :rules rules)
       (assoc :label labels)
       (assoc :validators (conj validators :required))
       (assoc-in [:params :size] size)
@@ -350,7 +351,12 @@
 
 (defn ^:private postal-code-component
   []
-  (text-field {:fi "Postinumero" :sv "Postnummer"} :size "S" :id :postal-code :validators [:postal-code]))
+  (text-field
+    {:fi "Postinumero" :sv "Postnummer"}
+    :size "S"
+    :id :postal-code
+    :rules {:select-postal-office-based-on-postal-code :postal-office}
+    :validators [:postal-code]))
 
 (defn ^:private postal-office-component
   []

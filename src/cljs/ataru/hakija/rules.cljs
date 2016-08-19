@@ -1,5 +1,6 @@
 (ns ataru.hakija.rules
-  (:require [cljs.core.match :refer-macros [match]]))
+  (:require [cljs.core.match :refer-macros [match]]
+            [ataru.hakija.hakija-ajax :refer [get]]))
 
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
@@ -35,12 +36,24 @@
         (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "female" "male"))]
           (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))))
 
+(defn- select-postal-office-based-on-postal-code
+  [db _]
+  (when (-> db :application :answers :postal-code :valid)
+    (let [postal-code (-> db :application :answers :postal-code :value)]
+      (get
+        (str "/hakemus/api/postal-codes/" postal-code)
+        :application/handle-postal-code-input
+        :application/handle-postal-code-error)
+      db)))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :swap-ssn-birthdate-based-on-nationality
     swap-ssn-birthdate-based-on-nationality
     :select-gender-based-on-ssn
     select-gender-based-on-ssn
+    :select-postal-office-based-on-postal-code
+    select-postal-office-based-on-postal-code
     nil))
 
 (defn extract-rules [content]
