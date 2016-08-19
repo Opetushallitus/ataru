@@ -65,21 +65,23 @@
 
 (defn input-field
   ([path lang]
-   (input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])))
-  ([path lang dispatch-fn]
    (let [value (subscribe [:editor/get-component-value path])]
-     (r/create-class
-       {:component-did-mount (fn [component]
-                               (when (:focus? @value)
-                                 (let [dom-node (r/dom-node component)]
-                                   (.focus dom-node))))
-        :reagent-render      (fn [path lang]
-                               [:input.editor-form__text-field
-                                ; default-value means any programmatic changes to component value will NOT be dynamically updated
-                                ; this fixes flickering text-field input on IE11, and IE11 only
-                                {:default-value (get-in @value [:label lang])
-                                 :on-change dispatch-fn
-                                 :on-drop   prevent-default}])}))))
+     (input-field
+       path
+       (:focus? @value)
+       (reaction (get-in @value [:label lang]))
+       #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang]))))
+  ([path focus? value dispatch-fn]
+   (r/create-class
+     {:component-did-mount (fn [component]
+                             (when focus?
+                               (let [dom-node (r/dom-node component)]
+                                 (.focus dom-node))))
+      :reagent-render      (fn [_ _ _ _]
+                             [:input.editor-form__text-field
+                              {:value     @value
+                               :on-change dispatch-fn
+                               :on-drop   prevent-default}])})))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
