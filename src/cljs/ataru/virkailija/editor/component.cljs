@@ -65,12 +65,14 @@
 
 (defn input-field
   ([path lang]
+   (input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])))
+  ([path lang dispatch-fn]
    (let [value (subscribe [:editor/get-component-value path])]
      (input-field
        path
        (:focus? @value)
        (reaction (get-in @value [:label lang]))
-       #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang]))))
+       dispatch-fn)))
   ([path focus? value dispatch-fn]
    (r/create-class
      {:component-did-mount (fn [component]
