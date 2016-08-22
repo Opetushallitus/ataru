@@ -182,7 +182,7 @@
           :on-click (fn [evt]
                       (.preventDefault evt)
                       (dispatch [:editor/add-dropdown-option path]))}
-         [:img {:src "/lomake-editori/images/add_row.png"}] " Lisää"]]])))
+         [:i.zmdi.zmdi-plus-square] " Lisää"]]])))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"     component/form-section
