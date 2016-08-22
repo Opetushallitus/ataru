@@ -33,12 +33,12 @@
 (defn dropdown
   []
   {:fieldClass "formField"
-   :fieldType "dropdown"
-   :id (util/component-id)
-   :label {:fi "", :sv ""}
-   :params {}
-   :options [(dropdown-option)]
-   :focus? true})
+   :fieldType  "dropdown"
+   :id         (util/component-id)
+   :label      {:fi "", :sv ""}
+   :params     {}
+   :options    [(merge (dropdown-option) {:focus? false})]
+   :focus?     true})
 
 (defn row-section
   "Creates a data structure that represents a row that has multiple form
