@@ -40,7 +40,7 @@
         value  (or (first
                      (eduction
                        (comp (filter :default-value)
-                             (map :value))
+                             (map (comp :fi :label)))
                        (:options dropdown-data)))
                    (-> select .-value))
         valid  (field-value-valid? dropdown-data value)]
@@ -136,8 +136,9 @@
                                 [:select.application__form-select
                                  {:value (textual-field-value field-descriptor @application)}
                                  (for [option (:options field-descriptor)]
-                                   ^{:key (:value option)}
-                                   [:option {:value (:value option)} (get-in option [:label :fi])])]]])})))
+                                   (let [value (get-in option [:label :fi])]
+                                     ^{:key value}
+                                     [:option {:value value} value]))]]])})))
 
 (defn render-field
   [field-descriptor & args]

@@ -12,7 +12,7 @@
                              (update-in [:application :ui :ssn] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        "FIN"
+        "Suomi"
         (-> db
             (update-in [:application :answers] dissoc :birth-date)
             (update-in [:application :answers] assoc :ssn {:value nil :valid false})
@@ -33,7 +33,7 @@
   (when (-> db :application :answers :ssn :valid)
     (let [ssn (-> db :application :answers :ssn :value)]
       (when-let [gender-sign (when (= (count ssn) 11) (nth ssn 9))]
-        (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "female" "male"))]
+        (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "Nainen" "Mies"))]
           (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))))
 
 (defn- select-postal-office-based-on-postal-code
