@@ -67,8 +67,8 @@
          [:span.application__form-field-error "Tarkista muoto"])])))
 
 (defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        id (keyword (:id field-descriptor))
+  (let [id (keyword (:id field-descriptor))
+        value (subscribe [:state-query [:application :answers id :value]])
         valid? (subscribe [:state-query [:application :answers id :valid]])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
@@ -82,9 +82,7 @@
                                           " application__form-text-input--normal"
                                           " application__form-field-error"))
 
-           ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
-           ; dynamically made changes to the text-field value.
-           :default-value (textual-field-value field-descriptor @application)
+           :value @value
            :on-change (partial textual-field-change field-descriptor)}]]))))
 
 (defn- text-area-size->class [size]
