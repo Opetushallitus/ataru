@@ -284,36 +284,41 @@
             [component]
             (subvec components add-idx)))))))
 
-(defn- alter-component-index?
+(defn- fix-index-when-moving-within-same-component-group
   [source-path target-path]
   (let [target-index (last target-path)
-        fixed-target-path (if-not
-                            (or
-                              (= 0 target-index)
-                              (< 1 (count source-path)))
-                            (assoc target-path (dec (count target-path)) (dec target-index))
-                            target-path)]
-      fixed-target-path))
+        same-component-group? (and
+                                (= (butlast source-path) (butlast target-path))
+                                ((set target-path) :children)
+                                ((set source-path) :children))]
+    (if same-component-group?
+      (assoc target-path
+        (dec (count target-path))
+        (max (dec target-index) 0))
+      target-path)))
 
 (defn- recalculate-target-path
   [source-path target-path]
-  (let [altered-target-path (alter-component-index? source-path target-path)]
+  (let [altered-target-path (fix-index-when-moving-within-same-component-group source-path target-path)]
     (if (and
           (= 1 (count source-path))
           (< 1 (count altered-target-path))
-          (< (source-path 0) (altered-target-path 0)))
-        (into
-          [(dec (altered-target-path 0))]
-          (rest altered-target-path))
-        altered-target-path)))
+          (< (first source-path) (first (altered-target-path))))
+      (into
+        [(dec (first altered-target-path))]
+        (rest altered-target-path))
+      altered-target-path)))
 
 (defn move-component
   [db [_ source-path target-path]]
   (with-form-id [db form-id]
     (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
           recalculated-target-path (recalculate-target-path source-path target-path)
-          result-is-nested-component-group (and (contains? (set recalculated-target-path) :children) (= "wrapperElement" (:fieldClass component)))]
-      (if result-is-nested-component-group
+          result-is-nested-component-group? (and
+                                              (contains?
+                                                (set recalculated-target-path) :children)
+                                              (= "wrapperElement" (:fieldClass component)))]
+      (if result-is-nested-component-group?
         db ; Nesting is not allowed/supported
         (-> db
           (remove-component-from-list source-path)
