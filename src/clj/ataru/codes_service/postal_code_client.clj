@@ -42,12 +42,13 @@
        (map filter-postal-codes)
        (into {})))
 
-(defn- load-postal-codes
-  []
-  (parse-response @(http/get (str (get-in config [:codes-service :url]) "/rest/posti/koodi"))))
+(def ^:private postal-codes (atom nil))
 
-(def ^:private memo-postal-codes
-  (memoize load-postal-codes))
+(defn- memo-postal-codes
+  []
+  (if (nil? @postal-codes)
+    (reset! postal-codes (parse-response @(http/get (str (get-in config [:codes-service :url]) "/rest/posti/koodi"))))
+    @postal-codes))
 
 (defprotocol PostalCodeService
   "Get list of postal codes with their corresponding postal office names
