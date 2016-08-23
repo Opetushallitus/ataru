@@ -42,13 +42,16 @@
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (when (-> db :application :answers :postal-code :valid)
+  (if (-> db :application :answers :postal-code :valid)
     (let [postal-code (-> db :application :answers :postal-code :value)]
       (get
         (str "/hakemus/api/postal-codes/" postal-code)
         :application/handle-postal-code-input
         :application/handle-postal-code-error)
-      db)))
+      db)
+    (-> db
+        (update-in [:application :answers] assoc :postal-office {:valid false :value ""})
+        (update-in [:application :ui] dissoc :postal-office))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
