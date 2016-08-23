@@ -153,5 +153,7 @@
 
 (def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
 
+(s/defschema postal-office-name {s/Keyword s/Str})
+
 (s/defschema PostalCodes
-  {postal-code-key {s/Keyword s/Str}})
+  {postal-code-key postal-office-name})

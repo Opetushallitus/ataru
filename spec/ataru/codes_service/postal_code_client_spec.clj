@@ -34,4 +34,10 @@
         (should= 2 (count actual))
         (should= {"99400" {:sv "ENONTEKIÖ" :fi "ENONTEKIÖ"}
                   "55120" {:sv "IMATRA" :fi "IMATRA"}}
-                 actual)))))
+                 actual))))
+
+  (it "should return postal office names based on postal code"
+      (with-mock-api [client (fn [& _]
+                               (response/ok postal-code-response))]
+        (let [actual (.get-postal-office-name client "99400")]
+          (should= {:sv "ENONTEKIÖ" :fi "ENONTEKIÖ"} actual)))))

@@ -95,3 +95,18 @@
   (fn [db [_ f]]
     (or (f db)
         db)))
+
+(register-handler
+  :application/handle-postal-code-input
+  (fn [db [_ postal-office-name]]
+    (-> db
+        (assoc-in [:application :answers :postal-office] {:value (:fi postal-office-name) :valid true})
+        (assoc-in [:application :answers :home-town] {:value (:fi postal-office-name) :valid true}))))
+
+(register-handler
+  :application/handle-postal-code-error
+  (fn [db _]
+    (-> db
+        (assoc-in [:application :answers :postal-office] {:value "" :valid false})
+        (assoc-in [:application :answers :home-town] {:value "" :valid false}))))
+

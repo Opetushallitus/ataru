@@ -44,10 +44,9 @@
                        (:options dropdown-data)))
                    (-> select .-value))
         valid  (field-value-valid? dropdown-data value)]
-    (do
-      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])
-      (when-let [rules (not-empty (:rules dropdown-data))]
-        (dispatch [:application/run-rule rules])))))
+    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])
+    (when-let [rules (not-empty (:rules dropdown-data))]
+      (dispatch [:application/run-rule rules]))))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -137,8 +136,9 @@
                                 [:select.application__form-select
                                  {:value (textual-field-value field-descriptor @application)}
                                  (for [option (:options field-descriptor)]
-                                   ^{:key (:value option)}
-                                   [:option (get-in option [:label :fi])])]]])})))
+                                   (let [value (get-in option [:label :fi])]
+                                     ^{:key value}
+                                     [:option {:value value} value]))]]])})))
 
 (defn render-field
   [field-descriptor & args]
