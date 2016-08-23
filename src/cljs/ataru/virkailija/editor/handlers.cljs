@@ -284,36 +284,40 @@
             [component]
             (subvec components add-idx)))))))
 
-(defn- alter-component-index?
+(defn- recalculate-target-path-prevent-oob
   [source-path target-path]
-  (let [target-index (last target-path)
-        fixed-target-path (if-not
-                            (or
-                              (= 0 target-index)
-                              (< 1 (count source-path)))
-                            (assoc target-path (dec (count target-path)) (dec target-index))
-                            target-path)]
-      fixed-target-path))
+  (match [source-path target-path]
+    ; moving-top-level components
+    [[n :guard integer?] [nn :guard integer?]]
+    (or (when (> nn n)
+          [(dec nn)])
+      [(max 0 nn)])
 
-(defn- recalculate-target-path
-  [source-path target-path]
-  (let [altered-target-path (alter-component-index? source-path target-path)]
-    (if (and
-          (= 1 (count source-path))
-          (< 1 (count altered-target-path))
-          (< (source-path 0) (altered-target-path 0)))
-        (into
-          [(dec (altered-target-path 0))]
-          (rest altered-target-path))
-        altered-target-path)))
+    [[a :children xa] [b :children xb]]
+    (or
+      (when (and (> xb xa) (= a b))
+       [b :children (dec xb)])  ; moving within same component-group, index out of bounds prevention
+      [b :children (max 0 xb)]) ; moving between component-groups
+
+    ; moving component from root-level into a component-group
+    [[a] [b :children xb]]
+    (if (spy (-> b (< a)))
+      [b :children xb]       ; topwards
+      [(dec b) :children xb] ; bottomwards
+      )
+
+    :else target-path))
 
 (defn move-component
   [db [_ source-path target-path]]
   (with-form-id [db form-id]
     (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
-          recalculated-target-path (recalculate-target-path source-path target-path)
-          result-is-nested-component-group (and (contains? (set recalculated-target-path) :children) (= "wrapperElement" (:fieldClass component)))]
-      (if result-is-nested-component-group
+          recalculated-target-path (recalculate-target-path-prevent-oob source-path target-path)
+          result-is-nested-component-group? (and
+                                              (contains?
+                                                (set recalculated-target-path) :children)
+                                              (= "wrapperElement" (:fieldClass component)))]
+      (if result-is-nested-component-group?
         db ; Nesting is not allowed/supported
         (-> db
           (remove-component-from-list source-path)

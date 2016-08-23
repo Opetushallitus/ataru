@@ -2,11 +2,11 @@
 
 (defmacro with-path-and-index
   [bindings & body]
-  `(let [form-id#             (get-in ~(bindings 0) [:editor :selected-form-id])
+  `(let [form-id#             (get-in ~(first bindings) [:editor :selected-form-id])
          root-component-path# [:editor :forms form-id# :content]
          ~(bindings 2)        (if
-                                (= 1 (count ~(bindings 1)))
+                                (= 1 (count ~(second bindings)))
                                 root-component-path#
-                                (concat root-component-path# (butlast ~(bindings 1))))
-         ~(bindings 3)        (last ~(bindings 1))]
+                                (concat root-component-path# (butlast ~(second bindings))))
+         ~(bindings 3)        (last ~(second bindings))]
      ~@body))

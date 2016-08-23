@@ -256,7 +256,7 @@
              [:input.editor-form__text-field
               {:value     (get-in @value [:label lang])
                :on-change #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])
-               :on-drop prevent-default}]))]]
+               :on-drop   prevent-default}]))]]
        children
        [drag-n-drop-spacer (conj path :children (count children))]
        [add-component (conj path :children (count children))]])))
