@@ -65,24 +65,25 @@
                (validator/validate "required" @value))
          [:span.application__form-field-error "Tarkista muoto"])])))
 
-(defn text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+(defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id (keyword (:id field-descriptor))
         value (subscribe [:state-query [:application :answers id :value]])
         valid? (subscribe [:state-query [:application :answers id :valid]])]
-    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+    (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
          [label field-descriptor size-class]
          [:input.application__form-text-input
-          {:type      "text"
-           :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                          (:fi input-hint))
-           :class     (str size-class (if @valid?
-                                          " application__form-text-input--normal"
-                                          " application__form-field-error"))
+          (merge {:type        "text"
+                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                 (:fi input-hint))
+                  :class       (str size-class (if @valid?
+                                                 " application__form-text-input--normal"
+                                                 " application__form-field-error"))
 
-           :value @value
-           :on-change (partial textual-field-change field-descriptor)}]]))))
+                  :value       @value
+                  :on-change   (partial textual-field-change field-descriptor)}
+                 (when disabled {:disabled true}))]]))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -146,21 +147,22 @@
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
-      (cond-> (match field-descriptor
-                     {:fieldClass "wrapperElement"
-                      :fieldType  "fieldset"
-                      :children   children} [wrapper-field field-descriptor children]
-                     {:fieldClass "wrapperElement"
-                      :fieldType  "rowcontainer"
-                      :children   children} [row-wrapper children]
-                     {:fieldClass "formField"
-                      :id (_ :guard (complement visible?))} [:div]
+      (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
+        (cond-> (match field-descriptor
+                       {:fieldClass "wrapperElement"
+                        :fieldType  "fieldset"
+                        :children   children} [wrapper-field field-descriptor children]
+                       {:fieldClass "wrapperElement"
+                        :fieldType  "rowcontainer"
+                        :children   children} [row-wrapper children]
+                       {:fieldClass "formField"
+                        :id         (_ :guard (complement visible?))} [:div]
 
-                     {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor]
-                     {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                     {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
-        (and (empty? (:children field-descriptor))
-             (visible? (:id field-descriptor))) (into args)))))
+                       {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
+                       {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+                (and (empty? (:children field-descriptor))
+                     (visible? (:id field-descriptor))) (into args))))))
 
 (defn editable-fields [form-data]
   (when form-data

@@ -17,24 +17,28 @@
             (update-in [:application :answers] dissoc :birth-date)
             (update-in [:application :answers] assoc :ssn {:value nil :valid false})
             (update-in [:application :ui :birth-date] assoc :visible? false)
-            (update-in [:application :ui :ssn] assoc :visible? true))
-
+            (update-in [:application :ui :ssn] assoc :visible? true)
+            (update-in [:application :answers] assoc :gender {:value "" :valid false})
+            (update-in [:application :ui :gender] assoc :visible? false))
         (_ :guard string?)
         (-> db
             (update-in [:application :answers] dissoc :ssn)
             (update-in [:application :answers] assoc :birth-date {:value nil :valid false})
             (update-in [:application :ui :ssn] assoc :visible? false)
-            (update-in [:application :ui :birth-date] assoc :visible? true))
+            (update-in [:application :ui :birth-date] assoc :visible? true)
+            (update-in [:application :answers] assoc :gender {:value "" :valid false})
+            (update-in [:application :ui :gender] assoc :visible? true))
         :else (hide-both-fields))
       (hide-both-fields))))
 
 (defn- select-gender-based-on-ssn
   [db _]
-  (when (-> db :application :answers :ssn :valid)
+  (if (-> db :application :answers :ssn :valid)
     (let [ssn (-> db :application :answers :ssn :value)]
-      (when-let [gender-sign (when (= (count ssn) 11) (nth ssn 9))]
+      (when-let [gender-sign (nth ssn 9)]
         (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "Nainen" "Mies"))]
-          (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))))
+          (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))
+    (update-in db [:application :answers] assoc :gender {:value "" :valid false})))
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
