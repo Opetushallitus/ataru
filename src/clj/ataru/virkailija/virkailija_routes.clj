@@ -13,6 +13,7 @@
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
+            [compojure.api.exception :as ex]
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -181,7 +182,15 @@
                                                        :description "Specifies the clerk API for Ataru"}
                                                 :tags [{:name "form-api" :description "Form handling"}
                                                        {:name "applications-api" :description "Application handling"}
-                                                       {:name "postal-code-api" :descriptino "Postal code service"}]}}}
+                                                       {:name "postal-code-api" :description "Postal code service"}]}}
+                               :exceptions {:handlers {::ex/request-parsing
+                                                       (ex/with-logging ex/request-parsing-handler :warn)
+                                                       ::ex/request-validation
+                                                       (ex/with-logging ex/request-validation-handler :warn)
+                                                       ::ex/response-validation
+                                                       (ex/with-logging ex/response-validation-handler :error)
+                                                       ::ex/default
+                                                       (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
                               (api/context "/lomake-editori" []
@@ -195,13 +204,12 @@
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
-                                               (update-in [:session] assoc :store (create-store))
-                                               (update-in [:security] dissoc :content-type-options)
-                                               (update-in [:security] dissoc :anti-forgery)
-                                               (update-in [:responses] dissoc :content-types)))
+                                               (update :session assoc :store (create-store))
+                                               (update :security dissoc :content-type-options :anti-forgery)
+                                               (update :responses dissoc :content-types)))
                             (wrap-with-logger
                               :debug identity
-                              :info  identity
+                              :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
                               :error (fn [x] (error x)))
                             (wrap-gzip)
