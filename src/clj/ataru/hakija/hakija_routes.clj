@@ -1,20 +1,23 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.buildversion :refer [buildversion-routes]]
+            [ataru.applications.application-store :as application-store]
+            [ataru.forms.form-store :as form-store]
             [ataru.hakija.email-store :as email-store]
             [ataru.hakija.validator :as validator]
-            [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
-            [clojure.java.io :as io]
-            [com.stuartsierra.component :as component]
-            [environ.core :refer [env]]
-            [schema.core :as s]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
+            [clojure.java.io :as io]
+            [com.stuartsierra.component :as component]
+            [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
-            [ring.util.http-response :as response]
             [compojure.route :as route]
+            [environ.core :refer [env]]
+            [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.logger :refer [wrap-with-logger]]
+            [ring.util.http-response :as response]
+            [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info error]]))
+            [taoensso.timbre :refer [info warn error]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -70,23 +73,37 @@
   component/Lifecycle
 
   (start [this]
-    (assoc this :routes (api/api
-                          {:swagger {:spec "/hakemus/swagger.json"
-                                     :ui "/hakemus/api-docs"
-                                     :data {:info {:version "1.0.0"
-                                                   :title "Ataru Hakija API"
-                                                   :description "Specifies the Hakija API for Ataru"}}
-                                     :tags [{:name "application-api" :description "Application handling"}]}}
-                          (when (:dev? env) james-routes)
-                          (api/routes
-                            (api/context "/hakemus" []
-                              buildversion-routes
-                              (api-routes this)
-                              (route/resources "/")
-                              (api/undocumented
-                                (api/GET "/:id" []
-                                  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
-                            (route/not-found "<h1>Page not found</h1>")))))
+    (assoc this :routes (-> (api/api
+                              {:swagger    {:spec "/hakemus/swagger.json"
+                                            :ui   "/hakemus/api-docs"
+                                            :data {:info {:version     "1.0.0"
+                                                          :title       "Ataru Hakija API"
+                                                          :description "Specifies the Hakija API for Ataru"}}
+                                            :tags [{:name "application-api" :description "Application handling"}]}
+                               :exceptions {:handlers {::ex/request-parsing
+                                                       (ex/with-logging ex/request-parsing-handler :warn)
+                                                       ::ex/request-validation
+                                                       (ex/with-logging ex/request-validation-handler :warn)
+                                                       ::ex/response-validation
+                                                       (ex/with-logging ex/response-validation-handler :error)
+                                                       ::ex/default
+                                                       (ex/with-logging ex/safe-handler :error)}}}
+                              (when (:dev? env) james-routes)
+                              (api/routes
+                                (api/context "/hakemus" []
+                                  buildversion-routes
+                                  (api-routes this)
+                                  (route/resources "/")
+                                  (api/undocumented
+                                    (api/GET "/:id" []
+                                      (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
+                                (route/not-found "<h1>Page not found</h1>")))
+                            (wrap-with-logger
+                              :debug identity
+                              :info  identity
+                              :warn  (fn [x] (warn x))
+                              :error (fn [x] (error x)))
+                            (wrap-gzip))))
 
   (stop [this]
     this))

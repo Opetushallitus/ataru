@@ -185,8 +185,12 @@
                                                        {:name "postal-code-api" :description "Postal code service"}]}}
                                :exceptions {:handlers {::ex/request-parsing
                                                        (ex/with-logging ex/request-parsing-handler :warn)
+                                                       ::ex/request-validation
+                                                       (ex/with-logging ex/request-validation-handler :warn)
                                                        ::ex/response-validation
-                                                       (ex/with-logging ex/response-validation-handler :error)}}}
+                                                       (ex/with-logging ex/response-validation-handler :error)
+                                                       ::ex/default
+                                                       (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
                               (api/context "/lomake-editori" []
