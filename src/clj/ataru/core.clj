@@ -28,7 +28,7 @@
                       (assoc old-system :system (component/start (system-fn))))))))
 
 (defn stop []
-  (swap! system (fn [{:keys [system system-fn] :as old-system}]
+  (swap! system (fn [{:keys [system] :as old-system}]
                    (do
                      (when system
                        (component/stop system))
