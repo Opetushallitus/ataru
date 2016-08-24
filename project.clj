@@ -47,6 +47,7 @@
                  [metosin/ring-http-response "0.6.5"]
                  [oph/clj-util "0.1.0"]
                  [ring.middleware.logger "0.5.0"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [org.apache.poi/poi-ooxml "3.15-beta1"]]
 
   :min-lein-version "2.5.3"
