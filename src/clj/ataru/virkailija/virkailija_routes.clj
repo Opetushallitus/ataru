@@ -184,7 +184,7 @@
                                                        {:name "applications-api" :description "Application handling"}
                                                        {:name "postal-code-api" :description "Postal code service"}]}}
                                :exceptions {:handlers {::ex/request-parsing
-                                                       (ex/with-logging ex/request-parsing-handler :info)
+                                                       (ex/with-logging ex/request-parsing-handler :warn)
                                                        ::ex/response-validation
                                                        (ex/with-logging ex/response-validation-handler :error)}}}
                               redirect-routes
