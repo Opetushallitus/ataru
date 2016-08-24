@@ -26,7 +26,7 @@
           port         (:port server-setup)
           repl-port    (:repl-port server-setup)
           handler      (cond-> (get-in this [:handler :routes])
-                         (:dev? env) wrap-reload)
+                         (:dev? env) (wrap-reload))
           server       (http/start-server handler {:port port})]
       (do
         (a/go (start-repl! repl-port)))
