@@ -58,12 +58,14 @@
     (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label {:class size-class}
        [:span (str (get-in field-descriptor [:label :fi]) (required-hint field-descriptor))]
-       [scroll-to-anchor field-descriptor]
-       (when (and
-               (not @valid?)
-               (some #(= % "required") (:validators field-descriptor))
-               (validator/validate "required" @value))
-         [:span.application__form-field-error "Tarkista muoto"])])))
+       [scroll-to-anchor field-descriptor]])))
+
+(defn- show-text-field-error-class?
+  [field-descriptor value valid?]
+  (and
+    (not valid?)
+    (some #(= % "required") (:validators field-descriptor))
+    (validator/validate "required" value)))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id (keyword (:id field-descriptor))
@@ -77,10 +79,9 @@
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                  (:fi input-hint))
-                  :class       (str size-class (if @valid?
-                                                 " application__form-text-input--normal"
-                                                 " application__form-field-error"))
-
+                  :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
+                                                 " application__form-field-error"
+                                                 " application__form-text-input--normal"))
                   :value       @value
                   :on-change   (partial textual-field-change field-descriptor)}
                  (when disabled {:disabled true}))]]))))
