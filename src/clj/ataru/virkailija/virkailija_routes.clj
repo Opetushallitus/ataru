@@ -209,7 +209,7 @@
                                                (update :responses dissoc :content-types)))
                             (wrap-with-logger
                               :debug identity
-                              :info  identity
+                              :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
                               :error (fn [x] (error x)))
                             (wrap-gzip)

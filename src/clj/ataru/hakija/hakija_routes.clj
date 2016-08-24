@@ -100,7 +100,7 @@
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity
-                              :info  identity
+                              :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
                               :error (fn [x] (error x)))
                             (wrap-gzip))))
