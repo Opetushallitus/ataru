@@ -182,7 +182,7 @@
                                                        :description "Specifies the clerk API for Ataru"}
                                                 :tags [{:name "form-api" :description "Form handling"}
                                                        {:name "applications-api" :description "Application handling"}
-                                                       {:name "postal-code-api" :descriptino "Postal code service"}]}}
+                                                       {:name "postal-code-api" :description "Postal code service"}]}}
                                :exceptions {:handlers {::ex/request-parsing
                                                        (ex/with-logging ex/request-parsing-handler :info)
                                                        ::ex/response-validation
