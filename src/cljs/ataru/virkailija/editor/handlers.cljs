@@ -163,7 +163,7 @@
             (update-in db
                        [:editor :forms form-id]
                        merge
-                       (select-keys response [:content :modified-by :modified-time]))
+                       (select-keys response [:content :created-by :modified-time]))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
                                                :changed-predicate

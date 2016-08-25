@@ -15,7 +15,7 @@
     :class (when selected? "editor-form__selected-row")}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:modified-time form))]
-   [:span.editor-form__list-form-editor (:modified-by form)]])
+   [:span.editor-form__list-form-editor (:created-by form)]])
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])

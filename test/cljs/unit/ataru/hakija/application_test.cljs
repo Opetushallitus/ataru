@@ -11,7 +11,7 @@
   {:id 37,
    :name "uusi lomake",
    :modified-time "x",
-   :modified-by "DEVELOPER",
+   :created-by "DEVELOPER",
    :content [{:id "G__1",
               :label {:fi "osio1", :sv "Avsnitt namn"},
               :children [{:id "G__2",
@@ -37,7 +37,7 @@
 (def person-info-form
   {:id 22,
    :name "Testilomake",
-   :modified-by "DEVELOPER",
+   :created-by "DEVELOPER",
    :modified-time "2016-07-15T13:48:17.815+03:00",
    :content
    [{:fieldClass "wrapperElement",
@@ -176,7 +176,7 @@
   {:id 38,
    :name "toinen lomake",
    :modified-time "y",
-   :modified-by "DEVELOPER",
+   :created-by "DEVELOPER",
    :content [{:id "w1",
               :label {:fi "osio1", :sv ""},
               :children [{:id "f1",

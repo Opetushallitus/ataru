@@ -35,7 +35,7 @@
     :field :modified-time
     :format-fn time-formatter}
    {:label "Viimeinen muokkaaja"
-    :field :modified-by}])
+    :field :created-by}])
 
 (def ^:private application-meta-fields
   [{:label "Id"

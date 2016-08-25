@@ -9,7 +9,7 @@
 
 (def form1 {:id 1,
             :name "Selaintestilomake1",
-            :modified-by "DEVELOPER",
+            :created-by "DEVELOPER",
             :content
             [{:fieldClass "wrapperElement",
               :id "G__31",
@@ -24,7 +24,7 @@
 
 (def form2 {:id 2,
             :name "Selaintestilomake2",
-            :modified-by "DEVELOPER",
+            :created-by "DEVELOPER",
             :content
             [{:fieldClass "wrapperElement",
               :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
