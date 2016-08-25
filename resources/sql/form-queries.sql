@@ -1,23 +1,21 @@
--- name: yesql-get-forms-query
--- Get all stored forms, without content
-select id, name, modified_by, modified_time from forms order by modified_time desc;
+-- name: yesql-get-forms
+-- Get all stored forms, without content, latest version
+select id, name, created_by, created_time from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key);
 
--- name: yesql-add-form-query<!
+-- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
+insert into forms (name, content, created_by, :key) values (:name, :content, :created_by. :key);
 
--- name: yesql-form-exists-query
--- Get single form
-select id from forms where id = :id;
+-- name: yesql-fetch-latest-version-by-key
+select id, key, name, content, created_by, created_time from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
+and key = :key;
+
+
+-- name: yesql-fetch-latest-version-by-id
+select id, key, name, content, created_by, created_time from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key and f2.id = :id);
 
 -- name: yesql-get-by-id
-select * from forms where id = :id;
+select id, key, name, content, created_by, created_time from forms where id = :id;
 
--- name: yesql-update-form-query!
--- Update form
-update forms set
-  name = :name,
-  modified_time = now(),
-  modified_by = :modified_by,
-  content = cast(:content as jsonb)
-  where id = :id;
+-- name: yesql-fetch-latest-version-by-id-lock-for-update
+select id, key, name, content, created_by, created_time from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key and f2.id = :id) for update;

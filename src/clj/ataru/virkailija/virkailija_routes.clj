@@ -98,8 +98,8 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(form-store/upsert-form
-                             (assoc form :modified-by (-> session :identity :username)))))
+                   (trying #(form-store/create-form-or-increment-version!
+                             (assoc form :created-by (-> session :identity :username)))))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
