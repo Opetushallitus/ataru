@@ -101,11 +101,11 @@
   (fn [db [_ postal-office-name]]
     (-> db
         (update-in [:application :ui :postal-office] assoc :disabled? true)
-        (assoc-in [:application :answers :postal-office] {:value (:fi postal-office-name) :valid true}))))
+        (update-in [:application :answers :postal-office] merge {:value (:fi postal-office-name) :valid true}))))
 
 (register-handler
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
-        (assoc-in [:application :answers :postal-office] {:value "" :valid false}))))
+        (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
 
