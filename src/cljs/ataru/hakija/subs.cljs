@@ -11,7 +11,7 @@
 
 (defn valid-status [db _]
   (reaction
-    (answers->valid-status (-> @db :application :answers))))
+    (answers->valid-status (-> @db :application :answers) (-> @db :application :ui))))
 
 (register-sub
   :application/valid-status
