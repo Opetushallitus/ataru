@@ -14,7 +14,7 @@
    {:href  (str "#/editor/" (:id form))
     :class (when selected? "editor-form__selected-row")}
    [:span.editor-form__list-form-name (:name form)]
-   [:span.editor-form__list-form-time (time->str (:modified-time form))]
+   [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]])
 
 (defn form-list []

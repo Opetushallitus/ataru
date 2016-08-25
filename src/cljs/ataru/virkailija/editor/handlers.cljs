@@ -30,8 +30,8 @@
 (defn sorted-by-time [m]
   (into (sorted-map-by
           (fn [k1 k2]
-            (let [v1 (-> (get m k1) :modified-time)
-                  v2 (-> (get m k2) :modified-time)]
+            (let [v1 (-> (get m k1) :created-time)
+                  v2 (-> (get m k2) :created-time)]
               (match [v1 v2]
                      [nil nil] 0
                      [_   nil] 1
@@ -163,7 +163,7 @@
             (update-in db
                        [:editor :forms form-id]
                        merge
-                       (select-keys response [:content :created-by :modified-time]))
+                       (select-keys response [:content :created-by :created-time]))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
                                                :changed-predicate
@@ -175,8 +175,8 @@
 
                                                         :else
                                                         (not=
-                                                          (dissoc prev :modified-time)
-                                                          (dissoc current :modified-time))))
+                                                          (dissoc prev :created-time)
+                                                          (dissoc current :created-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
                                                  (dispatch [:editor/save-form]))}))))))
@@ -217,10 +217,6 @@
           (:content form))]
     (merge form {:content new-content})))
 
-(defn- set-modified-time
-  [form]
-  (assoc-in form [:modified-time] (temporal/time->iso-str (:modified-time form))))
-
 (defn- remove-focus
   [form]
   (clojure.walk/prewalk
@@ -239,13 +235,12 @@
     db))
 
 (defn save-loop [save-chan response-chan]
-  (let [modified-time (atom nil)]
+  (let [created-time (atom nil)]
     (go-loop [form (async/<! save-chan)]
-      (when (nil? @modified-time)
-        (reset! modified-time (:modified-time form)))
+      (when (nil? @created-time)
+        (reset! created-time (:created-time form)))
       (let [form (-> form
-                     (assoc :modified-time @modified-time)
-                     (set-modified-time))]
+                     (assoc :created-time @created-time))]
         (post "/lomake-editori/api/forms" form :editor/handle-response-sync
           :handler-args  {:response-chan response-chan}
           :override-args {:error-handler (fn [error]
@@ -253,9 +248,9 @@
                                            (dispatch-flasher-error-msg :post error))})
         (let [updated-form (async/<! response-chan)]
           (when-not (false? updated-form)
-            (reset! modified-time (:modified-time updated-form))
+            (reset! created-time (:created-time updated-form))
             (dispatch [:state-update (fn [db]
-                                       (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))]))
+                                       (assoc-in db [:editor :forms (:id updated-form) :created-time] (:created-time updated-form)))]))
           (recur (async/<! save-chan)))))))
 
 (save-loop save-chan response-chan)

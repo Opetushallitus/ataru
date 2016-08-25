@@ -44,7 +44,7 @@
   (if (not= (:id current) (:id prev))
     false
     ;timestamp instances for same timestamp fetched via ajax are not equal :(
-    (not= (dissoc current :modified-time) (dissoc prev :modified-time))))
+    (not= (dissoc current :created-time) (dissoc prev :created-time))))
 
 (defn start-application-review-autosave [db]
   (assoc-in

@@ -80,7 +80,7 @@
     (should (some? (-> @resp :body :id))))
 
   (it "Should have updated modified-time"
-    (should (some? (-> @resp :body :modified-time))))
+    (should (some? (-> @resp :body :created-time))))
 
   (it "Should have changed :created-by"
     (should= "DEVELOPER" (-> @resp :body :created-by)))

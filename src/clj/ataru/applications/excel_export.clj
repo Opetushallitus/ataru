@@ -32,7 +32,7 @@
    {:label "Id"
     :field :id}
    {:label "Viimeksi muokattu"
-    :field :modified-time
+    :field :created-time
     :format-fn time-formatter}
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
@@ -41,7 +41,7 @@
   [{:label "Id"
     :field :key}
    {:label "Lähetysaika"
-    :field :modified-time
+    :field :created-time
     :format-fn time-formatter}])
 
 (defn- indexed-meta-fields

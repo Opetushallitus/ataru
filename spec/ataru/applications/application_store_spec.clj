@@ -52,5 +52,5 @@
 
           (it "should return all applications belonging to a form"
               (should= expected-applications (map
-                                               #(dissoc % :modified-time)
+                                               #(dissoc % :created-time)
                                                (store/get-applications form-id {})))))
