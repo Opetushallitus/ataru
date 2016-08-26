@@ -30,6 +30,6 @@
 
   (it "should throw when later version already exists"
       (let [{:keys [id key created-time] :as version-one}    (store/create-form-or-increment-version! id-less)
-            {:keys [id2 key2 created-time2] :as version-two} (store/create-form-or-increment-version! version-one)]
-
-        (store/create-form-or-increment-version! version-one))))
+            version-two (store/create-form-or-increment-version! version-one)]
+        (should-throw
+          (store/create-form-or-increment-version! version-one)))))

@@ -28,7 +28,6 @@
 
 (defn- postprocess [result]
   (->> (if (or (seq? result) (list? result) (vector? result)) result [result])
-    (transform-keys ->kebab-case-keyword)
     (mapv unwrap-form-content)))
 
 (defn execute-with-db [db yesql-query-fn params]
