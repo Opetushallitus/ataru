@@ -343,7 +343,7 @@
 
 (defn ^:private street-address-component
   []
-  (text-field {:fi "Katuosoite" :sv "Adress"} :size "L" :id :address))
+  (text-field {:fi "Katuosoite" :sv "Adress"} :size "M" :id :address))
 
 (defn ^:private home-town-component
   []

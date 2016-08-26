@@ -15,13 +15,16 @@
   [form]
   (initial-valid-status (util/flatten-form-fields (:content form))))
 
-(defn answers->valid-status [all-answers]
-  (let [answer-validity (for [[_ answers] all-answers] (:valid answers))]
-    {:valid (if (empty? answer-validity) false (every? true? answer-validity))
-     :invalid-fields (for
-                       [[key answers] (sort-by (fn [[_ answers]]
-                                                 (:order-idx answers)) all-answers) :when (not (:valid answers))]
-                       (assoc (select-keys answers [:label]) :key key))}))
+(defn answers->valid-status [all-answers ui]
+  (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
+        invalid-fields (for [[key answers]
+                             (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
+                             :when (and (not (:valid answers)) (get-in ui [key :visible?] true))]
+                         (assoc (select-keys answers [:label]) :key key))]
+    {:invalid-fields invalid-fields
+     :valid          (if (empty? answer-validity)
+                       false
+                       (= 0 (count invalid-fields)))}))
 
 (defn form->flat-form-map [form]
   (into {}

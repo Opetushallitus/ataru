@@ -2,49 +2,57 @@
   (:require [cljs.core.match :refer-macros [match]]
             [ataru.hakija.hakija-ajax :refer [get]]))
 
+(def ^:private no-required-answer {:valid false :value ""})
+
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
   (let [nationality (-> db :application :answers :nationality)
         hide-both-fields #(-> db
-                             (update-in [:application :answers] dissoc :birth-date)
-                             (update-in [:application :answers] dissoc :ssn)
+                             (update-in [:application :answers :birth-date] merge no-required-answer)
+                             (update-in [:application :answers :ssn] merge no-required-answer)
                              (update-in [:application :ui :birth-date] assoc :visible? false)
                              (update-in [:application :ui :ssn] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
         "Suomi"
         (-> db
-            (update-in [:application :answers] dissoc :birth-date)
-            (update-in [:application :answers] assoc :ssn {:value nil :valid false})
+            (update-in [:application :answers :ssn] merge no-required-answer)
+            (update-in [:application :answers :gender] merge no-required-answer)
             (update-in [:application :ui :birth-date] assoc :visible? false)
-            (update-in [:application :ui :ssn] assoc :visible? true))
-
+            (update-in [:application :ui :ssn] assoc :visible? true)
+            (update-in [:application :ui :gender] assoc :visible? false))
         (_ :guard string?)
         (-> db
-            (update-in [:application :answers] dissoc :ssn)
-            (update-in [:application :answers] assoc :birth-date {:value nil :valid false})
+            (update-in [:application :answers :ssn] merge no-required-answer)
+            (update-in [:application :answers :birth-date] merge no-required-answer)
+            (update-in [:application :answers :gender] merge no-required-answer)
+            (update-in [:application :ui :birth-date] assoc :visible? true)
             (update-in [:application :ui :ssn] assoc :visible? false)
-            (update-in [:application :ui :birth-date] assoc :visible? true))
+            (update-in [:application :ui :gender] assoc :visible? true))
         :else (hide-both-fields))
       (hide-both-fields))))
 
 (defn- select-gender-based-on-ssn
   [db _]
-  (when (-> db :application :answers :ssn :valid)
+  (if (-> db :application :answers :ssn :valid)
     (let [ssn (-> db :application :answers :ssn :value)]
-      (when-let [gender-sign (when (= (count ssn) 11) (nth ssn 9))]
+      (when-let [gender-sign (nth ssn 9)]
         (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "Nainen" "Mies"))]
-          (update-in db [:application :answers] assoc :gender {:value gender :valid true}))))))
+          (update-in db [:application :answers :gender] merge {:value gender :valid true}))))
+    (update-in db [:application :answers :gender] merge no-required-answer)))
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (when (-> db :application :answers :postal-code :valid)
+  (if (-> db :application :answers :postal-code :valid)
     (let [postal-code (-> db :application :answers :postal-code :value)]
       (get
         (str "/hakemus/api/postal-codes/" postal-code)
         :application/handle-postal-code-input
         :application/handle-postal-code-error)
-      db)))
+      db)
+    (-> db
+        (update-in [:application :answers :postal-office] merge no-required-answer)
+        (update-in [:application :ui] dissoc :postal-office))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
