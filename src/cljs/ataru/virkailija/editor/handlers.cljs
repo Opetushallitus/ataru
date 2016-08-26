@@ -235,23 +235,20 @@
     db))
 
 (defn save-loop [save-chan response-chan]
-  (let [created-time (atom nil)]
-    (go-loop [form (async/<! save-chan)]
-      (when (nil? @created-time)
-        (reset! created-time (:created-time form)))
-      (let [form (-> form
-                     (assoc :created-time @created-time))]
-        (post "/lomake-editori/api/forms" form :editor/handle-response-sync
-          :handler-args  {:response-chan response-chan}
-          :override-args {:error-handler (fn [error]
-                                           (async/put! response-chan false)
-                                           (dispatch-flasher-error-msg :post error))})
-        (let [updated-form (async/<! response-chan)]
-          (when-not (false? updated-form)
-            (reset! created-time (:created-time updated-form))
-            (dispatch [:state-update (fn [db]
-                                       (assoc-in db [:editor :forms (:id updated-form) :created-time] (:created-time updated-form)))]))
-          (recur (async/<! save-chan)))))))
+  (go-loop [form (async/<! save-chan)]
+    (post "/lomake-editori/api/forms" form :editor/handle-response-sync
+      :handler-args  {:response-chan response-chan}
+      :override-args {:error-handler (fn [error]
+                                       (async/put! response-chan false)          
+                                       (dispatch-flasher-error-msg :post error))})
+    (let [updated-form (async/<! response-chan)]
+      (when-not (false? updated-form)
+        (dispatch [:state-update 
+          (fn [db]
+            (-> db
+              (assoc-in [:editor :selected-form-id] (:id updated-form))
+              (update :editor assoc (:id updated-form) updated-form))))]))
+      (recur (async/<! save-chan)))))
 
 (save-loop save-chan response-chan)
 
@@ -259,7 +256,8 @@
   [db _]
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
                  (update-dropdown-field-options)
-                 (remove-focus))]
+                 (remove-focus)
+                 (dissoc :created-time))]
     (when (not-empty (:content form))
       (async/put! save-chan form))
     db))
