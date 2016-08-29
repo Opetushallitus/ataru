@@ -2,7 +2,6 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
-            [ataru.codes-service.postal-code-client :as postal-code-client]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
@@ -77,7 +76,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn api-routes [{:keys [postal-code-client]}]
+(defn api-routes []
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -154,15 +153,7 @@
                                        :path-params [koodisto-uri :- s/Str version :- Long]
                                        :return s/Any
                                        (let [koodi-options (koodisto/get-cached-koodi-options :db koodisto-uri version)]
-                                         (ok (:content koodi-options)))))
-
-  (api/context "/postal-codes" []
-                   :tags ["postal-code-api"]
-
-                   (api/GET "/" []
-                     :summary "List all availble postal codes and postal office names"
-                     :return {:postal-codes ataru-schema/PostalCodes}
-                     (ok {:postal-codes (.get-postal-codes postal-code-client)})))))
+                                         (ok (:content koodi-options)))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -212,7 +203,7 @@
                                 (api/middleware [auth-middleware/with-authentication]
                                   resource-routes
                                   app-routes
-                                  (api-routes this)
+                                  (api-routes)
                                   auth-routes))
                               (api/undocumented
                                 (route/not-found "Not found")))
