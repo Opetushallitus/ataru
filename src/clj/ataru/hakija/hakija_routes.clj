@@ -65,9 +65,12 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-      (if-let [name (get-in (first (filter #(= (:value %) postal-code) (:content (koodisto/get-cached-koodi-options :db "posti" 1)))) [:label])]
-        (response/ok name)
-        (response/not-found)))))
+             (let [code (->> (:content (koodisto/get-cached-koodi-options :db "posti" 1))
+                             (filter #(= postal-code (:value %)))
+                             (first))]
+               (if-let [labels (:label code)]
+                 (response/ok labels)
+                 (response/not-found))))))
 
 (defrecord Handler []
   component/Lifecycle
