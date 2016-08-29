@@ -28,7 +28,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [schema.spec.core :as spec]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [oph.soresu.common.koodisto :as koodisto])
   (:import [manifold.deferred.Deferred]
            (org.joda.time DateTime)
            (clojure.lang ExceptionInfo)))
@@ -143,7 +144,19 @@
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
                       :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))
 
-                 (api/context "/postal-codes" []
+                 (api/context "/koodisto" []
+                              :tags ["koodisto-api"]
+                              (api/GET "/" []
+                                       :return s/Any
+                                       (let [koodisto-list (koodisto/list-koodistos)]
+                                         (ok koodisto-list)))
+                              (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
+                                       :path-params [koodisto-uri :- s/Str version :- Long]
+                                       :return s/Any
+                                       (let [koodi-options (koodisto/get-cached-koodi-options :db koodisto-uri version)]
+                                         (ok (:content koodi-options)))))
+
+  (api/context "/postal-codes" []
                    :tags ["postal-code-api"]
 
                    (api/GET "/" []
