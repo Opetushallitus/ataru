@@ -1,7 +1,8 @@
 (ns ataru.virkailija.ldap-service
   (:require
    [clj-ldap.client :as ldap]
-   [oph.soresu.common.config :refer [config]])
+   [oph.soresu.common.config :refer [config]]
+   [cheshire.core :as json])
   (:import (java.net InetAddress)))
 
 (def people-path-base "ou=People,dc=opintopolku,dc=fi")
@@ -18,5 +19,8 @@
                    :ssl? (:ssl ldap-config)
                    :num-connections 4})))
 
+(defn get-description-seq [user]
+  (json/parse-string (:description user)))
+
 (defn get-user [connection user-name]
-  (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")}))
+  (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))
