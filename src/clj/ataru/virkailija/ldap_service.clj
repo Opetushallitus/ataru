@@ -6,21 +6,17 @@
 
 (def people-path-base "ou=People,dc=opintopolku,dc=fi")
 
-(defn- ldap-pool [{:keys [hostname port user password]}]
-  (ldap/connect {:host [{:address (.getHostName hostname) :port port}]
-                 :bind-dn user
-                 :password password
-                 :ssl? false
-                 :num-connections 1}))
-
 (defn create-ldap-connection []
-  (println "create connection")
+  {:pre [(some? (:ldap config))]}
   (let [ldap-config (:ldap config)
-        hostname (InetAddress/getByName (:server ldap-config))]
-    (ldap-pool {:hostname hostname
-                :port (:port ldap-config)
-                :user (:userdn ldap-config)
-                :password (:password ldap-config)})))
+        host        (InetAddress/getByName (:server ldap-config))
+        host-name   (.getHostName host)]
+    (ldap/connect {:host [{:address host-name
+                           :port (:port ldap-config)}]
+                   :bind-dn (:userdn ldap-config)
+                   :password (:password ldap-config)
+                   :ssl? (:ssl ldap-config)
+                   :num-connections 4})))
 
 (defn get-user [connection user-name]
   (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")}))
