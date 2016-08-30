@@ -29,7 +29,7 @@
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-two))))))
 
   (it "should throw when later version already exists"
-      (let [{:keys [id key created-time] :as version-one}    (store/create-form-or-increment-version! id-less)
-            version-two (store/create-form-or-increment-version! version-one)]
+      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! id-less)
+            version-two                                   (store/create-form-or-increment-version! version-one)]
         (should-throw
           (store/create-form-or-increment-version! version-one)))))

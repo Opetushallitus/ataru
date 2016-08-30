@@ -13,7 +13,7 @@
   (fn [db [_ & path]]
     (reaction (get-in @db
                       (flatten (concat
-                                 [:editor :forms (-> @db :editor :selected-form-id) :content]
+                                 [:editor :forms (-> @db :editor :selected-form-key) :content]
                                  path))))))
 
 (register-sub

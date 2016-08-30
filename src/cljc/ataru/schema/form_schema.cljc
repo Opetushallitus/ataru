@@ -25,8 +25,9 @@
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
 
-(s/defschema Form {(s/optional-key :id)            s/Int
-                   :name                           s/Str
+(s/defschema Form {(s/optional-key :id)           s/Int
+                   :name                          s/Str
+                   (s/optional-key :key)          s/Str
                    (s/optional-key :created-by)   s/Str
                    (s/optional-key :created-time) #?(:clj org.joda.time.DateTime
                                                       :cljs s/Str)

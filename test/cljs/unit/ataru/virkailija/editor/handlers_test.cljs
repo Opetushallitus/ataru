@@ -8,51 +8,51 @@
   {:fake :component})
 
 (deftest generate-component-adds-to-root-level
-  (let [form-id 1234
-        initial-form {:id form-id
+  (let [form-key 1234
+        initial-form {:key form-key
                       :content [{:some :component}]}
-        new-content (-> {:editor {:selected-form-id form-id
-                                  :forms {form-id initial-form}}}
+        new-content (-> {:editor {:selected-form-key form-key
+                                  :forms {form-key initial-form}}}
                         (h/generate-component [:generate-component generate-fn 1])
-                        (get-in [:editor :forms form-id :content]))]
+                        (get-in [:editor :forms form-key :content]))]
     (are [expected actual] (= expected actual)
       2 (count new-content)
       {:some :component} (first new-content)
       {:fake :component} (second new-content))))
 
 (deftest generate-component-adds-to-child
-  (let [form-id 1234
-        initial-form {:id form-id
+  (let [form-key 1234
+        initial-form {:key form-key
                       :content [{:children [{:child :component}]}]}
-        new-children (-> {:editor {:selected-form-id form-id
-                                   :forms         {form-id initial-form}}}
+        new-children (-> {:editor {:selected-form-key form-key
+                                   :forms         {form-key initial-form}}}
                          (h/generate-component [:generate-component generate-fn [0 :children 1]])
-                         (get-in [:editor :forms form-id :content 0 :children]))]
+                         (get-in [:editor :forms form-key :content 0 :children]))]
     (are [expected actual] (= expected actual)
       2 (count new-children)
       {:child :component} (first new-children)
       {:fake :component} (second new-children))))
 
 (deftest remove-component-removes-from-root-level
-  (let [form-id 1234
-        initial-form {:id form-id
+  (let [form-key 1234
+        initial-form {:key form-key
                       :content [{:first :component} {:second :another-component}]}
-        new-content (-> {:editor {:selected-form-id form-id
-                                  :forms {form-id initial-form}}}
+        new-content (-> {:editor {:selected-form-key form-key
+                                  :forms {form-key initial-form}}}
                         (h/remove-component [0])
-                        (get-in [:editor :forms form-id :content]))]
+                        (get-in [:editor :forms form-key :content]))]
     (are [expected actual] (= expected actual)
       1 (count new-content)
       {:second :another-component} (first new-content))))
 
 (deftest remove-component-removes-from-child
-  (let [form-id 1234
-        initial-form {:id form-id
+  (let [form-key 1234
+        initial-form {:key form-key
                       :content [{:children [{:first :component} {:second :another-component}]}]}
-        new-children (-> {:editor {:selected-form-id form-id
-                                   :forms {form-id initial-form}}}
+        new-children (-> {:editor {:selected-form-key form-key
+                                   :forms {form-key initial-form}}}
                          (h/remove-component [0 :children 1])
-                         (get-in [:editor :forms form-id :content 0 :children]))]
+                         (get-in [:editor :forms form-key :content 0 :children]))]
     (are [expected actual] (= expected actual)
       1 (count new-children)
       {:first :component} (first new-children))))
@@ -65,9 +65,9 @@
 
 (defn- as-form
   [content]
-  (let [form-id 1234]
-    {:editor {:selected-form-id form-id
-              :forms {form-id {:content content}}}}))
+  (let [form-key 1234]
+    {:editor {:selected-form-key form-key
+              :forms {form-key {:content content}}}}))
 
 (deftest on-drop-moves-form-component-at-root-level
   (let [target-path    [0]

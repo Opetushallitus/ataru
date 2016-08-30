@@ -9,7 +9,7 @@
             [ataru.virkailija.component-data.person-info-module :as pm]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
-            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
+            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
@@ -46,7 +46,7 @@
 
 (defn- current-form-content-path
   [db further-path]
-  (flatten [:editor :forms (-> db :editor :selected-form-id) :content [further-path]]))
+  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
 
 (register-handler
   :editor/remove-dropdown-option
@@ -98,8 +98,8 @@
 
 (defn generate-component
   [db [_ generate-fn path]]
-  (with-form-id [db form-id]
-    (let [form-id       (get-in db [:editor :selected-form-id])
+  (with-form-key [db form-key]
+    (let [form-key       (get-in db [:editor :selected-form-key])
           path-vec      (current-form-content-path db [path])
           component     (generate-fn)]
       (if (zero? (last path-vec))
@@ -110,9 +110,9 @@
 
 (defn remove-component
   [db path]
-  (with-form-id [db form-id]
+  (with-form-key [db form-key]
     (let [remove-index (last path)
-          path-vec     (-> [:editor :forms form-id :content [path]]
+          path-vec     (-> [:editor :forms form-key :content [path]]
                          flatten
                          butlast)]
       (->> (get-in db path-vec)
@@ -145,7 +145,7 @@
     :get
     "/lomake-editori/api/forms"
     (fn [db {:keys [forms]}]
-      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
+      (assoc-in db [:editor :forms] (-> (util/group-by-first :key forms)
                                         (sorted-by-time))))))
 
 (register-handler
@@ -158,38 +158,39 @@
 (defn fetch-form-content! [form-id]
   (http :get
         (str "/lomake-editori/api/forms/" form-id)
-        (fn [db response _]
+        (fn [db {:keys [key] :as response} _]
           (->
-            (update-in db
-                       [:editor :forms form-id]
-                       merge
-                       (select-keys response [:content :created-by :created-time]))
+            (assoc-in db
+              [:editor :forms key]
+              response)
             (assoc-in [:editor :autosave]
-                      (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
+                      (autosave/interval-loop {:subscribe-path [:editor :forms key]
                                                :changed-predicate
                                                (fn [current prev]
-                                                 (match [current (merge {:content nil}
+                                                 (match [current (merge {:content []}
                                                                         prev)]
-                                                        [_ {:content nil}]
+                                                        [_ {:content []}]
                                                         false
 
                                                         :else
                                                         (not=
-                                                          (dissoc prev :created-time)
-                                                          (dissoc current :created-time))))
+                                                          ; :id changes when new version is created, :key remains the same across versions
+                                                          (dissoc prev :created-time :id)
+                                                          (dissoc current :created-time :id))))
                                                :handler
-                                               (fn [form previous-autosave-form]
+                                               (fn [form previous-autosave-form-at-time-of-dispatch]
                                                  (dispatch [:editor/save-form]))}))))))
 
 (register-handler
   :editor/select-form
-  (fn [db [_ form-id]]
-    (with-form-id [db previous-form-id]
+  (fn [db [_ form-key]]
+    (with-form-key [db previous-form-key]
       (do
-        (when (not= previous-form-id form-id)
+        (when (not= previous-form-key form-key)
           (autosave/stop-autosave! (-> db :editor :autosave)))
-        (fetch-form-content! form-id)
-        (assoc-in db [:editor :selected-form-id] form-id)))))
+        (when-let [id (get-in db [:editor :forms form-key :id])]
+          (fetch-form-content! id))
+        (assoc-in db [:editor :selected-form-key] form-key)))))
 
 (defn- remove-empty-options
   [options]
@@ -245,16 +246,14 @@
       (when-not (false? updated-form)
         (dispatch [:state-update 
           (fn [db]
-            (-> db
-              (assoc-in [:editor :selected-form-id] (:id updated-form))
-              (update :editor assoc (:id updated-form) updated-form))))]))
+            (update-in db [:editor :forms] assoc (:key updated-form) updated-form))]))
       (recur (async/<! save-chan)))))
 
 (save-loop save-chan response-chan)
 
 (defn save-form
   [db _]
-  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
+  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-key)])
                  (update-dropdown-field-options)
                  (remove-focus)
                  (dissoc :created-time))]
@@ -272,15 +271,15 @@
            :content [(pm/person-info-module)]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
-            (set-history! (str "/editor/" (:id new-or-updated-form)))
+            (set-history! (str "/editor/" (:key new-or-updated-form)))
             (assoc-in db [:editor :new-form-created?] true)))
     db))
 
 (register-handler
   :editor/change-form-name
   (fn [db [_ new-form-name]]
-    (with-form-id [db selected-form-id]
-      (update-in db [:editor :forms selected-form-id]
+    (with-form-key [db selected-form-key]
+      (update-in db [:editor :forms selected-form-key]
                  assoc :name
                  new-form-name))))
 
@@ -331,8 +330,8 @@
 
 (defn move-component
   [db [_ source-path target-path]]
-  (with-form-id [db form-id]
-    (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
+  (with-form-key [db form-key]
+    (let [component                (get-in db (concat [:editor :forms form-key :content] source-path))
           recalculated-target-path (recalculate-target-path-prevent-oob source-path target-path)
           result-is-nested-component-group? (and
                                               (contains?

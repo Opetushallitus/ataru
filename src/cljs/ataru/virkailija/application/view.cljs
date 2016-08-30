@@ -29,12 +29,12 @@
                       (:name form)]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
-(defn form-list-opened [forms selected-form-id open]
+(defn form-list-opened [forms selected-form-key open]
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
    [form-list-arrow-up open]
    (into [:div.application-handling__form-list-open]
         (for [[id form] forms
-              :let [selected? (= id selected-form-id)]]
+              :let [selected? (= id selected-form-key)]]
           ^{:key id}
           [form-list-row form selected? open]))])
 
@@ -46,17 +46,17 @@
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
         selected-form    (subscribe [:editor/selected-form])
         open             (r/atom false)]
     (fn []
       [:div.application-handling__form-list-wrapper
        (if @open
-        [form-list-opened @forms @selected-form-id open]
+        [form-list-opened @forms @selected-form-key open]
         [form-list-closed @selected-form open])])))
 
 (defn excel-download-link [applications]
-  (let [form-id (subscribe [:state-query [:editor :selected-form-id]])]
+  (let [form-id (reaction (:id @(subscribe [:editor/selected-form])))]
     (fn [applications]
       (when (> (count applications) 0)
         [:a.application-handling__excel-download-link

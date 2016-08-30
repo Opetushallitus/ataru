@@ -33,16 +33,16 @@
     (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms]))
 
-  (defroute #"/editor/(\d+)" [id]
+  (defroute #"/editor/([a-f0-9-]{36})" [key]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
-    (when-let [parsed-id (js/Number id)]
-      (dispatch-after-state
-        :predicate
-        (fn [db] (not-empty (get-in db [:editor :forms])))
-        :handler
-        (fn [forms]
-          (dispatch [:editor/select-form parsed-id])))))
+    (dispatch-after-state
+      :predicate
+      (fn [db]
+        (not-empty (get-in db [:editor :forms key])))
+      :handler
+      (fn [form]
+        (dispatch [:editor/select-form (:key form)]))))
 
   (defroute #"/applications/" []
     (dispatch [:editor/refresh-forms])
@@ -51,23 +51,21 @@
       (fn [db] (not-empty (get-in db [:editor :forms])))
       :handler
       (fn [forms]
-        (let [id (-> forms first first)]
-          (.replaceState js/history nil nil (str "#/applications/" id))
-          (dispatch [:editor/select-form id])
-          (dispatch [:application/fetch-applications id])
+        (let [form (-> forms first second)]
+          (.replaceState js/history nil nil (str "#/applications/" (:key form)))
+          (dispatch [:editor/select-form (:key form)])
+          (dispatch [:application/fetch-applications (:id form)])
           (dispatch [:set-active-panel :application])))))
 
-  (defroute #"/applications/(\d+)" [form-id]
-    (let [parsed-id (js/Number form-id)]
-      (dispatch [:editor/refresh-forms])
-      (when-let [parsed-id (js/Number form-id)]
-        (dispatch-after-state
-          :predicate
-          (fn [db] (not-empty (get-in db [:editor :forms])))
-          :handler
-          (fn [forms]
-            (dispatch [:editor/select-form parsed-id]))))
-      (dispatch [:application/fetch-applications parsed-id]))
+  (defroute #"/applications/:key" [key]
+    (dispatch [:editor/refresh-forms])
+    (dispatch-after-state
+      :predicate
+      (fn [db] (not-empty (get-in db [:editor :forms key])))
+      :handler
+      (fn [form]
+        (dispatch [:editor/select-form (:key form)])
+        (dispatch [:application/fetch-applications (:id form)])))
     (dispatch [:set-active-panel :application]))
 
   ;; --------------------

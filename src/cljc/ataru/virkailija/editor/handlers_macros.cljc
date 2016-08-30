@@ -2,8 +2,8 @@
 
 (defmacro with-path-and-index
   [bindings & body]
-  `(let [form-id#             (get-in ~(first bindings) [:editor :selected-form-id])
-         root-component-path# [:editor :forms form-id# :content]
+  `(let [form-key#             (get-in ~(first bindings) [:editor :selected-form-key])
+         root-component-path# [:editor :forms form-key# :content]
          ~(bindings 2)        (if
                                 (= 1 (count ~(second bindings)))
                                 root-component-path#

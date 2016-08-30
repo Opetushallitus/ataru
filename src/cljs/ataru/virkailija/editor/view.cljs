@@ -11,7 +11,7 @@
 
 (defn form-row [form selected?]
   [:a.editor-form__row
-   {:href  (str "#/editor/" (:id form))
+   {:href  (str "#/editor/" (:key form))
     :class (when selected? "editor-form__selected-row")}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
@@ -19,14 +19,14 @@
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])]
     (fn []
-      (into (if @selected-form-id
+      (into (if @selected-form-key
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
-            (for [[id form] @forms
-                  :let [selected? (= id @selected-form-id)]]
-              ^{:key id}
+            (for [[key form] @forms
+                  :let [selected? (= key @selected-form-key)]]
+              ^{:key key}
               (if selected?
                 [wrap-scroll-to [form-row form selected?]]
                 [form-row form selected?]))))))
@@ -61,7 +61,7 @@
                                 :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (defn editor-panel []
-  (let [form            (subscribe [:editor/selected-form])]
+  (let [form (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
@@ -70,9 +70,9 @@
          [:div.editor-form__link-row
           [:div
            [:span [:a.editor-form__preview-link
-                                                {:href   (str js/config.applicant.service_url "/hakemus/" (:id @form))
-                                                 :target "_blank"}
-                                                "Esikatsele lomake"]]]]
+                   {:href   (str js/config.applicant.service_url "/hakemus/" (:id @form))
+                    :target "_blank"}
+                   "Esikatsele lomake"]]]]
          [c/editor]]))))
 
 (defn editor []
