@@ -57,7 +57,7 @@
           (dispatch [:application/fetch-applications (:id form)])
           (dispatch [:set-active-panel :application])))))
 
-  (defroute #"/applications/:key" [key]
+  (defroute #"/applications/([a-f0-9-]{36})" [key]
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
       :predicate
