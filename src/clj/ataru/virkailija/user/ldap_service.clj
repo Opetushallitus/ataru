@@ -1,4 +1,4 @@
-(ns ataru.virkailija.ldap-service
+(ns ataru.virkailija.user.ldap-service
   (:require
    [clj-ldap.client :as ldap]
    [oph.soresu.common.config :refer [config]]
