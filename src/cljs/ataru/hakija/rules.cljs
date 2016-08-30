@@ -11,7 +11,9 @@
                              (update-in [:application :answers :birth-date] merge no-required-answer)
                              (update-in [:application :answers :ssn] merge no-required-answer)
                              (update-in [:application :ui :birth-date] assoc :visible? false)
-                             (update-in [:application :ui :ssn] assoc :visible? false))]
+                             (update-in [:application :ui :ssn] assoc :visible? false)
+                             (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
+                             (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
         "Suomi"
@@ -20,7 +22,8 @@
             (update-in [:application :answers :gender] merge no-required-answer)
             (update-in [:application :ui :birth-date] assoc :visible? false)
             (update-in [:application :ui :ssn] assoc :visible? true)
-            (update-in [:application :ui :gender] assoc :visible? false))
+            (update-in [:application :ui :gender] assoc :visible? false)
+            (update-in [:application :ui :have-finnish-ssn] assoc :visible? false))
         (_ :guard string?)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
@@ -28,7 +31,8 @@
             (update-in [:application :answers :gender] merge no-required-answer)
             (update-in [:application :ui :birth-date] assoc :visible? true)
             (update-in [:application :ui :ssn] assoc :visible? false)
-            (update-in [:application :ui :gender] assoc :visible? true))
+            (update-in [:application :ui :gender] assoc :visible? true)
+            (update-in [:application :ui :have-finnish-ssn] assoc :visible? true))
         :else (hide-both-fields))
       (hide-both-fields))))
 
@@ -54,6 +58,20 @@
         (update-in [:application :answers :postal-office] merge no-required-answer)
         (update-in [:application :ui] dissoc :postal-office))))
 
+(defn- toggle-ssn-based-fields
+  [db _]
+  (if (= "Kyllä" (-> db :application :answers :have-finnish-ssn :value))
+    (do
+      (-> db
+          (update-in [:application :ui :ssn] assoc :visible? true)
+          (update-in [:application :ui :gender] assoc :visible? false)
+          (update-in [:application :ui :birth-date] assoc :visible? false)))
+    (do
+      (-> db
+          (update-in [:application :ui :ssn] assoc :visible? false)
+          (update-in [:application :ui :gender] assoc :visible? true)
+          (update-in [:application :ui :birth-date] assoc :visible? true)))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :swap-ssn-birthdate-based-on-nationality
@@ -62,6 +80,8 @@
     select-gender-based-on-ssn
     :select-postal-office-based-on-postal-code
     select-postal-office-based-on-postal-code
+    :toggle-ssn-based-fields
+    toggle-ssn-based-fields
     nil))
 
 (defn extract-rules [content]
