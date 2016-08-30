@@ -1,11 +1,14 @@
 (ns ataru.virkailija.user.ldap-service
   (:require
+   [clojure.string :as str]
    [clj-ldap.client :as ldap]
    [oph.soresu.common.config :refer [config]]
    [cheshire.core :as json])
   (:import (java.net InetAddress)))
 
 (def people-path-base "ou=People,dc=opintopolku,dc=fi")
+(def user-right-name "APP_HAKULOMAKKEENHALLINTA_CRUD")
+(def oid-prefix "1.2.246.562")
 
 (defn create-ldap-connection []
   {:pre [(some? (:ldap config))]}
@@ -22,5 +25,17 @@
 (defn get-description-seq [user]
   (json/parse-string (:description user)))
 
+(defn filter-with-user-right [description-seq]
+  (filter #(.contains % user-right-name) description-seq))
+
+(defn get-organization-oids [description-seq]
+  (let [split-descriptions (map #(str/split % #"_") description-seq)
+        last-items         (map #(last %) split-descriptions)]
+    (filter #(.contains % oid-prefix) last-items)))
+;(filter #(.contains % "APP_HAKULOMAKKEENHALLINTA_CRUD") descr-seq)
+
 (defn get-user [connection user-name]
   (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))
+
+(defn get-organization-oids [connection user-name]
+  (-> (get-user connection user-name) get-description-seq filter-with-user-right get-organization-oids))
