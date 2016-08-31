@@ -302,8 +302,9 @@
   []
   (-> (component/dropdown)
       (merge {:label {:fi "Onko sinulla suomalainen henkilötunnus?" :sv ""}
-              :validators [:required]
               :rules {:toggle-ssn-based-fields :ssn}
+              :no-blank-option true
+              :exclude-from-answers true
               :id :have-finnish-ssn})
       (assoc :options [(dropdown-option "true" {:fi "Kyllä" :sv "Ja"} :default-value true)
                        (dropdown-option "false" {:fi "Ei" :sv "Nej"})])))

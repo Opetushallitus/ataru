@@ -39,8 +39,8 @@
               field-map (get flat-form-map (name ans-key))
               field-type (:fieldType field-map)
               label (:label field-map)]
-        :when (not-empty ans-value)]
-     {:key (name ans-key) :value ans-value :fieldType field-type :label label}))
+        :when (and (not-empty ans-value) (not (:exclude-from-answers field-map)))]
+    {:key (name ans-key) :value ans-value :fieldType field-type :label label}))
 
 (defn create-application-to-submit [application form lang]
   {:form (:id form)
