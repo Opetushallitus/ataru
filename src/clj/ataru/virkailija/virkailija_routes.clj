@@ -122,11 +122,15 @@
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
-                                    :review      ataru-schema/Review}
+                                    :review      ataru-schema/Review
+                                    :form        ataru-schema/FormWithContent}
                            (trying (fn []
-                                     {:application (application-store/get-application application-id)
-                                      :events      (application-store/get-application-events application-id)
-                                      :review      (application-store/get-application-review application-id)})))
+                                     (let [application (application-store/get-application application-id)
+                                           form        (form-store/fetch-by-id (:form application))]
+                                       {:application application
+                                        :form        form
+                                        :events      (application-store/get-application-events application-id)
+                                        :review      (application-store/get-application-review application-id)}))))
 
                    (api/PUT "/review" []
                             :summary "Update existing application review"
