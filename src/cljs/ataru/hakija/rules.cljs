@@ -20,6 +20,7 @@
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
+            (update-in [:application :answers :birth-date] merge no-required-answer)
             (update-in [:application :ui :birth-date] assoc :visible? false)
             (update-in [:application :ui :ssn] assoc :visible? true)
             (update-in [:application :ui :gender] assoc :visible? false)
@@ -27,8 +28,8 @@
         (_ :guard string?)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
-            (update-in [:application :answers :birth-date] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
+            (update-in [:application :answers :birth-date] merge no-required-answer)
             (update-in [:application :ui :birth-date] assoc :visible? true)
             (update-in [:application :ui :ssn] assoc :visible? false)
             (update-in [:application :ui :gender] assoc :visible? true)
@@ -36,13 +37,28 @@
         :else (hide-both-fields))
       (hide-both-fields))))
 
-(defn- select-gender-based-on-ssn
+(defn- parse-birth-date-from-ssn
+  [ssn]
+  (let [century-sign (nth ssn 6)
+        day (subs ssn 0 2)
+        month (subs ssn 2 4)
+        year (subs ssn 4 6)
+        century (case century-sign
+                  "+" "18"
+                  "-" "19"
+                  "A" "20")]
+    (str day "." month "." century year)))
+
+(defn- update-gender-and-birth-date-based-on-ssn
   [db _]
   (if (-> db :application :answers :ssn :valid)
-    (let [ssn (-> db :application :answers :ssn :value)]
-      (when-let [gender-sign (nth ssn 9)]
+    (let [ssn (-> db :application :answers :ssn :value)
+          birth-date (parse-birth-date-from-ssn ssn)]
+      (when-let [gender-sign (js/parseInt (nth ssn 9))]
         (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "Nainen" "Mies"))]
-          (update-in db [:application :answers :gender] merge {:value gender :valid true}))))
+          (-> db
+              (update-in [:application :answers :gender] merge {:value gender :valid true})
+              (update-in [:application :answers :birth-date] merge {:value birth-date :valid true})))))
     (update-in db [:application :answers :gender] merge no-required-answer)))
 
 (defn- select-postal-office-based-on-postal-code
@@ -76,8 +92,8 @@
   (case rule
     :swap-ssn-birthdate-based-on-nationality
     swap-ssn-birthdate-based-on-nationality
-    :select-gender-based-on-ssn
-    select-gender-based-on-ssn
+    :update-gender-and-birth-date-based-on-ssn
+    update-gender-and-birth-date-based-on-ssn
     :select-postal-office-based-on-postal-code
     select-postal-office-based-on-postal-code
     :toggle-ssn-based-fields

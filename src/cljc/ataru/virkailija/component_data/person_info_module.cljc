@@ -304,7 +304,6 @@
       (merge {:label {:fi "Onko sinulla suomalainen henkilötunnus?" :sv ""}
               :validators [:required]
               :rules {:toggle-ssn-based-fields :ssn}
-              :ignore-in-answers true
               :id :have-finnish-ssn})
       (assoc :options [(dropdown-option "true" {:fi "Kyllä" :sv "Ja"} :default-value true)
                        (dropdown-option "false" {:fi "Ei" :sv "Nej"})])))
@@ -312,7 +311,7 @@
 (defn ^:private ssn-component
   []
   (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn)
-         :rules {:select-gender-based-on-ssn :gender}
+         :rules {:update-gender-and-birth-date-based-on-ssn :gender}
          :validators [:ssn :required]))
 
 (defn ^:private gender-section
@@ -586,8 +585,6 @@
                                                 (last-name-component)
                                                 (nationality-component)
                                                 (have-finnish-ssn-component)
-                                                ;(identification-section)
-                                                ;(gender-section)
                                                 (ssn-component)
                                                 (birthdate-and-gender-component)
                                                 (email-component)
