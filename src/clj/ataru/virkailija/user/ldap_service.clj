@@ -32,7 +32,6 @@
   (let [split-descriptions (map #(str/split % #"_") description-seq)
         last-items         (map #(last %) split-descriptions)]
     (filter #(.contains % oid-prefix) last-items)))
-;(filter #(.contains % "APP_HAKULOMAKKEENHALLINTA_CRUD") descr-seq)
 
 (defn get-user [connection user-name]
   (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))
