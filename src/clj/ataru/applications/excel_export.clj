@@ -31,6 +31,8 @@
     :field :name}
    {:label "Id"
     :field :id}
+   {:label "Tunniste"
+    :field :key}
    {:label "Viimeksi muokattu"
     :field :created-time
     :format-fn time-formatter}
