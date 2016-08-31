@@ -18,10 +18,10 @@
 
 (register-handler
   :application/fetch-applications
-  (fn [db [_ form-id]]
+  (fn [db [_ form-key]]
     (ajax/http
       :get
-      (str "/lomake-editori/api/applications/list?formId=" form-id)
+      (str "/lomake-editori/api/applications/list?formKey=" form-key)
       (fn [db aplications-response]
         (assoc-in db [:application :applications] (:applications aplications-response))))
     db))

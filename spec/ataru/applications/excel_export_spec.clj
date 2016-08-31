@@ -49,9 +49,9 @@
                 metadata-sheet (.getSheetAt workbook 0)
                 applications-sheet (.getSheetAt workbook 1)]
             (verify-row metadata-sheet 0
-              ["Nimi" "Id" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+              ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
             (verify-row metadata-sheet 1
-              ["Test fixture what is this" "703" "2016-06-14 15:34:56" "DEVELOPER"])
+              ["Test fixture what is this" "703" "abcdefghjkl" "2016-06-14 15:34:56" "DEVELOPER"])
             (verify-row applications-sheet 0
               ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "Muistiinpanot"])
             (verify-row applications-sheet 1
