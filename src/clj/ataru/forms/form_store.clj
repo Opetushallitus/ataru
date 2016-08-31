@@ -62,6 +62,9 @@
 
 (def fetch-form fetch-latest-version)
 
+(defn fetch-by-key [key & [conn]]
+  (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))
+
 (defn throw-if-latest-version-not-same [form latest-version]
   (when
       (or

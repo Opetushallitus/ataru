@@ -70,7 +70,7 @@
          [:div.editor-form__link-row
           [:div
            [:span [:a.editor-form__preview-link
-                   {:href   (str js/config.applicant.service_url "/hakemus/" (:id @form))
+                   {:href   (str js/config.applicant.service_url "/hakemus/" (:key @form))
                     :target "_blank"}
                    "Esikatsele lomake"]]]]
          [c/editor]]))))

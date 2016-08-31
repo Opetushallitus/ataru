@@ -11,7 +11,7 @@
 
 (enable-console-print!)
 
-(defn- form-id-from-url []
+(defn- form-key-from-url []
   (last (str/split (-> js/window .-location .-pathname) #"/")))
 
 (defn mount-root []
@@ -22,4 +22,4 @@
   (set-global-error-handler! #(post "/hakemus/api/client-error" %))
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
-  (re-frame/dispatch [:application/get-form (form-id-from-url)]))
+  (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))

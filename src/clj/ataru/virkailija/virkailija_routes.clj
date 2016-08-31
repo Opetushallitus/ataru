@@ -112,10 +112,10 @@
                    :tags ["applications-api"]
 
                   (api/GET "/list" []
-                           :query-params [formId :- Long]
+                           :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (trying (fn [] {:applications (application-store/get-application-list formId)})))
+                           (trying (fn [] {:applications (application-store/get-application-list formKey)})))
 
                   (api/GET "/:application-id" []
                            :path-params [application-id :- Long]

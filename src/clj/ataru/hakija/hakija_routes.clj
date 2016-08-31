@@ -22,8 +22,8 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
-(defn- fetch-form [id]
-  (let [form (form-store/fetch-form id)]
+(defn- fetch-form-by-key [key]
+  (let [form (form-store/fetch-by-key key)]
     (if form
       (response/ok form)
       (response/not-found form))))
@@ -51,10 +51,10 @@
 (defn api-routes []
   (api/context "/api" []
     :tags ["application-api"]
-    (api/GET "/form/:id" []
-      :path-params [id :- Long]
+    (api/GET "/form/:key" []
+      :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
-      (fetch-form id))
+      (fetch-form-by-key key))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
@@ -98,8 +98,8 @@
                                              (api-routes)
                                              (route/resources "/")
                                              (api/undocumented
-                                               (api/GET "/:id" []
-                                                        (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
+                                             (api/GET "/:key" []
+                                                      (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity

@@ -46,8 +46,8 @@
 
 (defn get-application-list
   "Only list with header-level info, not answers"
-  [form-id]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_id form-id})))
+  [form-key]
+  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_key form-key})))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
