@@ -36,8 +36,11 @@
 (defn get-user [connection user-name]
   (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))
 
-(defn get-organization-oids [connection user-name]
-  (-> (get-user connection user-name)
-      get-description-seq
-      filter-with-user-right
-      get-organization-oids-from-description-seq))
+(defn get-organization-oids
+  ([user]
+   (-> user
+       get-description-seq
+       filter-with-user-right
+       get-organization-oids-from-description-seq))
+  ([connection user-name]
+   (get-organization-oids (get-user connection user-name))))
