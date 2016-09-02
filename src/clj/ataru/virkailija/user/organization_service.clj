@@ -8,14 +8,17 @@
   [resp]
   (-> resp :body slurp (json/parse-string true)))
 
+(defn- org-node->map [org-node] {:name (:nimi org-node) :oid (:oid org-node)})
+
 (defn get-all-organizations-as-seq
   "Flattens hierarchy and includes all suborganizations"
   [hierarchy]
-  (letfn [(recursively-get-organizations [org-node]
+  (letfn [(recur-orgs [org-node]
             (if (< 0 (count (:children org-node)))
-              (map #(recursively-get-organizations %) (:children org-node))
-              {:name (:nimi org-node) :oid (:oid org-node)}))]
-    (flatten (map #(recursively-get-organizations %) (:organisaatiot hierarchy)))))
+              (into [(org-node->map org-node)]
+                    (map #(recur-orgs %) (:children org-node)))
+              (org-node->map org-node)))]
+    (flatten (map #(recur-orgs %) (:organisaatiot hierarchy)))))
 
 (defn create []
   {:base-address (get-in config [:organization-service :base-address])})
