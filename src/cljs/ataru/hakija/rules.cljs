@@ -51,7 +51,10 @@
 
 (defn- update-gender-and-birth-date-based-on-ssn
   [db _]
-  (if (-> db :application :answers :ssn :valid)
+
+  (if (and
+        (-> db :application :answers :ssn :valid)
+        (not (clojure.string/blank? (-> db :application :answers :ssn :value))))
     (let [ssn (-> db :application :answers :ssn :value)
           birth-date (parse-birth-date-from-ssn ssn)]
       (when-let [gender-sign (js/parseInt (nth ssn 9))]
@@ -86,7 +89,8 @@
       (-> db
           (update-in [:application :ui :ssn] assoc :visible? false)
           (update-in [:application :ui :gender] assoc :visible? true)
-          (update-in [:application :ui :birth-date] assoc :visible? true)))))
+          (update-in [:application :ui :birth-date] assoc :visible? true)
+          (update-in [:application :answers :ssn] merge {:value "" :valid true})))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
