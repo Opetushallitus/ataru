@@ -94,6 +94,8 @@
 
   :main ataru.core
 
+  :aot [com.stuartsierra.dependency ataru.db.migrations]
+
   :cljsbuild {:jar true
               :builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]

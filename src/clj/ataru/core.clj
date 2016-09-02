@@ -3,6 +3,7 @@
             [clojure.tools.namespace.repl :refer [refresh]]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
+            [ataru.db.migrations :as migrations]
             [environ.core :refer [env]]
             [taoensso.timbre :refer [info]])
   (:gen-class))
@@ -24,6 +25,8 @@
                       (info "System already started")
                       old-system)
                     (do
+                      (info "Running migrations")
+                      (migrations/migrate)
                       (info "Starting system" app-id)
                       (assoc old-system :system (component/start (system-fn))))))))
 
