@@ -24,7 +24,8 @@
   {:base-address (get-in config [:organization-service :base-address])})
 
 (defn get-organizations
-  "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations"
+  "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
+   The root organization is the first element"
   [this root-organization-oid]
   {:pre [(some? (:base-address this))]}
   (let [cas-client (:cas-client this)
