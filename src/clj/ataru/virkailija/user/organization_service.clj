@@ -4,6 +4,10 @@
    [cheshire.core :as json]
    [ataru.cas.client :as cas-client]))
 
+(def
+  plain-org-hierarchy-path
+  "/hierarkia/hae/nimi?aktiiviset=true&suunnitellut=true&lakkautetut=false&skipParents=true&oid=")
+
 (defn read-body
   [resp]
   (-> resp :body slurp (json/parse-string true)))
@@ -31,7 +35,7 @@
   (let [cas-client (:cas-client this)
         response (cas-client/cas-authenticated-get cas-client
                                                    (str (:base-address this)
-                                                        "/hierarkia/hae/nimi?aktiiviset=true&suunnitellut=true&lakkautetut=false&skipParents=true&oid="
+                                                        plain-org-hierarchy-path
                                                         root-organization-oid) )]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
