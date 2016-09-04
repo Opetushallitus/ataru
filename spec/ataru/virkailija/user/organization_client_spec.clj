@@ -1,9 +1,9 @@
-(ns ataru.virkailija.user.organization-hierarchy-service-spec
+(ns ataru.virkailija.user.organization-client-spec
   (:require
    [clojure.java.io :as io]
    [cheshire.core :as json]
    [speclj.core :refer [describe it should= tags]]
-   [ataru.virkailija.user.organization-service :as org-service]))
+   [ataru.virkailija.user.organization-client :as org-client]))
 
 (def organization-hierarchy-data (slurp (io/resource "organisaatio_service/organization-hierarchy1.json")))
 (def expected-flat-organizations '({:name {:fi "Telajärven seudun koulutuskuntayhtymä"},
@@ -28,5 +28,5 @@
           (tags :unit)
           (it "Returns suborganizations"
               (let [parsed-hierarchy (json/parse-string organization-hierarchy-data true)
-                    organizations (org-service/get-all-organizations-as-seq parsed-hierarchy)]
+                    organizations (org-client/get-all-organizations-as-seq parsed-hierarchy)]
                 (should= expected-flat-organizations organizations))))

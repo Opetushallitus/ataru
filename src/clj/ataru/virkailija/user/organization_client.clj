@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.organization-service
+(ns ataru.virkailija.user.organization-client
   (:require
    [oph.soresu.common.config :refer [config]]
    [cheshire.core :as json]
