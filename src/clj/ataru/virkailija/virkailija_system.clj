@@ -5,7 +5,7 @@
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
             [ataru.person-service.client :as person-service]
-            [ataru.virkailija.user.organization-service :as organization-service]
+            [ataru.virkailija.user.organization-client :as organization-client]
             [ataru.virkailija.virkailija-routes :as handler]
             [environ.core :refer [env]]))
 
@@ -35,7 +35,7 @@
      :postal-code-client (postal-code-client/new-postal-code-client)
 
      :organization-service (component/using
-                            (organization-service/create)
+                            (organization-client/create)
                             [:cas-client])
 
      :server         (component/using
