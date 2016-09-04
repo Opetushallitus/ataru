@@ -1,6 +1,7 @@
 (ns ataru.virkailija.user.organization-service
   (:require
    [com.stuartsierra.component :as component]
+   [oph.soresu.common.config :refer [config]]
    [ataru.virkailija.user.ldap-client :as ldap-client]
    [ataru.virkailija.user.organization-client :as org-client]))
 
@@ -26,7 +27,7 @@
     (ldap-client/get-organization-oids (:ldap-connection this) user-name))
 
   (get-all-organizations [this user-name]
-    (let [direct-oids (get-direct-organizations-oids this user-name)]
+    (let [direct-oids (get-direct-organization-oids this user-name)]
       (flatten (map #(org-client/get-organizations (:cas-client this) %) direct-oids))))
 
   (start [this]
@@ -35,5 +36,19 @@
   (stop [this]
     (.close (:ldap-connection this))))
 
+;; Test double for UI tests
+(defrecord FakeOrganizationService []
+  OrganizationService
+
+  (get-direct-organization-oids [this user-name] ["1.2.246.562.10.0439845"])
+
+  (get-all-organizations [this user-name]
+    [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}]))
+
+
 (defn new-organization-service []
-  (->IntegratedOrganizationService))
+  (if (-> config :dev :fake-dependencies)
+    ;; Ui automated test mode
+    (->FakeOrganizationService)
+    ;; Normal mode
+    (->IntegratedOrganizationService)))
