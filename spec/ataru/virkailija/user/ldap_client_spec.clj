@@ -1,6 +1,6 @@
-(ns ataru.virkailija.user.ldap-service-spec
+(ns ataru.virkailija.user.ldap-client-spec
   (:require
-   [ataru.virkailija.user.ldap-service :as ldap]
+   [ataru.virkailija.user.ldap-client :as ldap]
    [speclj.core :refer [describe it should= tags]]))
 
 (def test-user1 {:employeeNumber "1.2.246.562.24.23424"

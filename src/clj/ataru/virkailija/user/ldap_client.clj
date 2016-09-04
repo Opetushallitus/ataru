@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.ldap-service
+(ns ataru.virkailija.user.ldap-client
   (:require
    [clojure.string :as str]
    [clj-ldap.client :as ldap]
