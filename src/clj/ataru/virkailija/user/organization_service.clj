@@ -1,8 +1,10 @@
 (ns ataru.virkailija.user.organization-service
   (:require
+   [clojure.string :refer [join]]
    [com.stuartsierra.component :as component]
    [oph.soresu.common.config :refer [config]]
    [ataru.virkailija.user.ldap-client :as ldap-client]
+   [clojure.core.cache :as cache]
    [ataru.virkailija.user.organization-client :as org-client]))
 
 (defprotocol OrganizationService
@@ -18,7 +20,23 @@
      the right (ldap-client/user-right-name) for. Includes sub-organizations,
      but no parents"))
 
-; The real implementation for Organization service
+(defn get-orgs-from-client [cas-client direct-oids]
+  (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
+
+(defn get-orgs-from-cache-or-service [all-orgs-cache cas-client direct-oids]
+  (let [cache-key (join "-" direct-oids)]
+    ;; According to this:
+    ;; https://github.com/clojure/core.cache/wiki/Using
+    ;; has?/hit/miss pattern _must_ be used (although seems a bit redundant here)
+    (if (cache/has? @all-orgs-cache cache-key)
+      (let [orgs (cache/lookup @all-orgs-cache cache-key)]
+        (swap! all-orgs-cache cache/hit cache-key)
+        orgs)
+      (let [orgs (get-orgs-from-client cas-client direct-oids)]
+        (swap! all-orgs-cache cache/miss cache-key orgs)
+        orgs))))
+
+;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
   OrganizationService
@@ -28,13 +46,19 @@
 
   (get-all-organizations [this user-name]
     (let [direct-oids (get-direct-organization-oids this user-name)]
-      (flatten (map #(org-client/get-organizations (:cas-client this) %) direct-oids))))
+      (get-orgs-from-cache-or-service
+       (:all-orgs-cache this)
+       (:cas-client this)
+       direct-oids)))
 
   (start [this]
-    (assoc this :ldap-connection (ldap-client/create-ldap-connection)))
+    (-> this
+        (assoc :ldap-connection (ldap-client/create-ldap-connection))
+        (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl 60000)))))
 
   (stop [this]
-    (.close (:ldap-connection this))))
+    (.close (:ldap-connection this))
+    (assoc this :all-orgs-cache nil)))
 
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
