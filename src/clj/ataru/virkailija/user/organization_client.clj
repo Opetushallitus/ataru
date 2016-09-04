@@ -24,17 +24,15 @@
               (org-node->map org-node)))]
     (flatten (map #(recur-orgs %) (:organisaatiot hierarchy)))))
 
-(defn create []
-  {:base-address (get-in config [:organization-service :base-address])})
+(defn base-address [] (get-in config [:organization-service :base-address]))
 
 (defn get-organizations
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
-  [this root-organization-oid]
-  {:pre [(some? (:base-address this))]}
-  (let [cas-client (:cas-client this)
-        response (cas-client/cas-authenticated-get cas-client
-                                                   (str (:base-address this)
+  [cas-client root-organization-oid]
+  {:pre [(some? (base-address))]}
+  (let [response (cas-client/cas-authenticated-get cas-client
+                                                   (str (base-address)
                                                         plain-org-hierarchy-path
                                                         root-organization-oid) )]
     (if (= 200 (:status response))

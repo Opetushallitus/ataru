@@ -34,10 +34,6 @@
 
      :postal-code-client (postal-code-client/new-postal-code-client)
 
-     :organization-service (component/using
-                            (organization-client/create)
-                            [:cas-client])
-
      :server         (component/using
                        (server/new-server)
                        [:server-setup :handler]))))
