@@ -17,7 +17,8 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info warn error]]))
+            [taoensso.timbre :refer [info warn error]]
+            [oph.soresu.common.koodisto :as koodisto]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -47,7 +48,7 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
 
-(defn api-routes [{:keys [postal-code-client]}]
+(defn api-routes []
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET "/form/:id" []
@@ -64,10 +65,12 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-      :return ataru-schema/postal-office-name
-      (if-let [name (.get-postal-office-name postal-code-client postal-code)]
-        (response/ok name)
-        (response/not-found)))))
+             (let [code (->> (:content (koodisto/get-cached-koodi-options :db "posti" 1))
+                             (filter #(= postal-code (:value %)))
+                             (first))]
+               (if-let [labels (:label code)]
+                 (response/ok labels)
+                 (response/not-found))))))
 
 (defrecord Handler []
   component/Lifecycle
@@ -91,17 +94,17 @@
                               (when (:dev? env) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
-                                  buildversion-routes
-                                  (api-routes this)
-                                  (route/resources "/")
-                                  (api/undocumented
-                                    (api/GET "/:id" []
-                                      (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
+                                             buildversion-routes
+                                             (api-routes)
+                                             (route/resources "/")
+                                             (api/undocumented
+                                               (api/GET "/:id" []
+                                                        (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity
-                              :info  (fn [x] (info x))
-                              :warn  (fn [x] (warn x))
+                              :info (fn [x] (info x))
+                              :warn (fn [x] (warn x))
                               :error (fn [x] (error x)))
                             (wrap-gzip))))
 

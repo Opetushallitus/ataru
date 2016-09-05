@@ -1,7 +1,6 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
             [ataru.cas.client :as cas]
-            [ataru.codes-service.postal-code-client :as postal-code-client]
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
             [ataru.person-service.client :as person-service]
@@ -17,8 +16,7 @@
    (component/system-map
      :handler        (component/using
                        (handler/new-handler)
-                       [:person-service
-                        :postal-code-client])
+                       [:person-service])
 
      :server-setup   {:port http-port
                       :repl-port repl-port}
@@ -30,8 +28,6 @@
      :person-service (component/using
                        (person-service/new-client)
                        [:cas-client])
-
-     :postal-code-client (postal-code-client/new-postal-code-client)
 
      :server         (component/using
                        (server/new-server)
