@@ -8,6 +8,3 @@ create table koodisto_cache (
 
   unique (koodisto_uri, version, checksum)
 );
-
-create index on koodisto_cache (koodisto_uri, version);
-create index on koodisto_cache (koodisto_uri, version, checksum);
