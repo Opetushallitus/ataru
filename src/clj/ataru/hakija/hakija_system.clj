@@ -18,8 +18,6 @@
      :server-setup {:port http-port
                     :repl-port repl-port}
 
-     :migration    (migrations/new-migration)
-
      :email        (email/new-emailer)
 
      :server       (component/using

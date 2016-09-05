@@ -46,6 +46,7 @@
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application children]
+         {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown")} (text application content)))
 
 (defn readonly-fields [form-data application]

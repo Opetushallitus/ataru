@@ -56,6 +56,8 @@
                         (s/optional-key :helpText) LocalizedString
                         (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params) s/Any
+                        (s/optional-key :no-blank-option) Boolean
+                        (s/optional-key :exclude-from-answers) Boolean
                         (s/optional-key :options) [Option]
                         :fieldType (apply s/enum ["textField"
                                                   "textArea"

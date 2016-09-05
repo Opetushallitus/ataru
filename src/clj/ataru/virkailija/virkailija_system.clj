@@ -21,8 +21,6 @@
      :server-setup   {:port http-port
                       :repl-port repl-port}
 
-     :migration      (migrations/new-migration)
-
      :cas-client     (cas/new-client)
 
      :person-service (component/using

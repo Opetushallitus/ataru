@@ -5,7 +5,7 @@
             [clojure.set :refer [difference]]
             [yesql.core :as sql]
             [clojure.core.match :refer [match]]
-            [taoensso.timbre :refer [spy debug]]))
+            [taoensso.timbre :refer [spy debug warn]]))
 
 (defn allowed-values [options]
   (set
@@ -85,12 +85,17 @@
    (valid-application? application (form-store/fetch-form (:form application))))
   ([application form]
    {:pre [(not-empty form)]}
-   (let [answers-by-key (util/answers-by-key (:answers application))]
+   (let [answers-by-key (util/answers-by-key (:answers application))
+         extra-answers (extra-answers-not-in-original-form
+                         (map (comp keyword :id) (util/flatten-form-fields (:content form)))
+                         (keys answers-by-key))
+         results (build-results answers-by-key [] (:content form))
+         failed-results (filter #(not (:passed? (second %))) results)]
+     (when (not (empty? extra-answers))
+       (warn "Extra answers in application" (apply str extra-answers)))
+     (when (not (empty? failed-results))
+       (warn "Validation failed in application fields" (apply str failed-results)))
      (and
-       (empty?
-         (extra-answers-not-in-original-form
-           (map (comp keyword :id) (util/flatten-form-fields (:content form)))
-           (keys answers-by-key)))
-       (every?
-         #(:passed? (second %))
-         (build-results answers-by-key [] (:content form)))))))
+       (empty? extra-answers)
+       (empty? failed-results)))))
+
