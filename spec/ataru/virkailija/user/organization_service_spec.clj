@@ -16,4 +16,9 @@
       (with-redefs [ldap/search fake-ldap-search
                     ataru-ldap/create-ldap-connection fake-create-connection]
         (let [org-service-instance (create-org-service-instance)]
-          (should= [test-user1-organization-oid] (.get-direct-organization-oids org-service-instance "testi2editori"))))))
+          (should= [test-user1-organization-oid] (.get-direct-organization-oids org-service-instance "testi2editori")))))
+  (it "Should get organizations from organization client and cache the result"
+      (with-redefs [ldap/search fake-ldap-search
+                    ataru-ldap/create-ldap-connection fake-create-connection]
+        (let [org-service-instance (create-org-service-instance)]
+          (println "all orgs cache " @(:all-orgs-cache org-service-instance))))))
