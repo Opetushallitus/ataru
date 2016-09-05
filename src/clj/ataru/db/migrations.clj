@@ -12,7 +12,7 @@
     (assoc-in form [:content] content-with-new-person-info-module)))
 
 (migrations/defmigration
-  migrate-person-info-module "1.12"
+  migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
   (let [new-person-module (person-info-module/person-info-module)
         existing-forms    (store/get-forms)]
