@@ -22,9 +22,14 @@
         (let [org-service-instance (create-org-service-instance)]
           (should= [test-user1-organization-oid] (.get-direct-organization-oids org-service-instance "testi2editori")))))
   (it "Should get organizations from organization client and cache the result"
-      (with-redefs [ldap/search fake-ldap-search
-                    ataru-ldap/create-ldap-connection fake-create-connection
-                    cas-client/cas-authenticated-get fake-cas-authenticated-get]
-        (let [org-service-instance (create-org-service-instance)]
-          (should= expected-flat-organizations (.get-all-organizations org-service-instance test-user1-organization-oid))
-          (should= {test-user1-organization-oid  expected-flat-organizations} (into {} @(:all-orgs-cache org-service-instance)))))))
+      (let [cas-get-call-count (atom 0)]
+        (with-redefs [ldap/search fake-ldap-search
+                      ataru-ldap/create-ldap-connection fake-create-connection
+                      cas-client/cas-authenticated-get (fn [cas-client url]
+                                                         (swap! cas-get-call-count inc)
+                                                         {:status 200
+                                                          :body (io/resource "organisaatio_service/organization-hierarchy1.json")})]
+          (let [org-service-instance (create-org-service-instance)]
+            (should= expected-flat-organizations (.get-all-organizations org-service-instance test-user1-organization-oid))
+            (should= {test-user1-organization-oid  expected-flat-organizations} (into {} @(:all-orgs-cache org-service-instance)))
+            (should= 1 @cas-get-call-count))))))
