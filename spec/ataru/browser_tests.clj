@@ -7,6 +7,7 @@
             [oph.soresu.common.db :as db]
             [oph.soresu.common.config :refer [config]]
             [com.stuartsierra.component :as component]
+            [ataru.db.migrations :as migrations]
             [ataru.test-utils :refer [login]]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]])
@@ -16,6 +17,7 @@
   [specs]
   (let [system (virkailija-system/new-system)]
     (try
+      (migrations/migrate)
       (component/start-system system)
       (init-db-fixture) ;; Has to be done "this late" in the process because start-system runs migrations (creates db structure)
       (specs)
