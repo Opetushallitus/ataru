@@ -4,6 +4,7 @@
    [com.stuartsierra.component :as component]
    [oph.soresu.common.config :refer [config]]
    [ataru.virkailija.user.ldap-client :as ldap-client]
+   [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]
    [ataru.virkailija.user.organization-client :as org-client]))
 
@@ -53,6 +54,7 @@
 
   (start [this]
     (-> this
+        (assoc :cas-client (cas-client/new-client "/organisaatio-service"))
         (assoc :ldap-connection (ldap-client/create-ldap-connection))
         (assoc :all-orgs-cache (atom (cache/ttl-cache-factory {} :ttl 60000)))))
 
