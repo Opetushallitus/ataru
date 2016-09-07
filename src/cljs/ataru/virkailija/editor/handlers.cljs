@@ -12,7 +12,7 @@
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
-            [ataru.virkailija.virkailija-ajax :refer [http post]]
+            [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal])
@@ -246,11 +246,16 @@
       (let [form (-> form
                      (assoc :modified-time @modified-time)
                      (set-modified-time))]
-        (post "/lomake-editori/api/forms" form :editor/handle-response-sync :handler-args {:response-chan response-chan})
+        (post "/lomake-editori/api/forms" form :editor/handle-response-sync
+          :handler-args  {:response-chan response-chan}
+          :override-args {:error-handler (fn [error]
+                                           (async/put! response-chan false)
+                                           (dispatch-flasher-error-msg :post error))})
         (let [updated-form (async/<! response-chan)]
-          (reset! modified-time (:modified-time updated-form))
-          (dispatch [:state-update (fn [db]
-                                     (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))])
+          (when-not (false? updated-form)
+            (reset! modified-time (:modified-time updated-form))
+            (dispatch [:state-update (fn [db]
+                                       (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))]))
           (recur (async/<! save-chan)))))))
 
 (save-loop save-chan response-chan)
