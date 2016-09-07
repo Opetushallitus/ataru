@@ -73,8 +73,8 @@
 
 
 (defn new-organization-service []
-  (if (-> config :dev :fake-dependencies)
-    ;; Ui automated test mode
-    (->FakeOrganizationService)
-    ;; Normal mode
-    (->IntegratedOrganizationService)))
+  (cond (not (-> config :organization-service :enabled)) {}
+        ;; Ui automated test mode
+        (-> config :dev :fake-dependencies)              (->FakeOrganizationService)
+        ;; Normal mode
+        :else                                            (->IntegratedOrganizationService)))
