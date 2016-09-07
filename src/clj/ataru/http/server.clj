@@ -4,14 +4,19 @@
             [environ.core :refer [env]]
             [ring.middleware.reload :refer [wrap-reload]]
             [cider.nrepl :refer [cider-nrepl-handler]]
-            [clojure.tools.nrepl.server :refer [start-server]]
+            [clojure.tools.nrepl.server :as nrepl]
             [aleph.http :as http]
             [com.stuartsierra.component :as component]))
 
+; When restarting, we want to keep the same repl running, otherwise our repl-session is lost
+; and restarting the repl is meaningless
+(def repl-started (atom false))
+
 (defn start-repl! [repl-port]
-  (when (:dev? env)
+  (when (and (:dev? env) (not @repl-started))
     (do
-      (start-server :port repl-port :handler cider-nrepl-handler)
+      (nrepl/start-server :port repl-port :handler cider-nrepl-handler)
+      (reset! repl-started true)
       (info "nREPL started on port" repl-port))))
 
 (defmacro ^:private try-f

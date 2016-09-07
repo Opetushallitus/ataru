@@ -1,9 +1,8 @@
 (ns ataru.virkailija.virkailija-system
   (:require [com.stuartsierra.component :as component]
-            [ataru.cas.client :as cas]
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
-            [ataru.person-service.client :as person-service]
+            [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.virkailija.virkailija-routes :as handler]
             [environ.core :refer [env]]))
 
@@ -14,18 +13,12 @@
      (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
    (component/system-map
-     :handler        (component/using
-                       (handler/new-handler)
-                       [:person-service])
+     :handler        (handler/new-handler)
 
      :server-setup   {:port http-port
                       :repl-port repl-port}
 
-     :cas-client     (cas/new-client)
-
-     :person-service (component/using
-                       (person-service/new-client)
-                       [:cas-client])
+     :organization-service (organization-service/new-organization-service)
 
      :server         (component/using
                        (server/new-server)
