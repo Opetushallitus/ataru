@@ -4,8 +4,7 @@
             [ataru.hakija.hakija-routes :as handler]
             [ataru.http.server :as server]
             [ataru.hakija.email :as email]
-            [environ.core :refer [env]]
-            [ataru.codes-service.postal-code-client :as postal-code-client]))
+            [environ.core :refer [env]]))
 
 (defn new-system
   ([]
@@ -14,18 +13,12 @@
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (component/system-map
-     :handler (component/using
-                (handler/new-handler)
-                [:postal-code-client])
+     :handler (handler/new-handler)
 
      :server-setup {:port http-port
                     :repl-port repl-port}
 
-     :migration    (migrations/new-migration)
-
      :email        (email/new-emailer)
-
-     :postal-code-client (postal-code-client/new-postal-code-client)
 
      :server       (component/using
                      (server/new-server)

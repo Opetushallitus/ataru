@@ -298,31 +298,22 @@
                        (dropdown-option "UMI" {:fi "Yhdysvaltain pienet erillissaaret"})
                        (dropdown-option "ZWE" {:fi "Zimbabwe"})])))
 
+(defn- have-finnish-ssn-component
+  []
+  (-> (component/dropdown)
+      (merge {:label {:fi "Onko sinulla suomalainen henkilötunnus?" :sv ""}
+              :rules {:toggle-ssn-based-fields :ssn}
+              :no-blank-option true
+              :exclude-from-answers true
+              :id :have-finnish-ssn})
+      (assoc :options [(dropdown-option "true" {:fi "Kyllä" :sv "Ja"} :default-value true)
+                       (dropdown-option "false" {:fi "Ei" :sv "Nej"})])))
+
 (defn ^:private ssn-component
   []
   (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer"} :size "S" :id :ssn)
-         :rules {:select-gender-based-on-ssn :gender}
+         :rules {:update-gender-and-birth-date-based-on-ssn :gender}
          :validators [:ssn :required]))
-
-(defn ^:private birthdate-component
-  []
-  (merge-with merge
-    (text-field
-      {:fi "Syntymäaika" :sv "Födelsedag"}
-      :size "S"
-      :id :birth-date
-      :validators [:past-date :required])
-    {:params {:placeholder {:fi "pp.kk.vvvv"}}}))
-
-(defn ^:private identification-section
-  []
-  (component/row-section
-    [(nationality-component)
-     (assoc (component/row-section
-              [(ssn-component)
-               (birthdate-component)])
-            :child-validator :one-of
-            )]))
 
 (defn ^:private gender-section
   []
@@ -332,6 +323,18 @@
                                    :id         :gender})
       (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa"})
                                    (dropdown-option "female" {:fi "Nainen" :sv "Kvinna"})]))))
+
+(defn ^:private birthdate-and-gender-component
+  []
+  (component/row-section
+    [(merge-with merge
+                 (text-field
+                   {:fi "Syntymäaika" :sv "Födelsedag"}
+                   :size "S"
+                   :id :birth-date
+                   :validators [:past-date :required])
+                 {:params {:placeholder {:fi "pp.kk.vvvv"}}})
+     (gender-section)]))
 
 (defn ^:private email-component
   []
@@ -581,8 +584,10 @@
                                                        :sv "Partitionen automatiskt lägga formen"}
                                      :children [(first-name-section)
                                                 (last-name-component)
-                                                (identification-section)
-                                                (gender-section)
+                                                (nationality-component)
+                                                (have-finnish-ssn-component)
+                                                (ssn-component)
+                                                (birthdate-and-gender-component)
                                                 (email-component)
                                                 (phone-component)
                                                 (street-address-component)

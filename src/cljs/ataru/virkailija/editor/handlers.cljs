@@ -198,10 +198,11 @@
   (into [(component/dropdown-option)] options))
 
 (defn- update-options-in-dropdown-field
-  [dropdown-field]
-  (let [updated-options (-> (:options dropdown-field)
+  [dropdown-field no-blank-option?]
+  (let [add-blank-fn (if no-blank-option? identity add-empty-option)
+        updated-options (-> (:options dropdown-field)
                             (remove-empty-options)
-                            (add-empty-option))]
+                            (add-blank-fn))]
     (merge dropdown-field {:options updated-options})))
 
 (defn- update-dropdown-field-options
@@ -209,7 +210,7 @@
   (let [new-content
         (walk/prewalk
           #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
-            (update-options-in-dropdown-field %)
+            (update-options-in-dropdown-field % (:no-blank-option %))
             %)
           (:content form))]
     (merge form {:content new-content})))

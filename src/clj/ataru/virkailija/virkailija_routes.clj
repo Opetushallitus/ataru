@@ -2,7 +2,6 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
-            [ataru.codes-service.postal-code-client :as postal-code-client]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
@@ -28,7 +27,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [schema.spec.core :as spec]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [oph.soresu.common.koodisto :as koodisto])
   (:import [manifold.deferred.Deferred]
            (org.joda.time DateTime)
            (clojure.lang ExceptionInfo)))
@@ -76,7 +76,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn api-routes [{:keys [postal-code-client]}]
+(defn api-routes []
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -143,13 +143,17 @@
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
                       :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))
 
-                 (api/context "/postal-codes" []
-                   :tags ["postal-code-api"]
-
-                   (api/GET "/" []
-                     :summary "List all availble postal codes and postal office names"
-                     :return {:postal-codes ataru-schema/PostalCodes}
-                     (ok {:postal-codes (.get-postal-codes postal-code-client)})))))
+                 (api/context "/koodisto" []
+                              :tags ["koodisto-api"]
+                              (api/GET "/" []
+                                       :return s/Any
+                                       (let [koodisto-list (koodisto/list-koodistos)]
+                                         (ok koodisto-list)))
+                              (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
+                                       :path-params [koodisto-uri :- s/Str version :- Long]
+                                       :return s/Any
+                                       (let [koodi-options (koodisto/get-cached-koodi-options :db koodisto-uri version)]
+                                         (ok (:content koodi-options)))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -199,7 +203,7 @@
                                 (api/middleware [auth-middleware/with-authentication]
                                   resource-routes
                                   app-routes
-                                  (api-routes this)
+                                  (api-routes)
                                   auth-routes))
                               (api/undocumented
                                 (route/not-found "Not found")))
