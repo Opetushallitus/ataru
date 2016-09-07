@@ -228,6 +228,10 @@
         x))
     form))
 
+(defn save-cb
+  (fn [db updated-form _]
+    (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form))))
+
 (defn save-form
   [db _]
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
@@ -235,11 +239,7 @@
                  (update-dropdown-field-options)
                  (remove-focus))]
     (when (not-empty (:content form))
-      (post
-        "/lomake-editori/api/forms"
-        form
-        (fn [db updated-form]
-          (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
+      (post "/lomake-editori/api/forms" form save-cb))
     db))
 
 (register-handler :editor/save-form save-form)
