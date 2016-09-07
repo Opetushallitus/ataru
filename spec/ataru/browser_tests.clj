@@ -18,8 +18,8 @@
   (let [system (virkailija-system/new-system)]
     (try
       (migrations/migrate)
+      (init-db-fixture)
       (component/start-system system)
-      (init-db-fixture) ;; Has to be done "this late" in the process because start-system runs migrations (creates db structure)
       (specs)
       (finally
         (component/stop-system system)))))
