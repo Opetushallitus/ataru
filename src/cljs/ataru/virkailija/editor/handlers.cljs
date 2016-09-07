@@ -233,7 +233,7 @@
 (def save-chan (async/chan (async/sliding-buffer 1)))
 (def response-chan (async/chan))
 
-(register-handler :editor/handle-form-save-response
+(register-handler :editor/handle-response-sync
   (fn [db [_ response {:keys [response-chan]}]]
     (async/put! response-chan response)
     db))
@@ -246,7 +246,7 @@
       (let [form (-> form
                      (assoc :modified-time @modified-time)
                      (set-modified-time))]
-        (post "/lomake-editori/api/forms" form :editor/handle-form-save-response :handler-args {:response-chan response-chan})
+        (post "/lomake-editori/api/forms" form :editor/handle-response-sync :handler-args {:response-chan response-chan})
         (let [updated-form (async/<! response-chan)]
           (reset! modified-time (:modified-time updated-form))
           (dispatch [:state-update (fn [db]
