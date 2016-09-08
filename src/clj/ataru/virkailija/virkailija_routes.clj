@@ -76,7 +76,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn api-routes []
+(defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -98,8 +98,10 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(form-store/upsert-form
-                             (assoc form :modified-by (-> session :identity :username)))))
+                   (trying #(let [user-name         (-> session :identity :username)
+                                  organization-oids (.get-direct-organization-oids organization-service user-name)]
+                              (form-store/upsert-form
+                               (assoc form :modified-by user-name)))))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -203,7 +205,7 @@
                                 (api/middleware [auth-middleware/with-authentication]
                                   resource-routes
                                   app-routes
-                                  (api-routes)
+                                  (api-routes this)
                                   auth-routes))
                               (api/undocumented
                                 (route/not-found "Not found")))

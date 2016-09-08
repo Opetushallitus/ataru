@@ -18,7 +18,7 @@
 
 (defn- cas-login [ticket virkailija-login-url]
   (let [cas-client (cas/cas-client cas-client-url)
-        username (if (:dev? env)
+        username (if (-> config :dev:fake-dependencies)
                    "DEVELOPER"
                    (.run (.validateServiceTicket cas-client virkailija-login-url ticket)))]
     (cas-store/login ticket)
