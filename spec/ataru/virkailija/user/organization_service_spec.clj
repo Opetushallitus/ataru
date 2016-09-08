@@ -27,6 +27,7 @@
       (let [cas-get-call-count (atom 0)]
         (with-redefs [ldap/search                       fake-ldap-search
                       ataru-ldap/create-ldap-connection fake-create-connection
+                      cas-client/new-client             {}
                       cas-client/cas-authenticated-get  (partial fake-cas-authenticated-get cas-get-call-count)
                       config                            {:organization-service {:base-address "dummy"} :cas {}}]
           (let [org-service-instance (create-org-service-instance)]
