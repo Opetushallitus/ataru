@@ -2,7 +2,6 @@
     (:require [re-frame.core :refer [register-handler dispatch]]
               [ataru.virkailija.autosave :as autosave]
               [ataru.virkailija.db :as db]
-              [ataru.virkailija.virkailija-ajax :refer [http]]
               [taoensso.timbre :refer-macros [spy debug]]))
 
 (register-handler

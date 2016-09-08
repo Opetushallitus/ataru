@@ -3,6 +3,7 @@
             [clojure.data :refer [diff]]
             [clojure.walk :as walk]
             [cljs-time.core :as c]
+            [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as pm]
@@ -11,10 +12,11 @@
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
-            [ataru.virkailija.virkailija-ajax :refer [http post]]
+            [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
             [ataru.util :as util]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.virkailija.temporal :as temporal]))
+            [ataru.virkailija.temporal :as temporal])
+  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (defn get-user-info [db _]
   (http
@@ -228,18 +230,43 @@
         x))
     form))
 
+(def save-chan (async/chan (async/sliding-buffer 1)))
+(def response-chan (async/chan))
+
+(register-handler :editor/handle-response-sync
+  (fn [db [_ response {:keys [response-chan]}]]
+    (async/put! response-chan response)
+    db))
+
+(defn save-loop [save-chan response-chan]
+  (let [modified-time (atom nil)]
+    (go-loop [form (async/<! save-chan)]
+      (when (nil? @modified-time)
+        (reset! modified-time (:modified-time form)))
+      (let [form (-> form
+                     (assoc :modified-time @modified-time)
+                     (set-modified-time))]
+        (post "/lomake-editori/api/forms" form :editor/handle-response-sync
+          :handler-args  {:response-chan response-chan}
+          :override-args {:error-handler (fn [error]
+                                           (async/put! response-chan false)
+                                           (dispatch-flasher-error-msg :post error))})
+        (let [updated-form (async/<! response-chan)]
+          (when-not (false? updated-form)
+            (reset! modified-time (:modified-time updated-form))
+            (dispatch [:state-update (fn [db]
+                                       (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))]))
+          (recur (async/<! save-chan)))))))
+
+(save-loop save-chan response-chan)
+
 (defn save-form
   [db _]
   (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
-                 (set-modified-time)
                  (update-dropdown-field-options)
                  (remove-focus))]
     (when (not-empty (:content form))
-      (post
-        "/lomake-editori/api/forms"
-        form
-        (fn [db updated-form]
-          (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))))
+      (async/put! save-chan form))
     db))
 
 (register-handler :editor/save-form save-form)
