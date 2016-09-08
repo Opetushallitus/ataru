@@ -69,6 +69,7 @@
                                                   "bic"
                                                   "dropdown"
                                                   "radioButton"
+                                                  "multipleChoice"
                                                   "checkboxButton"
                                                   "namedAttachment"
                                                   "koodistoField"])})
