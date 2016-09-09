@@ -4,7 +4,7 @@ select id, name, modified_by, modified_time from forms order by modified_time de
 
 -- name: yesql-add-form-query<!
 -- Add form
-insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
+insert into forms (name, content, modified_by, organization_oid) values (:name, :content, :modified_by, :organization_oid);
 
 -- name: yesql-form-exists-query
 -- Get single form

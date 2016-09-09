@@ -36,13 +36,14 @@
                            (first (yesql-get-by-id form {:connection conn})))
                          (throw (ex-info "form updated in background" {:error "form_updated_in_background"})))))
 
-(defn upsert-form [{:keys [id] :as form-with-modified-time}]
+(defn upsert-form [organization-oid {:keys [id] :as form-with-modified-time}]
   (let [modified-time (:modified-time form-with-modified-time)
         form (dissoc form-with-modified-time :modified-time)
         content {:content (or (not-empty (:content form))
                               [])}
         f       (-> (transform-keys ->snake_case (dissoc form :content))
-                    (assoc :content content))]
+                    (assoc :content content)
+                    (assoc :organization_oid organization-oid))]
     (restructure-form-with-content
       (let [existing-form (when id (first (execute :db yesql-get-by-id f)))]
         (if (some? existing-form)

@@ -79,10 +79,14 @@
 (defn- post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
         organization-oids (.get-direct-organization-oids organization-service user-name)]
-    (if (< 1 (count organization-oids))
-      (throw (Exception. (str "Too many organizations for user " user-name ", can't attach form to an ambiguous organization: " organization-oids))))
-    (form-store/upsert-form
-     (assoc form :modified-by user-name))))
+    (if (not= 1 (count organization-oids))
+      (throw (Exception. (str "User "
+                              user-name
+                              " has the wrong amount of organizations: "
+                              (count organization-oids)
+                              " (required: exactly one).  can't attach form to an ambiguous organization: "
+                              organization-oids))))
+    (form-store/upsert-form (first organization-oids) (assoc form :modified-by user-name))))
 
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
