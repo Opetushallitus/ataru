@@ -76,6 +76,14 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
+(defn- post-form [form session organization-service]
+  (let [user-name         (-> session :identity :username)
+        organization-oids (.get-direct-organization-oids organization-service user-name)]
+    (if (< 1 (count organization-oids))
+      (throw (Exception. (str "Too many organizations for user " user-name ", can't attach form to an ambiguous organization: " organization-oids))))
+    (form-store/upsert-form
+     (assoc form :modified-by user-name))))
+
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
@@ -98,10 +106,7 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(let [user-name         (-> session :identity :username)
-                                  organization-oids (.get-direct-organization-oids organization-service user-name)]
-                              (form-store/upsert-form
-                               (assoc form :modified-by user-name)))))
+                   (trying #(post-form form session organization-service)))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
