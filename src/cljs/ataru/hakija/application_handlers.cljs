@@ -59,7 +59,7 @@
   initialize-db)
 
 (defn set-application-field [db [_ key values]]
-  (let [path [:application :answers key]
+  (let [path                [:application :answers key]
         current-answer-data (get-in db path)]
     (assoc-in db path (merge current-answer-data values))))
 
@@ -109,3 +109,14 @@
     (-> db
         (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
 
+(register-handler
+  :application/toggle-multiple-choice-option
+  (fn [db [_ multiple-choice-id value]]
+    (update-in db [:application :answers multiple-choice-id :value]
+      (fn [answers]
+        (let [answers   (clojure.string/split (or answers "") #", ")
+              true-pred (partial = value)]
+          (clojure.string/join ", "
+            (if (some true-pred answers)
+              (filter (complement true-pred) answers)
+              (conj answers value))))))))

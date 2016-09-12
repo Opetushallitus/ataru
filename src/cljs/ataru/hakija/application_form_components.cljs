@@ -142,27 +142,48 @@
                                      ^{:key value}
                                      [:option {:value value} value]))]]])})))
 
-(defn multiple-choice-option
-  [option]
-  (fn [option]
-    (let [label (get-in option [:label :fi])
-          id    (util/component-id)]
-      [:div
-       [:input.application__form-checkbox
-        {:id      id
-         :type    "checkbox"
-         :checked false}]
-       [:label
-        {:for id}
-        label]])))
+(defn multiple-choice-option [option multiple-choice-id]
+  (let [label     (get-in option [:label :fi])
+        option-id (util/component-id)
+        value     (:value option)]
+    [:div
+     [:input.application__form-checkbox
+      {:id        option-id
+       :type      "checkbox"
+       :checked   false
+       :value     value
+       :on-change (fn [event]
+                    (let [value (.. event -target -value)]
+                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
+     [:label
+      {:for option-id}
+      label]]))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-  [div-kwd
-   (map (fn [option]
-          ^{:key (:value option)}
-          [multiple-choice-option option])
-        (:options field-descriptor))])
+  (let [multiple-choice-id (answer-key field-descriptor)
+        answers            (subscribe [:state-query [:application :answers multiple-choice-id :value]])]
+    (fn [field-descriptor]
+      (let [answers @answers]
+        [div-kwd
+         (map (fn [option]
+                (let [label     (get-in option [:label :fi])
+                      option-id (util/component-id)
+                      value     (:value option)]
+                  [:div {:key value}
+                   [:input.application__form-checkbox
+                    {:id        option-id
+                     :type      "checkbox"
+                     :checked   (and (not (nil? answers))
+                                     (clojure.string/includes? answers value))
+                     :value     value
+                     :on-change (fn [event]
+                                  (let [value (.. event -target -value)]
+                                    (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
+                   [:label
+                    {:for option-id}
+                    label]]))
+              (:options field-descriptor))]))))
 
 (defn render-field
   [field-descriptor & args]
