@@ -47,6 +47,7 @@
    :id         (util/component-id)
    :label      {:fi "" :sv ""}
    :params     {}
+   :options    []
    :focus?     true})
 
 (defn row-section
