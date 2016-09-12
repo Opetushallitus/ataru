@@ -166,24 +166,26 @@
     (fn [field-descriptor]
       (let [answers @answers]
         [div-kwd
-         (map (fn [option]
-                (let [label     (get-in option [:label :fi])
-                      option-id (util/component-id)
-                      value     (:value option)]
-                  [:div {:key value}
-                   [:input.application__form-checkbox
-                    {:id        option-id
-                     :type      "checkbox"
-                     :checked   (and (not (nil? answers))
-                                     (clojure.string/includes? answers value))
-                     :value     value
-                     :on-change (fn [event]
-                                  (let [value (.. event -target -value)]
-                                    (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
-                   [:label
-                    {:for option-id}
-                    label]]))
-              (:options field-descriptor))]))))
+         [:div.application__form-outer-checkbox-container
+          [:div ; This is the inner container, acts as the growing component for outer container
+           (map (fn [option]
+                  (let [label     (get-in option [:label :fi])
+                        option-id (util/component-id)
+                        value     (:value option)]
+                    [:div {:key value}
+                     [:input.application__form-checkbox
+                      {:id        option-id
+                       :type      "checkbox"
+                       :checked   (and (not (nil? answers))
+                                       (clojure.string/includes? answers value))
+                       :value     value
+                       :on-change (fn [event]
+                                    (let [value (.. event -target -value)]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
+                     [:label
+                      {:for option-id}
+                      label]]))
+                (:options field-descriptor))]]]))))
 
 (defn render-field
   [field-descriptor & args]

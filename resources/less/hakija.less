@@ -331,6 +331,11 @@
   font-weight: bold;
 }
 
+.application__form-outer-checkbox-container {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
 .application__form-checkbox {
   display: none;
 }
@@ -344,7 +349,7 @@
   height: 43px;
   justify-content: flex-start;
   padding: 0px 19px;
-  width: 305px;
+  min-width: 305px;
 }
 
 .application__form-checkbox:checked + label {
