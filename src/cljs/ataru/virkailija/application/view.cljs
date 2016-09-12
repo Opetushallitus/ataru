@@ -91,10 +91,8 @@
     [:span.application-handling__list-row--state "Tila"]]
    [application-list-contents applications]])
 
-(defn application-contents [selected-application]
-  (let [selected-form           (subscribe [:editor/selected-form])]
-    (fn [selected-application]
-      [readonly-contents/readonly-fields @selected-form selected-application])))
+(defn application-contents [{:keys [form application]}]
+  [readonly-contents/readonly-fields form application])
 
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
@@ -137,15 +135,15 @@
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
 (defn application-review-area [applications]
-  (let [selected-id             (subscribe [:state-query [:application :selected-id]])
-        selected-application    (subscribe [:state-query [:application :selected-application]])
-        belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
+  (let [selected-id                   (subscribe [:state-query [:application :selected-id]])
+        selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
+        belongs-to-current-form       (fn [id applications] (first (filter #(= id (:id %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-id applications)
         [:div.application-handling__container.panel-content
-         [application-heading @selected-application]
+         [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
-          [application-contents @selected-application]
+          [application-contents @selected-application-and-form]
           [application-review]]]))))
 
 (defn application []
