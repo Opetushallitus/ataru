@@ -331,7 +331,34 @@
   font-weight: bold;
 }
 
+.application__form-checkbox {
+  display: none;
+}
 
+.application__form-checkbox + label {
+  align-items: center;
+  background-color: @multiple-choice-not-selected-background;
+  color: @text-color;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  justify-content: flex-start;
+  padding: 0px 19px;
+  width: 305px;
+}
+
+.application__form-checkbox:checked + label {
+  background-color: @section-header-text;
+  color: @white;
+}
+
+.application__form-checkbox:checked + label::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  background: url('../../images/icon_check.png') no-repeat;
+}
 
 @media only screen
 and (max-width: @desktop-content-width) {

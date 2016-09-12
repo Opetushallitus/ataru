@@ -142,6 +142,28 @@
                                      ^{:key value}
                                      [:option {:value value} value]))]]])})))
 
+(defn multiple-choice-option
+  [option]
+  (fn [option]
+    (let [label (get-in option [:label :fi])
+          id    (util/component-id)]
+      [:div
+       [:input.application__form-checkbox
+        {:id      id
+         :type    "checkbox"
+         :checked false}]
+       [:label
+        {:for id}
+        label]])))
+
+(defn multiple-choice
+  [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+  [div-kwd
+   (map (fn [option]
+          ^{:key (:value option)}
+          [multiple-choice-option option])
+        (:options field-descriptor))])
+
 (defn render-field
   [field-descriptor & args]
   (let [ui (subscribe [:state-query [:application :ui]])
@@ -161,7 +183,8 @@
 
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 
