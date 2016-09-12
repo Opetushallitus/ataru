@@ -48,6 +48,32 @@
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
 
+(defn- remove-empty-options
+  [options]
+  (vec (remove #(clojure.string/blank? (:value %)) options)))
+
+(defn- add-empty-option
+  [options]
+  (into [(component/dropdown-option)] options))
+
+(defn- update-options-in-dropdown-field
+  [dropdown-field no-blank-option?]
+  (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
+        updated-options (-> (:options dropdown-field)
+                          (remove-empty-options)
+                          (add-blank-fn))]
+    (merge dropdown-field {:options updated-options})))
+
+(defn- update-dropdown-field-options
+  [form]
+  (let [new-content
+        (walk/prewalk
+          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
+             (update-options-in-dropdown-field % (:no-blank-option %))
+             %)
+          (:content form))]
+    (merge form {:content new-content})))
+
 (register-handler
   :editor/remove-dropdown-option
   (fn [db [_ & path]]
@@ -174,9 +200,16 @@
 
                                                         :else
                                                         (not=
-                                                          ; :id changes when new version is created, :key remains the same across versions
-                                                          (dissoc prev :created-time :id)
-                                                          (dissoc current :created-time :id))))
+                                                          ; :id changes when new version is created,
+                                                          ; :key remains the same across versions
+                                                          (-> prev
+                                                            ; prevent autosave when adding blank dropdown option
+                                                            (update-dropdown-field-options)
+                                                            (dissoc :created-time :id))
+                                                          (-> current
+                                                            ; prevent autosave when adding blank dropdown option
+                                                            (update-dropdown-field-options)
+                                                            (dissoc :created-time :id)))))
                                                :handler
                                                (fn [form previous-autosave-form-at-time-of-dispatch]
                                                  (dispatch [:editor/save-form]))}))))))
@@ -191,32 +224,6 @@
         (when-let [id (get-in db [:editor :forms form-key :id])]
           (fetch-form-content! id))
         (assoc-in db [:editor :selected-form-key] form-key)))))
-
-(defn- remove-empty-options
-  [options]
-  (vec (remove #(clojure.string/blank? (:value %)) options)))
-
-(defn- add-empty-option
-  [options]
-  (into [(component/dropdown-option)] options))
-
-(defn- update-options-in-dropdown-field
-  [dropdown-field no-blank-option?]
-  (let [add-blank-fn (if no-blank-option? identity add-empty-option)
-        updated-options (-> (:options dropdown-field)
-                            (remove-empty-options)
-                            (add-blank-fn))]
-    (merge dropdown-field {:options updated-options})))
-
-(defn- update-dropdown-field-options
-  [form]
-  (let [new-content
-        (walk/prewalk
-          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
-            (update-options-in-dropdown-field % (:no-blank-option %))
-            %)
-          (:content form))]
-    (merge form {:content new-content})))
 
 (defn- remove-focus
   [form]
