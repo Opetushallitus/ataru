@@ -18,7 +18,11 @@
         existing-forms    (store/get-forms)]
     (doseq [form existing-forms]
       (let [changed-form (update-person-info-module form new-person-module)]
-        (store/upsert-form changed-form)))))
+        ; Form versioning deprecates this migration which made it into production
+        ; before form versioning. No harm done for empty databases, for existing development databases
+        ; this may or may not work. comment below expression if it doesn't :)
+        (store/create-form-or-increment-version! changed-form)
+        ))))
 
 (defn migrate
   []
