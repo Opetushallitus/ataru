@@ -240,13 +240,13 @@
     (post "/lomake-editori/api/forms" form :editor/handle-response-sync
       :handler-args  {:response-chan response-chan}
       :override-args {:error-handler (fn [error]
-                                       (async/put! response-chan false)          
+                                       (async/put! response-chan false)
                                        (dispatch-flasher-error-msg :post error))})
     (let [updated-form (async/<! response-chan)]
       (when-not (false? updated-form)
-        (dispatch [:state-update 
-          (fn [db]
-            (update-in db [:editor :forms] assoc (:key updated-form) updated-form))]))
+        (dispatch [:state-update
+                   (fn [db]
+                     (update-in db [:editor :forms] assoc (:key updated-form) updated-form))]))
       (recur (async/<! save-chan)))))
 
 (save-loop save-chan response-chan)
