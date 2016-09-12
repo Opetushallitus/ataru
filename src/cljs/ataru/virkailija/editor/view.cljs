@@ -54,7 +54,7 @@
                                   (dispatch [:set-state [:editor :new-form-created?] false]))))
        :reagent-render      (fn []
                               [:input.editor-form__form-name-input
-                               {:key         (:id @form) ; needed to trigger component-did-update
+                               {:key         (:key @form) ; needed to trigger component-did-update
                                 :type        "text"
                                 :default-value @form-name
                                 :placeholder "Lomakkeen nimi"
