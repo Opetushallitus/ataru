@@ -116,7 +116,8 @@
                                         [s/Str])
                      :fieldType (apply s/enum ["textField"
                                                "textArea"
-                                               "dropdown"])
+                                               "dropdown"
+                                               "multipleChoice"])
                      :label (s/cond-pre
                               LocalizedString
                               s/Str)})
