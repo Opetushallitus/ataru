@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
+            [ataru.hakija.application-validators :as validator]
             [ataru.hakija.hakija-ajax :refer [get post]]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -111,7 +112,7 @@
 
 (register-handler
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id idx value]]
+  (fn [db [_ multiple-choice-id idx value validators]]
     (let [db    (-> db
                     (assoc-in [:application :answers multiple-choice-id :options idx :value] value)
                     (update-in [:application :answers multiple-choice-id :options idx :selected] not))
@@ -119,5 +120,10 @@
                      (vals)
                      (filter :selected)
                      (map :value)
-                     (clojure.string/join ", "))]
-      (assoc-in db [:application :answers multiple-choice-id :value] value))))
+                     (clojure.string/join ", "))
+          valid (if (not-empty validators)
+                  (every? true? (map #(validator/validate % value) validators))
+                  true)]
+      (-> db
+          (assoc-in [:application :answers multiple-choice-id :value] value)
+          (assoc-in [:application :answers multiple-choice-id :valid] valid)))))

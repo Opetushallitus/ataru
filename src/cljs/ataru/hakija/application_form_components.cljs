@@ -164,7 +164,7 @@
                        :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
-                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value])))}]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]
                      [:label
                       {:for option-id}
                       label]]))
