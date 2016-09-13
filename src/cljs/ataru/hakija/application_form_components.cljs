@@ -150,7 +150,7 @@
       (let [answers @answers]
         [div-kwd
          [:div.application__form-outer-checkbox-container
-          [:div ; This is the inner container, acts as the growing component for outer container
+          [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map (fn [option]
                   (let [label     (get-in option [:label :fi])
                         option-id (util/component-id)
