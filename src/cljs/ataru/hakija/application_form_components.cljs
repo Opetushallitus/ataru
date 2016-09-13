@@ -142,6 +142,34 @@
                                      ^{:key value}
                                      [:option {:value value} value]))]]])})))
 
+(defn multiple-choice
+  [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+  (let [multiple-choice-id (answer-key field-descriptor)
+        options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])]
+    (fn [field-descriptor]
+      (let [options @options]
+        [div-kwd
+         [label field-descriptor "application__form-select-label"]
+         [:div.application__form-outer-checkbox-container
+          [:div ; prevents inner div items from reserving full space of the outer checkbox container
+           (map-indexed (fn [idx option]
+                  (let [label     (get-in option [:label :fi])
+                        option-id (util/component-id)
+                        value     (:value option)]
+                    [:div {:key option-id}
+                     [:input.application__form-checkbox
+                      {:id        option-id
+                       :type      "checkbox"
+                       :checked   (true? (get-in options [idx :selected]))
+                       :value     value
+                       :on-change (fn [event]
+                                    (let [value (.. event -target -value)]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]
+                     [:label
+                      {:for option-id}
+                      label]]))
+                (:options field-descriptor))]]]))))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui (subscribe [:state-query [:application :ui]])
@@ -161,7 +189,8 @@
 
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor])
+                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 

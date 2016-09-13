@@ -40,6 +40,16 @@
    :options    [(merge (dropdown-option) {:focus? false})]
    :focus?     true})
 
+(defn multiple-choice
+  []
+  {:fieldClass "formField"
+   :fieldType  "multipleChoice"
+   :id         (util/component-id)
+   :label      {:fi "" :sv ""}
+   :params     {}
+   :options    []
+   :focus?     true})
+
 (defn row-section
   "Creates a data structure that represents a row that has multiple form
    components in it.

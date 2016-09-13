@@ -331,7 +331,40 @@
   font-weight: bold;
 }
 
+.application__form-outer-checkbox-container {
+  display: flex;
+  flex-flow: row nowrap;
+}
 
+.application__form-checkbox {
+  display: none;
+}
+
+.application__form-checkbox + label {
+  align-items: center;
+  background-color: @multiple-choice-not-selected-background;
+  border-radius: 2px;
+  color: @text-color;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  justify-content: flex-start;
+  padding: 0px 19px;
+  margin-bottom: 1px;
+  min-width: 305px;
+}
+
+.application__form-checkbox:checked + label {
+  background-color: @section-header-text;
+  color: @white;
+}
+
+.application__form-checkbox:checked + label::before {
+  content: url('../../images/icon_check.png');
+  margin-bottom: 2px;
+  margin-right: 6px;
+}
 
 @media only screen
 and (max-width: @desktop-content-width) {

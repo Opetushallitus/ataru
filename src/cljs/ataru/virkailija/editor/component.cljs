@@ -142,7 +142,10 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Pudotusvalikko" path]
+       (let [header (case (:fieldType @value)
+                      "dropdown"       "Pudotusvalikko"
+                      "multipleChoice" "Lista, monta valittavissa")]
+         [text-header header path])
        [:div.editor-form__multi-question-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
@@ -184,10 +187,11 @@
          [:i.zmdi.zmdi-plus-square] " Lisää"]]])))
 
 (def ^:private toolbar-elements
-  {"Lomakeosio"     component/form-section
-   "Tekstikenttä"   component/text-field
-   "Tekstialue"     component/text-area
-   "Pudotusvalikko" component/dropdown})
+  {"Lomakeosio"                component/form-section
+   "Tekstikenttä"              component/text-field
+   "Tekstialue"                component/text-area
+   "Pudotusvalikko"            component/dropdown
+   "Lista, monta valittavissa" component/multiple-choice})
 
 (defn ^:private component-toolbar [path]
   (fn [path]
