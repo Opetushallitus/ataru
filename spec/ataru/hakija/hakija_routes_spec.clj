@@ -13,6 +13,8 @@
 
 (sql/defqueries "sql/application-queries.sql")
 
+(def ^:private form (atom nil))
+
 (def form-blank-required-field (assoc-in application-fixtures/person-info-form-application [:answers 0 :value] ""))
 (def form-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
 (def form-invalid-phone-field (assoc-in application-fixtures/person-info-form-application [:answers 5 :value] "invalid phone number"))
@@ -38,7 +40,7 @@
 
 (defn- have-any-application-in-db
   []
-  (let [app-count (count (soresu-db/exec :db yesql-get-application-list {:form_id 15}))]
+  (let [app-count (count (soresu-db/exec :db yesql-get-application-list {:form_key (:key @form)}))]
     (< 0 app-count)))
 
 (defmacro add-spec
@@ -63,7 +65,7 @@
   (before
     (db/clear-database)
     (migrations/migrate)
-    (db/init-db-fixture))
+    (reset! form (db/init-db-fixture)))
 
   (it "should validate application"
     (with-response resp application-fixtures/person-info-form-application
