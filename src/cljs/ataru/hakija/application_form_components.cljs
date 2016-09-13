@@ -142,23 +142,6 @@
                                      ^{:key value}
                                      [:option {:value value} value]))]]])})))
 
-(defn multiple-choice-option [option multiple-choice-id]
-  (let [label     (get-in option [:label :fi])
-        option-id (util/component-id)
-        value     (:value option)]
-    [:div
-     [:input.application__form-checkbox
-      {:id        option-id
-       :type      "checkbox"
-       :checked   false
-       :value     value
-       :on-change (fn [event]
-                    (let [value (.. event -target -value)]
-                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
-     [:label
-      {:for option-id}
-      label]]))
-
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
