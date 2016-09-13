@@ -149,6 +149,7 @@
     (fn [field-descriptor]
       (let [options @options]
         [div-kwd
+         [label field-descriptor "application__form-select-label"]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
