@@ -101,7 +101,7 @@
                    :body [form ataru-schema/FormWithContent]
                    (match (trying #(form-store/create-form-or-increment-version!
                                      (assoc form :created-by (-> session :identity :username))))
-                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request concurrently-modified)
+                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request {:error "form_updated_in_background"})
                      response response))
 
                  (api/POST "/client-error" []
