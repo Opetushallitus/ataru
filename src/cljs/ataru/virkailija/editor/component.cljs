@@ -156,6 +156,7 @@
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
 (defn- remove-dropdown-option-button [path option-index]
+  {:key (str "remove-option-" option-index)}
   [:a {:href "#"
        :on-click (fn [evt]
                    (.preventDefault evt)
@@ -178,8 +179,10 @@
      (remove-dropdown-option-button path option-index)]))
 
 (defn dropdown [initial-content path]
-  (let [languages (subscribe [:editor/languages])
-        value (subscribe [:editor/get-component-value path])
+  (let [languages        (subscribe [:editor/languages])
+        options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
+        value            (subscribe [:editor/get-component-value path])
+        dropdown-id      (util/new-uuid)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
       (let [languages @languages]
@@ -199,23 +202,61 @@
              :header? true)]
           [:div.editor-form__checkbox-wrapper
            (render-checkbox path initial-content)]]
-         [:div.editor-form__multi-options-container
+
+         [:div.editor-form__multi-options_wrapper
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-          (let [options (:options @value)]
-            (->> options
-                 (map-indexed (fn [idx option]
-                                (when-not (and (clojure.string/blank? (:value option))
-                                               (= idx 0)
-                                               (> (count options) 1))
-                                  (dropdown-option idx path languages))))
-                 (remove nil?)))]
-         [:div.editor-form__add-dropdown-item
-          [:a
-           {:href "#"
-            :on-click (fn [evt]
-                        (.preventDefault evt)
-                        (dispatch [:editor/add-dropdown-option path]))}
-           [:i.zmdi.zmdi-plus-square] " Lisää"]]]))))
+          (let [custom-button-value   "Omat vastausvaihtoehdot"
+                custom-button-id      (str dropdown-id "-custom")
+                koodisto-button-value "Koodisto"
+                koodisto-button-id    (str dropdown-id "-koodisto")]
+            [:div.editor-form__custom-koodisto-options-selector
+             [:input
+              {:type      "radio"
+               :value     custom-button-value
+               :checked   (nil? @options-koodisto)
+               :name      dropdown-id
+               :id        custom-button-id
+               :on-change (fn [evt]
+                            (.preventDefault evt)
+                            (dispatch [:editor/toggle-custom-or-koodisto-options :custom path]))}]
+             [:label
+              {:for   custom-button-id
+               :class "editor-form__size-button--left-edge"}
+              custom-button-value]
+             [:input
+              {:type      "radio"
+               :value     koodisto-button-value
+               :checked   (not (nil? @options-koodisto))
+               :name      dropdown-id
+               :id        koodisto-button-id
+               :on-change (fn [evt]
+                            (.preventDefault evt)
+                            (dispatch [:editor/toggle-custom-or-koodisto-options :koodisto path]))}]
+             [:label
+              {:for   koodisto-button-id
+               :class "editor-form__size-button--right-edge"}
+              koodisto-button-value]])
+
+          (when (nil? @options-koodisto)
+            (seq [
+                  ^{:key "options-input"}
+                  [:div.editor-form__multi-options-container
+                   (let [options (:options @value)]
+                     (->> options
+                          (map-indexed (fn [idx option]
+                                         (when-not (and (clojure.string/blank? (:value option))
+                                                        (= idx 0)
+                                                        (> (count options) 1))
+                                           (dropdown-option idx path languages))))
+                          (remove nil?)))]
+                  ^{:key "options-input-add"}
+                  [:div.editor-form__add-dropdown-item
+                   [:a
+                    {:href     "#"
+                     :on-click (fn [evt]
+                                 (.preventDefault evt)
+                                 (dispatch [:editor/add-dropdown-option path]))}
+                    [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                component/form-section

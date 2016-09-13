@@ -22,10 +22,25 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
+(defn- populate-form-koodisto-fields
+  [form]
+  (assoc form :content
+              (clojure.walk/prewalk
+                #(if (and (:koodisto-source %)
+                          (= (:fieldType %) "dropdown")
+                          (= (:fieldClass %) "formField"))
+                  (let [{:keys [uri version]} (:koodisto-source %)]
+                    (assoc % :options (into [{:value "" :label {:fi "" :sv ""}}]
+                                            (koodisto/get-koodi-options uri version))))
+                  %)
+                (:content form))))
+
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
     (if form
-      (response/ok form)
+      (-> form
+          (populate-form-koodisto-fields)
+          (response/ok))
       (response/not-found form))))
 
 (defn- handle-application [application]
