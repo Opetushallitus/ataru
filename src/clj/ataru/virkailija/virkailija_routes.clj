@@ -88,6 +88,11 @@
                               organization-oids))))
     (form-store/upsert-form (first organization-oids) (assoc form :modified-by user-name))))
 
+(defn- get-forms [session organization-service]
+  (let [all-organizations (.get-all-organizations organization-service (-> session :identity :username))
+        all-oids          (conj (map :oid all-organizations) nil)]
+    {:forms (form-store/get-forms all-oids)}))
+
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
@@ -95,11 +100,10 @@
                  (api/GET "/user-info" {session :session}
                    (ok {:username (-> session :identity :username)}))
 
-                 (api/GET "/forms" []
+                 (api/GET "/forms" {session :session}
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (ok
-                     {:forms (form-store/get-forms)}))
+                   (trying #(get-forms session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]

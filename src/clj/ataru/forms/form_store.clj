@@ -16,8 +16,8 @@
        (transform-keys ->kebab-case-keyword)
        vec))
 
-(defn get-forms []
-  (execute :db yesql-get-forms-query {}))
+(defn get-forms [organization-oids]
+  (execute :db yesql-get-forms-query {:authorized_organization_oids organization-oids}))
 
 (defn- restructure-form-with-content
   "Unwraps form :content wrapper and transforms all other keys

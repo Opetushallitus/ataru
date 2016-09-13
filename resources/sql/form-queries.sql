@@ -1,6 +1,9 @@
 -- name: yesql-get-forms-query
 -- Get all stored forms, without content
-select id, name, modified_by, modified_time from forms order by modified_time desc;
+select id, name, modified_by, modified_time
+from forms
+where (organization_oid in (:authorized_organization_oids) or organization_oid is null)
+order by modified_time desc;
 
 -- name: yesql-add-form-query<!
 -- Add form
