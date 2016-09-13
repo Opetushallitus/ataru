@@ -112,9 +112,9 @@
 
 (register-handler
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id idx value validators]]
+  (fn [db [_ multiple-choice-id idx option-value validators]]
     (let [db    (-> db
-                    (assoc-in [:application :answers multiple-choice-id :options idx :value] value)
+                    (assoc-in [:application :answers multiple-choice-id :options idx :value] option-value)
                     (update-in [:application :answers multiple-choice-id :options idx :selected] not))
           value (->> (get-in db [:application :answers multiple-choice-id :options])
                      (vals)
