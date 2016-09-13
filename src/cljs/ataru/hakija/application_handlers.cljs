@@ -111,12 +111,13 @@
 
 (register-handler
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id value]]
-    (update-in db [:application :answers multiple-choice-id :value]
-      (fn [answers]
-        (let [answers   (clojure.string/split (or answers "") #", ")
-              true-pred (partial = value)]
-          (clojure.string/join ", "
-            (if (some true-pred answers)
-              (filter (complement true-pred) answers)
-              (conj answers value))))))))
+  (fn [db [_ multiple-choice-id idx value]]
+    (let [db    (-> db
+                    (assoc-in [:application :answers multiple-choice-id :options idx :value] value)
+                    (update-in [:application :answers multiple-choice-id :options idx :selected] not))
+          value (->> (get-in db [:application :answers multiple-choice-id :options])
+                     (vals)
+                     (filter :selected)
+                     (map :value)
+                     (clojure.string/join ", "))]
+      (assoc-in db [:application :answers multiple-choice-id :value] value))))

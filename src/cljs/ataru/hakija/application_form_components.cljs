@@ -145,13 +145,13 @@
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
-        answers            (subscribe [:state-query [:application :answers multiple-choice-id :value]])]
+        options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])]
     (fn [field-descriptor]
-      (let [answers @answers]
+      (let [options @options]
         [div-kwd
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
-           (map (fn [option]
+           (map-indexed (fn [idx option]
                   (let [label     (get-in option [:label :fi])
                         option-id (util/component-id)
                         value     (:value option)]
@@ -159,12 +159,11 @@
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
-                       :checked   (and (not (nil? answers))
-                                       (clojure.string/includes? answers value))
+                       :checked   (true? (get-in options [idx :selected]))
                        :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
-                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value])))}]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value])))}]
                      [:label
                       {:for option-id}
                       label]]))
