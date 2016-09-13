@@ -155,7 +155,7 @@
                   (let [label     (get-in option [:label :fi])
                         option-id (util/component-id)
                         value     (:value option)]
-                    [:div {:key value}
+                    [:div {:key option-id}
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
