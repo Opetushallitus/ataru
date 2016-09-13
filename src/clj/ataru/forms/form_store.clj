@@ -65,15 +65,11 @@
 (defn fetch-by-key [key & [conn]]
   (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))
 
-(defn throw-if-latest-version-not-same [form latest-version]
-  (when
-      (or
-        (not= (:id form) (:id latest-version))
-        (not= (:created-by latest-version) (:created-by form)) ; should never go here because rows are not updated anymore
-        (t/after? (:created-time latest-version) (:created-time form)))
-    (do
-      (throw (Exception. (str "Form with id " (:id latest-version) " created-time " (:created-time latest-version)
-                           " already exists."))))))
+(defn latest-version-not-same? [form latest-version]
+  (or
+    (not= (:id form) (:id latest-version))
+    (not= (:created-by latest-version) (:created-by form)) ; should never go here because rows are not updated anymore
+    (t/after? (:created-time latest-version) (:created-time form))))
 
 (defn create-new-form! [form]
   (first
@@ -82,7 +78,6 @@
         form
         (dissoc :created-time :id)
         (assoc :key (str (UUID/randomUUID)))))))
-
 
 (defn increment-version [{:keys [key id] :as form} conn]
   {:pre [(some? key)
@@ -94,8 +89,9 @@
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
-        (do
-          (throw-if-latest-version-not-same form latest-version)
+        (if (latest-version-not-same? form latest-version)
+          {:error (str "Form with id " (:id latest-version) " created-time " (:created-time latest-version)
+                    " already exists.")}
           (increment-version
             ; use :key set in db just to be sure it never is nil
             (assoc form :key (:key latest-version))

@@ -10,6 +10,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
+            [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
             [compojure.api.exception :as ex]
@@ -98,8 +99,10 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(form-store/create-form-or-increment-version!
-                             (assoc form :created-by (-> session :identity :username)))))
+                   (match (trying #(form-store/create-form-or-increment-version!
+                                     (assoc form :created-by (-> session :identity :username))))
+                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request concurrently-modified)
+                     response response))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
