@@ -34,5 +34,5 @@
             (should= expected-flat-organizations
                      (.get-all-organizations org-service-instance test-user1-organization-oid))
             (should= {test-user1-organization-oid  expected-flat-organizations}
-                     (into {} @(:all-orgs-cache org-service-instance)))
+                     (into {} (for [[k v] @(:all-orgs-cache org-service-instance)] [k v])))
             (should= 1 @cas-get-call-count))))))
