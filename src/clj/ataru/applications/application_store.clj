@@ -62,9 +62,9 @@
   (exec-db :db yesql-save-application-review! (transform-keys ->snake_case review)))
 
 (s/defn get-applications :- [schema/Application]
-  [form-id :- s/Int application-request :- schema/ApplicationRequest]
+  [form-key :- s/Str application-request :- schema/ApplicationRequest]
   (let [request (merge
-                  {:form-id form-id}
+                  {:form-key form-key}
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)

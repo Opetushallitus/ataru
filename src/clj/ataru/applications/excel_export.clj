@@ -115,13 +115,13 @@
                    {:header header :column idx})
                  all-labels)))
 
-(defn export-all-applications [form-id & {:keys [language] :or {language :fi}}]
+(defn export-all-applications [form-key & {:keys [language] :or {language :fi}}]
   (let [workbook (XSSFWorkbook.)
-        form (form-store/fetch-form form-id)
+        form (form-store/fetch-by-key form-key)
         form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
         applications-sheet (.createSheet workbook "Hakemukset")
         applications (application-store/get-applications
-                       form-id
+                       form-key
                        {:lang (name language)})
         application-meta-fields (indexed-meta-fields application-meta-fields)
         headers (extract-headers applications form)]
@@ -139,12 +139,12 @@
       (.toByteArray stream))))
 
 (defn filename
-  [form-id]
-  (let [form (form-store/fetch-form form-id)
+  [form-key]
+  (let [form (form-store/fetch-by-key form-key)
         sanitized-name (-> (:name form)
                            (string/replace #"[\s]+" "-")
                            (string/replace #"[^\w-]+" ""))
         time (time-formatter (t/now) filename-time-format)]
-    (str form-id "_" sanitized-name "_" time ".xlsx")))
+    (str sanitized-name "_" form-key "_" time ".xlsx")))
 
 

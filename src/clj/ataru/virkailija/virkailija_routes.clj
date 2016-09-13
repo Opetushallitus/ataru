@@ -139,13 +139,13 @@
                                       (application-store/save-application-review review)
                                       {})))
 
-                   (api/GET "/excel/:form-id" []
-                     :path-params [form-id :- Long]
-                     :summary "Return Excel export of the form and applications for it."
-                     {:status 200
+                   (api/GET "/excel/:form-key" []
+                     :path-params [form-key :- s/Str]
+                     :summary  "Return Excel export of the form and applications for it."
+                     {:status  200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
-                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))
+                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
+                      :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
