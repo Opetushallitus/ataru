@@ -16,6 +16,9 @@
   (get-direct-organization-oids [this user-name]
     "Gets this user's direct organization ids (oids) which are connected to the
      required user-right (see ldap-client/user-right-name)")
+  (get-direct-organizations [this user-name]
+    "Gets this user's direct organizations (as in get-direct-organization-oids
+     but gets organization name as well)")
   (get-all-organizations [this user-name]
     "Gets a flattened organization hierarhy: all organizations this user has
      the right (ldap-client/user-right-name) for. Includes sub-organizations,
@@ -45,6 +48,10 @@
   (get-direct-organization-oids [this user-name]
     (ldap-client/get-organization-oids (:ldap-connection this) user-name))
 
+  (get-direct-organizations [this user-name]
+    (let [direct-oids (get-direct-organization-oids this user-name)]
+      (map #(org-client/get-organization (:cas-client this) %) direct-oids)))
+
   (get-all-organizations [this user-name]
     (let [direct-oids (get-direct-organization-oids this user-name)]
       (get-orgs-from-cache-or-service
@@ -67,7 +74,8 @@
   OrganizationService
 
   (get-direct-organization-oids [this user-name] ["1.2.246.562.10.0439845"])
-
+  (get-direct-organizations [this user-name]
+    [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}])
   (get-all-organizations [this user-name]
     [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}]))
 
