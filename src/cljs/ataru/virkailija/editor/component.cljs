@@ -152,13 +152,13 @@
       (cond-> {:key (str "options-" option-index)}
         multiple-languages?
         (assoc :class "editor-form__multi-options-wrapper-inner"))
-     (for [lang languages]
-       (let [option-value (:value option)
-             option-path [path :options option-index]]
-         (when-not (and (clojure.string/blank? option-value)
-                        (= option-index 0))
-           ^{:key (str "option-" lang "-" option-index)}
-           [:div.editor-form__multi-option-wrapper
+      (for [lang languages]
+        (let [option-value (:value option)
+              option-path [path :options option-index]]
+          (when-not (and (clojure.string/blank? option-value)
+                         (= option-index 0))
+            ^{:key (str "option-" lang "-" option-index)}
+            [:div.editor-form__multi-option-wrapper
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
               (cond-> {}
                 multiple-languages?
