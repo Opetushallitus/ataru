@@ -189,10 +189,9 @@
         [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
         (doall
           (let [options (:options @value)
-                options-count (count options)
-                option-fields
-                (for [[option-index option] (map vector (range options-count) options)]
-                  (dropdown-option option-index option path languages))]
+                option-fields (map-indexed (fn [idx option]
+                                             (dropdown-option idx option path languages))
+                                           options)]
             (remove nil? option-fields)))]
        [:div.editor-form__add-dropdown-item
         [:a
