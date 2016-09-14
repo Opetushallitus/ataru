@@ -170,36 +170,36 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
       (let [languages @languages]
-      [:div.editor-form__component-wrapper
-       {:class @animation-effect}
-       (let [header (case (:fieldType @value)
-                      "dropdown"       "Pudotusvalikko"
-                      "multipleChoice" "Lista, monta valittavissa")]
-         [text-header header path])
-       [:div.editor-form__multi-question-wrapper
-        [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"]
-         (doall
-           (for [lang languages]
-             ^{:key lang}
-             [input-field path lang {}]))]
-        [:div.editor-form__checkbox-wrapper
-         (render-checkbox path initial-content)]]
-       [:div.editor-form__multi-options_wrapper
-        [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-        (doall
-          (let [options (:options @value)
-                option-fields (map-indexed (fn [idx option]
-                                             (dropdown-option idx option path languages))
-                                           options)]
-            (remove nil? option-fields)))]
-       [:div.editor-form__add-dropdown-item
-        [:a
-         {:href "#"
-          :on-click (fn [evt]
-                      (.preventDefault evt)
-                      (dispatch [:editor/add-dropdown-option path]))}
-         [:i.zmdi.zmdi-plus-square] " Lisää"]]]))))
+        [:div.editor-form__component-wrapper
+         {:class @animation-effect}
+         (let [header (case (:fieldType @value)
+                        "dropdown"       "Pudotusvalikko"
+                        "multipleChoice" "Lista, monta valittavissa")]
+           [text-header header path])
+         [:div.editor-form__multi-question-wrapper
+          [:div.editor-form__text-field-wrapper
+           [:header.editor-form__component-item-header "Kysymys"]
+           (doall
+             (for [lang languages]
+               ^{:key lang}
+               [input-field path lang {}]))]
+          [:div.editor-form__checkbox-wrapper
+           (render-checkbox path initial-content)]]
+         [:div.editor-form__multi-options_wrapper
+          [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+          (doall
+            (let [options (:options @value)
+                  option-fields (map-indexed (fn [idx option]
+                                               (dropdown-option idx option path languages))
+                                             options)]
+              (remove nil? option-fields)))]
+         [:div.editor-form__add-dropdown-item
+          [:a
+           {:href "#"
+            :on-click (fn [evt]
+                        (.preventDefault evt)
+                        (dispatch [:editor/add-dropdown-option path]))}
+           [:i.zmdi.zmdi-plus-square] " Lisää"]]]))))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                component/form-section
