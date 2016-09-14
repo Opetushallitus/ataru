@@ -143,11 +143,12 @@
        :on-click (fn [evt]
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-   [:i.zmdi.zmdi-close.zmdi-hc-lg]])
+   [:i.zmdi.zmdi-close.zmdi-hc-lg.editor-form__remove-dropdown-option-button]])
 
 (defn- dropdown-option [option-index option path languages]
   (let [multiple-languages? (< 1 (count languages))]
     [:div.editor-form__multi-options-wrapper
+     [:div
      {:key (str "options-" option-index)}
      (for [lang languages]
        (let [option-value (:value option)
@@ -162,8 +163,9 @@
                 multiple-languages?
                 (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
              (when multiple-languages?
-               [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
-             (remove-dropdown-option-button path option-index)]])))]))
+               [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]])))]
+     (when (< 0 option-index)
+       (remove-dropdown-option-button path option-index))]))
 
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
