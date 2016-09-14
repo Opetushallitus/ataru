@@ -146,6 +146,7 @@
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
 (defn- dropdown-option [option-index option path languages]
+  (let [multiple-languages? (< 1 (count languages))]
   [:div.editor-form__multi-options-wrapper
    {:key (str "options-" option-index)}
    (for [lang languages]
@@ -158,11 +159,11 @@
           [:div.editor-form__text-field-wrapper__option
            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
             (cond-> {}
-              (< 1 (count languages))
+              multiple-languages?
               (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
-           (when (< 1 (count languages))
+           (when multiple-languages?
              [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
-           (remove-dropdown-option-button path option-index)]])))])
+           (remove-dropdown-option-button path option-index)]])))]))
 
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
