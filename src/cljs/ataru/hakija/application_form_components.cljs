@@ -78,22 +78,52 @@
         value        (subscribe [:state-query [:application :answers id :value]])
         valid?       (subscribe [:state-query [:application :answers id :valid]])
         lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-      (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
-        [div-kwd
-         [label field-descriptor]
-         [:input.application__form-text-input
-          (merge {:type        "text"
-                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (non-blank-val (get input-hint @lang)
-                                                (get input-hint @default-lang)))
-                  :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
-                                                 " application__form-field-error"
-                                                 " application__form-text-input--normal"))
-                  :value       @value
-                  :on-change   (partial textual-field-change field-descriptor)}
-                 (when disabled {:disabled true}))]]))))
+      [div-kwd
+       [label field-descriptor size-class]
+       [:input.application__form-text-input
+        (merge {:type        "text"
+                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                               (non-blank-val (get input-hint @lang)
+                                              (get input-hint @default-lang)))
+                :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
+                                               " application__form-field-error"
+                                               " application__form-text-input--normal"))
+                :value       @value
+                :on-change   (partial textual-field-change field-descriptor)}
+          (when disabled {:disabled true}))]])))
+
+(defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+  (let [id         (keyword (:id field-descriptor))
+        values     (subscribe [:state-query [:application :answers id :values]])
+        valid?     (subscribe [:state-query [:application :answers id :valid]])
+        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+      (into  [div-kwd
+              [label field-descriptor size-class]]
+        (cons
+          [:div
+           [:input.application__form-text-input
+            {:type        "text"
+             :class       (str size-class (if (show-text-field-error-class? field-descriptor (first @values) @valid?)
+                                            " application__form-field-error"
+                                            " application__form-text-input--normal"))
+             :value       (first @values)
+             :on-change   (partial textual-field-change field-descriptor 0)}]
+           [:span "+"]]
+          (map-indexed
+            (fn [idx value]
+              [:div
+               [:input.application__form-text-input
+                {:type        "text"
+                 :placeholder "Lisää.."
+                 :class       (str size-class " application__form-text-input--normal")
+                 :value       value
+                 :on-change   (partial textual-field-change field-descriptor (inc idx))}]
+               [:span "+"]])
+            (rest @values)))))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -211,6 +241,7 @@
                        {:fieldClass "formField"
                         :id         (_ :guard (complement visible?))} [:div]
 
+                       {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
