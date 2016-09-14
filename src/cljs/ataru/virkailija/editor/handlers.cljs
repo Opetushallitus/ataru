@@ -59,7 +59,7 @@
 (defn- update-options-in-dropdown-field
   [dropdown-field no-blank-option?]
   (if (:koodisto-source dropdown-field)
-    (dissoc dropdown-field :options)
+    (assoc dropdown-field :options [{:value "" :label {:fi ""}}])
     (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
           updated-options (-> (:options dropdown-field)
                               (remove-empty-options)
