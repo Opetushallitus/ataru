@@ -251,6 +251,8 @@ form > div > .editor-form__component-wrapper {
 
 .editor-form__button-group {
   display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .editor-form__button {
@@ -266,6 +268,10 @@ form > div > .editor-form__component-wrapper {
   cursor: pointer;
   background-color: @not-selected-button-background;
   color: @not-selected-button-text;
+}
+
+.editor-form__button--large + label {
+  width: 332px;
 }
 
 .editor-form__button--left-edge {
