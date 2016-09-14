@@ -175,12 +175,12 @@
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.editor-form__remove-dropdown-option-button {
-  bottom: 5px;
-  position: relative;
+.editor-form__multi-options-wrapper-inner {
+  border-right: 1px solid @section-header-text;
+  margin-right: 14px;
 }
 
 .editor-form__multi-option-wrapper {
@@ -194,6 +194,10 @@
 
 .editor-form__multi-option-wrapper input {
   margin-right: 10px;
+}
+
+.editor-form__multi-option-wrapper:last-child {
+  padding-bottom: 0px;
 }
 
 .editor-form__add-dropdown-item {
