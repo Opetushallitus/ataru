@@ -242,22 +242,22 @@ form > div > .editor-form__component-wrapper {
   padding-left: 12px;
 }
 
-.editor-form__size-button-wrapper {
+.editor-form__button-wrapper {
   display: flex;
   flex-flow: column nowrap;
   padding: 10px 14px 20px;
   margin-right: 61px;
 }
 
-.editor-form__size-button-group {
+.editor-form__button-group {
   display: flex;
 }
 
-.editor-form__size-button {
+.editor-form__button {
   display: none;
 }
 
-.editor-form__size-button + label {
+.editor-form__button + label {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -268,19 +268,19 @@ form > div > .editor-form__component-wrapper {
   color: @not-selected-button-text;
 }
 
-.editor-form__size-button--left-edge {
+.editor-form__button--left-edge {
   border-radius: 2px 0 0 2px;
 }
-.editor-form__size-button--right-edge {
+.editor-form__button--right-edge {
   border-radius: 0 2px 2px 0;
 }
 
-.editor-form__size-button:checked + label {
+.editor-form__button:checked + label {
   color: @white;
   background-color: @section-header-text;
 }
 
-.editor-form__size-button:checked + label::before {
+.editor-form__button:checked + label::before {
   content: url('../../images/icon_check.png');
   margin-bottom: 2px;
   margin-right: 6px;

@@ -122,13 +122,13 @@
             [input-field path lang {}])
           @languages
           :header? true)]
-       [:div.editor-form__button-wrapper
+       [:div.editor-form__size-button-wrapper
         [:header.editor-form__component-item-header size-label]
-        [:div.editor-form__button-group
+        [:div.editor-form__size-button-group
          (doall (for [[btn-name btn-id] radio-button-ids]
                   ^{:key (str btn-id "-radio")}
                   [:div
-                   [:input.editor-form__button
+                   [:input.editor-form__size-button.editor-form__size-button
                     {:type      "radio"
                      :value     btn-name
                      :checked   (or
@@ -142,8 +142,8 @@
                    [:label
                     {:for   btn-id
                      :class (match btn-name
-                                   "S" "editor-form__button--left-edge"
-                                   "L" "editor-form__button--right-edge"
+                                   "S" "editor-form__size-button--left-edge"
+                                   "L" "editor-form__size-button--right-edge"
                                    :else nil)}
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
@@ -221,7 +221,7 @@
                             (dispatch [:editor/toggle-custom-or-koodisto-options :custom path]))}]
              [:label
               {:for   custom-button-id
-               :class "editor-form-button--left-edge"}
+               :class "editor-form__size-button--left-edge"}
               custom-button-value]
              [:input
               {:type      "radio"
@@ -234,7 +234,7 @@
                             (dispatch [:editor/toggle-custom-or-koodisto-options :koodisto path]))}]
              [:label
               {:for   koodisto-button-id
-               :class "editor-form-button--right-edge"}
+               :class "editor-form__size-button--right-edge"}
               koodisto-button-value]])
 
           (when (nil? @options-koodisto)

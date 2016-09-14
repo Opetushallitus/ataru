@@ -117,12 +117,20 @@
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
+<<<<<<< 714c88b2c204fe417e675525d6e4fe49021f1a00
         (input-fields-with-lang
           (fn [lang]
             [input-field path lang {}])
           @languages
           :header? true)]
+       [:div.editor-form__size-button-wrapper
+=======
+        (doall
+          (for [lang @languages]
+            ^{:key lang}
+            [input-field path lang]))]
        [:div.editor-form__button-wrapper
+>>>>>>> Rename button style classes
         [:header.editor-form__component-item-header size-label]
         [:div.editor-form__button-group
          (doall (for [[btn-name btn-id] radio-button-ids]
@@ -185,6 +193,7 @@
         dropdown-id      (util/new-uuid)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
+<<<<<<< 714c88b2c204fe417e675525d6e4fe49021f1a00
       (let [languages @languages]
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
@@ -221,7 +230,7 @@
                             (dispatch [:editor/toggle-custom-or-koodisto-options :custom path]))}]
              [:label
               {:for   custom-button-id
-               :class "editor-form-button--left-edge"}
+               :class "editor-form__size-button--left-edge"}
               custom-button-value]
              [:input
               {:type      "radio"
@@ -234,7 +243,7 @@
                             (dispatch [:editor/toggle-custom-or-koodisto-options :koodisto path]))}]
              [:label
               {:for   koodisto-button-id
-               :class "editor-form-button--right-edge"}
+               :class "editor-form__size-button--right-edge"}
               koodisto-button-value]])
 
           (when (nil? @options-koodisto)
@@ -257,6 +266,87 @@
                                  (.preventDefault evt)
                                  (dispatch [:editor/add-dropdown-option path]))}
                     [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
+=======
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
+       (let [header (case (:fieldType @value)
+                      "dropdown"       "Pudotusvalikko"
+                      "multipleChoice" "Lista, monta valittavissa")]
+         [text-header header path])
+       [:div.editor-form__multi-question-wrapper
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Kysymys"]
+         (doall
+           (for [lang @languages]
+             ^{:key lang}
+             [input-field path lang]))]
+        [:div.editor-form__checkbox-wrapper
+         (render-checkbox path initial-content)]]
+       [:div.editor-form__multi-options_wrapper
+        [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+        (let [custom-button-value   "Omat vastausvaihtoehdot"
+              custom-button-id      (str dropdown-id "-custom")
+              koodisto-button-value "Koodisto"
+              koodisto-button-id    (str dropdown-id "-koodisto")]
+          [:div.editor-form__custom-koodisto-options-selector
+           [:input
+            {:type      "radio"
+             :value     custom-button-value
+             :checked   (nil? @options-koodisto)
+             :name      "options-selector"
+             :id        custom-button-id
+             :on-change (fn [evt]
+                          (.preventDefault evt)
+                          (dispatch [:editor/toggle-custom-or-koodisto-options :custom path]))}]
+           [:label
+            {:for   custom-button-id
+             :class "editor-form__button--left-edge"}
+            custom-button-value]
+           [:input
+            {:type      "radio"
+             :value     koodisto-button-value
+             :checked   (not (nil? @options-koodisto))
+             :name      "options-selector"
+             :id        koodisto-button-id
+             :on-change (fn [evt]
+                          (.preventDefault evt)
+                          (dispatch [:editor/toggle-custom-or-koodisto-options :koodisto path]))}]
+           [:label
+            {:for   koodisto-button-id
+             :class "editor-form__button--right-edge"}
+            koodisto-button-value]])
+        (when (nil? @options-koodisto)
+          (seq [
+                [:div.editor-form__custom-multi-options
+                 (doall
+                   (let [options       (:options @value)
+                         options-count (count options)
+                         option-fields
+                                       (for [lang              @languages
+                                             option-with-index (map vector (range options-count) options)]
+                                         (let [[option-index option] option-with-index
+                                               option-label (get-in option [:label lang])
+                                               option-path  [path :options option-index]]
+                                           (if (and (clojure.string/blank? option-label) (= option-index 0) (not= options-count 1))
+                                             nil
+                                             ^{:key (str "option-" lang "-" option-index)}
+                                             [:div.editor-form__multi-option-wrapper
+                                              [:div.editor-form__text-field-wrapper__option
+                                               [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])]
+                                               [:a {:href     "#"
+                                                    :on-click (fn [evt]
+                                                                (.preventDefault evt)
+                                                                (dispatch [:editor/remove-dropdown-option path :options option-index]))}
+                                                [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])))]
+                     (remove nil? option-fields)))]
+                [:div.editor-form__add-dropdown-item
+                 [:a
+                  {:href     "#"
+                   :on-click (fn [evt]
+                               (.preventDefault evt)
+                               (dispatch [:editor/add-dropdown-option path]))}
+                  [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]])))
+>>>>>>> Rename button style classes
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                component/form-section
