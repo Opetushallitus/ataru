@@ -186,7 +186,7 @@
                [input-field path lang {}]))]
           [:div.editor-form__checkbox-wrapper
            (render-checkbox path initial-content)]]
-         [:div.editor-form__multi-options_wrapper
+         [:div.editor-form__multi-options-container
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
           (doall
             (let [options (:options @value)
