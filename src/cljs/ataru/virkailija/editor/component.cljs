@@ -140,6 +140,7 @@
         value (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
+      (let [languages @languages]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
        (let [header (case (:fieldType @value)
@@ -150,7 +151,7 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (doall
-           (for [lang @languages]
+           (for [lang languages]
              ^{:key lang}
              [input-field path lang]))]
         [:div.editor-form__checkbox-wrapper
@@ -164,7 +165,7 @@
                 (for [option-with-index (map vector (range options-count) options)]
                   [:div.editor-form__multi-options-wrapper
                    {:key (str "options-" (first option-with-index))}
-                   (for [lang @languages]
+                   (for [lang languages]
                      (let [[option-index option] option-with-index
                            option-value (:value option)
                            option-path [path :options option-index]]
@@ -186,7 +187,7 @@
           :on-click (fn [evt]
                       (.preventDefault evt)
                       (dispatch [:editor/add-dropdown-option path]))}
-         [:i.zmdi.zmdi-plus-square] " Lisää"]]])))
+         [:i.zmdi.zmdi-plus-square] " Lisää"]]]))))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                component/form-section
