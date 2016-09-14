@@ -29,9 +29,18 @@
                 #(if (and (:koodisto-source %)
                           (= (:fieldType %) "dropdown")
                           (= (:fieldClass %) "formField"))
-                  (let [{:keys [uri version]} (:koodisto-source %)]
-                    (assoc % :options (into [{:value "" :label {:fi "" :sv ""}}]
-                                            (koodisto/get-koodi-options uri version))))
+                  (let [{:keys [uri version default-option]} (:koodisto-source %)
+                        empty-option [{:value "" :label {:fi "" :sv ""}}]
+                        koodis (koodisto/get-koodi-options uri version)
+                        koodis-with-default-option (if default-option
+                                                     (map (fn [option] (if (=
+                                                                             default-option
+                                                                             (-> option :label :fi))
+                                                                         (merge option {:default-value true})
+                                                                         option))
+                                                          koodis)
+                                                     koodis)]
+                    (assoc % :options (into empty-option koodis-with-default-option)))
                   %)
                 (:content form))))
 
