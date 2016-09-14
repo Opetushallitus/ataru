@@ -145,6 +145,25 @@
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
+(defn- dropdown-option [option-index option path languages]
+  [:div.editor-form__multi-options-wrapper
+   {:key (str "options-" option-index)}
+   (for [lang languages]
+     (let [option-value (:value option)
+           option-path [path :options option-index]]
+       (when-not (and (clojure.string/blank? option-value)
+                      (= option-index 0))
+         ^{:key (str "option-" lang "-" option-index)}
+         [:div.editor-form__multi-option-wrapper
+          [:div.editor-form__text-field-wrapper__option
+           [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
+            (cond-> {}
+              (< 1 (count languages))
+              (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
+           (when (< 1 (count languages))
+             [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
+           (remove-dropdown-option-button path option-index)]])))])
+
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
         value (subscribe [:editor/get-component-value path])
@@ -172,25 +191,8 @@
           (let [options (:options @value)
                 options-count (count options)
                 option-fields
-                (for [option-with-index (map vector (range options-count) options)]
-                  [:div.editor-form__multi-options-wrapper
-                   {:key (str "options-" (first option-with-index))}
-                   (for [lang languages]
-                     (let [[option-index option] option-with-index
-                           option-value (:value option)
-                           option-path [path :options option-index]]
-                       (when-not (and (clojure.string/blank? option-value)
-                                      (= option-index 0))
-                         ^{:key (str "option-" lang "-" option-index)}
-                         [:div.editor-form__multi-option-wrapper
-                          [:div.editor-form__text-field-wrapper__option
-                           [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
-                            (cond-> {}
-                              (< 1 (count languages))
-                              (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
-                           (when (< 1 (count languages))
-                             [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
-                           (remove-dropdown-option-button path option-index)]])))])]
+                (for [[option-index option] (map vector (range options-count) options)]
+                  (dropdown-option option-index option path languages))]
             (remove nil? option-fields)))]
        [:div.editor-form__add-dropdown-item
         [:a
