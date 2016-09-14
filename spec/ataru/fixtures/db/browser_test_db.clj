@@ -46,6 +46,6 @@
                            :label {:fi "Kengännumero", :sv ""}}]})
 
 (defn init-db-fixture []
-  (form-store/upsert-form form1)
-  (form-store/upsert-form form2)
+  (form-store/upsert-form "1.2.246.562.10.2.45" form1)
+  (form-store/upsert-form "1.2.246.562.10.2.45" form2)
   (application-store/add-new-application application1))
