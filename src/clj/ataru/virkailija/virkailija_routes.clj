@@ -78,7 +78,7 @@
 
 (defn- post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
-        organization-oids (.get-direct-organization-oids organization-service user-name)]
+        organization-oids (map :oid (-> session :identity :organizations))]
     (if (not= 1 (count organization-oids))
       (throw (Exception. (str "User "
                               user-name

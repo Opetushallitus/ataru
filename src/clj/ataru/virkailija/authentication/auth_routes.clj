@@ -12,7 +12,8 @@
            (api/GET "/cas" [ticket]
              (login (if (-> config :dev:fake-dependencies)
                       (str (System/currentTimeMillis))
-                      ticket)))
+                      ticket)
+                    organization-service))
            (api/POST "/cas" [logoutRequest]
                  (cas-initiated-logout logoutRequest))
            (api/GET "/logout" {session :session}
