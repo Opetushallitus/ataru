@@ -13,9 +13,12 @@
              (match [(login (if (-> config :dev:fake-dependencies)
                               (str (System/currentTimeMillis))
                               ticket))]
+
                     [{:body "" :status 302 :headers {"Location" ""}}]
                     {:status 503 :body "ERROR"}
-                    [response] response))
+
+                    [response]
+                    response))
            (api/POST "/cas" [logoutRequest]
                  (cas-initiated-logout logoutRequest))
            (api/GET "/logout" {session :session}
