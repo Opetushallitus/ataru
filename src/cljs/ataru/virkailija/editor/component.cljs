@@ -138,6 +138,13 @@
 (defn text-area [initial-content path]
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
+(defn- remove-dropdown-option-button [path option-index]
+  [:a {:href "#"
+       :on-click (fn [evt]
+                   (.preventDefault evt)
+                   (dispatch [:editor/remove-dropdown-option path :options option-index]))}
+   [:i.zmdi.zmdi-close.zmdi-hc-lg]])
+
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
         value (subscribe [:editor/get-component-value path])
@@ -183,11 +190,7 @@
                               (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
                            (when (< 1 (count languages))
                              [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
-                           [:a {:href "#"
-                                :on-click (fn [evt]
-                                            (.preventDefault evt)
-                                            (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-                            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])))])]
+                           (remove-dropdown-option-button path option-index)]])))])]
             (remove nil? option-fields)))]
        [:div.editor-form__add-dropdown-item
         [:a
