@@ -32,7 +32,7 @@
                       config                            {:organization-service {:base-address "dummy"} :cas {}}]
           (let [org-service-instance (create-org-service-instance)]
             (should= expected-flat-organizations
-                     (.get-all-organizations org-service-instance test-user1-organization-oid))
+                     (.get-all-organizations org-service-instance [test-user1-organization-oid]))
             (should= {test-user1-organization-oid  expected-flat-organizations}
                      (into {} @(:all-orgs-cache org-service-instance)))
             (should= 1 @cas-get-call-count))))))

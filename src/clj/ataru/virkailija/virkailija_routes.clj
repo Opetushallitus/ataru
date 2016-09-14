@@ -76,9 +76,11 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
+(defn- org-oids [session] (map :oid (-> session :identity :organizations)))
+
 (defn- post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
-        organization-oids (map :oid (-> session :identity :organizations))]
+        organization-oids (org-oids session)]
     (if (not= 1 (count organization-oids))
       (throw (Exception. (str "User "
                               user-name
@@ -89,8 +91,8 @@
     (form-store/upsert-form (first organization-oids) (assoc form :modified-by user-name))))
 
 (defn- get-forms [session organization-service]
-  (let [all-organizations (.get-all-organizations organization-service (-> session :identity :username))
-        all-oids          (conj (map :oid all-organizations) nil)]
+  (let [all-organizations (.get-all-organizations organization-service (org-oids session))
+        all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
     {:forms (form-store/get-forms all-oids)}))
 
 (defn api-routes [{:keys [organization-service]}]

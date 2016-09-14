@@ -50,14 +50,14 @@
 
   (get-direct-organizations [this user-name]
     (let [direct-oids (get-direct-organization-oids this user-name)]
-      (map #(org-client/get-organization (:cas-client this) %) direct-oids)))
+      ; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
+      (remove nil? (map #(org-client/get-organization (:cas-client this) %) direct-oids))))
 
-  (get-all-organizations [this user-name]
-    (let [direct-oids (get-direct-organization-oids this user-name)]
-      (get-orgs-from-cache-or-service
-       (:all-orgs-cache this)
-       (:cas-client this)
-       direct-oids)))
+  (get-all-organizations [this direct-organization-oids-for-user]
+    (get-orgs-from-cache-or-service
+     (:all-orgs-cache this)
+     (:cas-client this)
+     direct-organization-oids-for-user))
 
   (start [this]
     (-> this
