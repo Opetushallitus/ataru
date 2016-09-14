@@ -162,21 +162,22 @@
                 options-count (count options)
                 option-fields
                 (for [option-with-index (map vector (range options-count) options)]
-                  (for [lang @languages]
-                    (let [[option-index option] option-with-index
-                          option-value (:value option)
-                          option-path [path :options option-index]]
-                      (when-not (and (clojure.string/blank? option-value)
-                                     (= option-index 0))
-                        ^{:key (str "option-" lang "-" option-index)}
-                        [:div.editor-form__multi-option-wrapper
-                         [:div.editor-form__text-field-wrapper__option
-                          [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])]
-                          [:a {:href "#"
-                               :on-click (fn [evt]
-                                           (.preventDefault evt)
-                                           (dispatch [:editor/remove-dropdown-option path :options option-index]))}
-                           [:i.zmdi.zmdi-close.zmdi-hc-lg]]]]))))]
+                  [:div.editor-form__multi-options-wrapper
+                   (for [lang @languages]
+                     (let [[option-index option] option-with-index
+                           option-value (:value option)
+                           option-path [path :options option-index]]
+                       (when-not (and (clojure.string/blank? option-value)
+                                      (= option-index 0))
+                         ^{:key (str "option-" lang "-" option-index)}
+                         [:div.editor-form__multi-option-wrapper
+                          [:div.editor-form__text-field-wrapper__option
+                           [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])]
+                           [:a {:href "#"
+                                :on-click (fn [evt]
+                                            (.preventDefault evt)
+                                            (dispatch [:editor/remove-dropdown-option path :options option-index]))}
+                            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])))])]
             (remove nil? option-fields)))]
        [:div.editor-form__add-dropdown-item
         [:a
