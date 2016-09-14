@@ -104,7 +104,7 @@
   (fn [db [_ options-source & path]]
     (let [dropdown-path (current-form-content-path db [path])]
       (case options-source
-        :koodisto (update-in db dropdown-path assoc :koodisto-source {:uri "pohjakoulutuskk" :version 1}) ; TODO other types; pohjakoulutuseditori
+        :koodisto (update-in db dropdown-path assoc :koodisto-source {:uri "pohjakoulutuseditori" :version 1}) ; TODO other types
         (update-in db dropdown-path dissoc :koodisto-source)))))
 
 (defn add-validator
