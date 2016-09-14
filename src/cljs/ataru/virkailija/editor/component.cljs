@@ -178,9 +178,9 @@
                          [:div.editor-form__multi-option-wrapper
                           [:div.editor-form__text-field-wrapper__option
                            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
-                            {:class (< 1 (count languages)
-                                       "editor-form__text-field-wrapper__option--with-label"
-                                       "editor-form__text-field-wrapper__option--without-label")}]
+                            (cond-> {}
+                              (< 1 (count languages))
+                              (assoc :class "editor-form__text-field-wrapper__option--with-label"))]
                            (when (< 1 (count languages))
                              [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])
                            [:a {:href "#"
