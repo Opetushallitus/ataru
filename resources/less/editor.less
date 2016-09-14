@@ -159,15 +159,6 @@
   width: 434px;
 }
 
-.editor-form__text-field-wrapper__option {
-  padding: 0 14px 10px 0;
-  position: relative;
-}
-
-.editor-form__text-field-wrapper__option--with-label {
-  padding-right: 35px;
-}
-
 .editor-form__multi-question-wrapper {
   width: 100%;
   display: flex;
@@ -180,7 +171,7 @@
   width: 100%;
 }
 
-.editor-form__multi-options-wrapper {
+.editor-form__multi-options-wrapper-outer {
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
@@ -194,6 +185,12 @@
 
 .editor-form__multi-option-wrapper {
   display: flex;
+  position: relative;
+  padding: 0 14px 10px 0;
+}
+
+.editor-form__text-field-wrapper--with-label {
+  padding-right: 35px;
 }
 
 .editor-form__multi-option-wrapper input {
