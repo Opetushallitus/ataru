@@ -166,9 +166,8 @@
                     (let [[option-index option] option-with-index
                           option-value (:value option)
                           option-path [path :options option-index]]
-                      (if (and (clojure.string/blank? option-value)
-                               (= option-index 0))
-                        nil
+                      (when-not (and (clojure.string/blank? option-value)
+                                     (= option-index 0))
                         ^{:key (str "option-" lang "-" option-index)}
                         [:div.editor-form__multi-option-wrapper
                          [:div.editor-form__text-field-wrapper__option
