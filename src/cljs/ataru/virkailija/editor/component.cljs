@@ -163,6 +163,7 @@
                 option-fields
                 (for [option-with-index (map vector (range options-count) options)]
                   [:div.editor-form__multi-options-wrapper
+                   {:key (str "options-" (first option-with-index))}
                    (for [lang @languages]
                      (let [[option-index option] option-with-index
                            option-value (:value option)
