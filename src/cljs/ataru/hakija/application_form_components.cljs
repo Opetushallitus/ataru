@@ -48,8 +48,8 @@
                              (map (comp lang :label)))
                        (:options dropdown-data)))
                    (-> select .-value))
-        valid  (field-value-valid? dropdown-data value)]
-    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])
+        valid? (field-value-valid? dropdown-data value)]
+    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}])
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
