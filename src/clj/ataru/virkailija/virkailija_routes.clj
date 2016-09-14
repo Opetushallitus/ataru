@@ -219,7 +219,7 @@
                                   resource-routes
                                   app-routes
                                   (api-routes this)
-                                  auth-routes))
+                                  (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

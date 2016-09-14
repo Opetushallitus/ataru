@@ -14,6 +14,7 @@
 (def ataru-login-success-url (-> config :authentication :ataru-login-success-url))
 
 (defn- redirect-to-logged-out-page []
+  {:pre [(and (not-empty opintopolku-login-url) (not-empty ataru-login-success-url))]}
   (resp/redirect (str opintopolku-login-url ataru-login-success-url)))
 
 (defn- cas-login [ticket virkailija-login-url]

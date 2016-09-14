@@ -6,19 +6,13 @@
             [taoensso.timbre :refer [spy debug]]
             [clojure.core.match :refer [match]]))
 
-(def auth-routes
+(defn auth-routes [organization-service]
   (api/context "/auth" []
     (api/undocumented
            (api/GET "/cas" [ticket]
-             (match [(login (if (-> config :dev:fake-dependencies)
-                              (str (System/currentTimeMillis))
-                              ticket))]
-
-                    [{:body "" :status 302 :headers {"Location" ""}}]
-                    {:status 503 :body "ERROR"}
-
-                    [response]
-                    response))
+             (login (if (-> config :dev:fake-dependencies)
+                      (str (System/currentTimeMillis))
+                      ticket)))
            (api/POST "/cas" [logoutRequest]
                  (cas-initiated-logout logoutRequest))
            (api/GET "/logout" {session :session}
