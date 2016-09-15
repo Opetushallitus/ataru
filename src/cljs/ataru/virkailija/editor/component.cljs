@@ -145,6 +145,20 @@
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
+(defn- input-fields-with-lang [field-fn languages]
+  (let [multiple-languages? (> (count languages) 1)]
+    (map-indexed (fn [idx lang]
+                   (let [field-spec (field-fn lang)]
+                     ^{:key (str "option-" lang "-" idx)}
+                     [:div.editor-form__multi-option-wrapper
+                      (cond-> field-spec
+                        (and multiple-languages?
+                             (map? (last field-spec)))
+                        (assoc-in [(dec (count field-spec)) :class] "editor-form__text-field-wrapper--with-label"))
+                      (when multiple-languages?
+                        [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
+                 languages)))
+
 (defn- dropdown-option [option-index option path languages]
   (let [multiple-languages? (< 1 (count languages))]
     [:div.editor-form__multi-options-wrapper-outer
@@ -154,15 +168,10 @@
         multiple-languages?
         (assoc :class "editor-form__multi-options-wrapper-inner"))
       (let [option-path [path :options option-index]]
-        (for [lang languages]
-            ^{:key (str "option-" lang "-" option-index)}
-            [:div.editor-form__multi-option-wrapper
-             [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
-              (cond-> {}
-                multiple-languages?
-                (assoc :class "editor-form__text-field-wrapper--with-label"))]
-             (when multiple-languages?
-               [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang]) {}])
+          languages))]
      (remove-dropdown-option-button path option-index)]))
 
 (defn dropdown [initial-content path]
