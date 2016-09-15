@@ -159,7 +159,7 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
                  languages)))
 
-(defn- dropdown-option [option-index option path languages]
+(defn- dropdown-option [option-index path languages]
   (let [multiple-languages? (< 1 (count languages))]
     [:div.editor-form__multi-options-wrapper-outer
      {:key (str "options-" option-index)}
@@ -203,7 +203,7 @@
                                 (when-not (and (clojure.string/blank? (:value option))
                                                (= idx 0)
                                                (> (count options) 1))
-                                  (dropdown-option idx option path languages))))
+                                  (dropdown-option idx path languages))))
                  (remove nil?)))]
          [:div.editor-form__add-dropdown-item
           [:a
