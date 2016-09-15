@@ -279,22 +279,25 @@
         value            (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
     (fn [content path children]
-      [:div.editor-form__section_wrapper
-       {:class @animation-effect}
-       [:div.editor-form__component-wrapper
-        [text-header "Lomakeosio" path :form-section? true]
-        [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-         [:header.editor-form__component-item-header "Osion nimi"]
-         (doall
-           (for [lang @languages]
-             ^{:key lang}
-             [:input.editor-form__text-field
-              {:value     (get-in @value [:label lang])
-               :on-change #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])
-               :on-drop   prevent-default}]))]]
-       children
-       [drag-n-drop-spacer (conj path :children (count children))]
-       [add-component (conj path :children (count children))]])))
+      (let [languages @languages
+            value     @value]
+        [:div.editor-form__section_wrapper
+         {:class @animation-effect}
+         [:div.editor-form__component-wrapper
+          [text-header "Lomakeosio" path :form-section? true]
+          [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+           [:header.editor-form__component-item-header "Osion nimi"]
+           (input-fields-with-lang
+             (fn [lang]
+               [:input.editor-form__text-field
+                {:value     (get-in value [:label lang])
+                 :on-change #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])
+                 :on-drop   prevent-default}])
+             languages
+             :header? true)]]
+         children
+         [drag-n-drop-spacer (conj path :children (count children))]
+         [add-component (conj path :children (count children))]]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
