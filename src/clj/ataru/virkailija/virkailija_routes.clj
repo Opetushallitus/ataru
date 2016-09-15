@@ -94,8 +94,15 @@
 (defn- get-forms [session organization-service]
   (let [organization-oids (org-oids session)]
     ;; OPH organization members can see everything when they're given the correct privilege
-    (if (some #{oph-organization} organization-oids)
+    (cond
+      (some #{oph-organization} organization-oids)
       {:forms (form-store/get-all-forms)}
+
+      ;; If the user has no organization connected with the required user right, we'll show nothing
+      (empty? organization-oids)
+      {:forms []}
+
+      :else
       (let [all-organizations (.get-all-organizations organization-service organization-oids)
             all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
         {:forms (form-store/get-forms all-oids)}))))
