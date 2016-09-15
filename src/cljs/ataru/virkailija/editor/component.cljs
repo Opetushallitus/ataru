@@ -188,15 +188,14 @@
            (render-checkbox path initial-content)]]
          [:div.editor-form__multi-options-container
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-          (doall
-            (let [options (:options @value)
-                  option-fields (map-indexed (fn [idx option]
-                                               (when-not (and (clojure.string/blank? (:value option))
-                                                              (= idx 0)
-                                                              (> (count options) 1))
-                                                 (dropdown-option idx option path languages)))
-                                             options)]
-              (remove nil? option-fields)))]
+          (let [options (:options @value)]
+            (->> options
+                 (map-indexed (fn [idx option]
+                                (when-not (and (clojure.string/blank? (:value option))
+                                               (= idx 0)
+                                               (> (count options) 1))
+                                  (dropdown-option idx option path languages))))
+                 (remove nil?)))]
          [:div.editor-form__add-dropdown-item
           [:a
            {:href "#"
