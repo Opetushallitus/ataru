@@ -1,8 +1,14 @@
 -- name: yesql-get-forms-query
--- Get all stored forms, without content
+-- Get stored forms, without content, filtered by what's allowed for the viewing user
 select id, name, modified_by, modified_time
 from forms
 where (organization_oid in (:authorized_organization_oids) or organization_oid is null)
+order by modified_time desc;
+
+-- name: yesql-get-all-forms-query
+-- Get all stored forms, without content
+select id, name, modified_by, modified_time
+from forms
 order by modified_time desc;
 
 -- name: yesql-add-form-query<!

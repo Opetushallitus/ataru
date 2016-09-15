@@ -16,6 +16,9 @@
        (transform-keys ->kebab-case-keyword)
        vec))
 
+(defn get-all-forms []
+  (execute :db yesql-get-all-forms-query {}))
+
 (defn get-forms [organization-oids]
   (execute :db yesql-get-forms-query {:authorized_organization_oids organization-oids}))
 

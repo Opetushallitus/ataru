@@ -9,6 +9,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [ataru.virkailija.user.organization-client :refer [oph-organization]]
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
@@ -91,9 +92,13 @@
     (form-store/upsert-form (first organization-oids) (assoc form :modified-by user-name))))
 
 (defn- get-forms [session organization-service]
-  (let [all-organizations (.get-all-organizations organization-service (org-oids session))
-        all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
-    {:forms (form-store/get-forms all-oids)}))
+  (let [organization-oids (org-oids session)]
+    ;; OPH organization members can see everything when they're given the correct privilege
+    (if (some #{oph-organization} organization-oids)
+      {:forms (form-store/get-all-forms)}
+      (let [all-organizations (.get-all-organizations organization-service organization-oids)
+            all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
+        {:forms (form-store/get-forms all-oids)}))))
 
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
