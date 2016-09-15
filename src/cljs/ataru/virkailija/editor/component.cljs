@@ -148,15 +148,13 @@
 (defn- dropdown-option [option-index option path languages]
   (let [multiple-languages? (< 1 (count languages))]
     [:div.editor-form__multi-options-wrapper-outer
+     {:key (str "options-" option-index)}
      [:div
       (cond-> {:key (str "options-" option-index)}
         multiple-languages?
         (assoc :class "editor-form__multi-options-wrapper-inner"))
       (for [lang languages]
-        (let [option-value (:value option)
-              option-path [path :options option-index]]
-          (when-not (and (clojure.string/blank? option-value)
-                         (= option-index 0))
+        (let [option-path [path :options option-index]]
             ^{:key (str "option-" lang "-" option-index)}
             [:div.editor-form__multi-option-wrapper
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
@@ -164,9 +162,8 @@
                 multiple-languages?
                 (assoc :class "editor-form__text-field-wrapper--with-label"))]
              (when multiple-languages?
-               [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])])))]
-     (when (< 0 option-index)
-       (remove-dropdown-option-button path option-index))]))
+               [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))]
+     (remove-dropdown-option-button path option-index)]))
 
 (defn dropdown [initial-content path]
   (let [languages (subscribe [:editor/languages])
@@ -194,7 +191,10 @@
           (doall
             (let [options (:options @value)
                   option-fields (map-indexed (fn [idx option]
-                                               (dropdown-option idx option path languages))
+                                               (when-not (and (clojure.string/blank? (:value option))
+                                                              (= idx 0)
+                                                              (> (count options) 1))
+                                                 (dropdown-option idx option path languages)))
                                              options)]
               (remove nil? option-fields)))]
          [:div.editor-form__add-dropdown-item
