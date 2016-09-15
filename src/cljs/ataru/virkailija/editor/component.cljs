@@ -153,8 +153,8 @@
       (cond-> {:key (str "options-" option-index)}
         multiple-languages?
         (assoc :class "editor-form__multi-options-wrapper-inner"))
-      (for [lang languages]
-        (let [option-path [path :options option-index]]
+      (let [option-path [path :options option-index]]
+        (for [lang languages]
             ^{:key (str "option-" lang "-" option-index)}
             [:div.editor-form__multi-option-wrapper
              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])
