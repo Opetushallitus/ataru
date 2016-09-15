@@ -20,7 +20,7 @@
 (defn- required-checkbox
   [path initial-content]
   (let [id           (util/new-uuid)
-        required?    (str (true? (some? ((set (map keyword (:validators initial-content))) :required))))]
+        required?    (true? (some? ((set (map keyword (:validators initial-content))) :required)))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
                                     :id id
@@ -40,7 +40,7 @@
                                     :id        id
                                     :checked   checked?
                                     :on-change (fn [event]
-                                                 (dispatch [:editor/set-component-value (boolean (-> event .-target .-checked)) path :params :repeatable]))}]
+                                                 (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- on-drag-start
