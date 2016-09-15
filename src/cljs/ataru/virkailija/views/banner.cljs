@@ -6,7 +6,8 @@
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
             [cljs.core.async :as a :refer  [<! timeout]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [clojure.string :as string]))
 
 (def logo
   [:div.logo
@@ -40,14 +41,13 @@
      [section-link :application "#/applications/"]]))
 
 (defn profile []
-  (let [username         (subscribe [:state-query [:editor :user-info :username]])]
+  (let [user-info         (subscribe [:state-query [:editor :user-info]])]
     (fn []
-      (when @username
+      (when @user-info
         [:div.profile
          [:div
-          [:p @username]
-          ;; Hidden until we get the relevant organization
-          ;; [:p "Stadin Aikuisopisto"]
+          [:p (:username @user-info)]
+          [:p (string/join ", " (map :fi (:organization-names @user-info)))]
           ]
          [:div.divider]
          [:div

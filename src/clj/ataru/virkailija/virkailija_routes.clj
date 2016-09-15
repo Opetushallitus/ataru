@@ -79,6 +79,8 @@
 
 (defn- org-oids [session] (map :oid (-> session :identity :organizations)))
 
+(defn- org-names [session] (map :name (-> session :identity :organizations)))
+
 (defn- post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
         organization-oids (org-oids session)]
@@ -112,7 +114,8 @@
                  :tags ["form-api"]
 
                  (api/GET "/user-info" {session :session}
-                   (ok {:username (-> session :identity :username)}))
+                          (ok {:username (-> session :identity :username)
+                               :organization-names (org-names session)}))
 
                  (api/GET "/forms" {session :session}
                    :summary "Return all forms."
