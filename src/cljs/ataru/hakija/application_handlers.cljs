@@ -83,7 +83,7 @@
   :application/initialize-db
   initialize-db)
 
-(defn set-application-field [db [_ key values]]
+(defn set-application-field [db [_ key idx values]]
   (let [path                [:application :answers key]
         current-answer-data (get-in db path)]
     (assoc-in db path (merge current-answer-data values))))
@@ -91,6 +91,25 @@
 (register-handler
   :application/set-application-field
   set-application-field)
+
+(register-handler
+  :application/set-repeatable-application-field
+  (fn [db [_ key idx {:keys [value valid] :as values}]]
+    (let [path                [:application :answers key :values]]
+      (if (and
+            (zero? idx)
+            (empty? value)
+            (= 1 (count (get-in db path))))
+        (assoc-in db path [])
+        (update-in db path (fnil assoc []) idx values)))))
+
+(register-handler
+  :application/remove-repeatable-application-field-value
+  (fn [db [_ key idx]]
+    (update-in db [:application :answers key :values]
+      (fn [values]
+        (vec
+          (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))

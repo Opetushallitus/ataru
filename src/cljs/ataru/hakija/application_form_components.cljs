@@ -99,31 +99,43 @@
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         valid?     (subscribe [:state-query [:application :answers id :valid]])
-        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
+        size-class (text-field-size->class (get-in field-descriptor [:params :size]))
+        on-change  (fn [idx evt]
+                     (let [value (-> evt .-target .-value)
+                           valid (field-value-valid? field-descriptor value)]
+                       (dispatch [:application/set-repeatable-application-field id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
               [label field-descriptor size-class]]
         (cons
           [:div
            [:input.application__form-text-input
-            {:type        "text"
-             :class       (str size-class (if (show-text-field-error-class? field-descriptor (first @values) @valid?)
-                                            " application__form-field-error"
-                                            " application__form-text-input--normal"))
-             :value       (first @values)
-             :on-change   (partial textual-field-change field-descriptor 0)}]
-           [:span "+"]]
+            {:type      "text"
+             :class     (str size-class (if (show-text-field-error-class? field-descriptor (first @values) @valid?)
+                                          " application__form-field-error"
+                                          " application__form-text-input--normal"))
+             :value     (spy (:value (first @values)))
+             :on-change (partial on-change 0)}]]
           (map-indexed
-            (fn [idx value]
-              [:div
-               [:input.application__form-text-input
-                {:type        "text"
-                 :placeholder "Lisää.."
-                 :class       (str size-class " application__form-text-input--normal")
-                 :value       value
-                 :on-change   (partial textual-field-change field-descriptor (inc idx))}]
-               [:span "+"]])
-            (rest @values)))))))
+            (fn [idx {:keys [value]}]
+              (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
+                [:div.application__form-repeatable-text-wrap
+                 [:input.application__form-text-input
+                  {:type        "text"
+                   :placeholder "Lisää.."
+                   :class       (str size-class " application__form-text-input--normal")
+                   :value       value
+                   :on-blur     #(when (empty? (-> % .-target .-value))
+                                   (clicky))
+                   :on-change   (partial on-change (inc idx))}]
+                 [:a.application__form-repeatable-text--addremove
+                  {:on-click clicky}
+                  [:i.zmdi.zmdi-close.zmdi-hc-lg]]]))
+            (concat (rest @values)
+              (when (and
+                      (some? (:value (last @values)))
+                      (:valid (last @values)))
+                [{:value nil :valid true}]))))))))
 
 (defn- text-area-size->class [size]
   (match size
