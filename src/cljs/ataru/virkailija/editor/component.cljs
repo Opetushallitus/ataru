@@ -87,6 +87,22 @@
                                 (not (clojure.string/blank? class))
                                 (assoc :class class))])})))
 
+(defn- input-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
+  (let [multiple-languages? (> (count languages) 1)]
+    (map-indexed (fn [idx lang]
+                   (let [field-spec (field-fn lang)]
+                     ^{:key (str "option-" lang "-" idx)}
+                     [:div.editor-form__text-field-container
+                      (when-not header?
+                        {:class "editor-form__multi-option-wrapper"})
+                      (cond-> field-spec
+                        (and multiple-languages?
+                             (map? (last field-spec)))
+                        (assoc-in [(dec (count field-spec)) :class] "editor-form__text-field-wrapper--with-label"))
+                      (when multiple-languages?
+                        [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
+                 languages)))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         size             (subscribe [:editor/get-component-value path :params :size])
@@ -101,10 +117,11 @@
        [text-header header-label path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Kysymys"]
-        (doall
-          (for [lang @languages]
-            ^{:key lang}
-            [input-field path lang {}]))]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang {}])
+          @languages
+          :header? true)]
        [:div.editor-form__size-button-wrapper
         [:header.editor-form__component-item-header size-label]
         [:div.editor-form__size-button-group
@@ -144,22 +161,6 @@
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
-
-(defn- input-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
-  (let [multiple-languages? (> (count languages) 1)]
-    (map-indexed (fn [idx lang]
-                   (let [field-spec (field-fn lang)]
-                     ^{:key (str "option-" lang "-" idx)}
-                     [:div.editor-form__text-field-container
-                      (when-not header?
-                        {:class "editor-form__multi-option-wrapper"})
-                      (cond-> field-spec
-                        (and multiple-languages?
-                             (map? (last field-spec)))
-                        (assoc-in [(dec (count field-spec)) :class] "editor-form__text-field-wrapper--with-label"))
-                      (when multiple-languages?
-                        [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
-                 languages)))
 
 (defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
   (let [multiple-languages? (< 1 (count languages))]
