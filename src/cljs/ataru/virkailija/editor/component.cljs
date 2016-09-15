@@ -145,12 +145,14 @@
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
-(defn- input-fields-with-lang [field-fn languages]
+(defn- input-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
   (let [multiple-languages? (> (count languages) 1)]
     (map-indexed (fn [idx lang]
                    (let [field-spec (field-fn lang)]
                      ^{:key (str "option-" lang "-" idx)}
-                     [:div.editor-form__multi-option-wrapper
+                     [:div.editor-form__text-field-container
+                      (when-not header?
+                        {:class "editor-form__multi-option-wrapper"})
                       (cond-> field-spec
                         (and multiple-languages?
                              (map? (last field-spec)))
@@ -159,7 +161,7 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
                  languages)))
 
-(defn- dropdown-option [option-index path languages]
+(defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
   (let [multiple-languages? (< 1 (count languages))]
     [:div.editor-form__multi-options-wrapper-outer
      {:key (str "options-" option-index)}
@@ -189,10 +191,11 @@
          [:div.editor-form__multi-question-wrapper
           [:div.editor-form__text-field-wrapper
            [:header.editor-form__component-item-header "Kysymys"]
-           (doall
-             (for [lang languages]
-               ^{:key lang}
-               [input-field path lang {}]))]
+           (input-fields-with-lang
+             (fn [lang]
+               [input-field path lang {}])
+             languages
+             :header? true)]
           [:div.editor-form__checkbox-wrapper
            (render-checkbox path initial-content)]]
          [:div.editor-form__multi-options-container
