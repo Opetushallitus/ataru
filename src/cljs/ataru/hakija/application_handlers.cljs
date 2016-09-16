@@ -110,13 +110,13 @@
                                                       (butlast all-values)))
                                         not-empty
                                         (every? true?)))
-          value-for-readonly-fields (apply str (interpose ", " (map :value all-values)))]
+          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
       (update-in
         with-answer
         (butlast path)
         assoc
         :valid validity-for-validation
-        :value value-for-readonly-fields))))
+        :value value-for-readonly-fields-and-db))))
 
 (register-handler
   :application/remove-repeatable-application-field-value

@@ -20,10 +20,9 @@
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
    [:div
     (or
-      (when-let [values (not-empty (->
-                                     ((answer-key field-descriptor) (:answers application))
-                                     :values))]
-        (into [:ul] (for [value (map :value values)] [:li value])))
+      (let [values (:value ((answer-key field-descriptor) (:answers application)))]
+        (when (or (seq? (spy values)) (vector? values))
+          (into [:ul] (for [value values] [:li value]))))
       (textual-field-value field-descriptor application))]])
 
 (declare field)
