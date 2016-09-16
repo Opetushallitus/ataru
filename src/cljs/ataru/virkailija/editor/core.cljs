@@ -16,14 +16,6 @@
                                  [:editor :forms (-> @db :editor :selected-form-id) :content]
                                  path))))))
 
-(register-sub
-  :editor/languages
-  (fn [db]
-    (let [lang-path [:editor :forms (-> @db :editor :selected-form-id) :languages]
-          languages (or (get-in @db lang-path)
-                        [:fi])]
-      (reaction languages))))
-
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div

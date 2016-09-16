@@ -7,3 +7,11 @@
   (fn [db _]
     (reaction
       (get-in @db [:editor :forms (get-in @db [:editor :selected-form-id])]))))
+
+(register-sub
+  :editor/languages
+  (fn [db]
+    (let [lang-path [:editor :forms (-> @db :editor :selected-form-id) :languages]
+          languages (or (get-in @db lang-path)
+                        [:fi])]
+      (reaction languages))))
