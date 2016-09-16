@@ -60,19 +60,40 @@
                                 :placeholder "Lomakkeen nimi"
                                 :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
+(defn- lang-kwd->link [form lang-kwd]
+  (let [text (-> lang-kwd
+                 name
+                 (clojure.string/upper-case))]
+    [:a
+     {:href   (str js/config.applicant.service_url "/hakemus/" (:id form))
+      :target "_blank"}
+     text]))
+
+(defn language-toolbar [form]
+  (let [languages (subscribe [:editor/languages])
+        visible?  (r/atom true)]
+    [:div.editor-form__language-toolbar-outer
+     [:div.editor-form__language-toolbar-inner
+      [:a
+       "Kieliversiot "
+       [:i.zmdi.zmdi-chevron-down
+        {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
+      [:span.editor-form__language-toolbar-header-text
+       "Esikatselu: "
+       (map-indexed (fn [idx lang-kwd]
+                      (cond-> [:span (lang-kwd->link form lang-kwd)]
+                        (> (dec (count @languages)) idx)
+                        (conj [:span " | "])))
+                    @languages)]]]))
+
 (defn editor-panel []
   (let [form            (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
          [:div
-          [editor-name]]
-         [:div.editor-form__link-row
-          [:div
-           [:span [:a.editor-form__preview-link
-                                                {:href   (str js/config.applicant.service_url "/hakemus/" (:id @form))
-                                                 :target "_blank"}
-                                                "Esikatsele lomake"]]]]
+          [editor-name]
+          [language-toolbar @form]]
          [c/editor]]))))
 
 (defn editor []

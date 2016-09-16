@@ -66,14 +66,20 @@
   }
 }
 
-.editor-form__link-row {
+.editor-form__language-toolbar-outer {
   display: flex;
-  justify-content: flex-end;
+  flex-flow: column nowrap;
   margin-bottom: 15px;
+}
 
-  .editor-form__link-row--divider {
-    padding-left: 10px;
-  }
+.editor-form__language-toolbar-inner {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.editor-form__language-toolbar-header-text {
+  color: @link-color;
 }
 
 .editor-form__form-name-input {
@@ -86,11 +92,6 @@
   border-radius: 2px;
   margin: 10px 0 5px 0;
   font-weight: 600;
-}
-
-.editor-form__preview-link {
-  white-space: nowrap;
-  margin-left: 10px;
 }
 
 .editor-form__section_wrapper {
