@@ -65,8 +65,8 @@
    :sv "Ruotsi"
    :en "Englanti"})
 
-(defn- lang-checkbox [lang checked?]
-  (let [id (str "lang-checkbox-" (name lang))]
+(defn- lang-checkbox [lang-kwd checked?]
+  (let [id (str "lang-checkbox-" (name lang-kwd))]
     [:div
      {:key id}
      [:input.editor-form__checkbox
@@ -75,7 +75,7 @@
        :type    "checkbox"}]
      [:label.editor-form__checkbox-label.editor-form__language-toolbar-checkbox
       {:for id}
-      (get lang-versions lang)]]))
+      (get lang-versions lang-kwd)]]))
 
 (defn- lang-kwd->link [form lang-kwd]
   (let [text (-> lang-kwd
