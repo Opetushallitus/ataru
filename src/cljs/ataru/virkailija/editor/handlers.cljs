@@ -359,6 +359,7 @@
       (update-in db lang-path
         (fn [languages]
           (let [languages (or languages [:fi])]
-            (if (some #{lang} languages)
-              (filter (partial not= lang) languages)
-              (conj languages lang))))))))
+            (cond
+              (not (some #{lang} languages)) (conj languages lang)
+              (> (count languages) 1)        (filter (partial not= lang) languages)
+              :else                          languages)))))))
