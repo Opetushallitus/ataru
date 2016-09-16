@@ -10,7 +10,7 @@
   (api/context "/auth" []
     (api/undocumented
            (api/GET "/cas" [ticket]
-             (login (if (-> config :dev:fake-dependencies)
+             (login (if (-> config :dev :fake-dependencies)
                       (str (System/currentTimeMillis))
                       ticket)
                     organization-service))

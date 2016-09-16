@@ -1,4 +1,4 @@
-(ns ataru.virkailija.virkailija-routes-spec
+(ns ataru.virkailija-routes-spec
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.test-utils :refer [login should-have-header virkailija-routes]]
             [ring.mock.request :as mock]
@@ -14,7 +14,7 @@
                    virkailija-routes)))
 
 (describe "GET /lomake-editori"
-  (tags :unit)
+  ;(tags :unit)
 
   (with-static-resource resp "/lomake-editori")
 
@@ -28,7 +28,7 @@
     (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
 
 (describe "GET /lomake-editori/"
-  (tags :unit)
+  ;(tags :unit)
 
   (with-static-resource resp "/lomake-editori/")
 
@@ -49,7 +49,7 @@
     (should-have-header "Cache-Control" "no-cache" @resp)))
 
 (describe "Getting a static resource"
-  (tags :unit)
+  ;(tags :unit)
 
   (with-static-resource resp "/lomake-editori/js/compiled/virkailija-app.js")
 
@@ -60,8 +60,8 @@
     (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
 (describe "Storing a form"
-  (tags :unit)
-
+  ;(tags :unit)
+  
     (with resp
           (-> (mock/request :post "/lomake-editori/api/forms"
                             (json/generate-string fixtures/form-with-content))
