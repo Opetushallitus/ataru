@@ -18,7 +18,13 @@
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div (textual-field-value field-descriptor application)]])
+   [:div
+    (or
+      (when-let [values (not-empty (->
+                                     ((answer-key field-descriptor) (:answers application))
+                                     :values))]
+        (into [:ul] (for [value (map :value values)] [:li value])))
+      (textual-field-value field-descriptor application))]])
 
 (declare field)
 
