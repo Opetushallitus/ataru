@@ -15,7 +15,7 @@
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
   (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (store/get-forms)]
+        existing-forms    (store/get-all-forms)]
     (doseq [form existing-forms]
       (let [changed-form (update-person-info-module form new-person-module)]
         (store/upsert-form changed-form)))))
