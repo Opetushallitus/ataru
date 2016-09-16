@@ -11,7 +11,8 @@
 (register-sub
   :editor/languages
   (fn [db]
-    (let [lang-path [:editor :forms (-> @db :editor :selected-form-id) :languages]
-          languages (or (get-in @db lang-path)
-                        [:fi])]
-      (reaction languages))))
+    (reaction
+      (let [lang-path [:editor :forms (-> @db :editor :selected-form-id) :languages]
+            languages (map keyword
+                           (or (get-in @db lang-path) [:fi]))]
+        languages))))

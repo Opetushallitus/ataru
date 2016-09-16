@@ -352,3 +352,13 @@
           (add-component-to-list component recalculated-target-path))))))
 
 (register-handler :editor/move-component move-component)
+
+(register-handler :editor/toggle-language
+  (fn [db [_ lang]]
+    (let [lang-path [:editor :forms (-> db :editor :selected-form-id) :languages]]
+      (update-in db lang-path
+        (fn [languages]
+          (let [languages (or languages [:fi])]
+            (if (some #{lang} languages)
+              (filter (partial not= lang) languages)
+              (conj languages lang))))))))

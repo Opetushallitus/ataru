@@ -72,7 +72,9 @@
      [:input.editor-form__checkbox
       {:id      id
        :checked checked?
-       :type    "checkbox"}]
+       :type    "checkbox"
+       :on-change (fn [_]
+                    (dispatch [:editor/toggle-language lang-kwd]))}]
      [:label.editor-form__checkbox-label.editor-form__language-toolbar-checkbox
       {:for id}
       (get lang-versions lang-kwd)]]))
