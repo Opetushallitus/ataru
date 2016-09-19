@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [register-handler dispatch]]
+  (:require [re-frame.core :refer [register-handler dispatch dispatch-sync subscribe]]
             [clojure.data :refer [diff]]
             [clojure.walk :as walk]
             [cljs-time.core :as c]
@@ -243,30 +243,36 @@
     db))
 
 (defn save-loop [save-chan response-chan]
-  (go-loop [form (async/<! save-chan)]
-    (post "/lomake-editori/api/forms" form :editor/handle-response-sync
-      :handler-args  {:response-chan response-chan}
-      :override-args {:error-handler (fn [error]
-                                       (async/put! response-chan false)
-                                       (dispatch-flasher-error-msg :post error))})
-    (let [updated-form (async/<! response-chan)]
-      (when-not (false? updated-form)
-        (dispatch [:state-update
-                   (fn [db]
-                     (update-in db [:editor :forms] assoc (:key updated-form) updated-form))]))
-      (recur (async/<! save-chan)))))
+  (go-loop [_ (async/<! save-chan)]
+    (let [form (-> @(subscribe [:editor/selected-form])
+                   (update-dropdown-field-options)
+                   (remove-focus)
+                   (dissoc :created-time))]
+      (when (not-empty (:content form))
+        (do
+          (post "/lomake-editori/api/forms" form :editor/handle-response-sync
+            :handler-args  {:response-chan response-chan}
+            :override-args {:error-handler (fn [error]
+                                             (async/put! response-chan false)
+                                             (dispatch-flasher-error-msg :post error))})
+          (let [updated-form (async/<! response-chan)]
+            (when-not (false? updated-form)
+              (dispatch-sync
+                [:state-update
+                 (fn [db]
+                   ; Merge updated form without content, because
+                   ; user might have typed something between requests and
+                   ; updated-form would replace the newer content
+                   (update-in db [:editor :forms (:key updated-form)]
+                     merge (dissoc updated-form :content :name)))]))))))
+    (recur (async/<! save-chan))))
 
 (save-loop save-chan response-chan)
 
 (defn save-form
   [db _]
-  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-key)])
-                 (update-dropdown-field-options)
-                 (remove-focus)
-                 (dissoc :created-time))]
-    (when (not-empty (:content form))
-      (async/put! save-chan form))
-    db))
+  (async/put! save-chan true)
+  db)
 
 (register-handler :editor/save-form save-form)
 
