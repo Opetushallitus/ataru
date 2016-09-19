@@ -375,12 +375,19 @@
 
 (register-handler :editor/toggle-language
   (fn [db [_ lang]]
-    (let [lang-path [:editor :forms (get-in db [:editor :selected-form-id]) :languages]]
-      (update-in db lang-path
-        (fn [languages]
-          (let [languages (or languages [:fi])]
-            (cond
-              (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
-                                                      (conj languages lang))
-              (> (count languages) 1)        (filter (partial not= lang) languages)
-              :else                          languages)))))))
+    (let [form-path [:editor :forms (get-in db [:editor :selected-form-id])]
+          lang-path (conj form-path :languages)]
+      (-> db
+          (update-in lang-path
+            (fn [languages]
+              (let [languages (or languages [:fi])]
+                (cond
+                  (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                                          (conj languages lang))
+                  (> (count languages) 1) (filter (partial not= lang) languages)
+                  :else languages))))
+          (clojure.walk/prewalk
+            (fn [x]
+              (if (= [:focus? true] x)
+                [:focus? false]
+                x)))))))
