@@ -140,13 +140,19 @@
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
 
+(defn- languages->kwd [form]
+  (update form :languages
+    (partial mapv keyword)))
+
 (defn refresh-forms []
   (http
     :get
     "/lomake-editori/api/forms"
     (fn [db {:keys [forms]}]
-      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
-                                        (sorted-by-time))))))
+      (assoc-in db [:editor :forms] (->> forms
+                                         (mapv languages->kwd)
+                                         (util/group-by-first :id)
+                                         (sorted-by-time))))))
 
 (register-handler
   :editor/refresh-forms
@@ -159,11 +165,12 @@
   (http :get
         (str "/lomake-editori/api/forms/" form-id)
         (fn [db response _]
+          (let [response (languages->kwd response)]
           (->
             (update-in db
                        [:editor :forms form-id]
                        merge
-                       (select-keys response [:content :modified-by :modified-time]))
+                       (select-keys response [:content :modified-by :modified-time :languages]))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
                                                :changed-predicate
@@ -179,7 +186,7 @@
                                                           (dissoc current :modified-time))))
                                                :handler
                                                (fn [form previous-autosave-form]
-                                                 (dispatch [:editor/save-form]))}))))))
+                                                 (dispatch [:editor/save-form]))})))))))
 
 (register-handler
   :editor/select-form
@@ -279,9 +286,10 @@
            :content   [(pm/person-info-module)]
            :languages [:fi]}
           (fn [db new-or-updated-form]
-            (autosave/stop-autosave! (-> db :editor :autosave))
-            (set-history! (str "/editor/" (:id new-or-updated-form)))
-            (assoc-in db [:editor :new-form-created?] true)))
+            (let [new-or-updated-form (languages->kwd new-or-updated-form)]
+              (autosave/stop-autosave! (-> db :editor :autosave))
+              (set-history! (str "/editor/" (:id new-or-updated-form)))
+              (assoc-in db [:editor :new-form-created?] true))))
     db))
 
 (register-handler
