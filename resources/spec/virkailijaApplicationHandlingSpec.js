@@ -4,7 +4,7 @@
   }
 
   var form2OnList = function() {
-    return testFrame().find('[href="#/applications/2"] .application-handling__form-list-row')
+    return testFrame().find('.application-handling__form-list-open > a > div:contains(Selaintestilomake2)')
   }
 
   var downloadLink = function() {
@@ -16,7 +16,10 @@
   }
 
   function navigateToApplicationHandlingForm1Selected() {
-    $('#test').attr('src', '/lomake-editori/#/applications/1')
+    var hrefs = testFrame().find("#app > div > div:nth-child(2) > div > div.editor-form__container.panel-content > div.editor-form__list")
+    var href = hrefs.children().find('span:contains(Selaintestilomake1)').parent()
+    var spl = href.attr('href').split("/").reverse()[0]
+    $('#test').attr('src', '/lomake-editori/#/applications/' + spl)
   }
 
   afterEach(function() {
@@ -36,8 +39,6 @@
     })
     describe('form 2 (no applications)', function() {
       before(
-        navigateToApplicationHandlingForm1Selected,
-        wait.until(closedFormListExists),
         function() { closedFormList()[0].click() },
         wait.until(function() {
           return form2OnList().text() === 'Selaintestilomake2'

@@ -82,7 +82,7 @@
   "Verifies that given application is valid by validating each answer
    against their associated validators."
   ([application]
-   (valid-application? application (form-store/fetch-form (:form application))))
+   (valid-application? application (form-store/fetch-by-id (:form application))))
   ([application form]
    {:pre [(not-empty form)]}
    (let [answers-by-key (util/answers-by-key (:answers application))

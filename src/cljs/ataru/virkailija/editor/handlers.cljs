@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [register-handler dispatch]]
+  (:require [re-frame.core :refer [register-handler dispatch dispatch-sync subscribe]]
             [clojure.data :refer [diff]]
             [clojure.walk :as walk]
             [cljs-time.core :as c]
@@ -9,7 +9,7 @@
             [ataru.virkailija.component-data.person-info-module :as pm]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
-            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-id]]
+            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
@@ -30,8 +30,8 @@
 (defn sorted-by-time [m]
   (into (sorted-map-by
           (fn [k1 k2]
-            (let [v1 (-> (get m k1) :modified-time)
-                  v2 (-> (get m k2) :modified-time)]
+            (let [v1 (-> (get m k1) :created-time)
+                  v2 (-> (get m k2) :created-time)]
               (match [v1 v2]
                      [nil nil] 0
                      [_   nil] 1
@@ -46,7 +46,33 @@
 
 (defn- current-form-content-path
   [db further-path]
-  (flatten [:editor :forms (-> db :editor :selected-form-id) :content [further-path]]))
+  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
+
+(defn- remove-empty-options
+  [options]
+  (vec (remove #(clojure.string/blank? (:value %)) options)))
+
+(defn- add-empty-option
+  [options]
+  (into [(component/dropdown-option)] options))
+
+(defn- update-options-in-dropdown-field
+  [dropdown-field no-blank-option?]
+  (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
+        updated-options (-> (:options dropdown-field)
+                          (remove-empty-options)
+                          (add-blank-fn))]
+    (merge dropdown-field {:options updated-options})))
+
+(defn- update-dropdown-field-options
+  [form]
+  (let [new-content
+        (walk/prewalk
+          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
+             (update-options-in-dropdown-field % (:no-blank-option %))
+             %)
+          (:content form))]
+    (merge form {:content new-content})))
 
 (register-handler
   :editor/remove-dropdown-option
@@ -98,8 +124,8 @@
 
 (defn generate-component
   [db [_ generate-fn path]]
-  (with-form-id [db form-id]
-    (let [form-id       (get-in db [:editor :selected-form-id])
+  (with-form-key [db form-key]
+    (let [form-key       (get-in db [:editor :selected-form-key])
           path-vec      (current-form-content-path db [path])
           component     (generate-fn)]
       (if (zero? (last path-vec))
@@ -110,9 +136,9 @@
 
 (defn remove-component
   [db path]
-  (with-form-id [db form-id]
+  (with-form-key [db form-key]
     (let [remove-index (last path)
-          path-vec     (-> [:editor :forms form-id :content [path]]
+          path-vec     (-> [:editor :forms form-key :content [path]]
                          flatten
                          butlast)]
       (->> (get-in db path-vec)
@@ -145,7 +171,7 @@
     :get
     "/lomake-editori/api/forms"
     (fn [db {:keys [forms]}]
-      (assoc-in db [:editor :forms] (-> (util/group-by-first :id forms)
+      (assoc-in db [:editor :forms] (-> (util/group-by-first :key forms)
                                         (sorted-by-time))))))
 
 (register-handler
@@ -158,68 +184,46 @@
 (defn fetch-form-content! [form-id]
   (http :get
         (str "/lomake-editori/api/forms/" form-id)
-        (fn [db response _]
+        (fn [db {:keys [key] :as response} _]
           (->
-            (update-in db
-                       [:editor :forms form-id]
-                       merge
-                       (select-keys response [:content :modified-by :modified-time]))
+            (assoc-in db
+              [:editor :forms key]
+              response)
             (assoc-in [:editor :autosave]
-                      (autosave/interval-loop {:subscribe-path [:editor :forms form-id]
+                      (autosave/interval-loop {:subscribe-path [:editor :forms key]
                                                :changed-predicate
                                                (fn [current prev]
-                                                 (match [current (merge {:content nil}
+                                                 (match [current (merge {:content []}
                                                                         prev)]
-                                                        [_ {:content nil}]
+                                                        [_ {:content []}]
                                                         false
 
                                                         :else
                                                         (not=
-                                                          (dissoc prev :modified-time)
-                                                          (dissoc current :modified-time))))
+                                                          ; :id changes when new version is created,
+                                                          ; :key remains the same across versions
+                                                          (-> prev
+                                                            ; prevent autosave when adding blank dropdown option
+                                                            (update-dropdown-field-options)
+                                                            (dissoc :created-time :id))
+                                                          (-> current
+                                                            ; prevent autosave when adding blank dropdown option
+                                                            (update-dropdown-field-options)
+                                                            (dissoc :created-time :id)))))
                                                :handler
-                                               (fn [form previous-autosave-form]
+                                               (fn [form previous-autosave-form-at-time-of-dispatch]
                                                  (dispatch [:editor/save-form]))}))))))
 
 (register-handler
   :editor/select-form
-  (fn [db [_ form-id]]
-    (with-form-id [db previous-form-id]
+  (fn [db [_ form-key]]
+    (with-form-key [db previous-form-key]
       (do
-        (when (not= previous-form-id form-id)
+        (when (not= previous-form-key form-key)
           (autosave/stop-autosave! (-> db :editor :autosave)))
-        (fetch-form-content! form-id)
-        (assoc-in db [:editor :selected-form-id] form-id)))))
-
-(defn- remove-empty-options
-  [options]
-  (vec (remove #(clojure.string/blank? (:value %)) options)))
-
-(defn- add-empty-option
-  [options]
-  (into [(component/dropdown-option)] options))
-
-(defn- update-options-in-dropdown-field
-  [dropdown-field no-blank-option?]
-  (let [add-blank-fn (if no-blank-option? identity add-empty-option)
-        updated-options (-> (:options dropdown-field)
-                            (remove-empty-options)
-                            (add-blank-fn))]
-    (merge dropdown-field {:options updated-options})))
-
-(defn- update-dropdown-field-options
-  [form]
-  (let [new-content
-        (walk/prewalk
-          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
-            (update-options-in-dropdown-field % (:no-blank-option %))
-            %)
-          (:content form))]
-    (merge form {:content new-content})))
-
-(defn- set-modified-time
-  [form]
-  (assoc-in form [:modified-time] (temporal/time->iso-str (:modified-time form))))
+        (when-let [id (get-in db [:editor :forms form-key :id])]
+          (fetch-form-content! id))
+        (assoc-in db [:editor :selected-form-key] form-key)))))
 
 (defn- remove-focus
   [form]
@@ -239,35 +243,36 @@
     db))
 
 (defn save-loop [save-chan response-chan]
-  (let [modified-time (atom nil)]
-    (go-loop [form (async/<! save-chan)]
-      (when (nil? @modified-time)
-        (reset! modified-time (:modified-time form)))
-      (let [form (-> form
-                     (assoc :modified-time @modified-time)
-                     (set-modified-time))]
-        (post "/lomake-editori/api/forms" form :editor/handle-response-sync
-          :handler-args  {:response-chan response-chan}
-          :override-args {:error-handler (fn [error]
-                                           (async/put! response-chan false)
-                                           (dispatch-flasher-error-msg :post error))})
-        (let [updated-form (async/<! response-chan)]
-          (when-not (false? updated-form)
-            (reset! modified-time (:modified-time updated-form))
-            (dispatch [:state-update (fn [db]
-                                       (assoc-in db [:editor :forms (:id updated-form) :modified-time] (:modified-time updated-form)))]))
-          (recur (async/<! save-chan)))))))
+  (go-loop [_ (async/<! save-chan)]
+    (let [form (-> @(subscribe [:editor/selected-form])
+                   (update-dropdown-field-options)
+                   (remove-focus)
+                   (dissoc :created-time))]
+      (when (not-empty (:content form))
+        (do
+          (post "/lomake-editori/api/forms" form :editor/handle-response-sync
+            :handler-args  {:response-chan response-chan}
+            :override-args {:error-handler (fn [error]
+                                             (async/put! response-chan false)
+                                             (dispatch-flasher-error-msg :post error))})
+          (let [updated-form (async/<! response-chan)]
+            (when-not (false? updated-form)
+              (dispatch-sync
+                [:state-update
+                 (fn [db]
+                   ; Merge updated form without content, because
+                   ; user might have typed something between requests and
+                   ; updated-form would replace the newer content
+                   (update-in db [:editor :forms (:key updated-form)]
+                     merge (dissoc updated-form :content :name)))]))))))
+    (recur (async/<! save-chan))))
 
 (save-loop save-chan response-chan)
 
 (defn save-form
   [db _]
-  (let [form (-> (get-in db [:editor :forms (-> db :editor :selected-form-id)])
-                 (update-dropdown-field-options)
-                 (remove-focus))]
-    (when (not-empty (:content form))
-      (async/put! save-chan form))
-    db))
+  (async/put! save-chan true)
+  db)
 
 (register-handler :editor/save-form save-form)
 
@@ -279,15 +284,15 @@
            :content [(pm/person-info-module)]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
-            (set-history! (str "/editor/" (:id new-or-updated-form)))
+            (set-history! (str "/editor/" (:key new-or-updated-form)))
             (assoc-in db [:editor :new-form-created?] true)))
     db))
 
 (register-handler
   :editor/change-form-name
   (fn [db [_ new-form-name]]
-    (with-form-id [db selected-form-id]
-      (update-in db [:editor :forms selected-form-id]
+    (with-form-key [db selected-form-key]
+      (update-in db [:editor :forms selected-form-key]
                  assoc :name
                  new-form-name))))
 
@@ -338,8 +343,8 @@
 
 (defn move-component
   [db [_ source-path target-path]]
-  (with-form-id [db form-id]
-    (let [component                (get-in db (concat [:editor :forms form-id :content] source-path))
+  (with-form-key [db form-key]
+    (let [component                (get-in db (concat [:editor :forms form-key :content] source-path))
           recalculated-target-path (recalculate-target-path-prevent-oob source-path target-path)
           result-is-nested-component-group? (and
                                               (contains?

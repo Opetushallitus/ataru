@@ -3,7 +3,7 @@
             [ataru.fixtures.application :as fixtures]
             [speclj.core :refer :all]))
 
-(def form-id (:id fixtures/form))
+(def form-key (:key fixtures/form))
 
 (def expected-applications
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
@@ -46,11 +46,11 @@
     (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                   (should= :db ds-key)
                                   (should= "yesql-application-query-by-modified" (-> query-fn .meta :name))
-                                  (should= {:form_id 703, :lang "fi"} params)
+                                  (should= {:form_key "abcdefghjkl", :lang "fi"} params)
                                   fixtures/applications)]
       (spec)))
 
           (it "should return all applications belonging to a form"
               (should= expected-applications (map
-                                               #(dissoc % :modified-time)
-                                               (store/get-applications form-id {})))))
+                                               #(dissoc % :created-time)
+                                               (store/get-applications form-key {})))))

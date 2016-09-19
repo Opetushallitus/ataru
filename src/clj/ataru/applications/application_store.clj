@@ -46,8 +46,8 @@
 
 (defn get-application-list
   "Only list with header-level info, not answers"
-  [form-id]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_id form-id})))
+  [form-key]
+  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_key form-key})))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
@@ -62,9 +62,9 @@
   (exec-db :db yesql-save-application-review! (transform-keys ->snake_case review)))
 
 (s/defn get-applications :- [schema/Application]
-  [form-id :- s/Int application-request :- schema/ApplicationRequest]
+  [form-key :- s/Str application-request :- schema/ApplicationRequest]
   (let [request (merge
-                  {:form-id form-id}
+                  {:form-key form-key}
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)

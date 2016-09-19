@@ -2,7 +2,7 @@
 
 (def form-with-content
   {:name        "Test fixture!"
-   :modified-by "DEVELOPER"
+   :created-by "DEVELOPER"
    :content
                 [{:fieldClass "formField"
                   :label      {:fi "tekstiä" :sv ""}
@@ -20,8 +20,8 @@
 
 (def person-info-form {:id 15,
                        :name "Uusi lomake",
-                       :modified-by "DEVELOPER",
-                       :modified-time "2016-07-28T09:58:34.217+03:00",
+                       :created-by "DEVELOPER",
+                       :created-time "2016-07-28T09:58:34.217+03:00",
                        :content [{:fieldClass "wrapperElement",
                                   :id "a41f4c1a-4eb6-4b05-8c95-c5a2ef59a9a3",
                                   :fieldType "fieldset",
