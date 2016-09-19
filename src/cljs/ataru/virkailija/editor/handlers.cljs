@@ -362,6 +362,17 @@
 
 (register-handler :editor/move-component move-component)
 
+(def ^:private lang-order
+  [:fi :sv :en])
+
+(defn- index-of [coll t]
+  (let [length (count coll)]
+    (loop [idx 0]
+      (cond
+        (<= length idx) -1
+        (= (get coll idx) t) idx
+        :else (recur (inc idx))))))
+
 (register-handler :editor/toggle-language
   (fn [db [_ lang]]
     (let [lang-path [:editor :forms (-> db :editor :selected-form-id) :languages]]
@@ -369,6 +380,7 @@
         (fn [languages]
           (let [languages (or languages [:fi])]
             (cond
-              (not (some #{lang} languages)) (conj languages lang)
+              (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                                      (conj languages lang))
               (> (count languages) 1)        (filter (partial not= lang) languages)
               :else                          languages)))))))
