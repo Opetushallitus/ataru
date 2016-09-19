@@ -33,7 +33,7 @@
     (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms]))
 
-  (defroute #"/editor/([a-f0-9-]{36})" [key]
+  (defroute #"/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
@@ -57,7 +57,7 @@
          (dispatch [:application/fetch-applications (:key form)])))
      (dispatch [:set-active-panel :application])))
 
-  (defroute #"/applications/([a-f0-9-]{36})" [key]
+  (defroute #"/applications/(.*)" [key]
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
      :predicate
