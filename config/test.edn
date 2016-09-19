@@ -4,7 +4,7 @@
       :username "oph"
       :password "oph"
       :server-name "localhost"
-      :port-number 5432
+      :port-number 5433
       :schema "public"}
  :cas {}
  :authentication {:opintopolku-login-url "https://itest-virkailija.oph.ware.fi/cas/login?service="
