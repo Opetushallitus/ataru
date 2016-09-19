@@ -77,6 +77,15 @@ To run only browser tests (headless, using phantomJS):
 CONFIG=config/test.edn lein spec -t ui
 ```
 
+Browser tests rely on having dummy implementations of certain
+backend-services, e.g. organization service. Instantiating fake
+versions of required services is configured in the normal
+edn-config-files like this:
+
+```
+:dev {:fake-dependencies true}
+```
+
 ### Running integration tests on your browser
 
 * Start the development server
