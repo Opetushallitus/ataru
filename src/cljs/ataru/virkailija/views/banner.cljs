@@ -22,14 +22,14 @@
 (defn section-link [panel-kw]
   (let [active-panel     (subscribe [:active-panel])
         active?          (reaction (= @active-panel panel-kw))
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])]
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])]
     (fn []
       [:div.section-link {:class (name panel-kw)}
        (if @active?
          [:span.active-section
           active-section-arrow
           (-> panels panel-kw :text)]
-         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-id))}
+         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-key))}
           (-> panels panel-kw :text)])])))
 
 (defn title []

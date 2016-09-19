@@ -13,15 +13,15 @@
   {:form nil
    :application {:answers {}}})
 
-(defn get-form [db [_ form-id]]
+(defn get-latest-form-by-key [db [_ form-key]]
   (get
-    (str "/hakemus/api/form/" form-id)
+    (str "/hakemus/api/form/" form-key)
     :application/handle-form)
   db)
 
 (register-handler
-  :application/get-form
-  get-form)
+  :application/get-latest-form-by-key
+  get-latest-form-by-key)
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))

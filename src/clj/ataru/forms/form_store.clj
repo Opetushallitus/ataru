@@ -1,20 +1,15 @@
 (ns ataru.forms.form-store
-  (:require [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
-            [ataru.db.extensions] ; don't remove, timestamp coercion
+  (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
+            [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
+            [clj-time.core :as t]
             [oph.soresu.common.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
-            [taoensso.timbre :refer [spy debug]]))
+            [taoensso.timbre :refer [spy debug]])
+  (:import [java.util UUID]))
 
 (defqueries "sql/form-queries.sql")
-
-(defn execute [db query params]
-  (->> params
-       (transform-keys ->snake_case)
-       (exec db query)
-       (transform-keys ->kebab-case-keyword)
-       vec))
 
 (defn- languages->vec [form]
   (update form :languages :languages))
@@ -24,11 +19,7 @@
     (fn [languages]
       {:languages languages})))
 
-(defn get-forms []
-  (->> (execute :db yesql-get-forms-query {})
-       (map languages->vec)))
-
-(defn- restructure-form-with-content
+(defn- unwrap-form-content
   "Unwraps form :content wrapper and transforms all other keys
    to kebab-case"
   [form]
@@ -39,32 +30,84 @@
                  (languages->vec))]
     form))
 
-(defn- update-existing-form
-  [existing-form modified-time form]
-  (with-db-transaction [conn {:datasource (get-datasource :db)}]
-                       (if (= (:modified-time existing-form) modified-time)
-                         (do
-                           (yesql-update-form-query! form {:connection conn})
-                           (-> (yesql-get-by-id form {:connection conn})
-                               (first)))
-                         (throw (ex-info "form updated in background" {:error "form_updated_in_background"})))))
+(defn- wrap-form-content
+  "Wraps form :content and transforms all keys to snake_case"
+  [{:keys [content] :as form}]
+  (let [form-no-content (->> (dissoc form :content)
+                             (transform-keys ->snake_case))
+        form (-> form-no-content
+                 (assoc :content {:content (or content [])})
+                 (languages->obj))]
+    form))
 
-(defn upsert-form [{:keys [id] :as form-with-modified-time}]
-  (let [modified-time (:modified-time form-with-modified-time)
-        form (dissoc form-with-modified-time :modified-time)
-        content {:content (or (not-empty (:content form))
-                              [])}
-        f       (-> (transform-keys ->snake_case (dissoc form :content))
-                    (assoc :content content)
-                    (languages->obj))]
-    (restructure-form-with-content
-      (let [existing-form (when id (first (execute :db yesql-get-by-id f)))]
-        (if (some? existing-form)
-          (update-existing-form existing-form modified-time f)
-          (exec :db yesql-add-form-query<! f))))))
+(defn- postprocess [result]
+  (->> (if (or (seq? result) (list? result) (vector? result)) result [result])
+    (mapv unwrap-form-content)))
 
-(defn fetch-form [id]
-  (if-let [form (-> (exec :db yesql-get-by-id {:id id})
-                    (first))]
-    (restructure-form-with-content form)
-    nil))
+(defn execute-with-db [db yesql-query-fn params]
+  (->> params
+       wrap-form-content
+       (exec db yesql-query-fn)
+       postprocess))
+
+(defn execute-with-connection [conn yesql-query-fn params]
+  (->>
+    (yesql-query-fn
+      (wrap-form-content params)
+      {:connection conn})
+    postprocess))
+
+(defn execute [yesql-query-fn params & [conn]]
+  (if conn
+    (execute-with-connection conn yesql-query-fn params)
+    (execute-with-db :db yesql-query-fn params)))
+
+(defn get-forms []
+  (execute-with-db :db yesql-get-forms {}))
+
+(defn fetch-latest-version [id & [conn]]
+  (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
+
+(defn fetch-latest-version-and-lock-for-update [id conn]
+  (first (execute yesql-fetch-latest-version-by-id-lock-for-update {:id id} conn)))
+
+(defn fetch-by-id [id & [conn]]
+  (first (execute yesql-get-by-id {:id id} conn)))
+
+(def fetch-form fetch-latest-version)
+
+(defn fetch-by-key [key & [conn]]
+  (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))
+
+(defn latest-version-not-same? [form latest-version]
+  (or
+    (not= (:id form) (:id latest-version))
+    (not= (:created-by latest-version) (:created-by form)) ; should never go here because rows are not updated anymore
+    (t/after? (:created-time latest-version) (:created-time form))))
+
+(defn create-new-form! [form]
+  (first
+    (execute yesql-add-form<!
+      (->
+        form
+        (dissoc :created-time :id)
+        (assoc :key (str (UUID/randomUUID)))))))
+
+(defn increment-version [{:keys [key id] :as form} conn]
+  {:pre [(some? key)
+         (some? id)]}
+  (first
+    (execute yesql-add-form<! (dissoc form :created-time :id))))
+
+(defn create-form-or-increment-version! [{:keys [id] :as form}]
+  (or
+    (with-db-transaction [conn {:datasource (get-datasource :db)}]
+      (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
+        (if (latest-version-not-same? form latest-version)
+          {:error (str "Form with id " (:id latest-version) " created-time " (:created-time latest-version)
+                    " already exists.")}
+          (increment-version
+            ; use :key set in db just to be sure it never is nil
+            (assoc form :key (:key latest-version))
+            conn))))
+    (create-new-form! (dissoc form :key))))

@@ -1,11 +1,11 @@
 (ns ataru.virkailija.routes
-    (:require-macros [secretary.core :refer [defroute]])
-    (:import goog.History)
-    (:require [ataru.cljs-util :refer [dispatch-after-state]]
-              [secretary.core :as secretary]
-              [goog.events :as events]
-              [goog.history.EventType :as EventType]
-              [re-frame.core :refer [dispatch]]))
+  (:require-macros [secretary.core :refer [defroute]])
+  (:import goog.History)
+  (:require [ataru.cljs-util :refer [dispatch-after-state]]
+            [secretary.core :as secretary]
+            [goog.events :as events]
+            [goog.history.EventType :as EventType]
+            [re-frame.core :refer [dispatch]]))
 
 (defonce history (History.))
 
@@ -33,41 +33,39 @@
     (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms]))
 
-  (defroute #"/editor/(\d+)" [id]
+  (defroute #"/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
-    (when-let [parsed-id (js/Number id)]
-      (dispatch-after-state
-        :predicate
-        (fn [db] (not-empty (get-in db [:editor :forms])))
-        :handler
-        (fn [forms]
-          (dispatch [:editor/select-form parsed-id])))))
+    (dispatch-after-state
+     :predicate
+     (fn [db]
+       (not-empty (get-in db [:editor :forms key])))
+     :handler
+     (fn [form]
+       (dispatch [:editor/select-form (:key form)]))))
 
   (defroute #"/applications/" []
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
-      :predicate
-      (fn [db] (not-empty (get-in db [:editor :forms])))
-      :handler
-      (fn [forms]
-        (let [id (-> forms first first)]
-          (.replaceState js/history nil nil (str "#/applications/" id))
-          (dispatch [:editor/select-form id])
-          (dispatch [:application/fetch-applications id])
-          (dispatch [:set-active-panel :application])))))
+     :predicate
+     (fn [db] (not-empty (get-in db [:editor :forms])))
+     :handler
+     (fn [forms]
+       (let [form (-> forms first second)]
+         (.replaceState js/history nil nil (str "#/applications/" (:key form)))
+         (dispatch [:editor/select-form (:key form)])
+         (dispatch [:application/fetch-applications (:key form)])))
+     (dispatch [:set-active-panel :application])))
 
-  (defroute #"/applications/(\d+)" [form-id]
-    (let [parsed-id (js/Number form-id)]
-      (dispatch [:editor/refresh-forms])
-      (when-let [parsed-id (js/Number form-id)]
-        (dispatch-after-state
-          :predicate
-          (fn [db] (not-empty (get-in db [:editor :forms])))
-          :handler
-          (fn [forms]
-            (dispatch [:editor/select-form parsed-id]))))
-      (dispatch [:application/fetch-applications parsed-id]))
+  (defroute #"/applications/(.*)" [key]
+    (dispatch [:editor/refresh-forms])
+    (dispatch-after-state
+     :predicate
+     (fn [db] (not-empty (get-in db [:editor :forms key])))
+     :handler
+     (fn [form]
+       (dispatch [:editor/select-form (:key form)])
+       (dispatch [:application/fetch-applications (:key form)])))
     (dispatch [:set-active-panel :application]))
 
   ;; --------------------

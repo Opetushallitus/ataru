@@ -1,24 +1,33 @@
--- name: yesql-get-forms-query
--- Get all stored forms, without content
-select id, name, modified_by, modified_time, languages from forms order by modified_time desc;
+-- name: yesql-get-forms
+-- Get all stored forms, without content, latest version
+select id, key, name, created_by, created_time, languages from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
+order by created_time desc;
 
--- name: yesql-add-form-query<!
+-- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, modified_by, languages) values (:name, :content, :modified_by, :languages);
-
--- name: yesql-form-exists-query
--- Get single form
-select id from forms where id = :id;
+insert into forms (name, content, created_by, key, languages) values (:name, :content, :created_by, :key, :languages);
 
 -- name: yesql-get-by-id
-select * from forms where id = :id;
+select id, key, name, content, created_by, created_time, languages from forms where id = :id;
 
--- name: yesql-update-form-query!
--- Update form
-update forms set
-  name = :name,
-  modified_time = now(),
-  modified_by = :modified_by,
-  content = cast(:content as jsonb),
-  languages = cast(:languages as jsonb)
-  where id = :id;
+-- name: yesql-fetch-latest-version-by-id
+with the_key as (
+  select key from forms where id = :id
+), latest_version as (
+  select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
+)
+select id, key, name, content, created_by, created_time, languages from forms f join latest_version lv on f.created_time = lv.latest_time;
+
+-- name: yesql-fetch-latest-version-by-key
+with latest_version as (
+  select max(created_time) as latest_time from forms f where f.key = :key
+)
+select id, key, name, content, created_by, created_time, languages from forms f join latest_version lv on f.created_time = lv.latest_time;
+
+-- name: yesql-fetch-latest-version-by-id-lock-for-update
+with the_key as (
+  select key from forms where id = :id
+), latest_version as (
+  select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
+)
+select id, key, name, content, created_by, created_time, languages from forms f join latest_version lv on f.created_time = lv.latest_time for update;

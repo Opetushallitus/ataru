@@ -13,7 +13,7 @@
   (fn [db [_ & path]]
     (reaction (get-in @db
                       (flatten (concat
-                                 [:editor :forms (-> @db :editor :selected-form-id) :content]
+                                 [:editor :forms (-> @db :editor :selected-form-key) :content]
                                  path))))))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
@@ -52,11 +52,10 @@
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
-      [:section.editor-form
-       (-> (into [:form]
-             (for [[index json-blob] (zipmap (range) @content)
-                   :when             (not-empty @content)]
-               [soresu->reagent json-blob [index]]))
-           (conj [ec/drag-n-drop-spacer [(count @content)]])
-           (conj [ec/add-component (count @content)]))])))
+      (-> (into [:section.editor-form]
+            (for [[index json-blob] (zipmap (range) @content)
+                  :when             (not-empty @content)]
+              [soresu->reagent json-blob [index]]))
+        (conj [ec/drag-n-drop-spacer [(count @content)]])
+        (conj [ec/add-component (count @content)])))))
 

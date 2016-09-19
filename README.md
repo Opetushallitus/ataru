@@ -46,7 +46,7 @@ lein hakija-dev
 (in another terminal)
 lein figwheel hakija-dev
 ```
-Browse to [http://localhost:8351/hakemus/<id>](http://localhost:8351/hakemus/<id>).
+Browse to [http://localhost:8351/hakemus/<uuid>](http://localhost:8351/hakemus/<uuid>).
 
 _Note: figwheel nrepl ports now conflict (they are the same and it's not easy to configure
 separate ports in project.clj), so you can run only either hakija/virkailija 

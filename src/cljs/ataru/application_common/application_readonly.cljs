@@ -49,11 +49,11 @@
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text application content)))
 
-(defn readonly-fields [form-data application]
+(defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [form-data application]
-      (when form-data
+    (fn [form application]
+      (when form
         (into [:div.application__readonly-container]
-          (for [content (:content form-data)
+          (for [content (:content form)
                 :when   (get-in @ui [(keyword (:id content)) :visible?] true)]
                 [field content application]))))))

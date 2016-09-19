@@ -3,7 +3,8 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.fixtures.application :as fixtures]
-            [speclj.core :refer :all])
+            [speclj.core :refer :all]
+            [taoensso.timbre :refer [spy debug]])
   (:import (java.io FileOutputStream File)
            (java.util UUID)
            (org.apache.poi.ss.usermodel WorkbookFactory)))
@@ -13,7 +14,7 @@
   (let [row (.getRow sheet row-num)]
     (should-not-be-nil row)
     (doseq [col-idx (range (count expected-values))]
-      (let [cell (.getCell row col-idx)
+      (let [cell     (.getCell row col-idx)
             expected (nth expected-values col-idx)]
         (if-not (nil? expected)
           (should= (nth expected-values col-idx) (.getStringCellValue cell))
@@ -33,7 +34,7 @@
 
   (around [spec]
     (with-redefs [application-store/exec-db (fn [& _] fixtures/applications)
-                  form-store/fetch-form (fn [& _] fixtures/form)
+                  form-store/fetch-by-key (fn [& _] fixtures/form)
                   application-store/get-application-review (fn [application-id]
                                                              (when (= application-id 3)
                                                                fixtures/application-review))]
@@ -43,15 +44,15 @@
       (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
-            (->> (j2ee/export-all-applications 99999999)
+            (->> (j2ee/export-all-applications "abcdefghjkl")
                  (.write output)))
-          (let [workbook (WorkbookFactory/create file)
-                metadata-sheet (.getSheetAt workbook 0)
+          (let [workbook           (WorkbookFactory/create file)
+                metadata-sheet     (.getSheetAt workbook 0)
                 applications-sheet (.getSheetAt workbook 1)]
             (verify-row metadata-sheet 0
-              ["Nimi" "Id" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+              ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
             (verify-row metadata-sheet 1
-              ["Test fixture what is this" "703" "2016-06-14 15:34:56" "DEVELOPER"])
+              ["Test fixture what is this" "703" "abcdefghjkl" "2016-06-14 15:34:56" "DEVELOPER"])
             (verify-row applications-sheet 0
               ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "Muistiinpanot"])
             (verify-row applications-sheet 1

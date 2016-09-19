@@ -13,15 +13,15 @@
       (do (dispatch [:application/fetch-application application-id])
         (-> db
             (assoc-in [:application :selected-id] application-id)
-            (assoc-in [:application :selected-application] nil)))
+            (assoc-in [:application :selected-application-and-form] nil)))
       db)))
 
 (register-handler
   :application/fetch-applications
-  (fn [db [_ form-id]]
+  (fn [db [_ form-key]]
     (ajax/http
       :get
-      (str "/lomake-editori/api/applications/list?formId=" form-id)
+      (str "/lomake-editori/api/applications/list?formKey=" form-key)
       (fn [db aplications-response]
         (assoc-in db [:application :applications] (:applications aplications-response))))
     db))
@@ -34,17 +34,19 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db application-response]
+(defn update-application-details [db {:keys [form application events review]}]
   (-> db
-      (assoc-in [:application :selected-application] (answers-indexed (:application application-response)))
-      (assoc-in [:application :events] (:events application-response))
-      (assoc-in [:application :review] (:review application-response))))
+      (assoc-in [:application :selected-application-and-form]
+        {:form        form
+         :application (answers-indexed application)})
+      (assoc-in [:application :events] events)
+      (assoc-in [:application :review] review)))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
     false
     ;timestamp instances for same timestamp fetched via ajax are not equal :(
-    (not= (dissoc current :modified-time) (dissoc prev :modified-time))))
+    (not= (dissoc current :created-time) (dissoc prev :created-time))))
 
 (defn start-application-review-autosave [db]
   (assoc-in

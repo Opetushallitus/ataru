@@ -10,6 +10,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [cheshire.core :as json]
+            [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
             [compojure.api.exception :as ex]
@@ -98,8 +99,10 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(form-store/upsert-form
-                             (assoc form :modified-by (-> session :identity :username)))))
+                   (match (trying #(form-store/create-form-or-increment-version!
+                                     (assoc form :created-by (-> session :identity :username))))
+                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request {:error "form_updated_in_background"})
+                     response response))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -112,21 +115,25 @@
                    :tags ["applications-api"]
 
                   (api/GET "/list" []
-                           :query-params [formId :- Long]
+                           :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (trying (fn [] {:applications (application-store/get-application-list formId)})))
+                           (trying (fn [] {:applications (application-store/get-application-list formKey)})))
 
                   (api/GET "/:application-id" []
                            :path-params [application-id :- Long]
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
-                                    :review      ataru-schema/Review}
+                                    :review      ataru-schema/Review
+                                    :form        ataru-schema/FormWithContent}
                            (trying (fn []
-                                     {:application (application-store/get-application application-id)
-                                      :events      (application-store/get-application-events application-id)
-                                      :review      (application-store/get-application-review application-id)})))
+                                     (let [application (application-store/get-application application-id)
+                                           form        (form-store/fetch-by-id (:form application))]
+                                       {:application application
+                                        :form        form
+                                        :events      (application-store/get-application-events application-id)
+                                        :review      (application-store/get-application-review application-id)}))))
 
                    (api/PUT "/review" []
                             :summary "Update existing application review"
@@ -135,13 +142,13 @@
                                       (application-store/save-application-review review)
                                       {})))
 
-                   (api/GET "/excel/:form-id" []
-                     :path-params [form-id :- Long]
-                     :summary "Return Excel export of the form and applications for it."
-                     {:status 200
+                   (api/GET "/excel/:form-key" []
+                     :path-params [form-key :- s/Str]
+                     :summary  "Return Excel export of the form and applications for it."
+                     {:status  200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-id))}
-                      :body (java.io.ByteArrayInputStream. (excel/export-all-applications form-id))}))
+                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
+                      :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]

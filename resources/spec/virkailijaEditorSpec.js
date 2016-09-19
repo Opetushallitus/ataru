@@ -36,7 +36,7 @@ function formSections() {
 }
 
 function clickComponentMenuItem(title) {
-  function menuItem() { return testFrame().find('.editor-form > form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
+  function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
   return clickElement(menuItem)
 }
 

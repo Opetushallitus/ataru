@@ -80,10 +80,10 @@
     (should (some? (-> @resp :body :id))))
 
   (it "Should have updated modified-time"
-    (should (some? (-> @resp :body :modified-time))))
+    (should (some? (-> @resp :body :created-time))))
 
-  (it "Should have changed :modified-by"
-    (should= "DEVELOPER" (-> @resp :body :modified-by)))
+  (it "Should have changed :created-by"
+    (should= "DEVELOPER" (-> @resp :body :created-by)))
 
   (it "Should have :content with it"
      (should= (:content fixtures/form-with-content) (-> @resp :body :content))))
