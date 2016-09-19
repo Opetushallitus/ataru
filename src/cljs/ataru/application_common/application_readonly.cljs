@@ -21,7 +21,7 @@
    [:div
     (or
       (let [values (:value ((answer-key field-descriptor) (:answers application)))]
-        (when (or (seq? (spy values)) (vector? values))
+        (when (or (seq? values) (vector? values))
           (into [:ul.application__form-field-list] (for [value values] [:li value]))))
       (textual-field-value field-descriptor application))]])
 
