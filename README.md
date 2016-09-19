@@ -31,14 +31,28 @@ docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTG
 This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
 
 ### Virkailija app
+
+Virkailija has a certain amount of configurations containing private
+secrets like passwords etc. To run it in full development mode, first
+check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
+need privileges). Then you can run:
+
 ```
-lein virkailija-dev
+config=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
 (in another terminal)
 lein figwheel virkailija-dev
 ```
-Figwheel will automatically push cljs changes to the browser.
+The above assumes that your ataru-secrets repo is checked out beside
+ataru repo. Figwheel will automatically push cljs changes to the browser.
 
 Browse to [http://localhost:8350](http://localhost:8350).
+
+You can also run a "minimal" version of the virkailija system with
+just the automated test configuration
+
+```
+config=config/test.edn lein virkailija-dev
+```
 
 ### Hakija app
 ```
