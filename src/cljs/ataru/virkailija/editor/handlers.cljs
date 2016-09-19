@@ -375,7 +375,7 @@
 
 (register-handler :editor/toggle-language
   (fn [db [_ lang]]
-    (let [lang-path [:editor :forms (-> db :editor :selected-form-id) :languages]]
+    (let [lang-path [:editor :forms (get-in db [:editor :selected-form-id]) :languages]]
       (update-in db lang-path
         (fn [languages]
           (let [languages (or languages [:fi])]
