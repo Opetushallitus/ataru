@@ -430,3 +430,13 @@ and (max-width: @desktop-content-width) {
     margin-right: 10px;
   }
 }
+
+@media print {
+  .application__banner-container {
+    display: none;
+  }
+
+  .application__form-content-area {
+    margin-top: 0;
+  }
+}
