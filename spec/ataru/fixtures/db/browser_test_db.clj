@@ -8,6 +8,7 @@
 (defqueries "sql/form-queries.sql")
 
 (def form1 {:id 1,
+            :key "foobar1",
             :name "Selaintestilomake1",
             :created-by "DEVELOPER",
             :content
@@ -23,6 +24,7 @@
               :label {:fi "Jalat", :sv "Avsnitt namn"}}]})
 
 (def form2 {:id 2,
+            :key "foobar2",
             :name "Selaintestilomake2",
             :created-by "DEVELOPER",
             :content
@@ -39,6 +41,7 @@
 
 (def application1 {:form 1,
                    :lang "fi",
+                   :key "application-key",
                    :answers
                          [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value "47",

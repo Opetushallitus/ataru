@@ -33,10 +33,10 @@
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
    [form-list-arrow-up open]
    (into [:div.application-handling__form-list-open]
-        (for [[id form] forms
-              :let [selected? (= id selected-form-key)]]
-          ^{:key id}
-          [form-list-row form selected? open]))])
+     (for [[id form] forms
+           :let      [selected? (= id selected-form-key)]]
+       ^{:key id}
+       [form-list-row form selected? open]))])
 
 (defn form-list-closed [selected-form open]
   [:div.application-handling__form-list-closed
