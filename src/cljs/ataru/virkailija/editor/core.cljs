@@ -57,11 +57,10 @@
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
-      [:section.editor-form
-       (-> (into [:form]
-             (for [[index json-blob] (zipmap (range) @content)
-                   :when             (not-empty @content)]
-               [soresu->reagent json-blob [index]]))
-           (conj [ec/drag-n-drop-spacer [(count @content)]])
-           (conj [ec/add-component (count @content)]))])))
+      (-> (into [:section.editor-form]
+            (for [[index json-blob] (zipmap (range) @content)
+                  :when             (not-empty @content)]
+              [soresu->reagent json-blob [index]]))
+        (conj [ec/drag-n-drop-spacer [(count @content)]])
+        (conj [ec/add-component (count @content)])))))
 
