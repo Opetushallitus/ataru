@@ -31,7 +31,7 @@
                           (= (:fieldClass %) "formField"))
                   (let [{:keys [uri version default-option]} (:koodisto-source %)
                         empty-option [{:value "" :label {:fi "" :sv ""}}]
-                        koodis (koodisto/get-koodi-options uri version)
+                        koodis (koodisto/get-cached-koodi-options :db uri version)
                         koodis-with-default-option (if default-option
                                                      (map (fn [option] (if (=
                                                                              default-option

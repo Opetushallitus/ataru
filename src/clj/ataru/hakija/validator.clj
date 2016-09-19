@@ -9,7 +9,7 @@
             [oph.soresu.common.koodisto :as koodisto]))
 
 (defn- allowed-koodisto-values [{:keys [uri version]}]
-  (let [koodisto-values (koodisto/get-koodi-options uri version)]
+  (let [koodisto-values (koodisto/get-cached-koodi-options :db uri version)]
     (set (mapcat #(vals (:label %)) koodisto-values))))
 
 (defn allowed-values [options]
