@@ -20,7 +20,7 @@
 
 (defn form-list-row [form selected? open]
   [:a.application-handling__form-list-row-link
-    {:href  (str "#/applications/" (:id form))}
+    {:href  (str "#/applications/" (:key form))}
    (let [row-element [:div.application-handling__form-list-row
                       {:class (if selected? "application-handling__form-list-selected-row" "")
                        :on-click (if (not selected?)
