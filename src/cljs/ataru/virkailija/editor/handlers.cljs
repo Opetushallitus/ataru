@@ -275,8 +275,9 @@
   :editor/add-form
   (fn [db _]
     (post "/lomake-editori/api/forms"
-          {:name   "Uusi lomake"
-           :content [(pm/person-info-module)]}
+          {:name      "Uusi lomake"
+           :content   [(pm/person-info-module)]
+           :languages [:fi]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
             (set-history! (str "/editor/" (:id new-or-updated-form)))

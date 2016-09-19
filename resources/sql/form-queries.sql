@@ -1,10 +1,10 @@
 -- name: yesql-get-forms-query
 -- Get all stored forms, without content
-select id, name, modified_by, modified_time from forms order by modified_time desc;
+select id, name, modified_by, modified_time, languages from forms order by modified_time desc;
 
 -- name: yesql-add-form-query<!
 -- Add form
-insert into forms (name, content, modified_by) values (:name, :content, :modified_by);
+insert into forms (name, content, modified_by, languages) values (:name, :content, :modified_by, :languages);
 
 -- name: yesql-form-exists-query
 -- Get single form
@@ -19,5 +19,6 @@ update forms set
   name = :name,
   modified_time = now(),
   modified_by = :modified_by,
-  content = cast(:content as jsonb)
+  content = cast(:content as jsonb),
+  languages = cast(:languages as jsonb)
   where id = :id;

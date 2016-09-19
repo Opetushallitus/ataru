@@ -16,16 +16,28 @@
        (transform-keys ->kebab-case-keyword)
        vec))
 
+(defn- languages->vec [form]
+  (update form :languages :languages))
+
+(defn- languages->obj [form]
+  (update form :languages
+    (fn [languages]
+      {:languages languages})))
+
 (defn get-forms []
-  (execute :db yesql-get-forms-query {}))
+  (->> (execute :db yesql-get-forms-query {})
+       (map languages->vec)))
 
 (defn- restructure-form-with-content
   "Unwraps form :content wrapper and transforms all other keys
    to kebab-case"
   [form]
-  (assoc (transform-keys ->kebab-case-keyword (dissoc form :content))
-         :content (or (-> form :content :content)
-                      [])))
+  (let [form-no-content (->> (dissoc form :content)
+                             (transform-keys ->kebab-case-keyword))
+        form (-> form-no-content
+                 (assoc :content (or (get-in form [:content :content]) []))
+                 (languages->vec))]
+    form))
 
 (defn- update-existing-form
   [existing-form modified-time form]
@@ -33,7 +45,8 @@
                        (if (= (:modified-time existing-form) modified-time)
                          (do
                            (yesql-update-form-query! form {:connection conn})
-                           (first (yesql-get-by-id form {:connection conn})))
+                           (-> (yesql-get-by-id form {:connection conn})
+                               (first)))
                          (throw (ex-info "form updated in background" {:error "form_updated_in_background"})))))
 
 (defn upsert-form [{:keys [id] :as form-with-modified-time}]
@@ -42,7 +55,8 @@
         content {:content (or (not-empty (:content form))
                               [])}
         f       (-> (transform-keys ->snake_case (dissoc form :content))
-                    (assoc :content content))]
+                    (assoc :content content)
+                    (languages->obj))]
     (restructure-form-with-content
       (let [existing-form (when id (first (execute :db yesql-get-by-id f)))]
         (if (some? existing-form)
@@ -50,6 +64,7 @@
           (exec :db yesql-add-form-query<! f))))))
 
 (defn fetch-form [id]
-  (if-let [form (first (exec :db yesql-get-by-id {:id id}))]
+  (if-let [form (-> (exec :db yesql-get-by-id {:id id})
+                    (first))]
     (restructure-form-with-content form)
     nil))
