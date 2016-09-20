@@ -105,7 +105,7 @@
                         :compiler     {:main                 "ataru.virkailija.core"
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/out"
-                                       :asset-path           "js/compiled/out"
+                                       :asset-path           "/lomake-editori/js/compiled/out"
                                        :optimizations        :none
                                        :source-map-timestamp true}}
 
@@ -115,7 +115,7 @@
                         :compiler {:main                 "ataru.hakija.core"
                                    :output-to            "resources/public/js/compiled/hakija-app.js"
                                    :output-dir           "resources/public/js/compiled/hakija-out"
-                                   :asset-path           "js/compiled/hakija-out"
+                                   :asset-path           "/hakemus/js/compiled/hakija-out"
                                    :optimizations        :none
                                    :source-map-timestamp true}}
 
