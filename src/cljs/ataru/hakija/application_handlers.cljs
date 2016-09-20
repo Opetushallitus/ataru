@@ -1,7 +1,7 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.hakija.application-validators :as validator]
-            [ataru.hakija.hakija-ajax :refer [get post]]
+            [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
@@ -14,7 +14,7 @@
    :application {:answers {}}})
 
 (defn get-latest-form-by-key [db [_ form-key]]
-  (get
+  (ajax/get
     (str "/hakemus/api/form/" form-key)
     :application/handle-form)
   db)
@@ -31,7 +31,7 @@
   handle-submit)
 
 (defn submit-application [db _]
-  (post "/hakemus/api/application"
+  (ajax/post "/hakemus/api/application"
         (create-application-to-submit (:application db) (:form db) "fi")
         :application/handle-submit-response)
   (assoc-in db [:application :submit-status] :submitting))

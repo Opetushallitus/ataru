@@ -1,6 +1,6 @@
 (ns ataru.hakija.rules
   (:require [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.hakija-ajax :refer [get]]))
+            [ataru.hakija.hakija-ajax :as ajax]))
 
 (def ^:private no-required-answer {:valid false :value ""})
 
@@ -68,7 +68,7 @@
   [db _]
   (if (-> db :application :answers :postal-code :valid)
     (let [postal-code (-> db :application :answers :postal-code :value)]
-      (get
+      (ajax/get
         (str "/hakemus/api/postal-codes/" postal-code)
         :application/handle-postal-code-input
         :application/handle-postal-code-error)
