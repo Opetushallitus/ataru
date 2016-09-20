@@ -65,10 +65,13 @@
 (defn input-field [path lang dispatch-fn {:keys [class]}]
   (let [component (subscribe [:editor/get-component-value path])
         focus?    (reaction (:focus? @component))
-        value     (reaction (get-in @component [:label lang]))]
+        value     (reaction (get-in @component [:label lang]))
+        languages (subscribe [:editor/languages])]
     (r/create-class
       {:component-did-mount (fn [component]
-                              (when @focus?
+                              (when (cond-> @focus?
+                                      (> (count @languages) 1)
+                                      (and (= (first @languages) lang)))
                                 (let [dom-node (r/dom-node component)]
                                   (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
