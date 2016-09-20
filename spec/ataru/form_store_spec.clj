@@ -6,8 +6,8 @@
             [taoensso.timbre :refer [spy debug]]))
 
 
-(def id-less (dissoc form :id))
 (def org-id  "1.2.246.562.10.2.45")
+(def id-less (-> form (dissoc :id) (assoc :organization_oid org-id)))
 
 (describe "form versioning"
   (tags :unit)
