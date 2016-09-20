@@ -15,7 +15,7 @@
   (partial re-matches #"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
 
 (defn- form-key-from-url []
-  (let [path (.. js/window -location -pathname)]
+  (let [path (cljs-util/get-path)]
     (some key-pred (clojure.string/split path #"/"))))
 
 (defn mount-root []

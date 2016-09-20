@@ -100,3 +100,6 @@
 
 (defn new-uuid []
   (uuid/uuid-string (uuid/make-random-uuid)))
+
+(defn get-path []
+  (.. js/window -location -pathname))
