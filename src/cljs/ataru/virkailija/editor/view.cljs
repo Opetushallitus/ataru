@@ -84,7 +84,7 @@
                (get lang-versions lang-kwd)
                text)]
     [:a
-     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form))
+     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form) "/" (name lang-kwd))
       :target "_blank"}
      text]))
 
