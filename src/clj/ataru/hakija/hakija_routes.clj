@@ -4,6 +4,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.email-store :as email-store]
             [ataru.hakija.validator :as validator]
+            [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
@@ -17,38 +18,15 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info warn error]]
-            [oph.soresu.common.koodisto :as koodisto]))
+            [taoensso.timbre :refer [info warn error]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
-
-(defn- populate-form-koodisto-fields
-  [form]
-  (assoc form :content
-              (clojure.walk/prewalk
-                #(if (and (:koodisto-source %)
-                          (= (:fieldType %) "dropdown")
-                          (= (:fieldClass %) "formField"))
-                  (let [{:keys [uri version default-option]} (:koodisto-source %)
-                        empty-option [{:value "" :label {:fi "" :sv ""}}]
-                        koodis       (:content (koodisto/get-cached-koodi-options :db uri version))
-                        koodis-with-default-option (if default-option
-                                                     (map (fn [option] (if (=
-                                                                             default-option
-                                                                             (-> option :label :fi))
-                                                                         (merge option {:default-value true})
-                                                                         option))
-                                                          koodis)
-                                                     koodis)]
-                    (assoc % :options (into empty-option koodis-with-default-option)))
-                  %)
-                (:content form))))
 
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
     (if form
       (-> form
-          (populate-form-koodisto-fields)
+          (koodisto/populate-form-koodisto-fields)
           (response/ok))
       (response/not-found form))))
 
@@ -89,9 +67,7 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-             (let [code (->> (:content (koodisto/get-cached-koodi-options :db "posti" 1))
-                             (filter #(= postal-code (:value %)))
-                             (first))]
+             (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
                (if-let [labels (:label code)]
                  (response/ok labels)
                  (response/not-found))))))

@@ -3,14 +3,9 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [clojure.set :refer [difference]]
-            [yesql.core :as sql]
             [clojure.core.match :refer [match]]
             [taoensso.timbre :refer [spy debug warn]]
-            [oph.soresu.common.koodisto :as koodisto]))
-
-(defn- allowed-koodisto-values [{:keys [uri version]}]
-  (let [koodisto-values (:content (koodisto/get-cached-koodi-options :db uri version))]
-    (set (mapcat #(vals (:label %)) koodisto-values))))
+            [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
   (set
@@ -66,7 +61,7 @@
          :options    options}
              (let [koodisto-source (:koodisto-source field)
                    allowed-values  (if koodisto-source
-                                     (allowed-koodisto-values koodisto-source)
+                                     (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
                                      (allowed-values options))]
                (build-results
                  answers-by-key
