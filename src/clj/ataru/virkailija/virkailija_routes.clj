@@ -92,11 +92,9 @@
                               (count organization-oids)
                               " (required: exactly one).  can't attach form to an ambiguous organization: "
                               organization-oids))))
-    (match (trying #(form-store/create-form-or-increment-version!
-                                     (first organization-oids)
-                                     (assoc form :created-by (-> session :identity :username))))
-                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request {:error "form_updated_in_background"})
-                     response response)))
+    (form-store/create-form-or-increment-version!
+     (first organization-oids)
+     (assoc form :created-by (-> session :identity :username)))))
 
 (defn- get-forms [session organization-service]
   (let [organization-oids (org-oids session)]
@@ -136,7 +134,13 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (trying #(post-form form session organization-service)))
+                   (match
+                       (trying #(post-form form session organization-service))
+                           {:status 200 :body ({:error _} :as concurrently-modified)}
+                           (bad-request {:error "form_updated_in_background"})
+
+                           response
+                           response))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
