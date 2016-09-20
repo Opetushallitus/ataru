@@ -15,7 +15,7 @@ order by created_time desc;
 
 -- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, created_by, key, languages) values (:name, :content, :created_by, :key, :languages, :organization_oid);
+insert into forms (name, content, created_by, key, languages, organization_oid) values (:name, :content, :created_by, :key, :languages, :organization_oid);
 
 -- name: yesql-get-by-id
 select id, key, name, content, created_by, created_time, languages from forms where id = :id;
