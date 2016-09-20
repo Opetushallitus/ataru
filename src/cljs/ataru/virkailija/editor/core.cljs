@@ -16,11 +16,6 @@
                                  [:editor :forms (-> @db :editor :selected-form-key) :content]
                                  path))))))
 
-(register-sub
-  :editor/languages
-  (fn [db]
-    (reaction [:fi])))
-
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div

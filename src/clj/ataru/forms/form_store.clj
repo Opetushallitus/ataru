@@ -11,20 +11,34 @@
 
 (defqueries "sql/form-queries.sql")
 
+(defn- languages->vec [form]
+  (update form :languages :languages))
+
+(defn- languages->obj [form]
+  (update form :languages
+    (fn [languages]
+      {:languages languages})))
+
 (defn- unwrap-form-content
   "Unwraps form :content wrapper and transforms all other keys
    to kebab-case"
   [form]
-  (assoc (transform-keys ->kebab-case-keyword (dissoc form :content))
-    :content (or (-> form :content :content)
-               [])))
+  (let [form-no-content (->> (dissoc form :content)
+                             (transform-keys ->kebab-case-keyword))
+        form (-> form-no-content
+                 (assoc :content (or (get-in form [:content :content]) []))
+                 (languages->vec))]
+    form))
 
 (defn- wrap-form-content
   "Wraps form :content and transforms all keys to snake_case"
   [{:keys [content] :as form}]
-  (assoc (transform-keys ->snake_case (dissoc form :content))
-    :content {:content (or content [])}))
-
+  (let [form-no-content (->> (dissoc form :content)
+                             (transform-keys ->snake_case))
+        form (-> form-no-content
+                 (assoc :content {:content (or content [])})
+                 (languages->obj))]
+    form))
 
 (defn- postprocess [result]
   (->> (if (or (seq? result) (list? result) (vector? result)) result [result])

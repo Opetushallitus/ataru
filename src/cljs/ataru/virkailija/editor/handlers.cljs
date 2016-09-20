@@ -166,13 +166,23 @@
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
 
+(defn- languages->kwd [form]
+  (update form :languages
+    (partial mapv keyword)))
+
+(defn- p [x]
+  (println x)
+  x)
+
 (defn refresh-forms []
   (http
     :get
     "/lomake-editori/api/forms"
     (fn [db {:keys [forms]}]
-      (assoc-in db [:editor :forms] (-> (util/group-by-first :key forms)
-                                        (sorted-by-time))))))
+      (assoc-in db [:editor :forms] (->> forms
+                                         (mapv languages->kwd)
+                                         (util/group-by-first :key)
+                                         (sorted-by-time))))))
 
 (register-handler
   :editor/refresh-forms
@@ -188,7 +198,7 @@
           (->
             (assoc-in db
               [:editor :forms key]
-              response)
+              (languages->kwd response))
             (assoc-in [:editor :autosave]
                       (autosave/interval-loop {:subscribe-path [:editor :forms key]
                                                :changed-predicate
@@ -255,7 +265,8 @@
             :override-args {:error-handler (fn [error]
                                              (async/put! response-chan false)
                                              (dispatch-flasher-error-msg :post error))})
-          (let [updated-form (async/<! response-chan)]
+          (let [updated-form (-> (async/<! response-chan)
+                                 (languages->kwd))]
             (when-not (false? updated-form)
               (dispatch-sync
                 [:state-update
@@ -280,11 +291,12 @@
   :editor/add-form
   (fn [db _]
     (post "/lomake-editori/api/forms"
-          {:name   "Uusi lomake"
-           :content [(pm/person-info-module)]}
+          {:name      "Uusi lomake"
+           :content   [(pm/person-info-module)]
+           :languages [:fi]}
           (fn [db new-or-updated-form]
             (autosave/stop-autosave! (-> db :editor :autosave))
-            (set-history! (str "/editor/" (:key new-or-updated-form)))
+            (set-history! (str "/editor/" (:key (languages->kwd new-or-updated-form))))
             (assoc-in db [:editor :new-form-created?] true)))
     db))
 
@@ -357,3 +369,32 @@
           (add-component-to-list component recalculated-target-path))))))
 
 (register-handler :editor/move-component move-component)
+
+(def ^:private lang-order
+  [:fi :sv :en])
+
+(defn- index-of [coll t]
+  (let [length (count coll)]
+    (loop [idx 0]
+      (cond
+        (<= length idx) -1
+        (= (get coll idx) t) idx
+        :else (recur (inc idx))))))
+
+(register-handler :editor/toggle-language
+  (fn [db [_ lang]]
+    (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
+          lang-path (conj form-path :languages)]
+      (->> (update-in db lang-path
+             (fn [languages]
+               (let [languages (or languages [:fi])]
+                 (cond
+                   (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                                           (conj languages lang))
+                   (> (count languages) 1) (filter (partial not= lang) languages)
+                   :else languages))))
+           (clojure.walk/prewalk
+             (fn [x]
+               (if (= [:focus? true] x)
+                 [:focus? false]
+                 x)))))))

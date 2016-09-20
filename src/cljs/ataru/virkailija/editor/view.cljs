@@ -60,19 +60,72 @@
                                 :placeholder "Lomakkeen nimi"
                                 :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
+(def ^:private lang-versions
+  {:fi "Suomi"
+   :sv "Ruotsi"
+   :en "Englanti"})
+
+(defn- lang-checkbox [lang-kwd checked?]
+  (let [id (str "lang-checkbox-" (name lang-kwd))]
+    [:div
+     {:key id}
+     [:input.editor-form__checkbox
+      {:id      id
+       :checked checked?
+       :type    "checkbox"
+       :on-change (fn [_]
+                    (dispatch [:editor/toggle-language lang-kwd]))}]
+     [:label.editor-form__checkbox-label.editor-form__language-toolbar-checkbox
+      {:for id}
+      (get lang-versions lang-kwd)]]))
+
+(defn- lang-kwd->link [form lang-kwd]
+  (let [text (-> lang-kwd
+                 name
+                 (clojure.string/upper-case))]
+    [:a
+     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form))
+      :target "_blank"}
+     text]))
+
+(defn language-toolbar [form]
+  (let [languages (subscribe [:editor/languages])
+        visible?  (r/atom true)]
+    (fn [form]
+      (let [languages @languages]
+        [:div.editor-form__language-toolbar-outer
+         [:div.editor-form__language-toolbar-inner
+          [:a
+           {:on-click (fn [_]
+                        (swap! visible? not)
+                        nil)}
+           "Kieliversiot "
+           [:i.zmdi.zmdi-chevron-down
+            {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
+          [:span.editor-form__language-toolbar-header-text
+           "Esikatselu: "
+           (map-indexed (fn [idx lang-kwd]
+                          (cond-> [:span
+                                   {:key idx}
+                                   (lang-kwd->link form lang-kwd)]
+                            (> (dec (count languages)) idx)
+                            (conj [:span " | "])))
+                        languages)]]
+         [:div.editor-form__language-toolbar-checkbox-container
+          (when-not @visible?
+            {:style {:display "none"}})
+          (map (fn [lang-kwd]
+                 (lang-checkbox lang-kwd (some #{lang-kwd} languages)))
+               (keys lang-versions))]]))))
+
 (defn editor-panel []
   (let [form (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
          [:div
-          [editor-name]]
-         [:div.editor-form__link-row
-          [:div
-           [:span [:a.editor-form__preview-link
-                   {:href   (str js/config.applicant.service_url "/hakemus/" (:key @form))
-                    :target "_blank"}
-                   "Esikatsele lomake"]]]]
+          [editor-name]
+          [language-toolbar @form]]
          [c/editor]]))))
 
 (defn editor []

@@ -66,14 +66,30 @@
   }
 }
 
-.editor-form__link-row {
+.editor-form__language-toolbar-outer {
   display: flex;
-  justify-content: flex-end;
+  flex-flow: column nowrap;
   margin-bottom: 15px;
+}
 
-  .editor-form__link-row--divider {
-    padding-left: 10px;
-  }
+.editor-form__language-toolbar-inner {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.editor-form__language-toolbar-checkbox-container {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+}
+
+.editor-form__language-toolbar-header-text {
+  color: @link-color;
+}
+
+.editor-form__language-toolbar-checkbox {
+  margin-right: 20px;
 }
 
 .editor-form__form-name-input {
@@ -86,11 +102,6 @@
   border-radius: 2px;
   margin: 10px 0 5px 0;
   font-weight: 600;
-}
-
-.editor-form__preview-link {
-  white-space: nowrap;
-  margin-left: 10px;
 }
 
 .editor-form__section_wrapper {
@@ -153,8 +164,14 @@ section.editor-form > div > .editor-form__component-wrapper {
   flex-basis: 390px;
 }
 
-.editor-form__text-field-wrapper__option {
-  padding: 0 14px 10px 0;
+.editor-form__text-field {
+  color: @text-color;
+  font-size: 16px;
+  border: 1px solid @section-header-text;
+  border-radius: 2px;
+  padding: 10px 14px 11px;
+  height: 43px;
+  width: 434px;
 }
 
 .editor-form__multi-question-wrapper {
@@ -164,17 +181,42 @@ section.editor-form > div > .editor-form__component-wrapper {
   flex-flow: row wrap;
 }
 
-.editor-form__multi-options_wrapper {
+.editor-form__multi-options-container {
   padding: 10px 14px 5px;
   width: 100%;
 }
 
-.editor-form__multi-option-wrapper {
+.editor-form__multi-options-wrapper-outer {
+  align-items: center;
   display: flex;
+  flex-flow: row nowrap;
+  margin-bottom: 20px;
+}
+
+.editor-form__multi-options-wrapper-inner {
+  border-right: 1px solid @section-header-text;
+  margin-right: 14px;
+}
+
+.editor-form__text-field-container {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.editor-form__multi-option-wrapper {
+  padding-right: 14px;
+}
+
+.editor-form__text-field-wrapper--with-label {
+  padding-right: 35px;
 }
 
 .editor-form__multi-option-wrapper input {
   margin-right: 10px;
+}
+
+.editor-form__multi-option-wrapper:last-child {
+  padding-bottom: 0px;
 }
 
 .editor-form__add-dropdown-item {
@@ -186,15 +228,13 @@ form > div > .editor-form__component-wrapper {
   margin-right: 0;
 }
 
-
-.editor-form__text-field {
-  color: @text-color;
-  font-size: 16px;
-  border: 1px solid @section-header-text;
-  border-radius: 2px;
-  padding: 10px 14px 11px;
-  height: 43px;
-  width: 434px;
+.editor-form__text-field-label {
+  color: @blue-text-color;
+  direction: ltr;
+  display: inline-block;
+  left: 405px;
+  top: 10px;
+  position: absolute;
 }
 
 .editor-form__text-field--section {
