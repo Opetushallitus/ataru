@@ -66,7 +66,7 @@
   (execute-with-db :db yesql-get-forms-query {:authorized_organization_oids organization-oids}))
 
 (defn get-all-forms []
-  (execute :db yesql-get-all-forms-query {}))
+  (execute yesql-get-all-forms-query {}))
 
 (defn fetch-latest-version [id & [conn]]
   (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
