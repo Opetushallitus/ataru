@@ -39,7 +39,7 @@
                                                                          (merge option {:default-value true})
                                                                          option))
                                                           koodis)
-                                                     koodis)
+                                                     koodis)]
                     (assoc % :options (into empty-option koodis-with-default-option)))
                   %)
                 (:content form))))
