@@ -4,6 +4,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.email-store :as email-store]
             [ataru.hakija.validator :as validator]
+            [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
@@ -17,15 +18,16 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info warn error]]
-            [oph.soresu.common.koodisto :as koodisto]))
+            [taoensso.timbre :refer [info warn error]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
     (if form
-      (response/ok form)
+      (-> form
+          (koodisto/populate-form-koodisto-fields)
+          (response/ok))
       (response/not-found form))))
 
 (defn- handle-application [application]
@@ -65,9 +67,7 @@
       (handle-client-error error-details))
     (api/GET "/postal-codes/:postal-code" [postal-code]
       :summary "Get name of postal office by postal code"
-             (let [code (->> (:content (koodisto/get-cached-koodi-options :db "posti" 1))
-                             (filter #(= postal-code (:value %)))
-                             (first))]
+             (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
                (if-let [labels (:label code)]
                  (response/ok labels)
                  (response/not-found))))))

@@ -9,6 +9,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -27,12 +28,8 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [schema.spec.core :as spec]
-            [com.stuartsierra.component :as component]
-            [oph.soresu.common.koodisto :as koodisto])
-  (:import [manifold.deferred.Deferred]
-           (org.joda.time DateTime)
-           (clojure.lang ExceptionInfo)))
+            [com.stuartsierra.component :as component])
+  (:import (clojure.lang ExceptionInfo)))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -154,13 +151,13 @@
                               :tags ["koodisto-api"]
                               (api/GET "/" []
                                        :return s/Any
-                                       (let [koodisto-list (koodisto/list-koodistos)]
+                                       (let [koodisto-list (koodisto/list-all-koodistos)]
                                          (ok koodisto-list)))
                               (api/GET "/:koodisto-uri/:version" [koodisto-uri version]
                                        :path-params [koodisto-uri :- s/Str version :- Long]
                                        :return s/Any
-                                       (let [koodi-options (koodisto/get-cached-koodi-options :db koodisto-uri version)]
-                                         (ok (:content koodi-options)))))))
+                                       (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
+                                         (ok koodi-options))))))
 
 (api/defroutes resource-routes
   (api/undocumented
