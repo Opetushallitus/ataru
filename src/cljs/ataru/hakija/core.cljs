@@ -11,8 +11,12 @@
 
 (enable-console-print!)
 
+(def ^:private key-pred
+  (partial re-matches #"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
+
 (defn- form-key-from-url []
-  (last (str/split (-> js/window .-location .-pathname) #"/")))
+  (let [path (.. js/window -location -pathname)]
+    (some key-pred (clojure.string/split path #"/"))))
 
 (defn mount-root []
   (reagent/render [form-view]
