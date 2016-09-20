@@ -11,11 +11,11 @@
   (assoc form :content
               (clojure.walk/prewalk
                 #(if (and (:koodisto-source %)
-                          (= (:fieldType %) "dropdown")
-                          (= (:fieldClass %) "formField"))
+                          (= (:fieldClass %) "formField")
+                          (some (fn [type] (= type (:fieldType %))) ["dropdown" "multipleChoice"]))
                   (let [{:keys [uri version default-option]} (:koodisto-source %)
-                        empty-option [{:value "" :label {:fi "" :sv ""}}]
-                        koodis       (get-koodisto-options uri version)
+                        empty-option               [{:value "" :label {:fi "" :sv ""}}]
+                        koodis                     (get-koodisto-options uri version)
                         koodis-with-default-option (if default-option
                                                      (map (fn [option] (if (=
                                                                              default-option
@@ -24,7 +24,9 @@
                                                                          option))
                                                           koodis)
                                                      koodis)]
-                    (assoc % :options (into empty-option koodis-with-default-option)))
+                    (assoc % :options (if (= (:fieldType %) "dropdown")
+                                        (into empty-option koodis-with-default-option)
+                                        koodis-with-default-option)))
                   %)
                 (:content form))))
 
