@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [taoensso.timbre :refer-macros [spy info]]
-            [ataru.cljs-util :refer [set-global-error-handler!]]
+            [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :refer [post]]
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
@@ -23,7 +23,7 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (set-global-error-handler! #(post "/hakemus/api/client-error" %))
+  (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
   (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))
