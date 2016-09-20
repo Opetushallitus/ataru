@@ -209,9 +209,10 @@
                 custom-button-id      (str dropdown-id "-custom")
                 koodisto-button-value "Koodisto"
                 koodisto-button-id    (str dropdown-id "-koodisto")]
-            [:div.editor-form__custom-koodisto-options-selector
+            [:div.editor-form__button-group
              [:input
               {:type      "radio"
+               :class     "editor-form__button editor-form__button--large"
                :value     custom-button-value
                :checked   (nil? @options-koodisto)
                :name      dropdown-id
@@ -225,6 +226,7 @@
               custom-button-value]
              [:input
               {:type      "radio"
+               :class     "editor-form__button editor-form__button--large"
                :value     koodisto-button-value
                :checked   (not (nil? @options-koodisto))
                :name      dropdown-id
