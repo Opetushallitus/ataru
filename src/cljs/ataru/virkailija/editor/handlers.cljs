@@ -381,20 +381,21 @@
         (= (get coll idx) t) idx
         :else (recur (inc idx))))))
 
-(register-handler :editor/toggle-language
-  (fn [db [_ lang]]
-    (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
-          lang-path (conj form-path :languages)]
-      (->> (update-in db lang-path
-             (fn [languages]
-               (let [languages (or languages [:fi])]
-                 (cond
-                   (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
-                                                           (conj languages lang))
-                   (> (count languages) 1) (filter (partial not= lang) languages)
-                   :else languages))))
-           (clojure.walk/prewalk
-             (fn [x]
-               (if (= [:focus? true] x)
-                 [:focus? false]
-                 x)))))))
+(defn- toggle-language [db [_ lang]]
+  (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
+        lang-path (conj form-path :languages)]
+    (->> (update-in db lang-path
+           (fn [languages]
+             (let [languages (or languages [:fi])]
+               (cond
+                 (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                                         (conj languages lang))
+                 (> (count languages) 1) (filter (partial not= lang) languages)
+                 :else languages))))
+         (clojure.walk/prewalk
+           (fn [x]
+             (if (= [:focus? true] x)
+               [:focus? false]
+               x))))))
+
+(register-handler :editor/toggle-language toggle-language)
