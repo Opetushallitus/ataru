@@ -48,11 +48,13 @@ ataru repo. Figwheel will automatically push cljs changes to the browser.
 Browse to [http://localhost:8350](http://localhost:8350).
 
 You can also run a "minimal" version of the virkailija system with
-just the automated test configuration
+just fake integrations (no organizations etc, hard-coded stuff):
 
 ```
-config=config/test.edn lein virkailija-dev
+lein virkailija-dev
 ```
+
+(Above uses config/dev.edn by default)
 
 ### Hakija app
 ```
