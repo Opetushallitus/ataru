@@ -62,30 +62,22 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
-(defn input-field
-  ([path lang args]
-   (input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang]) args))
-  ([path lang dispatch-fn args]
-   (let [value (subscribe [:editor/get-component-value path])]
-     (input-field
-       path
-       (:focus? @value)
-       (reaction (get-in @value [:label lang]))
-       dispatch-fn
-       args)))
-  ([path focus? value dispatch-fn {:keys [class]}]
-   (r/create-class
-     {:component-did-mount (fn [component]
-                             (when focus?
-                               (let [dom-node (r/dom-node component)]
-                                 (.focus dom-node))))
-      :reagent-render      (fn [_ _ _ _]
-                             [:input.editor-form__text-field
-                              (cond-> {:value     @value
-                                       :on-change dispatch-fn
-                                       :on-drop   prevent-default}
-                                (not (clojure.string/blank? class))
-                                (assoc :class class))])})))
+(defn input-field [path lang dispatch-fn {:keys [class]}]
+  (let [component (subscribe [:editor/get-component-value path])
+        focus?    (reaction (:focus? @component))
+        value     (reaction (get-in @component [:label lang]))]
+    (r/create-class
+      {:component-did-mount (fn [component]
+                              (when @focus?
+                                (let [dom-node (r/dom-node component)]
+                                  (.focus dom-node))))
+       :reagent-render      (fn [_ _ _ _]
+                              [:input.editor-form__text-field
+                               (cond-> {:value     @value
+                                        :on-change dispatch-fn
+                                        :on-drop   prevent-default}
+                                 (not (clojure.string/blank? class))
+                                 (assoc :class class))])})))
 
 (defn- input-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
   (let [multiple-languages? (> (count languages) 1)]
@@ -119,7 +111,7 @@
         [:header.editor-form__component-item-header "Kysymys"]
         (input-fields-with-lang
           (fn [lang]
-            [input-field path lang {}])
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
           @languages
           :header? true)]
        [:div.editor-form__size-button-wrapper
@@ -173,7 +165,7 @@
       (let [option-path [path :options option-index]]
         (input-fields-with-lang
           (fn [lang]
-            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang]) {}])
+            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
           languages))]
      (remove-dropdown-option-button path option-index)]))
 
@@ -194,7 +186,7 @@
            [:header.editor-form__component-item-header "Kysymys"]
            (input-fields-with-lang
              (fn [lang]
-               [input-field path lang {}])
+               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
              languages
              :header? true)]
           [:div.editor-form__checkbox-wrapper
