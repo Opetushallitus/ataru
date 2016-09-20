@@ -15,10 +15,14 @@
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
   (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (store/get-all-forms)]
+        existing-forms    (try (store/get-all-forms) (catch Exception _ []))]
     (doseq [form existing-forms]
       (let [changed-form (update-person-info-module form new-person-module)]
-        (store/upsert-form changed-form)))))
+        ; Form versioning deprecates this migration which made it into production
+        ; before form versioning. No harm done for empty databases, for existing development databases
+        ; this may or may not work. comment below expression if it doesn't :)
+        (store/create-form-or-increment-version! changed-form)
+        ))))
 
 (defn migrate
   []

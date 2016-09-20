@@ -8,8 +8,9 @@
 (defqueries "sql/form-queries.sql")
 
 (def form1 {:id 1,
+            :key "foobar1",
             :name "Selaintestilomake1",
-            :modified-by "DEVELOPER",
+            :created-by "DEVELOPER",
             :content
             [{:fieldClass "wrapperElement",
               :id "G__31",
@@ -23,8 +24,9 @@
               :label {:fi "Jalat", :sv "Avsnitt namn"}}]})
 
 (def form2 {:id 2,
+            :key "foobar2",
             :name "Selaintestilomake2",
-            :modified-by "DEVELOPER",
+            :created-by "DEVELOPER",
             :content
             [{:fieldClass "wrapperElement",
               :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
@@ -39,6 +41,7 @@
 
 (def application1 {:form 1,
                    :lang "fi",
+                   :key "application-key",
                    :answers
                          [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value "47",
@@ -46,6 +49,6 @@
                            :label {:fi "Kengännumero", :sv ""}}]})
 
 (defn init-db-fixture []
-  (form-store/upsert-form "1.2.246.562.10.0439845" form1)
-  (form-store/upsert-form "1.2.246.562.10.0439845" form2)
+  (form-store/create-form-or-increment-version! "1.2.246.562.10.0439845" form1)
+  (form-store/create-form-or-increment-version! "1.2.246.562.10.0439845" form2)
   (application-store/add-new-application application1))

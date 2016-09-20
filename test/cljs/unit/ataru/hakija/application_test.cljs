@@ -10,8 +10,8 @@
 (def form1
   {:id 37,
    :name "uusi lomake",
-   :modified-time "x",
-   :modified-by "DEVELOPER",
+   :created-time "x",
+   :created-by "DEVELOPER",
    :content [{:id "G__1",
               :label {:fi "osio1", :sv "Avsnitt namn"},
               :children [{:id "G__2",
@@ -37,8 +37,8 @@
 (def person-info-form
   {:id 22,
    :name "Testilomake",
-   :modified-by "DEVELOPER",
-   :modified-time "2016-07-15T13:48:17.815+03:00",
+   :created-by "DEVELOPER",
+   :created-time "2016-07-15T13:48:17.815+03:00",
    :content
    [{:fieldClass "wrapperElement",
      :id "5febd7b0-75f0-462c-b9a4-6cac6a4bec88",
@@ -175,8 +175,8 @@
 (def form2
   {:id 38,
    :name "toinen lomake",
-   :modified-time "y",
-   :modified-by "DEVELOPER",
+   :created-time "y",
+   :created-by "DEVELOPER",
    :content [{:id "w1",
               :label {:fi "osio1", :sv ""},
               :children [{:id "f1",

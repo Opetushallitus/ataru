@@ -37,7 +37,7 @@
             (should= expected-flat-organizations
                      (.get-all-organizations org-service-instance [test-user1-organization-oid]))
             (should= {test-user1-organization-oid  expected-flat-organizations}
-                     (into {} @(:all-orgs-cache org-service-instance)))
+                     (into {} (for [[k v] @(:all-orgs-cache org-service-instance)] [k v])))
             (should= 1 @cas-get-call-count)))))
   (it "Should get direct organizatons from organization client"
       (with-redefs [ldap/search                       fake-ldap-search
@@ -47,3 +47,4 @@
         (let [org-service-instance (create-org-service-instance)]
           (should= [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342"}]
                    (.get-direct-organizations org-service-instance "testi2editori"))))))
+

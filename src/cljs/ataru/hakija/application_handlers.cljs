@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
+            [ataru.hakija.application-validators :as validator]
             [ataru.hakija.hakija-ajax :refer [get post]]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -12,15 +13,15 @@
   {:form nil
    :application {:answers {}}})
 
-(defn get-form [db [_ form-id]]
+(defn get-latest-form-by-key [db [_ form-key]]
   (get
-    (str "/hakemus/api/form/" form-id)
+    (str "/hakemus/api/form/" form-key)
     :application/handle-form)
   db)
 
 (register-handler
-  :application/get-form
-  get-form)
+  :application/get-latest-form-by-key
+  get-latest-form-by-key)
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
@@ -59,7 +60,7 @@
   initialize-db)
 
 (defn set-application-field [db [_ key values]]
-  (let [path [:application :answers key]
+  (let [path                [:application :answers key]
         current-answer-data (get-in db path)]
     (assoc-in db path (merge current-answer-data values))))
 
@@ -109,3 +110,20 @@
     (-> db
         (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
 
+(register-handler
+  :application/toggle-multiple-choice-option
+  (fn [db [_ multiple-choice-id idx option-value validators]]
+    (let [db    (-> db
+                    (assoc-in [:application :answers multiple-choice-id :options idx :value] option-value)
+                    (update-in [:application :answers multiple-choice-id :options idx :selected] not))
+          value (->> (get-in db [:application :answers multiple-choice-id :options])
+                     (vals)
+                     (filter :selected)
+                     (map :value)
+                     (clojure.string/join ", "))
+          valid (if (not-empty validators)
+                  (every? true? (map #(validator/validate % value) validators))
+                  true)]
+      (-> db
+          (assoc-in [:application :answers multiple-choice-id :value] value)
+          (assoc-in [:application :answers multiple-choice-id :valid] valid)))))

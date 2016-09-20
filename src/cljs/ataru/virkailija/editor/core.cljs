@@ -13,13 +13,8 @@
   (fn [db [_ & path]]
     (reaction (get-in @db
                       (flatten (concat
-                                 [:editor :forms (-> @db :editor :selected-form-id) :content]
+                                 [:editor :forms (-> @db :editor :selected-form-key) :content]
                                  path))))))
-
-(register-sub
-  :editor/languages
-  (fn [db]
-    (reaction [:fi])))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
@@ -46,6 +41,9 @@
             [{:fieldClass "formField" :fieldType "dropdown"}]
             [ec/dropdown content path]
 
+            [{:fieldClass "formField" :fieldType "multipleChoice"}]
+            [ec/dropdown content path]
+
             :else (do
                     (error content)
                     (throw "error" content)))]))
@@ -54,11 +52,10 @@
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
-      [:section.editor-form
-       (-> (into [:form]
-             (for [[index json-blob] (zipmap (range) @content)
-                   :when             (not-empty @content)]
-               [soresu->reagent json-blob [index]]))
-           (conj [ec/drag-n-drop-spacer [(count @content)]])
-           (conj [ec/add-component (count @content)]))])))
+      (-> (into [:section.editor-form]
+            (for [[index json-blob] (zipmap (range) @content)
+                  :when             (not-empty @content)]
+              [soresu->reagent json-blob [index]]))
+        (conj [ec/drag-n-drop-spacer [(count @content)]])
+        (conj [ec/add-component (count @content)])))))
 

@@ -20,7 +20,7 @@
 
 (defn form-list-row [form selected? open]
   [:a.application-handling__form-list-row-link
-    {:href  (str "#/applications/" (:id form))}
+    {:href  (str "#/applications/" (:key form))}
    (let [row-element [:div.application-handling__form-list-row
                       {:class (if selected? "application-handling__form-list-selected-row" "")
                        :on-click (if (not selected?)
@@ -29,14 +29,14 @@
                       (:name form)]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
-(defn form-list-opened [forms selected-form-id open]
+(defn form-list-opened [forms selected-form-key open]
   [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
    [form-list-arrow-up open]
    (into [:div.application-handling__form-list-open]
-        (for [[id form] forms
-              :let [selected? (= id selected-form-id)]]
-          ^{:key id}
-          [form-list-row form selected? open]))])
+     (for [[id form] forms
+           :let      [selected? (= id selected-form-key)]]
+       ^{:key id}
+       [form-list-row form selected? open]))])
 
 (defn form-list-closed [selected-form open]
   [:div.application-handling__form-list-closed
@@ -46,21 +46,21 @@
 
 (defn form-list []
   (let [forms            (subscribe [:state-query [:editor :forms]])
-        selected-form-id (subscribe [:state-query [:editor :selected-form-id]])
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
         selected-form    (subscribe [:editor/selected-form])
         open             (r/atom false)]
     (fn []
       [:div.application-handling__form-list-wrapper
        (if @open
-        [form-list-opened @forms @selected-form-id open]
+        [form-list-opened @forms @selected-form-key open]
         [form-list-closed @selected-form open])])))
 
 (defn excel-download-link [applications]
-  (let [form-id (subscribe [:state-query [:editor :selected-form-id]])]
+  (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))]
     (fn [applications]
       (when (> (count applications) 0)
         [:a.application-handling__excel-download-link
-         {:href (str "/lomake-editori/api/applications/excel/" @form-id)}
+         {:href (str "/lomake-editori/api/applications/excel/" @form-key)}
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
 (defn application-list-contents [applications]
@@ -91,10 +91,8 @@
     [:span.application-handling__list-row--state "Tila"]]
    [application-list-contents applications]])
 
-(defn application-contents [selected-application]
-  (let [selected-form           (subscribe [:editor/selected-form])]
-    (fn [selected-application]
-      [readonly-contents/readonly-fields @selected-form selected-application])))
+(defn application-contents [{:keys [form application]}]
+  [readonly-contents/readonly-fields form application])
 
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
@@ -137,15 +135,15 @@
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
 (defn application-review-area [applications]
-  (let [selected-id             (subscribe [:state-query [:application :selected-id]])
-        selected-application    (subscribe [:state-query [:application :selected-application]])
-        belongs-to-current-form (fn [id applications] (first (filter #(= id (:id %)) applications)))]
+  (let [selected-id                   (subscribe [:state-query [:application :selected-id]])
+        selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
+        belongs-to-current-form       (fn [id applications] (first (filter #(= id (:id %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-id applications)
         [:div.application-handling__container.panel-content
-         [application-heading @selected-application]
+         [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
-          [application-contents @selected-application]
+          [application-contents @selected-application-and-form]
           [application-review]]]))))
 
 (defn application []
