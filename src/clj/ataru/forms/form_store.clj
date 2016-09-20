@@ -115,4 +115,4 @@
                (assoc :key (:key latest-version))
                (assoc :organization_oid organization-oid))
             conn))))
-    (create-new-form! (dissoc form :key))))
+    (create-new-form! (-> form (dissoc :key) (assoc :organization_oid organization-oid)))))
