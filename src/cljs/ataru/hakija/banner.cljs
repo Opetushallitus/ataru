@@ -64,7 +64,7 @@
 (defn wrapper-section [ws]
   (if (:valid ws)
     [:div.application__banner-wrapper-section
-     [:img.application__banner-wrapper-section-valid-img {:src "images/icon_check.png"}]
+     [:img.application__banner-wrapper-section-valid-img {:src "/hakemus/images/icon_check.png"}]
      [wrapper-section-link ws]]
     [:div.application__banner-wrapper-section.application__banner-wrapper-section-not-valid
      [wrapper-section-link ws]]))
