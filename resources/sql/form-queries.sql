@@ -1,11 +1,21 @@
--- name: yesql-get-forms
--- Get all stored forms, without content, latest version
-select id, key, name, created_by, created_time, languages from forms f where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
+-- name: yesql-get-forms-query
+-- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
+select id, key, name, created_by, created_time, languages
+from forms f
+where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
+and   (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+order by created_time desc;
+
+-- name: yesql-get-all-forms-query
+-- Get all stored forms, without content. Use the latest version.
+select id, key, name, created_by, created_time, languages
+from forms f
+where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
 order by created_time desc;
 
 -- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, created_by, key, languages) values (:name, :content, :created_by, :key, :languages);
+insert into forms (name, content, created_by, key, languages, organization_oid) values (:name, :content, :created_by, :key, :languages, :organization_oid);
 
 -- name: yesql-get-by-id
 select id, key, name, content, created_by, created_time, languages from forms where id = :id;

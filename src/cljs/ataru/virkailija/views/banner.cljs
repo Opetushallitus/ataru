@@ -6,7 +6,8 @@
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
             [cljs.core.async :as a :refer  [<! timeout]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [clojure.string :as string]))
 
 (def logo
   [:div.logo
@@ -40,18 +41,19 @@
      [section-link :application "#/applications/"]]))
 
 (defn profile []
-  (let [username         (subscribe [:state-query [:editor :user-info :username]])]
+  (let [user-info         (subscribe [:state-query [:editor :user-info]])]
     (fn []
-      (when @username
-        [:div.profile
-         [:div
-          [:p @username]
-          ;; Hidden until we get the relevant organization
-          ;; [:p "Stadin Aikuisopisto"]
-          ]
-         [:div.divider]
-         [:div
-          [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]]))))
+      (when @user-info
+        (let [org-names      (map :fi (:organization-names @user-info))
+              joint-orgs-str (string/join ", " org-names)
+              org-str        (if (empty? joint-orgs-str) "Ei organisaatiota" joint-orgs-str)]
+          [:div.profile
+           [:div
+            [:p (:username @user-info)]
+            [:p org-str]]
+           [:div.divider]
+           [:div
+            [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])

@@ -3,7 +3,7 @@
             [ataru.db.migrations :as migrations]
             [ataru.http.server :as server]
             [ataru.virkailija.user.organization-service :as organization-service]
-            [ataru.virkailija.virkailija-routes :as handler]
+            [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [environ.core :refer [env]]))
 
 (defn new-system
@@ -13,7 +13,9 @@
      (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
    (component/system-map
-     :handler        (handler/new-handler)
+    :handler        (component/using
+                     (virkailija-routes/new-handler)
+                     [:organization-service])
 
      :server-setup   {:port http-port
                       :repl-port repl-port}

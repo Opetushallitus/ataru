@@ -62,8 +62,11 @@
     (execute-with-connection conn yesql-query-fn params)
     (execute-with-db :db yesql-query-fn params)))
 
-(defn get-forms []
-  (execute-with-db :db yesql-get-forms {}))
+(defn get-forms [organization-oids]
+  (execute-with-db :db yesql-get-forms-query {:authorized_organization_oids organization-oids}))
+
+(defn get-all-forms []
+  (execute yesql-get-all-forms-query {}))
 
 (defn fetch-latest-version [id & [conn]]
   (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
@@ -99,7 +102,7 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn create-form-or-increment-version! [{:keys [id] :as form}]
+(defn create-form-or-increment-version! [organization-oid {:keys [id] :as form}]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
@@ -107,7 +110,9 @@
           {:error (str "Form with id " (:id latest-version) " created-time " (:created-time latest-version)
                     " already exists.")}
           (increment-version
-            ; use :key set in db just to be sure it never is nil
-            (assoc form :key (:key latest-version))
+           (-> form
+               ; use :key set in db just to be sure it never is nil
+               (assoc :key (:key latest-version))
+               (assoc :organization_oid organization-oid))
             conn))))
-    (create-new-form! (dissoc form :key))))
+    (create-new-form! (-> form (dissoc :key) (assoc :organization_oid organization-oid)))))
