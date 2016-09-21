@@ -38,7 +38,7 @@ check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
 need privileges). Then you can run:
 
 ```
-config=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
+CONFIG=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
 (in another terminal)
 lein figwheel virkailija-dev
 ```
