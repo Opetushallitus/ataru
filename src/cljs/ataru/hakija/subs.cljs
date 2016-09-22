@@ -25,3 +25,11 @@
 (register-sub
   :application/wrapper-sections
   wrapper-sections)
+
+(defn- form-language [db _]
+  (reaction
+    (get-in @db [:form :selected-language])))
+
+(register-sub
+  :application/form-language
+  form-language)
