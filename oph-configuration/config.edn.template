@@ -13,7 +13,7 @@
                   :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
                   :cas-client-url "{{ataru_authentication_cas_client_url}}"}
  :cas {:username "{{ataru_cas_username}}" :password "{{ataru_cas_password}}"}
- :ldap {:server "{{host_ldalp}}"
+ :ldap {:server "{{host_ldap}}"
         :port 389
         :ssl false
         :userdn "{{ldap_manager_userdn}}"
