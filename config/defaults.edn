@@ -1,4 +1,4 @@
-{:db {:database-name "ataru"
+{:db {:database-name "ataru-dev"
        :pool-name "ataru-pool"
        :username "oph"
        :password "oph"
@@ -6,5 +6,4 @@
        :port-number 5432
        :schema "public"}
  :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
- :public-config {:applicant {:service_url "http://localhost:8351"}}
- :codes-service {:url "https://itest-virkailija.oph.ware.fi/koodisto-service"}}
+ :public-config {:applicant {:service_url "http://localhost:8351"}}}

@@ -23,7 +23,7 @@ lein less auto
 Just use the postgres Docker (9.4) image:
 
 ```
-docker run -d --name oph -p 5432:5432 -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.4
+docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.4
 ```
 
 ### Run application:
@@ -31,14 +31,30 @@ docker run -d --name oph -p 5432:5432 -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=
 This will also allow you to connect to the nREPL servers of the jvm processes individually and change running code without restarting the JVM.
 
 ### Virkailija app
+
+Virkailija has a certain amount of configurations containing private
+secrets like passwords etc. To run it in full development mode, first
+check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
+need privileges). Then you can run:
+
 ```
-lein virkailija-dev
+CONFIG=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
 (in another terminal)
 lein figwheel virkailija-dev
 ```
-Figwheel will automatically push cljs changes to the browser.
+The above assumes that your ataru-secrets repo is checked out beside
+ataru repo. Figwheel will automatically push cljs changes to the browser.
 
 Browse to [http://localhost:8350](http://localhost:8350).
+
+You can also run a "minimal" version of the virkailija system with
+just fake integrations (no organizations etc, hard-coded stuff):
+
+```
+lein virkailija-dev
+```
+
+(Above uses config/dev.edn by default)
 
 ### Hakija app
 ```
@@ -54,6 +70,13 @@ figwheel process at once. You can still run both applications just fine, but the
  one will have to be either with lein cljsbuild once or auto <id>_
 
 ### Backend & browser tests
+
+Tests require a special database. Here is an example of running it
+with Docker:
+
+```
+docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.4
+```
 
 To run all tests once:
 
@@ -75,6 +98,15 @@ To run only browser tests (headless, using phantomJS):
 
 ```
 CONFIG=config/test.edn lein spec -t ui
+```
+
+Browser tests rely on having dummy implementations of certain
+backend-services, e.g. organization service. Instantiating fake
+versions of required services is configured in the normal
+edn-config-files like this:
+
+```
+:dev {:fake-dependencies true}
 ```
 
 ### Running integration tests on your browser

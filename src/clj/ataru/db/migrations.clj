@@ -15,9 +15,7 @@
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
   (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (try
-                            (store/get-forms)
-                            (catch Exception _ []))]
+        existing-forms    (try (store/get-all-forms) (catch Exception _ []))]
     (doseq [form existing-forms]
       (let [changed-form (update-person-info-module form new-person-module)]
         ; Form versioning deprecates this migration which made it into production

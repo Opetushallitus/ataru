@@ -1,9 +1,12 @@
 (ns ataru.test-utils
   (:require [ataru.virkailija.virkailija-routes :as v]
+            [ataru.virkailija.user.organization-service :as org-service]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]))
 
-(def virkailija-routes (-> (v/new-handler)
+(def virkailija-routes (->
+                        (v/new-handler)
+                        (assoc :organization-service (org-service/->FakeOrganizationService))
                         .start
                         :routes))
 

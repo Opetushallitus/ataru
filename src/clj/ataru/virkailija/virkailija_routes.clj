@@ -9,6 +9,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [ataru.virkailija.user.organization-client :refer [oph-organization]]
             [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
@@ -74,18 +75,52 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn api-routes []
+(defn- org-oids [session] (map :oid (-> session :identity :organizations)))
+
+(defn- org-names [session] (map :name (-> session :identity :organizations)))
+
+(defn- post-form [form session organization-service]
+  (let [user-name         (-> session :identity :username)
+        organization-oids (org-oids session)]
+    (if (not= 1 (count organization-oids))
+      (throw (Exception. (str "User "
+                              user-name
+                              " has the wrong amount of organizations: "
+                              (count organization-oids)
+                              " (required: exactly one).  can't attach form to an ambiguous organization: "
+                              organization-oids))))
+    (form-store/create-form-or-increment-version!
+     (first organization-oids)
+     (assoc form :created-by (-> session :identity :username)))))
+
+(defn- get-forms [session organization-service]
+  (let [organization-oids (org-oids session)]
+    ;; OPH organization members can see everything when they're given the correct privilege
+    (cond
+      (some #{oph-organization} organization-oids)
+      {:forms (form-store/get-all-forms)}
+
+      ;; If the user has no organization connected with the required user right, we'll show nothing
+      (empty? organization-oids)
+      {:forms []}
+
+      :else
+      (let [all-organizations (.get-all-organizations organization-service organization-oids)
+            all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
+        {:forms (form-store/get-forms all-oids)}))))
+
+(defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
                  (api/GET "/user-info" {session :session}
-                   (ok {:username (-> session :identity :username)}))
+                          (ok {:username (-> session :identity :username)
+                               :organization-names (org-names session)}))
 
-                 (api/GET "/forms" []
+                 (api/GET "/forms" {session :session}
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (ok
-                     {:forms (form-store/get-forms)}))
+                   (trying #(get-forms session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]
@@ -96,10 +131,13 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (match (trying #(form-store/create-form-or-increment-version!
-                                     (assoc form :created-by (-> session :identity :username))))
-                     {:status 200 :body ({:error _} :as concurrently-modified)} (bad-request {:error "form_updated_in_background"})
-                     response response))
+                   (match
+                       (trying #(post-form form session organization-service))
+                           {:status 200 :body ({:error _} :as concurrently-modified)}
+                           (bad-request {:error "form_updated_in_background"})
+
+                           response
+                           response))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -207,8 +245,8 @@
                                 (api/middleware [auth-middleware/with-authentication]
                                   resource-routes
                                   app-routes
-                                  (api-routes)
-                                  auth-routes))
+                                  (api-routes this)
+                                  (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

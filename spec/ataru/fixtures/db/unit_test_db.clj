@@ -8,7 +8,7 @@
 (defqueries "sql/dev-form-queries.sql")
 
 (defn init-db-fixture []
-  (let [{:keys [id] :as form} (form-store/create-form-or-increment-version! form-fixtures/person-info-form)]
+  (let [{:keys [id] :as form} (form-store/create-form-or-increment-version! "1.2.246.562.10.2.45" form-fixtures/person-info-form)]
     (soresu-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id form-fixtures/person-info-form)})
     form))
 

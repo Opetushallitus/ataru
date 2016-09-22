@@ -12,9 +12,14 @@
                   :opintopolku-logout-url  "{{ataru_authentication_opintopolku_logout_url}}"
                   :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
                   :cas-client-url "{{ataru_authentication_cas_client_url}}"}
+ :cas {:username "{{ataru_cas_username}}" :password "{{ataru_cas_password}}"}
+ :ldap {:server "{{host_ldalp}}"
+        :port 389
+        :ssl false
+        :userdn "{{ldap_manager_userdn}}"
+        :password "{{ldap_manager_password}}"}
  :email {:email_service_url "{{ataru_email_service_url}}"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
- :person-service {:url "{{ataru_person_service_url}}"}
- :codes-service {:url "{{ataru_codes_service_url}}"}}
+ :organization-service {:base-address " https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}}
