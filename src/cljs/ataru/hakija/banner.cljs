@@ -35,10 +35,18 @@
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (match submit-status
-         :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-         :submitted  [:div.application__sent-indicator.animated.fadeIn "Saat vahvistuksen sähköpostiisi"]
-         :else nil))
+  (let [lang (subscribe [:application/form-language])]
+    (fn [submit-status]
+      (match submit-status
+             :submitting [:div.application__sent-indicator (case @lang
+                                                             :fi "Hakemusta lähetetään"
+                                                             :sv "Ansökan skickas"
+                                                             :en "The application is being sent")]
+             :submitted [:div.application__sent-indicator.animated.fadeIn (case @lang
+                                                                            :fi "Saat vahvistuksen sähköpostiisi"
+                                                                            :sv "Du får en bekräftelse till din e-post"
+                                                                            :en "Confirmation email will be sent to the email address you've provided")]
+             :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
   (match submit-status
