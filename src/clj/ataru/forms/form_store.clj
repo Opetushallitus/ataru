@@ -102,7 +102,7 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn create-form-or-increment-version! [organization-oid {:keys [id] :as form}]
+(defn create-form-or-increment-version! [{:keys [id] :as form} organization-oid]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]

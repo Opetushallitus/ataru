@@ -90,8 +90,8 @@
                               " (required: exactly one).  can't attach form to an ambiguous organization: "
                               organization-oids))))
     (form-store/create-form-or-increment-version!
-     (first organization-oids)
-     (assoc form :created-by (-> session :identity :username)))))
+     (assoc form :created-by (-> session :identity :username))
+     (first organization-oids))))
 
 (defn- get-forms [session organization-service]
   (let [organization-oids (org-oids session)]

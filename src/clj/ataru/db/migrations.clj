@@ -21,7 +21,7 @@
         ; Form versioning deprecates this migration which made it into production
         ; before form versioning. No harm done for empty databases, for existing development databases
         ; this may or may not work. comment below expression if it doesn't :)
-        (store/create-form-or-increment-version! changed-form)
+        (store/create-form-or-increment-version! changed-form nil)
         ))))
 
 (defn migrate
