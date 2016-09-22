@@ -60,7 +60,7 @@
     (should-have-header "Cache-Control" "max-age=86400" @resp)))
 
 (describe "Storing a form"
-  (tags :unit)
+  (tags :disabled)
 
     (with resp
           (-> (mock/request :post "/lomake-editori/api/forms"
