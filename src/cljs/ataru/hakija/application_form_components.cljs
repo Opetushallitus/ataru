@@ -52,10 +52,7 @@
   (str "field-" (:id field-descriptor)))
 
 (defn- label [field-descriptor & [size-class]]
-  (let [id     (keyword (:id field-descriptor))
-        valid? (subscribe [:state-query [:application :answers id :valid]])
-        value  (subscribe [:state-query [:application :answers id :value]])
-        lang   (subscribe [:application/form-language])]
+  (let [lang (subscribe [:application/form-language])]
     (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label {:class size-class}
        [:span (str (get-in field-descriptor [:label @lang]) (required-hint field-descriptor))]
