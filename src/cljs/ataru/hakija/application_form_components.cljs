@@ -154,14 +154,13 @@
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
                   (let [label     (get-in option [:label :fi])
-                        option-id (util/component-id)
-                        value     (:value option)]
+                        option-id (util/component-id)]
                     [:div {:key option-id}
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
                        :checked   (true? (get-in options [idx :selected]))
-                       :value     value
+                       :value     label
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
                                       (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]

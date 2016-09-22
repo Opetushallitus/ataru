@@ -58,11 +58,13 @@
 
 (defn- update-options-in-dropdown-field
   [dropdown-field no-blank-option?]
-  (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
-        updated-options (-> (:options dropdown-field)
-                          (remove-empty-options)
-                          (add-blank-fn))]
-    (merge dropdown-field {:options updated-options})))
+  (if (:koodisto-source dropdown-field)
+    (assoc dropdown-field :options [{:value "" :label {:fi ""}}])
+    (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
+          updated-options (-> (:options dropdown-field)
+                              (remove-empty-options)
+                              (add-blank-fn))]
+      (merge dropdown-field {:options updated-options}))))
 
 (defn- update-dropdown-field-options
   [form]
@@ -96,6 +98,14 @@
                                 (assoc-in label-path value)
                                 (assoc-in value-path value))]
       option-updated-db)))
+
+(register-handler
+  :editor/toggle-custom-or-koodisto-options
+  (fn [db [_ options-source & path]]
+    (let [dropdown-path (current-form-content-path db [path])]
+      (case options-source
+        :koodisto (update-in db dropdown-path assoc :koodisto-source {:uri "pohjakoulutuseditori" :version 1}) ; TODO other types
+        (update-in db dropdown-path dissoc :koodisto-source)))))
 
 (defn add-validator
   [db [_ validator & path]]

@@ -88,7 +88,7 @@ function autosaveSuccessful() {
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(1)
           expect(formComponents().eq(0).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys')
-          expect(formComponents().eq(0).find('.editor-form__size-button-group input:checked').val()).to.equal('M')
+          expect(formComponents().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('M')
           expect(formComponents().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
         })
       })
@@ -96,14 +96,14 @@ function autosaveSuccessful() {
       describe('textarea', function() {
         before(
           clickComponentMenuItem('Tekstialue'),
-          clickElement(function() { return formComponents().eq(1).find('.editor-form__size-button-group div:eq(2) label')}),
+          clickElement(function() { return formComponents().eq(1).find('.editor-form__button-group div:eq(2) label')}),
           clickElement(function() { return formComponents().eq(1).find('.editor-form__checkbox-wrapper label')}),
           setTextFieldValue(function() { return formComponents().eq(1).find('.editor-form__text-field')}, 'Toinen kysymys')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(2)
           expect(formComponents().eq(1).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
-          expect(formComponents().eq(1).find('.editor-form__size-button-group input:checked').val()).to.equal('L')
+          expect(formComponents().eq(1).find('.editor-form__button-group input:checked').val()).to.equal('L')
           expect(formComponents().eq(1).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
@@ -138,13 +138,13 @@ function autosaveSuccessful() {
           clickElement(function() { return formSections().eq(0).find('.form__add-component-toolbar--list li a:contains("Tekstialue")') }),
           clickElement(function() { return formSections().eq(0).find('.editor-form__checkbox-wrapper label')}),
           setTextFieldValue(function() { return formSections().eq(0).find('.editor-form__text-field').eq(1) }, 'Osiokysymys'),
-          clickElement(function() { return formSections().eq(0).find('.editor-form__size-button-group div:eq(0) label')})
+          clickElement(function() { return formSections().eq(0).find('.editor-form__button-group div:eq(0) label')})
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(5)
           expect(formSections().eq(0).find('.editor-form__text-field').eq(0).val()).to.equal('Testiosio')
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
-          expect(formSections().eq(0).find('.editor-form__size-button-group input:checked').val()).to.equal('S')
+          expect(formSections().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('S')
           expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })

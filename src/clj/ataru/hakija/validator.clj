@@ -3,9 +3,9 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [clojure.set :refer [difference]]
-            [yesql.core :as sql]
             [clojure.core.match :refer [match]]
-            [taoensso.timbre :refer [spy debug warn]]))
+            [taoensso.timbre :refer [spy debug warn]]
+            [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
   (set
@@ -59,14 +59,17 @@
          :fieldType  "dropdown"
          :validators validators
          :options    options}
-        (let [allowed-values (allowed-values options)]
-          (build-results
-            answers-by-key
-            (concat results
-                    {id {:passed? (and (or (nil? allowed-values)
-                                           (some? (allowed-values answer)))
-                                       (passed? answer validators))}})
-            forms))
+             (let [koodisto-source (:koodisto-source field)
+                   allowed-values  (if koodisto-source
+                                     (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
+                                     (allowed-values options))]
+               (build-results
+                 answers-by-key
+                 (concat results
+                         {id {:passed? (and (or (nil? allowed-values)
+                                                (some? (allowed-values answer)))
+                                            (passed? answer validators))}})
+                 forms))
 
         {:fieldClass "formField"
          :validators validators}
