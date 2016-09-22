@@ -24,7 +24,7 @@
           (str (count (:invalid-fields valid-status)) (case @lang
                                                         :fi " pakollista tietoa puuttuu"
                                                         :sv " obligatoriska uppgifter saknas"
-                                                        :en " mandatory information is missing"))]
+                                                        :en " mandatory fields are missing"))]
           (when @show-details
             [:div
              [:div.application__invalid-fields-arrow-up]
