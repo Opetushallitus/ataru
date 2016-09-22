@@ -80,12 +80,14 @@
        [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [ws]
       [:a.application__banner-wrapper-section-link
        {:href  (str "#scroll-to-" (:id ws))
         :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
-       (get-in ws [:label @lang])])))
+       (or (get-in ws [:label @lang])
+           (get-in ws [:label @default-lang]))])))
 
 (defn wrapper-section [ws]
   (if (:valid ws)
