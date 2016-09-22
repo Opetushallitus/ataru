@@ -16,7 +16,7 @@
                              (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        "Suomi"
+        (:or "Suomi" "Finland" "Finnish")
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
