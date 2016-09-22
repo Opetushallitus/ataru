@@ -51,13 +51,14 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
-(defn- label [field-descriptor lang & [size-class]]
+(defn- label [field-descriptor & [size-class]]
   (let [id     (keyword (:id field-descriptor))
         valid? (subscribe [:state-query [:application :answers id :valid]])
-        value  (subscribe [:state-query [:application :answers id :value]])]
-    (fn [field-descriptor lang & [size-class]]
+        value  (subscribe [:state-query [:application :answers id :value]])
+        lang   (subscribe [:application/form-language])]
+    (fn [field-descriptor & [size-class]]
       [:label.application__form-field-label {:class size-class}
-       [:span (str (get-in field-descriptor [:label lang]) (required-hint field-descriptor))]
+       [:span (str (get-in field-descriptor [:label @lang]) (required-hint field-descriptor))]
        [scroll-to-anchor field-descriptor]])))
 
 (defn- show-text-field-error-class?
@@ -74,7 +75,7 @@
     (fn [field-descriptor lang & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
-         [label field-descriptor lang size-class]
+         [label field-descriptor size-class]
          [:input.application__form-text-input
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
@@ -97,7 +98,7 @@
   (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor lang]
       [div-kwd
-       [label field-descriptor lang "application__form-text-area"]
+       [label field-descriptor "application__form-text-area"]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
@@ -132,7 +133,7 @@
        :reagent-render      (fn [field-descriptor lang]
                               [div-kwd
                                {:on-change (partial textual-field-change field-descriptor)}
-                               [label field-descriptor lang "application__form-select-label"]
+                               [label field-descriptor "application__form-select-label"]
                                [:div.application__form-select-wrapper
                                 [:span.application__form-select-arrow]
                                 [:select.application__form-select
@@ -150,7 +151,7 @@
     (fn [field-descriptor lang]
       (let [options @options]
         [div-kwd
-         [label field-descriptor lang "application__form-select-label"]
+         [label field-descriptor "application__form-select-label"]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
