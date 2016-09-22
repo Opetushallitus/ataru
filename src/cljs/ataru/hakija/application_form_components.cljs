@@ -65,18 +65,19 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
-(defn text-field [field-descriptor lang & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+(defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id (keyword (:id field-descriptor))
         value (subscribe [:state-query [:application :answers id :value]])
-        valid? (subscribe [:state-query [:application :answers id :valid]])]
-    (fn [field-descriptor lang & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+        valid? (subscribe [:state-query [:application :answers id :valid]])
+        lang (subscribe [:application/form-language])]
+    (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
          [label field-descriptor size-class]
          [:input.application__form-text-input
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (get input-hint lang))
+                                 (get input-hint @lang))
                   :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
@@ -91,9 +92,9 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
-(defn text-area [field-descriptor lang & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+(defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])]
-    (fn [field-descriptor lang]
+    (fn [field-descriptor]
       [div-kwd
        [label field-descriptor "application__form-text-area"]
        [:textarea.application__form-text-input.application__form-text-area
@@ -105,48 +106,54 @@
 
 (declare render-field)
 
-(defn wrapper-field [field-descriptor children lang]
-  [:div.application__wrapper-element.application__wrapper-element--border
-   [:div.application__wrapper-heading
-    [:h2 (-> field-descriptor :label lang)]
-    [scroll-to-anchor field-descriptor]]
-   (into [:div.application__wrapper-contents]
+(defn wrapper-field [field-descriptor children]
+  (let [lang (subscribe [:application/form-language])]
+    (fn [field-descriptor children]
+      [:div.application__wrapper-element.application__wrapper-element--border
+       [:div.application__wrapper-heading
+        [:h2 (get-in field-descriptor [:label @lang])]
+        [scroll-to-anchor field-descriptor]]
+       (into [:div.application__wrapper-contents]
          (for [child children]
-           [render-field child lang]))])
+           [render-field child lang]))])))
 
-(defn row-wrapper [children lang]
+(defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
         ; flatten fields here because 'rowcontainer' may
         ; have nested fields because
         ; of validation (for example :one-of validator)
         (for [child (util/flatten-form-fields children)]
-          [render-field child lang :div-kwd :div.application__row-field.application__form-field])))
+          [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
 (defn dropdown
-  [field-descriptor lang & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])]
+  [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+  (let [application (subscribe [:state-query [:application]])
+        lang        (subscribe [:application/form-language])]
     (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor lang)
-       :reagent-render      (fn [field-descriptor lang]
-                              [div-kwd
-                               {:on-change (partial textual-field-change field-descriptor)}
-                               [label field-descriptor "application__form-select-label"]
-                               [:div.application__form-select-wrapper
-                                [:span.application__form-select-arrow]
-                                [:select.application__form-select
-                                 {:value (textual-field-value field-descriptor @application)}
-                                 (map-indexed (fn [idx option]
-                                                (let [value (get-in option [:label lang])]
-                                                  ^{:key idx}
-                                                  [:option {:value value} value]))
-                                              (:options field-descriptor))]]])})))
+      {:component-did-mount (partial init-dropdown-value field-descriptor @lang)
+       :reagent-render      (fn [field-descriptor]
+                              (let [lang @lang]
+                                [div-kwd
+                                 {:on-change (partial textual-field-change field-descriptor)}
+                                 [label field-descriptor "application__form-select-label"]
+                                 [:div.application__form-select-wrapper
+                                  [:span.application__form-select-arrow]
+                                  [:select.application__form-select
+                                   {:value (textual-field-value field-descriptor @application)}
+                                   (map-indexed (fn [idx option]
+                                                  (let [value (get-in option [:label lang])]
+                                                    ^{:key idx}
+                                                    [:option {:value value} value]))
+                                                (:options field-descriptor))]]]))})))
 
 (defn multiple-choice
-  [field-descriptor lang & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+  [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
-        options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])]
-    (fn [field-descriptor lang]
-      (let [options @options]
+        options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])
+        lang               (subscribe [:application/form-language])]
+    (fn [field-descriptor]
+      (let [options @options
+            lang    @lang]
         [div-kwd
          [label field-descriptor "application__form-select-label"]
          [:div.application__form-outer-checkbox-container
@@ -170,30 +177,30 @@
                 (:options field-descriptor))]]]))))
 
 (defn render-field
-  [field-descriptor lang & args]
+  [field-descriptor & args]
   (let [ui (subscribe [:state-query [:application :ui]])
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
-    (fn [field-descriptor lang & args]
+    (fn [field-descriptor & args]
       (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
         (cond-> (match field-descriptor
                        {:fieldClass "wrapperElement"
                         :fieldType  "fieldset"
-                        :children   children} [wrapper-field field-descriptor children lang]
+                        :children   children} [wrapper-field field-descriptor children]
                        {:fieldClass "wrapperElement"
                         :fieldType  "rowcontainer"
-                        :children   children} [row-wrapper children lang]
+                        :children   children} [row-wrapper children]
                        {:fieldClass "formField"
                         :id         (_ :guard (complement visible?))} [:div]
 
-                       {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor lang :disabled disabled?]
-                       {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor lang]
-                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor lang]
-                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor lang])
+                       {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
+                       {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 
-(defn editable-fields [{:keys [selected-language] :as form-data}]
+(defn editable-fields [form-data]
   (when form-data
     (into [:div] (for [content (:content form-data)]
-                   [render-field content selected-language]))))
+                   [render-field content]))))
