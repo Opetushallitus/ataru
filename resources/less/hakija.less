@@ -192,12 +192,26 @@
   margin-left: 5px;
   opacity: 0.7;
 }
+.application__header-container {
+  align-items: flex-end;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  margin-top: 40px;
+}
 .application__header {
   font-size: 24px;
   font-weight: 400;
   color: #2A2A2A;
-  margin-bottom: 20px;
-  margin-top: 40px;
+  margin: 0px;
+}
+.application__header-text {
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+.application__header-language-link-separator {
+  color: @gray;
 }
 .application__wrapper-element {
   margin-bottom: 32px;
@@ -410,8 +424,9 @@ and (max-width: @desktop-content-width) {
   .application__invalid-fields {
     left: -29px;
   }
-  .application__header {
+  .application__header-container {
     margin-left: 10px;
+    margin-right: 10px;
     margin-top: 20px;
   }
   .application__form-content-area {
