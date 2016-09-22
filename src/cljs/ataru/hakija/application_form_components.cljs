@@ -137,10 +137,11 @@
                                 [:span.application__form-select-arrow]
                                 [:select.application__form-select
                                  {:value (textual-field-value field-descriptor @application)}
-                                 (for [option (:options field-descriptor)]
-                                   (let [value (get-in option [:label lang])]
-                                     ^{:key value}
-                                     [:option {:value value} value]))]]])})))
+                                 (map-indexed (fn [idx option]
+                                                (let [value (get-in option [:label lang])]
+                                                  ^{:key idx}
+                                                  [:option {:value value} value]))
+                                              (:options field-descriptor))]]])})))
 
 (defn multiple-choice
   [field-descriptor lang & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
