@@ -52,11 +52,14 @@
   (str "field-" (:id field-descriptor)))
 
 (defn- label [field-descriptor & [size-class]]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor & [size-class]]
-      [:label.application__form-field-label {:class size-class}
-       [:span (str (get-in field-descriptor [:label @lang]) (required-hint field-descriptor))]
-       [scroll-to-anchor field-descriptor]])))
+      (let [label (or (get-in field-descriptor [:label @lang])
+                      (get-in field-descriptor [:label @default-lang]))]
+        [:label.application__form-field-label {:class size-class}
+         [:span (str label (required-hint field-descriptor))]
+         [scroll-to-anchor field-descriptor]]))))
 
 (defn- show-text-field-error-class?
   [field-descriptor value valid?]
@@ -66,10 +69,11 @@
     (validator/validate "required" value)))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-  (let [id (keyword (:id field-descriptor))
-        value (subscribe [:state-query [:application :answers id :value]])
-        valid? (subscribe [:state-query [:application :answers id :valid]])
-        lang (subscribe [:application/form-language])]
+  (let [id           (keyword (:id field-descriptor))
+        value        (subscribe [:state-query [:application :answers id :value]])
+        valid?       (subscribe [:state-query [:application :answers id :valid]])
+        lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
@@ -77,7 +81,8 @@
          [:input.application__form-text-input
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (get input-hint @lang))
+                                 (or (get input-hint @lang)
+                                     (get input-hint @default-lang)))
                   :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
@@ -107,15 +112,18 @@
 (declare render-field)
 
 (defn wrapper-field [field-descriptor children]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor children]
-      [:div.application__wrapper-element.application__wrapper-element--border
-       [:div.application__wrapper-heading
-        [:h2 (get-in field-descriptor [:label @lang])]
-        [scroll-to-anchor field-descriptor]]
-       (into [:div.application__wrapper-contents]
-         (for [child children]
-           [render-field child lang]))])))
+      (let [label (or (get-in field-descriptor [:label @lang])
+                      (get-in field-descriptor [:label @default-lang]))]
+        [:div.application__wrapper-element.application__wrapper-element--border
+         [:div.application__wrapper-heading
+          [:h2 label]
+          [scroll-to-anchor field-descriptor]]
+         (into [:div.application__wrapper-contents]
+           (for [child children]
+             [render-field child lang]))]))))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
@@ -127,12 +135,14 @@
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        lang        (subscribe [:application/form-language])]
+  (let [application  (subscribe [:state-query [:application]])
+        lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang)
        :reagent-render      (fn [field-descriptor]
-                              (let [lang @lang]
+                              (let [lang         @lang
+                                    default-lang @default-lang]
                                 [div-kwd
                                  {:on-change (partial textual-field-change field-descriptor)}
                                  [label field-descriptor "application__form-select-label"]
@@ -141,7 +151,8 @@
                                   [:select.application__form-select
                                    {:value (textual-field-value field-descriptor @application)}
                                    (map-indexed (fn [idx option]
-                                                  (let [value (get-in option [:label lang])]
+                                                  (let [value (or (get-in option [:label lang])
+                                                                  (get-in option [:label default-lang]))]
                                                     ^{:key idx}
                                                     [:option {:value value} value]))
                                                 (:options field-descriptor))]]]))})))
@@ -150,16 +161,19 @@
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
         options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])
-        lang               (subscribe [:application/form-language])]
+        lang               (subscribe [:application/form-language])
+        default-lang       (subscribe [:application/default-language])]
     (fn [field-descriptor]
-      (let [options @options
-            lang    @lang]
+      (let [options      @options
+            lang         @lang
+            default-lang @default-lang]
         [div-kwd
          [label field-descriptor "application__form-select-label"]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
-                  (let [label     (get-in option [:label lang])
+                  (let [label     (or (get-in option [:label lang])
+                                      (get-in option [:label default-lang]))
                         option-id (util/component-id)]
                     [:div {:key option-id}
                      [:input.application__form-checkbox
