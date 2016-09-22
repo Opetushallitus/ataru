@@ -49,14 +49,22 @@
              :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (match submit-status
-         :submitted [:div.application__sent-placeholder.animated.fadeIn
-                     [:i.zmdi.zmdi-check]
-                     [:span.application__sent-placeholder-text "Hakemus lähetetty"]]
-         :else      [:button.application__send-application-button
-                      {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
-                       :on-click #(dispatch [:application/submit-form])}
-                      "LÄHETÄ HAKEMUS"]))
+  (let [lang (subscribe [:application/form-language])]
+    (fn [valid-status submit-status]
+      (match submit-status
+             :submitted [:div.application__sent-placeholder.animated.fadeIn
+                         [:i.zmdi.zmdi-check]
+                         [:span.application__sent-placeholder-text (case @lang
+                                                                     :fi "Hakemus lähetetty"
+                                                                     :sv "Ansökan skickas"
+                                                                     :en "The application has been sent")]]
+             :else [:button.application__send-application-button
+                    {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
+                     :on-click #(dispatch [:application/submit-form])}
+                    (case @lang
+                      :fi "LÄHETÄ HAKEMUS"
+                      :sv "SKICKA ANSÖKAN"
+                      :en "SEND APPLICATION")]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
