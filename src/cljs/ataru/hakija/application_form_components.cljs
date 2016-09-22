@@ -18,6 +18,11 @@
          "L" "application__form-text-input__size-large"
          :else "application__form-text-input__size-medium"))
 
+(defn- non-blank-val [val default]
+  (if-not (clojure.string/blank? val)
+    val
+    default))
+
 (defn- field-value-valid?
   [field-data value]
   (if (not-empty (:validators field-data))
@@ -55,8 +60,8 @@
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor & [size-class]]
-      (let [label (or (get-in field-descriptor [:label @lang])
-                      (get-in field-descriptor [:label @default-lang]))]
+      (let [label (non-blank-val (get-in field-descriptor [:label @lang])
+                                 (get-in field-descriptor [:label @default-lang]))]
         [:label.application__form-field-label {:class size-class}
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
@@ -81,8 +86,8 @@
          [:input.application__form-text-input
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (or (get input-hint @lang)
-                                     (get input-hint @default-lang)))
+                                 (non-blank-val (get input-hint @lang)
+                                                (get input-hint @default-lang)))
                   :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
@@ -115,8 +120,8 @@
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor children]
-      (let [label (or (get-in field-descriptor [:label @lang])
-                      (get-in field-descriptor [:label @default-lang]))]
+      (let [label (non-blank-val (get-in field-descriptor [:label @lang])
+                                 (get-in field-descriptor [:label @default-lang]))]
         [:div.application__wrapper-element.application__wrapper-element--border
          [:div.application__wrapper-heading
           [:h2 label]
@@ -151,8 +156,8 @@
                                   [:select.application__form-select
                                    {:value (textual-field-value field-descriptor @application)}
                                    (map-indexed (fn [idx option]
-                                                  (let [value (or (get-in option [:label lang])
-                                                                  (get-in option [:label default-lang]))]
+                                                  (let [value (non-blank-val (get-in option [:label lang])
+                                                                             (get-in option [:label default-lang]))]
                                                     ^{:key idx}
                                                     [:option {:value value} value]))
                                                 (:options field-descriptor))]]]))})))
@@ -172,8 +177,8 @@
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
-                  (let [label     (or (get-in option [:label lang])
-                                      (get-in option [:label default-lang]))
+                  (let [label     (non-blank-val (get-in option [:label lang])
+                                                 (get-in option [:label default-lang]))
                         option-id (util/component-id)]
                     [:div {:key option-id}
                      [:input.application__form-checkbox
