@@ -13,13 +13,17 @@
 
 (defn invalid-field-status [valid-status]
   (let [show-details (r/atom false)
-        toggle-show-details #(do (reset! show-details (not @show-details)) nil)]
+        toggle-show-details #(do (reset! show-details (not @show-details)) nil)
+        lang (subscribe [:application/form-language])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
-          (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")]
+          (str (count (:invalid-fields valid-status)) (case @lang
+                                                        :fi " pakollista tietoa puuttuu"
+                                                        :sv " obligatoriska uppgifter saknas"
+                                                        :en " mandatory information is missing"))]
           (when @show-details
             [:div
              [:div.application__invalid-fields-arrow-up]
@@ -27,7 +31,7 @@
                     [:span.application__close-invalid-fields
                      {:on-click toggle-show-details}
                      "x"]]
-                (mapv (fn [field] [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (-> field :label :fi)]])
+                (mapv (fn [field] [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (get-in field [:label @lang])]])
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
