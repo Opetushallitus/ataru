@@ -28,7 +28,9 @@
 
 (defn- form-language [db _]
   (reaction
-    (get-in @db [:form :selected-language])))
+    (or
+      (get-in @db [:form :selected-language])
+      :fi))) ; When user lands on the page, there isn't any language set until the form is loaded
 
 (register-sub
   :application/form-language
