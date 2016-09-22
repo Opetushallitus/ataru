@@ -101,8 +101,8 @@
                    :body [form ataru-schema/FormWithContent]
                    (match
                        (trying #(access-controlled-form/post-form form session organization-service))
-                           {:status 200 :body ({:error _} :as concurrently-modified)}
-                           (bad-request {:error "form_updated_in_background"})
+                           {:status 200 :body ({:error error-code} :as explicit-error)}
+                           (bad-request {:error error-code})
 
                            response
                            response))
