@@ -14,7 +14,8 @@
 (defn invalid-field-status [valid-status]
   (let [show-details (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
-        lang (subscribe [:application/form-language])]
+        lang (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
@@ -31,7 +32,10 @@
                     [:span.application__close-invalid-fields
                      {:on-click toggle-show-details}
                      "x"]]
-                (mapv (fn [field] [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (get-in field [:label @lang])]])
+                (mapv (fn [field]
+                        (let [label (or (get-in field [:label @lang])
+                                        (get-in field [:label @default-lang]))]
+                          [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
