@@ -35,3 +35,13 @@
 (register-sub
   :application/form-language
   form-language)
+
+(defn- default-language [db _]
+  (-> @db
+      (get-in [:form :languages])
+      first
+      reaction))
+
+(register-sub
+  :application/default-language
+  default-language)
