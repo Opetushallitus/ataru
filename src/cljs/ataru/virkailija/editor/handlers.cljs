@@ -100,12 +100,16 @@
       option-updated-db)))
 
 (register-handler
-  :editor/toggle-custom-or-koodisto-options
-  (fn [db [_ options-source & path]]
+  :editor/select-custom-multi-options
+  (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path])]
-      (case options-source
-        :koodisto (update-in db dropdown-path assoc :koodisto-source {:uri "pohjakoulutuseditori" :version 1}) ; TODO other types
-        (update-in db dropdown-path dissoc :koodisto-source)))))
+      (update-in db dropdown-path dissoc :koodisto-source))))
+
+(register-handler
+  :editor/select-koodisto-options
+  (fn [db [_ uri version title & path]]
+    (let [dropdown-path (current-form-content-path db [path])]
+      (update-in db dropdown-path assoc :koodisto-source {:uri uri :version version :title title}))))
 
 (defn add-validator
   [db [_ validator & path]]
