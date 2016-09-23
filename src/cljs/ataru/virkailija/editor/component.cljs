@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
+            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
@@ -240,16 +241,24 @@
                :class "editor-form-button--right-edge"}
               koodisto-button-value]
              (when @koodisto-popover-expanded?
-               [:ul.editor-form__custom-koodisto-options-popover
-                (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
-                         ^{:key (str "koodisto-" uri)}
-                         [:li
-                          [:a {:href                  "#"
-                               :on-click              (fn [e]
-                                                        (.preventDefault e)
-                                                        (reset! koodisto-popover-expanded? false)
-                                                        (dispatch [:editor/select-koodisto-options uri version title path]))}
-                           title]]))])])
+               [:div.editor-form__koodisto-popover
+                [:div.editor-form__koodisto-popover-header "Koodisto"
+                 [:a.editor-form__koodisto-popover-close
+                  {:href     "#"
+                   :on-click (fn [e]
+                               (.preventDefault e)
+                               (reset! koodisto-popover-expanded? false))}
+                  [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+                [:ul.editor-form__koodisto-popover-list
+                 (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+                          ^{:key (str "koodisto-" uri)}
+                          [:li.editor-form__koodisto-popover-list-item
+                           [:a.editor-form__koodisto-popover-link {:href     "#"
+                                                                   :on-click (fn [e]
+                                                                               (.preventDefault e)
+                                                                               (reset! koodisto-popover-expanded? false)
+                                                                               (dispatch [:editor/select-koodisto-options uri version title path]))}
+                            title]]))]])])
 
           (when (nil? @options-koodisto)
             (seq [
