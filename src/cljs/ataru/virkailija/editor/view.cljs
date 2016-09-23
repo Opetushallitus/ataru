@@ -79,10 +79,10 @@
       {:for id}
       (get lang-versions lang-kwd)]]))
 
-(defn- lang-kwd->link [form lang-kwd]
-  (let [text (-> lang-kwd
-                 name
-                 (clojure.string/upper-case))]
+(defn- lang-kwd->link [form lang-kwd & [text]]
+  (let [text (if (nil? text)
+               (get lang-versions lang-kwd)
+               text)]
     [:a
      {:href   (str js/config.applicant.service_url "/hakemus/" (:key form))
       :target "_blank"}
@@ -103,14 +103,17 @@
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
           [:span.editor-form__language-toolbar-header-text
-           "Esikatselu: "
-           (map-indexed (fn [idx lang-kwd]
-                          (cond-> [:span
-                                   {:key idx}
-                                   (lang-kwd->link form lang-kwd)]
-                            (> (dec (count languages)) idx)
-                            (conj [:span " | "])))
-                        languages)]]
+           (if (= (count languages) 1)
+             (lang-kwd->link form (first languages) "Esikatselu")
+             [:span
+              "Esikatselu: "
+              (map-indexed (fn [idx lang-kwd]
+                             (cond-> [:span
+                                      {:key idx}
+                                      (lang-kwd->link form lang-kwd)]
+                               (> (dec (count languages)) idx)
+                               (conj [:span " | "])))
+                           languages)])]]
          [:div.editor-form__language-toolbar-checkbox-container
           (when-not @visible?
             {:style {:display "none"}})
