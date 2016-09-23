@@ -5,14 +5,23 @@
             [ajax.core :refer [GET POST PUT DELETE]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(def ^:private
+  error-messages
+  {"form_updated_in_background"      "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
+   "no_organization_for_user"        "Käyttäjätunnukseen ei ole liitetty organisaatota"
+   "multiple_organizations_for_user" "Käyttäjätunnukselle löytyi monta organisaatiota"})
+
 (defn dispatch-flasher-error-msg
   [method response]
-  (let [error-type (if (and (= 400 (:status response))
-                         (= (-> response :response :error) "form_updated_in_background"))
-                     :concurrent-edit
+  (let [response-error-code (-> response :response :error)
+        explicit-error-message (get error-messages response-error-code)
+        error-type (if (and (= 400 (:status response))
+                            (not-empty response-error-code)
+                            (not-empty explicit-error-message))
+                     :explicit-error
                      :server-error)
         message (case error-type
-                  :concurrent-edit "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
+                  :explicit-error explicit-error-message
                   :server-error (str "Virhe "
                                      (case method
                                        :get "haettaessa."
@@ -47,7 +56,6 @@
                                         (dispatch [:flasher {:loading? false
                                                              :message
                                                                        (match [method]
-                                                                              [:put] "Kaikki muutokset tallennettu"
                                                                               [:post] "Kaikki muutokset tallennettu"
                                                                               [:delete] "Tiedot poistettu"
                                                                               :else nil)}])

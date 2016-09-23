@@ -6,7 +6,7 @@
             [clj-time.core :as t]
             [oph.soresu.common.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
-            [taoensso.timbre :refer [spy debug]])
+            [taoensso.timbre :refer [warn]])
   (:import [java.util UUID]))
 
 (defqueries "sql/form-queries.sql")
@@ -102,13 +102,18 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn create-form-or-increment-version! [organization-oid {:keys [id] :as form}]
+(defn create-form-or-increment-version! [{:keys [id] :as form} organization-oid]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
         (if (latest-version-not-same? form latest-version)
-          {:error (str "Form with id " (:id latest-version) " created-time " (:created-time latest-version)
-                    " already exists.")}
+          (do
+            (warn (str "Form with id "
+                        (:id latest-version)
+                        " created-time "
+                        (:created-time latest-version)
+                        " already exists."))
+            {:error "form_updated_in_background"})
           (increment-version
            (-> form
                ; use :key set in db just to be sure it never is nil

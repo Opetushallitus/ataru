@@ -9,7 +9,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
-            [ataru.virkailija.user.organization-client :refer [oph-organization]]
+            [ataru.virkailija.user.form-access-control :as access-controlled-form]
             [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
@@ -75,39 +75,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn- org-oids [session] (map :oid (-> session :identity :organizations)))
-
 (defn- org-names [session] (map :name (-> session :identity :organizations)))
-
-(defn- post-form [form session organization-service]
-  (let [user-name         (-> session :identity :username)
-        organization-oids (org-oids session)]
-    (if (not= 1 (count organization-oids))
-      (throw (Exception. (str "User "
-                              user-name
-                              " has the wrong amount of organizations: "
-                              (count organization-oids)
-                              " (required: exactly one).  can't attach form to an ambiguous organization: "
-                              organization-oids))))
-    (form-store/create-form-or-increment-version!
-     (first organization-oids)
-     (assoc form :created-by (-> session :identity :username)))))
-
-(defn- get-forms [session organization-service]
-  (let [organization-oids (org-oids session)]
-    ;; OPH organization members can see everything when they're given the correct privilege
-    (cond
-      (some #{oph-organization} organization-oids)
-      {:forms (form-store/get-all-forms)}
-
-      ;; If the user has no organization connected with the required user right, we'll show nothing
-      (empty? organization-oids)
-      {:forms []}
-
-      :else
-      (let [all-organizations (.get-all-organizations organization-service organization-oids)
-            all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
-        {:forms (form-store/get-forms all-oids)}))))
 
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
@@ -120,7 +88,7 @@
                  (api/GET "/forms" {session :session}
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (trying #(get-forms session organization-service)))
+                   (trying #(access-controlled-form/get-forms session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]
@@ -132,9 +100,9 @@
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
                    (match
-                       (trying #(post-form form session organization-service))
-                           {:status 200 :body ({:error _} :as concurrently-modified)}
-                           (bad-request {:error "form_updated_in_background"})
+                       (trying #(access-controlled-form/post-form form session organization-service))
+                           {:status 200 :body ({:error error-code} :as explicit-error)}
+                           (bad-request {:error error-code})
 
                            response
                            response))

@@ -81,7 +81,7 @@ docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POS
 To run all tests once:
 
 ```
-CONFIG=config/test.edn lein spec
+lein spec
 ```
 
 To run them automatically whenever code changes, use `-a`.
@@ -89,7 +89,7 @@ To run them automatically whenever code changes, use `-a`.
 ### Backend unit tests
 
 ```
-CONFIG=config/test.edn lein spec -t unit
+lein spec -t unit
 ```
 
 ### Browser integration tests
@@ -97,7 +97,7 @@ CONFIG=config/test.edn lein spec -t unit
 To run only browser tests (headless, using phantomJS):
 
 ```
-CONFIG=config/test.edn lein spec -t ui
+lein spec -t ui
 ```
 
 Browser tests rely on having dummy implementations of certain
@@ -117,7 +117,7 @@ edn-config-files like this:
 Note that this assumes a blank database on which to run and create new data to! In other words, you might want to:
 
 * Create a test database (see `config/test.edn` for details)
-* Run your development server with the test profile: `CONFIG=config/test.edn lein virkailija-dev`
+* Run your development server with the test profile: `lein virkailija-dev` (uses `config/dev.edn` settings)
 * Wipe the test db between each test run (`lein spec -t ui` will do this automatically).
 
 Alternatively, you can e.g. use Mocha's grep utility to run only the desired tests.

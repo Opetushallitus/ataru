@@ -42,6 +42,7 @@
   (it "Should get direct organizatons from organization client"
       (with-redefs [ldap/search                       fake-ldap-search
                     ataru-ldap/create-ldap-connection fake-create-connection
+                    cas-client/new-client             {}
                     cas-client/cas-authenticated-get  fake-cas-auth-organization
                     config                            fake-config]
         (let [org-service-instance (create-org-service-instance)]
