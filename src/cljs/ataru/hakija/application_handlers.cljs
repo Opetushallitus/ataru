@@ -33,7 +33,7 @@
 
 (defn submit-application [db _]
   (ajax/post "/hakemus/api/application"
-        (create-application-to-submit (:application db) (:form db) "fi")
+        (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
         :application/handle-submit-response)
   (assoc-in db [:application :submit-status] :submitting))
 
