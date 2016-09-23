@@ -14,7 +14,7 @@
                                                                        textual-field-value
                                                                        scroll-to-anchor]]))
 
-(defn text [application field-descriptor]
+(defn text [field-descriptor application]
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label :fi) (required-hint field-descriptor))]
@@ -47,7 +47,7 @@
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application children]
          {:fieldClass "formField" :exclude-from-answers true} nil
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text application content)))
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text content application)))
 
 (defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
