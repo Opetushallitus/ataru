@@ -15,18 +15,22 @@
   (let [selected-lang (:selected-language form)
         languages     (filter
                         (partial not= selected-lang)
-                        (:languages form))]
-    [:div.application__header-container
-     [:span.application__header (:name form)]
-     (when (> (count languages) 1)
-       [:span.application__header-text
-        (map-indexed (fn [idx lang]
-                       (cond-> [:span {:key (name lang)}
-                                [:a {:href (str "/hakemus/" (:key form) "/" (name lang))}
-                                 (get language-names lang)]]
-                         (> (dec (count languages)) idx)
-                         (conj [:span.application__header-language-link-separator " | "])))
-                     languages)])]))
+                        (:languages form))
+        submit-status (subscribe [:state-query [:application :submit-status]])]
+    (fn [form]
+      (println @submit-status)
+      [:div.application__header-container
+       [:span.application__header (:name form)]
+       (when (and (not= :submitted @submit-status)
+                  (> (count languages) 1))
+         [:span.application__header-text
+          (map-indexed (fn [idx lang]
+                         (cond-> [:span {:key (name lang)}
+                                  [:a {:href (str "/hakemus/" (:key form) "/" (name lang))}
+                                   (get language-names lang)]]
+                           (> (dec (count languages)) idx)
+                           (conj [:span.application__header-language-link-separator " | "])))
+                       languages)])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
