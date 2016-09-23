@@ -40,18 +40,6 @@
                  manifold.deferred.Deferred
                  (render [d _] d))
 
-;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
-
-(defn trying [f]
-  (try (if-let [result (f)]
-         (ok result)
-         (not-found))
-       (catch ExceptionInfo e
-         (bad-request (-> e ex-data)))
-       (catch Exception e
-         (error e)
-         (internal-server-error))))
-
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (api/defroutes app-routes
@@ -88,24 +76,23 @@
                  (api/GET "/forms" {session :session}
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (trying #(access-controlled-form/get-forms session organization-service)))
+                   (ok (access-controlled-form/get-forms session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]
                           :return ataru-schema/FormWithContent
                           :summary "Get content for form"
-                          (trying #(form-store/fetch-form id)))
+                          (ok (form-store/fetch-form id)))
 
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (match
-                       (trying #(access-controlled-form/post-form form session organization-service))
-                           {:status 200 :body ({:error error-code} :as explicit-error)}
-                           (bad-request {:error error-code})
+                   (match (access-controlled-form/post-form form session organization-service)
+                     {:error error-code}
+                     (bad-request {:error error-code})
 
-                           response
-                           response))
+                     response
+                     (ok response)))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -121,7 +108,7 @@
                            :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (trying (fn [] {:applications (application-store/get-application-list formKey)})))
+                           (ok {:applications (application-store/get-application-list formKey)}))
 
                   (api/GET "/:application-id" []
                            :path-params [application-id :- Long]
@@ -130,20 +117,20 @@
                                     :events      [ataru-schema/Event]
                                     :review      ataru-schema/Review
                                     :form        ataru-schema/FormWithContent}
-                           (trying (fn []
-                                     (let [application (application-store/get-application application-id)
-                                           form        (form-store/fetch-by-id (:form application))]
-                                       {:application application
-                                        :form        form
-                                        :events      (application-store/get-application-events application-id)
-                                        :review      (application-store/get-application-review application-id)}))))
+                           (ok
+                            (let [application (application-store/get-application application-id)
+                                  form        (form-store/fetch-by-id (:form application))]
+                              {:application application
+                               :form        form
+                               :events      (application-store/get-application-events application-id)
+                               :review      (application-store/get-application-review application-id)})))
 
                    (api/PUT "/review" []
                             :summary "Update existing application review"
                             :body [review s/Any]
-                            (trying (fn []
-                                      (application-store/save-application-review review)
-                                      {})))
+                            (ok
+                             (application-store/save-application-review review)
+                             {}))
 
                    (api/GET "/excel/:form-key" []
                      :path-params [form-key :- s/Str]
