@@ -56,13 +56,13 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
-(defn- label [field-descriptor & [size-class]]
+(defn- label [field-descriptor]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])]
-    (fn [field-descriptor & [size-class]]
+    (fn [field-descriptor]
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
-        [:label.application__form-field-label {:class size-class}
+        [:label.application__form-field-label
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
 
@@ -82,7 +82,7 @@
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
         [div-kwd
-         [label field-descriptor size-class]
+         [label field-descriptor]
          [:input.application__form-text-input
           (merge {:type        "text"
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
@@ -106,7 +106,7 @@
   (let [application (subscribe [:state-query [:application]])]
     (fn [field-descriptor]
       [div-kwd
-       [label field-descriptor "application__form-text-area"]
+       [label field-descriptor]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
@@ -150,7 +150,7 @@
                                     default-lang @default-lang]
                                 [div-kwd
                                  {:on-change (partial textual-field-change field-descriptor)}
-                                 [label field-descriptor "application__form-select-label"]
+                                 [label field-descriptor]
                                  [:div.application__form-select-wrapper
                                   [:span.application__form-select-arrow]
                                   [:select.application__form-select
@@ -173,7 +173,7 @@
             lang         @lang
             default-lang @default-lang]
         [div-kwd
-         [label field-descriptor "application__form-select-label"]
+         [label field-descriptor]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
