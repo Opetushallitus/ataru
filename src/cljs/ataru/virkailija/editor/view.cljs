@@ -39,16 +39,20 @@
    "Luo uusi lomake"])
 
 (defn- copy-form []
-  [:a {:on-click (fn [event]
-                   (.preventDefault event)
-                   (dispatch [:editor/copy-form]))}
-   "Kopioi lomake"])
+  (let [form (subscribe [:editor/selected-form])]
+    (fn []
+      (when-not (empty? (:content @form))
+        [:span
+         [:span.editor-form__form-control-link-separator " | "]
+         [:a {:on-click (fn [event]
+                          (.preventDefault event)
+                          (dispatch [:editor/copy-form]))}
+          "Kopioi lomake"]]))))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
    [:span
     [add-form]
-    [:span.editor-form__form-control-link-separator " | "]
     [copy-form]]])
 
 (defn editor-name []
