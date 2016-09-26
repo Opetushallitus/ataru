@@ -10,7 +10,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
-            [ataru.virkailija.user.form-access-control :as access-controlled-form]
+            [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]

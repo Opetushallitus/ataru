@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.form-access-control
+(ns ataru.forms.form-access-control
   (:require
    [ataru.forms.form-store :as form-store]
    [ataru.virkailija.user.organization-client :refer [oph-organization]]
