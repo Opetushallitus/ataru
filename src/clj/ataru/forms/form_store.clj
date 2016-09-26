@@ -69,6 +69,9 @@
 (defn get-all-forms []
   (execute yesql-get-all-forms-query {}))
 
+(defn get-organization-oid-by-key [key]
+  (:organization-oid (first (execute yesql-get-latest-version-organization-by-key {:key key}))))
+
 (defn fetch-latest-version [id & [conn]]
   (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
 

@@ -11,6 +11,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [ataru.forms.form-access-control :as access-controlled-form]
+            [ataru.applications.application-access-control :as access-controlled-applications]
             [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
@@ -99,11 +100,11 @@
                  (api/context "/applications" []
                    :tags ["applications-api"]
 
-                  (api/GET "/list" []
+                  (api/GET "/list" {session :session}
                            :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (ok {:applications (application-store/get-application-list formKey)}))
+                           (ok (access-controlled-applications/get-application-list formKey session)))
 
                   (api/GET "/:application-id" []
                            :path-params [application-id :- Long]

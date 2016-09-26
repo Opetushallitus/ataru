@@ -7,6 +7,11 @@
 
 (defn- org-oids [session] (map :oid (-> session :identity :organizations)))
 
+(defn form-allowed? [form-key session]
+  (let [organization-oids     (org-oids session)
+        form-organization-oid (form-store/get-organization-oid-by-key form-key)]
+    (boolean (some #{oph-organization form-organization-oid} organization-oids))))
+
 (defn post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
         organization-oids (org-oids session)
