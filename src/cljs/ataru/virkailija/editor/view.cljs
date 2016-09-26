@@ -40,7 +40,8 @@
 
 (defn- copy-form []
   [:a {:on-click (fn [event]
-                   (.preventDefault event))}
+                   (.preventDefault event)
+                   (dispatch [:editor/copy-form]))}
    "Kopioi lomake"])
 
 (defn- form-controls []
