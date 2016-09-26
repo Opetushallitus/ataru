@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.middleware.cache-control :as cache-control]
+            [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
@@ -29,8 +30,7 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [com.stuartsierra.component :as component])
-  (:import (clojure.lang ExceptionInfo)))
+            [com.stuartsierra.component :as component]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -87,12 +87,7 @@
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (match (access-controlled-form/post-form form session organization-service)
-                     {:error error-code}
-                     (bad-request {:error error-code})
-
-                     response
-                     (ok response)))
+                   (ok (access-controlled-form/post-form form session organization-service)))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -197,7 +192,7 @@
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
-                                (api/middleware [auth-middleware/with-authentication]
+                                (api/middleware [auth-middleware/with-authentication user-feedback/wrap-user-feedback]
                                   resource-routes
                                   app-routes
                                   (api-routes this)

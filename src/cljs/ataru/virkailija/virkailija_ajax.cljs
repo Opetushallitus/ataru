@@ -5,23 +5,15 @@
             [ajax.core :refer [GET POST PUT DELETE]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(def ^:private
-  error-messages
-  {"form_updated_in_background"      "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
-   "no_organization_for_user"        "Käyttäjätunnukseen ei ole liitetty organisaatota"
-   "multiple_organizations_for_user" "Käyttäjätunnukselle löytyi monta organisaatiota"})
-
 (defn dispatch-flasher-error-msg
   [method response]
-  (let [response-error-code (-> response :response :error)
-        explicit-error-message (get error-messages response-error-code)
+  (let [response-error-msg (-> response :response :error)
         error-type (if (and (= 400 (:status response))
-                            (not-empty response-error-code)
-                            (not-empty explicit-error-message))
-                     :explicit-error
+                            (not-empty response-error-msg))
+                     :user-feedback-error
                      :server-error)
         message (case error-type
-                  :explicit-error explicit-error-message
+                  :user-feedback-error response-error-msg
                   :server-error (str "Virhe "
                                      (case method
                                        :get "haettaessa."

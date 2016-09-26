@@ -1,6 +1,7 @@
 (ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
             [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
+            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [clj-time.core :as t]
@@ -113,7 +114,7 @@
                         " created-time "
                         (:created-time latest-version)
                         " already exists."))
-            {:error "form_updated_in_background"})
+            (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen.")))
           (increment-version
            (-> form
                ; use :key set in db just to be sure it never is nil

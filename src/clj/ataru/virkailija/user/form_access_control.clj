@@ -2,6 +2,7 @@
   (:require
    [ataru.forms.form-store :as form-store]
    [ataru.virkailija.user.organization-client :refer [oph-organization]]
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
 (defn- org-oids [session] (map :oid (-> session :identity :organizations)))
@@ -18,10 +19,10 @@
                    (count organization-oids)
                    " (required: exactly one).  can't attach form to an ambiguous organization: "
                    organization-oids))
-        {:error
-         (if (= 0 org-count)
-           "no_organization_for_user"
-           "multiple_organizations_for_user")})
+        (throw (user-feedback-exception
+                (if (= 0 org-count)
+                  "Käyttäjätunnukseen ei ole liitetty organisaatota"
+                  "Käyttäjätunnukselle löytyi monta organisaatiota"))))
       (form-store/create-form-or-increment-version!
        (assoc form :created-by (-> session :identity :username))
        (first organization-oids)))))
