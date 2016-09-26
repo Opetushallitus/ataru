@@ -72,6 +72,9 @@
                  (response/ok labels)
                  (response/not-found))))))
 
+(defn- render-application []
+  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))
+
 (defrecord Handler []
   component/Lifecycle
 
@@ -99,7 +102,9 @@
                                              (route/resources "/")
                                              (api/undocumented
                                              (api/GET "/:key" []
-                                                      (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
+                                               (render-application))
+                                             (api/GET "/:key/:lang" []
+                                               (render-application))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity

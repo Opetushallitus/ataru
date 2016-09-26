@@ -7,7 +7,7 @@
                  [re-frame "0.7.0"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [oph/soresu "0.1.2-SNAPSHOT"]
+                 [oph/soresu "0.1.3-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.4"]
                  [binaryage/devtools "0.7.2"]
@@ -105,7 +105,7 @@
                         :compiler     {:main                 "ataru.virkailija.core"
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/out"
-                                       :asset-path           "js/compiled/out"
+                                       :asset-path           "/lomake-editori/js/compiled/out"
                                        :optimizations        :none
                                        :source-map-timestamp true}}
 
@@ -115,7 +115,7 @@
                         :compiler {:main                 "ataru.hakija.core"
                                    :output-to            "resources/public/js/compiled/hakija-app.js"
                                    :output-dir           "resources/public/js/compiled/hakija-out"
-                                   :asset-path           "js/compiled/hakija-out"
+                                   :asset-path           "/hakemus/js/compiled/hakija-out"
                                    :optimizations        :none
                                    :source-map-timestamp true}}
 

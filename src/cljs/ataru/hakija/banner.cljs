@@ -13,13 +13,18 @@
 
 (defn invalid-field-status [valid-status]
   (let [show-details (r/atom false)
-        toggle-show-details #(do (reset! show-details (not @show-details)) nil)]
+        toggle-show-details #(do (reset! show-details (not @show-details)) nil)
+        lang (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
-          (str (count (:invalid-fields valid-status)) " pakollista tietoa puuttuu")]
+          (str (count (:invalid-fields valid-status)) (case @lang
+                                                        :fi " pakollista tietoa puuttuu"
+                                                        :sv " obligatoriska uppgifter saknas"
+                                                        :en " mandatory fields are missing"))]
           (when @show-details
             [:div
              [:div.application__invalid-fields-arrow-up]
@@ -27,24 +32,43 @@
                     [:span.application__close-invalid-fields
                      {:on-click toggle-show-details}
                      "x"]]
-                (mapv (fn [field] [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (-> field :label :fi)]])
+                (mapv (fn [field]
+                        (let [label (or (get-in field [:label @lang])
+                                        (get-in field [:label @default-lang]))]
+                          [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (match submit-status
-         :submitting [:div.application__sent-indicator "Hakemusta lähetetään"]
-         :submitted  [:div.application__sent-indicator.animated.fadeIn "Saat vahvistuksen sähköpostiisi"]
-         :else nil))
+  (let [lang (subscribe [:application/form-language])]
+    (fn [submit-status]
+      (match submit-status
+             :submitting [:div.application__sent-indicator (case @lang
+                                                             :fi "Hakemusta lähetetään"
+                                                             :sv "Ansökan skickas"
+                                                             :en "The application is being sent")]
+             :submitted [:div.application__sent-indicator.animated.fadeIn (case @lang
+                                                                            :fi "Saat vahvistuksen sähköpostiisi"
+                                                                            :sv "Du får en bekräftelse till din e-post"
+                                                                            :en "Confirmation email will be sent to the email address you've provided")]
+             :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (match submit-status
-         :submitted [:div.application__sent-placeholder.animated.fadeIn
-                     [:i.zmdi.zmdi-check]
-                     [:span.application__sent-placeholder-text "Hakemus lähetetty"]]
-         :else      [:button.application__send-application-button
-                      {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
-                       :on-click #(dispatch [:application/submit-form])}
-                      "LÄHETÄ HAKEMUS"]))
+  (let [lang (subscribe [:application/form-language])]
+    (fn [valid-status submit-status]
+      (match submit-status
+             :submitted [:div.application__sent-placeholder.animated.fadeIn
+                         [:i.zmdi.zmdi-check]
+                         [:span.application__sent-placeholder-text (case @lang
+                                                                     :fi "Hakemus lähetetty"
+                                                                     :sv "Ansökan skickas"
+                                                                     :en "The application has been sent")]]
+             :else [:button.application__send-application-button
+                    {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
+                     :on-click #(dispatch [:application/submit-form])}
+                    (case @lang
+                      :fi "LÄHETÄ HAKEMUS"
+                      :sv "SKICKA ANSÖKAN"
+                      :en "SEND APPLICATION")]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
@@ -56,15 +80,19 @@
        [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
-  [:a.application__banner-wrapper-section-link
-   {:href (str "#scroll-to-" (:id ws))
-    :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
-   (-> ws :label :fi)])
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
+    (fn [ws]
+      [:a.application__banner-wrapper-section-link
+       {:href  (str "#scroll-to-" (:id ws))
+        :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
+       (or (get-in ws [:label @lang])
+           (get-in ws [:label @default-lang]))])))
 
 (defn wrapper-section [ws]
   (if (:valid ws)
     [:div.application__banner-wrapper-section
-     [:img.application__banner-wrapper-section-valid-img {:src "images/icon_check.png"}]
+     [:img.application__banner-wrapper-section-valid-img {:src "/hakemus/images/icon_check.png"}]
      [wrapper-section-link ws]]
     [:div.application__banner-wrapper-section.application__banner-wrapper-section-not-valid
      [wrapper-section-link ws]]))

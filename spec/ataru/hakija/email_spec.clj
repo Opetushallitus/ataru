@@ -56,7 +56,6 @@
                        (should= "application/json" (get-in request [:headers "content-type"]))
                        (let [body (json/parse-string (:body request) true)]
                          (should= "no-reply@opintopolku.fi" (get-in body [:email :from]))
-                         (should= "Opintopolku.fi - Hakemuksesi on vastaanotettu" (get-in body [:email :subject]))
                          (let [recipients (:recipient body)]
                            (should= 1 (count recipients))
                            (should= "applicant@example.com" (get-in recipients [0 :email])))))

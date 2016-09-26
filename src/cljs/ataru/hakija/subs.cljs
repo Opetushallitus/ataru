@@ -25,3 +25,23 @@
 (register-sub
   :application/wrapper-sections
   wrapper-sections)
+
+(defn- form-language [db _]
+  (reaction
+    (or
+      (get-in @db [:form :selected-language])
+      :fi))) ; When user lands on the page, there isn't any language set until the form is loaded
+
+(register-sub
+  :application/form-language
+  form-language)
+
+(defn- default-language [db _]
+  (-> @db
+      (get-in [:form :languages])
+      first
+      reaction))
+
+(register-sub
+  :application/default-language
+  default-language)

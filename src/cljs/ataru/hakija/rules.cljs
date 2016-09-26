@@ -1,22 +1,26 @@
 (ns ataru.hakija.rules
   (:require [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.hakija-ajax :refer [get]]))
+            [ataru.hakija.hakija-ajax :as ajax]))
 
 (def ^:private no-required-answer {:valid false :value ""})
 
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
-  (let [nationality (-> db :application :answers :nationality)
+  (let [nationality      (-> db :application :answers :nationality)
         hide-both-fields #(-> db
                              (update-in [:application :answers :birth-date] merge no-required-answer)
                              (update-in [:application :answers :ssn] merge no-required-answer)
                              (update-in [:application :ui :birth-date] assoc :visible? false)
                              (update-in [:application :ui :ssn] assoc :visible? false)
                              (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
-                             (update-in [:application :ui :gender] assoc :visible? false))]
+                             (update-in [:application :ui :gender] assoc :visible? false))
+        finnish-value    (case (get-in db [:form :selected-language])
+                           :fi "Suomi"
+                           :sv "Finland"
+                           :en "Finland")]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        "Suomi"
+        finnish-value
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -56,9 +60,18 @@
         (-> db :application :answers :ssn :valid)
         (not (clojure.string/blank? (-> db :application :answers :ssn :value))))
     (let [ssn (-> db :application :answers :ssn :value)
-          birth-date (parse-birth-date-from-ssn ssn)]
+          birth-date (parse-birth-date-from-ssn ssn)
+          lang (get-in db [:form :selected-language])]
       (when-let [gender-sign (js/parseInt (nth ssn 9))]
-        (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2)) "Nainen" "Mies"))]
+        (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2))
+                                                   (case lang
+                                                     :fi "Nainen"
+                                                     :sv "Kvinna"
+                                                     :en "Female")
+                                                   (case lang
+                                                     :fi "Mies"
+                                                     :sv "Människa"
+                                                     :en "Male")))]
           (-> db
               (update-in [:application :answers :gender] merge {:value gender :valid true})
               (update-in [:application :answers :birth-date] merge {:value birth-date :valid true})))))
@@ -68,7 +81,7 @@
   [db _]
   (if (-> db :application :answers :postal-code :valid)
     (let [postal-code (-> db :application :answers :postal-code :value)]
-      (get
+      (ajax/get
         (str "/hakemus/api/postal-codes/" postal-code)
         :application/handle-postal-code-input
         :application/handle-postal-code-error)
@@ -79,7 +92,12 @@
 
 (defn- toggle-ssn-based-fields
   [db _]
-  (if (= "Kyllä" (-> db :application :answers :have-finnish-ssn :value))
+  (let [lang (get-in db [:form :selected-language])]
+  (if (= (case lang
+           :fi "Kyllä"
+           :sv "Ja"
+           :en "Yes")
+         (-> db :application :answers :have-finnish-ssn :value))
     (do
       (-> db
           (update-in [:application :ui :ssn] assoc :visible? true)
@@ -90,7 +108,7 @@
           (update-in [:application :ui :ssn] assoc :visible? false)
           (update-in [:application :ui :gender] assoc :visible? true)
           (update-in [:application :ui :birth-date] assoc :visible? true)
-          (update-in [:application :answers :ssn] merge {:value "" :valid true})))))
+          (update-in [:application :answers :ssn] merge {:value "" :valid true}))))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
