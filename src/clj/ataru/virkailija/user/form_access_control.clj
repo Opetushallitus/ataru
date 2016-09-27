@@ -17,7 +17,7 @@
                    " has the wrong amount of organizations: "
                    (count organization-oids)
                    " (required: exactly one).  can't attach form to an ambiguous organization: "
-                   organization-oids))
+                   (vec organization-oids)))
         {:error
          (if (= 0 org-count)
            "no_organization_for_user"
