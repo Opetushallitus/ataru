@@ -145,7 +145,7 @@ function autosaveSuccessful() {
           expect(formSections().eq(0).find('.editor-form__text-field').eq(0).val()).to.equal('Testiosio')
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
           expect(formSections().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('S')
-          expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
     })
