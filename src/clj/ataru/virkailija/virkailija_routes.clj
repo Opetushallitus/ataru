@@ -4,7 +4,6 @@
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
-            [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.applications.application-store :as application-store]
@@ -128,13 +127,10 @@
                              (application-store/save-application-review review)
                              {}))
 
-                   (api/GET "/excel/:form-key" []
+                   (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]
                      :summary  "Return Excel export of the form and applications for it."
-                     {:status  200
-                      :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-                      :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))}))
+                     (access-controlled-applications/get-excel-report-of-applications form-key session organization-service)))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]

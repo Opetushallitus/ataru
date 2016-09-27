@@ -2,7 +2,8 @@
   (:require
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.applications.excel-export :as excel]))
 
 (defn check-form-access [form-key session organization-service]
   (when-not
@@ -12,3 +13,10 @@
 (defn get-application-list [form-key session organization-service]
   (check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list form-key)})
+
+(defn get-excel-report-of-applications [form-key session organization-service]
+  (check-form-access form-key session organization-service)
+  {:status  200
+   :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+             "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
+   :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))})
