@@ -159,6 +159,56 @@ function clickRepeatingAnswers(question) {
         })
       })
 
+      describe('dropdown from koodisto', function() {
+        before(
+          clickComponentMenuItem('Pudotusvalikko'),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field')}, 'Neljäs kysymys'),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__multi-options_wrapper label:contains("Koodisto")')}),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__koodisto-popover a:contains("Pohjakoulutus")') })
+        )
+        it('selected correctly', function() {
+          expect(formComponents()).to.have.length(5)
+          expect(formComponents().eq(3).find('.editor-form__multi-options_wrapper label:eq(1)').text()).to.equal("Koodisto: Pohjakoulutus")
+        })
+      })
+
+      describe('multiple choice', function() {
+        before(
+          clickComponentMenuItem('Lista, monta valittavissa'),
+          setTextFieldValue(function () { return formComponents().eq(4).find('.editor-form__text-field').eq(0) }, 'Viides kysymys'),
+          clickElement(function () { return formComponents().eq(4).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function () { return formComponents().eq(4).find('.editor-form__text-field:last') }, 'Ensimmäinen vaihtoehto'),
+          clickElement(function () { return formComponents().eq(4).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function () { return formComponents().eq(4).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto'),
+          clickElement(function () { return formComponents().eq(4).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function () { return formComponents().eq(4).find('.editor-form__text-field:last') }, 'Kolmas vaihtoehto'),
+          clickElement(function () { return formComponents().eq(4).find('.editor-form__add-dropdown-item a') })
+        )
+        it('has expected contents', function () {
+          expect(formComponents()).to.have.length(6)
+          expect(formComponents().eq(4).find('.editor-form__text-field:first').val()).to.equal('Viides kysymys')
+          expect(formComponents().eq(4).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formComponents().eq(4).find('.editor-form__multi-option-wrapper input').length).to.equal(4)
+          var options = _.map(formComponents().eq(2).find('.editor-form__multi-option-wrapper input'), function (inputField) {
+            return $(inputField).val()
+          })
+          expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])
+        })
+      })
+
+      describe('multiple choice from koodisto', function() {
+        before(
+          clickComponentMenuItem('Lista, monta valittavissa'),
+          setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__text-field') }, 'Kuudes kysymys'),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__multi-options_wrapper label:contains("Koodisto")') }),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
+        )
+        it('selected correctly', function() {
+          expect(formComponents()).to.have.length(7)
+          expect(formComponents().eq(5).find('.editor-form__multi-options_wrapper label:eq(1)').text()).to.equal("Koodisto: Tutkinto")
+        })
+      })
+
       describe('section with contents', function() {
         before(
           clickComponentMenuItem('Lomakeosio'),
@@ -169,7 +219,7 @@ function clickRepeatingAnswers(question) {
           clickElement(function() { return formSections().eq(0).find('.editor-form__button-group div:eq(0) label')})
         )
         it('has expected contents', function() {
-          expect(formComponents()).to.have.length(6)
+          expect(formComponents()).to.have.length(8)
           expect(formSections().eq(0).find('.editor-form__text-field').eq(0).val()).to.equal('Testiosio')
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
           expect(formSections().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('S')
