@@ -104,7 +104,7 @@
                            :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (ok (access-controlled-applications/get-application-list formKey session)))
+                           (ok (access-controlled-applications/get-application-list formKey session organization-service)))
 
                   (api/GET "/:application-id" []
                            :path-params [application-id :- Long]

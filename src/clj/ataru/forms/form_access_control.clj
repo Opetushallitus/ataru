@@ -7,10 +7,23 @@
 
 (defn- org-oids [session] (map :oid (-> session :identity :organizations)))
 
-(defn form-allowed? [form-key session]
-  (let [organization-oids     (org-oids session)
-        form-organization-oid (form-store/get-organization-oid-by-key form-key)]
-    (boolean (some (conj #{form-organization-oid} oph-organization) organization-oids))))
+(defn- all-org-oids [organization-service organization-oids]
+  (let [all-organizations (.get-all-organizations organization-service organization-oids)]
+        (map :oid all-organizations)))
+
+(defn form-allowed? [form-key session organization-service]
+  (let [organization-oids (org-oids session)]
+    (cond
+      (some #{oph-organization} organization-oids)
+      true
+
+      (empty? organization-oids)
+      false
+
+      :else
+      (-> #{(form-store/get-organization-oid-by-key form-key)}
+          (some (all-org-oids organization-service organization-oids))
+          boolean))))
 
 (defn post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
@@ -44,6 +57,5 @@
       {:forms []}
 
       :else
-      (let [all-organizations (.get-all-organizations organization-service organization-oids)
-            all-oids          (map :oid all-organizations)] ; TODO figure out empty list case (gives sqlexception)
+      (let [all-oids (all-org-oids organization-service organization-oids)]
         {:forms (form-store/get-forms all-oids)}))))
