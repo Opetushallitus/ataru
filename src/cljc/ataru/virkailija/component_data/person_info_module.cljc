@@ -19,7 +19,7 @@
 
 (defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Smeknamn" :en "Middle name"} :size "S" :id :preferred-name))
+  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Middle name"} :size "S" :id :preferred-name))
 
 (defn ^:private first-name-section
   []
@@ -41,7 +41,7 @@
 (defn ^:private nationality-component
   []
   (-> (component/dropdown)
-      (merge {:label {:fi "Kansalaisuus" :sv "Nationalitet" :en "Nationality"}
+      (merge {:label {:fi "Kansalaisuus" :sv "Medborgarskap" :en "Nationality"}
               :validators [:required]
               :rules {:swap-ssn-birthdate-based-on-nationality [:ssn :birth-date]}
               :id :nationality
@@ -51,7 +51,7 @@
   []
   (-> (component/dropdown)
       (merge {:label {:fi "Onko sinulla suomalainen henkilötunnus?"
-                      :sv "Har du en finsk säkerhet personnummer?"
+                      :sv "Har du en finländsk personbeteckning?"
                       :en "Do you have a Finnish social security number?"}
               :rules {:toggle-ssn-based-fields :ssn}
               :no-blank-option true
@@ -62,7 +62,7 @@
 
 (defn ^:private ssn-component
   []
-  (assoc (text-field {:fi "Henkilötunnus" :sv "Personnummer" :en "Social security number"} :size "S" :id :ssn)
+  (assoc (text-field {:fi "Henkilötunnus" :sv "Personbeteckning" :en "Social security number"} :size "S" :id :ssn)
          :rules {:update-gender-and-birth-date-based-on-ssn :gender}
          :validators [:ssn :required]))
 
@@ -80,7 +80,7 @@
   (component/row-section
     [(merge-with merge
                  (text-field
-                   {:fi "Syntymäaika" :sv "Födelsedag" :en "Date of birth"}
+                   {:fi "Syntymäaika" :sv "Födelsetid" :en "Date of birth"}
                    :size "S"
                    :id :birth-date
                    :validators [:past-date :required])
@@ -97,11 +97,11 @@
 
 (defn ^:private street-address-component
   []
-  (text-field {:fi "Katuosoite" :sv "Adress" :en "Address"} :size "M" :id :address))
+  (text-field {:fi "Katuosoite" :sv "Näraddress" :en "Address"} :size "M" :id :address))
 
 (defn ^:private home-town-component
   []
-  (text-field {:fi "Kotikunta" :sv "Bostadsort" :en "Home town"} :id :home-town))
+  (text-field {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"} :id :home-town))
 
 (defn ^:private postal-code-component
   []
@@ -137,7 +137,7 @@
         (dissoc x :focus?)
         x))
     (merge (component/form-section) {:label {:fi "Henkilötiedot"
-                                             :sv "Personlig information"
+                                             :sv "Personuppgifter"
                                              :en "Personal information"}
                                      :label-amendment {:fi "(Osio lisätään automaattisesti lomakkeelle)"
                                                        :sv "Partitionen automatiskt lägga formen"
