@@ -104,7 +104,7 @@ function autosaveSuccessful() {
           expect(formComponents()).to.have.length(2)
           expect(formComponents().eq(1).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
           expect(formComponents().eq(1).find('.editor-form__button-group input:checked').val()).to.equal('L')
-          expect(formComponents().eq(1).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formComponents().eq(1).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
 
