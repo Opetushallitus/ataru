@@ -19,6 +19,14 @@
        #(application-store/get-application-organization-oid application-id))
     (throw (user-feedback-exception (str "Hakemus " application-id " ei ole sallittu")))))
 
+(defn- check-review-access [review-id session organization-service]
+  (when-not
+      (form-access-control/organization-allowed?
+       session
+       organization-service
+       #(application-store/get-application-review-organization-oid review-id))
+    (throw (user-feedback-exception (str "Hakemuksen arvostelu " review-id " ei ole sallittu")))))
+
 (defn get-application-list [form-key session organization-service]
   (check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list form-key)})
@@ -38,3 +46,7 @@
    :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
              "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
    :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))})
+
+(defn save-application-review [review session organization-service]
+  (check-application-access (:id review) session organization-service)
+  (application-store/save-application-review review))

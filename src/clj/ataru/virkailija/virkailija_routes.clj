@@ -114,12 +114,15 @@
                                     :form        ataru-schema/FormWithContent}
                            (ok (access-controlled-applications/get-application application-id session organization-service)))
 
-                   (api/PUT "/review" []
+                   (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
                             :body [review s/Any]
                             (ok
-                             (application-store/save-application-review review)
-                             {}))
+                             (do (access-controlled-applications/save-application-review
+                                  review
+                                  session
+                                  organization-service)
+                                 {})))
 
                    (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]
