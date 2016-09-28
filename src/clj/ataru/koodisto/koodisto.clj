@@ -14,7 +14,7 @@
                           (= (:fieldClass %) "formField")
                           (some (fn [type] (= type (:fieldType %))) ["dropdown" "multipleChoice"]))
                   (let [{:keys [uri version default-option]} (:koodisto-source %)
-                        empty-option               [{:value "" :label {:fi "" :sv ""}}]
+                        empty-option               [{:value "" :label {:fi "" :sv "" :en ""}}]
                         koodis                     (get-koodisto-options uri version)
                         koodis-with-default-option (if default-option
                                                      (map (fn [option] (if (=
