@@ -40,7 +40,7 @@ with the_key as (
 ), latest_version as (
   select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
 )
-select id, key, name, content, created_by, created_time, languages from forms f join latest_version lv on f.created_time = lv.latest_time for update;
+select id, key, name, content, created_by, created_time, organization_oid, languages from forms f join latest_version lv on f.created_time = lv.latest_time for update;
 
 -- name: yesql-get-latest-version-organization-by-key
 with latest_version as (

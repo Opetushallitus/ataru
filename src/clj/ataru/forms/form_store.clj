@@ -110,6 +110,12 @@
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
+        (if (not= (:organization-oid latest-version) organization-oid)
+          (throw (user-feedback-exception
+                  (str "Ei oikeutta lomakkeeseen "
+                       (:key latest-version)
+                       " organisaatiolla "
+                       organization-oid))))
         (if (latest-version-not-same? form latest-version)
           (do
             (warn (str "Form with id "
