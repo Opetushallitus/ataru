@@ -157,8 +157,7 @@
    :notes                           (s/maybe s/Str)})
 
 (s/defschema ApplicationRequest
-  {(s/optional-key :sort) (s/enum :by-date)
-   (s/optional-key :lang) s/Str})
+  {(s/optional-key :sort) (s/enum :by-date)})
 
 (def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
 

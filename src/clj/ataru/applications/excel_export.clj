@@ -115,14 +115,12 @@
                    {:header header :column idx})
                  all-labels)))
 
-(defn export-all-applications [form-key & {:keys [language] :or {language :fi}}]
+(defn export-all-applications [form-key]
   (let [workbook (XSSFWorkbook.)
         form (form-store/fetch-by-key form-key)
         form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
         applications-sheet (.createSheet workbook "Hakemukset")
-        applications (application-store/get-applications
-                       form-key
-                       {:lang (name language)})
+        applications (application-store/get-applications form-key {})
         application-meta-fields (indexed-meta-fields application-meta-fields)
         headers (extract-headers applications form)]
     (when (not-empty form)
