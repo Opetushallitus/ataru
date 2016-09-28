@@ -44,18 +44,17 @@
 (def ^:private lang-pattern #"/(\w{2})$")
 
 (defn- get-lang-from-path [supported-langs]
-  (when-let [lang (->> (util/get-path)
-                       (re-find lang-pattern)
-                       (second)
-                       (keyword))]
-    (when (some #{lang} supported-langs)
-      lang)))
+  ((set supported-langs)
+   (some->> (util/get-path)
+     (re-find lang-pattern)
+     second
+     keyword)))
 
 (defn- set-form-language [form & [lang]]
   (let [supported-langs (:languages form)
         lang            (or lang
-                            (get-lang-from-path supported-langs)
-                            (first supported-langs))]
+                          (get-lang-from-path supported-langs)
+                          (first supported-langs))]
     (assoc form :selected-language lang)))
 
 (defn- languages->kwd [form]

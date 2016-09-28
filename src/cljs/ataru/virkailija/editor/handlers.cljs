@@ -259,40 +259,37 @@
     form))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
-(def response-chan (async/chan))
 
-(register-handler :editor/handle-response-sync
-  (fn [db [_ response {:keys [response-chan]}]]
-    (async/put! response-chan response)
-    db))
-
-(defn save-loop [save-chan response-chan]
+(defn save-loop [save-chan]
   (go-loop [_ (async/<! save-chan)]
     (let [form (-> @(subscribe [:editor/selected-form])
                    (update-dropdown-field-options)
                    (remove-focus)
-                   (dissoc :created-time))]
+                   (dissoc :created-time))
+          response-chan (async/chan)]
       (when (not-empty (:content form))
         (do
-          (post "/lomake-editori/api/forms" form :editor/handle-response-sync
-            :handler-args  {:response-chan response-chan}
+          (post "/lomake-editori/api/forms" form
+            (fn [db response] (do (async/put! response-chan response)
+                                  db))
             :override-args {:error-handler (fn [error]
-                                             (async/put! response-chan false)
+                                             (async/close! response-chan)
                                              (dispatch-flasher-error-msg :post error))})
-          (let [updated-form (-> (async/<! response-chan)
-                                 (languages->kwd))]
-            (when-not (false? updated-form)
-              (dispatch-sync
-                [:state-update
-                 (fn [db]
-                   ; Merge updated form without content, because
-                   ; user might have typed something between requests and
-                   ; updated-form would replace the newer content
-                   (update-in db [:editor :forms (:key updated-form)]
-                     merge (dissoc updated-form :content :name)))]))))))
+          (when-let [updated-form (some->
+                                    (async/<! response-chan)
+                                    (languages->kwd))]
+            (dispatch-sync
+              [:state-update
+               (fn [db]
+                 ; Merge updated form without content, because
+                 ; user might have typed something between requests and
+                 ; updated-form would replace the newer content
+                 (do (async/close! response-chan)
+                     (update-in db [:editor :forms (:key updated-form)]
+                       merge (dissoc updated-form :content :name))))])))))
     (recur (async/<! save-chan))))
 
-(save-loop save-chan response-chan)
+(save-loop save-chan)
 
 (defn save-form
   [db _]
