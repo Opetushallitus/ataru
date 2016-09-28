@@ -26,6 +26,13 @@ order by a.modified_time desc;
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, modified_time, content from applications where id = :application_id;
 
+-- name: yesql-get-application-organization-by-id
+-- Get the related form's organization oid for access checks
+
+select f.organization_oid from applications a
+join forms f on f.id = a.form_id
+and a.id = :application_id;
+
 -- name: yesql-add-application-event!
 -- Add application event
 insert into application_events (application_id, event_type) values (:application_id, :event_type);

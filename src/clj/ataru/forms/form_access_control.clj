@@ -11,7 +11,9 @@
   (let [all-organizations (.get-all-organizations organization-service organization-oids)]
         (map :oid all-organizations)))
 
-(defn form-allowed? [form-key session organization-service]
+(defn organization-allowed?
+  "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
+  [session organization-service organization-oid-handle]
   (let [organization-oids (org-oids session)]
     (cond
       (some #{oph-organization} organization-oids)
@@ -21,9 +23,19 @@
       false
 
       :else
-      (-> #{(form-store/get-organization-oid-by-key form-key)}
-          (some (all-org-oids organization-service organization-oids))
-          boolean))))
+      (let [organization-oid  (if (instance? clojure.lang.IFn organization-oid-handle)
+                                (organization-oid-handle)
+                                organization-oid-handle)]
+        (-> #{organization-oid}
+            (some (all-org-oids organization-service organization-oids))
+            boolean)))))
+
+(defn form-allowed? [form-key session organization-service]
+  (organization-allowed?
+   session
+   organization-service
+   ;; Pass a function instead of value to avoid unnecessary remote calls to organization service
+   (fn [] (form-store/get-organization-oid-by-key form-key))))
 
 (defn post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)

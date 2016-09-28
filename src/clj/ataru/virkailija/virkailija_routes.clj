@@ -105,20 +105,14 @@
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (ok (access-controlled-applications/get-application-list formKey session organization-service)))
 
-                  (api/GET "/:application-id" []
+                  (api/GET "/:application-id" {session :session}
                            :path-params [application-id :- Long]
                            :summary "Return application details needed for application review, including events and review data"
                            :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
                                     :review      ataru-schema/Review
                                     :form        ataru-schema/FormWithContent}
-                           (ok
-                            (let [application (application-store/get-application application-id)
-                                  form        (form-store/fetch-by-id (:form application))]
-                              {:application application
-                               :form        form
-                               :events      (application-store/get-application-events application-id)
-                               :review      (application-store/get-application-review application-id)})))
+                           (ok (access-controlled-applications/get-application application-id session organization-service)))
 
                    (api/PUT "/review" []
                             :summary "Update existing application review"
