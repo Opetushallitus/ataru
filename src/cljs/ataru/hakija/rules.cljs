@@ -70,7 +70,7 @@
                                                      :en "Female")
                                                    (case lang
                                                      :fi "Mies"
-                                                     :sv "Människa"
+                                                     :sv "Man"
                                                      :en "Male")))]
           (-> db
               (update-in [:application :answers :gender] merge {:value gender :valid true})

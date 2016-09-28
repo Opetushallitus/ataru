@@ -72,7 +72,7 @@
       (merge (component/dropdown) {:label      {:fi "Sukupuoli" :sv "Kön" :en "Gender"}
                                    :validators [:required]
                                    :id         :gender})
-      (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Människa" :en "Male"})
+      (update :options #(concat % [(dropdown-option "male" {:fi "Mies" :sv "Man" :en "Male"})
                                    (dropdown-option "female" {:fi "Nainen" :sv "Kvinna" :en "Female"})]))))
 
 (defn ^:private birthdate-and-gender-component
