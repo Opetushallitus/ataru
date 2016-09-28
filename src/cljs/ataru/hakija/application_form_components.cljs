@@ -48,8 +48,8 @@
                              (map (comp lang :label)))
                        (:options dropdown-data)))
                    (-> select .-value))
-        valid  (field-value-valid? dropdown-data value)]
-    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid}])
+        valid? (field-value-valid? dropdown-data value)]
+    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}])
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
@@ -78,22 +78,68 @@
         value        (subscribe [:state-query [:application :answers id :value]])
         valid?       (subscribe [:state-query [:application :answers id :valid]])
         lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-      (let [size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
-        [div-kwd
-         [label field-descriptor]
-         [:input.application__form-text-input
-          (merge {:type        "text"
-                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (non-blank-val (get input-hint @lang)
-                                                (get input-hint @default-lang)))
-                  :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
-                                                 " application__form-field-error"
-                                                 " application__form-text-input--normal"))
-                  :value       @value
-                  :on-change   (partial textual-field-change field-descriptor)}
-                 (when disabled {:disabled true}))]]))))
+      [div-kwd
+       [label field-descriptor size-class]
+       [:input.application__form-text-input
+        (merge {:type        "text"
+                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                               (non-blank-val (get input-hint @lang)
+                                              (get input-hint @default-lang)))
+                :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
+                                               " application__form-field-error"
+                                               " application__form-text-input--normal"))
+                :value       @value
+                :on-change   (partial textual-field-change field-descriptor)}
+          (when disabled {:disabled true}))]])))
+
+(defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+  (let [id         (keyword (:id field-descriptor))
+        values     (subscribe [:state-query [:application :answers id :values]])
+        size-class (text-field-size->class (get-in field-descriptor [:params :size]))
+        on-change  (fn [idx evt]
+                     (let [value (some-> evt .-target .-value)
+                           valid (field-value-valid? field-descriptor value)]
+                       (dispatch [:application/set-repeatable-application-field id idx {:value value :valid valid}])))]
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+      (into  [div-kwd
+              [label field-descriptor size-class]]
+        (cons
+          (let [{:keys [value valid]} (first @values)]
+            [:div
+             [:input.application__form-text-input
+              {:type      "text"
+               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                            " application__form-field-error"
+                                            " application__form-text-input--normal"))
+               :value     value
+               :on-change (partial on-change 0)}]])
+          (map-indexed
+            (fn [idx {:keys [value last?]}]
+              (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
+                [:div.application__form-repeatable-text-wrap
+                 [:input.application__form-text-input
+                  (merge
+                    {:type        "text"
+                     :class       (str
+                                    size-class " application__form-text-input--normal"
+                                    (when-not value " application__form-text-input--disabled"))
+                     :value       value
+                     :on-blur     #(when (and
+                                           (not last?)
+                                           (empty? (-> % .-target .-value)))
+                                     (clicky))
+                     :on-change   (partial on-change (inc idx))}
+                    (when last?
+                      {:placeholder "Lisää.."}))]
+                 (when value
+                   [:a.application__form-repeatable-text--addremove
+                    {:on-click clicky}
+                    [:i.zmdi.zmdi-close.zmdi-hc-lg]])]))
+            (concat (rest @values)
+              [{:value nil :valid true :last? true}])))))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -211,6 +257,7 @@
                        {:fieldClass "formField"
                         :id         (_ :guard (complement visible?))} [:div]
 
+                       {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]

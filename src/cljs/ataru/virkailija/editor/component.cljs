@@ -17,20 +17,31 @@
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
 (def ^:private ie-compatible-drag-data-attribute-name "Text")
 
-(defn- render-checkbox
+(defn- required-checkbox
   [path initial-content]
   (let [id           (util/new-uuid)
-        required?    (true? (some #(= % "required") (:validators initial-content)))]
+        required?    (true? (some? ((set (map keyword (:validators initial-content))) :required)))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
                                     :id id
                                     :checked required?
                                     :on-change (fn [event]
-                                                 (let [dispatch-kwd (if (-> event .-target .-checked)
-                                                                     :editor/add-validator
-                                                                     :editor/remove-validator)]
-                                                   (dispatch [dispatch-kwd "required" path])))}]
+                                                 (dispatch [(if (-> event .-target .-checked)
+                                                              :editor/add-validator
+                                                              :editor/remove-validator) "required" path]))}]
      [:label.editor-form__checkbox-label {:for id} "Pakollinen tieto"]]))
+
+(defn- repeater-checkbox
+  [path initial-content]
+  (let [id       (util/new-uuid)
+        checked? (-> initial-content :params :repeatable)]
+    [:div.editor-form__checkbox-container
+     [:input.editor-form__checkbox {:type      "checkbox"
+                                    :id        id
+                                    :checked   checked?
+                                    :on-change (fn [event]
+                                                 (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
+     [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- on-drag-start
   [path]
@@ -147,7 +158,9 @@
                                    :else nil)}
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
-        (render-checkbox path initial-content)]])))
+        [required-checkbox path initial-content]
+        (when-not (= "Tekstialue" header-label)
+          [repeater-checkbox path initial-content])]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -202,7 +215,7 @@
              languages
              :header? true)]
           [:div.editor-form__checkbox-wrapper
-           (render-checkbox path initial-content)]]
+           [required-checkbox path initial-content]]]
 
          [:div.editor-form__multi-options_wrapper
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]

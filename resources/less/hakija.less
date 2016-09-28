@@ -96,6 +96,17 @@
   font-weight: 600;
 }
 
+.application__form-field-list {
+  list-style-type: none; 
+  margin: 0;
+  padding: 0;
+}
+.application__form-field-list li::before {
+  content: '-';
+  margin-right: 1em;
+  padding-left: 10px;
+}
+
 .application__wrapper-heading {
   position: absolute;
   width: 245px;
@@ -221,6 +232,7 @@
   margin-top: @total-banner-height;
   margin-right: auto;
   margin-left: auto;
+  margin-bottom: 150px;
   width: @desktop-content-width;
 }
 .application__row-field-wrapper {
@@ -304,6 +316,15 @@
   border: 1px solid #AEAEAE;
   box-shadow: inset 0px 1px 4px 0px rgba(0,0,0,0.20);
   border-radius: 2px;
+}
+.application__form-repeatable-text--addremove {
+  margin-left: 10px;
+}
+input.application__form-text-input--disabled {
+  background: rgba(215,215,215,0.23);
+}
+.application__form-repeatable-text-wrap {
+  margin-top: 10px;
 }
 .application__form-field-error {
   background: #ffe9e9;

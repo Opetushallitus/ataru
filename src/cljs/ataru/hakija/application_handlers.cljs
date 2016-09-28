@@ -92,6 +92,40 @@
   :application/set-application-field
   set-application-field)
 
+(register-handler
+  :application/set-repeatable-application-field
+  (fn [db [_ key idx {:keys [value valid] :as values}]]
+    (let [path                      [:application :answers key :values]
+          with-answer               (if (and
+                                          (zero? idx)
+                                          (empty? value)
+                                          (= 1 (count (get-in db path))))
+                                      (assoc-in db path [])
+                                      (update-in db path (fnil assoc []) idx values))
+          all-values                (get-in with-answer path)
+          validity-for-validation   (boolean
+                                      (some->>
+                                        (map :valid (or (when (= 1 (count all-values))
+                                                          [values])
+                                                      (butlast all-values)))
+                                        not-empty
+                                        (every? true?)))
+          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
+      (update-in
+        with-answer
+        (butlast path)
+        assoc
+        :valid validity-for-validation
+        :value value-for-readonly-fields-and-db))))
+
+(register-handler
+  :application/remove-repeatable-application-field-value
+  (fn [db [_ key idx]]
+    (update-in db [:application :answers key :values]
+      (fn [values]
+        (vec
+          (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
+
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
 

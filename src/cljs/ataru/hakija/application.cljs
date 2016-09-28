@@ -33,14 +33,13 @@
          (util/flatten-form-fields (:content form)))))
 
 (defn- create-answers-to-submit [answers form]
-  (for [[ans-key ans-map] answers
-        :let [ans-value (:value ans-map)
-              flat-form-map (form->flat-form-map form)
+  (for [[ans-key {:keys [value]}] answers
+        :let [flat-form-map (form->flat-form-map form)
               field-map (get flat-form-map (name ans-key))
               field-type (:fieldType field-map)
               label (:label field-map)]
-        :when (and (not-empty ans-value) (not (:exclude-from-answers field-map)))]
-    {:key (name ans-key) :value ans-value :fieldType field-type :label label}))
+        :when (and (not-empty value) (not (:exclude-from-answers field-map)))]
+    {:key (name ans-key) :value value :fieldType field-type :label label}))
 
 (defn create-application-to-submit [application form lang]
   {:form (:id form)
