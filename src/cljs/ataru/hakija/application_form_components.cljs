@@ -100,7 +100,7 @@
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
         on-change  (fn [idx evt]
-                     (let [value (-> evt .-target .-value)
+                     (let [value (some-> evt .-target .-value)
                            valid (field-value-valid? field-descriptor value)]
                        (dispatch [:application/set-repeatable-application-field id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -117,26 +117,29 @@
                :value     value
                :on-change (partial on-change 0)}]])
           (map-indexed
-            (fn [idx {:keys [value]}]
+            (fn [idx {:keys [value last?]}]
               (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
                 [:div.application__form-repeatable-text-wrap
                  [:input.application__form-text-input
-                  {:type        "text"
-                   :placeholder "Lisää.."
-                   :class       (str size-class " application__form-text-input--normal")
-                   :value       value
-                   :on-blur     #(when (empty? (-> % .-target .-value))
-                                   (clicky))
-                   :on-change   (partial on-change (inc idx))}]
+                  (merge
+                    {:type        "text"
+                     :class       (str
+                                    size-class " application__form-text-input--normal"
+                                    (when-not value " application__form-text-input--disabled"))
+                     :value       value
+                     :on-blur     #(when (and
+                                           (not last?)
+                                           (empty? (-> % .-target .-value)))
+                                     (clicky))
+                     :on-change   (partial on-change (inc idx))}
+                    (when last?
+                      {:placeholder "Lisää.."}))]
                  (when value
                    [:a.application__form-repeatable-text--addremove
                     {:on-click clicky}
                     [:i.zmdi.zmdi-close.zmdi-hc-lg]])]))
             (concat (rest @values)
-              (when (and
-                      (some? (:value (last @values)))
-                      (:valid (last @values)))
-                [{:value nil :valid true}]))))))))
+              [{:value nil :valid true :last? true}])))))))
 
 (defn- text-area-size->class [size]
   (match size
