@@ -47,7 +47,7 @@
          [:a {:on-click (fn [event]
                           (.preventDefault event)
                           (dispatch [:editor/copy-form]))}
-          "Kopioi lomake"]]))))
+          "Kopioi valittu lomake"]]))))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
