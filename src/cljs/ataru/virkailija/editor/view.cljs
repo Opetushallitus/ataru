@@ -150,6 +150,6 @@
 (defn editor []
     [:div
      [:div.editor-form__container.panel-content
-      (form-controls)
+      [form-controls]
       [form-list]]
      [editor-panel]])
