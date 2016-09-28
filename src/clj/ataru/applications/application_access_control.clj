@@ -42,10 +42,7 @@
 
 (defn get-excel-report-of-applications [form-key session organization-service]
   (check-form-access form-key session organization-service)
-  {:status  200
-   :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-             "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-   :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))})
+  (java.io.ByteArrayInputStream. (excel/export-all-applications form-key)))
 
 (defn save-application-review [review session organization-service]
   (check-application-access (:id review) session organization-service)

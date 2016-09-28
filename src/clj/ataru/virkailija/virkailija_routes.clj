@@ -12,6 +12,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.applications.application-access-control :as access-controlled-applications]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.applications.excel-export :as excel]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -127,7 +128,10 @@
                    (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]
                      :summary  "Return Excel export of the form and applications for it."
-                     (access-controlled-applications/get-excel-report-of-applications form-key session organization-service)))
+                     {:status  200
+                      :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
+                      :body    (access-controlled-applications/get-excel-report-of-applications form-key session organization-service)}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
