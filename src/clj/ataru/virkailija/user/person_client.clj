@@ -13,6 +13,7 @@
                  search-term)]
     (-> (cas/cas-authenticated-get cas-client url)
         :body
+        slurp
         (json/parse-string true)
         :results
         first)))

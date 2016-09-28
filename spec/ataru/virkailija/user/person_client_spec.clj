@@ -4,7 +4,8 @@
             [cheshire.core :as json]
             [oph.soresu.common.config :refer [config]]
             [ring.util.http-response :as response]
-            [speclj.core :refer [describe it tags should= should-be-nil]]))
+            [speclj.core :refer [describe it tags should= should-be-nil]])
+  (:import [java.io ByteArrayInputStream]))
 
 (def fake-config {:authentication-service {:base-address "dummy"} :cas {}})
 
@@ -26,6 +27,8 @@
   (fn [client url]
     (-> resp
         json/generate-string
+        .getBytes
+        ByteArrayInputStream.
         response/ok)))
 
 (describe "person client"
