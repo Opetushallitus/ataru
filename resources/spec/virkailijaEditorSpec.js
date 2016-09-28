@@ -58,6 +58,10 @@ function clickRepeatingAnswers(question) {
 }
 
 (function() {
+  before(function () {
+    loadInFrame('http://localhost:8350/lomake-editori/')
+  })
+
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })

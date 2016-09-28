@@ -12,52 +12,14 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/4.13.1/lodash.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/q.js/1.4.1/q.min.js"></script>
 <script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+
 <link rel="stylesheet" href="/css/compiled/mocha.css">
-<script>
-  mocha.ui('bdd')
-  mocha.reporter('html')
-  mocha.useColors(false)
-  mocha.bail(true)
-  mocha.timeout(30000)
-</script>
 
 <script src="/lomake-editori/spec/util.js"></script>
 <script src="/lomake-editori/spec/virkailijaEditorSpec.js"></script>
 <script src="/lomake-editori/spec/virkailijaApplicationHandlingSpec.js"></script>
 
-<script>
-  var runner = mocha.run()
-  var failed = 0
-  $(document).keyup(function (e) {
-    if (e.keyCode == 27) {
-      runner._abort = true
-    }
-  })
+<script src="/lomake-editori/spec/testRunner.js"></script>
 
-  function parseTitle(test) {
-    var titleArr = []
-    var thisTest = test
-    while(thisTest && thisTest.title) {
-      titleArr.unshift(thisTest.title)
-      thisTest = thisTest.parent
-    }
-    return titleArr.join(' / ')
-  }
-
-  runner.on('fail', function(t, err) {
-    console.log("Failed:", parseTitle(t))
-    console.log(err)
-    failed++
-  })
-
-  runner.on('end', function() {
-    if (failed > 0) {
-      console.log("*** TEST FAIL", failed)
-    } else {
-      console.log("*** TEST SUCCESS")
-    }
-  })
-
-</script>
 </body>
 </html>
