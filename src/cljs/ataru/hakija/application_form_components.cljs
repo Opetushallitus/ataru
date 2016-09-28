@@ -128,9 +128,10 @@
                    :on-blur     #(when (empty? (-> % .-target .-value))
                                    (clicky))
                    :on-change   (partial on-change (inc idx))}]
-                 [:a.application__form-repeatable-text--addremove
-                  {:on-click clicky}
-                  [:i.zmdi.zmdi-close.zmdi-hc-lg]]]))
+                 (when value
+                   [:a.application__form-repeatable-text--addremove
+                    {:on-click clicky}
+                    [:i.zmdi.zmdi-close.zmdi-hc-lg]])]))
             (concat (rest @values)
               (when (and
                       (some? (:value (last @values)))
