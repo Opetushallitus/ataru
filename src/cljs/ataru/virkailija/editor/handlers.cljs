@@ -298,18 +298,41 @@
 
 (register-handler :editor/save-form save-form)
 
+(defn- post-new-form
+  ([] (post-new-form {}))
+  ([{:keys [name
+            content
+            languages]
+     :or   {name      "Uusi lomake"
+            content   [(pm/person-info-module)]
+            languages [:fi]}}]
+   (post "/lomake-editori/api/forms"
+     {:name      name
+      :content   content
+      :languages languages}
+     (fn [db form]
+       (let [stop-fn (get-in db [:editor :autosave])
+             history (str "/editor/" (:key (languages->kwd form)))]
+         (autosave/stop-autosave! stop-fn)
+         (set-history! history)
+         (assoc-in db [:editor :new-form-created?] true))))))
+
 (register-handler
   :editor/add-form
   (fn [db _]
-    (post "/lomake-editori/api/forms"
-          {:name      "Uusi lomake"
-           :content   [(pm/person-info-module)]
-           :languages [:fi]}
-          (fn [db new-or-updated-form]
-            (autosave/stop-autosave! (-> db :editor :autosave))
-            (set-history! (str "/editor/" (:key (languages->kwd new-or-updated-form))))
-            (assoc-in db [:editor :new-form-created?] true)))
+    (post-new-form)
     db))
+
+(defn- copy-form [db _]
+  (let [form-id (get-in db [:editor :selected-form-key])
+        form    (-> (get-in db [:editor :forms form-id])
+                    (update :name (fn [name]
+                                    (str name " - KOPIO")))
+                    (remove-focus))]
+    (post-new-form form)
+    db))
+
+(register-handler :editor/copy-form copy-form)
 
 (register-handler
   :editor/change-form-name
