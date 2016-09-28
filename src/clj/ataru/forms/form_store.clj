@@ -128,6 +128,6 @@
            (-> form
                ; use :key set in db just to be sure it never is nil
                (assoc :key (:key latest-version))
-               (assoc :organization_oid organization-oid))
+               (assoc :organization-oid organization-oid))
             conn))))
-    (create-new-form! (-> form (dissoc :key) (assoc :organization_oid organization-oid)))))
+    (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid)))))
