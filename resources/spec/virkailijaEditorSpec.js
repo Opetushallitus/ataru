@@ -49,7 +49,7 @@ function clickRepeatingAnswers(question) {
     return testFrame()
       .find("input.editor-form__text-field")
       .filter(function() {
-        return this.value === 'Ensimmäinen kysymys, toistuvilla arvoilla'
+        return this.value === question
       })
       .parent().parent().parent()
       .find(".editor-form__checkbox-wrapper label:contains('Vastaaja voi')")
