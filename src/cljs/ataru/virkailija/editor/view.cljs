@@ -32,11 +32,12 @@
                 [form-row form selected?]))))))
 
 (defn add-form []
-  [:a {:on-click (fn [evt]
-                   (.preventDefault evt)
-                   (dispatch [:editor/add-form]))
-       :href     "#"}
-   "Luo uusi lomake"])
+  [:span.editor-form__add-new
+   [:a {:on-click (fn [evt]
+                    (.preventDefault evt)
+                    (dispatch [:editor/add-form]))
+        :href     "#"}
+    "Luo uusi lomake"]])
 
 (defn- copy-form []
   (let [form (subscribe [:editor/selected-form])]
