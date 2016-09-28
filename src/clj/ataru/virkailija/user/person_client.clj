@@ -6,7 +6,7 @@
 (defn- base-address []
   (get-in config [:authentication-service :base-address]))
 
-(defn list-persons [cas-client search-term]
+(defn get-person [cas-client search-term]
   {:pre [(some? (base-address))]}
   (let [url (str (base-address)
                  "/resources/henkilo?p=false&q="

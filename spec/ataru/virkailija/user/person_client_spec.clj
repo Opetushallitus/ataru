@@ -35,9 +35,9 @@
     (with-redefs [config fake-config
                   cas-client/cas-authenticated-get (fake-cas-get person-response)]
       (should= person1
-               (person-client/list-persons nil "010101-123N"))))
+               (person-client/get-person nil "010101-123N"))))
 
   (it "returns nil when search produces no results"
     (with-redefs [config fake-config
                   cas-client/cas-authenticated-get (fake-cas-get empty-response)]
-      (should-be-nil (person-client/list-persons nil "010101-123N")))))
+      (should-be-nil (person-client/get-person nil "010101-123N")))))
