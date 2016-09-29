@@ -1,4 +1,4 @@
-(ns ataru.virkailija.user.person-client
+(ns ataru.person-service.person-client
   (:require [ataru.cas.client :as cas]
             [cheshire.core :as json]
             [oph.soresu.common.config :refer [config]]))
