@@ -3,7 +3,7 @@ var system = require('system');
 var args = system.args;
 
 var app = args[1];
-var cookie = args.length > 2 ? args[2] : ''
+var cookieOrFormId = args.length > 2 ? args[2] : ''
 
 if (app != 'virkailija' && app != 'hakija') {
   console.log('invalid app: ' + app + ', must be one of [virkailija, hakija]')
@@ -13,14 +13,16 @@ if (app != 'virkailija' && app != 'hakija') {
 if (app == 'virkailija') {
   phantom.addCookie({
     'name': 'ring-session',
-    'value': cookie,
+    'value': cookieOrFormId,
     'domain': 'localhost'
   });
 }
 
-var url = (app == 'virkailija') ? 'http://localhost:8350/lomake-editori/virkailija-test.html' : 'http://localhost:8351/hakemus/hakija-test.html'
+var url = (app == 'virkailija')
+  ? 'http://localhost:8350/lomake-editori/virkailija-test.html'
+  : 'http://localhost:8351/hakemus/hakija-test.html?formId=' + cookieOrFormId
 
-console.log("running browser tests for", app, url, cookie);
+console.log("running browser tests for", app, url, cookieOrFormId);
 
 global.testsSuccessful = undefined;
 var resultPrefix = '*** TEST';

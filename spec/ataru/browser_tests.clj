@@ -10,6 +10,7 @@
             [ataru.test-utils :refer [login]]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
+            [ataru.forms.form-store :as form-store]
             [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]])
   (:import (java.util.concurrent TimeUnit)))
 
@@ -61,9 +62,10 @@
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
           (it "are successful"
-              (let [results (sh-timeout 120 "node_modules/phantomjs-prebuilt/bin/phantomjs"
+              (let [latest-form (first (form-store/get-all-forms))
+                    results (sh-timeout 120 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                         "--web-security" "false"
-                                        "bin/phantomjs-runner.js" "hakija")]
+                                        "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
