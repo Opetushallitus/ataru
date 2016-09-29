@@ -70,7 +70,7 @@
 
                 [false _ {:detail detailed-error
                         :message message}]
-                [:div.flasher {:style {"color" "crimson"}}
+                [:div.flasher
                  [:span message]]
 
                 [_ false {:message (message :guard some?)}]

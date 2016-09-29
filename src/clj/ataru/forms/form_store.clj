@@ -1,6 +1,7 @@
 (ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
             [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
+            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [clj-time.core :as t]
@@ -68,6 +69,9 @@
 (defn get-all-forms []
   (execute yesql-get-all-forms-query {}))
 
+(defn get-organization-oid-by-key [key]
+  (:organization-oid (first (execute yesql-get-latest-version-organization-by-key {:key key}))))
+
 (defn fetch-latest-version [id & [conn]]
   (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
 
@@ -106,6 +110,12 @@
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
+        (if (not= (:organization-oid latest-version) organization-oid)
+          (throw (user-feedback-exception
+                  (str "Ei oikeutta lomakkeeseen "
+                       (:key latest-version)
+                       " organisaatiolla "
+                       organization-oid))))
         (if (latest-version-not-same? form latest-version)
           (do
             (warn (str "Form with id "
@@ -113,11 +123,11 @@
                         " created-time "
                         (:created-time latest-version)
                         " already exists."))
-            {:error "form_updated_in_background"})
+            (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen.")))
           (increment-version
            (-> form
                ; use :key set in db just to be sure it never is nil
                (assoc :key (:key latest-version))
-               (assoc :organization_oid organization-oid))
+               (assoc :organization-oid organization-oid))
             conn))))
-    (create-new-form! (-> form (dissoc :key) (assoc :organization_oid organization-oid)))))
+    (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid)))))
