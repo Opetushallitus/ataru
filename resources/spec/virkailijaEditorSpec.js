@@ -230,6 +230,17 @@ function clickRepeatingAnswers(question) {
           expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
+
+      describe('autosave', function () {
+        before(
+          wait.until(function() {
+            return testFrame().find('.top-banner .flasher').css('opacity') > 0
+          }, 5000)
+        )
+        it('notification shows success', function() {
+          expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
+        })
+      })
     })
   })
 })();
