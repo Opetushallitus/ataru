@@ -205,6 +205,24 @@
     (refresh-forms)
     (update db :editor dissoc :forms)))
 
+(defn- editor-autosave-predicate [current prev]
+  (match [current (merge {:content []} prev)]
+    [_ {:content []}]
+    false
+
+    :else
+    (not=
+      ; :id changes when new version is created,
+      ; :key remains the same across versions
+      (-> prev
+        ; prevent autosave when adding blank dropdown option
+        (update-dropdown-field-options)
+        (dissoc :created-time :id))
+      (-> current
+        ; prevent autosave when adding blank dropdown option
+        (update-dropdown-field-options)
+        (dissoc :created-time :id)))))
+
 (defn fetch-form-content! [form-id]
   (http :get
         (str "/lomake-editori/api/forms/" form-id)
@@ -214,29 +232,11 @@
               [:editor :forms key]
               (languages->kwd response))
             (assoc-in [:editor :autosave]
-                      (autosave/interval-loop {:subscribe-path [:editor :forms key]
-                                               :changed-predicate
-                                               (fn [current prev]
-                                                 (match [current (merge {:content []}
-                                                                        prev)]
-                                                        [_ {:content []}]
-                                                        false
-
-                                                        :else
-                                                        (not=
-                                                          ; :id changes when new version is created,
-                                                          ; :key remains the same across versions
-                                                          (-> prev
-                                                            ; prevent autosave when adding blank dropdown option
-                                                            (update-dropdown-field-options)
-                                                            (dissoc :created-time :id))
-                                                          (-> current
-                                                            ; prevent autosave when adding blank dropdown option
-                                                            (update-dropdown-field-options)
-                                                            (dissoc :created-time :id)))))
-                                               :handler
-                                               (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                 (dispatch [:editor/save-form]))}))))))
+              (autosave/interval-loop {:subscribe-path [:editor :forms key]
+                                       :changed-predicate editor-autosave-predicate
+                                       :handler
+                                       (fn [form previous-autosave-form-at-time-of-dispatch]
+                                         (dispatch [:editor/save-form]))}))))))
 
 (register-handler
   :editor/select-form
