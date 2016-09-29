@@ -10,8 +10,7 @@
 (defqueries "sql/application-queries.sql")
 
 (defonce default-application-request
-  {:sort :by-date
-   :lang "fi"})
+  {:sort :by-date})
 
 (defn- exec-db
   [ds-key query params]
@@ -41,7 +40,11 @@
   (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
          :answers
          (mapv (fn [answer]
-                 (update answer :label (keyword lang)))
+                 (update answer :label (fn [label]
+                                         (or
+                                           (:fi label)
+                                           (:sv label)
+                                           (:en label)))))
                (-> application :content :answers))))
 
 (defn get-application-list

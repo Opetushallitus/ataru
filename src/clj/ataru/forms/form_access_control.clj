@@ -48,7 +48,7 @@
                    " has the wrong amount of organizations: "
                    (count organization-oids)
                    " (required: exactly one).  can't attach form to an ambiguous organization: "
-                   organization-oids))
+                   (vec organization-oids)))
         (throw (user-feedback-exception
                 (if (= 0 org-count)
                   "Käyttäjätunnukseen ei ole liitetty organisaatota"

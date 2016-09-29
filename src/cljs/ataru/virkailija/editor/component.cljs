@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
+            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
@@ -16,20 +17,31 @@
 ; http://stackoverflow.com/questions/26213011/html5-dragdrop-issue-in-internet-explorer-datatransfer-property-access-not-pos
 (def ^:private ie-compatible-drag-data-attribute-name "Text")
 
-(defn- render-checkbox
+(defn- required-checkbox
   [path initial-content]
   (let [id           (util/new-uuid)
-        required?    (true? (some #(= % "required") (:validators initial-content)))]
+        required?    (true? (some? ((set (map keyword (:validators initial-content))) :required)))]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type "checkbox"
                                     :id id
                                     :checked required?
                                     :on-change (fn [event]
-                                                 (let [dispatch-kwd (if (-> event .-target .-checked)
-                                                                     :editor/add-validator
-                                                                     :editor/remove-validator)]
-                                                   (dispatch [dispatch-kwd "required" path])))}]
+                                                 (dispatch [(if (-> event .-target .-checked)
+                                                              :editor/add-validator
+                                                              :editor/remove-validator) "required" path]))}]
      [:label.editor-form__checkbox-label {:for id} "Pakollinen tieto"]]))
+
+(defn- repeater-checkbox
+  [path initial-content]
+  (let [id       (util/new-uuid)
+        checked? (-> initial-content :params :repeatable)]
+    [:div.editor-form__checkbox-container
+     [:input.editor-form__checkbox {:type      "checkbox"
+                                    :id        id
+                                    :checked   checked?
+                                    :on-change (fn [event]
+                                                 (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
+     [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- on-drag-start
   [path]
@@ -146,7 +158,9 @@
                                    :else nil)}
                     btn-name]]))]]
        [:div.editor-form__checkbox-wrapper
-        (render-checkbox path initial-content)]])))
+        [required-checkbox path initial-content]
+        (when-not (= "Tekstialue" header-label)
+          [repeater-checkbox path initial-content])]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -182,7 +196,8 @@
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path])
         dropdown-id      (util/new-uuid)
-        animation-effect (fade-out-effect path)]
+        animation-effect (fade-out-effect path)
+        koodisto-popover-expanded? (r/atom false)]
     (fn [initial-content path]
       (let [languages @languages]
         [:div.editor-form__component-wrapper
@@ -200,14 +215,14 @@
              languages
              :header? true)]
           [:div.editor-form__checkbox-wrapper
-           (render-checkbox path initial-content)]]
+           [required-checkbox path initial-content]]]
 
          [:div.editor-form__multi-options_wrapper
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-          (let [custom-button-value   "Omat vastausvaihtoehdot"
-                custom-button-id      (str dropdown-id "-custom")
-                koodisto-button-value "Koodisto"
-                koodisto-button-id    (str dropdown-id "-koodisto")]
+          (let [custom-button-value        "Omat vastausvaihtoehdot"
+                custom-button-id           (str dropdown-id "-custom")
+                koodisto-button-value      (str "Koodisto" (if-let [koodisto-name (:title @options-koodisto)] (str ": " koodisto-name) ""))
+                koodisto-button-id         (str dropdown-id "-koodisto")]
             [:div.editor-form__button-group
              [:input
               {:type      "radio"
@@ -218,7 +233,8 @@
                :id        custom-button-id
                :on-change (fn [evt]
                             (.preventDefault evt)
-                            (dispatch [:editor/toggle-custom-or-koodisto-options :custom path]))}]
+                            (reset! koodisto-popover-expanded? false)
+                            (dispatch [:editor/select-custom-multi-options path]))}]
              [:label
               {:for   custom-button-id
                :class "editor-form-button--left-edge"}
@@ -232,11 +248,30 @@
                :id        koodisto-button-id
                :on-change (fn [evt]
                             (.preventDefault evt)
-                            (dispatch [:editor/toggle-custom-or-koodisto-options :koodisto path]))}]
+                            (reset! koodisto-popover-expanded? true))}]
              [:label
               {:for   koodisto-button-id
                :class "editor-form-button--right-edge"}
-              koodisto-button-value]])
+              koodisto-button-value]
+             (when @koodisto-popover-expanded?
+               [:div.editor-form__koodisto-popover
+                [:div.editor-form__koodisto-popover-header "Koodisto"
+                 [:a.editor-form__koodisto-popover-close
+                  {:href     "#"
+                   :on-click (fn [e]
+                               (.preventDefault e)
+                               (reset! koodisto-popover-expanded? false))}
+                  [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+                [:ul.editor-form__koodisto-popover-list
+                 (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+                          ^{:key (str "koodisto-" uri)}
+                          [:li.editor-form__koodisto-popover-list-item
+                           [:a.editor-form__koodisto-popover-link {:href     "#"
+                                                                   :on-click (fn [e]
+                                                                               (.preventDefault e)
+                                                                               (reset! koodisto-popover-expanded? false)
+                                                                               (dispatch [:editor/select-koodisto-options uri version title path]))}
+                            title]]))]])])
 
           (when (nil? @options-koodisto)
             (seq [

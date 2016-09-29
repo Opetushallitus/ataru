@@ -46,7 +46,7 @@
     (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                   (should= :db ds-key)
                                   (should= "yesql-application-query-by-modified" (-> query-fn .meta :name))
-                                  (should= {:form_key "abcdefghjkl", :lang "fi"} params)
+                                  (should= {:form_key "abcdefghjkl"} params)
                                   fixtures/applications)]
       (spec)))
 

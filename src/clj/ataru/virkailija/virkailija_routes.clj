@@ -25,7 +25,7 @@
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger]]
+            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
@@ -205,7 +205,13 @@
                               :debug identity
                               :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
-                              :error (fn [x] (error x)))
+                              :error (fn [x] (error x))
+                              :pre-logger (fn [_ _] nil)
+                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
+                                             (when (or
+                                                     (>= status 400)
+                                                     (clojure.string/starts-with? uri "/lomake-editori/api/"))
+                                               (#'middleware-logger/post-logger options request response totaltime))))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 

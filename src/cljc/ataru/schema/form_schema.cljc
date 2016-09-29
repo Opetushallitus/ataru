@@ -59,7 +59,10 @@
                         (s/optional-key :params) s/Any
                         (s/optional-key :no-blank-option) s/Bool
                         (s/optional-key :exclude-from-answers) s/Bool
-                        (s/optional-key :koodisto-source) {:uri s/Str :version s/Int (s/optional-key :default-option) s/Any}
+                        (s/optional-key :koodisto-source) {:uri s/Str
+                                                           :version s/Int
+                                                           (s/optional-key :default-option) s/Any
+                                                           (s/optional-key :title) s/Str}
                         (s/optional-key :options) [Option]
                         :fieldType (apply s/enum ["textField"
                                                   "textArea"
@@ -154,8 +157,7 @@
    :notes                           (s/maybe s/Str)})
 
 (s/defschema ApplicationRequest
-  {(s/optional-key :sort) (s/enum :by-date)
-   (s/optional-key :lang) s/Str})
+  {(s/optional-key :sort) (s/enum :by-date)})
 
 (def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
 

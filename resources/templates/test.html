@@ -34,7 +34,19 @@
     }
   })
 
+  function parseTitle(test) {
+    var titleArr = []
+    var thisTest = test
+    while(thisTest && thisTest.title) {
+      titleArr.unshift(thisTest.title)
+      thisTest = thisTest.parent
+    }
+    return titleArr.join(' / ')
+  }
+
   runner.on('fail', function(t, err) {
+    console.log("Failed:", parseTitle(t))
+    console.log(err)
     failed++
   })
 

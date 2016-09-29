@@ -17,11 +17,15 @@
   }
 }
 
-.editor-form__add-new {
+.editor-form__form-controls-container {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 16px;
   font-size: 14px;
+}
+
+.editor-form__form-control-link-separator {
+  color: @gray;
 }
 
 .editor-form__list {
@@ -212,7 +216,6 @@ section.editor-form > div > .editor-form__component-wrapper {
 
 .editor-form__multi-option-wrapper input {
   margin-right: 10px;
-  width: 332px;
 }
 
 .editor-form__multi-option-wrapper:last-child {
@@ -254,6 +257,7 @@ form > div > .editor-form__component-wrapper {
   display: flex;
   flex-wrap: wrap;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .editor-form__button {
@@ -307,8 +311,13 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__checkbox-container {
-  margin-bottom: 10px;
-  margin-top: 22px;
+  display: flex;
+  align-items: baseline;
+  margin: 5px 0px;
+}
+
+.editor-form__checkbox-container:last-child {
+  margin: 0;
 }
 
 .editor-form__component-item-header {
@@ -436,4 +445,48 @@ form > div > .editor-form__component-wrapper {
   height: 100px;
   margin: 14px 0px;
   border: 1px dashed #cccccc;
+}
+
+.editor-form__koodisto-popover {
+  position: absolute;
+  left: 407px;
+  top: -10px;
+  min-width: 200px;
+  background: @popover-background-gray;
+  box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.12), 0px 2px 2px 0px rgba(0, 0, 0, 0.24);
+  border-radius: 2px;
+  z-index: 5;
+}
+
+.editor-form__koodisto-popover-header {
+  padding: 10px;
+  margin: 10px 0;
+  position: relative;
+}
+
+.editor-form__koodisto-popover-close {
+  color: #2a2a2a;
+  position: absolute;
+  right: 10px;
+}
+
+.editor-form__koodisto-popover-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.editor-form__koodisto-popover-list-item {
+  height: 41px;
+}
+
+.editor-form__koodisto-popover-list-item:hover {
+  background-color: @popover-highlighted-gray;
+}
+
+.editor-form__koodisto-popover-link {
+  color: #2a2a2a;
+  padding: 10px;
+  display: block;
+  width: 100%;
 }

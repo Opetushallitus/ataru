@@ -88,7 +88,11 @@
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
-          value (:value answer)]
+          value-or-values (-> (:value answer))
+          value (or
+                  (when (or (seq? value-or-values) (vector? value-or-values))
+                    (apply str (interpose "\n" value-or-values)))
+                  value-or-values)]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (when-let [notes (:notes (application-store/get-application-review (:id application)))]
     (let [column (+ (apply max (map :column headers))
@@ -115,14 +119,12 @@
                    {:header header :column idx})
                  all-labels)))
 
-(defn export-all-applications [form-key & {:keys [language] :or {language :fi}}]
+(defn export-all-applications [form-key]
   (let [workbook (XSSFWorkbook.)
         form (form-store/fetch-by-key form-key)
         form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
         applications-sheet (.createSheet workbook "Hakemukset")
-        applications (application-store/get-applications
-                       form-key
-                       {:lang (name language)})
+        applications (application-store/get-applications form-key {})
         application-meta-fields (indexed-meta-fields application-meta-fields)
         headers (extract-headers applications form)]
     (when (not-empty form)

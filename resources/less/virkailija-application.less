@@ -222,6 +222,17 @@ and (max-width: 1000px) {
   font-weight: 600;
 }
 
+.application__form-field-list {
+  list-style-type: none; 
+  margin: 0;
+  padding: 0;
+}
+.application__form-field-list li::before {
+  content: '-';
+  margin-right: 1em;
+  padding-left: 10px;
+}
+
 .application__wrapper-heading {
   position: absolute;
   width: 245px;

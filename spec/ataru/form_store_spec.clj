@@ -2,15 +2,23 @@
   (:require [speclj.core :refer :all]
             [clj-time.core :as t]
             [ataru.fixtures.person-info-form :refer [form]]
+            [ataru.fixtures.db.unit-test-db :as db]
             [ataru.forms.form-store :as store]
-            [taoensso.timbre :refer [spy debug]]))
-
+            [taoensso.timbre :refer [spy debug]]
+            [oph.soresu.common.db :as soresu-db]
+            [yesql.core :as sql]
+            [manual-migrations :as migrations]))
 
 (def org-id  "1.2.246.562.10.2.45")
 (def id-less (-> form (dissoc :id) (assoc :organization_oid org-id)))
 
 (describe "form versioning"
   (tags :unit)
+
+  (after
+    (db/clear-database)
+    (migrations/migrate))
+
   (it "should be saved as new form"
       (let [{:keys [id key] :as new-form} (store/create-new-form! id-less)]
         (should id)

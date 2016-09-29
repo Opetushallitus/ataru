@@ -44,6 +44,19 @@ function autosaveSuccessful() {
   return function() { $('.top-banner .flasher span').text() === "Kaikki muutokset tallennettu" }
 }
 
+function clickRepeatingAnswers(question) {
+  return function() {
+    return testFrame()
+      .find("input.editor-form__text-field")
+      .filter(function() {
+        return this.value === question
+      })
+      .parent().parent().parent()
+      .find(".editor-form__checkbox-wrapper label:contains('Vastaaja voi')")
+      .prev().click()
+  }
+}
+
 (function() {
   afterEach(function() {
     expect(window.uiError || null).to.be.null
@@ -93,6 +106,21 @@ function autosaveSuccessful() {
         })
       })
 
+      describe('textfield with repeating answers', function() {
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys, toistuvilla arvoilla'),
+          clickRepeatingAnswers('Ensimmäinen kysymys, toistuvilla arvoilla'),
+          wait.forMilliseconds(1000)
+        )
+        it('has expected contents', function() {
+          expect(formComponents()).to.have.length(2)
+          expect(formComponents().eq(0).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys, toistuvilla arvoilla')
+          expect(formComponents().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('M')
+          expect(formComponents().eq(0).find('.editor-form__checkbox-container input').eq(1).prop('checked')).to.equal(true)
+        })
+      })
+
       describe('textarea', function() {
         before(
           clickComponentMenuItem('Tekstialue'),
@@ -101,7 +129,7 @@ function autosaveSuccessful() {
           setTextFieldValue(function() { return formComponents().eq(1).find('.editor-form__text-field')}, 'Toinen kysymys')
         )
         it('has expected contents', function() {
-          expect(formComponents()).to.have.length(2)
+          expect(formComponents()).to.have.length(3)
           expect(formComponents().eq(1).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
           expect(formComponents().eq(1).find('.editor-form__button-group input:checked').val()).to.equal('L')
           expect(formComponents().eq(1).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
@@ -111,20 +139,20 @@ function autosaveSuccessful() {
       describe('dropdown', function() {
         before(
           clickComponentMenuItem('Pudotusvalikko'),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field').eq(0)}, 'Kolmas kysymys'),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field:last')}, 'Ensimmäinen vaihtoehto'),
-          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') }),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field:last')}, 'Toinen vaihtoehto'),
-          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') }),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
-          clickElement(function() { return formComponents().eq(2).find('.editor-form__add-dropdown-item a') })
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field').eq(0)}, 'Kolmas kysymys'),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Ensimmäinen vaihtoehto'),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Toinen vaihtoehto'),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') })
         )
         it('has expected contents', function() {
-          expect(formComponents()).to.have.length(3)
-          expect(formComponents().eq(2).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
-          expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
-          expect(formComponents().eq(2).find('.editor-form__multi-option-wrapper input').length).to.equal(4)
-          var options = _.map(formComponents().eq(2).find('.editor-form__multi-option-wrapper input'), function(inputField) {
+          expect(formComponents()).to.have.length(4)
+          expect(formComponents().eq(3).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
+          expect(formComponents().eq(3).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formComponents().eq(3).find('.editor-form__multi-option-wrapper input').length).to.equal(4)
+          var options = _.map(formComponents().eq(3).find('.editor-form__multi-option-wrapper input'), function(inputField) {
             return $(inputField).val()
           })
           expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])
@@ -141,7 +169,7 @@ function autosaveSuccessful() {
           clickElement(function() { return formSections().eq(0).find('.editor-form__button-group div:eq(0) label')})
         )
         it('has expected contents', function() {
-          expect(formComponents()).to.have.length(5)
+          expect(formComponents()).to.have.length(6)
           expect(formSections().eq(0).find('.editor-form__text-field').eq(0).val()).to.equal('Testiosio')
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
           expect(formSections().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('S')

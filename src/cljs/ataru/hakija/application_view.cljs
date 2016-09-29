@@ -6,8 +6,30 @@
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
-(defn application-header [form-name]
-  [:h1.application__header form-name])
+(def ^:private language-names
+  {:fi "Suomeksi"
+   :sv "På svenska"
+   :en "In English"})
+
+(defn application-header [form]
+  (let [selected-lang (:selected-language form)
+        languages     (filter
+                        (partial not= selected-lang)
+                        (:languages form))
+        submit-status (subscribe [:state-query [:application :submit-status]])]
+    (fn [form]
+      [:div.application__header-container
+       [:span.application__header (:name form)]
+       (when (and (not= :submitted @submit-status)
+                  (> (count languages) 0))
+         [:span.application__header-text
+          (map-indexed (fn [idx lang]
+                         (cond-> [:span {:key (name lang)}
+                                  [:a {:href (str "/hakemus/" (:key form) "/" (name lang))}
+                                   (get language-names lang)]]
+                           (> (dec (count languages)) idx)
+                           (conj [:span.application__header-language-link-separator " | "])))
+                       languages)])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -27,7 +49,8 @@
   (let [form (subscribe [:state-query [:form]])]
     (fn []
       [:div.application__form-content-area
-       [application-header (:name @form)]
+       ^{:key (:id @form)}
+       [application-header @form]
        [render-fields @form]])))
 
 (defn error-display []

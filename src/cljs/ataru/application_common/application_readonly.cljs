@@ -14,46 +14,53 @@
                                                                        textual-field-value
                                                                        scroll-to-anchor]]))
 
-(defn text [application field-descriptor]
+(defn text [field-descriptor application lang]
   [:div.application__form-field
    [:label.application__form-field-label
-    (str (-> field-descriptor :label :fi) (required-hint field-descriptor))]
-   [:div (textual-field-value field-descriptor application)]])
+    (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+   [:div
+    (or
+      (let [values (:value ((answer-key field-descriptor) (:answers application)))]
+        (when (or (seq? values) (vector? values))
+          (into [:ul.application__form-field-list] (for [value values] [:li value]))))
+      (textual-field-value field-descriptor application))]])
 
 (declare field)
 
-(defn child-fields [children application ui]
+(defn child-fields [children application lang ui]
   (for [child children
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
-    [field child application]))
+    [field child application lang]))
 
-(defn wrapper [content application children]
+(defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application children]
+    (fn [content application lang children]
         [:div.application__wrapper-element.application__wrapper-element--border
          [:div.application__wrapper-heading
-          [:h2 (-> content :label :fi)]
+          [:h2 (-> content :label lang)]
           [scroll-to-anchor content]]
          (into [:div.application__wrapper-contents]
-               (child-fields children application @ui))])))
+               (child-fields children application lang @ui))])))
 
-(defn row-container [application children]
+(defn row-container [application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [application children]
-      (into [:div] (child-fields children application @ui)))))
+    (fn [application lang children]
+      (into [:div] (child-fields children application lang @ui)))))
 
-(defn field [content application]
+(defn field [content application lang]
   (match content
-         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application children]
-         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application children]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text application content)))
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text content application lang)))
 
 (defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [form application]
       (when form
-        (into [:div.application__readonly-container]
-          (for [content (:content form)
-                :when   (get-in @ui [(keyword (:id content)) :visible?] true)]
-                [field content application]))))))
+        (let [lang (or (:selected-language form)
+                       :fi)]
+          (into [:div.application__readonly-container]
+            (for [content (:content form)
+                  :when (get-in @ui [(keyword (:id content)) :visible?] true)]
+              [field content application lang])))))))

@@ -13,11 +13,11 @@
      (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
    (component/system-map
-    :handler        (component/using
-                     (virkailija-routes/new-handler)
-                     [:organization-service])
+     :handler        (component/using
+                       (virkailija-routes/new-handler)
+                       [:organization-service])
 
-     :server-setup   {:port http-port
+     :server-setup   {:port      http-port
                       :repl-port repl-port}
 
      :organization-service (organization-service/new-organization-service)

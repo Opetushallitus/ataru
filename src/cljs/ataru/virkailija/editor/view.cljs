@@ -32,12 +32,29 @@
                 [form-row form selected?]))))))
 
 (defn add-form []
-  [:div.editor-form__add-new
+  [:span.editor-form__add-new
    [:a {:on-click (fn [evt]
                     (.preventDefault evt)
                     (dispatch [:editor/add-form]))
-        :href "#"}
+        :href     "#"}
     "Luo uusi lomake"]])
+
+(defn- copy-form []
+  (let [form (subscribe [:editor/selected-form])]
+    (fn []
+      (when-not (empty? (:content @form))
+        [:span
+         [:span.editor-form__form-control-link-separator " | "]
+         [:a {:on-click (fn [event]
+                          (.preventDefault event)
+                          (dispatch [:editor/copy-form]))}
+          "Kopioi valittu lomake"]]))))
+
+(defn- form-controls []
+  [:div.editor-form__form-controls-container
+   [:span
+    [add-form]
+    [copy-form]]])
 
 (defn editor-name []
   (let [form              (subscribe [:editor/selected-form])
@@ -84,7 +101,7 @@
                (get lang-versions lang-kwd)
                text)]
     [:a
-     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form))
+     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form) "/" (name lang-kwd))
       :target "_blank"}
      text]))
 
@@ -134,6 +151,6 @@
 (defn editor []
     [:div
      [:div.editor-form__container.panel-content
-      [add-form]
+      [form-controls]
       [form-list]]
      [editor-panel]])

@@ -1,7 +1,8 @@
 (ns ataru.hakija.application-handlers
   (:require [re-frame.core :refer [register-handler dispatch]]
             [ataru.hakija.application-validators :as validator]
-            [ataru.hakija.hakija-ajax :refer [get post]]
+            [ataru.cljs-util :as util]
+            [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
@@ -14,7 +15,7 @@
    :application {:answers {}}})
 
 (defn get-latest-form-by-key [db [_ form-key]]
-  (get
+  (ajax/get
     (str "/hakemus/api/form/" form-key)
     :application/handle-form)
   db)
@@ -31,8 +32,8 @@
   handle-submit)
 
 (defn submit-application [db _]
-  (post "/hakemus/api/application"
-        (create-application-to-submit (:application db) (:form db) "fi")
+  (ajax/post "/hakemus/api/application"
+        (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
         :application/handle-submit-response)
   (assoc-in db [:application :submit-status] :submitting))
 
@@ -40,11 +41,34 @@
   :application/submit-form
   submit-application)
 
+(def ^:private lang-pattern #"/(\w{2})$")
+
+(defn- get-lang-from-path [supported-langs]
+  ((set supported-langs)
+   (some->> (util/get-path)
+     (re-find lang-pattern)
+     second
+     keyword)))
+
+(defn- set-form-language [form & [lang]]
+  (let [supported-langs (:languages form)
+        lang            (or lang
+                          (get-lang-from-path supported-langs)
+                          (first supported-langs))]
+    (assoc form :selected-language lang)))
+
+(defn- languages->kwd [form]
+  (update form :languages
+    (fn [languages]
+      (mapv keyword languages))))
+
 (defn handle-form [db [_ form]]
-  (-> db
-    (assoc :form form)
-    (assoc :application {:answers (create-initial-answers form)})
-    (assoc :wrapper-sections (extract-wrapper-sections form))))
+  (let [form (-> (languages->kwd form)
+                 (set-form-language))]
+    (-> db
+        (assoc :form form)
+        (assoc :application {:answers (create-initial-answers form)})
+        (assoc :wrapper-sections (extract-wrapper-sections form)))))
 
 (register-handler
   :flasher
@@ -67,6 +91,40 @@
 (register-handler
   :application/set-application-field
   set-application-field)
+
+(register-handler
+  :application/set-repeatable-application-field
+  (fn [db [_ key idx {:keys [value valid] :as values}]]
+    (let [path                      [:application :answers key :values]
+          with-answer               (if (and
+                                          (zero? idx)
+                                          (empty? value)
+                                          (= 1 (count (get-in db path))))
+                                      (assoc-in db path [])
+                                      (update-in db path (fnil assoc []) idx values))
+          all-values                (get-in with-answer path)
+          validity-for-validation   (boolean
+                                      (some->>
+                                        (map :valid (or (when (= 1 (count all-values))
+                                                          [values])
+                                                      (butlast all-values)))
+                                        not-empty
+                                        (every? true?)))
+          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
+      (update-in
+        with-answer
+        (butlast path)
+        assoc
+        :valid validity-for-validation
+        :value value-for-readonly-fields-and-db))))
+
+(register-handler
+  :application/remove-repeatable-application-field-value
+  (fn [db [_ key idx]]
+    (update-in db [:application :answers key :values]
+      (fn [values]
+        (vec
+          (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))

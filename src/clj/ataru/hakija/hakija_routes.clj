@@ -14,7 +14,7 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger]]
+            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -72,6 +72,9 @@
                  (response/ok labels)
                  (response/not-found))))))
 
+(defn- render-application []
+  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))
+
 (defrecord Handler []
   component/Lifecycle
 
@@ -99,13 +102,21 @@
                                              (route/resources "/")
                                              (api/undocumented
                                              (api/GET "/:key" []
-                                                      (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))))
+                                               (render-application))
+                                             (api/GET "/:key/:lang" []
+                                               (render-application))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity
                               :info (fn [x] (info x))
                               :warn (fn [x] (warn x))
-                              :error (fn [x] (error x)))
+                              :error (fn [x] (error x))
+                              :pre-logger (fn [_ _] nil)
+                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
+                                             (when (or
+                                                     (>= status 400)
+                                                     (clojure.string/starts-with? uri "/hakemus/api/"))
+                                               (#'middleware-logger/post-logger options request response totaltime))))
                             (wrap-gzip))))
 
   (stop [this]
