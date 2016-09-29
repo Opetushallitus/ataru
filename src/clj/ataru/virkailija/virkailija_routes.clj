@@ -225,7 +225,8 @@
                               :debug identity
                               :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
-                              :error (fn [x] (error x)))
+                              :error (fn [x] (error x))
+                              :pre-logger (fn [_ _] nil))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 
