@@ -18,7 +18,6 @@
                         (:languages form))
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn [form]
-      (println @submit-status)
       [:div.application__header-container
        [:span.application__header (:name form)]
        (when (and (not= :submitted @submit-status)
