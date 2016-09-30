@@ -76,3 +76,9 @@
                          yesql-application-query-by-modified)
                    (dissoc (transform-keys ->snake_case request)
                            :sort)))))
+
+(defn add-person-oid
+  "Add person OID to an application"
+  [application-id person-oid]
+  (exec-db :db yesql-add-person-oid!
+    {:id application-id :person_oid person-oid}))

@@ -39,6 +39,8 @@
      {:key "G__14", :label "Seitsemas kysymys", :value "f", :fieldType "textField"}
      {:key "G__47", :label "Kuudes kysymys", :value "g", :fieldType "textField"}]}])
 
+(def oid "1.2.246.562.24.96282369159")
+
 (describe "get-applications"
           (tags :unit)
 
@@ -54,3 +56,16 @@
               (should= expected-applications (map
                                                #(dissoc % :created-time)
                                                (store/get-applications form-key {})))))
+
+(describe "setting person oid to application"
+  (tags :unit)
+
+  (it "should set person oid to the application"
+    (let [expected (assoc (first fixtures/applications) :person-oid oid)]
+      (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                    (should= :db ds-key)
+                                    (should= "yesql-add-person-oid!" (-> query-fn .meta :name))
+                                    (should= {:id 1 :person_oid oid} params)
+                                    expected)]
+        (should= expected
+                 (store/add-person-oid (:id expected) oid))))))
