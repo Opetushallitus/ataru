@@ -17,8 +17,8 @@ function parseTitle(test) {
   return titleArr.join(' / ')
 }
 
-runner.on('test', function(t) {
-  console.log("Starting", parseTitle(t));
+runner.on('test end', function(t) {
+  console.log("Completed:", parseTitle(t));
 })
 
 runner.on('fail', function(t, err) {
