@@ -1,6 +1,6 @@
-(ns ataru.virkailija.user.person-client-spec
+(ns ataru.person-service.person-client-spec
   (:require [ataru.cas.client :as cas-client]
-            [ataru.virkailija.user.person-client :as person-client]
+            [ataru.person-service.person-client :as person-client]
             [cheshire.core :as json]
             [oph.soresu.common.config :refer [config]]
             [ring.util.http-response :as response]
