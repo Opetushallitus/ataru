@@ -4,4 +4,4 @@
 (def id-seq (atom 0))
 
 (defn store-new [job-type state]
-  (swap! in-memory-store assoc (swap! id-seq inc) {job-type state}))
+  (swap! in-memory-store assoc (swap! id-seq inc) {job-type {:state state :next-step :initial}}))
