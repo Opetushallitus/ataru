@@ -8,8 +8,13 @@ echo $OLD_CWD
 export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
 export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 
+exec-lein-cmd() {
+    ./bin/lein version
+    $1
+}
+
 compile-less() {
-    ./bin/lein less once
+    exec-lein-cmd "./bin/lein less once"
 }
 
 npm-dependencies() {
@@ -17,35 +22,35 @@ npm-dependencies() {
 }
 
 process-resources() {
-    ./bin/lein resource
+    exec-lein-cmd "./bin/lein resource"
 }
 
 build-clojurescript-virkailija() {
-    ./bin/lein cljsbuild once virkailija-min
+    exec-lein-cmd "./bin/lein cljsbuild once virkailija-min"
 }
 
 build-clojurescript-hakija() {
-    ./bin/lein cljsbuild once hakija-min
+    exec-lein-cmd "./bin/lein cljsbuild once hakija-min"
 }
 
 create-uberjar() {
-    ./bin/lein uberjar
+    exec-lein-cmd "./bin/lein uberjar"
 }
 
 test-clojure() {
-    ./bin/lein spec -t ~ui
+    exec-lein-cmd "./bin/lein spec -t ~ui"
 }
 
 test-clojurescript() {
-    ./bin/lein doo phantom test once
+    exec-lein-cmd "./bin/lein doo phantom test once"
 }
 
 test-integration() {
-    ./bin/lein spec -t ui
+    exec-lein-cmd "./bin/lein spec -t ui"
 }
 
 run-migrations() {
-    ./bin/lein with-profile dev run -m manual-migrations/migrate
+    exec-lein-cmd "./bin/lein with-profile dev run -m manual-migrations/migrate"
 }
 
 clean() {
