@@ -1,7 +1,7 @@
 (ns ataru.background-job.job
-  (:require [ataru.background-job.job-types :as job-types]
-            [ataru.background-job.job-store :as job-store]
-            [taoensso.timbre :as log]))
+  (:require
+   [ataru.background-job.job-store :as job-store]
+   [taoensso.timbre :as log]))
 
 ;; These "step-transitions" are common to all jobs.
 ;; The go to final steps or remain in current
