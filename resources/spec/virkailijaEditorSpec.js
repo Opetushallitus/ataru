@@ -40,10 +40,6 @@ function clickComponentMenuItem(title) {
   return clickElement(menuItem)
 }
 
-function autosaveSuccessful() {
-  return function() { $('.top-banner .flasher span').text() === "Kaikki muutokset tallennettu" }
-}
-
 function clickRepeatingAnswers(question) {
   return function() {
     return testFrame()
@@ -99,8 +95,7 @@ function clickRepeatingAnswers(question) {
       describe('textfield', function() {
         before(
           clickComponentMenuItem('Tekstikenttä'),
-          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
-          wait.forMilliseconds(1000)
+          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(1)
@@ -113,30 +108,29 @@ function clickRepeatingAnswers(question) {
       describe('textfield with repeating answers', function() {
         before(
           clickComponentMenuItem('Tekstikenttä'),
-          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys, toistuvilla arvoilla'),
-          clickRepeatingAnswers('Ensimmäinen kysymys, toistuvilla arvoilla'),
-          wait.forMilliseconds(1000)
+          setTextFieldValue(function() { return formComponents().eq(1).find('.editor-form__text-field') }, 'Ensimmäinen kysymys, toistuvilla arvoilla'),
+          clickRepeatingAnswers('Ensimmäinen kysymys, toistuvilla arvoilla')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(2)
-          expect(formComponents().eq(0).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys, toistuvilla arvoilla')
-          expect(formComponents().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('M')
-          expect(formComponents().eq(0).find('.editor-form__checkbox-container input').eq(1).prop('checked')).to.equal(true)
+          expect(formComponents().eq(1).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys, toistuvilla arvoilla')
+          expect(formComponents().eq(1).find('.editor-form__button-group input:checked').val()).to.equal('M')
+          expect(formComponents().eq(1).find('.editor-form__checkbox-container input').eq(1).prop('checked')).to.equal(true)
         })
       })
 
       describe('textarea', function() {
         before(
           clickComponentMenuItem('Tekstialue'),
-          clickElement(function() { return formComponents().eq(1).find('.editor-form__button-group div:eq(2) label')}),
-          clickElement(function() { return formComponents().eq(1).find('.editor-form__checkbox-wrapper label')}),
-          setTextFieldValue(function() { return formComponents().eq(1).find('.editor-form__text-field')}, 'Toinen kysymys')
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__button-group div:eq(2) label')}),
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__checkbox-wrapper label')}),
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(3)
-          expect(formComponents().eq(1).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
-          expect(formComponents().eq(1).find('.editor-form__button-group input:checked').val()).to.equal('L')
-          expect(formComponents().eq(1).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(2).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
+          expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
+          expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
 
