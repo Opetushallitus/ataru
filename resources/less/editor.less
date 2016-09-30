@@ -156,17 +156,35 @@ section.editor-form > div > .editor-form__component-wrapper {
 .editor-form__component-wrapper {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: flex-start;
   margin: 0px 11px;
 }
 
+.editor-form__component-row-wrapper {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+}
+
+.editor-form__info-component-wrapper {
+  padding: 0px 14px 20px;
+  .editor-form__info-component-checkbox {
+    label {
+      color: @blue-text-color;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    input {
+      margin-right: 9px;
+    }
+  }
+}
+      
 .editor-form__text-field-wrapper {
-  padding: 10px 14px 20px;
+  padding: 10px 14px 0px;
   margin-right: 61px;
   display: flex;
   flex-flow: column nowrap;
+  justify-content: flex-end;
   flex-basis: 390px;
 }
 
@@ -178,6 +196,14 @@ section.editor-form > div > .editor-form__component-wrapper {
   padding: 10px 14px 11px;
   height: 43px;
   width: 434px;
+}
+
+.editor-form__info-component-inputs {
+  padding-left: 26px;
+  padding-top: 10px;
+  .editor-form__text-field {
+    width: 408px;
+  }
 }
 
 .editor-form__multi-question-wrapper {
@@ -201,23 +227,34 @@ section.editor-form > div > .editor-form__component-wrapper {
 
 .editor-form__multi-options-wrapper-inner {
   border-right: 1px solid @section-header-text;
+  padding-right: 10px;
   margin-right: 10px;
 }
 
 .editor-form__text-field-container {
-  position: relative;
   padding-bottom: 10px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.editor-form__text-field-label {
+  color: @blue-text-color;
+  font-size: 13px;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  left: -10px;
+  width: 0;
 }
 
 .editor-form__multi-option-wrapper {
 }
 
 .editor-form__text-field-wrapper--with-label {
-  padding-right: 35px;
 }
 
 .editor-form__multi-option-wrapper input {
-  margin-right: 10px;
 }
 
 .editor-form__multi-option-wrapper:last-child {
@@ -233,15 +270,6 @@ form > div > .editor-form__component-wrapper {
   margin-right: 0;
 }
 
-.editor-form__text-field-label {
-  color: @blue-text-color;
-  direction: ltr;
-  display: inline-block;
-  left: 408px;
-  font-size: 13px;
-  top: 13px;
-  position: absolute;
-}
 
 .editor-form__text-field--section {
   padding-bottom: 1px;
@@ -491,4 +519,10 @@ form > div > .editor-form__component-wrapper {
   padding: 10px;
   display: block;
   width: 100%;
+}
+
+.editor-form__info-component-checkbox {
+}
+
+.editor-form__info-component-inputs {
 }
