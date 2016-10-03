@@ -73,6 +73,12 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
+(defn info-text [field-descriptor]
+  (let [language (subscribe [:application/form-language])]
+    (fn [field-descriptor]
+      (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+        [:div.application__form-info-text info]))))
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (keyword (:id field-descriptor))
         value        (subscribe [:state-query [:application :answers id :value]])
@@ -83,6 +89,7 @@
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor size-class]
+       [info-text field-descriptor]
        [:input.application__form-text-input
         (merge {:id          id
                 :type        "text"
@@ -107,7 +114,8 @@
                        (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
-              [label field-descriptor size-class]]
+              [label field-descriptor size-class]
+              [info-text field-descriptor]]
         (cons
           (let [{:keys [value valid]} (first @values)]
             [:div
@@ -165,6 +173,7 @@
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
+       [info-text field-descriptor]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
