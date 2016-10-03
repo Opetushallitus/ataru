@@ -10,6 +10,9 @@
 ;; The go to final steps or remain in current
 (def common-transitions [:initial :final :fail :retry :to-next])
 
+(defn- verify-job-definitions [runner]
+  (if-not (:job-definitions runner) (throw (Exception. "No job definintions given for JobRunner"))))
+
 (defn start-job
   "Start a new background job of type <job-type>.
    initial-state is the initial data map needed to start the job (can be anything)"
@@ -22,6 +25,7 @@
 (defrecord JobRunner []
   component/Lifecycle
   (start [this]
+    (verify-job-definitions this)
     (assoc this :executor (execution/start this)))
   (stop [this]
     (-> this :executor (.shutdown))
