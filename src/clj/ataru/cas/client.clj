@@ -15,17 +15,22 @@
      :params cas-params
      :session-id (atom nil)}))
 
-(defn cas-authenticated-get [client url]
-  (let [cas-client (:client client)
-        cas-params (:params client)
-        cas-session-id (:session-id client)]
+(defn- cas-http [client method url]
+  (let [cas-client     (:client client)
+        cas-params     (:params client)
+        cas-session-id (:session-id client)
+        http-fn        (case method
+                         :get http/get)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params))))
-    (let [params {:headers {"Cookie" (str "JSESSIONID=" @cas-session-id)}
+    (let [params {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
                   :follow-redirects false}
-            resp  @(http/get url params)]
+          resp   @(http-fn url params)]
       (if (= 302 (:status resp))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params)))
-          @(http/get url params))
+          @(http-fn url params))
         resp))))
+
+(defn cas-authenticated-get [client url]
+  (cas-http client :get url))
