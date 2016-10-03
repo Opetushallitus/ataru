@@ -6,16 +6,16 @@
             [oph.soresu.common.config :refer [config]]))
 
 (defprotocol PersonService
-  (get-person [this search-term]
-    "Get a person using a SSN or OID as a search term. Returns
+  (get-person [this ssn email]
+    "Get a person using a SSN and e-mail as a search term. Returns
      nil if no search results is produced by the search term."))
 
 (defrecord IntegratedPersonService []
   component/Lifecycle
   PersonService
 
-  (get-person [{:keys [cas-client]} search-term]
-    (person-client/get-person cas-client search-term))
+  (get-person [{:keys [cas-client]} ssn email]
+    (person-client/get-person cas-client ssn email))
 
   (start [this]
     (assoc this :cas-client (cas/new-client "/authentication-service")))
@@ -27,7 +27,7 @@
   component/Lifecycle
   PersonService
 
-  (get-person [this search-term]
+  (get-person [this ssn email]
     fixtures/fake-person)
 
   (start [this]

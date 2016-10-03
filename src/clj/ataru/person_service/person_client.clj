@@ -6,14 +6,12 @@
 (defn- base-address []
   (get-in config [:authentication-service :base-address]))
 
-(defn get-person [cas-client search-term]
+(defn get-person [cas-client ssn email]
   {:pre [(some? (base-address))]}
-  (let [url (str (base-address)
-                 "/resources/henkilo?p=false&q="
-                 search-term)]
-    (-> (cas/cas-authenticated-get cas-client url)
+  (let [url  (str (base-address) "/resources/s2s/hakuperusteet")
+        body {:personId ssn
+              :email    email}]
+    (-> (cas/cas-authenticated-post cas-client url body)
         :body
         slurp
-        (json/parse-string true)
-        :results
-        first)))
+        (json/parse-string true))))

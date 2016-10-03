@@ -1,9 +1,9 @@
 (ns ataru.person-service.person-integration
   (:require [ataru.applications.application-store :as application-store]))
 
-(defn- extract-ssn [{:keys [answers]}]
+(defn- extract-field [{:keys [answers]} field]
   (some (fn [{:keys [key value]}]
-          (when (= key "ssn")
+          (when (= key field)
             value))
         answers))
 
@@ -13,11 +13,14 @@
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
-  (when-let [ssn (-> (application-store/get-application application-id)
-                     (extract-ssn))]
-    (let [person     (.get-person person-service ssn)
-          person-oid (:oidHenkilo person)]
-      (application-store/add-person-oid application-id person-oid)
-      {:transition    {:id :final}})))
+  (let [application (application-store/get-application application-id)
+        ssn         (extract-field application "ssn")
+        email       (extract-field application "email")]
+    (if (and (some? ssn)
+             (some? email))
+      (let [person     (.get-person person-service ssn email)
+            person-oid (:oidHenkilo person)]
+        (application-store/add-person-oid application-id person-oid)
+        {:transition {:id :final}}))))
 
 (def job-definition {:steps {:initial store-person-oid}})
