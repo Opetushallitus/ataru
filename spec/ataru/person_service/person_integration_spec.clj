@@ -30,4 +30,4 @@
                  (person-integration/store-person-oid
                    {:application-id (:id application)}
                    system))
-        (should @oid-in-db?))))
+        (should @oid-in-db?)))))
