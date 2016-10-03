@@ -1,8 +1,9 @@
 (ns ataru.cas.client
   (:require
-   [aleph.http :as http]
-   [clj-util.cas :as cas]
-   [oph.soresu.common.config :refer [config]]))
+    [aleph.http :as http]
+    [clj-util.cas :as cas]
+    [oph.soresu.common.config :refer [config]]
+    [cheshire.core :as json]))
 
 (defn new-client [cas-uri]
   {:pre [(some? (:cas config))]}
@@ -15,16 +16,24 @@
      :params cas-params
      :session-id (atom nil)}))
 
-(defn- cas-http [client method url]
+(defn- request-with-json-body [request body]
+  (-> request
+      (assoc-in [:headers "Content-Type"] "application/json")
+      (assoc :body (json/generate-string body))))
+
+(defn- cas-http [client method url & [body]]
   (let [cas-client     (:client client)
         cas-params     (:params client)
         cas-session-id (:session-id client)
         http-fn        (case method
-                         :get http/get)]
+                         :get http/get
+                         :post http/post)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params))))
-    (let [params {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
-                  :follow-redirects false}
+    (let [params (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
+                          :follow-redirects false}
+                   (some? body)
+                   (request-with-json-body body))
           resp   @(http-fn url params)]
       (if (= 302 (:status resp))
         (do
@@ -34,3 +43,6 @@
 
 (defn cas-authenticated-get [client url]
   (cas-http client :get url))
+
+(defn cas-authenticated-post [client url body]
+  (cas-http client :post url body))
