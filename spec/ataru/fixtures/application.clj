@@ -118,3 +118,65 @@
                                              {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
                                              {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
                                              {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}]})
+
+(def application-with-person-info-module {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
+                                          :lang "fi",
+                                          :form_id 703,
+                                          :id 3,
+                                          :answers [{:key "address",
+                                                     :label {:en "Address", :fi "Katuosoite", :sv "Näraddress"},
+                                                     :value "Paratiisitie 13",
+                                                     :fieldType "textField"}
+                                                    {:key "email",
+                                                     :label {:en "E-mail address", :fi "Sähköpostiosoite", :sv "E-postadress"},
+                                                     :value "aku@ankkalinna.com",
+                                                     :fieldType "textField"}
+                                                    {:key "preferred-name",
+                                                     :label {:en "Middle name", :fi "Kutsumanimi", :sv "Tilltalsnamn"},
+                                                     :value "Aku",
+                                                     :fieldType "textField"}
+                                                    {:key "last-name",
+                                                     :label {:en "Surname", :fi "Sukunimi", :sv "Efternamn"},
+                                                     :value "Ankka",
+                                                     :fieldType "textField"}
+                                                    {:key "phone",
+                                                     :label {:en "Mobile phone number", :fi "Matkapuhelin", :sv "Mobiltelefonnummer"},
+                                                     :value "050123",
+                                                     :fieldType "textField"}
+                                                    {:key "nationality",
+                                                     :label {:en "Nationality", :fi "Kansalaisuus", :sv "Medborgarskap"},
+                                                     :value "Finland",
+                                                     :fieldType "dropdown"}
+                                                    {:key "2b859fe1-8661-404c-8b19-bfb27604575c",
+                                                     :label {:en "Question", :fi "Pudotusvalikon kysymys", :sv ""},
+                                                     :value "Answer",
+                                                     :fieldType "dropdown"}
+                                                    {:key "ssn",
+                                                     :label {:en "Social security number", :fi "Henkilötunnus", :sv "Personbeteckning"},
+                                                     :value "120496-924J",
+                                                     :fieldType "textField"}
+                                                    {:key "first-name",
+                                                     :label {:en "First name", :fi "Etunimet", :sv "Förnamn"},
+                                                     :value "Aku",
+                                                     :fieldType "textField"}
+                                                    {:key "birth-date",
+                                                     :label {:en "Date of birth", :fi "Syntymäaika", :sv "Födelsetid"},
+                                                     :value "29.10.1984",
+                                                     :fieldType "textField"}
+                                                    {:key "postal-code",
+                                                     :label {:en "Postal code", :fi "Postinumero", :sv "Postnummer"},
+                                                     :value "00013",
+                                                     :fieldType "textField"}
+                                                    {:key "language",
+                                                     :label {:en "Native language", :fi "Äidinkieli", :sv "Modersmål"},
+                                                     :value "Finnish",
+                                                     :fieldType "dropdown"}
+                                                    {:key "gender", :label {:en "Gender", :fi "Sukupuoli", :sv "Kön"}, :value "Male", :fieldType "dropdown"}
+                                                    {:key "postal-office",
+                                                     :label {:en "Postal office", :fi "Postitoimipaikka", :sv "Postkontor"},
+                                                     :value "POHJOLA",
+                                                     :fieldType "textField"}
+                                                    {:key "home-town",
+                                                     :label {:en "Home town", :fi "Kotikunta", :sv "Hemkommun"},
+                                                     :value "Ankkalinna",
+                                                     :fieldType "textField"}]})
