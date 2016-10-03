@@ -65,8 +65,10 @@
     }
   }
 
-  function setNthFieldRadioChecked(n, value, isChecked) {
-    return function() { formFields().eq(n).find('label:contains('+value+')').siblings('input').attr('checked', isChecked) }
+  function clickNthFieldRadio(n, value) {
+    return function() {
+      triggerEvent(formFields().eq(n).find('label:contains('+value+')'), 'click')
+    }
   }
 
   describe('hakemus', function() {
@@ -118,7 +120,7 @@
         })
       })
 
-      // TODO: tests for nationality / SSN / gender logic
+      // TODO: tests for nationality / SSN / birthdate / gender logic
     })
 
     describe('user-defined fields', function() {
@@ -128,8 +130,8 @@
         setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
         setNthFieldOption(15, 'Toinen vaihtoehto'),
         setNthFieldOption(16, 'Lisensiaatin tutkinto'),
-        setNthFieldRadioChecked(17, 'Kolmas vaihtoehto', true),
-        setNthFieldRadioChecked(18, 'Arkkitehti', true),
+        clickNthFieldRadio(17, 'Kolmas vaihtoehto', true),
+        clickNthFieldRadio(18, 'Arkkitehti', true),
         setNthFieldValue(19, 'textarea', 'Toisen pakollisen tekstialueen vastaus')
       )
       it('works and validates correctly', function() {
@@ -138,5 +140,17 @@
       })
     })
 
+    describe('submitting', function() {
+      before(clickElement(function() { return submitButton() }))
+      wait.until(function() {
+        return $('.application-status-controls .application__sent-placeholder-text:contains("Hakemus lähtetty")').length == 1
+      }, 2000)
+
+      it('shows submitted form', function() {
+        var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
+        var expectedValues = ["Etunimi", "Etunimi", "Sukunimi", "Suomi", "020202A0202", "test@example.com", "0123456789", "Katutie 12 B", "40100", "JYVÄSKYLÄ", "Jyväskylä", "suomi", "Tekstikentän vastaus", "", "Pakollisen tekstialueen vastaus", "Toinen vaihtoehto", "Lisensiaatin tutkinto", "Kolmas vaihtoehto", "Arkkitehti", "Toisen pakollisen tekstialueen vastaus"]
+        expect(displayedValues).to.eql(expectedValues)
+      })
+    })
   })
 })()
