@@ -8,7 +8,7 @@
 
 (defn- check-form-access [form-key session organization-service]
   (when-not
-      (form-access-control/form-allowed? form-key session organization-service)
+      (form-access-control/form-allowed-by-key? form-key session organization-service)
     (throw (user-feedback-exception (str "Lomake " form-key " ei ole sallittu")))))
 
 (defn- check-application-access [application-id session organization-service]

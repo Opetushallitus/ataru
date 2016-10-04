@@ -47,3 +47,6 @@ with latest_version as (
   select max(created_time) as latest_time from forms f where f.key = :key
 )
 select organization_oid from forms f join latest_version lv on f.created_time = lv.latest_time;
+
+-- name: yesql-get-latest-version-organization-by-id
+select organization_oid from forms f where id = :id;

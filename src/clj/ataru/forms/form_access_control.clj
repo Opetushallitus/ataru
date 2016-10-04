@@ -30,12 +30,19 @@
             (some (all-org-oids organization-service organization-oids))
             boolean)))))
 
-(defn form-allowed? [form-key session organization-service]
+(defn form-allowed-by-key? [form-key session organization-service]
   (organization-allowed?
    session
    organization-service
-   ;; Pass a function instead of value to avoid unnecessary remote calls to organization service
    (fn [] (form-store/get-organization-oid-by-key form-key))))
+
+(defn form-allowed-by-id?
+  "id identifies a version of the form"
+  [form-id session organization-service]
+  (organization-allowed?
+   session
+   organization-service
+   (fn [] (form-store/get-organization-oid-by-id form-id))))
 
 (defn post-form [form session organization-service]
   (let [user-name         (-> session :identity :username)
@@ -52,10 +59,18 @@
         (throw (user-feedback-exception
                 (if (= 0 org-count)
                   "Käyttäjätunnukseen ei ole liitetty organisaatota"
-                  "Käyttäjätunnukselle löytyi monta organisaatiota"))))
+                  "Käyttäjätunnukselle löytyi monta organisaatiota")))))
+      (if (and
+           (:id form) ; Updating, since form already has id
+           (not (form-allowed-by-id? (:id form) session organization-service)))
+        (throw (user-feedback-exception
+                (str "Ei oikeutta lomakkeeseen "
+                     (:id form)
+                     " organisaatioilla "
+                     (vec organization-oids)))))
       (form-store/create-form-or-increment-version!
        (assoc form :created-by (-> session :identity :username))
-       (first organization-oids)))))
+       (first organization-oids))))
 
 (defn get-forms [session organization-service]
   (let [organization-oids (org-oids session)]

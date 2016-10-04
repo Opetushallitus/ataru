@@ -1,7 +1,6 @@
 (ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
             [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
-            [ataru.virkailija.user.organization-client :refer [oph-organization]]
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
@@ -73,6 +72,9 @@
 (defn get-organization-oid-by-key [key]
   (:organization-oid (first (execute yesql-get-latest-version-organization-by-key {:key key}))))
 
+(defn get-organization-oid-by-id [id]
+  (:organization-oid (first (execute yesql-get-latest-version-organization-by-id {:id id}))))
+
 (defn fetch-latest-version [id & [conn]]
   (first (execute yesql-fetch-latest-version-by-id {:id id} conn)))
 
@@ -106,23 +108,10 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn- form-update-allowed [latest-version-organization-oid
-                            current-user-organization-oid]
-  (or
-   (= oph-organization current-user-organization-oid)
-   (= latest-version-organization-oid current-user-organization-oid)))
-
 (defn create-form-or-increment-version! [{:keys [id] :as form} organization-oid]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
-        (if-not (form-update-allowed (:organization-oid latest-version)
-                                     organization-oid)
-          (throw (user-feedback-exception
-                  (str "Ei oikeutta lomakkeeseen "
-                       (:key latest-version)
-                       " organisaatiolla "
-                       organization-oid))))
         (if (latest-version-not-same? form latest-version)
           (do
             (warn (str "Form with id "
@@ -135,6 +124,6 @@
            (-> form
                ; use :key set in db just to be sure it never is nil
                (assoc :key (:key latest-version))
-               (assoc :organization-oid organization-oid))
+               (assoc :organization-oid (:organization-oid latest-version)))
             conn))))
     (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid)))))
