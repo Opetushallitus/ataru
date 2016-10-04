@@ -51,6 +51,7 @@
 (defn exec-job [runner job]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
+    (log/debug "Executing job " job)
     (if job-definition
       (let [step-result (exec-steps runner job job-definition)]
         (store-job job job-definition step-result)
@@ -64,7 +65,6 @@
 
 (defn execute-due-jobs [runner]
   (try
-    (log/debug "Executing due jobs")
     (get-jobs-and-exec runner)
     (catch Exception e ;; We need to catch everything, executor will stop if we let this escalate
       (log/error "Error while executing background jobs:")
