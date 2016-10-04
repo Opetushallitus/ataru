@@ -2,16 +2,17 @@
   (:require
    [taoensso.timbre :as log]))
 
-
 (defn initial [state _]
   {:transition {:id    :to-next
                 :step  :log-hello}
-   :updated-state (assoc state :initialized true)})
+   :updated-state {:initialized true :hello-log-count 0}})
 
 (defn log-hello [state _]
   (log/info (str "Hello " (:name state) "from example job!"))
-  {:transition {:id :final}
-   :updated-state state})
+  (if (> (:hello-log-count state) 0)
+    {:transition {:id :final}}
+    {:transition {:id :retry}
+     :updated-state (assoc state :hello-log-count (inc (:hello-log-count state)))}))
 
 (def steps {:initial   initial
             :log-hello log-hello})
