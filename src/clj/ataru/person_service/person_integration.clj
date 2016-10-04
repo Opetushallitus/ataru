@@ -7,20 +7,25 @@
             value))
         answers))
 
-(defn store-person-oid
+(defn- extract-person [application]
+  {:email          (extract-field application "email")
+   :firstName      (extract-field application "first-name")
+   :personId       (extract-field application "ssn")
+   :lastName       (extract-field application "last-name")
+   :nativeLanguage (extract-field application "language")
+   :idpEntitys     []})
+
+(defn upsert-person
   "Fetch person OID from person service and store it to database"
   [{:keys [application-id]}
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
-  (let [application (application-store/get-application application-id)
-        ssn         (extract-field application "ssn")
-        email       (extract-field application "email")]
-    (if (and (some? ssn)
-             (some? email))
-      (let [person     (.get-person person-service ssn email)
-            person-oid (:oidHenkilo person)]
-        (application-store/add-person-oid application-id person-oid)
-        {:transition {:id :final}}))))
+  (let [person     (->> (application-store/get-application application-id)
+                        extract-person
+                        (.upsert-person person-service))
+        person-oid (:personOid person)]
+    (application-store/add-person-oid application-id person-oid)
+    {:transition {:id :final}}))
 
-(def job-definition {:steps {:initial store-person-oid}})
+(def job-definition {:steps {:initial upsert-person}})

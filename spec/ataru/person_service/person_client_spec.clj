@@ -9,18 +9,29 @@
 
 (def fake-config {:authentication-service {:base-address "dummy"} :cas {}})
 
-(def person {:etunimet   "Aku"
-             :hetu       "010101-123N"
-             :sukunimi   "Ankka"
-             :oidHenkilo "1.2.246.562.24.96282369159"
-             :email      "aku@ankkalinna.com"})
+(def person-before {:email          "aku@ankkalinna.com",
+                    :personId       "130580-327L",
+                    :nativeLanguage "sv",
+                    :idpEntitys     [],
+                    :firstName      "Roope",
+                    :lastName       "Ankka"})
+
+(def person-after {:email          "aku@ankkalinna.com",
+                   :personId       "130580-327L",
+                   :nativeLanguage nil,
+                   :nationality    "fi",
+                   :birthDate      nil,
+                   :firstName      "Roope",
+                   :lastName       "Ankka",
+                   :gender         nil,
+                   :idpEntitys     [],
+                   :personOid      "1.2.246.562.24.56818753409"})
 
 (defn- fake-cas-get [resp]
   (fn [client url body]
     (should= "dummy/resources/s2s/hakuperusteet"
              url)
-    (should= {:personId "010101-123N"
-              :email    "aku@ankkalinna.com"}
+    (should= person-before
              body)
     (-> resp
         json/generate-string
@@ -28,11 +39,11 @@
         ByteArrayInputStream.
         response/ok)))
 
-(describe "person client"
+(describe "person-client/upsert-person"
   (tags :unit)
 
-  (it "searches person by a search parameter"
+  (it "upserts person to remote service"
     (with-redefs [config fake-config
-                  cas-client/cas-authenticated-post (fake-cas-get person)]
-      (should= person
-               (person-client/get-person nil "010101-123N" "aku@ankkalinna.com")))))
+                  cas-client/cas-authenticated-post (fake-cas-get person-after)]
+      (should= person-after
+               (person-client/upsert-person nil person-before)))))
