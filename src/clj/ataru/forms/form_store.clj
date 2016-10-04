@@ -1,6 +1,7 @@
 (ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
             [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
+            [ataru.virkailija.user.organization-client :refer [oph-organization]]
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
@@ -89,7 +90,6 @@
 (defn latest-version-not-same? [form latest-version]
   (or
     (not= (:id form) (:id latest-version))
-    (not= (:created-by latest-version) (:created-by form)) ; should never go here because rows are not updated anymore
     (t/after? (:created-time latest-version) (:created-time form))))
 
 (defn create-new-form! [form]
@@ -106,11 +106,18 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
+(defn- form-update-allowed [latest-version-organization-oid
+                            current-user-organization-oid]
+  (or
+   (= oph-organization current-user-organization-oid)
+   (= latest-version-organization-oid current-user-organization-oid)))
+
 (defn create-form-or-increment-version! [{:keys [id] :as form} organization-oid]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
-        (if (not= (:organization-oid latest-version) organization-oid)
+        (if-not (form-update-allowed (:organization-oid latest-version)
+                                     organization-oid)
           (throw (user-feedback-exception
                   (str "Ei oikeutta lomakkeeseen "
                        (:key latest-version)
