@@ -64,7 +64,7 @@
 
 (defn execute-due-jobs [runner]
   (try
-    (log/info "Executing due jobs")
+    (log/debug "Executing due jobs")
     (get-jobs-and-exec runner)
     (catch Exception e ;; We need to catch everything, executor will stop if we let this escalate
       (log/error "Error while executing background jobs:")
