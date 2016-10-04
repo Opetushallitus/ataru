@@ -31,7 +31,7 @@
 
 (defn store-job [job job-definition step-result]
   (job-store/store (-> job
-                       (assoc :state (or (:update-state step-result)
+                       (assoc :state (or (:updated-state step-result)
                                          (:state job)))
                        (assoc :next-step (determine-next-step (:transition step-result) (:next-step job)))
                        (assoc :status (determine-status (:transition step-result))))))
