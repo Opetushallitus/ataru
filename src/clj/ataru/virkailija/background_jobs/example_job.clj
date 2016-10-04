@@ -8,7 +8,7 @@
    :updated-state {:initialized true :hello-log-count 0}})
 
 (defn log-hello [state _]
-  (log/info (str "Hello " (:name state) "from example job!"))
+  (log/info (str "Hello " (:hello-log-count state) " from example job!"))
   (if (> (:hello-log-count state) 0)
     {:transition {:id :final}}
     {:transition {:id :retry}
