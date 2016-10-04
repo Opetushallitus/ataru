@@ -7,6 +7,8 @@
 (defn- base-address []
   (get-in config [:authentication-service :base-address]))
 
+; This schema is just "internal" part of the person-client ns
+; and therefore it isn't placed into form-schema.cljc
 (s/defschema Person
   {:email                        s/Str
    :personId                     s/Str
