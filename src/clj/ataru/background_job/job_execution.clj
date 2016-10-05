@@ -66,9 +66,11 @@
 (defn execute-due-jobs [runner]
   (try
     (get-jobs-and-exec runner)
-    (catch Exception e ;; We need to catch everything, executor will stop if we let this escalate
+    ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
+    (catch Throwable t
+      (println "in exception handler")
       (log/error "Error while executing background jobs:")
-      (log/error e))))
+      (log/error t))))
 
 (defn start [runner]
   (let [scheduled-executor (Executors/newSingleThreadScheduledExecutor)]

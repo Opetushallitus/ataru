@@ -32,4 +32,4 @@
 
      :job-runner           (component/using
                              (job/->JobRunner)
-                             [:job-definitions]))))
+                             [:job-definitions :person-service]))))

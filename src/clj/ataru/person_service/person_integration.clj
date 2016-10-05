@@ -1,5 +1,7 @@
 (ns ataru.person-service.person-integration
-  (:require [ataru.applications.application-store :as application-store]))
+  (:require
+   [taoensso.timbre :as log]
+   [ataru.applications.application-store :as application-store]))
 
 (defn- extract-field [{:keys [answers]} field]
   (some (fn [{:keys [key value]}]
@@ -21,10 +23,12 @@
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
+  (log/info "Trying to add applicant from application " application-id " to person service")
   (let [person     (->> (application-store/get-application application-id)
                         extract-person
                         (.upsert-person person-service))
         person-oid (:personOid person)]
+    (log/info "Added person " person-oid " to person service")
     (application-store/add-person-oid application-id person-oid)
     {:transition {:id :final}}))
 
