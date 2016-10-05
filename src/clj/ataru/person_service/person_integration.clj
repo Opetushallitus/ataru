@@ -17,20 +17,23 @@
    :nativeLanguage (extract-field application "language")
    :idpEntitys     []})
 
+(defn create-person-to-send [application-id]
+  (let [person-to-send (extract-person (application-store/get-application application-id))]
+    (log/info "Sending person " person-to-send)
+    person-to-send))
+
 (defn upsert-person
   "Fetch person OID from person service and store it to database"
   [{:keys [application-id]}
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
-  (log/info "Trying to add applicant from application " application-id " to person service")
-  (let [person     (->> (application-store/get-application application-id)
-                        extract-person
-                        (.upsert-person person-service))
-        person-oid (:personOid person)]
+  (log/info "Trying to add applicant from application " application-id " to person service")33
+  (let [response-person (.upsert-person person-service (create-person-to-send application-id))
+        person-oid      (:personOid response-person)]
     (log/info "Added person " person-oid " to person service")
-    (application-store/add-person-oid application-id person-oid)
-    {:transition {:id :final}}))
+    (application-store/add-person-oid application-id person-oid))
+    {:transition {:id :final}})
 
 (def job-definition {:steps {:initial upsert-person}
                      :type  (str (ns-name *ns*))})
