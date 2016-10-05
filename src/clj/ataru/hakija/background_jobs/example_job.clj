@@ -1,4 +1,4 @@
-(ns ataru.virkailija.background-jobs.example-job
+(ns ataru.hakija.background-jobs.example-job
   (:require
    [taoensso.timbre :as log]))
 

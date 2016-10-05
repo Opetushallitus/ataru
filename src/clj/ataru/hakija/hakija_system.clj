@@ -1,7 +1,8 @@
 (ns ataru.hakija.hakija-system
   (:require [com.stuartsierra.component :as component]
-            [ataru.db.migrations :as migrations]
             [ataru.hakija.hakija-routes :as handler]
+            [ataru.background-job.job :as job]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.http.server :as server]
             [ataru.hakija.email :as email]
             [ataru.person-service.person-service :as person-service]
@@ -14,15 +15,21 @@
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (component/system-map
-     :handler        (handler/new-handler)
+     :handler              (handler/new-handler)
 
-     :server-setup   {:port      http-port
-                      :repl-port repl-port}
+     :server-setup         {:port      http-port
+                            :repl-port repl-port}
 
-     :email          (email/new-emailer)
+     :email                (email/new-emailer)
 
-     :server         (component/using
-                       (server/new-server)
-                       [:server-setup :handler])
+     :server               (component/using
+                           (server/new-server)
+                            [:server-setup :handler])
 
-     :person-service (person-service/new-person-service))))
+     :person-service       (person-service/new-person-service)
+
+     :job-definitions      hakija-jobs/jobs
+
+     :job-runner           (component/using
+                             (job/->JobRunner)
+                             [:job-definitions]))))
