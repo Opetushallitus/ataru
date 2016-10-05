@@ -29,5 +29,4 @@
   (let [url (str (base-address) "/resources/s2s/hakuperusteet")]
     (-> (cas/cas-authenticated-post cas-client url person)
         :body
-        slurp
         (json/parse-string true))))

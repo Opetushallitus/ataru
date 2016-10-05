@@ -1,6 +1,6 @@
 (ns ataru.cas.client
   (:require
-    [aleph.http :as http]
+    [org.httpkit.client :as http]
     [clj-util.cas :as cas]
     [oph.soresu.common.config :refer [config]]
     [cheshire.core :as json]))
