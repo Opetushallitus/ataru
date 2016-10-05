@@ -60,17 +60,17 @@
                 (if (= 0 org-count)
                   "Käyttäjätunnukseen ei ole liitetty organisaatota"
                   "Käyttäjätunnukselle löytyi monta organisaatiota")))))
-      (if (and
-           (:id form) ; Updating, since form already has id
-           (not (form-allowed-by-id? (:id form) session organization-service)))
-        (throw (user-feedback-exception
-                (str "Ei oikeutta lomakkeeseen "
-                     (:id form)
-                     " organisaatioilla "
-                     (vec organization-oids)))))
-      (form-store/create-form-or-increment-version!
-       (assoc form :created-by (-> session :identity :username))
-       (first organization-oids))))
+    (if (and
+         (:id form) ; Updating, since form already has id
+         (not (form-allowed-by-id? (:id form) session organization-service)))
+      (throw (user-feedback-exception
+              (str "Ei oikeutta lomakkeeseen "
+                   (:id form)
+                   " organisaatioilla "
+                   (vec organization-oids)))))
+    (form-store/create-form-or-increment-version!
+     (assoc form :created-by (-> session :identity :username))
+     (first organization-oids))))
 
 (defn get-forms [session organization-service]
   (let [organization-oids (org-oids session)]
