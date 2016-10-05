@@ -1,11 +1,14 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.buildversion :refer [buildversion-routes]]
             [ataru.applications.application-store :as application-store]
+            [ataru.background-job.job :as job]
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.email-store :as email-store]
             [ataru.hakija.validator :as validator]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.person-service.person-integration :as person-integration]
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
@@ -36,6 +39,7 @@
     (let [stored-app-id (application-store/add-new-application application)]
       (info "Stored application with id:" stored-app-id)
       (email-store/store-email-verification application stored-app-id)
+      (job/start-job hakija-jobs/jobs person-integration/job-type {:application-id stored-app-id})
       (response/ok {:id stored-app-id}))
     (do
       (error "Invalid application!")

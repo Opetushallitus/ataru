@@ -35,5 +35,7 @@
     (application-store/add-person-oid application-id person-oid))
     {:transition {:id :final}})
 
+(def job-type (str (ns-name *ns*)))
+
 (def job-definition {:steps {:initial upsert-person}
-                     :type  (str (ns-name *ns*))})
+                     :type  job-type})
