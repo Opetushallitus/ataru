@@ -10,9 +10,7 @@
             [speclj.core :refer [describe it tags should should=]])
   (:import [java.io ByteArrayInputStream]))
 
-(def system (component/start-system
-              (component/system-map
-                :person-service (person-service/new-person-service))))
+(def person-service (.start (person-service/new-person-service)))
 
 (def application application-fixtures/application-with-person-info-module)
 (def fake-config {:authentication-service {:base-address "dummy"}})
@@ -49,5 +47,5 @@
         (should= {:transition {:id :final}}
                  (person-integration/upsert-person
                    {:application-id (:id application)}
-                   system))
+                   {:person-service person-service}))
         (should @oid-in-db?)))))
