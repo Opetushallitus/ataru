@@ -28,7 +28,7 @@
       (assoc this :email emailer-future)))
   (stop [this]
     (info "Stopping emailer process")
-    (let [emailer-future (:email this)]
+    (when-let [emailer-future (:email this)]
       (future-cancel emailer-future)
       (if (future-cancelled? emailer-future)
         (do

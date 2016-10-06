@@ -59,8 +59,8 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/test.html" []
-      (render-file-in-dev "templates/test.html"))
+    (api/GET "/virkailija-test.html" []
+      (render-file-in-dev "templates/virkailija-test.html"))
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
