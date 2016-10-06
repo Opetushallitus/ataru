@@ -45,7 +45,7 @@
         value  (or (first
                      (eduction
                        (comp (filter :default-value)
-                             (map (comp lang :label)))
+                             (map :value))
                        (:options dropdown-data)))
                    (-> select .-value))
         valid? (field-value-valid? dropdown-data value)]
@@ -202,10 +202,11 @@
                                   [:select.application__form-select
                                    {:value (textual-field-value field-descriptor @application)}
                                    (map-indexed (fn [idx option]
-                                                  (let [value (non-blank-val (get-in option [:label lang])
-                                                                             (get-in option [:label default-lang]))]
+                                                  (let [label (non-blank-val (get-in option [:label lang])
+                                                                             (get-in option [:label default-lang]))
+                                                        value (:value option)]
                                                     ^{:key idx}
-                                                    [:option {:value value} value]))
+                                                    [:option {:value value} label]))
                                                 (:options field-descriptor))]]]))})))
 
 (defn multiple-choice
@@ -225,13 +226,14 @@
            (map-indexed (fn [idx option]
                   (let [label     (non-blank-val (get-in option [:label lang])
                                                  (get-in option [:label default-lang]))
+                        value     (:value option)
                         option-id (util/component-id)]
                     [:div {:key option-id}
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
                        :checked   (true? (get-in options [idx :selected]))
-                       :value     label
+                       :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
                                       (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]

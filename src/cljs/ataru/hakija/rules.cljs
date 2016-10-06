@@ -13,14 +13,10 @@
                              (update-in [:application :ui :birth-date] assoc :visible? false)
                              (update-in [:application :ui :ssn] assoc :visible? false)
                              (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
-                             (update-in [:application :ui :gender] assoc :visible? false))
-        finnish-value    (case (get-in db [:form :selected-language])
-                           :fi "Suomi"
-                           :sv "Finland"
-                           :en "Finland")]
+                             (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        finnish-value
+        "246"
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -92,11 +88,7 @@
 
 (defn- toggle-ssn-based-fields
   [db _]
-  (let [lang (get-in db [:form :selected-language])]
-  (if (= (case lang
-           :fi "Kyllä"
-           :sv "Ja"
-           :en "Yes")
+  (if (= "true"
          (-> db :application :answers :have-finnish-ssn :value))
     (do
       (-> db
@@ -108,7 +100,7 @@
           (update-in [:application :ui :ssn] assoc :visible? false)
           (update-in [:application :ui :gender] assoc :visible? true)
           (update-in [:application :ui :birth-date] assoc :visible? true)
-          (update-in [:application :answers :ssn] merge {:value "" :valid true}))))))
+          (update-in [:application :answers :ssn] merge {:value "" :valid true})))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
