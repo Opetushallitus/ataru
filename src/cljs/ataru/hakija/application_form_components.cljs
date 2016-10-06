@@ -115,29 +115,34 @@
                                             " application__form-field-error"
                                             " application__form-text-input--normal"))
                :value     value
+               :on-blur   #(when (empty? (-> % .-target .-value))
+                             (dispatch [:application/remove-repeatable-application-field-value id 0]))
                :on-change (partial on-change 0)}]])
           (map-indexed
-            (fn [idx {:keys [value last?]}]
-              (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
-                [:div.application__form-repeatable-text-wrap
-                 [:input.application__form-text-input
-                  (merge
-                    {:type        "text"
-                     :class       (str
+            (let [first-is-empty? (empty? (first (map :value @values)))]
+              (fn [idx {:keys [value last?]}]
+                (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
+                  [:div.application__form-repeatable-text-wrap
+                   [:input.application__form-text-input
+                    (merge
+                      {:type      "text"
+                       ; prevent adding second answer when first is empty
+                       :disabled  (and last? first-is-empty?)
+                       :class     (str
                                     size-class " application__form-text-input--normal"
                                     (when-not value " application__form-text-input--disabled"))
-                     :value       value
-                     :on-blur     #(when (and
+                       :value     value
+                       :on-blur   #(when (and
                                            (not last?)
                                            (empty? (-> % .-target .-value)))
                                      (clicky))
-                     :on-change   (partial on-change (inc idx))}
-                    (when last?
-                      {:placeholder "Lisää.."}))]
-                 (when value
-                   [:a.application__form-repeatable-text--addremove
-                    {:on-click clicky}
-                    [:i.zmdi.zmdi-close.zmdi-hc-lg]])]))
+                       :on-change (partial on-change (inc idx))}
+                      (when last?
+                        {:placeholder "Lisää.."}))]
+                   (when value
+                     [:a.application__form-repeatable-text--addremove
+                      {:on-click clicky}
+                      [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))
             (concat (rest @values)
               [{:value nil :valid true :last? true}])))))))
 
