@@ -109,7 +109,10 @@
           setNthFieldInputValue(6, '0123456789'),
           setNthFieldInputValue(7, 'Katutie 12 B'),
           setNthFieldInputValue(8, '40100'),
-          setNthFieldInputValue(10, 'Jyväskylä')
+          setNthFieldInputValue(10, 'Jyväskylä'),
+          wait.until(function() {
+            return formFields().eq(9).find('input').val() !== ''
+          })
         )
         it('works and validates correctly', function() {
           expect(formFields().eq(3).find('select').val()).to.equal('Suomi')
