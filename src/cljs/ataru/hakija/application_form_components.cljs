@@ -27,7 +27,7 @@
   [field-data value]
   (if (not-empty (:validators field-data))
     (every? true? (map #(validator/validate % value)
-                       (:validators field-data)))
+                    (:validators field-data)))
     true))
 
 (defn- textual-field-change [text-field-data evt]
@@ -103,7 +103,7 @@
         on-change  (fn [idx evt]
                      (let [value (some-> evt .-target .-value)
                            valid (field-value-valid? field-descriptor value)]
-                       (dispatch [:application/set-repeatable-application-field id idx {:value value :valid valid}])))]
+                       (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
               [label field-descriptor size-class]]
