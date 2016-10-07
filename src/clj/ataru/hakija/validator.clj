@@ -61,7 +61,7 @@
          :options    options}
              (let [koodisto-source (:koodisto-source field)
                    allowed-values  (if koodisto-source
-                                     (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
+                                     (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
                                      (allowed-values options))]
                (build-results
                  answers-by-key
