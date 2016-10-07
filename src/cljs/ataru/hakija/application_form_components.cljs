@@ -84,7 +84,8 @@
       [div-kwd
        [label field-descriptor size-class]
        [:input.application__form-text-input
-        (merge {:type        "text"
+        (merge {:id          id
+                :type        "text"
                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                (non-blank-val (get input-hint @lang)
                                               (get input-hint @default-lang)))
