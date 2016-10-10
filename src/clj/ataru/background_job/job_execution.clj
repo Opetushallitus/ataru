@@ -1,6 +1,7 @@
 (ns ataru.background-job.job-execution
   (:require
    [taoensso.timbre :as log]
+   [clj-time.core :as time]
    [clojure.core.match :refer [match]]
    [ataru.background-job.job-store :as job-store])
   (:import
@@ -21,58 +22,119 @@
     {:id (:or :final :fail)}
     nil))
 
-(defn determine-status [transition]
-  (match transition
-    {:id (:or :final :fail)}
-    :stopped
+(defn next-activation-for-retry [retry-count]
+  (time/plus (time/now) (time/minutes retry-count)))
+
+(defn continue-running-steps? [transition-id]
+  (match transition-id
+    (:or :final :fail :retry)
+    false
 
     :else
-    :running))
+    true))
 
-(defn store-job [job job-definition step-result]
-  (job-store/store (-> job
-                       (assoc :state (or (:updated-state step-result)
-                                         (:state job)))
-                       (assoc :next-step (determine-next-step (:transition step-result) (:next-step job)))
-                       (assoc :status (determine-status (:transition step-result))))))
+(defn- final-error-iteration [step state retry-count msg]
+  {:step step
+   :state state 
+   :final true
+   :retry-count retry-count
+   :next-activation nil
+   :transition :fail
+   :error msg})
 
-(defn exec-step [step state runner]
-  (step state runner))
+(defn- retry-error-iteration [step state retry-count msg]
+  {:step step
+   :state state
+   :final false
+   :retry-count retry-count
+   :next-activation (next-activation-for-retry retry-count)
+   :transition :retry
+   :error msg})
+
+(defn exec-step [iteration step-fn runner]
+  (log/debug "Executing step:" (:step iteration))
+  (try
+    (let [state                (:state iteration)
+          step                 (:step iteration)
+          retry-count          (:retry-count iteration)
+          step-result          (step-fn state runner)
+          result-transition-id (-> step-result :transition :id)
+          next-step            (determine-next-step (:transition step-result) step)
+          next-is-retry        (= :retry result-transition-id)
+          next-is-final        (contains? #{:final :fail} result-transition-id)]
+      (log/debug "result:" step-result)
+      {:step        next-step
+       :transition  result-transition-id
+       :final       next-is-final
+       :retry-count (if next-is-retry (inc retry-count) 0)
+       :next-activation (cond
+                          next-is-final
+                          nil
+
+                          next-is-retry
+                          (next-activation-for-retry (inc retry-count))
+
+                          :else
+                          (time/now))
+       :state       (or (:updated-state step-result) state)})
+    (catch Throwable t
+      (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
+        (log/error msg)
+        (log/error t)
+        (if (instance? Exception t) ;; Exceptions are retried, Errors cause job stop
+          ;; TODO add states to these!
+          (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg t))
+          (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg t)))))))
 
 (defn exec-steps
-  "For now, only execs the next step.
-   Will execute nonfinal steps until some final condition at once."
-  [runner job job-definition]
-  (let [step-to-exec (get (:steps job-definition) (:next-step job))]
-    (if-not step-to-exec
-      (throw (Exception. (str "Could not find step " (:next-step job) " from job definition for " (:job-type job)))))
-    (exec-step step-to-exec (:state job) runner)))
+  [runner stored-iteration job-definition]
+  (loop [iteration           stored-iteration ;;     (:step iteration)
+         step-fn             (get (:steps job-definition) (:step stored-iteration))
+         ;state               (:state iteration) ;; The previously stored iteration
+         result-iterations []]
+    (if (nil? step-fn)
+      (conj result-iterations (final-error-iteration
+                                 (:step iteration)
+                                 (str "Could not find step "
+                                      (:step iteration)
+                                      " from job definition for "
+                                      (:job-type job-definition))))
+
+      (let [next-iteration (exec-step iteration step-fn runner)]
+        (if (continue-running-steps? (:transition next-iteration))
+          (recur next-iteration;(:step next-iteration)
+                 (get (:steps job-definition) (:step next-iteration))
+                 ;(:state next-iteration)
+                 (conj result-iterations (assoc next-iteration :executed true)))
+          (conj result-iterations (assoc next-iteration :executed false)))))))
 
 (defn exec-job [runner job]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
-    (log/debug "Executing job " job)
+    (log/debug "Executing job" (:job-type job))
     (if job-definition
-      (let [step-result (exec-steps runner job job-definition)]
-        (store-job job job-definition step-result)
-        ;;store job with the transition we coulnd't execute immediately
-        )
-      (log/error "Could not find job definition for " (:job-type job)))))
+      (exec-steps runner (:iteration job) job-definition)
+      (let [msg (str "Could not find job definition for " (:job-type job))]
+        (log/error msg)
+        [(final-error-iteration (-> job :iteration :step) msg)]))))
 
-(defn get-jobs-and-exec [runner]
-  (let [due-jobs        (job-store/get-due-jobs)]
-    (mapv (partial exec-job runner) due-jobs)))
+(defn get-job-and-exec [runner]
+  (job-store/with-due-job
+    (fn [due-job]
+      (exec-job runner due-job))
+    (keys (:job-definitions runner))))
 
-(defn execute-due-jobs [runner]
+(defn execute-next-due-job [runner]
+  (println "execute-next-due-job")
   (try
-    (get-jobs-and-exec runner)
+    (get-job-and-exec runner)
     ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
     (catch Throwable t
-      (println "in exception handler")
       (log/error "Error while executing background jobs:")
+      (.printStackTrace t)
       (log/error t))))
 
 (defn start [runner]
   (let [scheduled-executor (Executors/newSingleThreadScheduledExecutor)]
-    (.scheduleWithFixedDelay scheduled-executor #(execute-due-jobs runner) 0 job-exec-interval-seconds TimeUnit/SECONDS)
+    (.scheduleWithFixedDelay scheduled-executor #(execute-next-due-job runner) 0 job-exec-interval-seconds TimeUnit/SECONDS)
     scheduled-executor))
