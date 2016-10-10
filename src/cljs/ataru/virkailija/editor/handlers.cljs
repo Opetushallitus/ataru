@@ -223,20 +223,19 @@
         (update-dropdown-field-options)
         (dissoc :created-time :id)))))
 
+(defn- handle-fetch-form [db {:keys [key] :as response} _]
+  (-> db
+      (assoc-in [:editor :forms key] (languages->kwd response))
+      (assoc-in [:editor :autosave]
+        (autosave/interval-loop {:subscribe-path    [:editor :forms key]
+                                 :changed-predicate editor-autosave-predicate
+                                 :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
+                                                      (dispatch [:editor/save-form]))}))))
+
 (defn fetch-form-content! [form-id]
   (http :get
         (str "/lomake-editori/api/forms/" form-id)
-        (fn [db {:keys [key] :as response} _]
-          (->
-            (assoc-in db
-              [:editor :forms key]
-              (languages->kwd response))
-            (assoc-in [:editor :autosave]
-              (autosave/interval-loop {:subscribe-path [:editor :forms key]
-                                       :changed-predicate editor-autosave-predicate
-                                       :handler
-                                       (fn [form previous-autosave-form-at-time-of-dispatch]
-                                         (dispatch [:editor/save-form]))}))))))
+        handle-fetch-form))
 
 (register-handler
   :editor/select-form
