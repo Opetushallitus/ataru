@@ -20,7 +20,7 @@
   (case (keyword validator-keyword)
     :one-of ; one of the answers of a group of fields must validate to true
     (fn [answers]
-      (boolean (some true? (spy answers))))))
+      (boolean (some true? answers)))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
@@ -38,9 +38,9 @@
 (defn- passes-all? [validators answers]
   (every? true? (map
                   #(passed? % validators)
-                  (spy (or
-                         (when (empty? answers) [nil])
-                         answers)))))
+                  (or
+                    (when (empty? answers) [nil])
+                    answers))))
 
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & forms]]
