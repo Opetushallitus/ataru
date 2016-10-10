@@ -100,6 +100,7 @@
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
+        lang       (subscribe [:application/form-language])
         on-change  (fn [idx evt]
                      (let [value (some-> evt .-target .-value)
                            valid (field-value-valid? field-descriptor value)]
@@ -139,7 +140,12 @@
                                      (clicky))
                        :on-change (partial on-change (inc idx))}
                       (when last?
-                        {:placeholder "Lisää.."}))]
+                        {:placeholder
+                         (case @lang
+                           :en "Lägg till.."
+                           :sv "Fler svar.."
+                           ;fi
+                           "Lisää..")}))]
                    (when value
                      [:a.application__form-repeatable-text--addremove
                       {:on-click clicky}
