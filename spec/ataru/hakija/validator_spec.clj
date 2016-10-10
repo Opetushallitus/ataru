@@ -1,5 +1,6 @@
 (ns ataru.hakija.validator-spec
   (:require [ataru.hakija.validator :as validator]
+            [clojure.core.match :refer [match]]
             [speclj.core :refer :all]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
@@ -42,7 +43,44 @@
        :gender                               {:passed? true}
        :postal-office                        {:passed? true}
        :home-town                            {:passed? true}
-       :a3199cdf-fba3-4be1-8ab1-760f75f16d54 {:passed? true}}
+       ; ssn+birthdate container
+       :a3199cdf-fba3-4be1-8ab1-760f75f16d54 {:passed? true}
+       ; repeatable text field
+       :047da62c-9afe-4e28-bfe8-5b50b21b4277 {:passed? true}
+       ; multipleChoice
+       :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 {:passed? true}}
       (validator/build-results answers-by-key
         []
-        (:content f)))))
+        (:content f))))
+
+  (it "passes validation on multipleChoice answer being empty"
+    (should
+      (-> (validator/build-results
+            (update
+              answers-by-key
+              :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+              assoc
+              :value "")
+            []
+            (:content f))
+          :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+          :passed?)))
+
+  (it "fails validation on multipleChoice answer being empty and required set to true"
+      (should-not
+        (-> (validator/build-results
+              (update
+                answers-by-key
+                :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+                assoc
+                :value "")
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                    (assoc form :validators ["required"])
+                    :else form))
+                (:content f)))
+            :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+            :passed?))))

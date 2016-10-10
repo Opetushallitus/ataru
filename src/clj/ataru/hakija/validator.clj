@@ -9,18 +9,18 @@
 
 (defn allowed-values [options]
   (set
-    (reduce
-      (fn [values option]
-        (when-not (clojure.string/blank? (:value option))
-          (concat values (vals (:label option)))))
-      []
-      options)))
+    (->> (reduce
+           (fn [values option]
+             (concat values (vals (:label option))))
+           []
+           options)
+         (filter not-empty))))
 
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
     :one-of ; one of the answers of a group of fields must validate to true
     (fn [answers]
-      (some true? answers))))
+      (boolean (some true? (spy answers))))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
@@ -30,22 +30,36 @@
             (validator/validate validator answer))
           validators))
 
+(defn- wrap-coll [xs]
+  (if (coll? xs)
+    xs
+    [xs]))
+
+(defn- passes-all? [validators answers]
+  (every? true? (map
+                  #(passed? % validators)
+                  (spy (or
+                         (when (empty? answers) [nil])
+                         answers)))))
+
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & forms]]
-  (let [id     (keyword id)
-        answer (:value (get answers-by-key id))]
+  (let [id      (keyword id)
+        answers (wrap-coll (:value (get answers-by-key id)))]
     (into {}
-      (match field
+      (match (merge {:validators []
+                     :params     []}
+               field)
         {:fieldClass      "wrapperElement"
          :children        children
          :child-validator validation-keyword}
         (build-results
           answers-by-key
           (concat results
-                  {id {:passed?
-                       ((validator-keyword->fn validation-keyword)
-                        (mapv (comp :passed? second)
-                              (build-results answers-by-key [] children)))}})
+            {id {:passed?
+                 ((validator-keyword->fn validation-keyword)
+                  (mapv (comp :passed? second)
+                    (build-results answers-by-key [] children)))}})
           forms)
 
         {:fieldClass "wrapperElement"
@@ -59,24 +73,45 @@
          :fieldType  "dropdown"
          :validators validators
          :options    options}
-             (let [koodisto-source (:koodisto-source field)
-                   allowed-values  (if koodisto-source
-                                     (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
-                                     (allowed-values options))]
-               (build-results
-                 answers-by-key
-                 (concat results
-                         {id {:passed? (and (or (nil? allowed-values)
-                                                (some? (allowed-values answer)))
-                                            (passed? answer validators))}})
-                 forms))
+        (let [koodisto-source (:koodisto-source field)
+              allowed-values  (if koodisto-source
+                                (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
+                                (allowed-values options))]
+          (build-results
+            answers-by-key
+            (concat results
+              {id {:passed? (and
+                              (or
+                                (nil? allowed-values)
+                                (clojure.set/subset? (set answers) allowed-values))
+                              (passes-all? validators answers))}})
+            forms))
+
+        {:fieldClass "formField"
+         :fieldType "multipleChoice"
+         :validators validators
+         :options options}
+        (let [allowed-values (allowed-values options)
+              answers        (mapcat
+                               #(clojure.string/split % #", ")
+                               (filter not-empty answers))]
+          (build-results
+            answers-by-key
+            (concat results
+              {id {:passed? (and
+                              (or
+                                (nil? allowed-values)
+                                (clojure.set/subset? (set answers) allowed-values))
+                              (passes-all? validators (vec answers)))}})
+            forms))
+
 
         {:fieldClass "formField"
          :validators validators}
         (build-results
           answers-by-key
           (concat results
-                  {id {:passed? (passed? answer validators)}})
+            {id {:passed? (passes-all? validators answers)}})
           forms)
 
         :else results))))
