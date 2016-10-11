@@ -67,20 +67,52 @@
           :passed?)))
 
   (it "fails validation on multipleChoice answer being empty and required set to true"
+    (should-not
+      (-> (validator/build-results
+            (update
+              answers-by-key
+              :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+              assoc
+              :value "")
+            []
+            (clojure.walk/postwalk
+              (fn [form]
+                (match form
+                  {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                  (assoc form :validators ["required"])
+                  :else form))
+              (:content f)))
+          :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+          :passed?)))
+
+  (it "passes validation on repeatable answer being empty"
+    (should
+      (-> (validator/build-results
+            (update
+              answers-by-key
+              :047da62c-9afe-4e28-bfe8-5b50b21b4277
+              assoc
+              :value [])
+            []
+            (:content f))
+          :047da62c-9afe-4e28-bfe8-5b50b21b4277
+          :passed?)))
+
+  (it "fails validation on repeatable answer being empty and required set to true"
       (should-not
         (-> (validator/build-results
               (update
                 answers-by-key
-                :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+                :047da62c-9afe-4e28-bfe8-5b50b21b4277
                 assoc
-                :value "")
+                :value [])
               []
               (clojure.walk/postwalk
                 (fn [form]
                   (match form
-                    {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                    {:id "047da62c-9afe-4e28-bfe8-5b50b21b4277"}
                     (assoc form :validators ["required"])
                     :else form))
                 (:content f)))
-            :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-            :passed?))))
+          :047da62c-9afe-4e28-bfe8-5b50b21b4277
+          :passed?))))
