@@ -142,10 +142,10 @@
                       (when last?
                         {:placeholder
                          (case @lang
-                           :en "Lägg till.."
-                           :sv "Fler svar.."
+                           :en "Add more..."
+                           :sv "Lägg till..."
                            ;fi
-                           "Lisää..")}))]
+                           "Lisää...")}))]
                    (when value
                      [:a.application__form-repeatable-text--addremove
                       {:on-click clicky}
