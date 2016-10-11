@@ -88,7 +88,7 @@
           (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg t)))))))
 
 (defn maybe-exec-step
-  "Attempt to exec the next iteration's step if the function exists in job definition and 
+  "Attempt to exec the next iteration's step if the function exists in job definition and
    if we haven't exceeded retry-limit"
   [iteration job-definition runner]
   (let [step-fn (get (:steps job-definition) (:step iteration))]
@@ -116,22 +116,12 @@
 (defn exec-steps
   [runner stored-iteration job-definition]
   (loop [iteration           stored-iteration
-         step-fn             (get (:steps job-definition) (:step stored-iteration))
          result-iterations []]
-    (if (nil? step-fn)
-      (conj result-iterations (final-error-iteration
-                                 (:step iteration)
-                                 (str "Could not find step "
-                                      (:step iteration)
-                                      " from job definition for "
-                                      (:job-type job-definition))))
-
-      (let [next-iteration (maybe-exec-step iteration job-definition runner)]
-        (if (continue-running-steps? (:transition next-iteration))
-          (recur next-iteration
-                 (get (:steps job-definition) (:step next-iteration))
-                 (conj result-iterations (assoc next-iteration :executed true)))
-          (conj result-iterations (assoc next-iteration :executed false)))))))
+    (let [next-iteration (maybe-exec-step iteration job-definition runner)]
+      (if (continue-running-steps? (:transition next-iteration))
+        (recur next-iteration
+               (conj result-iterations (assoc next-iteration :executed true)))
+        (conj result-iterations (assoc next-iteration :executed false))))))
 
 (defn exec-job [runner job]
   (let [job-definitions (:job-definitions runner)
