@@ -82,15 +82,13 @@
         (log/error msg)
         (log/error t)
         (if (instance? Exception t) ;; Exceptions are retried, Errors cause job stop
-          ;; TODO add states to these!
           (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg t))
           (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg t)))))))
 
 (defn exec-steps
   [runner stored-iteration job-definition]
-  (loop [iteration           stored-iteration ;;     (:step iteration)
+  (loop [iteration           stored-iteration
          step-fn             (get (:steps job-definition) (:step stored-iteration))
-         ;state               (:state iteration) ;; The previously stored iteration
          result-iterations []]
     (if (nil? step-fn)
       (conj result-iterations (final-error-iteration
@@ -102,16 +100,15 @@
 
       (let [next-iteration (exec-step iteration step-fn runner)]
         (if (continue-running-steps? (:transition next-iteration))
-          (recur next-iteration;(:step next-iteration)
+          (recur next-iteration
                  (get (:steps job-definition) (:step next-iteration))
-                 ;(:state next-iteration)
                  (conj result-iterations (assoc next-iteration :executed true)))
           (conj result-iterations (assoc next-iteration :executed false)))))))
 
 (defn exec-job [runner job]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
-    (log/debug "Executing job" (:job-type job))
+    (log/debug "Executing job" (:job-id job) (:job-type job))
     (if job-definition
       (exec-steps runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
@@ -119,19 +116,27 @@
         [(final-error-iteration (-> job :iteration :step) msg)]))))
 
 (defn get-job-and-exec [runner]
+  (log/debug "executing next due job")
   (job-store/with-due-job
     (fn [due-job]
       (exec-job runner due-job))
     (keys (:job-definitions runner))))
 
+(defn exec-jobs-while-due
+  "Exec jobs while there are due jobs which should be run immediately.
+   When there are no more due jobs, we can take a short break and continue
+   when we poll the jobs again."
+  [runner]
+  (if (get-job-and-exec runner) (recur runner)))
+
 (defn execute-next-due-job [runner]
-  (println "execute-next-due-job")
   (try
-    (get-job-and-exec runner)
+    (println "### execute next due")
+    (exec-jobs-while-due runner)
+    (log/debug "No more jobs to execute at this time")
     ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
     (catch Throwable t
-      (log/error "Error while executing background jobs:")
-      (.printStackTrace t)
+      (log/error "Error while executing background job:")
       (log/error t))))
 
 (defn start [runner]

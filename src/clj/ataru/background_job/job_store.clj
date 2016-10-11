@@ -62,7 +62,8 @@
        job->job-with-iteration))
 
 (defn with-due-job
-  "Execute due job in transaction"
+  "Execute due job in transaction. Returns a boolean if there was a job to execute, false if none was
+   found at this time."
   [exec-job-fn job-types]
   (jdbc/with-db-transaction [data-source {:datasource (db/get-datasource :db)}]
     (let [connection {:connection data-source}
@@ -70,4 +71,7 @@
       (when raw-job
         (let [job               (raw-job->job raw-job)
               result-iterations (exec-job-fn job)]
-          (store-job-result connection job result-iterations))))))
+          (store-job-result connection job result-iterations)))
+      ;; When there are no more jobs right now to execute, the caller can decide to
+      ;; stop execution for a short period
+      (boolean raw-job))))
