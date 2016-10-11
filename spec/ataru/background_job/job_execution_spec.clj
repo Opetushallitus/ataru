@@ -41,8 +41,9 @@
                                 :fake-service    (atom {:call-count  0})}
              job               {:job-type "job1"
                                 :iteration {:state {:damn 0}
-                                            :step :initial}}
+                                            :step :initial
+                                            :retry-count 0}}
              result-iterations (job-exec/exec-job runner job)]
-         (should= [{:step :fake-remote-call, :transition :to-next, :final false, :retry-count 0, :next-activation (fixed-now), :state {:damn 0, :initialized true}, :executed true}
-                   {:step :fake-remote-call, :transition :retry, :final false, :retry-count 1, :next-activation (time/plus (fixed-now) (time/minutes 1)), :state {:damn 1, :initialized true}, :executed false}]
+         (should= [{:step :fake-remote-call, :transition :to-next, :final false, :retry-count 0, :next-activation (fixed-now), :state {:damn 0, :initialized true}, :executed true, :error nil}
+                   {:step :fake-remote-call, :transition :retry, :final false, :retry-count 1, :next-activation (time/plus (fixed-now) (time/minutes 1)), :state {:damn 1, :initialized true}, :executed false, :error nil}]
                   result-iterations)))))
