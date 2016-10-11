@@ -25,14 +25,6 @@
 
 (def max-retries 100)
 
-(defn continue-running-steps? [transition-id]
-  (match transition-id
-    (:or :final :fail :retry :error-retry)
-    false
-
-    :to-next
-    true))
-
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
    :state state
