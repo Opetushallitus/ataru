@@ -283,8 +283,7 @@
                [:div.editor-form__koodisto-popover
                 [:div.editor-form__koodisto-popover-header "Koodisto"
                  [:a.editor-form__koodisto-popover-close
-                  {:href     "#"
-                   :on-click (fn [e]
+                  {:on-click (fn [e]
                                (.preventDefault e)
                                (reset! koodisto-popover-expanded? false))}
                   [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
@@ -292,8 +291,7 @@
                  (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
                           ^{:key (str "koodisto-" uri)}
                           [:li.editor-form__koodisto-popover-list-item
-                           [:a.editor-form__koodisto-popover-link {:href     "#"
-                                                                   :on-click (fn [e]
+                           [:a.editor-form__koodisto-popover-link {:on-click (fn [e]
                                                                                (.preventDefault e)
                                                                                (reset! koodisto-popover-expanded? false)
                                                                                (dispatch [:editor/select-koodisto-options uri version title path]))}
@@ -315,8 +313,7 @@
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
                    [:a
-                    {:href     "#"
-                     :on-click (fn [evt]
+                    {:on-click (fn [evt]
                                  (.preventDefault evt)
                                  (dispatch [:editor/add-dropdown-option path]))}
                     [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
@@ -337,8 +334,7 @@
                                                     (= :children (second path))
                                                     (= "Lomakeosio" component-name)))]
             [:li.form__add-component-toolbar--list-item
-             [:a {:href     "#"
-                  :on-click (fn [evt]
+             [:a {:on-click (fn [evt]
                               (.preventDefault evt)
                               (dispatch [:generate-component generate-fn path]))}
               component-name]]))))

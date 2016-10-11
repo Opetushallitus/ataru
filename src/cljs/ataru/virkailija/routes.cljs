@@ -1,39 +1,42 @@
 (ns ataru.virkailija.routes
   (:require-macros [secretary.core :refer [defroute]])
-  (:import goog.History)
+  (:import [goog Uri])
   (:require [ataru.cljs-util :refer [dispatch-after-state]]
             [secretary.core :as secretary]
-            [goog.events :as events]
-            [goog.history.EventType :as EventType]
-            [re-frame.core :refer [dispatch]]))
+            [re-frame.core :refer [dispatch]]
+            [accountant.core :as accountant]))
 
-(defonce history (History.))
-
-(defn hook-browser-navigation! []
-  (doto history
-    (events/listen
-     EventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+(accountant/configure-navigation! {:nav-handler  (fn [path]
+                                                   (secretary/dispatch! path))
+                                   :path-exists? (fn [path]
+                                                   (secretary/locate-route path))})
 
 (defn set-history!
-  [route]
-  (.setToken history route))
+  ([path dispatch-path?]
+   (.pushState js/history nil nil path)
+   (when dispatch-path?
+     (secretary/dispatch! path)))
+  ([path]
+    (set-history! path true)))
+
+(defn anchor-click-handler
+  [event]
+  (let [path (.getPath (.parse Uri (.-href (.-target event))))
+        matches-path? (secretary/locate-route path)]
+    (when matches-path?
+      (set-history! path false))
+    (.preventDefault event)))
 
 (defn app-routes []
-  (secretary/set-config! :prefix "#")
-  ;; --------------------
-  ;; define routes here
-  (defroute "/" []
-    (secretary/dispatch! "/editor"))
+  (defroute "/lomake-editori/" []
+    (secretary/dispatch! "/lomake-editori/editor"))
 
-  (defroute "/editor" []
+  (defroute "/lomake-editori/editor" []
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/select-form nil])
     (dispatch [:editor/refresh-forms]))
 
-  (defroute #"/editor/(.*)" [key]
+  (defroute #"^/lomake-editori/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
@@ -44,7 +47,7 @@
      (fn [form]
        (dispatch [:editor/select-form (:key form)]))))
 
-  (defroute #"/applications/" []
+  (defroute #"^/lomake-editori/applications/" []
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
      :predicate
@@ -52,12 +55,12 @@
      :handler
      (fn [forms]
        (let [form (-> forms first second)]
-         (.replaceState js/history nil nil (str "#/applications/" (:key form)))
+         (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
          (dispatch [:editor/select-form (:key form)])
          (dispatch [:application/fetch-applications (:key form)])))
      (dispatch [:set-active-panel :application])))
 
-  (defroute #"/applications/(.*)" [key]
+  (defroute #"^/lomake-editori/applications/(.*)" [key]
     (dispatch [:editor/refresh-forms])
     (dispatch-after-state
      :predicate
@@ -68,5 +71,4 @@
        (dispatch [:application/fetch-applications (:key form)])))
     (dispatch [:set-active-panel :application]))
 
-  ;; --------------------
-  (hook-browser-navigation!))
+  (accountant/dispatch-current!))
