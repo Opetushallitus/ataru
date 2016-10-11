@@ -50,6 +50,13 @@
       (match (merge {:validators []
                      :params     []}
                field)
+
+        {:exclude-from-answers true}
+        (build-results
+          answers-by-key
+          results
+          forms)
+
         {:fieldClass      "wrapperElement"
          :children        children
          :child-validator validation-keyword}
@@ -116,6 +123,11 @@
 
         :else results))))
 
+(defn build-failed-results [answers-by-key failed-results]
+  (merge-with merge
+    (select-keys answers-by-key (keys failed-results))
+    failed-results))
+
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
@@ -128,12 +140,11 @@
                          (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                          (keys answers-by-key))
          results (build-results answers-by-key [] (:content form))
-         failed-results (filter #(not (:passed? (second %))) results)]
+         failed-results (into {} (filter #(not (:passed? (second %))) results))]
      (when (not (empty? extra-answers))
        (warn "Extra answers in application" (apply str extra-answers)))
      (when (not (empty? failed-results))
-       (warn "Validation failed in application fields" (apply str failed-results)))
+       (warn "Validation failed in application fields" (build-failed-results answers-by-key failed-results)))
      (and
        (empty? extra-answers)
        (empty? failed-results)))))
-
