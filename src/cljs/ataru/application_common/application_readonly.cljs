@@ -23,7 +23,7 @@
       (let [values (:value ((answer-key field-descriptor) (:answers application)))]
         (when (or (seq? values) (vector? values))
           (into [:ul.application__form-field-list] (for [value values] [:li value]))))
-      (textual-field-value field-descriptor application))]])
+      (textual-field-value field-descriptor application :lang lang))]])
 
 (declare field)
 
