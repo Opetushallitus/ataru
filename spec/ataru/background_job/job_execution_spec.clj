@@ -4,8 +4,11 @@
    [speclj.core :refer [tags describe it should=]]
    [ataru.background-job.job-execution :as job-exec]))
 
+;; mocked time for test execution
+(defn fixed-now [] (time/date-time 2016 10 10))
+
 (def
-  job1-definition
+  job1
   (letfn [(call-fakeservice [service]
             (swap! service assoc :call-count (inc (:call-count @service)))
             (if (> (:call-count @service) 1)
@@ -27,8 +30,6 @@
     {:steps {:initial initial
              :fake-remote-call fake-remote-call}
      :type "job1"}))
-
-(defn fixed-now [] (time/date-time 2016 10 10))
 
 (def expected-job1-iterations [{:step
                                 :fake-remote-call,
@@ -54,7 +55,16 @@
                                 :state {:damn 1, :initialized true},
                                 :error nil}])
 
-(def job-definitions {(:type job1-definition) job1-definition})
+(def
+  fatally-failing-job
+  (letfn [(fatally-flawed-step [state context]
+            (throw (Error. "INSTANT FATAL ISSUE")))]
+
+    {:steps {:initial fatally-flawed-step}
+     :type "fatally-failing-job"}))
+
+(def job-definitions {(:type job1) job1
+                      (:type fatally-failing-job) fatally-failing-job})
 
 (defn exec-all-iterations [runner job]
   (loop [iteration (:iteration job)
@@ -78,4 +88,19 @@
                                             :retry-count 0}}
              result-iterations (exec-all-iterations runner job)]
          (should= expected-job1-iterations
-                  result-iterations)))))
+                  result-iterations))))
+ (it "exec-job-step immediately produces final transition with error description"
+     (let [runner            {:job-definitions job-definitions}
+             job               {:job-type "fatally-failing-job"
+                                :iteration {:state {}
+                                            :step :initial
+                                            :retry-count 0}}
+           result-iterations (exec-all-iterations runner job)]
+       (should= [{:step :initial,
+                  :state {},
+                  :final true,
+                  :retry-count 0,
+                  :next-activation nil,
+                  :transition :fail,
+                  :error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
+                result-iterations))))
