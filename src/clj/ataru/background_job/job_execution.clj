@@ -9,14 +9,12 @@
 
 (def job-exec-interval-seconds 10)
 
-(defn determine-status [transition])
-
 (defn determine-next-step [transition current-step]
   (match transition
     {:id :to-next :step next-step}
     next-step
 
-    {:id :retry}
+    {:id (:or :retry :error-retry)}
     current-step
 
     {:id (:or :final :fail)}
@@ -27,15 +25,15 @@
 
 (defn continue-running-steps? [transition-id]
   (match transition-id
-    (:or :final :fail :retry)
+    (:or :final :fail :retry :error-retry)
     false
 
-    :else
+    :to-next
     true))
 
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
-   :state state 
+   :state state
    :final true
    :retry-count retry-count
    :next-activation nil
@@ -48,7 +46,7 @@
    :final false
    :retry-count retry-count
    :next-activation (next-activation-for-retry retry-count)
-   :transition :retry
+   :transition :error-retry
    :error msg})
 
 (defn exec-step [iteration step-fn runner]
@@ -63,10 +61,11 @@
           next-is-retry        (= :retry result-transition-id)
           next-is-final        (contains? #{:final :fail} result-transition-id)]
       (log/debug "result:" step-result)
-      {:step        next-step
-       :transition  result-transition-id
-       :final       next-is-final
-       :retry-count (if next-is-retry (inc retry-count) 0)
+      {:step            (or next-step step) ;; current step if final iteration
+       :transition      result-transition-id
+       :final           next-is-final
+       :retry-count     (if next-is-retry (inc retry-count) 0)
+       :executed        false
        :next-activation (cond
                           next-is-final
                           nil
@@ -76,7 +75,8 @@
 
                           :else
                           (time/now))
-       :state       (or (:updated-state step-result) state)})
+       :state           (or (:updated-state step-result) state)
+       :error           nil})
     (catch Throwable t
       (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
         (log/error msg)

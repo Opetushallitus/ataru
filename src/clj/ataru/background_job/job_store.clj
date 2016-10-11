@@ -29,6 +29,8 @@
           new-job-id (:id (yesql-add-background-job<! {:job_type job-type} connection))]
       (yesql-add-job-iteration<! {:job_id new-job-id
                                   :step "initial"
+                                  :final false
+                                  :transition "start"
                                   :state state
                                   :next_activation (time/now)
                                   :retry_count 0
@@ -39,7 +41,8 @@
 
 (defn job-iteration->db-format [job-iteration job-id]
   (assoc (transform-keys ->snake_case job-iteration)
-         :step (name (:step job-iteration))
+         :step (-> job-iteration :step name)
+         :transition (-> job-iteration :transition name)
          :job_id job-id))
 
 (defn store-job-result [connection job result-iterations]
