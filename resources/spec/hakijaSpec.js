@@ -67,7 +67,7 @@
 
   function clickNthFieldRadio(n, value) {
     return function() {
-      triggerEvent(formFields().eq(n).find('label:contains('+value+')'), 'click')
+      formFields().eq(n).find('label:contains('+value+')').click()
     }
   }
 

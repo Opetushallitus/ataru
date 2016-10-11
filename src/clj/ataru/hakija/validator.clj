@@ -77,13 +77,18 @@
           forms)
 
         {:fieldClass "formField"
-         :fieldType  "dropdown"
+         :fieldType  (:or "dropdown" "multipleChoice")
          :validators validators
          :options    options}
         (let [koodisto-source (:koodisto-source field)
               allowed-values  (if koodisto-source
                                 (koodisto/all-koodisto-labels (:uri koodisto-source) (:version koodisto-source))
-                                (allowed-values options))]
+                                (allowed-values options))
+              answers         (if (= "multipleChoice" (:fieldType field))
+                                (mapcat
+                                  #(clojure.string/split % #", ")
+                                  (filter not-empty answers))
+                                answers)]
           (build-results
             answers-by-key
             (concat results
@@ -93,25 +98,6 @@
                                 (clojure.set/subset? (set answers) allowed-values))
                               (passes-all? validators answers))}})
             forms))
-
-        {:fieldClass "formField"
-         :fieldType "multipleChoice"
-         :validators validators
-         :options options}
-        (let [allowed-values (allowed-values options)
-              answers        (mapcat
-                               #(clojure.string/split % #", ")
-                               (filter not-empty answers))]
-          (build-results
-            answers-by-key
-            (concat results
-              {id {:passed? (and
-                              (or
-                                (nil? allowed-values)
-                                (clojure.set/subset? (set answers) allowed-values))
-                              (passes-all? validators (vec answers)))}})
-            forms))
-
 
         {:fieldClass "formField"
          :validators validators}
