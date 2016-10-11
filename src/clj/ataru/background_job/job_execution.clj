@@ -116,7 +116,6 @@
         [(final-error-iteration (-> job :iteration :step) msg)]))))
 
 (defn get-job-and-exec [runner]
-  (log/debug "executing next due job")
   (job-store/with-due-job
     (fn [due-job]
       (exec-job runner due-job))
@@ -131,9 +130,7 @@
 
 (defn execute-next-due-job [runner]
   (try
-    (println "### execute next due")
     (exec-jobs-while-due runner)
-    (log/debug "No more jobs to execute at this time")
     ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
     (catch Throwable t
       (log/error "Error while executing background job:")
