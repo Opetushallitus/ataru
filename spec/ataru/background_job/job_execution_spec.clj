@@ -63,10 +63,25 @@
     {:steps {:initial fatally-flawed-step}
      :type "fatally-failing-job"}))
 
-(def job-definitions {(:type job1) job1
-                      (:type fatally-failing-job) fatally-failing-job})
+(def
+  always-exception-throwing-job
+  (letfn [(initial [state context]
+            {:transition {:id  :to-next
+                          :step  :throwing}})
+            (throwing-step [state context]
+                           (throw (Exception. "Something dreadful happened")))]
 
-(defn exec-all-iterations [runner job]
+    {:steps {:initial initial
+             :throwing throwing-step}
+     :type "always-exception-throwing-job"}))
+
+(def job-definitions {(:type job1) job1
+                      (:type fatally-failing-job) fatally-failing-job
+                      (:type always-exception-throwing-job) always-exception-throwing-job})
+
+(def default-start-iteration {:state {} :step :initial :retry-count 0})
+
+  (defn exec-all-iterations [runner job]
   (loop [iteration (:iteration job)
          result-iterations []]
     (let [result-iteration (job-exec/exec-job-step runner (assoc job :iteration iteration))
@@ -89,12 +104,10 @@
              result-iterations (exec-all-iterations runner job)]
          (should= expected-job1-iterations
                   result-iterations))))
- (it "exec-job-step immediately produces final transition with error description"
+ (it "exec-job-step immediately prodAuces final transition with error description"
      (let [runner            {:job-definitions job-definitions}
-             job               {:job-type "fatally-failing-job"
-                                :iteration {:state {}
-                                            :step :initial
-                                            :retry-count 0}}
+             job              {:job-type "fatally-failing-job"
+                               :iteration default-start-iteration}
            result-iterations (exec-all-iterations runner job)]
        (should= [{:step :initial,
                   :state {},
@@ -103,4 +116,18 @@
                   :next-activation nil,
                   :transition :fail,
                   :error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
-                result-iterations))))
+                result-iterations)))
+ (it "exec-job-step retries the maximum amount when an ordinary exception is thrown from the same step"
+     (let [runner            {:job-definitions job-definitions}
+             job             {:job-type "always-exception-throwing-job"
+                              :iteration default-start-iteration}
+           result-iterations (exec-all-iterations runner job)
+           last-iteration    (last result-iterations)]
+       (should= 102
+                (count result-iterations))
+       (should= {:final true,
+                 :retry-count 101,
+                 :next-activation nil,
+                 :transition :fail,
+                 :error "Retry limit exceeded for step :throwing in job always-exception-throwing-job"}
+                (select-keys last-iteration [:final :retry-count :next-activation :transition :error])))))
