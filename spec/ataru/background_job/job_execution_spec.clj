@@ -4,29 +4,29 @@
    [speclj.core :refer [tags describe it should=]]
    [ataru.background-job.job-execution :as job-exec]))
 
-(defn call-fakeservice [service]
-  (swap! service assoc :call-count (inc (:call-count @service)))
-  (if (> (:call-count @service) 1)
-    true
-    false))
+(def
+  job1-definition
+  (letfn [(call-fakeservice [service]
+            (swap! service assoc :call-count (inc (:call-count @service)))
+            (if (> (:call-count @service) 1)
+              true
+              false))
 
-(defn job1-initial [state context]
-  {:transition {:id    :to-next
-                :step  :fake-remote-call}
-   :updated-state (assoc state :initialized true)})
+          (initial [state context]
+            {:transition {:id    :to-next
+                          :step  :fake-remote-call}
+             :updated-state (assoc state :initialized true)})
 
-(defn fake-remote-call [state context]
-  (let [fake-service (:fake-service context)
-        service-call-result (call-fakeservice fake-service)]
-    (if-not service-call-result
-      {:transition {:id :retry} :updated-state (assoc state :damn (inc (:damn state)))}
-      {:transition {:id :final}})))
+          (fake-remote-call [state context]
+            (let [fake-service (:fake-service context)
+                  service-call-result (call-fakeservice fake-service)]
+              (if-not service-call-result
+                {:transition {:id :retry} :updated-state (assoc state :damn (inc (:damn state)))}
+                {:transition {:id :final}})))]
 
-(def job1-steps {:initial job1-initial
-                 :fake-remote-call fake-remote-call})
-
-(def job1-definition {:steps job1-steps
-                      :type "job1"})
+    {:steps {:initial initial
+             :fake-remote-call fake-remote-call}
+     :type "job1"}))
 
 (def job-definitions {(:type job1-definition) job1-definition})
 
