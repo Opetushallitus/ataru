@@ -11,7 +11,6 @@ create table job_iterations (
   job_id           bigint references jobs(id),
   step             varchar(255),                   -- step type, e.g. "initial"
   transition       varchar(100),                   -- the transition which resulted in this iteration and step, e.g. "to-next" or "retry"
-  next_iteration   bigint references job_iterations(id), -- When step has been executed, next step
   state            jsonb not null,                 -- Any job-specific state at a point in time
   next_activation  timestamp with time zone,
   retry_count      integer default 0,              -- How many retries have been made so far
