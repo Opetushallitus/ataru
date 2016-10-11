@@ -123,7 +123,7 @@
                               :iteration default-start-iteration}
            result-iterations (exec-all-iterations runner job)
            last-iteration    (last result-iterations)]
-       (should= 102
+       (should= 102 ;; Limit is 100, it goes one over and the other 1 is the initial step's transition
                 (count result-iterations))
        (should= {:final true,
                  :retry-count 101,
