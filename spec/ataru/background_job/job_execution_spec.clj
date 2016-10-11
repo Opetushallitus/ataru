@@ -68,7 +68,7 @@
 (describe
  "job execution"
  (tags :unit :dev)
- (it "exec job runs steps and produces iterations until there is a final transition"
+ (it "exec-job-step runs steps from job with manual retry and produces correct steps up until final iteration"
      (with-redefs [time/now fixed-now]
        (let [runner            {:job-definitions job-definitions
                                 :fake-service    (atom {:call-count  0})}
