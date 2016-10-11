@@ -23,6 +23,8 @@
 (defn next-activation-for-retry [retry-count]
   (time/plus (time/now) (time/minutes retry-count)))
 
+(def max-retries 100)
+
 (defn continue-running-steps? [transition-id]
   (match transition-id
     (:or :final :fail :retry :error-retry)
@@ -85,6 +87,32 @@
           (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg t))
           (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg t)))))))
 
+(defn maybe-exec-step
+  "Attempt to exec the next iteration's step if the function exists in job definition and 
+   if we haven't exceeded retry-limit"
+  [iteration job-definition runner]
+  (let [step-fn (get (:steps job-definition) (:step iteration))]
+    (cond
+      (nil? step-fn)
+      (final-error-iteration (:step iteration)
+                             (:state iteration)
+                             0
+                             (str "Could not find step "
+                                  (:step iteration)
+                                  " from job definition for "
+                                  (:job-type job-definition)))
+      (> (:retry-count iteration) max-retries)
+      (final-error-iteration (:step iteration)
+                             (:state iteration)
+                             (inc (:retry-count iteration))
+                             (str "Retry limit exceeded for step "
+                                  (:step iteration)
+                                  " in job "
+                                  (:job-type job-definition)))
+
+      :else
+      (exec-step iteration step-fn runner))))
+
 (defn exec-steps
   [runner stored-iteration job-definition]
   (loop [iteration           stored-iteration
@@ -98,7 +126,7 @@
                                       " from job definition for "
                                       (:job-type job-definition))))
 
-      (let [next-iteration (exec-step iteration step-fn runner)]
+      (let [next-iteration (maybe-exec-step iteration job-definition runner)]
         (if (continue-running-steps? (:transition next-iteration))
           (recur next-iteration
                  (get (:steps job-definition) (:step next-iteration))
