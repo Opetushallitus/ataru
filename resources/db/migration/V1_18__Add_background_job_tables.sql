@@ -15,6 +15,7 @@ create table job_iterations (
   next_activation  timestamp with time zone,
   retry_count      integer default 0,              -- How many retries have been made so far
   executed boolean default FALSE,                  -- Has the step been executed already
+  execution_time   timestamp with time zone,
   final    boolean default FALSE,
-  error            varchar(1024)                   -- If the current step resulted in error (usually exception), details are here
+  error            text                            -- If the current step resulted in error (usually exception), details are here. Text because stacktraces can be large.
 );

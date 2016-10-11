@@ -24,4 +24,4 @@ limit 1 -- Limits us to only one job at a time
 for update skip locked;
 
 -- name: yesql-update-previous-iteration!
-update job_iterations set executed = TRUE where id = :id;
+update job_iterations set executed = TRUE, execution_time = now() where id = :id;
