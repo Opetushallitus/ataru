@@ -1,6 +1,7 @@
 (ns ataru.background-job.job-store
   (:require
    [yesql.core :refer [defqueries]]
+   [taoensso.timbre :as log]
    [camel-snake-kebab.extras :refer [transform-keys]]
    [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
    [clj-time.core :as time]
@@ -34,7 +35,6 @@
                                   :state state
                                   :next_activation (time/now)
                                   :retry_count 0
-                                  :executed false
                                   :error nil}
                                   connection)
       new-job-id)))
@@ -45,11 +45,16 @@
          :transition (-> job-iteration :transition name)
          :job_id job-id))
 
-(defn store-job-result [connection job result-iterations]
+(defn store-job-result [connection job result-iteration]
   (yesql-update-previous-iteration! {:id (-> job :iteration :iteration-id)} connection)
-  (let [result-iterations-db-format (map #(job-iteration->db-format % (:job-id job)) result-iterations)]
-    (dorun
-     (map #(yesql-add-job-iteration<! % connection) result-iterations-db-format))))
+  (let [result-iteration-db-format (job-iteration->db-format result-iteration (:job-id job))]
+    (yesql-add-job-iteration<! result-iteration-db-format connection)
+    (log/debug "Stored result iteration for job"
+               (:job-id job)
+               (:job-type job)
+               (:transition result-iteration)
+               "->"
+               (:step result-iteration))))
 
 (defn- job->job-with-iteration [job]
   {:job-id (:job-id job)
@@ -73,8 +78,8 @@
           raw-job    (first (yesql-select-job-for-execution {:job_types job-types} connection))]
       (when raw-job
         (let [job               (raw-job->job raw-job)
-              result-iterations (exec-job-fn job)]
-          (store-job-result connection job result-iterations)))
+              result-iteration  (exec-job-fn job)]
+          (store-job-result connection job result-iteration)))
       ;; When there are no more jobs right now to execute, the caller can decide to
       ;; stop execution for a short period
       (boolean raw-job))))

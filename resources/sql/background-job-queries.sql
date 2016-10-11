@@ -3,9 +3,9 @@ insert into jobs (job_type) values (:job_type);
 
 -- name: yesql-add-job-iteration<!
 insert into job_iterations
-(job_id, step, state, next_activation, transition, retry_count, executed, final, error)
+(job_id, step, state, next_activation, transition, retry_count, final, error)
 values
-(:job_id, :step, :state, :next_activation, :transition, :retry_count, :executed, :final, :error);
+(:job_id, :step, :state, :next_activation, :transition, :retry_count, :final, :error);
 
 -- name: yesql-select-job-for-execution
 -- Selects job and locks it for execution. The locking doesn't force other nodes to
@@ -25,4 +25,3 @@ for update skip locked;
 
 -- name: yesql-update-previous-iteration!
 update job_iterations set executed = TRUE where id = :id;
-
