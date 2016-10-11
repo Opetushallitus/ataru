@@ -92,14 +92,14 @@
                                   (:step iteration)
                                   " from job definition for "
                                   (:job-type job-definition)))
-      (> (:retry-count iteration) max-retries)
+      (>= (:retry-count iteration) max-retries)
       (final-error-iteration (:step iteration)
                              (:state iteration)
                              (inc (:retry-count iteration))
                              (str "Retry limit exceeded for step "
                                   (:step iteration)
                                   " in job "
-                                  (:job-type job-definition)))
+                                  (:type job-definition)))
 
       :else
       (exec-step iteration step-fn runner))))
