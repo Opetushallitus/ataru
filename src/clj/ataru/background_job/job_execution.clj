@@ -9,20 +9,6 @@
   (:import
    (java.util.concurrent Executors TimeUnit)))
 
-(defn determine-next-step [transition current-step]
-  (match transition
-    {:id :to-next :step next-step}
-    next-step
-
-    {:id (:or :retry :error-retry)}
-    current-step
-
-    {:id (:or :final :fail)}
-    nil))
-
-(defn next-activation-for-retry [retry-count]
-  (time/plus (time/now) (time/minutes retry-count)))
-
 (def max-retries 100)
 
 ;; Iterations resulting in running or attempting to run steps
@@ -49,6 +35,20 @@
                      s/Any s/Any})
 
 (s/defschema JobWithStoredIteration {:job-type s/Str :iteration StoredIteration :job-id s/Int})
+
+(defn determine-next-step [transition current-step]
+  (match transition
+    {:id :to-next :step next-step}
+    next-step
+
+    {:id (:or :retry :error-retry)}
+    current-step
+
+    {:id (:or :final :fail)}
+    nil))
+
+(defn next-activation-for-retry [retry-count]
+  (time/plus (time/now) (time/minutes retry-count)))
 
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
