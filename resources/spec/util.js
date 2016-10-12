@@ -32,11 +32,19 @@ var triggerEvent = function($e, type) {
   $e.get(0).dispatchEvent(evt)
 }
 
+var isRadioButton = function($e) {
+  return $e.attr('for') && $e.parent().find("#" + $e.attr('for')) !== null
+}
+
 var clickElement = function(selectFn) {
   return wait.until(function () {
     $e = selectFn()
     if (elementExists($e)) {
-      triggerEvent($e, 'click')
+      if (isRadioButton($e)) {
+        $e.click()
+      } else {
+        triggerEvent($e, 'click')
+      }
       return true
     }
   })
