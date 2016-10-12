@@ -12,20 +12,16 @@
                                                    (secretary/locate-route path))})
 
 (defn set-history!
-  ([path dispatch-path?]
-   (.pushState js/history nil nil path)
-   (when dispatch-path?
-     (secretary/dispatch! path)))
-  ([path]
-    (set-history! path true)))
+  [path]
+  (accountant/navigate! path))
 
 (defn anchor-click-handler
   [event]
+  (.preventDefault event)
   (let [path (.getPath (.parse Uri (.-href (.-target event))))
         matches-path? (secretary/locate-route path)]
     (when matches-path?
-      (set-history! path false))
-    (.preventDefault event)))
+      (set-history! path))))
 
 (defn app-routes []
   (defroute "/lomake-editori/" []
