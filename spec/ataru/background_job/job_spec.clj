@@ -2,6 +2,7 @@
   "This tests how everything works together with database. More detailed tests are in job_execution_spec.clj."
   (:require
    [yesql.core :refer [defqueries]]
+   [oph.soresu.common.config :refer [config]]
    [clj-time.core :as time]
    [speclj.core :refer [tags describe it should= before-all after-all]]
    [ataru.background-job.job :as job]
@@ -14,6 +15,7 @@
 ;; mock time to be in the the past so that delayed retries
 ;; still happen immediately. We don't want to wait minutes here.
 (defn fixed-now [] (time/date-time 2015 10 10))
+(def fake-config (merge config {:background-job {:exec-interval-seconds 1}}))
 
 (def
   retrying-job
@@ -73,7 +75,8 @@
  (tags :unit :dev)
 
  (it "Check that job finishes without errors and with correct state"
-     (with-redefs [time/now fixed-now]
+     (with-redefs [time/now fixed-now
+                   config   fake-config]
        (let [job-runner      (start-job-runner)
              job-id          (job/start-job job-definitions (:type retrying-job) {:counter 0})
              final-iteration (wait-for-final-iteration job-id)]
