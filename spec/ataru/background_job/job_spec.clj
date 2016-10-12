@@ -1,4 +1,4 @@
-(ns ataru.background-job.job-execution-spec
+(ns ataru.background-job.job-spec
   "This tests how everything works together with database. More detailed tests are in job_execution_spec.clj."
   (:require
    [yesql.core :refer [defqueries]]
