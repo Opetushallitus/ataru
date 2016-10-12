@@ -53,6 +53,14 @@ function clickRepeatingAnswers(question) {
   }
 }
 
+function clickInfoTextCheckbox(selector) {
+  return function() {
+    return selector()
+      .find(".editor-form__info-component-checkbox > input")
+      .click()
+  }
+}
+
 (function() {
   before(function () {
     loadInFrame('http://localhost:8350/lomake-editori/')
@@ -222,6 +230,22 @@ function clickRepeatingAnswers(question) {
           expect(formSections().eq(0).find('.editor-form__text-field').eq(1).val()).to.equal('Osiokysymys')
           expect(formSections().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('S')
           expect(formSections().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
+        })
+      })
+
+      describe('textfield with info text', function() {
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          clickInfoTextCheckbox(function() { return formComponents().eq(9) }),
+          setTextFieldValue(function() { return formComponents().eq(9).find('.editor-form__text-field') }, 'Infoteksti'),
+          setTextFieldValue(function() {
+            return formComponents().eq(9).find('.editor-form__info-component-inputs input').eq(0) }, 'oikeen pitka infoteksti sitten tassa.')
+        )
+
+        it('has expected contents', function() {
+          expect(formComponents()).to.have.length(10)
+          expect(formComponents().eq(9).find('.editor-form__info-component-checkbox input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(9).find('.editor-form__info-component-inputs input').eq(0).val()).to.equal('oikeen pitka infoteksti sitten tassa.')
         })
       })
 

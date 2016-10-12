@@ -109,10 +109,32 @@
                       (when-not header?
                         {:class "editor-form__multi-option-wrapper"})
                       (cond-> field-spec
-                        (and multiple-languages?) add-multi-lang-class)
+                        multiple-languages? add-multi-lang-class)
                       (when multiple-languages?
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
                  languages)))
+
+(defn info-component [path initial-content]
+  (let [id        (util/new-uuid)
+        checked?  (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
+        languages (subscribe [:editor/languages])]
+    (fn [path initial-data]
+      [:div.editor-form__info-component-wrapper
+       [:div.editor-form__info-component-checkbox
+        [:input {:id        id
+                 :type      "checkbox"
+                 :checked   @checked?
+                 :on-change (fn [event]
+                              (dispatch [:editor/set-component-value
+                                         (if (-> event .-target .-checked) {:fi "" :sv "" :en ""} nil)
+                                         path :params :info-text :label]))}]
+        [:label {:for id} "Kysymys sisältää ohjetekstin"]]
+       (when @checked?
+         [:div.editor-form__info-component-inputs
+          (input-fields-with-lang
+            (fn [lang]
+              [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
+            @languages)])])))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
@@ -124,43 +146,46 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
-       [text-header header-label path]
-       [:div.editor-form__text-field-wrapper
-        [:header.editor-form__component-item-header "Kysymys"]
-        (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-          @languages
-          :header? true)]
-       [:div.editor-form__button-wrapper
-        [:header.editor-form__component-item-header size-label]
-        [:div.editor-form__button-group
-         (doall (for [[btn-name btn-id] radio-button-ids]
-                  ^{:key (str btn-id "-radio")}
-                  [:div
-                   [:input.editor-form__button
-                    {:type      "radio"
-                     :value     btn-name
-                     :checked   (or
-                                  (= @size btn-name)
-                                  (and
-                                    (nil? @size)
-                                    (= "M" btn-name)))
-                     :name      radio-group-id
-                     :id        btn-id
-                     :on-change (fn [] (size-change btn-name))}]
-                   [:label
-                    {:for   btn-id
-                     :class (match btn-name
-                                   "S" "editor-form__button--left-edge"
-                                   "L" "editor-form__button--right-edge"
-                                   :else nil)}
-                    btn-name]]))]]
-       [:div.editor-form__checkbox-wrapper
-        [required-checkbox path initial-content]
-        (when-not (= "Tekstialue" header-label)
-          [repeater-checkbox path initial-content])]])))
+       [:div.editor-form__component-row-wrapper
+        {:class @animation-effect}
+        [text-header header-label path]
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Kysymys"]
+         (input-fields-with-lang
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
+        [:div.editor-form__button-wrapper
+         [:header.editor-form__component-item-header size-label]
+         [:div.editor-form__button-group
+          (doall (for [[btn-name btn-id] radio-button-ids]
+                   ^{:key (str btn-id "-radio")}
+                   [:div
+                    [:input.editor-form__button
+                     {:type      "radio"
+                      :value     btn-name
+                      :checked   (or
+                                   (= @size btn-name)
+                                   (and
+                                     (nil? @size)
+                                     (= "M" btn-name)))
+                      :name      radio-group-id
+                      :id        btn-id
+                      :on-change (fn [] (size-change btn-name))}]
+                    [:label
+                     {:for   btn-id
+                      :class (match btn-name
+                               "S" "editor-form__button--left-edge"
+                               "L" "editor-form__button--right-edge"
+                               :else nil)}
+                     btn-name]]))]]
+        [:div.editor-form__checkbox-wrapper
+         [required-checkbox path initial-content]
+         (when-not (= "Tekstialue" header-label)
+           [repeater-checkbox path initial-content])]]
+
+       [info-component path initial-content]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -170,7 +195,7 @@
 
 (defn- remove-dropdown-option-button [path option-index]
   {:key (str "remove-option-" option-index)}
-  [:a {:href "#"
+  [:a.editor-form__multi-options-remove--cross {:href "#"
        :on-click (fn [evt]
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
