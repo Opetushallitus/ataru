@@ -111,7 +111,7 @@
       (maybe-exec-step runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
         (log/error msg)
-        [(final-error-iteration (-> job :iteration :step) msg)]))))
+        (final-error-iteration (-> job :iteration :step) nil 0 msg)))))
 
 (defn get-job-step-and-exec [runner]
   (job-store/with-due-job
