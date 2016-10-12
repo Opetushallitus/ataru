@@ -3,11 +3,10 @@
    [taoensso.timbre :as log]
    [clj-time.core :as time]
    [clojure.core.match :refer [match]]
-   [ataru.background-job.job-store :as job-store])
+   [ataru.background-job.job-store :as job-store]
+   [oph.soresu.common.config :refer [config]])
   (:import
    (java.util.concurrent Executors TimeUnit)))
-
-(def job-exec-interval-seconds 10)
 
 (defn determine-next-step [transition current-step]
   (match transition
@@ -135,7 +134,11 @@
       (log/error "Error while executing background job:")
       (log/error t))))
 
+(defn job-exec-interval-seconds
+  "Function instead of def so we can override this in tests"
+  [] (or (-> config :background-job :exec-interval-seconds) 15))
+
 (defn start [runner]
   (let [scheduled-executor (Executors/newSingleThreadScheduledExecutor)]
-    (.scheduleWithFixedDelay scheduled-executor #(execute-due-job-steps runner) 0 job-exec-interval-seconds TimeUnit/SECONDS)
+    (.scheduleWithFixedDelay scheduled-executor #(execute-due-job-steps runner) 0 (job-exec-interval-seconds) TimeUnit/SECONDS)
     scheduled-executor))
