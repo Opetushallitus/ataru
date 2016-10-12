@@ -49,7 +49,7 @@
          (filter koodi-pred)
          first)))
 
-(defn- populate-koodisto-fields [application {:keys [content] :as form}]
+(defn- populate-koodisto-fields [application {:keys [content]}]
   (let [koodisto-fields (extract-koodisto-fields content)]
     (println (str koodisto-fields))
     (update application :answers
