@@ -26,7 +26,13 @@
   [cas-client :- s/Any
    person :- Person]
   {:pre [(some? (base-address))]}
-  (let [url (str (base-address) "/resources/s2s/hakuperusteet")]
-    (-> (cas/cas-authenticated-post cas-client url person)
-        :body
-        (json/parse-string true))))
+  (let [url      (str (base-address) "/resources/s2s/hakuperusteet")
+        response (cas/cas-authenticated-post cas-client url person)]
+    (println "RESPONSE")
+    (if (= 200 (:status response))
+      (json/parse-string (:body response) true)
+      (throw (Exception.
+              (str "Failed to upsert person, got status code "
+                   (:status response)
+                   " body: "
+                   (:body response)))))))
