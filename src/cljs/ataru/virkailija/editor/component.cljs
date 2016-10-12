@@ -195,7 +195,7 @@
 
 (defn- remove-dropdown-option-button [path option-index]
   {:key (str "remove-option-" option-index)}
-  [:a {:href "#"
+  [:a.editor-form__multi-options-remove--cross {:href "#"
        :on-click (fn [evt]
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
