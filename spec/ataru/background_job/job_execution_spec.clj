@@ -79,7 +79,7 @@
                       (:type fatally-failing-job) fatally-failing-job
                       (:type always-exception-throwing-job) always-exception-throwing-job})
 
-(def default-start-iteration {:state {} :step :initial :retry-count 0})
+(def default-start-iteration {:state {} :step :initial :retry-count 0 :iteration-id 1})
 
   (defn exec-all-iterations [runner job]
   (loop [iteration (:iteration job)
@@ -98,6 +98,7 @@
        (let [runner            {:job-definitions job-definitions
                                 :fake-service    (atom {:call-count  0})}
              job               {:job-type "job1"
+                                :job-id 1
                                 :iteration {:state {:damn 0}
                                             :step :initial
                                             :retry-count 0}}
@@ -105,9 +106,10 @@
          (should= expected-job1-iterations
                   result-iterations))))
  (it "exec-job-step immediately prodAuces final transition with error description"
-     (let [runner            {:job-definitions job-definitions}
-             job              {:job-type "fatally-failing-job"
-                               :iteration default-start-iteration}
+     (let [runner           {:job-definitions job-definitions}
+           job              {:job-type "fatally-failing-job"
+                             :job-id 2
+                             :iteration default-start-iteration}
            result-iterations (exec-all-iterations runner job)]
        (should= [{:step :initial,
                   :state {},
@@ -118,9 +120,10 @@
                   :error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
                 result-iterations)))
  (it "exec-job-step retries the maximum amount when an ordinary exception is thrown from the same step"
-     (let [runner            {:job-definitions job-definitions}
-             job             {:job-type "always-exception-throwing-job"
-                              :iteration default-start-iteration}
+     (let [runner          {:job-definitions job-definitions}
+           job             {:job-type "always-exception-throwing-job"
+                            :job-id 3
+                            :iteration default-start-iteration}
            result-iterations (exec-all-iterations runner job)
            last-iteration    (last result-iterations)]
        (should= 102 ;; Limit is 100, it goes one over and the other 1 is the initial step's transition

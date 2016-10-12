@@ -37,9 +37,18 @@
    :transition                   s/Keyword
    :error                        (s/maybe s/Str)})
 
+;; Less stuff here, but the ID is needed because this has to be updated
+(s/defschema StoredIteration
+  {:step s/Keyword
+   :state {s/Any s/Any}
+   :retry-count s/Int
+   s/Any s/Any})
+
 (s/defschema Runner {:job-definitions {s/Str {:steps {s/Keyword s/Any}
                                               :type  s/Str}}
                      s/Any s/Any})
+
+(s/defschema JobWithStoredIteration {:job-type s/Str :iteration StoredIteration :job-id s/Int})
 
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
@@ -122,7 +131,7 @@
 
 (s/defn ^:always-validate exec-job-step :- ResultIteration
   [runner :- Runner
-   job :- s/Any]
+   job :- JobWithStoredIteration]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
     (log/debug "Executing job" (:job-id job) (:job-type job))
