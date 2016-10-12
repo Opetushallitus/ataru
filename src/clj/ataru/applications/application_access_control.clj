@@ -51,7 +51,6 @@
 
 (defn- populate-koodisto-fields [application {:keys [content]}]
   (let [koodisto-fields (extract-koodisto-fields content)]
-    (println (str koodisto-fields))
     (update application :answers
       (partial map
         (fn [{:keys [key] :as answer}]
