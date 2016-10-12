@@ -50,7 +50,10 @@
          first)))
 
 (defn- populate-koodisto-fields [application {:keys [content]}]
-  (let [koodisto-fields (extract-koodisto-fields content)]
+  (let [koodisto-fields (extract-koodisto-fields content)
+        lang            (-> (:lang application)
+                            clojure.string/lower-case
+                            keyword)]
     (update application :answers
       (partial map
         (fn [{:keys [key] :as answer}]
@@ -62,7 +65,7 @@
                                    koodisto     (koodisto/get-koodisto-options koodisto-uri version)]
                                (-> koodisto
                                    (get-koodi koodi-value)
-                                   (get-in [:label :fi])))))))))))
+                                   (get-in [:label lang])))))))))))
 
 (defn get-application [application-id session organization-service]
   (let [application (application-store/get-application application-id)
