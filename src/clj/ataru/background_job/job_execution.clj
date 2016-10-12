@@ -36,7 +36,7 @@
 
 (s/defschema JobWithStoredIteration {:job-type s/Str :iteration StoredIteration :job-id s/Int})
 
-(defn determine-next-step [transition current-step]
+(defn- determine-next-step [transition current-step]
   (match transition
     {:id :to-next :step next-step}
     next-step
@@ -47,8 +47,19 @@
     {:id (:or :final :fail)}
     nil))
 
-(defn next-activation-for-retry [retry-count]
+(defn- next-activation-for-retry [retry-count]
   (time/plus (time/now) (time/minutes retry-count)))
+
+(defn- next-activation [next-is-retry next-is-final retry-count]
+  (cond
+    next-is-final
+    nil
+
+    next-is-retry
+    (next-activation-for-retry (inc retry-count))
+
+    :else
+    (time/now)))
 
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
@@ -92,15 +103,7 @@
        :transition      result-transition-id
        :final           next-is-final
        :retry-count     (if next-is-retry (inc retry-count) 0)
-       :next-activation (cond
-                          next-is-final
-                          nil
-
-                          next-is-retry
-                          (next-activation-for-retry (inc retry-count))
-
-                          :else
-                          (time/now))
+       :next-activation (next-activation next-is-retry next-is-final retry-count)
        :state           (or (:updated-state step-result) state)
        :error           nil})
     (catch Throwable t
