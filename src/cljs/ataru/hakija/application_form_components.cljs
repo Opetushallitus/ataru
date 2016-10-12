@@ -27,7 +27,7 @@
   [field-data value]
   (if (not-empty (:validators field-data))
     (every? true? (map #(validator/validate % value)
-                       (:validators field-data)))
+                    (:validators field-data)))
     true))
 
 (defn- textual-field-change [text-field-data evt]
@@ -73,6 +73,12 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
+(defn info-text [field-descriptor]
+  (let [language (subscribe [:application/form-language])]
+    (fn [field-descriptor]
+      (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+        [:div.application__form-info-text info]))))
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (keyword (:id field-descriptor))
         value        (subscribe [:state-query [:application :answers id :value]])
@@ -83,8 +89,10 @@
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor size-class]
+       [info-text field-descriptor]
        [:input.application__form-text-input
-        (merge {:type        "text"
+        (merge {:id          id
+                :type        "text"
                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                (non-blank-val (get input-hint @lang)
                                               (get input-hint @default-lang)))
@@ -99,13 +107,15 @@
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
+        lang       (subscribe [:application/form-language])
         on-change  (fn [idx evt]
                      (let [value (some-> evt .-target .-value)
                            valid (field-value-valid? field-descriptor value)]
-                       (dispatch [:application/set-repeatable-application-field id idx {:value value :valid valid}])))]
+                       (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
-              [label field-descriptor size-class]]
+              [label field-descriptor size-class]
+              [info-text field-descriptor]]
         (cons
           (let [{:keys [value valid]} (first @values)]
             [:div
@@ -115,29 +125,39 @@
                                             " application__form-field-error"
                                             " application__form-text-input--normal"))
                :value     value
+               :on-blur   #(when (empty? (-> % .-target .-value))
+                             (dispatch [:application/remove-repeatable-application-field-value id 0]))
                :on-change (partial on-change 0)}]])
           (map-indexed
-            (fn [idx {:keys [value last?]}]
-              (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
-                [:div.application__form-repeatable-text-wrap
-                 [:input.application__form-text-input
-                  (merge
-                    {:type        "text"
-                     :class       (str
+            (let [first-is-empty? (empty? (first (map :value @values)))]
+              (fn [idx {:keys [value last?]}]
+                (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
+                  [:div.application__form-repeatable-text-wrap
+                   [:input.application__form-text-input
+                    (merge
+                      {:type      "text"
+                       ; prevent adding second answer when first is empty
+                       :disabled  (and last? first-is-empty?)
+                       :class     (str
                                     size-class " application__form-text-input--normal"
                                     (when-not value " application__form-text-input--disabled"))
-                     :value       value
-                     :on-blur     #(when (and
+                       :value     value
+                       :on-blur   #(when (and
                                            (not last?)
                                            (empty? (-> % .-target .-value)))
                                      (clicky))
-                     :on-change   (partial on-change (inc idx))}
-                    (when last?
-                      {:placeholder "Lisää.."}))]
-                 (when value
-                   [:a.application__form-repeatable-text--addremove
-                    {:on-click clicky}
-                    [:i.zmdi.zmdi-close.zmdi-hc-lg]])]))
+                       :on-change (partial on-change (inc idx))}
+                      (when last?
+                        {:placeholder
+                         (case @lang
+                           :en "Add more..."
+                           :sv "Lägg till..."
+                           ;fi
+                           "Lisää...")}))]
+                   (when value
+                     [:a.application__form-repeatable-text--addremove
+                      {:on-click clicky}
+                      [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))
             (concat (rest @values)
               [{:value nil :valid true :last? true}])))))))
 
@@ -153,6 +173,7 @@
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
+       [info-text field-descriptor]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any

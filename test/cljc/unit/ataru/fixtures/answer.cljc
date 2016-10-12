@@ -55,5 +55,14 @@
     {:key       "home-town",
      :value     "kunta",
      :fieldType "textField",
-     :label     {:fi "Kotikunta", :sv "Bostadsort"}}]})
+     :label     {:fi "Kotikunta", :sv "Bostadsort"}}
+    {:key       "047da62c-9afe-4e28-bfe8-5b50b21b4277",
+     :label     "Ensimmäinen kysymys, toistuvilla arvoilla",
+     :value
+     ["Voluptas enim ipsum ut debitis a qui tempor occaecat" "harum laudantium nulla voluptate est in ex sunt ipsum labor"],
+     :fieldType "textField"}
+    {:key       "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0",
+     :label     "Viides kysymys",
+     :value     "Ensimmäinen vaihtoehto, Toinen vaihtoehto, Kolmas vaihtoehto"
+     :fieldType "multipleChoice"}]})
 
