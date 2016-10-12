@@ -89,7 +89,8 @@
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor size-class]
-       [info-text field-descriptor]
+       [:div.application__form-text-input-info-text
+        [info-text field-descriptor]]
        [:input.application__form-text-input
         (merge {:id          id
                 :type        "text"
@@ -115,7 +116,8 @@
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
               [label field-descriptor size-class]
-              [info-text field-descriptor]]
+              [:div.application__form-text-input-info-text
+               [info-text field-descriptor]]]
         (cons
           (let [{:keys [value valid]} (first @values)]
             [:div
@@ -173,7 +175,8 @@
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
-       [info-text field-descriptor]
+       [:div.application__form-text-area-info-text
+        [info-text field-descriptor]]
        [:textarea.application__form-text-input.application__form-text-area
         {:class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
