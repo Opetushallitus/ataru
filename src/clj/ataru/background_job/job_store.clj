@@ -38,8 +38,9 @@
     (log/debug "Stored result iteration for job"
                (:job-id job)
                (:job-type job)
+               "transition:"
                (:transition result-iteration)
-               "->"
+               "result step:"
                (:step result-iteration))))
 
 (defn- job->job-with-iteration [job]
