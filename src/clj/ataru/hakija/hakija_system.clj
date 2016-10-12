@@ -28,7 +28,7 @@
 
      :person-service       (person-service/new-person-service)
 
-     :job-definitions      hakija-jobs/jobs
+     :job-definitions      hakija-jobs/job-definitions
 
      :job-runner           (component/using
                              (job/->JobRunner)

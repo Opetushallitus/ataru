@@ -36,10 +36,13 @@
 (defn- handle-application [application]
   (info "Received application:" application)
   (if (validator/valid-application? application)
-    (let [stored-app-id (application-store/add-new-application application)]
+    (let [stored-app-id         (application-store/add-new-application application)
+          person-service-job-id (job/start-job hakija-jobs/job-definitions
+                                               (:type person-integration/job-definition)
+                                               {:application-id stored-app-id})]
       (info "Stored application with id:" stored-app-id)
+      (info "Started person creation job (to person service) with job id" person-service-job-id)
       (email-store/store-email-verification application stored-app-id)
-      (job/start-job hakija-jobs/jobs person-integration/job-type {:application-id stored-app-id})
       (response/ok {:id stored-app-id}))
     (do
       (error "Invalid application!")
