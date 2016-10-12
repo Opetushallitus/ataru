@@ -22,14 +22,19 @@
     (log/info "Sending person " person-to-send)
     person-to-send))
 
+(defn upsert-and-log-person [person-service application-id]
+  (let [person-to-send (create-person-to-send application-id)]
+    (log/info "Sending person" person-to-send)
+    (.upsert-person person-service person-to-send)))
+
 (defn upsert-person
   "Fetch person OID from person service and store it to database"
   [{:keys [application-id]}
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
-  (log/info "Trying to add applicant from application " application-id " to person service")33
-  (let [response-person (.upsert-person person-service (create-person-to-send application-id))
+  (log/info "Trying to add applicant from application " application-id " to person service")
+  (let [response-person (upsert-and-log-person person-service application-id)
         person-oid      (:personOid response-person)]
     (log/info "Added person " person-oid " to person service")
     (application-store/add-person-oid application-id person-oid))
