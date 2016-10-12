@@ -159,8 +159,13 @@
     (exec-job-steps-while-due runner)
     ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
     (catch Throwable t
-      (log/error "Error while executing background job:")
-      (log/error t))))
+      (log/error
+       ;; ExceptionInfo instances did not behave well (nothing was logged)
+       ;; with (log/error t)
+       ;; with this (log/error t "message") a new Throwable was thrown causing
+       ;; Executor to stop :(
+       ;; So we had to resort to (str t) which at least prints lots of info
+       (str "Error while executing background job: " t)))))
 
 (defn job-exec-interval-seconds
   "Function instead of def so we can override this in tests"
