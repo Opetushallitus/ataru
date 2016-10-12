@@ -1,6 +1,7 @@
 (ns ataru.background-job.job-execution
   (:require
    [taoensso.timbre :as log]
+   [schema.core :as s]
    [clj-time.core :as time]
    [clojure.core.match :refer [match]]
    [ataru.background-job.job-store :as job-store]
@@ -23,6 +24,22 @@
   (time/plus (time/now) (time/minutes retry-count)))
 
 (def max-retries 100)
+
+;; Iterations resulting in running or attempting to run steps
+;; are so central, that we've specified them with schema
+;; and verify them in exec-job-step
+(s/defschema ResultIteration
+  {:step                         s/Keyword
+   :state                        {s/Any s/Any}
+   :final                        s/Bool
+   :retry-count                  s/Int
+   :next-activation              s/Any
+   :transition                   s/Keyword
+   :error                        (s/maybe s/Str)})
+
+(s/defschema Runner {:job-definitions {s/Str {:steps {s/Keyword s/Any}
+                                              :type  s/Str}}
+                     s/Any s/Any})
 
 (defn- final-error-iteration [step state retry-count msg]
   {:step step
@@ -103,7 +120,9 @@
       :else
       (exec-step iteration step-fn runner))))
 
-(defn exec-job-step [runner job]
+(s/defn ^:always-validate exec-job-step :- ResultIteration
+  [runner :- Runner
+   job :- s/Any]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
     (log/debug "Executing job" (:job-id job) (:job-type job))
@@ -111,7 +130,7 @@
       (maybe-exec-step runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
         (log/error msg)
-        (final-error-iteration (-> job :iteration :step) nil 0 msg)))))
+        (final-error-iteration (-> job :iteration :step) {} 0 msg)))))
 
 (defn get-job-step-and-exec [runner]
   (job-store/with-due-job
