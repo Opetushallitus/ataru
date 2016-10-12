@@ -21,8 +21,10 @@
 (defrecord JobRunner []
   component/Lifecycle
   (start [this]
+    (log/info "Starting background job runner")
     (verify-job-definitions this)
     (assoc this :executor (execution/start this)))
   (stop [this]
+    (log/info "Stopping background job runner")
     (-> this :executor (.shutdown))
     this))
