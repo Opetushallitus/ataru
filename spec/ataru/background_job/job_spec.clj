@@ -74,7 +74,7 @@
  "background job runner"
  (tags :unit :dev)
 
- (it "Check that job finishes without errors and with correct state"
+ (it "checks that job finishes without errors and with correct state"
      (with-redefs [time/now fixed-now
                    config   fake-config]
        (let [job-runner      (start-job-runner)

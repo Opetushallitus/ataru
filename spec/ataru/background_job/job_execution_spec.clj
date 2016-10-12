@@ -105,7 +105,7 @@
              result-iterations (exec-all-iterations runner job)]
          (should= expected-job1-iterations
                   result-iterations))))
- (it "exec-job-step immediately prodAuces final transition with error description"
+ (it "exec-job-step immediately produces final transition with error description"
      (let [runner           {:job-definitions job-definitions}
            job              {:job-type "fatally-failing-job"
                              :job-id 2
