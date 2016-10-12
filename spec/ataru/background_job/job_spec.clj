@@ -70,7 +70,7 @@
 
 (describe
  "background job runner"
- (tags :unit :dev2)
+ (tags :unit :dev)
 
  (it "Check that job finishes without errors and with correct state"
      (with-redefs [time/now fixed-now]
