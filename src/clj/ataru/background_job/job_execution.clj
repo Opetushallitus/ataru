@@ -68,6 +68,14 @@
    :transition :error-retry
    :error msg})
 
+(defn- handle-error [iteration throwable]
+  (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
+    (log/error msg)
+    (log/error throwable)
+    (if (instance? Exception throwable) ;; Exceptions are retried, Errors cause job stop
+      (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg throwable))
+      (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg throwable)))))
+
 (defn exec-step [iteration step-fn runner]
   (log/debug "Executing step:" (:step iteration))
   (try
@@ -96,12 +104,7 @@
        :state           (or (:updated-state step-result) state)
        :error           nil})
     (catch Throwable t
-      (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
-        (log/error msg)
-        (log/error t)
-        (if (instance? Exception t) ;; Exceptions are retried, Errors cause job stop
-          (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg t))
-          (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg t)))))))
+      (handle-error iteration t))))
 
 (defn maybe-exec-step
   "Attempt to exec the next iteration's step if the function exists in job definition and
@@ -134,7 +137,7 @@
    job :- JobWithStoredIteration]
   (let [job-definitions (:job-definitions runner)
         job-definition (get job-definitions (:job-type job))]
-    (log/debug "Executing job" (:job-id job) (:job-type job))
+    (log/info "Executing job" (:job-id job) (:job-type job))
     (if job-definition
       (maybe-exec-step runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
