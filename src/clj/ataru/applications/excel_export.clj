@@ -5,6 +5,7 @@
            [org.joda.time.format DateTimeFormat])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [ataru.koodisto.koodisto :as koodisto]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -82,7 +83,28 @@
   (doseq [header headers]
     (writer 0 (+ (:column header) (count meta-fields)) (:header header))))
 
-(defn- write-application! [writer application headers application-meta-fields]
+(defn- get-field-descriptor [field-descriptors key]
+  (loop [field-descriptors field-descriptors]
+    (if-let [field-descriptor (first field-descriptors)]
+      (let [ret (if (contains? field-descriptor :children)
+                  (get-field-descriptor (:children field-descriptor) key)
+                  field-descriptor)]
+        (if (= key (:id ret))
+          ret
+          (recur (next field-descriptors)))))))
+
+(defn- koodi-uri->human-readable-value [{:keys [content]} {:keys [lang]} key value]
+  (let [field-descriptor (get-field-descriptor content key)
+        lang             (-> lang clojure.string/lower-case keyword)]
+    (if-some [koodisto-source (:koodisto-source field-descriptor)]
+      (let [koodi (->> (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+                       (filter (fn [koodi]
+                                 (= (:value koodi) value)))
+                       first)]
+        (get-in koodi [:label lang]))
+      value)))
+
+(defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
@@ -91,8 +113,11 @@
           value-or-values (-> (:value answer))
           value (or
                   (when (or (seq? value-or-values) (vector? value-or-values))
-                    (apply str (interpose "\n" value-or-values)))
-                  value-or-values)]
+                    (->> value-or-values
+                         (map (partial koodi-uri->human-readable-value form application (:key answer)))
+                         (interpose "\n")
+                         (apply str)))
+                  (koodi-uri->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (when-let [notes (:notes (application-store/get-application-review (:id application)))]
     (let [column (+ (apply max (map :column headers))
@@ -133,7 +158,7 @@
       (dorun (map-indexed
                (fn [idx application]
                  (let [writer (make-writer applications-sheet (inc idx))]
-                   (write-application! writer application headers application-meta-fields)))
+                   (write-application! writer application headers application-meta-fields form)))
                applications))
       (.createFreezePane applications-sheet 0 1 0 1))
     (with-open [stream (ByteArrayOutputStream.)]
