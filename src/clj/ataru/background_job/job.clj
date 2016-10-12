@@ -6,10 +6,6 @@
    [ataru.background-job.job-execution :as execution]
    [ataru.background-job.job-store :as job-store]))
 
-;; These "step-transitions" are common to all jobs.
-;; The go to final steps or remain in current
-(def common-transitions [:initial :final :fail :retry :to-next])
-
 (defn- verify-job-definitions [runner]
   (if-not (:job-definitions runner) (throw (Exception. "No job definintions given for JobRunner"))))
 
