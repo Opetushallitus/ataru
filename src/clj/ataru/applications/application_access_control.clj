@@ -62,10 +62,14 @@
             (update :value (fn [koodi-value]
                              (let [koodisto-uri (get-in koodisto-fields [key :uri])
                                    version      (get-in koodisto-fields [key :version])
-                                   koodisto     (koodisto/get-koodisto-options koodisto-uri version)]
-                               (-> koodisto
-                                   (get-koodi koodi-value)
-                                   (get-in [:label lang])))))))))))
+                                   koodisto     (koodisto/get-koodisto-options koodisto-uri version)
+                                   value        (->> (clojure.string/split koodi-value #"\s*,\s*")
+                                                     (map (fn [koodi-uri]
+                                                            (let [koodi (get-koodi koodisto koodi-uri)]
+                                                              (get-in koodi [:label lang])))))]
+                               (cond-> value
+                                 (= (count value) 1)
+                                 first))))))))))
 
 (defn get-application [application-id session organization-service]
   (let [application (application-store/get-application application-id)
