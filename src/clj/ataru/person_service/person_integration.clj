@@ -17,13 +17,8 @@
    :nativeLanguage (extract-field application "language")
    :idpEntitys     []})
 
-(defn create-person-to-send [application-id]
-  (let [person-to-send (extract-person (application-store/get-application application-id))]
-    (log/info "Sending person " person-to-send)
-    person-to-send))
-
 (defn upsert-and-log-person [person-service application-id]
-  (let [person-to-send (create-person-to-send application-id)]
+  (let [person-to-send (extract-person (application-store/get-application application-id))]
     (log/info "Sending person" person-to-send)
     (.upsert-person person-service person-to-send)))
 

@@ -4,7 +4,7 @@
             [ataru.background-job.job :as job]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.http.server :as server]
-            [ataru.hakija.email :as email]
+            [ataru.hakija.legacy-application-email.email :as email]
             [ataru.person-service.person-service :as person-service]
             [environ.core :refer [env]]))
 
@@ -20,6 +20,9 @@
      :server-setup         {:port      http-port
                             :repl-port repl-port}
 
+     ;; TODO remove this and the code behind it
+     ;; after all the legacy emails have been sent
+     ;; Now background jobs handle this
      :email                (email/new-emailer)
 
      :server               (component/using

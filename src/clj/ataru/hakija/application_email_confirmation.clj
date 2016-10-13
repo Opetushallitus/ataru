@@ -6,7 +6,7 @@
    [ataru.applications.application-store :as application-store]
    [ataru.background-job.job :as job]
    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-   [ataru.hakija.email-job :as email-job]))
+   [ataru.hakija.background-jobs.email-job :as email-job]))
 
 (def ^:private subject
   {:fi "Opintopolku.fi - Hakemuksesi on vastaanotettu"

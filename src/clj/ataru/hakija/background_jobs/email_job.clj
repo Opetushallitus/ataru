@@ -1,4 +1,4 @@
-(ns ataru.hakija.email-job
+(ns ataru.hakija.background-jobs.email-job
   "You can send any email with this, it's not tied to any particular email-type"
   (:require
    [taoensso.timbre :as log]
