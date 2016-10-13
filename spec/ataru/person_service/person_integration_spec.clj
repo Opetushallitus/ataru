@@ -41,9 +41,7 @@
                     cas-client/cas-authenticated-post (fn [client url body]
                                                         {:body
                                                          (-> person
-                                                             json/generate-string
-                                                             .getBytes
-                                                             ByteArrayInputStream.)})]
+                                                             json/generate-string)})]
         (should= {:transition {:id :final}}
                  (person-integration/upsert-person
                    {:application-id (:id application)}

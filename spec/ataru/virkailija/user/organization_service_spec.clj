@@ -13,9 +13,9 @@
 (defn fake-create-connection [] :fake-conn)
 (defn fake-cas-auth-organization-hierarchy [call-count cas-client url]
   (swap! call-count inc)
-  {:status 200 :body (io/resource "organisaatio_service/organization-hierarchy1.json")})
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))})
 (defn fake-cas-auth-organization [cas-client url]
-  {:status 200 :body (io/resource "organisaatio_service/organization-response1.json")})
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))})
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 (defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService)))
 

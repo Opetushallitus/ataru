@@ -35,8 +35,6 @@
              body)
     (-> resp
         json/generate-string
-        .getBytes
-        ByteArrayInputStream.
         response/ok)))
 
 (describe "person-client/upsert-person"

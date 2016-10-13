@@ -2,7 +2,7 @@
   (:require [ataru.applications.application-store :as store]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
-            [ataru.hakija.email :as email]
+            [ataru.hakija.application-email-confirmation :as application-email]
             [ataru.hakija.hakija-routes :as routes]
             [cheshire.core :as json]
             [manual-migrations :as migrations]
@@ -59,7 +59,7 @@
   (tags :unit)
 
   (around [spec]
-    (with-redefs [email/send-email-verification (fn [_ _])]
+    (with-redefs [application-email/start-email-confirmation-job (fn [_])]
       (spec)))
 
   (before
