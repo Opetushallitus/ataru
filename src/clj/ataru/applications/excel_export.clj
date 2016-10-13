@@ -93,15 +93,23 @@
           ret
           (recur (next field-descriptors)))))))
 
-(defn- koodi-uri->human-readable-value [{:keys [content]} {:keys [lang]} key value]
+(defn- get-label [koodisto lang koodi-uri]
+  (let [koodi (->> koodisto
+                   (filter (fn [{:keys [value]}]
+                             (= value koodi-uri)))
+                   first)]
+    (get-in koodi [:label lang])))
+
+(defn- koodi-uris->human-readable-value [{:keys [content]} {:keys [lang]} key value]
   (let [field-descriptor (get-field-descriptor content key)
         lang             (-> lang clojure.string/lower-case keyword)]
     (if-some [koodisto-source (:koodisto-source field-descriptor)]
-      (let [koodi (->> (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
-                       (filter (fn [koodi]
-                                 (= (:value koodi) value)))
-                       first)]
-        (get-in koodi [:label lang]))
+      (let [koodisto         (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+            koodi-uri->label (partial get-label koodisto lang)]
+        (->> (clojure.string/split value #"\s*,\s*")
+             (mapv koodi-uri->label)
+             (interpose "\n")
+             (apply str)))
       value)))
 
 (defn- write-application! [writer application headers application-meta-fields form]
@@ -114,10 +122,8 @@
           value (or
                   (when (or (seq? value-or-values) (vector? value-or-values))
                     (->> value-or-values
-                         (map (partial koodi-uri->human-readable-value form application (:key answer)))
-                         (interpose "\n")
-                         (apply str)))
-                  (koodi-uri->human-readable-value form application (:key answer) value-or-values))]
+                         (map (partial koodi-uris->human-readable-value form application (:key answer)))))
+                  (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (when-let [notes (:notes (application-store/get-application-review (:id application)))]
     (let [column (+ (apply max (map :column headers))
