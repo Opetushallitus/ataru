@@ -1,6 +1,6 @@
 (ns ataru.hakija.background-jobs.hakija-jobs
-  (:require [ataru.hakija.background-jobs.example-job :as example-job]
+  (:require [ataru.hakija.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]))
 
-(def job-definitions {(:type example-job/job-definition) example-job/job-definition
+(def job-definitions {(:type email-job/job-definition) email-job/job-definition
                       person-integration/job-type        person-integration/job-definition})
