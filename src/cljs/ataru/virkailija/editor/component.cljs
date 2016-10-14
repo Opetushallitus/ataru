@@ -224,10 +224,11 @@
         animation-effect (fade-out-effect path)
         koodisto-popover-expanded? (r/atom false)]
     (fn [initial-content path]
-      (let [languages @languages]
+      (let [languages  @languages
+            field-type (:fieldType @value)]
         [:div.editor-form__component-wrapper
          {:class @animation-effect}
-         (let [header (case (:fieldType @value)
+         (let [header (case field-type
                         "dropdown"       "Pudotusvalikko"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
@@ -305,7 +306,8 @@
                    (let [options (:options @value)]
                      (->> options
                           (map-indexed (fn [idx option]
-                                         (when-not (and (clojure.string/blank? (:value option))
+                                         (when-not (and (= "dropdown" field-type)
+                                                        (clojure.string/blank? (:value option))
                                                         (= idx 0)
                                                         (> (count options) 1))
                                            (dropdown-option idx path languages))))
