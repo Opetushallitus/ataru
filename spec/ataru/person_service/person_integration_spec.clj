@@ -39,7 +39,8 @@
                                                         application)
                     config fake-config
                     cas-client/cas-authenticated-post (fn [client url body]
-                                                        {:body
+                                                        {:status 200
+                                                         :body
                                                          (-> person
                                                              json/generate-string)})]
         (should= {:transition {:id :final}}
