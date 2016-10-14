@@ -47,7 +47,7 @@
                                :transition "final"
                                :retry-count 0,
                                :final true,
-                               :error nil})
+                               :caused-by-error nil})
 
 (defn start-job-runner []
   (let [runner (assoc (job/->JobRunner) :job-definitions job-definitions)]

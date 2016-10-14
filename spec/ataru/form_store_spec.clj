@@ -13,11 +13,7 @@
 (def id-less (-> form (dissoc :id) (assoc :organization_oid org-id)))
 
 (describe "form versioning"
-  (tags :unit)
-
-  (after
-    (db/clear-database)
-    (migrations/migrate))
+  (tags :unit :form-versioning)
 
   (it "should be saved as new form"
       (let [{:keys [id key] :as new-form} (store/create-new-form! id-less)]

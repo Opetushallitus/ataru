@@ -90,7 +90,7 @@
    :state "received",
    :notes "Some notes about the applicant"})
 
-(def person-info-form-application {:form 15,
+(def person-info-form-application {:form 2147483647,
                                    :lang "fi",
                                    :id 1
                                    :answers [{:key "b0839467-a6e8-4294-b5cc-830756bbda8a",
