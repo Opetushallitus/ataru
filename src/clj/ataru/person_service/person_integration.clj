@@ -28,10 +28,10 @@
    {:keys [person-service]}]
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
-  (log/info "Trying to add applicant from application " application-id " to person service")
+  (log/info "Trying to add applicant from application" application-id "to person service")
   (let [response-person (upsert-and-log-person person-service application-id)
         person-oid      (:personOid response-person)]
-    (log/info "Added person " person-oid " to person service")
+    (log/info "Added person" person-oid "to person service")
     (application-store/add-person-oid application-id person-oid))
     {:transition {:id :final}})
 
