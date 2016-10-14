@@ -54,7 +54,8 @@ just fake integrations (no organizations etc, hard-coded stuff):
 lein virkailija-dev
 ```
 
-(Above uses config/dev.edn by default)
+(Above uses config/dev.edn by default, including the
+unit/browser-testing database which will be wiped out when you run tests)
 
 ### Hakija app
 ```
