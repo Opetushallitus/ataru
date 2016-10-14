@@ -63,8 +63,6 @@
       (spec)))
 
   (before
-    (db/clear-database)
-    (migrations/migrate)
     (reset! form (db/init-db-fixture)))
 
   (it "should validate application"
