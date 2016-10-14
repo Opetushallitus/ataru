@@ -28,7 +28,6 @@
   {:pre [(some? (base-address))]}
   (let [url      (str (base-address) "/resources/s2s/hakuperusteet")
         response (cas/cas-authenticated-post cas-client url person)]
-    (println "RESPONSE")
     (if (= 200 (:status response))
       (json/parse-string (:body response) true)
       (throw (Exception.
