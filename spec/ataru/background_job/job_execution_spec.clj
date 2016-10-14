@@ -38,7 +38,7 @@
                                 :retry-count 0,
                                 :next-activation (fixed-now),
                                 :state {:damn 0, :initialized true},
-                                :error nil}
+                                :caused-by-error nil}
                                {:step
                                 :fake-remote-call,
                                 :transition :retry,
@@ -46,14 +46,14 @@
                                 :retry-count 1,
                                 :next-activation (time/plus (fixed-now) (time/minutes 1)),
                                 :state {:damn 1, :initialized true},
-                                :error nil}
+                                :caused-by-error nil}
                                {:step :fake-remote-call,
                                 :transition :final,
                                 :final true,
                                 :retry-count 0,
                                 :next-activation nil,
                                 :state {:damn 1, :initialized true},
-                                :error nil}])
+                                :caused-by-error nil}])
 
 (def
   fatally-failing-job
@@ -92,7 +92,7 @@
 
 (describe
  "job execution"
- (tags :unit :dev)
+ (tags :unit)
  (it "exec-job-step runs steps from job with manual retry and produces correct steps up until final iteration"
      (with-redefs [time/now fixed-now]
        (let [runner            {:job-definitions job-definitions
@@ -117,7 +117,7 @@
                   :retry-count 0,
                   :next-activation nil,
                   :transition :fail,
-                  :error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
+                  :caused-by-error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
                 result-iterations)))
  (it "exec-job-step retries the maximum amount when an ordinary exception is thrown from the same step"
      (let [runner          {:job-definitions job-definitions}
@@ -132,5 +132,5 @@
                  :retry-count 101,
                  :next-activation nil,
                  :transition :fail,
-                 :error "Retry limit exceeded for step :throwing in job always-exception-throwing-job"}
-                (select-keys last-iteration [:final :retry-count :next-activation :transition :error])))))
+                 :caused-by-error "Retry limit exceeded for step :throwing in job always-exception-throwing-job"}
+                (select-keys last-iteration [:final :retry-count :next-activation :transition :caused-by-error])))))
