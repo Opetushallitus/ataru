@@ -17,5 +17,5 @@ create table job_iterations (
   executed boolean default FALSE,                  -- Has the step been executed already
   execution_time   timestamp with time zone,
   final    boolean default FALSE,
-  error            text                            -- If the current step resulted in error (usually exception), details are here. Text because stacktraces can be large.
+  caused_by_error  text                            -- If the previous iteration of current step resulted in error (usually exception), details are here. Text because stacktraces can be large.
 );

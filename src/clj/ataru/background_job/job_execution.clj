@@ -21,7 +21,7 @@
    :retry-count                  s/Int
    :next-activation              s/Any
    :transition                   s/Keyword
-   :error                        (s/maybe s/Str)})
+   :caused-by-error              (s/maybe s/Str)})
 
 ;; Less stuff here, but the ID is needed because this has to be updated
 (s/defschema StoredIteration
@@ -68,7 +68,7 @@
    :retry-count retry-count
    :next-activation nil
    :transition :fail
-   :error msg})
+   :caused-by-error msg})
 
 (defn- retry-error-iteration [step state retry-count msg]
   {:step step
@@ -77,7 +77,7 @@
    :retry-count retry-count
    :next-activation (next-activation-for-retry retry-count)
    :transition :error-retry
-   :error msg})
+   :caused-by-error msg})
 
 (defn- handle-error [iteration throwable]
   (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
@@ -105,7 +105,7 @@
        :retry-count     (if next-is-retry (inc retry-count) 0)
        :next-activation (next-activation next-is-retry next-is-final retry-count)
        :state           (or (:updated-state step-result) state)
-       :error           nil})
+       :caused-by-error nil})
     (catch Throwable t
       (handle-error iteration t))))
 

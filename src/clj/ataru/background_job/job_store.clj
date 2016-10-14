@@ -21,7 +21,7 @@
                                   :state state
                                   :next_activation (time/now)
                                   :retry_count 0
-                                  :error nil}
+                                  :caused_by_error nil}
                                   connection)
       new-job-id)))
 
