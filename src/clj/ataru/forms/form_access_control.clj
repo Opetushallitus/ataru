@@ -23,9 +23,9 @@
       false
 
       :else
-      (let [organization-oid  (if (instance? clojure.lang.IFn organization-oid-handle)
-                                (organization-oid-handle)
-                                organization-oid-handle)]
+      (let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
+                               (organization-oid-handle)
+                               organization-oid-handle)]
         (-> #{organization-oid}
             (some (all-org-oids organization-service organization-oids))
             boolean)))))
