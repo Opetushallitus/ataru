@@ -40,15 +40,15 @@
           (cond-> answer
             (contains? koodisto-fields key)
             (update :value (fn [koodi-value]
-                             (let [koodisto-uri (get-in koodisto-fields [key :uri])
-                                   version      (get-in koodisto-fields [key :version])
-                                   koodisto     (koodisto/get-koodisto-options koodisto-uri version)
-                                   value        (->> (clojure.string/split koodi-value #"\s*,\s*")
-                                                     (map (fn [koodi-uri]
-                                                            (let [koodi (get-koodi koodisto koodi-uri)]
-                                                              (get-in koodi [:label lang])))))]
-                               (cond-> value
-                                 (= (count value) 1)
+                             (let [koodisto-uri         (get-in koodisto-fields [key :uri])
+                                   version              (get-in koodisto-fields [key :version])
+                                   koodisto             (koodisto/get-koodisto-options koodisto-uri version)
+                                   human-readable-value (->> (clojure.string/split koodi-value #"\s*,\s*")
+                                                             (map (fn [koodi-uri]
+                                                                    (let [koodi (get-koodi koodisto koodi-uri)]
+                                                                      (get-in koodi [:label lang])))))]
+                               (cond-> human-readable-value
+                                 (= (count human-readable-value) 1)
                                  first))))))))))
 
 (defn get-application [application-id session organization-service]
