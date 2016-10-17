@@ -115,9 +115,9 @@
           })
         )
         it('works and validates correctly', function() {
-          expect(formFields().eq(3).find('select').val()).to.equal('Suomi')
+          expect(formFields().eq(3).find('select').val()).to.equal('246')
           expect(formFields().eq(9).find('input').val()).to.equal('JYVÄSKYLÄ')
-          expect(formFields().eq(11).find('select').val()).to.equal('suomi')
+          expect(formFields().eq(11).find('select').val()).to.equal('FI')
           expect(invalidFieldsStatus().text()).to.equal('2 pakollista tietoa puuttuu')
           expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         })
@@ -132,7 +132,7 @@
         // TODO: repeating field 13
         setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
         setNthFieldOption(15, 'Toinen vaihtoehto'),
-        setNthFieldOption(16, 'Lisensiaatin tutkinto'),
+        setNthFieldOption(16, '120'),
         clickNthFieldRadio(17, 'Kolmas vaihtoehto', true),
         clickNthFieldRadio(18, 'Arkkitehti', true),
         setNthFieldValue(19, 'textarea', 'Toisen pakollisen tekstialueen vastaus')

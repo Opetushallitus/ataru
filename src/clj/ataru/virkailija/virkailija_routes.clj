@@ -6,11 +6,11 @@
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
-            [ataru.applications.application-store :as application-store]
+            [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [ataru.forms.form-access-control :as access-controlled-form]
-            [ataru.applications.application-access-control :as access-controlled-applications]
+            [ataru.applications.application-service :as access-controlled-applications]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [cheshire.core :as json]
@@ -104,22 +104,22 @@
                            :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (ok (access-controlled-applications/get-application-list formKey session organization-service)))
+                           (ok (application-service/get-application-list formKey session organization-service)))
 
                   (api/GET "/:application-id" {session :session}
-                           :path-params [application-id :- Long]
-                           :summary "Return application details needed for application review, including events and review data"
-                           :return {:application ataru-schema/Application
+                    :path-params [application-id :- Long]
+                    :summary "Return application details needed for application review, including events and review data"
+                    :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
                                     :review      ataru-schema/Review
                                     :form        ataru-schema/FormWithContent}
-                           (ok (access-controlled-applications/get-application application-id session organization-service)))
+                    (ok (application-service/get-application-with-human-readable-koodis application-id session organization-service)))
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
                             :body [review s/Any]
                             (ok
-                             (do (access-controlled-applications/save-application-review
+                             (do (application-service/save-application-review
                                   review
                                   session
                                   organization-service)
@@ -131,7 +131,7 @@
                      {:status  200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-                      :body    (access-controlled-applications/get-excel-report-of-applications form-key session organization-service)}))
+                      :body    (application-service/get-excel-report-of-applications form-key session organization-service)}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]

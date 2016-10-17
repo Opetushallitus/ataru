@@ -33,7 +33,7 @@
          (util/flatten-form-fields (:content form)))))
 
 (defn- create-answers-to-submit [answers form]
-  (for [[ans-key {:keys [value]}] answers
+  (for [[ans-key {:keys [value] :as answer}] answers
         :let [flat-form-map (form->flat-form-map form)
               field-map (get flat-form-map (name ans-key))
               field-type (:fieldType field-map)
