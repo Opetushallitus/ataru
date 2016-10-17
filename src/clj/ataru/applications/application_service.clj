@@ -51,7 +51,10 @@
                                  (= (count human-readable-value) 1)
                                  first))))))))))
 
-(defn get-application [application-id session organization-service]
+(defn get-application-with-human-readable-koodis
+  "Get application that has human-readable koodisto values populated
+   onto raw koodi values."
+  [application-id session organization-service]
   (let [application (application-store/get-application application-id)
         form        (form-store/fetch-by-id (:form application))
         application (populate-koodisto-fields application form)]

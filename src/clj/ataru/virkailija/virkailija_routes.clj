@@ -107,13 +107,13 @@
                            (ok (application-service/get-application-list formKey session organization-service)))
 
                   (api/GET "/:application-id" {session :session}
-                           :path-params [application-id :- Long]
-                           :summary "Return application details needed for application review, including events and review data"
-                           :return {:application ataru-schema/Application
+                    :path-params [application-id :- Long]
+                    :summary "Return application details needed for application review, including events and review data"
+                    :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
                                     :review      ataru-schema/Review
                                     :form        ataru-schema/FormWithContent}
-                           (ok (application-service/get-application application-id session organization-service)))
+                    (ok (application-service/get-application-with-human-readable-koodis application-id session organization-service)))
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
