@@ -25,14 +25,14 @@
 
 ;; Less stuff here, but the ID is needed because this has to be updated
 (s/defschema StoredIteration
-  {:step s/Keyword
-   :state {s/Any s/Any}
+  {:step        s/Keyword
+   :state       {s/Any s/Any}
    :retry-count s/Int
-   s/Any s/Any})
+   s/Any        s/Any})
 
 (s/defschema Runner {:job-definitions {s/Str {:steps {s/Keyword s/Any}
                                               :type  s/Str}}
-                     s/Any s/Any})
+                     s/Any            s/Any})
 
 (s/defschema JobWithStoredIteration {:job-type s/Str :iteration StoredIteration :job-id s/Int})
 
@@ -62,21 +62,21 @@
     (time/now)))
 
 (defn- final-error-iteration [step state retry-count msg]
-  {:step step
-   :state state
-   :final true
-   :retry-count retry-count
+  {:step            step
+   :state           state
+   :final           true
+   :retry-count     retry-count
    :next-activation nil
-   :transition :fail
+   :transition      :fail
    :caused-by-error msg})
 
 (defn- retry-error-iteration [step state retry-count msg]
-  {:step step
-   :state state
-   :final false
-   :retry-count retry-count
+  {:step            step
+   :state           state
+   :final           false
+   :retry-count     retry-count
    :next-activation (next-activation-for-retry retry-count)
-   :transition :error-retry
+   :transition      :error-retry
    :caused-by-error msg})
 
 (defn- handle-error [iteration throwable]
