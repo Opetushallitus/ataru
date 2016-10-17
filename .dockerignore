@@ -1,0 +1,9 @@
+target
+node_modules
+bin
+gradle
+gradlew
+out
+test
+spec
+

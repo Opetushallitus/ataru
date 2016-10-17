@@ -1,0 +1,29 @@
+version: '2'
+volumes:
+  oph-production-dump: {}
+services:
+  db:
+    image: postgres
+    volumes:
+      - oph-production-dump:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=oph
+      - POSTGRES_USER=oph
+    ports:
+      - "3000:5432"
+  virkailija:
+    image: lomake-editori
+    command: virkailija
+    links:
+      - db:oph
+    ports:
+      - "8350:8350"
+    environment:
+      - DEV?=true
+  hakija:
+    image: lomake-editori
+    command: hakija
+    links:
+      - db:oph
+    ports:
+      - "8351:8351"
