@@ -12,7 +12,7 @@ services:
     ports:
       - "3000:5432"
   virkailija:
-    image: lomake-editori
+    image: lomake-editori/master
     command: virkailija
     links:
       - db:oph
@@ -21,7 +21,7 @@ services:
     environment:
       - DEV?=true
   hakija:
-    image: lomake-editori
+    image: lomake-editori/master
     command: hakija
     links:
       - db:oph
