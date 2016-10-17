@@ -15,13 +15,13 @@
 ;; are so central, that we've specified them with schema
 ;; and verify them in exec-job-step
 (s/defschema ResultIteration
-  {:step                         s/Keyword
-   :state                        {s/Any s/Any}
-   :final                        s/Bool
-   :retry-count                  s/Int
-   :next-activation              s/Any
-   :transition                   s/Keyword
-   :caused-by-error              (s/maybe s/Str)})
+  {:step            s/Keyword
+   :state           {s/Any s/Any}
+   :final           s/Bool
+   :retry-count     s/Int
+   :next-activation s/Any
+   :transition      s/Keyword
+   :caused-by-error (s/maybe s/Str)})
 
 ;; Less stuff here, but the ID is needed because this has to be updated
 (s/defschema StoredIteration
