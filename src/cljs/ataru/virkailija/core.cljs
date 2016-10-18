@@ -10,7 +10,8 @@
               [ataru.virkailija.views :as views]
               [ataru.virkailija.config :as config]
               [ataru.virkailija.editor.handlers]
-              [taoensso.timbre :refer-macros [spy info]]))
+              [taoensso.timbre :refer-macros [spy info]]
+              [ataru.application-common.fx])) ; ataru.application-common.fx must be required to have common fx handlers enabled
 
 (enable-console-print!)
 
