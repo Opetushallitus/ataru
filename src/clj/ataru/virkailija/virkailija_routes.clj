@@ -45,12 +45,10 @@
 
 (api/defroutes app-routes
   (api/undocumented
-    (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
-                                        {:cache-fingerprint cache-fingerprint
-                                         :config (-> config
-                                                     :public-config
-                                                     (update :enable-re-frisk true?) ; ensure that the config val is never nil
-                                                     json/generate-string)}))))
+    (let [config (json/generate-string (or (:public-config config) {}))]
+      (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
+                                          {:cache-fingerprint cache-fingerprint
+                                           :config            config})))))
 
 (defn- render-file-in-dev
   [filename]

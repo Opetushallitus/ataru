@@ -93,11 +93,9 @@
                  (response/not-found))))))
 
 (defn- render-application []
-  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
-                                               :config            (-> config
-                                                                      :public-config
-                                                                      (update :enable-re-frisk true?) ; ensure that the config val is never nil
-                                                                      json/generate-string)}))
+  (let [config (json/generate-string (or (:public-config config) {}))]
+    (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
+                                                 :config            config})))
 
 (defrecord Handler []
   component/Lifecycle
