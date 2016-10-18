@@ -23,5 +23,16 @@
   (stop [this]
     (assoc this :cas-client nil)))
 
+(defrecord FakePersonService []
+  PersonService
+  
+  (upsert-person [this person] {:personOid  "1.2.3.4.5.6"
+                                :firstName  "Foo"
+                                :lastName   "Bar"
+                                :email      "foo.bar@mailinator.com"
+                                :idpEntitys []}))
+
 (defn new-person-service []
-  (->IntegratedPersonService))
+  (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
+    (->FakePersonService)
+    (->IntegratedPersonService)))
