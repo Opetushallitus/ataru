@@ -10,7 +10,7 @@
             [speclj.core :refer [describe it tags should should=]])
   (:import [java.io ByteArrayInputStream]))
 
-(def person-service (.start (person-service/new-person-service)))
+(def person-service (.start (person-service/->IntegratedPersonService)))
 
 (def application application-fixtures/application-with-person-info-module)
 (def fake-config {:authentication-service {:base-address "dummy"}})
