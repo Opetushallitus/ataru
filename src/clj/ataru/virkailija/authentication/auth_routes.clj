@@ -9,12 +9,13 @@
 (defn auth-routes [organization-service]
   (api/context "/auth" []
     (api/undocumented
-           (api/GET "/cas" [ticket]
-             (login (if (-> config :dev :fake-dependencies)
-                      (str (System/currentTimeMillis))
-                      ticket)
-                    organization-service))
-           (api/POST "/cas" [logoutRequest]
-                 (cas-initiated-logout logoutRequest))
-           (api/GET "/logout" {session :session}
+      (api/GET "/cas" [ticket :as request]
+               (let [redirect-url (or (-> request :session :original-url) "/lomake-editori")]
+                 (login (if (-> config :dev :fake-dependencies)
+                          (str (System/currentTimeMillis))
+                          ticket)
+                        organization-service redirect-url)))
+      (api/POST "/cas" [logoutRequest]
+                (cas-initiated-logout logoutRequest))
+      (api/GET "/logout" {session :session}
                 (logout session)))))
