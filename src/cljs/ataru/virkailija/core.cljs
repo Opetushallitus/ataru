@@ -2,6 +2,7 @@
     (:require [devtools.core :as devtools]
               [reagent.core :as reagent]
               [re-frame.core :as re-frame]
+              [re-frisk.core :as re-frisk]
               [ataru.virkailija.handlers]
               [ataru.virkailija.subs]
               [ataru.cljs-util :refer [set-global-error-handler!]]
@@ -27,5 +28,9 @@
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
+  (when (-> js/config
+            js->clj
+            (get "enable-re-frisk"))
+    (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
   (mount-root))

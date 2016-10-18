@@ -1,6 +1,7 @@
 (ns ataru.hakija.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            [re-frisk.core :as re-frisk]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :refer [post]]
@@ -26,4 +27,8 @@
   (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
+  (when (-> js/config
+            js->clj
+            (get "enable-re-frisk"))
+    (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))

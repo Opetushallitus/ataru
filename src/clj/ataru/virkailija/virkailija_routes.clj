@@ -49,6 +49,7 @@
                                         {:cache-fingerprint cache-fingerprint
                                          :config (-> config
                                                      :public-config
+                                                     (update :enable-re-frisk true?) ; ensure that the config val is never nil
                                                      json/generate-string)}))))
 
 (defn- render-file-in-dev

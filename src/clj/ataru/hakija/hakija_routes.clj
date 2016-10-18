@@ -19,7 +19,9 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info warn error]]))
+            [taoensso.timbre :refer [info warn error]]
+            [cheshire.core :as json]
+            [oph.soresu.common.config :refer [config]]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -91,7 +93,11 @@
                  (response/not-found))))))
 
 (defn- render-application []
-  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint}))
+  (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
+                                               :config            (-> config
+                                                                      :public-config
+                                                                      (update :enable-re-frisk true?) ; ensure that the config val is never nil
+                                                                      json/generate-string)}))
 
 (defrecord Handler []
   component/Lifecycle
