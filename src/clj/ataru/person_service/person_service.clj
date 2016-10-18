@@ -24,8 +24,12 @@
     (assoc this :cas-client nil)))
 
 (defrecord FakePersonService []
+  component/Lifecycle
   PersonService
-  
+
+  (start [this] this)
+  (stop [this] this)
+
   (upsert-person [this person] {:personOid  "1.2.3.4.5.6"
                                 :firstName  "Foo"
                                 :lastName   "Bar"

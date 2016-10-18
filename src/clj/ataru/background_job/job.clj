@@ -1,6 +1,7 @@
 (ns ataru.background-job.job
   "Public API of the Background Job system"
   (:require
+   [oph.soresu.common.config :refer [config]]
    [taoensso.timbre :as log]
    [com.stuartsierra.component :as component]
    [ataru.background-job.job-execution :as execution]
@@ -28,3 +29,13 @@
     (log/info "Stopping background job runner")
     (-> this :executor (.shutdown))
     this))
+
+(defrecord FakeJobRunner []
+  component/Lifecycle
+  (start [this] this)
+  (stop [this] this))
+
+(defn new-job-runner []
+  (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
+    (->FakeJobRunner)
+    (->JobRunner)))

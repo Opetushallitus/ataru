@@ -34,5 +34,5 @@
      :job-definitions      hakija-jobs/job-definitions
 
      :job-runner           (component/using
-                             (job/->JobRunner)
+                             (job/new-job-runner)
                              [:job-definitions :person-service]))))
