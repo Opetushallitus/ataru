@@ -94,8 +94,9 @@
 
 (register-handler
   :application/set-repeatable-application-field
-  (fn [db [_ key idx {:keys [value valid] :as values}]]
+  (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
     (let [path                      [:application :answers key :values]
+          required?                 (some? ((set (:validators field-descriptor)) "required"))
           with-answer               (if (and
                                           (zero? idx)
                                           (empty? value)
@@ -105,8 +106,11 @@
           all-values                (get-in with-answer path)
           validity-for-validation   (boolean
                                       (some->>
-                                        (map :valid (or (when (= 1 (count all-values))
-                                                          [values])
+                                        (map :valid (or
+                                                      (when (= 1 (count all-values))
+                                                        [values])
+                                                      (when (and (not required?) (empty? all-values))
+                                                        [{:valid true}])
                                                       (butlast all-values)))
                                         not-empty
                                         (every? true?)))

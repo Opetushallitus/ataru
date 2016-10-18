@@ -11,13 +11,14 @@
             [ataru.person-service.person-integration :as person-integration]
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger]]
+            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -51,6 +52,23 @@
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
   (response/ok {}))
+
+(defn- is-dev-env?
+  []
+  (boolean (:dev? env)))
+
+(defn- render-file-in-dev
+  [filename]
+  (if (is-dev-env?)
+    (selmer/render-file filename {})
+    (response/not-found "Not found")))
+
+(api/defroutes test-routes
+  (api/undocumented
+   (api/GET "/hakija-test.html" []
+            (render-file-in-dev "templates/hakija-test.html"))
+   (api/GET "/spec/:filename.js" [filename]
+            (render-file-in-dev (str "spec/" filename ".js")))))
 
 (api/defroutes james-routes
   (api/undocumented
@@ -101,10 +119,11 @@
                                                        (ex/with-logging ex/response-validation-handler :error)
                                                        ::ex/default
                                                        (ex/with-logging ex/safe-handler :error)}}}
-                              (when (:dev? env) james-routes)
+                              (when (is-dev-env?) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
                                              buildversion-routes
+                                             test-routes
                                              (api-routes)
                                              (route/resources "/")
                                              (api/undocumented
@@ -117,7 +136,13 @@
                               :debug identity
                               :info (fn [x] (info x))
                               :warn (fn [x] (warn x))
-                              :error (fn [x] (error x)))
+                              :error (fn [x] (error x))
+                              :pre-logger (fn [_ _] nil)
+                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
+                                             (when (or
+                                                     (>= status 400)
+                                                     (clojure.string/starts-with? uri "/hakemus/api/"))
+                                               (#'middleware-logger/post-logger options request response totaltime))))
                             (wrap-gzip))))
 
   (stop [this]

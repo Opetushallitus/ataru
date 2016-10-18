@@ -1,16 +1,18 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.middleware.cache-control :as cache-control]
+            [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
-            [ataru.applications.excel-export :as excel]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
-            [ataru.applications.application-store :as application-store]
+            [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
-            [ataru.virkailija.user.form-access-control :as access-controlled-form]
+            [ataru.forms.form-access-control :as access-controlled-form]
+            [ataru.applications.application-service :as access-controlled-applications]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.applications.excel-export :as excel]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -23,14 +25,13 @@
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger]]
+            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [com.stuartsierra.component :as component])
-  (:import (clojure.lang ExceptionInfo)))
+            [com.stuartsierra.component :as component]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -39,18 +40,6 @@
 (extend-protocol Renderable
                  manifold.deferred.Deferred
                  (render [d _] d))
-
-;https://github.com/ztellman/aleph/blob/master/examples%2Fsrc%2Faleph%2Fexamples%2Fhttp.clj
-
-(defn trying [f]
-  (try (if-let [result (f)]
-         (ok result)
-         (not-found))
-       (catch ExceptionInfo e
-         (bad-request (-> e ex-data)))
-       (catch Exception e
-         (error e)
-         (internal-server-error))))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -70,8 +59,8 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/test.html" []
-      (render-file-in-dev "templates/test.html"))
+    (api/GET "/virkailija-test.html" []
+      (render-file-in-dev "templates/virkailija-test.html"))
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
@@ -88,24 +77,18 @@
                  (api/GET "/forms" {session :session}
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (trying #(access-controlled-form/get-forms session organization-service)))
+                   (ok (access-controlled-form/get-forms session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]
                           :return ataru-schema/FormWithContent
                           :summary "Get content for form"
-                          (trying #(form-store/fetch-form id)))
+                          (ok (form-store/fetch-form id)))
 
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
-                   (match
-                       (trying #(access-controlled-form/post-form form session organization-service))
-                           {:status 200 :body ({:error error-code} :as explicit-error)}
-                           (bad-request {:error error-code})
-
-                           response
-                           response))
+                   (ok (access-controlled-form/post-form form session organization-service)))
 
                  (api/POST "/client-error" []
                            :summary "Log client-side errors to server log"
@@ -117,41 +100,38 @@
                  (api/context "/applications" []
                    :tags ["applications-api"]
 
-                  (api/GET "/list" []
+                  (api/GET "/list" {session :session}
                            :query-params [formKey :- s/Str]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (trying (fn [] {:applications (application-store/get-application-list formKey)})))
+                           (ok (application-service/get-application-list formKey session organization-service)))
 
-                  (api/GET "/:application-id" []
-                           :path-params [application-id :- Long]
-                           :summary "Return application details needed for application review, including events and review data"
-                           :return {:application ataru-schema/Application
+                  (api/GET "/:application-id" {session :session}
+                    :path-params [application-id :- Long]
+                    :summary "Return application details needed for application review, including events and review data"
+                    :return {:application ataru-schema/Application
                                     :events      [ataru-schema/Event]
                                     :review      ataru-schema/Review
                                     :form        ataru-schema/FormWithContent}
-                           (trying (fn []
-                                     (let [application (application-store/get-application application-id)
-                                           form        (form-store/fetch-by-id (:form application))]
-                                       {:application application
-                                        :form        form
-                                        :events      (application-store/get-application-events application-id)
-                                        :review      (application-store/get-application-review application-id)}))))
+                    (ok (application-service/get-application-with-human-readable-koodis application-id session organization-service)))
 
-                   (api/PUT "/review" []
+                   (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
                             :body [review s/Any]
-                            (trying (fn []
-                                      (application-store/save-application-review review)
-                                      {})))
+                            (ok
+                             (do (application-service/save-application-review
+                                  review
+                                  session
+                                  organization-service)
+                                 {})))
 
-                   (api/GET "/excel/:form-key" []
+                   (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]
                      :summary  "Return Excel export of the form and applications for it."
                      {:status  200
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-                      :body    (java.io.ByteArrayInputStream. (excel/export-all-applications form-key))}))
+                      :body    (application-service/get-excel-report-of-applications form-key session organization-service)}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
@@ -210,7 +190,7 @@
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
-                                (api/middleware [auth-middleware/with-authentication]
+                                (api/middleware [auth-middleware/with-authentication user-feedback/wrap-user-feedback]
                                   resource-routes
                                   app-routes
                                   (api-routes this)
@@ -225,7 +205,13 @@
                               :debug identity
                               :info  (fn [x] (info x))
                               :warn  (fn [x] (warn x))
-                              :error (fn [x] (error x)))
+                              :error (fn [x] (error x))
+                              :pre-logger (fn [_ _] nil)
+                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
+                                             (when (or
+                                                     (>= status 400)
+                                                     (clojure.string/starts-with? uri "/lomake-editori/api/"))
+                                               (#'middleware-logger/post-logger options request response totaltime))))
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 

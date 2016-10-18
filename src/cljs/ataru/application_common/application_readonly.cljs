@@ -23,7 +23,7 @@
       (let [values (:value ((answer-key field-descriptor) (:answers application)))]
         (when (or (seq? values) (vector? values))
           (into [:ul.application__form-field-list] (for [value values] [:li value]))))
-      (textual-field-value field-descriptor application))]])
+      (textual-field-value field-descriptor application :lang lang))]])
 
 (declare field)
 
@@ -54,11 +54,18 @@
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice")} (text content application lang)))
 
+(defn- application-language [{:keys [lang]}]
+  (when (some? lang)
+    (-> lang
+        clojure.string/lower-case
+        keyword)))
+
 (defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [form application]
       (when form
-        (let [lang (or (:selected-language form)
+        (let [lang (or (:selected-language form)          ; languages is set to form in the applicant side
+                       (application-language application) ; language is set to application when in officer side
                        :fi)]
           (into [:div.application__readonly-container]
             (for [content (:content form)

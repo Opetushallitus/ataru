@@ -18,11 +18,10 @@
                         (:languages form))
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn [form]
-      (println @submit-status)
       [:div.application__header-container
        [:span.application__header (:name form)]
        (when (and (not= :submitted @submit-status)
-                  (> (count languages) 1))
+                  (> (count languages) 0))
          [:span.application__header-text
           (map-indexed (fn [idx lang]
                          (cond-> [:span {:key (name lang)}

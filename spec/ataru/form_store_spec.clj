@@ -7,7 +7,9 @@
             [taoensso.timbre :refer [spy debug]]
             [oph.soresu.common.db :as soresu-db]
             [yesql.core :as sql]
-            [manual-migrations :as migrations]))
+            [manual-migrations :as migrations])
+  (:import
+   (clojure.lang ExceptionInfo)))
 
 (def org-id  "1.2.246.562.10.2.45")
 (def id-less (-> form (dissoc :id) (assoc :organization_oid org-id)))
@@ -36,5 +38,5 @@
   (it "should throw when later version already exists"
       (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! id-less org-id )
             version-two                                   (store/create-form-or-increment-version! version-one org-id)]
-        (should= '(:error)
+        (should-throw ExceptionInfo "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
           (keys (store/create-form-or-increment-version! version-one org-id))))))

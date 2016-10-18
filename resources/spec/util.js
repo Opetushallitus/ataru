@@ -1,18 +1,26 @@
+mocha.ui('bdd')
+mocha.reporter('html')
+mocha.useColors(false)
+mocha.bail(true)
+mocha.timeout(30000)
+
 var expect = chai.expect;
 chai.should();
+
+var loadInFrame = function(src) {
+  $('#test')
+    .attr('src', src)
+    .attr('width', 1024)
+    .attr('height', 768)
+    .on('error', function (err) {
+      console.error(err);
+      window.uiError = err;
+    });
+}
 
 var testFrame = function() {
   return $('#test').contents()
 }
-
-$('#test')
-  .attr('src', '/lomake-editori/')
-  .attr('width', 1024)
-  .attr('height', 768)
-  .on('error', function (err) {
-    console.error(err);
-    window.uiError = err;
-  });
 
 var elementExists = function($e) {
   return $e && $e.length > 0
@@ -24,11 +32,19 @@ var triggerEvent = function($e, type) {
   $e.get(0).dispatchEvent(evt)
 }
 
+var isRadioButton = function($e) {
+  return $e.attr('for') && $e.parent().find("#" + $e.attr('for')) !== null
+}
+
 var clickElement = function(selectFn) {
   return wait.until(function () {
     $e = selectFn()
     if (elementExists($e)) {
-      triggerEvent($e, 'click')
+      if (isRadioButton($e)) {
+        $e.click()
+      } else {
+        triggerEvent($e, 'click')
+      }
       return true
     }
   })

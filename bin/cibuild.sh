@@ -8,6 +8,8 @@ echo $OLD_CWD
 export JAVA_HOME=/data00/oph/java/jdk1.8.0_60
 export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 
+./bin/lein version
+
 compile-less() {
     ./bin/lein less once
 }

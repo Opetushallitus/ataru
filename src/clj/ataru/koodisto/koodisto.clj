@@ -36,10 +36,11 @@
        (filter #(= postal-code (:value %)))
        (first)))
 
-(defn all-koodisto-labels
+(defn all-koodisto-values
   [uri version]
-  (let [koodisto-values (get-koodisto-options uri version)]
-    (set (mapcat #(vals (:label %)) koodisto-values))))
+  (->> (get-koodisto-options uri version)
+       (map :value)
+       (into #{})))
 
 (defn list-all-koodistos
   []

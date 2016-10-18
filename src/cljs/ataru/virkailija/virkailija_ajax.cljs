@@ -5,23 +5,15 @@
             [ajax.core :refer [GET POST PUT DELETE]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(def ^:private
-  error-messages
-  {"form_updated_in_background"      "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
-   "no_organization_for_user"        "Käyttäjätunnukseen ei ole liitetty organisaatota"
-   "multiple_organizations_for_user" "Käyttäjätunnukselle löytyi monta organisaatiota"})
-
 (defn dispatch-flasher-error-msg
   [method response]
-  (let [response-error-code (-> response :response :error)
-        explicit-error-message (get error-messages response-error-code)
+  (let [response-error-msg (-> response :response :error)
         error-type (if (and (= 400 (:status response))
-                            (not-empty response-error-code)
-                            (not-empty explicit-error-message))
-                     :explicit-error
+                            (not-empty response-error-msg))
+                     :user-feedback-error
                      :server-error)
         message (case error-type
-                  :explicit-error explicit-error-message
+                  :user-feedback-error response-error-msg
                   :server-error (str "Virhe "
                                      (case method
                                        :get "haettaessa."
@@ -41,10 +33,10 @@
             :put    PUT
             :delete DELETE)]
     (dispatch [:flasher {:loading? true
-                         :message  (match [method]
-                                          [:post] "Tietoja tallennetaan"
-                                          [:delete] "Tietoja poistetaan"
-                                          :else nil)}])
+                         :message  (match method
+                                     (:or :post :put) "Tietoja tallennetaan"
+                                     :delete "Tietoja poistetaan"
+                                     :else nil)}])
     (f path
        (merge {:response-format :json
                :format          :json
@@ -55,10 +47,10 @@
                :handler         (comp (fn [response]
                                         (dispatch [:flasher {:loading? false
                                                              :message
-                                                                       (match [method]
-                                                                              [:post] "Kaikki muutokset tallennettu"
-                                                                              [:delete] "Tiedot poistettu"
-                                                                              :else nil)}])
+                                                             (match method
+                                                               (:or :post :put) "Kaikki muutokset tallennettu"
+                                                               :delete "Tiedot poistettu"
+                                                               :else nil)}])
                                         (match [handler-or-dispatch]
                                                [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
                                                [nil] nil

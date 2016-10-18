@@ -61,6 +61,12 @@
 (defn get-application-review [application-id]
   (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
 
+(defn get-application-organization-oid [application-id]
+  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-id {:application_id application-id}))))
+
+(defn get-application-review-organization-oid [review-id]
+  (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
+
 (defn save-application-review [review]
   (exec-db :db yesql-save-application-review! (transform-keys ->snake_case review)))
 

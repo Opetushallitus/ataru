@@ -36,7 +36,7 @@
         (redirect-to-logged-out-page))
       (redirect-to-logged-out-page))
     (catch Exception e
-      (error "Error in login ticket handling" e)
+      (error e "Error in login ticket handling")
       (redirect-to-logged-out-page))))
 
 (defn logout [session]

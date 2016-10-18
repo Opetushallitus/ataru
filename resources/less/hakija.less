@@ -94,6 +94,13 @@
   flex-flow: row nowrap;
   justify-content: space-between;
   font-weight: 600;
+  max-width: 610px;
+}
+
+.application__form-info-text {
+  font-size: 14px;
+  margin-bottom: 10px;
+  padding-left: 5px;
 }
 
 .application__form-field-list {
@@ -216,6 +223,7 @@
   font-weight: 400;
   color: #2A2A2A;
   margin: 0px;
+  max-width: 800px;
 }
 .application__header-text {
   font-size: 13px;
@@ -255,10 +263,6 @@
   width: @form-select-width;
 }
 .application__form-select {
-  outline: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
   transition: border-color 0.2s;
   width: @form-select-width;
 
@@ -322,6 +326,10 @@
 }
 input.application__form-text-input--disabled {
   background: rgba(215,215,215,0.23);
+  box-shadow: none;
+}
+input.application__form-text-input--disabled:focus {
+  background: #fff;
 }
 .application__form-repeatable-text-wrap {
   margin-top: 10px;
@@ -346,6 +354,15 @@ input.application__form-text-input--disabled {
 .application__form-text-area {
   width: 610px;
 }
+
+.application__form-text-input-info-text {
+  max-width: 320px;
+}
+
+.application__form-text-area-info-text {
+  max-width: 610px;
+}
+
 .application__form-text-area__size-small {
   height: 100px;
 }
