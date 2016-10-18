@@ -1,5 +1,4 @@
 (ns ataru.cljs-util
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader :refer [read-string]]
             [cljs-uuid-utils.core :as uuid]
@@ -33,7 +32,7 @@
 (defn debounced-ratom
   ([ratom] (debounced-ratom 1000 ratom))
   ([debounce-ms ratom]
-   (let [value (reaction nil)
+   (let [value (r/atom nil)
          on-bounce (debounce #(reset! value %) debounce-ms)
          watch (fn [_ _ old-value new-value]
                  (on-bounce new-value))]
