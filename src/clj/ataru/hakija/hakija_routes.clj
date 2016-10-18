@@ -145,6 +145,10 @@
                                              (api-routes)
                                              (route/resources "/")
                                              (api/undocumented
+                                             (api/GET "/hakukohde/:oid" []
+                                               (render-application))
+                                             (api/GET "/hakukohde/:oid/:lang" []
+                                               (render-application))
                                              (api/GET "/:key" []
                                                (render-application))
                                              (api/GET "/:key/:lang" []
