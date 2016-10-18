@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [register-handler dispatch]]
+  (:require [re-frame.core :refer [reg-event-db dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -20,14 +20,14 @@
     :application/handle-form)
   db)
 
-(register-handler
+(reg-event-db
   :application/get-latest-form-by-key
   get-latest-form-by-key)
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
-(register-handler
+(reg-event-db
   :application/handle-submit-response
   handle-submit)
 
@@ -37,7 +37,7 @@
         :application/handle-submit-response)
   (assoc-in db [:application :submit-status] :submitting))
 
-(register-handler
+(reg-event-db
   :application/submit-form
   submit-application)
 
@@ -70,16 +70,16 @@
         (assoc :application {:answers (create-initial-answers form)})
         (assoc :wrapper-sections (extract-wrapper-sections form)))))
 
-(register-handler
+(reg-event-db
   :flasher
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
-(register-handler
+(reg-event-db
   :application/handle-form
   handle-form)
 
-(register-handler
+(reg-event-db
   :application/initialize-db
   initialize-db)
 
@@ -88,11 +88,11 @@
         current-answer-data (get-in db path)]
     (assoc-in db path (merge current-answer-data values))))
 
-(register-handler
+(reg-event-db
   :application/set-application-field
   set-application-field)
 
-(register-handler
+(reg-event-db
   :application/set-repeatable-application-field
   (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
     (let [path                      [:application :answers key :values]
@@ -122,7 +122,7 @@
         :valid validity-for-validation
         :value value-for-readonly-fields-and-db))))
 
-(register-handler
+(reg-event-db
   :application/remove-repeatable-application-field-value
   (fn [db [_ key idx]]
     (update-in db [:application :answers key :values]
@@ -138,41 +138,41 @@
     (rules/run-rule rule db)
     (rules/run-all-rules db)))
 
-(register-handler
+(reg-event-db
   :application/run-rule
   (fn [db [_ rule]]
     (if (#{:submitting :submitted} (-> db :application :submit-status))
       db
       (application-run-rule db rule))))
 
-(register-handler
+(reg-event-db
   :application/default-handle-error
   default-error-handler)
 
-(register-handler
+(reg-event-db
  :application/default-http-ok-handler
  (fn [db _] db))
 
-(register-handler
+(reg-event-db
   :state-update
   (fn [db [_ f]]
     (or (f db)
         db)))
 
-(register-handler
+(reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
     (-> db
         (update-in [:application :ui :postal-office] assoc :disabled? true)
         (update-in [:application :answers :postal-office] merge {:value (:fi postal-office-name) :valid true}))))
 
-(register-handler
+(reg-event-db
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
         (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
 
-(register-handler
+(reg-event-db
   :application/toggle-multiple-choice-option
   (fn [db [_ multiple-choice-id idx option-value validators]]
     (let [db    (-> db

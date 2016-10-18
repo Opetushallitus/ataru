@@ -1,15 +1,15 @@
 (ns ataru.virkailija.handlers
-    (:require [re-frame.core :refer [register-handler dispatch]]
+    (:require [re-frame.core :refer [reg-event-db dispatch]]
               [ataru.virkailija.autosave :as autosave]
               [ataru.virkailija.db :as db]
               [taoensso.timbre :refer-macros [spy debug]]))
 
-(register-handler
+(reg-event-db
  :initialize-db
  (fn  [_ _]
    db/default-db))
 
-(register-handler
+(reg-event-db
   :set-state
   (fn [db [_ path args]]
     (assert (or (vector? path)
@@ -18,19 +18,19 @@
       (update-in db path merge args)
       (assoc-in db path args))))
 
-(register-handler
+(reg-event-db
   :state-update
   (fn [db [_ f]]
     (or (f db)
         db)))
 
-(register-handler
+(reg-event-db
  :set-active-panel
  (fn [db [_ active-panel]]
    (autosave/stop-autosave! (-> db :editor :autosave))
    (assoc db :active-panel active-panel)))
 
-(register-handler
+(reg-event-db
   :flasher
   (fn [db [_ flash]]
     ; workaround css animation restart

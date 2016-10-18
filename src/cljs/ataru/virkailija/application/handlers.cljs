@@ -1,11 +1,11 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db]]
             [ataru.virkailija.autosave :as autosave]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(register-handler
+(reg-event-db
   :application/select-application
   (fn [db [_ application-id]]
     (if (not= application-id (get-in db [:application :selected-id]))
@@ -15,7 +15,7 @@
             (assoc-in [:application :selected-application-and-form] nil)))
       db)))
 
-(register-handler
+(reg-event-db
   :application/fetch-applications
   (fn [db [_ form-key]]
     (ajax/http
@@ -60,7 +60,7 @@
                                           nil
                                           :override-args {:params (select-keys current [:id :notes :state])}))})))
 
-(register-handler
+(reg-event-db
   :application/fetch-application
   (fn [db [_ application-id]]
     (when-let [autosave (get-in db [:application :review-autosave])]

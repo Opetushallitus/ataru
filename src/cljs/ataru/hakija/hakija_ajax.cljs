@@ -1,5 +1,5 @@
 (ns ataru.hakija.hakija-ajax
-  (:require [re-frame.core :refer [register-handler dispatch]]
+  (:require [re-frame.core :refer [dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ajax.core :refer [GET POST]])
   (:refer-clojure :exclude [get]))

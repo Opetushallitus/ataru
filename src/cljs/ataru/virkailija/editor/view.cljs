@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
+  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
             [ataru.virkailija.editor.core :as c]

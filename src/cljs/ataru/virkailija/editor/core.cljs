@@ -1,7 +1,7 @@
 (ns ataru.virkailija.editor.core
   (:require [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.component :as ec]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler reg-sub-raw]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub-raw]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
