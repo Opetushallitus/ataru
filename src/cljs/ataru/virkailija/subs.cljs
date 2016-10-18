@@ -1,13 +1,13 @@
 (ns ataru.virkailija.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :as re-frame :refer [register-sub]]))
+  (:require [re-frame.core :as re-frame]))
 
-(register-sub
+(re-frame/reg-sub-raw
  :active-panel
  (fn [db _]
    (reaction (:active-panel @db))))
 
-(register-sub
+(re-frame/reg-sub-raw
   :state-query
   (fn [db [_ path]]
     (reaction (get-in @db path))))

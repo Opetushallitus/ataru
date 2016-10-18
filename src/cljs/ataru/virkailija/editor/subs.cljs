@@ -1,15 +1,15 @@
 (ns ataru.virkailija.editor.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :as re-frame :refer [register-sub]]
+  (:require [re-frame.core :as re-frame]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(register-sub
+(re-frame/reg-sub-raw
   :editor/selected-form
   (fn [db _]
     (reaction
       (get-in @db [:editor :forms (get-in @db [:editor :selected-form-key])]))))
 
-(register-sub
+(re-frame/reg-sub-raw
   :editor/languages
   (fn [db]
     (reaction

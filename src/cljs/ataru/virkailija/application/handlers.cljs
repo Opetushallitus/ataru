@@ -1,6 +1,6 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler register-sub]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
             [ataru.virkailija.autosave :as autosave]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
