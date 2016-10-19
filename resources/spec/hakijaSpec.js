@@ -144,10 +144,12 @@
     })
 
     describe('submitting', function() {
-      before(clickElement(function() { return submitButton() }))
-      wait.until(function() {
-        return $('.application-status-controls .application__sent-placeholder-text:contains("Hakemus lähtetty")').length == 1
-      }, 2000)
+      before(
+        clickElement(function() { return submitButton() }),
+        wait.until(function() {
+          return $('.application-status-controls .application__sent-placeholder-text:contains("Hakemus lähetetty")').length == 1
+        })
+      )
 
       it('shows submitted form', function() {
         var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
