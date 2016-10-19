@@ -10,10 +10,10 @@
 ; This schema is just "internal" part of the person-client ns
 ; and therefore it isn't placed into form-schema.cljc
 (s/defschema Person
-  {:email                        s/Str
-   (s/optional-key :personId)    (s/maybe s/Str)
+  {(s/optional-key :personId)    (s/maybe s/Str)
    (s/optional-key :birthDate)   (s/maybe s/Str)
    :nativeLanguage               (s/maybe s/Str)
+   :email                        s/Str
    :idpEntitys                   [{:idpEntityId s/Str
                                    :identifier  s/Str}]
    :firstName                    s/Str
