@@ -43,13 +43,14 @@
 (defn- copy-form []
   (let [form (subscribe [:editor/selected-form])]
     (fn []
-      (when-not (empty? (:content @form))
-        [:span
-         [:span.editor-form__form-control-link-separator " | "]
-         [:a {:on-click (fn [event]
-                          (.preventDefault event)
-                          (dispatch [:editor/copy-form]))}
-          "Kopioi valittu lomake"]]))))
+      [:span
+       [:span.editor-form__form-control-link-separator " | "]
+       [:a (cond-> {:on-click (fn [event]
+                                (.preventDefault event)
+                                (dispatch [:editor/copy-form]))}
+             (empty? (:content @form))
+             (assoc :class "editor-form__form-control-link-disabled"))
+        "Kopioi valittu lomake"]])))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
