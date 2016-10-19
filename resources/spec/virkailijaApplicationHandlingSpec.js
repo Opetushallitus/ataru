@@ -16,10 +16,12 @@
   }
 
   function navigateToApplicationHandlingForm1Selected() {
-    var hrefs = testFrame().find("#app > div > div:nth-child(2) > div > div.editor-form__container.panel-content > div.editor-form__list")
-    var href = hrefs.children().find('span:contains(Selaintestilomake1)').parent()
-    var spl = href.attr('href').split("/").reverse()[0]
-    $('#test').attr('src', '/lomake-editori/#/applications/' + spl)
+    var href = testFrame()
+      .find("#app div.editor-form__list span:contains(Selaintestilomake1)")
+      .closest('a')
+      .attr('href')
+      .replace('/editor/', '/applications/')
+    loadInFrame(href)
   }
 
   afterEach(function() {
