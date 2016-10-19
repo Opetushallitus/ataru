@@ -20,6 +20,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
+            [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
