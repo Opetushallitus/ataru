@@ -52,11 +52,23 @@
              (assoc :class "editor-form__form-control-link-disabled"))
         "Kopioi valittu lomake"]])))
 
+(defn- remove-form []
+  (let [form (subscribe [:editor/selected-form])]
+    (fn []
+      [:span
+       [:span.editor-form__form-control-link-separator " | "]
+       [:a (cond-> {:on-click (fn [event]
+                                (.preventDefault event))}
+             (empty? (:content @form))
+             (assoc :class "editor-form__form-control-link-disabled"))
+        "Poista valittu lomake"]])))
+
 (defn- form-controls []
   [:div.editor-form__form-controls-container
    [:span
     [add-form]
-    [copy-form]]])
+    [copy-form]
+    [remove-form]]])
 
 (defn editor-name []
   (let [form              (subscribe [:editor/selected-form])
