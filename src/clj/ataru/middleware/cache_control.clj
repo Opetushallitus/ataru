@@ -8,6 +8,7 @@
           uri   (:uri req)
           cache (cond
                   (= uri "/") "no-cache"
+                  (or (= uri "/lomake-editori") (= uri "/lomake-editori/")) "no-cache"
                   (clojure.string/starts-with? uri "/lomake-editori/auth") "no-store"
                   (clojure.string/starts-with? uri "/lomake-editori/api") "no-store"
                   (clojure.string/starts-with? uri "/lomake-editori/editor") "no-cache"
