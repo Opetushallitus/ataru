@@ -50,7 +50,7 @@
                                :caused-by-error nil})
 
 (defn start-job-runner []
-  (let [runner (assoc (job/->JobRunner) :job-definitions job-definitions)]
+  (let [runner (job/->JobRunner job-definitions)]
     (.start runner)))
 
 (defn get-final-iteration-for-job [job-id]

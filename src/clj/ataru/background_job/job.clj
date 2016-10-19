@@ -7,9 +7,6 @@
    [ataru.background-job.job-execution :as execution]
    [ataru.background-job.job-store :as job-store]))
 
-(defn- verify-job-definitions [runner]
-  (if-not (:job-definitions runner) (throw (Exception. "No job definintions given for JobRunner"))))
-
 (defn start-job
   "Start a new background job of type <job-type>.
    initial-state is the initial data map needed to start the job (can be anything)"
@@ -18,12 +15,13 @@
     (job-store/store-new job-type initial-state)
     (log/error (str "No job definition found for job " job-type))))
 
-(defrecord JobRunner []
+(defrecord JobRunner [job-definitions]
   component/Lifecycle
   (start [this]
-    (log/info "Starting background job runner")
-    (verify-job-definitions this)
-    (assoc this :executor (execution/start this)))
+    (let [this-with-jobs (assoc this :job-definitions job-definitions)]
+      (log/info "Starting background job runner")
+      (if-not job-definitions (throw (Exception. "No job definintions given for JobRunner")))
+      (assoc this-with-jobs :executor (execution/start this-with-jobs))))
   (stop [this]
     (log/info "Stopping background job runner")
     (-> this :executor (.shutdown))
@@ -34,7 +32,7 @@
   (start [this] this)
   (stop [this] this))
 
-(defn new-job-runner []
+(defn new-job-runner [job-definitions]
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeJobRunner)
-    (->JobRunner)))
+    (->JobRunner job-definitions)))

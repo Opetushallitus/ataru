@@ -31,8 +31,6 @@
 
      :person-service       (person-service/new-person-service)
 
-     :job-definitions      hakija-jobs/job-definitions
-
      :job-runner           (component/using
-                             (job/new-job-runner)
-                             [:job-definitions :person-service]))))
+                             (job/new-job-runner hakija-jobs/job-definitions)
+                             [:person-service]))))
