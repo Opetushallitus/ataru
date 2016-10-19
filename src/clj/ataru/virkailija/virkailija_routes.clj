@@ -53,9 +53,9 @@
 (defn render-virkailija-page
   []
   (let [config (json/generate-string (or (:public-config config) {}))]
-    (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
-                                        {:cache-fingerprint cache-fingerprint
-                                         :config            config}))))
+    (selmer/render-file "templates/virkailija.html"
+                        {:cache-fingerprint cache-fingerprint
+                         :config            config})))
 
 (api/defroutes app-routes
   (api/undocumented
