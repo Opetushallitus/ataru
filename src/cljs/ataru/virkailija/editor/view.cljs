@@ -1,18 +1,20 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler]]
+  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.temporal :refer [time->str]]
+            [ataru.virkailija.routes :as routes]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn form-row [form selected?]
   [:a.editor-form__row
-   {:href  (str "#/editor/" (:key form))
-    :class (when selected? "editor-form__selected-row")}
+   {:href  (str "/lomake-editori/editor/" (:key form))
+    :class (when selected? "editor-form__selected-row")
+    :on-click routes/anchor-click-handler}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]])
@@ -35,8 +37,7 @@
   [:span.editor-form__add-new
    [:a {:on-click (fn [evt]
                     (.preventDefault evt)
-                    (dispatch [:editor/add-form]))
-        :href     "#"}
+                    (dispatch [:editor/add-form]))}
     "Luo uusi lomake"]])
 
 (defn- copy-form []

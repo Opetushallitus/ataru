@@ -2,6 +2,7 @@
     (:require [devtools.core :as devtools]
               [reagent.core :as reagent]
               [re-frame.core :as re-frame]
+              [re-frisk.core :as re-frisk]
               [ataru.virkailija.handlers]
               [ataru.virkailija.subs]
               [ataru.cljs-util :refer [set-global-error-handler!]]
@@ -10,7 +11,8 @@
               [ataru.virkailija.views :as views]
               [ataru.virkailija.config :as config]
               [ataru.virkailija.editor.handlers]
-              [taoensso.timbre :refer-macros [spy info]]))
+              [taoensso.timbre :refer-macros [spy info]]
+              [ataru.application-common.fx])) ; ataru.application-common.fx must be required to have common fx handlers enabled
 
 (enable-console-print!)
 
@@ -26,5 +28,9 @@
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
+  (when (-> js/config
+            js->clj
+            (get "enable-re-frisk"))
+    (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
   (mount-root))

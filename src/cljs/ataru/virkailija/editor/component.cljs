@@ -283,8 +283,7 @@
                [:div.editor-form__koodisto-popover
                 [:div.editor-form__koodisto-popover-header "Koodisto"
                  [:a.editor-form__koodisto-popover-close
-                  {:href     "#"
-                   :on-click (fn [e]
+                  {:on-click (fn [e]
                                (.preventDefault e)
                                (reset! koodisto-popover-expanded? false))}
                   [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
@@ -292,7 +291,7 @@
                  (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
                           ^{:key (str "koodisto-" uri)}
                           [:li.editor-form__koodisto-popover-list-item
-                           [:a.editor-form__koodisto-popover-link {:href     "#"
+                           [:a.editor-form__koodisto-popover-link {:href "#"
                                                                    :on-click (fn [e]
                                                                                (.preventDefault e)
                                                                                (reset! koodisto-popover-expanded? false)
@@ -315,7 +314,7 @@
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
                    [:a
-                    {:href     "#"
+                    {:href "#"
                      :on-click (fn [evt]
                                  (.preventDefault evt)
                                  (dispatch [:editor/add-dropdown-option path]))}
@@ -337,7 +336,7 @@
                                                     (= :children (second path))
                                                     (= "Lomakeosio" component-name)))]
             [:li.form__add-component-toolbar--list-item
-             [:a {:href     "#"
+             [:a {:href "#"
                   :on-click (fn [evt]
                               (.preventDefault evt)
                               (dispatch [:generate-component generate-fn path]))}

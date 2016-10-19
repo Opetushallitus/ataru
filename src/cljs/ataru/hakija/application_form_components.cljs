@@ -218,9 +218,10 @@
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
                                     default-lang @default-lang
-                                    value (-> (:answers @application)
-                                              (get (answer-key field-descriptor))
-                                              :value)]
+                                    value        (or (-> (:answers @application)
+                                                         (get (answer-key field-descriptor))
+                                                         :value)
+                                                     "")]
                                 [div-kwd
                                  {:on-change (partial textual-field-change field-descriptor)}
                                  [label field-descriptor]

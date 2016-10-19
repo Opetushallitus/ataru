@@ -2,7 +2,8 @@
   (:require-macros
             [reagent.ratom :refer [reaction]]
             [cljs.core.async.macros :refer [go]])
-  (:require [cljs.core.match :refer-macros [match]]
+  (:require [ataru.virkailija.routes :as routes]
+            [cljs.core.match :refer-macros [match]]
             [re-frame.core :as re-frame :refer [subscribe dispatch]]
             [reagent.core :as r]
             [cljs.core.async :as a :refer  [<! timeout]]
@@ -11,12 +12,12 @@
 
 (def logo
   [:div.logo
-    [:img {:src "images/opintopolku_large-fi.png"
+    [:img {:src "/lomake-editori/images/opintopolku_large-fi.png"
            :height "40px"}]])
 
 (def panels
-  {:editor      {:text "Lomake-editori" :href #(str "#/editor/" %)}
-   :application {:text "Hakemukset" :href #(str "#/applications/" %)}})
+  {:editor      {:text "Lomake-editori" :href #(str "/lomake-editori/editor/" %)}
+   :application {:text "Hakemukset" :href #(str "/lomake-editori/applications/" %)}})
 
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
 
@@ -30,15 +31,16 @@
          [:span.active-section
           active-section-arrow
           (-> panels panel-kw :text)]
-         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-key))}
+         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-key))
+              :on-click routes/anchor-click-handler}
           (-> panels panel-kw :text)])])))
 
 (defn title []
   (fn []
     [:div.title
-     [section-link :editor "#/editor/"]
+     [section-link :editor]
      [:div.divider]
-     [section-link :application "#/applications/"]]))
+     [section-link :application]]))
 
 (defn profile []
   (let [user-info         (subscribe [:state-query [:editor :user-info]])]

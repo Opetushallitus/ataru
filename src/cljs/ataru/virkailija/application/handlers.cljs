@@ -1,22 +1,21 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync register-handler register-sub]]
-            [reagent.ratom :refer-macros [reaction]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(register-handler
+(reg-event-fx
   :application/select-application
-  (fn [db [_ application-id]]
+  (fn [{:keys [db]} [_ application-id]]
+    (println "reg-event-fx")
     (if (not= application-id (get-in db [:application :selected-id]))
-      (do (dispatch [:application/fetch-application application-id])
-        (-> db
-            (assoc-in [:application :selected-id] application-id)
-            (assoc-in [:application :selected-application-and-form] nil)))
-      db)))
+      (-> {:db db}
+          (assoc-in [:db :application :selected-id] application-id)
+          (assoc-in [:db :application :selected-application-and-form] nil)
+          (assoc :dispatch [:application/fetch-application application-id])))))
 
-(register-handler
+(reg-event-db
   :application/fetch-applications
   (fn [db [_ form-key]]
     (ajax/http
@@ -61,7 +60,7 @@
                                           nil
                                           :override-args {:params (select-keys current [:id :notes :state])}))})))
 
-(register-handler
+(reg-event-db
   :application/fetch-application
   (fn [db [_ application-id]]
     (when-let [autosave (get-in db [:application :review-autosave])]

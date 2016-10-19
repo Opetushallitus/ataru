@@ -1,10 +1,10 @@
 (ns ataru.hakija.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :refer [register-sub]]
+  (:require [re-frame.core :as re-frame]
             [ataru.hakija.application :refer [answers->valid-status
                                               wrapper-sections-with-validity]]))
 
-(register-sub
+(re-frame/reg-sub-raw
   :state-query
   (fn [db [_ path]]
     (reaction (get-in @db path))))
@@ -13,7 +13,7 @@
   (reaction
     (answers->valid-status (-> @db :application :answers) (-> @db :application :ui))))
 
-(register-sub
+(re-frame/reg-sub-raw
   :application/valid-status
   valid-status)
 
@@ -22,7 +22,7 @@
               (:wrapper-sections @db)
               (-> @db :application :answers))))
 
-(register-sub
+(re-frame/reg-sub-raw
   :application/wrapper-sections
   wrapper-sections)
 
@@ -32,7 +32,7 @@
       (get-in @db [:form :selected-language])
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded
 
-(register-sub
+(re-frame/reg-sub-raw
   :application/form-language
   form-language)
 
@@ -42,6 +42,6 @@
       first
       reaction))
 
-(register-sub
+(re-frame/reg-sub-raw
   :application/default-language
   default-language)

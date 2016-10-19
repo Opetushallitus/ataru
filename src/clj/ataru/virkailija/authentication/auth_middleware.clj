@@ -6,6 +6,7 @@
     [buddy.auth.accessrules :refer [wrap-access-rules success error]]
     [buddy.auth.backends.session :refer [session-backend]]
     [clojure.data.json :as json]
+    [ring.util.request :refer [request-url]]
     [ataru.virkailija.authentication.auth :refer [logged-in?]]))
 
 (def opintopolku-login-url (-> config :authentication :opintopolku-login-url))
@@ -29,6 +30,7 @@
   {:status  302
    :headers {"Location" (str opintopolku-login-url ataru-login-success-url)
              "Content-Type" "text/plain"}
+   :session {:original-url (request-url request)}
    :body    (str "Access to " (:uri request) " is not authorized, redirecting to login")})
 
 (def ^:private rules [{:pattern #".*/auth/.*"

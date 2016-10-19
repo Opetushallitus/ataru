@@ -60,7 +60,7 @@
                          [:i.zmdi.zmdi-check]
                          [:span.application__sent-placeholder-text (case @lang
                                                                      :fi "Hakemus lähetetty"
-                                                                     :sv "Ansökan skickas"
+                                                                     :sv "Ansökan har skickats"
                                                                      :en "The application has been sent")]]
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))

@@ -21,9 +21,7 @@
       (migrations/migrate)
       (init-db-fixture)
       (reset! system (component/start-system @system))
-      (println "* go")
       (specs)
-      (println "* done")
       (finally
         (component/stop-system @system)))))
 

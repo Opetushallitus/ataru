@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [register-handler dispatch dispatch-sync subscribe]]
+  (:require [re-frame.core :refer [reg-event-db dispatch dispatch-sync subscribe]]
             [clojure.data :refer [diff]]
             [clojure.walk :as walk]
             [cljs-time.core :as c]
@@ -25,7 +25,7 @@
     :editor/handle-user-info)
   db)
 
-(register-handler :editor/get-user-info get-user-info)
+(reg-event-db :editor/get-user-info get-user-info)
 
 (defn sorted-by-time [m]
   (into (sorted-map-by
@@ -76,19 +76,19 @@
           (:content form))]
     (merge form {:content new-content})))
 
-(register-handler
+(reg-event-db
   :editor/remove-dropdown-option
   (fn [db [_ & path]]
     (let [option-path (current-form-content-path db [path])]
       (update-in db (drop-last option-path) remove-nth (last option-path)))))
 
-(register-handler
+(reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])]
       (update-in db dropdown-path into [(ataru.virkailija.component-data.component/dropdown-option)]))))
 
-(register-handler
+(reg-event-db
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
     (let [label-path (current-form-content-path db [path])
@@ -99,13 +99,13 @@
                                 (assoc-in value-path value))]
       option-updated-db)))
 
-(register-handler
+(reg-event-db
   :editor/select-custom-multi-options
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path])]
       (update-in db dropdown-path dissoc :koodisto-source))))
 
-(register-handler
+(reg-event-db
   :editor/select-koodisto-options
   (fn [db [_ uri version title & path]]
     (let [dropdown-path (current-form-content-path db [path])]
@@ -118,7 +118,7 @@
                          (when-not (some #(= % validator) validators)
                            (conj validators validator))))))
 
-(register-handler :editor/add-validator add-validator)
+(reg-event-db :editor/add-validator add-validator)
 
 (defn remove-validator
   [db [_ validator & path]]
@@ -129,9 +129,9 @@
                            (remove #(= % validator) validators)))
       db)))
 
-(register-handler :editor/remove-validator remove-validator)
+(reg-event-db :editor/remove-validator remove-validator)
 
-(register-handler
+(reg-event-db
   :editor/set-component-value
   (fn [db [_ value & path]]
     (assoc-in db (current-form-content-path db [path]) value)))
@@ -146,7 +146,7 @@
         (assoc-in db (butlast path-vec) [component])
         (assoc-in db path-vec component)))))
 
-(register-handler :generate-component generate-component)
+(reg-event-db :generate-component generate-component)
 
 (defn remove-component
   [db path]
@@ -161,7 +161,7 @@
            (into [])
            (assoc-in db path-vec)))))
 
-(register-handler
+(reg-event-db
   :remove-component
   (fn [db [_ path dom-node]]
     (.addEventListener
@@ -175,7 +175,7 @@
                           (update-in [:editor :forms-meta] assoc path :removed)))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
-(register-handler
+(reg-event-db
   :editor/handle-user-info
   (fn [db [_ user-info-response]]
     (assoc-in db [:editor :user-info] user-info-response)))
@@ -198,7 +198,7 @@
                                          (util/group-by-first :key)
                                          (sorted-by-time))))))
 
-(register-handler
+(reg-event-db
   :editor/refresh-forms
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
@@ -237,7 +237,7 @@
         (str "/lomake-editori/api/forms/" form-id)
         handle-fetch-form))
 
-(register-handler
+(reg-event-db
   :editor/select-form
   (fn [db [_ form-key]]
     (with-form-key [db previous-form-key]
@@ -295,7 +295,7 @@
   (async/put! save-chan true)
   db)
 
-(register-handler :editor/save-form save-form)
+(reg-event-db :editor/save-form save-form)
 
 (defn- post-new-form
   ([] (post-new-form {}))
@@ -311,12 +311,12 @@
       :languages languages}
      (fn [db form]
        (let [stop-fn (get-in db [:editor :autosave])
-             history (str "/editor/" (:key (languages->kwd form)))]
+             path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
          (autosave/stop-autosave! stop-fn)
-         (set-history! history)
+         (set-history! path)
          (assoc-in db [:editor :new-form-created?] true))))))
 
-(register-handler
+(reg-event-db
   :editor/add-form
   (fn [db _]
     (post-new-form)
@@ -331,9 +331,9 @@
     (post-new-form form)
     db))
 
-(register-handler :editor/copy-form copy-form)
+(reg-event-db :editor/copy-form copy-form)
 
-(register-handler
+(reg-event-db
   :editor/change-form-name
   (fn [db [_ new-form-name]]
     (with-form-key [db selected-form-key]
@@ -401,7 +401,7 @@
           (remove-component-from-list source-path)
           (add-component-to-list component recalculated-target-path))))))
 
-(register-handler :editor/move-component move-component)
+(reg-event-db :editor/move-component move-component)
 
 (def ^:private lang-order
   [:fi :sv :en])
@@ -431,4 +431,4 @@
                [:focus? false]
                x))))))
 
-(register-handler :editor/toggle-language toggle-language)
+(reg-event-db :editor/toggle-language toggle-language)
