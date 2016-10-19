@@ -27,9 +27,9 @@
                                     :oid "1.2.246.562.10.323412"}))
 (def oph-oid "1.2.246.562.10.00000000001")
 (defn fake-cas-auth-no-organization [cas-client url]
-  {:status 200 :body (io/resource "organisaatio_service/organization-response2.json")})
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))})
 (defn fake-cas-auth-organization [cas-client url]
-  {:status 200 :body (io/resource "organisaatio_service/organization-response1.json")})
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))})
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 
 (describe "organization client"

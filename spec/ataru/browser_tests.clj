@@ -16,24 +16,24 @@
 
 (defn- run-specs-in-virkailija-system
   [specs]
-  (let [system (virkailija-system/new-system)]
+  (let [system (atom (virkailija-system/new-system))]
     (try
       (migrations/migrate)
       (init-db-fixture)
-      (component/start-system system)
+      (reset! system (component/start-system @system))
       (specs)
       (finally
-        (component/stop-system system)))))
+        (component/stop-system @system)))))
 
 (defn- run-specs-in-hakija-system
   [specs]
-  (let [system (hakija-system/new-system)]
+  (let [system (atom (hakija-system/new-system))]
     (try
       (migrations/migrate)
-      (component/start-system system)
+      (reset! system (component/start-system @system))
       (specs)
       (finally
-        (component/stop-system system)))))
+        (component/stop-system @system)))))
 
 (defn sh-timeout [timeout-secs & args]
   (.get

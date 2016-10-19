@@ -60,14 +60,8 @@
           lang (get-in db [:form :selected-language])]
       (when-let [gender-sign (js/parseInt (nth ssn 9))]
         (when-let [gender (if (<= 0 gender-sign) (if (= 0 (mod gender-sign 2))
-                                                   (case lang
-                                                     :fi "Nainen"
-                                                     :sv "Kvinna"
-                                                     :en "Female")
-                                                   (case lang
-                                                     :fi "Mies"
-                                                     :sv "Man"
-                                                     :en "Male")))]
+                                                   "2" ;; based on koodisto-values
+                                                   "1"))]
           (-> db
               (update-in [:application :answers :gender] merge {:value gender :valid true})
               (update-in [:application :answers :birth-date] merge {:value birth-date :valid true})))))

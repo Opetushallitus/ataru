@@ -1,11 +1,14 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.buildversion :refer [buildversion-routes]]
             [ataru.applications.application-store :as application-store]
+            [ataru.hakija.application-email-confirmation :as application-email]
+            [ataru.background-job.job :as job]
             [ataru.forms.form-store :as form-store]
-            [ataru.hakija.email-store :as email-store]
             [ataru.hakija.validator :as validator]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.person-service.person-integration :as person-integration]
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
             [clojure.string :as string]
@@ -36,10 +39,14 @@
 (defn- handle-application [application]
   (info "Received application:" application)
   (if (validator/valid-application? application)
-    (let [stored-app-id (application-store/add-new-application application)]
-      (info "Stored application with id:" stored-app-id)
-      (email-store/store-email-verification application stored-app-id)
-      (response/ok {:id stored-app-id}))
+    (let [application-id        (application-store/add-new-application application)
+          person-service-job-id (job/start-job hakija-jobs/job-definitions
+                                               (:type person-integration/job-definition)
+                                               {:application-id application-id})]
+      (application-email/start-email-confirmation-job application-id)
+      (info "Stored application with id:" application-id)
+      (info "Started person creation job (to person service) with job id" person-service-job-id)
+      (response/ok {:id application-id}))
     (do
       (error "Invalid application!")
       (response/bad-request))))

@@ -1,10 +1,10 @@
 {:server {:allow-db-clear? true}
- :db {:database-name "ataru-dev"
+ :db {:database-name "ataru-test"
       :pool-name "ataru-pool"
       :username "oph"
       :password "oph"
       :server-name "localhost"
-      :port-number 5432
+      :port-number 5433
       :schema "public"}
  :cas {}
  :authentication {:opintopolku-login-url "https://itest-virkailija.oph.ware.fi/cas/login?service="

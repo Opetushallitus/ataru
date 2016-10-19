@@ -14,7 +14,7 @@
 
 (defn read-body
   [resp]
-  (-> resp :body slurp (json/parse-string true)))
+  (-> resp :body (json/parse-string true)))
 
 (defn- org-node->map [org-node] {:name (:nimi org-node) :oid (:oid org-node)})
 

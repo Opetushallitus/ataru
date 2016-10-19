@@ -7,7 +7,14 @@
 
 (defqueries "sql/dev-form-queries.sql")
 
+(defn- nuke-old-fixture-data [form-id]
+  (soresu-db/exec :db yesql-delete-fixture-application-review! {:form_id form-id})
+  (soresu-db/exec :db yesql-delete-fixture-application-events! {:form_id form-id})
+  (soresu-db/exec :db yesql-delete-fixture-application! {:form_id form-id})
+  (soresu-db/exec :db yesql-delete-fixture-form! {:id form-id}))
+
 (defn init-db-fixture []
+  (nuke-old-fixture-data (:id form-fixtures/person-info-form))
   (let [{:keys [id] :as form} (form-store/create-form-or-increment-version! form-fixtures/person-info-form "1.2.246.562.10.2.45")]
     (soresu-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id form-fixtures/person-info-form)})
     form))

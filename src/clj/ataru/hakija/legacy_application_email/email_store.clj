@@ -1,4 +1,4 @@
-(ns ataru.hakija.email-store
+(ns ataru.hakija.legacy-application-email.email-store
   (:require [oph.soresu.common.db :refer [exec]]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]

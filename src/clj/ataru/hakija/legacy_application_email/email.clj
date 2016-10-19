@@ -1,4 +1,4 @@
-(ns ataru.hakija.email
+(ns ataru.hakija.legacy-application-email.email
   (:require [ataru.applications.application-store :as application-store]
             [org.httpkit.client :as http]
             [cheshire.core :as json]
@@ -6,7 +6,7 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info error]]
             [com.stuartsierra.component :as component]
-            [ataru.hakija.email-store :as store]))
+            [ataru.hakija.legacy-application-email.email-store :as store]))
 
 (def email-poll-interval 5000)
 
