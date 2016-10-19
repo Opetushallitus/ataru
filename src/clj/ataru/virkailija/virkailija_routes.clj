@@ -10,7 +10,6 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [ataru.forms.form-access-control :as access-controlled-form]
-            [ataru.applications.application-service :as access-controlled-applications]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [cheshire.core :as json]
@@ -21,7 +20,6 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [manifold.deferred :as d]
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -31,7 +29,8 @@
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [clout.core :as clout]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -43,12 +42,26 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
+(def client-page-patterns #"(editor|applications)")
+
+(def client-routes
+  (clout/route-compile "/:page" {:page client-page-patterns}))
+
+(def client-sub-routes
+  (clout/route-compile "/:page/*" {:page client-page-patterns}))
+
+(defn render-virkailija-page
+  []
+  (let [config (json/generate-string (or (:public-config config) {}))]
+    (selmer/render-file "templates/virkailija.html"
+                        {:cache-fingerprint cache-fingerprint
+                         :config            config})))
+
 (api/defroutes app-routes
   (api/undocumented
-    (let [config (json/generate-string (or (:public-config config) {}))]
-      (api/GET "/" [] (selmer/render-file "templates/virkailija.html"
-                                          {:cache-fingerprint cache-fingerprint
-                                           :config            config})))))
+    (api/GET "/" [] (render-virkailija-page))
+    (api/GET client-routes [] (render-virkailija-page))
+    (api/GET client-sub-routes [] (render-virkailija-page))))
 
 (defn- render-file-in-dev
   [filename]

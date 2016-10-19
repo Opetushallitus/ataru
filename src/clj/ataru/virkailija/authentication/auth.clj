@@ -25,13 +25,13 @@
     (cas-store/login ticket)
     username))
 
-(defn login [ticket organization-service]
+(defn login [ticket organization-service redirect-url]
   (try
     (if ticket
       (if-let [username (cas-login ticket ataru-login-success-url)]
         (let [user-organizations (.get-direct-organizations organization-service username)]
           (info "username" username "logged in")
-          (-> (resp/redirect "/lomake-editori")
+          (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username username :ticket ticket :organizations user-organizations}})))
         (redirect-to-logged-out-page))
       (redirect-to-logged-out-page))

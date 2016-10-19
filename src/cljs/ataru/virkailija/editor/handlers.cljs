@@ -311,9 +311,9 @@
       :languages languages}
      (fn [db form]
        (let [stop-fn (get-in db [:editor :autosave])
-             history (str "/editor/" (:key (languages->kwd form)))]
+             path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
          (autosave/stop-autosave! stop-fn)
-         (set-history! history)
+         (set-history! path)
          (assoc-in db [:editor :new-form-created?] true))))))
 
 (reg-event-db
