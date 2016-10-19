@@ -21,7 +21,8 @@
                      :firstName      "Aku",
                      :lastName       "Ankka",
                      :gender         "2",
-                     :idpEntitys     []})
+                     :idpEntitys     [{:idpEntityId "oppijaToken"
+                                       :identifier "aku@ankkalinna.com"}]})
 
 (def finnish-person-with-oid (assoc finnish-person :personOid "1.2.246.562.24.56818753409"))
 
@@ -66,7 +67,8 @@
                               :lastName       "Moore"
                               :birthDate      "1984-10-29"
                               :gender         "1"
-                              :idpEntitys     []})
+                              :idpEntitys     [{:idpEntityId "oppijaToken"
+                                                :identifier "roger.moore@ankkalinna.com"}]})
 
 (describe
  "extract person"

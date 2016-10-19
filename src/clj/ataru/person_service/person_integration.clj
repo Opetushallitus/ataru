@@ -22,15 +22,15 @@
     (convert-birth-date finnish-format-date)))
 
 (defn extract-person [application]
-  (let [basic-fields
-        {:email          (extract-field application "email")
-         :firstName      (extract-field application "first-name")
-         :lastName       (extract-field application "last-name")
-         :gender         (extract-field application "gender")
-         :nativeLanguage (extract-field application "language")
-         :nationality    (extract-field application "nationality")
-         :idpEntitys     []}
-        person-id (extract-field application "ssn")]
+  (let [email        (extract-field application "email")
+        basic-fields {:email          email
+                      :firstName      (extract-field application "first-name")
+                      :lastName       (extract-field application "last-name")
+                      :gender         (extract-field application "gender")
+                      :nativeLanguage (extract-field application "language")
+                      :nationality    (extract-field application "nationality")
+                      :idpEntitys     [{:idpEntityId "oppijaToken" :identifier email}]}
+        person-id    (extract-field application "ssn")]
     (if person-id
       (assoc basic-fields :personId person-id)
       (assoc basic-fields :birthDate (extract-birth-date application)))))
