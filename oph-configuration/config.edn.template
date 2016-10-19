@@ -21,4 +21,5 @@
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
- :organization-service {:base-address " https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}}
+ :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
+ :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}}
