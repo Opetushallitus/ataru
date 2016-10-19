@@ -10,6 +10,7 @@
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.util.client-error :as client-error]
+            [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clj-time.core :as t]
@@ -35,7 +36,7 @@
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
     (if (and (some? form)
-             (not (deleted? form)))
+             (not ( form)))
       (-> form
           (koodisto/populate-form-koodisto-fields)
           (response/ok))
@@ -43,22 +44,26 @@
 
 (defn- handle-application [application]
   (info "Received application:" application)
-  (let [form (form-store/fetch-latest-version (:form application))]
-    (cond
-      (and (some? form)
-           (deleted? form)) (do (error (str "Form " (:id form) " deleted!"))
-                                (response/bad-request))
-      (not (validator/valid-application? application)) (do
-                                                         (error "Invalid application!")
-                                                         (response/bad-request))
-      :else (let [application-id        (application-store/add-new-application application)
-                  person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                                       (:type person-integration/job-definition)
-                                                       {:application-id application-id})]
-              (application-email/start-email-confirmation-job application-id)
-              (info "Stored application with id:" application-id)
-              (info "Started person creation job (to person service) with job id" person-service-job-id)
-              (response/ok {:id application-id})))))
+  (let [form (form-store/fetch-latest-version (:form application))
+        validatorf (fn [f] (validator/valid-application? application f))]
+    (match form
+      (_ :guard deleted?)
+      (do (warn (str "Form " (:id form) " deleted!"))
+          (response/bad-request {:passed? false :failures {:response "Lomake on poistettu"}}))
+
+      ({:passed?  false
+        :failures failures} :<< validatorf)
+      (response/bad-request failures)
+
+      :else
+      (let [application-id        (application-store/add-new-application application)
+            person-service-job-id (job/start-job hakija-jobs/job-definitions
+                                    (:type person-integration/job-definition)
+                                    {:application-id application-id})]
+        (application-email/start-email-confirmation-job application-id)
+        (info "Stored application with id:" application-id)
+        (info "Started person creation job (to person service) with job id" person-service-job-id)
+        (response/ok {:id application-id})))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)

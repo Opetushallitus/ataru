@@ -126,11 +126,16 @@
                          (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                          (keys answers-by-key))
          results (build-results answers-by-key [] (:content form))
-         failed-results (into {} (filter #(not (:passed? (second %))) results))]
+         failed-results (some->>
+                          (into {} (filter #(not (:passed? (second %))) results))
+                          (build-failed-results answers-by-key))]
      (when (not (empty? extra-answers))
        (warn "Extra answers in application" (apply str extra-answers)))
      (when (not (empty? failed-results))
-       (warn "Validation failed in application fields" (build-failed-results answers-by-key failed-results)))
-     (and
-       (empty? extra-answers)
-       (empty? failed-results)))))
+       (warn "Validation failed in application fields" failed-results))
+     {:passed?
+      (and
+        (empty? extra-answers)
+        (empty? failed-results))
+      :failures
+      failed-results})))
