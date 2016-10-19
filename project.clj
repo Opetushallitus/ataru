@@ -43,7 +43,7 @@
                  [org.clojure/java.jdbc "0.4.2"]
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
                  [clj-time "0.11.0"]
-                 [cider/cider-nrepl "0.14.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
+                 [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.5.0"]
                  [selmer "1.0.4"]
                  [metosin/ring-http-response "0.6.5"]
@@ -167,7 +167,7 @@
                                           (java.util.Date.) )}
              :silent false}
 
-  :profiles {:repl {:plugins [[cider/cider-nrepl "0.13.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
+  :profiles {:repl {:plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.8"]
                                   [refactor-nrepl "2.2.0"]
@@ -178,7 +178,7 @@
                                   [speclj "3.3.2"]
                                   [speclj-junit "0.0.10"]]
                    :plugins [[refactor-nrepl "2.2.0"]
-                             [cider/cider-nrepl "0.13.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
+                             [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.1"]]
                    :source-paths ["dev/clj" "test/cljc/unit"]
                    :resource-paths ["dev-resources"]
