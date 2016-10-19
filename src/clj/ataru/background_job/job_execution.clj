@@ -87,7 +87,7 @@
       (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg throwable))
       (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg throwable)))))
 
-(defn exec-step [iteration step-fn runner]
+(defn- exec-step [iteration step-fn runner]
   (log/debug "Executing step:" (:step iteration))
   (try
     (let [state                (:state iteration)
@@ -109,7 +109,7 @@
     (catch Throwable t
       (handle-error iteration t))))
 
-(defn maybe-exec-step
+(defn- maybe-exec-step
   "Attempt to exec the next iteration's step if the function exists in job definition and
    if we haven't exceeded retry-limit"
   [runner iteration job-definition]
@@ -147,27 +147,27 @@
         (log/error msg)
         (final-error-iteration (-> job :iteration :step) {} 0 msg)))))
 
-(defn get-job-step-and-exec [runner]
+(defn- get-job-step-and-exec [runner]
   (job-store/with-due-job
     (fn [due-job]
       (exec-job-step runner due-job))
     (keys (:job-definitions runner))))
 
-(defn exec-job-steps-while-due
+(defn- exec-job-steps-while-due
   "Exec job step while there are due jobs which should be run immediately.
    When there are no more due jobs, we can take a short break and continue
    when we poll the jobs again."
   [runner]
   (if (get-job-step-and-exec runner) (recur runner)))
 
-(defn execute-due-job-steps [runner]
+(defn- execute-due-job-steps [runner]
   (try
     (exec-job-steps-while-due runner)
     ;; We need to catch everything, executor will stop SILENTLY if we let this escalate
     (catch Throwable t
       (log/error t "Error while executing background job"))))
 
-(defn job-exec-interval-seconds
+(defn- job-exec-interval-seconds
   "Function instead of def so we can override this in tests"
   [] (or (-> config :background-job :exec-interval-seconds) 15))
 

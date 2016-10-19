@@ -14,10 +14,9 @@
   "Start a new background job of type <job-type>.
    initial-state is the initial data map needed to start the job (can be anything)"
   [system-job-definitions job-type initial-state]
-  (let [job-definition (get system-job-definitions job-type)]
-    (if job-definition
-      (job-store/store-new job-type initial-state)
-      (log/error (str "No job definition found for job " job-type)))))
+  (if-let [job-definition (get system-job-definitions job-type)]
+    (job-store/store-new job-type initial-state)
+    (log/error (str "No job definition found for job " job-type))))
 
 (defrecord JobRunner []
   component/Lifecycle

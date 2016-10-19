@@ -81,7 +81,7 @@
 
 (def default-start-iteration {:state {} :step :initial :retry-count 0 :iteration-id 1})
 
-  (defn exec-all-iterations [runner job]
+(defn exec-all-iterations [runner job]
   (loop [iteration (:iteration job)
          result-iterations []]
     (let [result-iteration (job-exec/exec-job-step runner (assoc job :iteration iteration))

@@ -16,10 +16,10 @@ ji.id as iteration_id, ji.step, ji.state, ji.retry_count
 from jobs j
 join job_iterations ji on j.id = ji.job_id
 where ji.executed = FALSE
-and job_type in (:job_types)
-and next_activation < now()
-and final = FALSE
-order by next_activation asc
+and j.job_type in (:job_types)
+and ji.next_activation < now()
+and ji.final = FALSE
+order by ji.next_activation asc
 limit 1 -- Limits us to only one job at a time
 for update skip locked;
 
