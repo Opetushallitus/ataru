@@ -67,8 +67,8 @@
     :rules {:test-rule-for-test []},
     :options
     [{:value "", :label {:fi "", :sv ""}}
-     {:value "male", :label {:fi "Mies", :sv "Människa"}}
-     {:value "female", :label {:fi "Nainen", :sv "Kvinna"}}],
+     {:value "1", :label {:fi "Mies", :sv "Människa"}}
+     {:value "2", :label {:fi "Nainen", :sv "Kvinna"}}],
     :fieldType "dropdown"}
    {:fieldClass "wrapperElement",
     :id "fe860cb8-588f-41ab-a8d7-15f835d9aac5",

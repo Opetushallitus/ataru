@@ -57,7 +57,7 @@
                                     {:key "birth-date" :value "29.10.1984"}
                                     {:key "language" :value "SV"}
                                     {:key "nationality" :value "247"}
-                                    {:key "gender" :value "2"}]}) ;; TODO use 1 when it's possible to do so
+                                    {:key "gender" :value "1"}]})
 
 (def expected-foreign-person {:email          "roger.moore@ankkalinna.com"
                               :nativeLanguage "SV"
@@ -65,7 +65,7 @@
                               :firstName      "Roger"
                               :lastName       "Moore"
                               :birthDate      "1984-10-29"
-                              :gender         "2"
+                              :gender         "1"
                               :idpEntitys     []})
 
 (describe

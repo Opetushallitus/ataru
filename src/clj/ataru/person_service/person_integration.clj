@@ -26,7 +26,7 @@
         {:email          (extract-field application "email")
          :firstName      (extract-field application "first-name")
          :lastName       (extract-field application "last-name")
-         :gender         "2" ;; TODO FIX
+         :gender         (extract-field application "gender")
          :nativeLanguage (extract-field application "language")
          :nationality    (extract-field application "nationality")
          :idpEntitys     []}

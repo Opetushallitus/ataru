@@ -171,7 +171,7 @@
                                                      :label {:en "Native language", :fi "Äidinkieli", :sv "Modersmål"},
                                                      :value "FI",
                                                      :fieldType "dropdown"}
-                                                    {:key "gender", :label {:en "Gender", :fi "Sukupuoli", :sv "Kön"}, :value "Male", :fieldType "dropdown"}
+                                                    {:key "gender", :label {:en "Gender", :fi "Sukupuoli", :sv "Kön"}, :value "2", :fieldType "dropdown"}
                                                     {:key "postal-office",
                                                      :label {:en "Postal office", :fi "Postitoimipaikka", :sv "Postkontor"},
                                                      :value "POHJOLA",

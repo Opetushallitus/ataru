@@ -322,8 +322,8 @@
      :params {},
      :options
      [{:label {:fi "", :sv ""}, :value ""}
-      {:label {:fi "Mies", :sv "Människa"}, :value "male"}
-      {:label {:fi "Nainen", :sv "Kvinna"}, :value "female"}],
+      {:label {:fi "Mies", :sv "Människa"}, :value "1"}
+      {:label {:fi "Nainen", :sv "Kvinna"}, :value "2"}],
      :fieldType "dropdown",
      :fieldClass "formField",
      :validators ["required"]}
