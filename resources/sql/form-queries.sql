@@ -34,7 +34,7 @@ select id, key, name, content, created_by, created_time, languages from forms f 
 with latest_version as (
   select max(created_time) as latest_time from forms f where f.key = :key
 )
-select id, key, name, content, created_by, created_time, languages from forms f join latest_version lv on f.created_time = lv.latest_time;
+select id, key, name, content, created_by, created_time, languages, deleted from forms f join latest_version lv on f.created_time = lv.latest_time;
 
 -- name: yesql-fetch-latest-version-by-id-lock-for-update
 with the_key as (

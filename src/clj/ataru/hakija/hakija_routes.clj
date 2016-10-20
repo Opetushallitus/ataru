@@ -12,6 +12,7 @@
             [ataru.util.client-error :as client-error]
             [clojure.java.io :as io]
             [clojure.string :as string]
+            [clj-time.core :as t]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
@@ -28,9 +29,14 @@
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
+(defn- deleted? [{:keys [deleted]}]
+  (and (some? deleted)
+       (t/after? (t/now) deleted)))
+
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
-    (if form
+    (if (and (some? form)
+             (not (deleted? form)))
       (-> form
           (koodisto/populate-form-koodisto-fields)
           (response/ok))
