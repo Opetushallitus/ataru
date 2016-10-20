@@ -28,7 +28,9 @@
              :handler :application/handle-form})))
 
 (defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
-  (println "get form for hakukohde-oid" hakukohde-oid)
+  (ajax/get
+
+    )
   db)
 
 (register-handler

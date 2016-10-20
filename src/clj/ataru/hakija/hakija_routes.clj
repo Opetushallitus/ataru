@@ -42,6 +42,12 @@
           (response/ok))
       (response/not-found form))))
 
+(defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
+  ; https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/1.2.246.562.5.86944309334
+  ; -> ataruLomakeAvain
+  ; -> fetch-form-by-key
+  )
+
 (defn- handle-application [application]
   (info "Received application:" application)
   (let [form (form-store/fetch-latest-version (:form application))
@@ -94,6 +100,10 @@
 (defn api-routes []
   (api/context "/api" []
     :tags ["application-api"]
+    (api/GET "/hakukohde/:hakukohde-oid" []
+      :path-params [hakukohde-oid :- s/str]
+      :return s/Any
+      (fetch-form-by-hakukohde-oid hakukohde-oid))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
