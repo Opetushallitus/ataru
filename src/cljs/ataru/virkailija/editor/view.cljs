@@ -58,7 +58,8 @@
       [:span
        [:span.editor-form__form-control-link-separator " | "]
        [:a (cond-> {:on-click (fn [event]
-                                (.preventDefault event))}
+                                (.preventDefault event)
+                                (dispatch [:editor/remove-form]))}
              (empty? (:content @form))
              (assoc :class "editor-form__form-control-link-disabled"))
         "Poista valittu lomake"]])))

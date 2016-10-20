@@ -100,7 +100,8 @@
       (->
         form
         (dissoc :created-time :id)
-        (assoc :key (str (UUID/randomUUID)))))))
+        (assoc :key (str (UUID/randomUUID)))
+        (update :deleted identity)))))
 
 (defn increment-version [{:keys [key id] :as form} conn]
   {:pre [(some? key)
@@ -124,6 +125,7 @@
            (-> form
                ; use :key set in db just to be sure it never is nil
                (assoc :key (:key latest-version))
-               (assoc :organization-oid (:organization-oid latest-version)))
+               (assoc :organization-oid (:organization-oid latest-version))
+               (update :deleted identity))
             conn))))
     (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid)))))

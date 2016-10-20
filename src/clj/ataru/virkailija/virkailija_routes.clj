@@ -98,6 +98,11 @@
                           :summary "Get content for form"
                           (ok (form-store/fetch-form id)))
 
+                 (api/DELETE "/forms/:id" {session :session}
+                   :path-params [id :- Long]
+                   :summary "Mark form as deleted"
+                   (ok (access-controlled-form/delete-form id session organization-service)))
+
                  (api/POST "/forms" {session :session}
                    :summary "Persist changed form."
                    :body [form ataru-schema/FormWithContent]
