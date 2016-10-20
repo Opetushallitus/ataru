@@ -24,8 +24,9 @@
 
 (defn- dispatch-form-load
   []
-  (let [path (cljs-util/get-path)]
-    (if-let [hakukohde-oid (re-matches #"/hakemus/hakukohde/(.+)/?" path)] ; TODO support language in path
+  (let [path (cljs-util/get-path)
+        hakukohde-match (re-matches #"/hakemus/hakukohde/(.+)/?" path)]
+    (if-let [hakukohde-oid (when hakukohde-match (nth hakukohde-match 1))]
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid])
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
 

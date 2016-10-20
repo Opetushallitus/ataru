@@ -29,11 +29,11 @@
 
 (defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
   (ajax/get
-
-    )
+    (str "/hakemus/api/hakukohde/" hakukohde-oid)
+    :application/handle-form)
   db)
 
-(register-handler
+(reg-event-db
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
 

@@ -9,6 +9,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.person-service.person-integration :as person-integration]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.util.client-error :as client-error]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -35,18 +36,31 @@
 
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
-    (if (and (some? form)
-             (not (deleted? form)))
+    (when (and (some? form)
+               (not (deleted? form)))
       (-> form
-          (koodisto/populate-form-koodisto-fields)
-          (response/ok))
-      (response/not-found form))))
+          (koodisto/populate-form-koodisto-fields)))))
+
+(defn- fetch-form-by-key-response [key]
+  (if-let [form (fetch-form-by-key key)]
+    (response/ok form)
+    (response/not-found)))
 
 (defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
-  ; https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/1.2.246.562.5.86944309334
-  ; -> ataruLomakeAvain
-  ; -> fetch-form-by-key
-  )
+  (let [result   (tarjonta-client/get-hakukohde hakukohde-oid)
+        labels   (:hakukohteenNimet result)
+        label    {:fi (:kieli_fi labels)
+                  :sv (:kieli_sv labels)
+                  :en (:kieli_en labels)}
+        form-key (:ataruLomakeAvain result)
+        form     (when form-key (fetch-form-by-key form-key))]
+    (if form
+      (response/ok
+        (merge form {:hakukohde-oid   hakukohde-oid
+                     :hakukohde-label label}))
+      (do
+        (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key)
+        (response/not-found)))))
 
 (defn- handle-application [application]
   (info "Received application:" application)
@@ -100,14 +114,14 @@
 (defn api-routes []
   (api/context "/api" []
     :tags ["application-api"]
-    (api/GET "/hakukohde/:hakukohde-oid" []
-      :path-params [hakukohde-oid :- s/str]
+    (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
+      :path-params [hakukohde-oid :- s/Str]
       :return s/Any
       (fetch-form-by-hakukohde-oid hakukohde-oid))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
-      (fetch-form-by-key key))
+      (fetch-form-by-key-response key))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
