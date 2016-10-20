@@ -1,5 +1,7 @@
 # ataru
 
+[![Dependencies Status](https://jarkeeper.com/Opetushallitus/ataru/status.svg)](https://jarkeeper.com/Opetushallitus/ataru)
+
 Ataru is a name for a service used to create forms.
 
 ## Development Mode
