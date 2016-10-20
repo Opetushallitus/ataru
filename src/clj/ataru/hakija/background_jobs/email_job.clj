@@ -7,7 +7,7 @@
    [oph.soresu.common.config :refer [config]]))
 
 (defn viestintapalvelu-address []
-  (str (get-in config [:email :email_service_url]) "/ryhmasahkoposti-service/email/firewall"))
+  (get-in config [:email :email-service-url]))
 
 (defn send-email [from recipients subject body]
   (let [url                 (viestintapalvelu-address)

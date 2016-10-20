@@ -48,9 +48,7 @@
 (defn- send-email-verification
   "Synchronous call to keep DB transactions intact"
   [email-verification]
-  (let [url            (str
-                         (get-in config [:email :email_service_url])
-                         "/ryhmasahkoposti-service/email/firewall")
+  (let [url            (get-in config [:email :email-service-url])
         id             (:id email-verification)
         application-id (:application_id email-verification)
         recipient      (:recipient email-verification)
