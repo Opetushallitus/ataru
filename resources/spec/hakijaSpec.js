@@ -146,8 +146,8 @@
     describe('submitting', function() {
       before(
         clickElement(function() { return submitButton() }),
-        wait.until(function() {
-          return $('.application-status-controls .application__sent-placeholder-text:contains("Hakemus lähetetty")').length == 1
+          wait.until(function() {
+            return testFrame().find('.application__sent-placeholder-text').length == 1
         })
       )
 
