@@ -76,7 +76,7 @@
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-doo "0.1.6"]
-            [lein-figwheel "0.5.0-6"]
+            [lein-figwheel "0.5.8"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
             [lein-environ "1.0.2"]
@@ -100,8 +100,7 @@
 
   :aot [com.stuartsierra.dependency ataru.db.migrations]
 
-  :cljsbuild {:jar true
-              :builds [{:id           "virkailija-dev"
+  :cljsbuild {:builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
                         :compiler     {:main                 "ataru.virkailija.core"
@@ -128,6 +127,7 @@
                                    :optimizations :none}}
 
                        {:id "virkailija-min"
+                        :jar true
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.virkailija.core"
                                    :output-to "resources/public/js/compiled/virkailija-app.js"
@@ -140,6 +140,7 @@
                                    :pretty-print false}}
 
                        {:id "hakija-min"
+                        :jar true
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler {:main "ataru.hakija.core"
                                    :output-to "resources/public/js/compiled/hakija-app.js"
@@ -166,7 +167,7 @@
 
   :profiles {:repl {:plugins [[cider/cider-nrepl "0.13.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
-                                  [figwheel-sidecar "0.5.0-2"]
+                                  [figwheel-sidecar "0.5.8"]
                                   [refactor-nrepl "2.2.0"]
                                   [org.clojure/tools.nrepl "0.2.12"]
                                   [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
