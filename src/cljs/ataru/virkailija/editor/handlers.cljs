@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [reg-event-db dispatch dispatch-sync subscribe]]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch dispatch-sync subscribe]]
             [clojure.data :refer [diff]]
             [clojure.walk :as walk]
             [cljs-time.core :as c]
@@ -184,10 +184,6 @@
   (update form :languages
     (partial mapv keyword)))
 
-(defn- p [x]
-  (println x)
-  x)
-
 (defn refresh-forms []
   (http
     :get
@@ -332,6 +328,16 @@
     db))
 
 (reg-event-db :editor/copy-form copy-form)
+
+(defn- remove-form [{:keys [db]} _]
+  (let [form-key (get-in db [:editor :selected-form-key])
+        form-id  (get-in db [:editor :forms form-key :id])]
+    (-> {:db   db
+         :http {:method              :delete
+                :path                (str "/lomake-editori/api/forms/" form-id)
+                :handler-or-dispatch :editor/refresh-forms}})))
+
+(reg-event-fx :editor/remove-form remove-form)
 
 (reg-event-db
   :editor/change-form-name

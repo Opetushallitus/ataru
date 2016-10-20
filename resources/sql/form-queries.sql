@@ -4,6 +4,7 @@ select id, key, name, created_by, created_time, languages
 from forms f
 where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
 and   (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+and   (f.deleted is null or f.deleted > now())
 order by created_time desc;
 
 -- name: yesql-get-all-forms-query
@@ -11,11 +12,12 @@ order by created_time desc;
 select id, key, name, created_by, created_time, languages
 from forms f
 where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
+and   (f.deleted is null or f.deleted > now())
 order by created_time desc;
 
 -- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, created_by, key, languages, organization_oid) values (:name, :content, :created_by, :key, :languages, :organization_oid);
+insert into forms (name, content, created_by, key, languages, organization_oid, deleted) values (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted);
 
 -- name: yesql-get-by-id
 select id, key, name, content, created_by, created_time, languages from forms where id = :id;
