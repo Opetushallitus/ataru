@@ -35,10 +35,12 @@ create-uberjar() {
 }
 
 test-clojure() {
+    ./bin/lein clean
     ./bin/lein spec -t ~ui
 }
 
 test-clojurescript() {
+    ./bin/lein clean
     ./bin/lein doo phantom test once
 }
 
