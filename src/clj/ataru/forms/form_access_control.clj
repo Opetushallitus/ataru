@@ -3,7 +3,6 @@
    [ataru.forms.form-store :as form-store]
    [ataru.virkailija.user.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [clj-time.core :as t]
    [taoensso.timbre :refer [warn]]))
 
 (defn- org-oids [session] (map :oid (-> session :identity :organizations)))
@@ -85,7 +84,7 @@
       (fn []
         (let [organization-oids (org-oids session)]
           (form-store/create-form-or-increment-version!
-            (assoc form :deleted (t/now))
+            (assoc form :deleted true)
             (first organization-oids)))))))
 
 (defn get-forms [session organization-service]

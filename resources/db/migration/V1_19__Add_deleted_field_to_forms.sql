@@ -1,1 +1,1 @@
-alter table forms add column deleted timestamp with time zone default null;
+alter table forms add column deleted boolean default false;

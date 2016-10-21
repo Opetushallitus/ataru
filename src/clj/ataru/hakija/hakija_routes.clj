@@ -30,8 +30,7 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defn- deleted? [{:keys [deleted]}]
-  (and (some? deleted)
-       (t/after? (t/now) deleted)))
+  (true? deleted))
 
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
