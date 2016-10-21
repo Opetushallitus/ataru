@@ -45,20 +45,21 @@
 (defn- handle-application [application]
   (info "Received application:" application)
   (let [form (form-store/fetch-latest-version (:form application))]
-    (if (and (some? form)
-             (not (deleted? form))
-             (validator/valid-application? application))
-      (let [application-id        (application-store/add-new-application application)
-            person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                                 (:type person-integration/job-definition)
-                                                 {:application-id application-id})]
-        (application-email/start-email-confirmation-job application-id)
-        (info "Stored application with id:" application-id)
-        (info "Started person creation job (to person service) with job id" person-service-job-id)
-        (response/ok {:id application-id}))
-      (do
-        (error "Invalid application!")
-        (response/bad-request)))))
+    (cond
+      (and (some? form)
+           (not (deleted? form))) (do (error (str "Form " (:id form) " deleted!"))
+                                      (response/bad-request))
+      (not (validator/valid-application? application)) (do
+                                                         (error "Invalid application!")
+                                                         (response/bad-request))
+      :else (let [application-id        (application-store/add-new-application application)
+                  person-service-job-id (job/start-job hakija-jobs/job-definitions
+                                                       (:type person-integration/job-definition)
+                                                       {:application-id application-id})]
+              (application-email/start-email-confirmation-job application-id)
+              (info "Stored application with id:" application-id)
+              (info "Started person creation job (to person service) with job id" person-service-job-id)
+              (response/ok {:id application-id})))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
