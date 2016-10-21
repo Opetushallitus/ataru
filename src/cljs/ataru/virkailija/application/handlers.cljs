@@ -8,7 +8,6 @@
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-id]]
-    (println "reg-event-fx")
     (if (not= application-id (get-in db [:application :selected-id]))
       (-> {:db db}
           (assoc-in [:db :application :selected-id] application-id)
