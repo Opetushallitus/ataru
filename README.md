@@ -1,8 +1,8 @@
-# ataru
+# Ataru
 
 [![Dependencies Status](https://jarkeeper.com/Opetushallitus/ataru/status.svg)](https://jarkeeper.com/Opetushallitus/ataru)
 
-Ataru is a name for a service used to create forms.
+A system for creating custom forms, applying to education and handling applications.
 
 ## Development Mode
 
