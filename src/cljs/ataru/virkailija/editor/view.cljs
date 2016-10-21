@@ -53,16 +53,21 @@
         "Kopioi valittu lomake"]])))
 
 (defn- remove-form []
-  (let [form (subscribe [:editor/selected-form])]
+  (let [form     (subscribe [:editor/selected-form])
+        confirm? (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])]
     (fn []
       [:span
        [:span.editor-form__form-control-link-separator " | "]
        [:a (cond-> {:on-click (fn [event]
                                 (.preventDefault event)
-                                (dispatch [:editor/remove-form]))}
+                                (if @confirm?
+                                  (dispatch [:editor/remove-form])
+                                  (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))}
              (empty? (:content @form))
              (assoc :class "editor-form__form-control-link-disabled"))
-        "Poista valittu lomake"]])))
+        (if @confirm?
+          "Vahvista poisto"
+          "Poista valittu lomake")]])))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
