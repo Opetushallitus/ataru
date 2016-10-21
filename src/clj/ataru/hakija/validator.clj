@@ -9,12 +9,11 @@
 
 (defn allowed-values [options]
   (set
-    (->> (reduce
-           (fn [values option]
-             (concat values (vals (:label option))))
-           []
-           options)
-         (filter not-empty))))
+    (reduce
+      (fn [values option]
+        (concat values (vals (:label option))))
+      []
+      options)))
 
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
