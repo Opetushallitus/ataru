@@ -45,7 +45,7 @@
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))))
 
-(defn- do-authenticated [form session organization-service do-fn]
+(defn- check-authenticated [form session organization-service do-fn]
   (let [user-name         (-> session :identity :username)
         organization-oids (org-oids session)
         org-count         (count organization-oids)]
@@ -72,7 +72,7 @@
     (do-fn)))
 
 (defn post-form [form session organization-service]
-  (do-authenticated form session organization-service
+  (check-authenticated form session organization-service
     (fn []
       (let [organization-oids (org-oids session)]
         (form-store/create-form-or-increment-version!
@@ -81,7 +81,7 @@
 
 (defn delete-form [form-id session organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
-    (do-authenticated form session organization-service
+    (check-authenticated form session organization-service
       (fn []
         (let [organization-oids (org-oids session)]
           (form-store/create-form-or-increment-version!
