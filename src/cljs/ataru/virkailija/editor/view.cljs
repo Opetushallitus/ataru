@@ -34,7 +34,7 @@
                 [form-row form selected?]))))))
 
 (defn- add-form []
-  [:span.editor-form__add-new
+  [:span
    [:a {:on-click (fn [evt]
                     (.preventDefault evt)
                     (dispatch [:editor/add-form]))}
