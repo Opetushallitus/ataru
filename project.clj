@@ -10,7 +10,7 @@
                  [oph/soresu "0.1.6-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.4"]
-                 [binaryage/devtools "0.7.2"]
+                 [binaryage/devtools "0.8.2"]
                  [re-frisk "0.2.2"] ; will only be used in development side
                  [venantius/accountant "0.1.7"]
 
