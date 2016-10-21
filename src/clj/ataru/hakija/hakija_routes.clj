@@ -46,8 +46,8 @@
   (let [form (form-store/fetch-latest-version (:form application))]
     (cond
       (and (some? form)
-           (not (deleted? form))) (do (error (str "Form " (:id form) " deleted!"))
-                                      (response/bad-request))
+           (deleted? form)) (do (error (str "Form " (:id form) " deleted!"))
+                                (response/bad-request))
       (not (validator/valid-application? application)) (do
                                                          (error "Invalid application!")
                                                          (response/bad-request))
