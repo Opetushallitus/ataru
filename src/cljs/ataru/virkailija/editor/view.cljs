@@ -33,7 +33,7 @@
                 [wrap-scroll-to [form-row form selected?]]
                 [form-row form selected?]))))))
 
-(defn add-form []
+(defn- add-form []
   [:span.editor-form__add-new
    [:a {:on-click (fn [evt]
                     (.preventDefault evt)
