@@ -329,10 +329,20 @@
 
 (reg-event-db :editor/copy-form copy-form)
 
+(defn- removed-application-review-active? [db]
+  (let [selected-form-key (get-in db [:editor :selected-form-key])
+        form-in-review    (get-in db [:application :selected-application-and-form :form])]
+    (= selected-form-key (:key form-in-review))))
+
+(defn- reset-application-review-state [db]
+  (assoc db :application {}))
+
 (defn- remove-form [{:keys [db]} _]
   (let [form-key (get-in db [:editor :selected-form-key])
         form-id  (get-in db [:editor :forms form-key :id])]
-    (-> {:db   db
+    (-> {:db   (cond-> db
+                 (removed-application-review-active? db)
+                 (reset-application-review-state))
          :http {:method              :delete
                 :path                (str "/lomake-editori/api/forms/" form-id)
                 :handler-or-dispatch :editor/refresh-forms}})))
