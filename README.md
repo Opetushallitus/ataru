@@ -81,7 +81,16 @@ with Docker:
 docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5
 ```
 
-To run all tests once:
+To build and run all the tests in the system:
+
+```
+./bin/cibuild.sh run-tests
+```
+
+This takes a while, but is great for reproducing any issus which occur
+on the CI build machine.
+
+To run all clojure tests once:
 
 ```
 lein spec
@@ -93,6 +102,12 @@ To run them automatically whenever code changes, use `-a`.
 
 ```
 lein spec -t unit
+```
+
+### ClojureScript unit tests
+
+```
+lein doo phantom test once
 ```
 
 ### Browser integration tests
