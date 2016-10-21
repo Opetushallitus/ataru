@@ -32,7 +32,7 @@
   (refresh-person-info-modules))
 
 (migrations/defmigration
-  migrate-person-info-module "1.18"
+  migrate-person-info-module "1.20"
   "Update person info module structure in existing forms"
   (refresh-person-info-modules))
 
