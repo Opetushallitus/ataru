@@ -2,7 +2,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.7.170"]
+                 [org.clojure/clojurescript "1.9.293"]
                  [reagent "0.6.0"]   ; react in clojure
                  [re-frame "0.8.0"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
