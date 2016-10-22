@@ -33,8 +33,8 @@
                 [wrap-scroll-to [form-row form selected?]]
                 [form-row form selected?]))))))
 
-(defn add-form []
-  [:span.editor-form__add-new
+(defn- add-form []
+  [:span
    [:a {:on-click (fn [evt]
                     (.preventDefault evt)
                     (dispatch [:editor/add-form]))}
@@ -43,19 +43,38 @@
 (defn- copy-form []
   (let [form (subscribe [:editor/selected-form])]
     (fn []
-      (when-not (empty? (:content @form))
-        [:span
-         [:span.editor-form__form-control-link-separator " | "]
-         [:a {:on-click (fn [event]
-                          (.preventDefault event)
-                          (dispatch [:editor/copy-form]))}
-          "Kopioi valittu lomake"]]))))
+      [:span
+       [:span.editor-form__form-control-link-separator " | "]
+       [:a (cond-> {:on-click (fn [event]
+                                (.preventDefault event)
+                                (dispatch [:editor/copy-form]))}
+             (empty? (:content @form))
+             (assoc :class "editor-form__form-control-link-disabled"))
+        "Kopioi valittu lomake"]])))
+
+(defn- remove-form []
+  (let [form     (subscribe [:editor/selected-form])
+        confirm? (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])]
+    (fn []
+      [:span
+       [:span.editor-form__form-control-link-separator " | "]
+       [:a (cond-> {:on-click (fn [event]
+                                (.preventDefault event)
+                                (if @confirm?
+                                  (dispatch [:editor/remove-form])
+                                  (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))}
+             (empty? (:content @form))
+             (assoc :class "editor-form__form-control-link-disabled"))
+        (if @confirm?
+          "Vahvista poisto"
+          "Poista valittu lomake")]])))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
    [:span
     [add-form]
-    [copy-form]]])
+    [copy-form]
+    [remove-form]]])
 
 (defn editor-name []
   (let [form              (subscribe [:editor/selected-form])

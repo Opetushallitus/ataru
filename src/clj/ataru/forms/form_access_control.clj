@@ -44,7 +44,7 @@
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))))
 
-(defn post-form [form session organization-service]
+(defn- check-authenticated [form session organization-service do-fn]
   (let [user-name         (-> session :identity :username)
         organization-oids (org-oids session)
         org-count         (count organization-oids)]
@@ -57,20 +57,35 @@
                    " (required: exactly one).  can't attach form to an ambiguous organization: "
                    (vec organization-oids)))
         (throw (user-feedback-exception
-                (if (= 0 org-count)
-                  "Käyttäjätunnukseen ei ole liitetty organisaatota"
-                  "Käyttäjätunnukselle löytyi monta organisaatiota")))))
+                 (if (= 0 org-count)
+                   "Käyttäjätunnukseen ei ole liitetty organisaatota"
+                   "Käyttäjätunnukselle löytyi monta organisaatiota")))))
     (if (and
-         (:id form) ; Updating, since form already has id
-         (not (form-allowed-by-id? (:id form) session organization-service)))
+          (:id form) ; Updating, since form already has id
+          (not (form-allowed-by-id? (:id form) session organization-service)))
       (throw (user-feedback-exception
-              (str "Ei oikeutta lomakkeeseen "
-                   (:id form)
-                   " organisaatioilla "
-                   (vec organization-oids)))))
-    (form-store/create-form-or-increment-version!
-     (assoc form :created-by (-> session :identity :username))
-     (first organization-oids))))
+               (str "Ei oikeutta lomakkeeseen "
+                    (:id form)
+                    " organisaatioilla "
+                    (vec organization-oids)))))
+    (do-fn)))
+
+(defn post-form [form session organization-service]
+  (check-authenticated form session organization-service
+    (fn []
+      (let [organization-oids (org-oids session)]
+        (form-store/create-form-or-increment-version!
+          (assoc form :created-by (-> session :identity :username))
+          (first organization-oids))))))
+
+(defn delete-form [form-id session organization-service]
+  (let [form (form-store/fetch-latest-version form-id)]
+    (check-authenticated form session organization-service
+      (fn []
+        (let [organization-oids (org-oids session)]
+          (form-store/create-form-or-increment-version!
+            (assoc form :deleted true)
+            (first organization-oids)))))))
 
 (defn get-forms [session organization-service]
   (let [organization-oids (org-oids session)]
