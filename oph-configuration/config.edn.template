@@ -22,4 +22,5 @@
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
- :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}}
+ :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}
+ :log-path: {{ataru_log_path}}}
