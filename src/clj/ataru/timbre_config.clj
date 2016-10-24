@@ -9,4 +9,4 @@
                            {:rotor (rotor/rotor-appender
                                      {:max-size (* 10 1024 1024)
                                       :backlog  10
-                                      :path     (str "./" logname ".log")})}})))
+                                      :path     (str "./logs" logname ".log")})}})))
