@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -14,15 +14,18 @@
   {:form nil
    :application {:answers {}}})
 
-(defn get-latest-form-by-key [db [_ form-key]]
-  (ajax/get
-    (str "/hakemus/api/form/" form-key)
-    :application/handle-form)
-  db)
+(reg-fx
+  :event
+  (fn [& event]
+    (debug event)))
 
-(reg-event-db
+(reg-event-fx
   :application/get-latest-form-by-key
-  get-latest-form-by-key)
+  (fn [cofx [_ form-key]]
+    (assoc cofx
+      :http {:method :get
+             :url (str "/hakemus/api/form/" form-key)
+             :handler :application/handle-form})))
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
@@ -31,15 +34,27 @@
   :application/handle-submit-response
   handle-submit)
 
-(defn submit-application [db _]
-  (ajax/post "/hakemus/api/application"
-        (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
-        :application/handle-submit-response)
-  (assoc-in db [:application :submit-status] :submitting))
+(reg-event-fx
+  :application/handle-submit-error
+  (fn [cofx [_ response]]
+    {:db (assoc-in (:db cofx) [:application :submit-status] nil)
+     :dispatch-later [:ms 1000 [:application/clear-error]]}))
 
 (reg-event-db
+  :application/clear-error
+  (fn [db _]
+    (dissoc db :error)))
+
+(reg-event-fx
   :application/submit-form
-  submit-application)
+  (fn [{:keys [db]} _]
+    {:db       (assoc-in db [:application :submit-status] :submitting)
+     :http     {:method        :post
+                :url           "/hakemus/api/application"
+                :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
+                :handler       :application/handle-submit-response
+                :error-handler :application/handle-submit-error}
+     :dispatch [:application/clear-error]}))
 
 (def ^:private lang-pattern #"/(\w{2})$")
 

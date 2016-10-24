@@ -1,5 +1,5 @@
 (ns ataru.hakija.hakija-ajax
-  (:require [re-frame.core :refer [dispatch]]
+  (:require [re-frame.core :refer [dispatch reg-fx]]
             [cljs.core.match :refer-macros [match]]
             [ajax.core :refer [GET POST]])
   (:refer-clojure :exclude [get]))
@@ -17,3 +17,12 @@
 
 (defn post [path post-data & [handler-kw error-handler-kw]]
   (POST path (merge {:params post-data} (params handler-kw error-handler-kw))))
+
+(reg-fx
+  :http
+  (fn [{:keys [method post-data url handler error-handler]}]
+    (let [f (case method
+              :post (partial post url post-data)
+              :get  (partial get url))]
+      (f handler error-handler))))
+
