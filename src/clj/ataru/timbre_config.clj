@@ -4,8 +4,7 @@
             [environ.core :refer [env]]))
 
 (defn configure-logging! [logname]
-  (when-not (:dev? env)
-    (timbre/debug (str "Configuring rotor logger for " logname))
+  (when-not (env :dev?)
     (timbre/merge-config! {:appenders
                            {:rotor (rotor/rotor-appender
                                      {:max-size (* 10 1024 1024)
