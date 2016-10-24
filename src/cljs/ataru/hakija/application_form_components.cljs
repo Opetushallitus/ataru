@@ -225,6 +225,8 @@
                                 [div-kwd
                                  {:on-change (partial textual-field-change field-descriptor)}
                                  [label field-descriptor]
+                                 [:div.application__form-text-input-info-text
+                                  [info-text field-descriptor]]
                                  [:div.application__form-select-wrapper
                                   [:span.application__form-select-arrow]
                                   [:select.application__form-select
@@ -249,6 +251,8 @@
             default-lang @default-lang]
         [div-kwd
          [label field-descriptor]
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
            (map-indexed (fn [idx option]
