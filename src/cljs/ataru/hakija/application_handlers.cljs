@@ -131,7 +131,7 @@
           (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
 
 (defn default-error-handler [db [_ response]]
-  (assoc db :error {:message "Tapahtui virhe" :detail (str response)}))
+  (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
 
 (defn application-run-rule [db rule]
   (if (not-empty rule)
