@@ -142,6 +142,8 @@
    :lang                           s/Str
    :answers                        [Answer]
    (s/optional-key :id)            s/Int
+   (s/optional-key :hakukohde)     s/Str
+   (s/optional-key :hakukohde-name) s/Str
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
 (def application-states (s/enum "received"

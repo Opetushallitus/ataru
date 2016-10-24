@@ -47,17 +47,13 @@
     (response/not-found)))
 
 (defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
-  (let [result   (tarjonta-client/get-hakukohde hakukohde-oid)
-        labels   (:hakukohteenNimet result)
-        label    {:fi (:kieli_fi labels)
-                  :sv (:kieli_sv labels)
-                  :en (:kieli_en labels)}
-        form-key (:ataruLomakeAvain result)
-        form     (when form-key (fetch-form-by-key form-key))]
+  (let [result         (tarjonta-client/get-hakukohde hakukohde-oid)
+        form-key       (:ataruLomakeAvain result)
+        form           (when form-key (fetch-form-by-key form-key))]
     (if form
       (response/ok
         (merge form {:hakukohde-oid   hakukohde-oid
-                     :hakukohde-label label}))
+                     :hakukohde-name  (-> result :hakukohteenNimet :kieli_fi)}))
       (do
         (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key)
         (response/not-found)))))
