@@ -1,5 +1,5 @@
 var addNewFormLink = function() {
-  return testFrame().find('.editor-form__add-new a')
+  return testFrame().find('.editor-form__form-controls-container a')
 }
 
 var formTitleField = function() {
