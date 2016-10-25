@@ -201,7 +201,8 @@
     (refresh-forms)
     (-> db
         (update :editor dissoc :forms)
-        (update :editor dissoc :show-remove-confirm-dialog?))))
+        (update :editor dissoc :show-remove-confirm-dialog?)
+        (update :editor dissoc :selected-form-key))))
 
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]

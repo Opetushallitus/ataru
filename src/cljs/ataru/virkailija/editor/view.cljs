@@ -41,8 +41,8 @@
    "Uusi lomake"])
 
 (defn- copy-form []
-  (let [form      (subscribe [:editor/selected-form])
-        disabled? (reaction (empty? (:content @form)))]
+  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
+        disabled? (reaction (nil? @form-key))]
     (fn []
       [:a.editor-form__control-button
        {:on-click (fn [event]
@@ -54,9 +54,9 @@
        "Kopioi lomake"])))
 
 (defn- remove-form []
-  (let [form      (subscribe [:editor/selected-form])
+  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
         confirm?  (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
-        disabled? (reaction (empty? (:content @form)))]
+        disabled? (reaction (nil? @form-key))]
     (fn []
       [:a.editor-form__control-button
        {:on-click (fn [event]
