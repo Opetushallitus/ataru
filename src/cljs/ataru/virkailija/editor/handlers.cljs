@@ -201,8 +201,7 @@
     (refresh-forms)
     (-> db
         (update :editor dissoc :forms)
-        (update :editor dissoc :show-remove-confirm-dialog?)
-        (update :editor dissoc :selected-form-key))))
+        (update :editor dissoc :show-remove-confirm-dialog?))))
 
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
@@ -343,7 +342,7 @@
 (defn- remove-form [{:keys [db]} _]
   (let [form-key (get-in db [:editor :selected-form-key])
         form-id  (get-in db [:editor :forms form-key :id])]
-    (-> {:db   (cond-> db
+    (-> {:db   (cond-> (update db :editor dissoc :selected-form-key)
                  (removed-application-review-active? db)
                  (reset-application-review-state))
          :http {:method              :delete
