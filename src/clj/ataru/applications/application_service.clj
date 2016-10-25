@@ -69,5 +69,8 @@
   (java.io.ByteArrayInputStream. (excel/export-all-applications form-key)))
 
 (defn save-application-review [review session organization-service]
-  (aac/check-application-access (:id review) session organization-service)
-  (application-store/save-application-review review))
+  (let [application-id (:application-id review)]
+    (aac/check-application-access application-id session organization-service)
+    (application-store/save-application-review review)
+    {:review (application-store/get-application-review application-id)
+     :events (application-store/get-application-events application-id)}))

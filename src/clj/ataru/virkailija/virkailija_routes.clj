@@ -137,11 +137,10 @@
                             :summary "Update existing application review"
                             :body [review s/Any]
                             (ok
-                             (do (application-service/save-application-review
-                                  review
-                                  session
-                                  organization-service)
-                                 {})))
+                             (application-service/save-application-review
+                                 review
+                                 session
+                                 organization-service)))
 
                    (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]

@@ -68,7 +68,16 @@
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
 (defn save-application-review [review]
-  (exec-db :db yesql-save-application-review! (transform-keys ->snake_case review)))
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [connection      {:connection conn}
+          app-id          (:application-id review)
+          old-review      (first (yesql-get-application-review {:application_id app-id} connection))
+          review-to-store (transform-keys ->snake_case review)]
+      (yesql-save-application-review! review-to-store connection)
+      (when (not= (:state old-review) (:state review-to-store))
+        (yesql-add-application-event!
+         {:application_id app-id :event_type (:state review-to-store)}
+         connection)))))
 
 (s/defn get-applications :- [schema/Application]
   [form-key :- s/Str application-request :- schema/ApplicationRequest]

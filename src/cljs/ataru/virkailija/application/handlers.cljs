@@ -24,6 +24,12 @@
         (assoc-in db [:application :applications] (:applications aplications-response))))
     db))
 
+(reg-event-db
+ :application/review-updated
+ (fn [db [_ response]]
+   (assoc-in db [:application :review] (:review response))
+   (assoc-in db [:application :events] (:events response))))
+
 (defn answers-indexed
   "Convert the rest api version of application to a version which application
   readonly-rendering can use (answers are indexed with key in a map)"
@@ -56,8 +62,8 @@
                                         (ajax/http
                                           :put
                                           "/lomake-editori/api/applications/review"
-                                          nil
-                                          :override-args {:params (select-keys current [:id :notes :state])}))})))
+                                          :application/review-updated
+                                          :override-args {:params (select-keys current [:id :application-id :notes :state])}))})))
 
 (reg-event-db
   :application/fetch-application

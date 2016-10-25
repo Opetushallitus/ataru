@@ -16,7 +16,7 @@ order by a.modified_time desc;
 select event_type, time from application_events where application_id = :application_id;
 
 -- name: yesql-get-application-review
-select id, modified_time, state, notes from application_reviews where application_id = :application_id;
+select id, application_id, modified_time, state, notes from application_reviews where application_id = :application_id;
 
 -- name: yesql-application-query-by-modified
 select a.id, a.key, a.lang, a.form_id as form, a.modified_time, a.content from applications a
