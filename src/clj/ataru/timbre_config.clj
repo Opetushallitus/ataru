@@ -6,7 +6,7 @@
 
 (defn configure-logging! [logname]
   (when-not (env :dev?)
-    (let [path (or (:log-path config) ".")]
+    (let [path (get-in config [:log :base-path])]
       (timbre/merge-config! {:appenders
                              {:rotor (rotor/rotor-appender
                                        {:max-size (* 10 1024 1024)
