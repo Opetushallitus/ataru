@@ -144,7 +144,11 @@
    (s/optional-key :id)            s/Int
    (s/optional-key :modified-time) org.joda.time.DateTime})
 
-(def application-states (s/enum "received" "accepted" "rejected"))
+(def application-states (s/enum "received"
+                                "processing"
+                                "rejected"
+                                "approved"
+                                "canceled"))
 
 (s/defschema Event
   {:event-type  application-states
