@@ -12,7 +12,10 @@
           path     (get-in config [:log log-kwd])
           filename (str (name app-id) ".log")]
       (timbre/merge-config! {:appenders
-                             {:rotor (rotor/rotor-appender
-                                       {:max-size (* 10 1024 1024)
-                                        :backlog  10
-                                        :path     (str path "/" filename)})}}))))
+                             {:println      {:enabled? false}
+                              :standard-out {:enabled? false}
+                              :spit         {:enabled? false}
+                              :rotor        (rotor/rotor-appender
+                                              {:max-size (* 10 1024 1024)
+                                               :backlog  10
+                                               :path     (str path "/" filename)})}}))))
