@@ -64,11 +64,11 @@
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
 (def application-review-states
-  (array-map "received"   "SAAPUNUT"
-             "processing" "KÄSITTELYSSÄ"
-             "rejected"   "HAKIJA HYLÄTTY"
-             "approved"   "HAKIJA VALITTU"
-             "canceled"   "HAKEMUS PERUUTETTU"))
+  (array-map "received"   "Saapunut"
+             "processing" "Käsittelyssä"
+             "rejected"   "Hakija hylätty"
+             "approved"   "Hakija valittu"
+             "canceled"   "Hakemus peruutettu"))
 
 (defn application-list-contents [applications]
   (let [selected-id (subscribe [:state-query [:application :selected-id]])]
@@ -124,10 +124,9 @@
 
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
-        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
-    (case (:event-type event)
-      "received" (to-event-row "Hakemus saapunut")
-      "Tuntematon")))
+        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])
+        event-label  (get application-review-states (:event-type event))]
+    (to-event-row event-label)))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]
