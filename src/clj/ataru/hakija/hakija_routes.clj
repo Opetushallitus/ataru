@@ -36,7 +36,7 @@
 (defn- fetch-form-by-key [key]
   (let [form (form-store/fetch-by-key key)]
     (if (and (some? form)
-             (not ( form)))
+             (not (deleted? form)))
       (-> form
           (koodisto/populate-form-koodisto-fields)
           (response/ok))

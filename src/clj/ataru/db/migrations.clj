@@ -9,7 +9,7 @@
 
 (defn- update-person-info-module
   [new-person-info-module form]
-  (clojure.walk/postwalk
+  (clojure.walk/prewalk
     (fn [expr]
       (match expr
         {:module (:or :person-info "person-info")}

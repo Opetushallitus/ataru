@@ -104,6 +104,25 @@
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
+  (it "fails validation on dropdown answer being empty and required set to true"
+      (should-not
+        (-> (validator/build-results
+              (update
+                answers-by-key
+                :gender
+                assoc
+                :value "")
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "gender"}
+                    (assoc form :validators ["required"])
+                    :else form))
+                (:content f)))
+          :gender
+          :passed?)))
+
   (it "passes validation on repeatable answer being empty"
     (should
       (-> (validator/build-results
