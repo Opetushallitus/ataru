@@ -38,7 +38,7 @@
    {:on-click (fn [evt]
                 (.preventDefault evt)
                 (dispatch [:editor/add-form]))}
-   "Luo uusi lomake"])
+   "Uusi lomake"])
 
 (defn- copy-form []
   (let [form      (subscribe [:editor/selected-form])
@@ -51,7 +51,7 @@
         :class    (if @disabled?
                     "editor-form__control-button--disabled"
                     "editor-form__control-button--enabled")}
-       "Kopioi valittu lomake"])))
+       "Kopioi lomake"])))
 
 (defn- remove-form []
   (let [form      (subscribe [:editor/selected-form])
@@ -70,7 +70,7 @@
                     :else "editor-form__control-button--enabled")}
        (if @confirm?
          "Vahvista poisto"
-         "Poista valittu lomake")])))
+         "Poista lomake")])))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
