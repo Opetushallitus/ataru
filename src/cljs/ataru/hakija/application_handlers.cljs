@@ -37,8 +37,9 @@
 (reg-event-fx
   :application/handle-submit-error
   (fn [cofx [_ response]]
-    {:db (assoc-in (:db cofx) [:application :submit-status] nil)
-     :dispatch-later [:ms 1000 [:application/clear-error]]}))
+    {:db (-> (update (:db cofx) :application dissoc :submit-status)
+             (assoc :error {:message "Tapahtui virhe " :detail response}))
+     :dispatch-later [{:ms 30000 :dispatch [:application/clear-error]}]}))
 
 (reg-event-db
   :application/clear-error
@@ -54,7 +55,7 @@
                 :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
                 :handler       :application/handle-submit-response
                 :error-handler :application/handle-submit-error}
-     :dispatch [:application/clear-error]}))
+     :dispatch  [:application/clear-error]}))
 
 (def ^:private lang-pattern #"/(\w{2})$")
 
