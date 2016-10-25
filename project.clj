@@ -87,7 +87,9 @@
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"
-                                    "resources/public/js/test"]
+                                    "resources/public/js/test"
+                                    "out"
+                                    "node_modules"]
 
   :auto-clean false
 

@@ -68,7 +68,6 @@ nuke-test-db() {
 run-tests() {
     echo "Starting test run"
     ./bin/lein clean
-    rm -rf out # phantom tests fail randomly without this
     npm-dependencies
     test-clojurescript
     nuke-test-db
@@ -83,9 +82,6 @@ run-tests() {
 clean() {
     echo "Cleaning everything"
     ./bin/lein clean
-    rm -rf target
-    rm -rf out
-    rm -rf node_modules
 }
 
 command="$1"
