@@ -63,6 +63,13 @@
          {:href (str "/lomake-editori/api/applications/excel/" @form-key)}
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
+(def application-review-states
+  (array-map :received   "SAAPUNUT"
+             :processing "KÄSITTELYSSÄ"
+             :rejected   "HAKIJA HYLÄTTY"
+             :approved   "HAKIJA VALITTU"
+             :canceled   "HAKEMUS PERUUTETTU"))
+
 (defn application-list-contents [applications]
   (let [selected-id (subscribe [:state-query [:application :selected-id]])]
     (fn [applications]
@@ -94,6 +101,25 @@
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
+(defn review-state-row [current-review-state review-state]
+  (let [review-state-id (first review-state)
+        review-state-label (second review-state)]
+    (if (= (keyword current-review-state) review-state-id)
+      [:div.application-handling__review-state-selected-row
+       [:img.application-handling__review-state-selected-icon
+        {:src "/lomake-editori/images/icon_check.png"}]
+       review-state-label]
+      [:div.application-handling__review-state-row
+       review-state-label])))
+
+(defn application-review-state []
+  (let [review-state (subscribe [:state-query [:application :review :state]])]
+    (fn []
+      (into
+       [:div.application-handling__review-state-container
+        [:div.application-handling__review-header "Tilanne"]]
+       (mapv (partial review-state-row @review-state) application-review-states)))))
+
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
         to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
@@ -107,7 +133,7 @@
       (into
         [:div.application-handling__event-list
          [:div.application-handling__review-header "Tapahtumat"]]
-        (mapv #(event-row %) @events)))))
+        (mapv event-row @events)))))
 
 (defn application-review-notes []
   (let [review (subscribe [:state-query [:application :review]])
@@ -124,6 +150,7 @@
 
 (defn application-review []
   [:div.application-handling__review
+   [application-review-state]
    [application-review-notes]
    [application-review-events]])
 
