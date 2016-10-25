@@ -199,7 +199,9 @@
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms)
-    (update db :editor dissoc :forms)))
+    (-> db
+        (update :editor dissoc :forms)
+        (update :editor dissoc :show-remove-confirm-dialog?))))
 
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
