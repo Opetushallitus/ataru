@@ -103,11 +103,15 @@ function clickInfoTextCheckbox(selector) {
       describe('textfield', function() {
         before(
           clickComponentMenuItem('Tekstikenttä'),
-          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys')
+          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
+          clickElement(function() { return formComponents().eq(0).find('.editor-form__info-component-checkbox label') }),
+          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__info-component-inputs input') }, 'Ensimmäisen kysymyksen ohjeteksti')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(1)
           expect(formComponents().eq(0).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys')
+          expect(formComponents().eq(0).find('.editor-form__info-component-checkbox input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(0).find('.editor-form__info-component-inputs input').val()).to.equal('Ensimmäisen kysymyksen ohjeteksti')
           expect(formComponents().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('M')
           expect(formComponents().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
         })
@@ -132,11 +136,15 @@ function clickInfoTextCheckbox(selector) {
           clickComponentMenuItem('Tekstialue'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__button-group div:eq(2) label')}),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__checkbox-wrapper label')}),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys')
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys'),
+          clickElement(function() { return formComponents().eq(2).find('.editor-form__info-component-checkbox label') }),
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__info-component-inputs input') }, 'Toisen kysymyksen ohjeteksti')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(3)
           expect(formComponents().eq(2).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
+          expect(formComponents().eq(2).find('.editor-form__info-component-checkbox input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(2).find('.editor-form__info-component-inputs input').val()).to.equal('Toisen kysymyksen ohjeteksti')
           expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
           expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
@@ -151,17 +159,21 @@ function clickInfoTextCheckbox(selector) {
           setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Toinen vaihtoehto'),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
           setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
-          clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') })
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__info-component-checkbox label') }),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-component-inputs input') }, 'Kolmannen kysymyksen ohjeteksti')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(4)
           expect(formComponents().eq(3).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
           expect(formComponents().eq(3).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
-          expect(formComponents().eq(3).find('.editor-form__multi-option-wrapper input').length).to.equal(4)
-          var options = _.map(formComponents().eq(3).find('.editor-form__multi-option-wrapper input'), function(inputField) {
+          expect(formComponents().eq(3).find('.editor-form__multi-options-container input').length).to.equal(4)
+          var options = _.map(formComponents().eq(3).find('.editor-form__multi-options-container input'), function(inputField) {
             return $(inputField).val()
           })
           expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])
+          expect(formComponents().eq(3).find('.editor-form__info-component-checkbox input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(3).find('.editor-form__info-component-inputs input').val()).to.equal('Kolmannen kysymyksen ohjeteksti')
         })
       })
 

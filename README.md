@@ -127,6 +127,11 @@ edn-config-files like this:
 :dev {:fake-dependencies true}
 ```
 
+To run browser tests using Chrome, start both virkailija and hakija applications with `CONFIG=config/dev.edn`.
+
+Hakija tests require `formId=$KEY` query parameter for the `hakija-test.html`. Use key of the lastest form created by
+virkailija tests (`select key from forms order by created_time desc limit 1;`).
+
 ### Running integration tests on your browser
 
 * Start the development server

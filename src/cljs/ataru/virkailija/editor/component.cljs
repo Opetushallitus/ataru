@@ -242,6 +242,8 @@
           [:div.editor-form__checkbox-wrapper
            [required-checkbox path initial-content]]]
 
+         [info-component path initial-content]
+
          [:div.editor-form__multi-options_wrapper
           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
           (let [custom-button-value        "Omat vastausvaihtoehdot"
