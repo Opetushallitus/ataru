@@ -4,11 +4,15 @@
             [environ.core :refer [env]]
             [oph.soresu.common.config :refer [config]]))
 
-(defn configure-logging! [logname]
+(defn configure-logging! [app-id]
   (when-not (env :dev?)
-    (let [path (get-in config [:log :base-path])]
+    (let [log-kwd  (case app-id
+                     :virkailija :virkailija-base-path
+                     :hakija     :hakija-base-path)
+          path     (get-in config [:log log-kwd])
+          filename (str (name app-id) ".log")]
       (timbre/merge-config! {:appenders
                              {:rotor (rotor/rotor-appender
                                        {:max-size (* 10 1024 1024)
                                         :backlog  10
-                                        :path     (str path "/logs" logname ".log")})}}))))
+                                        :path     (str path "/" filename)})}}))))
