@@ -1,5 +1,8 @@
 @import "vars";
 
+@editor-control-button-hover-blue: #00B5EF;
+@editor-control-button-confirm-red: #E44E4E;
+
 .main-container {
   padding-top: 100px;
 }
@@ -24,13 +27,31 @@
   font-size: 14px;
 }
 
-.editor-form__form-control-link-separator {
-  color: @gray;
+.editor-form__control-button {
+  align-items: center;
+  border-radius: 2px;
+  color: @white;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  margin-left: 15px;
+  width: 156px;
 }
 
-.editor-form__form-control-link-disabled {
-  color: @gray;
-  cursor: default;
+.editor-form__control-button--enabled {
+  background-color: @pale-blue;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+}
+
+.editor-form__control-button--confirm {
+  background-color: @editor-control-button-confirm-red;
+}
+
+.editor-form__control-button--disabled {
+  background-color: @section-gray-border;
 }
 
 .editor-form__list {
