@@ -86,9 +86,9 @@
             (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
            [:span.application-handling__list-row--time time]
            [:span.application-handling__list-row--state
-            (case (:state application)
-              "received" "Saapunut"
-              "Tuntematon")]])))))
+            (or
+             (get application-review-states (:state application))
+             "Tuntematon")]])))))
 
 (defn application-list [applications]
   [:div
