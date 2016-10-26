@@ -7,8 +7,7 @@
    :fieldType  "textField"
    :label      {:fi "", :sv ""}
    :id         (util/component-id)
-   :params     {}
-   :focus?     true})
+   :params     {}})
 
 (defn text-area []
   (assoc (text-field)
@@ -21,14 +20,12 @@
    :id         (util/component-id)
    :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
    :children   []
-   :params     {}
-   :focus?     true})
+   :params     {}})
 
 (defn dropdown-option
   []
   {:value ""
-   :label {:fi "" :sv ""}
-   :focus? true})
+   :label {:fi "" :sv ""}})
 
 (defn dropdown
   []
@@ -37,8 +34,7 @@
    :id         (util/component-id)
    :label      {:fi "", :sv ""}
    :params     {}
-   :options    [(merge (dropdown-option) {:focus? false})]
-   :focus?     true})
+   :options    [(dropdown-option)]})
 
 (defn multiple-choice
   []
@@ -47,8 +43,7 @@
    :id         (util/component-id)
    :label      {:fi "" :sv ""}
    :params     {}
-   :options    []
-   :focus?     true})
+   :options    []})
 
 (defn row-section
   "Creates a data structure that represents a row that has multiple form

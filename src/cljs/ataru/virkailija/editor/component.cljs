@@ -76,7 +76,7 @@
 
 (defn input-field [path lang dispatch-fn {:keys [class]}]
   (let [component (subscribe [:editor/get-component-value path])
-        focus?    (reaction (:focus? @component))
+        focus?    (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
         value     (reaction (get-in @component [:label lang]))
         languages (subscribe [:editor/languages])]
     (r/create-class
@@ -216,11 +216,11 @@
      (remove-dropdown-option-button path option-index)]))
 
 (defn dropdown [initial-content path]
-  (let [languages        (subscribe [:editor/languages])
-        options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
-        value            (subscribe [:editor/get-component-value path])
-        dropdown-id      (util/new-uuid)
-        animation-effect (fade-out-effect path)
+  (let [languages                  (subscribe [:editor/languages])
+        options-koodisto           (subscribe [:editor/get-component-value path :koodisto-source])
+        value                      (subscribe [:editor/get-component-value path])
+        dropdown-id                (util/new-uuid)
+        animation-effect           (fade-out-effect path)
         koodisto-popover-expanded? (r/atom false)]
     (fn [initial-content path]
       (let [languages  @languages
@@ -292,10 +292,11 @@
                  (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
                           ^{:key (str "koodisto-" uri)}
                           [:li.editor-form__koodisto-popover-list-item
-                           [:a.editor-form__koodisto-popover-link {:on-click (fn [e]
-                                                                               (.preventDefault e)
-                                                                               (reset! koodisto-popover-expanded? false)
-                                                                               (dispatch [:editor/select-koodisto-options uri version title path]))}
+                           [:a.editor-form__koodisto-popover-link
+                            {:on-click (fn [e]
+                                         (.preventDefault e)
+                                         (reset! koodisto-popover-expanded? false)
+                                         (dispatch [:editor/select-koodisto-options uri version title path]))}
                             title]]))]])])
 
           (when (nil? @options-koodisto)
