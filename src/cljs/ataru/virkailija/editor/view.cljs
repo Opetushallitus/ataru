@@ -34,47 +34,49 @@
                 [form-row form selected?]))))))
 
 (defn- add-form []
-  [:span
-   [:a {:on-click (fn [evt]
-                    (.preventDefault evt)
-                    (dispatch [:editor/add-form]))}
-    "Luo uusi lomake"]])
+  [:a.editor-form__control-button.editor-form__control-button--enabled
+   {:on-click (fn [evt]
+                (.preventDefault evt)
+                (dispatch [:editor/add-form]))}
+   "Uusi lomake"])
 
 (defn- copy-form []
-  (let [form (subscribe [:editor/selected-form])]
+  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
+        disabled? (reaction (nil? @form-key))]
     (fn []
-      [:span
-       [:span.editor-form__form-control-link-separator " | "]
-       [:a (cond-> {:on-click (fn [event]
-                                (.preventDefault event)
-                                (dispatch [:editor/copy-form]))}
-             (empty? (:content @form))
-             (assoc :class "editor-form__form-control-link-disabled"))
-        "Kopioi valittu lomake"]])))
+      [:a.editor-form__control-button
+       {:on-click (fn [event]
+                    (.preventDefault event)
+                    (dispatch [:editor/copy-form]))
+        :class    (if @disabled?
+                    "editor-form__control-button--disabled"
+                    "editor-form__control-button--enabled")}
+       "Kopioi lomake"])))
 
 (defn- remove-form []
-  (let [form     (subscribe [:editor/selected-form])
-        confirm? (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])]
+  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
+        confirm?  (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
+        disabled? (reaction (nil? @form-key))]
     (fn []
-      [:span
-       [:span.editor-form__form-control-link-separator " | "]
-       [:a (cond-> {:on-click (fn [event]
-                                (.preventDefault event)
-                                (if @confirm?
-                                  (dispatch [:editor/remove-form])
-                                  (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))}
-             (empty? (:content @form))
-             (assoc :class "editor-form__form-control-link-disabled"))
-        (if @confirm?
-          "Vahvista poisto"
-          "Poista valittu lomake")]])))
+      [:a.editor-form__control-button
+       {:on-click (fn [event]
+                    (.preventDefault event)
+                    (if @confirm?
+                      (dispatch [:editor/remove-form])
+                      (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))
+        :class    (cond
+                    @confirm? "editor-form__control-button--confirm"
+                    @disabled? "editor-form__control-button--disabled"
+                    :else "editor-form__control-button--enabled")}
+       (if @confirm?
+         "Vahvista poisto"
+         "Poista lomake")])))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container
-   [:span
-    [add-form]
-    [copy-form]
-    [remove-form]]])
+   [add-form]
+   [copy-form]
+   [remove-form]])
 
 (defn editor-name []
   (let [form              (subscribe [:editor/selected-form])
