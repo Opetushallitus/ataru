@@ -27,7 +27,6 @@
 (reg-event-db
  :application/review-updated
  (fn [db [_ response]]
-   (assoc-in db [:application :review] (:review response))
    (assoc-in db [:application :events] (:events response))))
 
 (defn answers-indexed
