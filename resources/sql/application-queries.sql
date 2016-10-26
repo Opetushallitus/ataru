@@ -52,7 +52,8 @@ insert into application_reviews (application_id, state) values (:application_id,
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
-update application_reviews set notes = :notes, modified_time = now(), state = :state where id = :id;
+update application_reviews set notes = :notes, modified_time = now(), state = :state
+where application_id = :application_id;
 
 -- name: yesql-add-person-oid!
 -- Add person OID to an application
