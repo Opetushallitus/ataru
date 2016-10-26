@@ -91,8 +91,11 @@
 (reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
-    (let [dropdown-path (current-form-content-path db [path :options])]
-      (update-in db dropdown-path into [(ataru.virkailija.component-data.component/dropdown-option)]))))
+    (let [dropdown-path (current-form-content-path db [path :options])
+          component     (ataru.virkailija.component-data.component/dropdown-option)]
+      (->
+        (update-in db dropdown-path into [component])
+        (assoc-in [:editor :ui (:id component) :focus?] true)))))
 
 (reg-event-db
   :editor/set-dropdown-option-value
@@ -145,12 +148,14 @@
 (defn generate-component
   [db [_ generate-fn path]]
   (with-form-key [db form-key]
-    (let [form-key       (get-in db [:editor :selected-form-key])
-          path-vec      (current-form-content-path db [path])
-          component     (generate-fn)]
-      (if (zero? (last path-vec))
-        (assoc-in db (butlast path-vec) [component])
-        (assoc-in db path-vec component)))))
+    (let [form-key  (get-in db [:editor :selected-form-key])
+          path-vec  (current-form-content-path db [path])
+          component (generate-fn)]
+      (->
+        (if (zero? (last path-vec))
+          (assoc-in db (butlast path-vec) [component])
+          (assoc-in db path-vec component))
+        (assoc-in [:editor :ui (:id component) :focus?] true)))))
 
 (reg-event-db :generate-component generate-component)
 
@@ -252,6 +257,7 @@
 
 (defn- handle-fetch-form [db {:keys [key] :as response} _]
   (-> db
+      (update :editor dissoc :ui)
       (assoc-in [:editor :forms key] (languages->kwd response))
       (assoc-in [:editor :autosave]
         (autosave/interval-loop {:subscribe-path    [:editor :forms key]
@@ -284,22 +290,12 @@
             (update-in [:editor] dissoc :selected-hakukohde)
             (assoc-in [:editor :selected-form-key] form-key))))))
 
-(defn- remove-focus
-  [form]
-  (clojure.walk/prewalk
-    (fn [x]
-      (if (map? x)
-        (dissoc x :focus?)
-        x))
-    form))
-
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
 (defn save-loop [save-chan]
   (go-loop [_ (async/<! save-chan)]
     (let [form (-> @(subscribe [:editor/selected-form])
                    (update-dropdown-field-options)
-                   (remove-focus)
                    (dissoc :created-time))
           response-chan (async/chan)]
       (when (not-empty (:content form))
@@ -361,9 +357,7 @@
 (defn- copy-form [db _]
   (let [form-id (get-in db [:editor :selected-form-key])
         form    (-> (get-in db [:editor :forms form-id])
-                    (update :name (fn [name]
-                                    (str name " - KOPIO")))
-                    (remove-focus))]
+                    (update :name str " - KOPIO"))]
     (post-new-form form)
     db))
 
@@ -473,18 +467,22 @@
 (defn- toggle-language [db [_ lang]]
   (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
         lang-path (conj form-path :languages)]
-    (->> (update-in db lang-path
-           (fn [languages]
-             (let [languages (or languages [:fi])]
-               (cond
-                 (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
-                                                         (conj languages lang))
-                 (> (count languages) 1) (filter (partial not= lang) languages)
-                 :else languages))))
-         (clojure.walk/prewalk
-           (fn [x]
-             (if (= [:focus? true] x)
-               [:focus? false]
-               x))))))
+    (->
+      (update-in db lang-path
+        (fn [languages]
+          (let [languages (or languages [:fi])]
+            (cond
+              (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                               (conj languages lang))
+              (> (count languages) 1)        (filter (partial not= lang) languages)
+              :else                          languages))))
+      (update-in [:editor :ui]
+        (fn [ui]
+          (clojure.walk/prewalk
+            (fn [x]
+              (if (= [:focus? true] x)
+                [:focus? false]
+                x))
+            ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)
