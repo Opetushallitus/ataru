@@ -151,8 +151,9 @@
                                 "canceled"))
 
 (s/defschema Event
-  {:event-type  application-states
-   :time        org.joda.time.DateTime})
+  {:event-type                        s/Str
+   :time                              org.joda.time.DateTime
+   (s/optional-key :new-review-state) application-states})
 
 (s/defschema Review
   {:id                              s/Int

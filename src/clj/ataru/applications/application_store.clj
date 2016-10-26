@@ -25,15 +25,20 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection           {:connection conn}
           answers              (:answers application)
-          application-to-store {:form_id (:form application)
-                                :key (str (java.util.UUID/randomUUID))
-                                :lang (:lang application)
+          application-to-store {:form_id        (:form application)
+                                :key            (str (java.util.UUID/randomUUID))
+                                :lang           (:lang application)
                                 :preferred_name (find-value-from-answers "preferred-name" answers)
-                                :last_name (find-value-from-answers "last-name" answers)
-                                :content {:answers answers}}
+                                :last_name      (find-value-from-answers "last-name" answers)
+                                :content        {:answers answers}}
           app-id               (:id (yesql-add-application-query<! application-to-store connection))]
-      (yesql-add-application-event! {:application_id app-id :event_type "received"} connection)
-      (yesql-add-application-review! {:application_id app-id :state "received"} connection)
+      (yesql-add-application-event! {:application_id   app-id
+                                     :event_type       "review-state-change"
+                                     :new_review_state "received"}
+                                    connection)
+      (yesql-add-application-review! {:application_id app-id
+                                      :state          "received"}
+                                     connection)
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
@@ -76,7 +81,7 @@
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
         (yesql-add-application-event!
-         {:application_id app-id :event_type (:state review-to-store)}
+         {:application_id app-id :event_type "review-state-change" :new_review_state (:state review-to-store)}
          connection)))))
 
 (s/defn get-applications :- [schema/Application]

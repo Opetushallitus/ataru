@@ -125,8 +125,11 @@
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
         to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])
-        event-label  (get application-review-states (:event-type event))]
-    (to-event-row event-label)))
+        event-type   (:event-type event)
+        event-caption (if (= "review-state-change" event-type)
+                        (get application-review-states (:new-review-state event))
+                        "Tuntematon")]
+    (to-event-row event-caption)))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]

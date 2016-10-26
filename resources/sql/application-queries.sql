@@ -13,7 +13,7 @@ join forms f on f.id = a.form_id and f.key = :form_key
 order by a.modified_time desc;
 
 -- name: yesql-get-application-events
-select event_type, time from application_events where application_id = :application_id;
+select event_type, time, new_review_state from application_events where application_id = :application_id;
 
 -- name: yesql-get-application-review
 select id, application_id, modified_time, state, notes from application_reviews where application_id = :application_id;
@@ -44,7 +44,7 @@ and ar.id = :review_id;
 
 -- name: yesql-add-application-event!
 -- Add application event
-insert into application_events (application_id, event_type) values (:application_id, :event_type);
+insert into application_events (application_id, event_type, new_review_state) values (:application_id, :event_type, :new_review_state);
 
 -- name: yesql-add-application-review!
 -- Add application review

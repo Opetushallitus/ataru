@@ -48,9 +48,9 @@
       (and (some? form)
            (deleted? form)) (do (error (str "Form " (:id form) " deleted!"))
                                 (response/bad-request))
-      (not (validator/valid-application? application)) (do
-                                                         (error "Invalid application!")
-                                                         (response/bad-request))
+      ;; (not (validator/valid-application? application)) (do
+      ;;                                                    (error "Invalid application!")
+      ;;                                                    (response/bad-request))
       :else (let [application-id        (application-store/add-new-application application)
                   person-service-job-id (job/start-job hakija-jobs/job-definitions
                                                        (:type person-integration/job-definition)
