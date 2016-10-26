@@ -13,10 +13,10 @@ join forms f on f.id = a.form_id and f.key = :form_key
 order by a.modified_time desc;
 
 -- name: yesql-get-application-events
-select event_type, time, new_review_state from application_events where application_id = :application_id;
+select event_type, time, new_review_state, application_key, id from application_events where application_id = :application_id;
 
 -- name: yesql-get-application-review
-select id, application_id, modified_time, state, notes from application_reviews where application_id = :application_id;
+select id, application_id, modified_time, state, notes, application_key from application_reviews where application_id = :application_id;
 
 -- name: yesql-application-query-by-modified
 select a.id, a.key, a.lang, a.form_id as form, a.modified_time, a.content from applications a
@@ -58,3 +58,23 @@ where application_id = :application_id;
 -- name: yesql-add-person-oid!
 -- Add person OID to an application
 update applications set person_oid = :person_oid where id = :id;
+
+-- name: yesql-get-all-applications
+-- Used by migration version 1.24, should be removed when it is run on production database
+select id,key from applications;
+
+-- name: yesql-set-application-key-to-application-events!
+-- Used by migration version 1.24, should be removed when it is run on production database
+update application_events set application_key = :application_key where id = :id;
+
+-- name: yesql-get-application-confirmation-emails
+-- Used by migration version 1.24, should be removed when it is run on production database
+select id from application_confirmation_emails where application_id = :application_id;
+
+-- name: yesql-set-application-key-to-application-confirmation-emails!
+-- Used by migration version 1.24, should be removed when it is run on production database
+update application_confirmation_emails set application_key = :application_key where id = :id;
+
+-- name: yesql-set-application-key-to-application-review!
+-- Used by migration version 1.24, should be removed when it is run on production database
+update application_reviews set application_key = :application_key where id = :id;

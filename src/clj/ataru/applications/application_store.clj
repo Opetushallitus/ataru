@@ -97,6 +97,38 @@
                    (dissoc (transform-keys ->snake_case request)
                            :sort)))))
 
+(defn get-all-applications
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  []
+  (mapv (partial transform-keys ->kebab-case-keyword)
+        (exec-db :db yesql-get-all-applications {})))
+
+(defn set-application-key-to-application-review
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [review-id key]
+  (exec-db :db yesql-set-application-key-to-application-review! {:application_key key :id review-id}))
+
+(defn set-application-key-to-application-event
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [event-id key]
+  (exec-db :db yesql-set-application-key-to-application-events! {:application_key key :id event-id}))
+
+(defn get-application-confirmation-emails
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [application-id]
+  (mapv (partial transform-keys ->kebab-case-keyword)
+        (exec-db :db yesql-get-application-confirmation-emails {:application_id application-id})))
+
+(defn set-application-key-to-application-confirmation-email
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [confirmation-id key]
+  (exec-db :db yesql-set-application-key-to-application-confirmation-emails! {:application_key key :id confirmation-id}))
+
 (defn add-person-oid
   "Add person OID to an application"
   [application-id person-oid]

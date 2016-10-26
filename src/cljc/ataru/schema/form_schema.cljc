@@ -153,11 +153,14 @@
 (s/defschema Event
   {:event-type                        s/Str
    :time                              org.joda.time.DateTime
+   :id                                s/Int
+   :application-key                   s/Str
    (s/optional-key :new-review-state) application-states})
 
 (s/defschema Review
   {:id                              s/Int
    :application-id                  s/Int
+   :application-key                 s/Str
    (s/optional-key :modified-time)  org.joda.time.DateTime
    :state                           application-states
    :notes                           (s/maybe s/Str)})
