@@ -66,9 +66,9 @@
 (def application-review-states
   (array-map "received"   "Saapunut"
              "processing" "Käsittelyssä"
-             "rejected"   "Hakija hylätty"
-             "approved"   "Hakija valittu"
-             "canceled"   "Hakemus peruutettu"))
+             "rejected"   "Hylätty"
+             "approved"   "Valittu"
+             "canceled"   "Peruutettu"))
 
 (defn application-list-contents [applications]
   (let [selected-id (subscribe [:state-query [:application :selected-id]])]
@@ -105,7 +105,7 @@
   (let [review-state-id (first review-state)
         review-state-label (second review-state)]
     (if (= current-review-state review-state-id)
-      [:div.application-handling__review-state-selected-row
+      [:div.application-handling__review-state-row.application-handling__review-state-selected-row
        [:img.application-handling__review-state-selected-icon
         {:src "/lomake-editori/images/icon_check.png"}]
        review-state-label]
