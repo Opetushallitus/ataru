@@ -303,15 +303,9 @@
             (seq [
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
-                   (let [options (:options @value)]
-                     (->> options
-                          (map-indexed (fn [idx option]
-                                         (when-not (and (= "dropdown" field-type)
-                                                        (clojure.string/blank? (:value option))
-                                                        (= idx 0)
-                                                        (> (count options) 1))
-                                           (dropdown-option idx path languages))))
-                          (remove nil?)))]
+                   (map-indexed (fn [idx option]
+                                  (dropdown-option idx path languages))
+                     (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
                    [:a
