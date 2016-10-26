@@ -86,6 +86,13 @@
                  {:params {:placeholder {:fi "pp.kk.vvvv"}}})
      (gender-section)]))
 
+(defn- ssn-birthdate-gender-wrapper []
+  (assoc
+    (component/row-section
+      [(ssn-component)
+       (birthdate-and-gender-component)])
+    :child-validator :one-of))
+
 (defn ^:private email-component
   []
   (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:email]))
@@ -145,8 +152,7 @@
                                                 (last-name-component)
                                                 (nationality-component)
                                                 (have-finnish-ssn-component)
-                                                (ssn-component)
-                                                (birthdate-and-gender-component)
+                                                (ssn-birthdate-gender-wrapper)
                                                 (email-component)
                                                 (phone-component)
                                                 (street-address-component)

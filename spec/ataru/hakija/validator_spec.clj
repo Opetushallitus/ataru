@@ -16,20 +16,20 @@
   (tags :unit)
   (it "fails answers with extraneous keys"
     (should= false
-      (validator/valid-application? extra-answers f))
+      (:passed? (validator/valid-application? extra-answers f)))
     (should= #{:foo}
       (validator/extra-answers-not-in-original-form
         (map (comp keyword :id) (util/flatten-form-fields (:content f)))
         (keys (util/answers-by-key (:answers extra-answers))))))
   (it "fails answers with missing answers"
     (should= false
-      (validator/valid-application? (assoc a :answers []) f))
+      (:passed? (validator/valid-application? (assoc a :answers []) f)))
     (should= false
-      (validator/valid-application? (update a :answers rest) f)))
+      (:passed? (validator/valid-application? (update a :answers rest) f))))
 
   (it "passes validation"
     (should= true
-      (validator/valid-application? a f))
+      (:passed? (validator/valid-application? a f)))
     (should=
       {:address                              {:passed? true}
        :email                                {:passed? true}
@@ -66,6 +66,25 @@
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
           :passed?)))
 
+  (it "passes validation on dropdown answer being empty"
+      (should
+        (-> (validator/build-results
+              (update
+                answers-by-key
+                :gender
+                assoc
+                :value "")
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "gender"}
+                    (dissoc form :validators)
+                    :else form))
+                (:content f)))
+            :gender
+            :passed?)))
+
   (it "fails validation on multipleChoice answer being empty and required set to true"
     (should-not
       (-> (validator/build-results
@@ -83,6 +102,25 @@
                   :else form))
               (:content f)))
           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+          :passed?)))
+
+  (it "fails validation on dropdown answer being empty and required set to true"
+      (should-not
+        (-> (validator/build-results
+              (update
+                answers-by-key
+                :gender
+                assoc
+                :value "")
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "gender"}
+                    (assoc form :validators ["required"])
+                    :else form))
+                (:content f)))
+          :gender
           :passed?)))
 
   (it "passes validation on repeatable answer being empty"

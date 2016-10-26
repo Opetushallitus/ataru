@@ -38,7 +38,10 @@
               field-map (get flat-form-map (name ans-key))
               field-type (:fieldType field-map)
               label (:label field-map)]
-        :when (and (not-empty value) (not (:exclude-from-answers field-map)))]
+        :when (or
+                ; permit empty dropdown values, because server side validation expects to match form fields to answers
+                (and (empty? value) (= "dropdown" field-type))
+                (and (not-empty value) (not (:exclude-from-answers field-map))))]
     {:key (name ans-key) :value value :fieldType field-type :label label}))
 
 (defn create-application-to-submit [application form lang]

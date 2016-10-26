@@ -1,5 +1,5 @@
 (ns ataru.virkailija.virkailija-ajax
-  (:require [re-frame.core :refer [register-handler dispatch]]
+  (:require [re-frame.core :refer [dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.temporal :as temporal]
             [ajax.core :refer [GET POST PUT DELETE]]
