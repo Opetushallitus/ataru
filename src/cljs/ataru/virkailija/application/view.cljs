@@ -63,6 +63,13 @@
          {:href (str "/lomake-editori/api/applications/excel/" @form-key)}
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
+(def application-review-states
+  (array-map "received"   "Saapunut"
+             "processing" "Käsittelyssä"
+             "rejected"   "Hylätty"
+             "approved"   "Valittu"
+             "canceled"   "Peruutettu"))
+
 (defn application-list-contents [applications]
   (let [selected-id (subscribe [:state-query [:application :selected-id]])]
     (fn [applications]
@@ -79,9 +86,9 @@
             (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
            [:span.application-handling__list-row--time time]
            [:span.application-handling__list-row--state
-            (case (:state application)
-              "received" "Saapunut"
-              "Tuntematon")]])))))
+            (or
+             (get application-review-states (:state application))
+             "Tuntematon")]])))))
 
 (defn application-list [applications]
   [:div
@@ -94,12 +101,35 @@
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
+(defn review-state-row [current-review-state review-state]
+  (let [review-state-id (first review-state)
+        review-state-label (second review-state)]
+    (if (= current-review-state review-state-id)
+      [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+       [:img.application-handling__review-state-selected-icon
+        {:src "/lomake-editori/images/icon_check.png"}]
+       review-state-label]
+      [:div.application-handling__review-state-row
+       {:on-click (fn [evt]
+                    (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :state review-state-id))]))}
+       review-state-label])))
+
+(defn application-review-state []
+  (let [review-state (subscribe [:state-query [:application :review :state]])]
+    (fn []
+      (into
+       [:div.application-handling__review-state-container
+        [:div.application-handling__review-header "Tilanne"]]
+       (mapv (partial review-state-row @review-state) application-review-states)))))
+
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
-        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])]
-    (case (:event-type event)
-      "received" (to-event-row "Hakemus saapunut")
-      "Tuntematon")))
+        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])
+        event-type   (:event-type event)
+        event-caption (if (= "review-state-change" event-type)
+                        (get application-review-states (:new-review-state event))
+                        "Tuntematon")]
+    (to-event-row event-caption)))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]
@@ -107,7 +137,7 @@
       (into
         [:div.application-handling__event-list
          [:div.application-handling__review-header "Tapahtumat"]]
-        (mapv #(event-row %) @events)))))
+        (mapv event-row @events)))))
 
 (defn application-review-notes []
   (let [review (subscribe [:state-query [:application :review]])
@@ -124,6 +154,7 @@
 
 (defn application-review []
   [:div.application-handling__review
+   [application-review-state]
    [application-review-notes]
    [application-review-events]])
 

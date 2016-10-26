@@ -135,13 +135,14 @@
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
-                            :body [review s/Any]
+                            :body [review ataru-schema/Review]
+                            :return {:review ataru-schema/Review
+                                     :events [ataru-schema/Event]}
                             (ok
-                             (do (application-service/save-application-review
-                                  review
-                                  session
-                                  organization-service)
-                                 {})))
+                             (application-service/save-application-review
+                                 review
+                                 session
+                                 organization-service)))
 
                    (api/GET "/excel/:form-key" {session :session}
                      :path-params [form-key :- s/Str]

@@ -13,10 +13,10 @@ join forms f on f.id = a.form_id and f.key = :form_key
 order by a.modified_time desc;
 
 -- name: yesql-get-application-events
-select event_type, time from application_events where application_id = :application_id;
+select event_type, time, new_review_state from application_events where application_id = :application_id;
 
 -- name: yesql-get-application-review
-select id, modified_time, state, notes from application_reviews where application_id = :application_id;
+select id, application_id, modified_time, state, notes from application_reviews where application_id = :application_id;
 
 -- name: yesql-application-query-by-modified
 select a.id, a.key, a.lang, a.form_id as form, a.modified_time, a.content from applications a
@@ -44,7 +44,7 @@ and ar.id = :review_id;
 
 -- name: yesql-add-application-event!
 -- Add application event
-insert into application_events (application_id, event_type) values (:application_id, :event_type);
+insert into application_events (application_id, event_type, new_review_state) values (:application_id, :event_type, :new_review_state);
 
 -- name: yesql-add-application-review!
 -- Add application review
@@ -52,7 +52,8 @@ insert into application_reviews (application_id, state) values (:application_id,
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
-update application_reviews set notes = :notes, modified_time = now() where id = :id;
+update application_reviews set notes = :notes, modified_time = now(), state = :state
+where application_id = :application_id;
 
 -- name: yesql-add-person-oid!
 -- Add person OID to an application

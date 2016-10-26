@@ -2,6 +2,7 @@
 @bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
+@blue-border-color: #06526B; 
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -172,6 +173,37 @@ and (max-width: 1000px) {
   margin-bottom: 16px;
 }
 
+.application-handling__review-state-container {
+  margin-bottom: 20px;
+}
+
+.application-handling__review-state-row {
+  position: relative;
+  color: @gray;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 20px;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.application-handling__review-state-row.application-handling__review-state-selected-row {
+  color: @text-color;
+  border: solid 1px @blue-border-color;
+  border-radius: 2px;
+  margin-left: 0;
+  padding-left: 3px;
+  width: 220px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.application-handling__review-state-selected-icon {
+  margin-left: 2px;
+  margin-right: 5px;
+}
+
 .application-handling__event-list {
   border-top: solid @review-separator-color 1px;
   padding-top: 9px;
@@ -185,7 +217,7 @@ and (max-width: 1000px) {
 .application-handling__review-notes {
   width: 100%;
   height: 323px;
-  border: solid 1px #06526B;
+  border: solid 1px @blue-border-color;
   margin-bottom: 30px;
   border-radius: 2px;
   font-size: 16px;
@@ -228,7 +260,7 @@ and (max-width: 1000px) {
 }
 
 .application__form-field-list {
-  list-style-type: none; 
+  list-style-type: none;
   margin: 0;
   padding: 0;
 }
