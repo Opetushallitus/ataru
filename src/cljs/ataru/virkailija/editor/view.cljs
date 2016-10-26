@@ -78,6 +78,11 @@
    [copy-form]
    [remove-form]])
 
+(defn- form-header-row []
+  [:div.editor-form__form-header-row
+   [:h1.editor-form__form-heading "Lomakkeet"]
+   [form-controls]])
+
 (defn editor-name []
   (let [form              (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
@@ -173,6 +178,6 @@
 (defn editor []
     [:div
      [:div.editor-form__container.panel-content
-      [form-controls]
+      [form-header-row]
       [form-list]]
      [editor-panel]])

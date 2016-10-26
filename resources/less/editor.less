@@ -8,6 +8,7 @@
 }
 
 .editor-form__container {
+  padding: 14px 85px 15px 85px;
   background-color: @very-light-gray;
   border-bottom: 1px solid #E6E6E6;
   ::-webkit-scrollbar {
@@ -23,8 +24,25 @@
 .editor-form__form-controls-container {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   font-size: 14px;
+}
+
+.editor-form__form-header-row {
+  border-bottom: solid 1px #e6e6e6;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  align-items: flex-end;
+}
+
+.editor-form__form-heading {
+    margin: 0;
+    font-size: 24px;
+    font-family: @paragraph-font;
+    color: @text-color;
+    font-weight: 600;
+    margin-bottom: 14px;
 }
 
 .editor-form__control-button {

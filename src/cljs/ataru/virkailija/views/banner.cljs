@@ -16,7 +16,7 @@
            :height "40px"}]])
 
 (def panels
-  {:editor      {:text "Lomake-editori" :href #(str "/lomake-editori/editor/" %)}
+  {:editor      {:text "Lomakkeet" :href #(str "/lomake-editori/editor/" %)}
    :application {:text "Hakemukset" :href #(str "/lomake-editori/applications/" %)}})
 
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
