@@ -135,7 +135,7 @@
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
-                            :body [review s/Any]
+                            :body [review ataru-schema/Review]
                             (ok
                              (application-service/save-application-review
                                  review
