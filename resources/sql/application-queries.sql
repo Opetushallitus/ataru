@@ -44,11 +44,11 @@ and ar.id = :review_id;
 
 -- name: yesql-add-application-event!
 -- Add application event
-insert into application_events (application_id, event_type, new_review_state) values (:application_id, :event_type, :new_review_state);
+insert into application_events (application_id, application_key, event_type, new_review_state) values (:application_id, :application_key, :event_type, :new_review_state);
 
 -- name: yesql-add-application-review!
 -- Add application review
-insert into application_reviews (application_id, state) values (:application_id, :state);
+insert into application_reviews (application_id, application_key, state) values (:application_id, :application_key, :state);
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
