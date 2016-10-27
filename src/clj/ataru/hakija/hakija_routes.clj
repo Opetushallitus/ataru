@@ -48,9 +48,7 @@
 
 (defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
   (let [result         (tarjonta-client/get-hakukohde hakukohde-oid)
-        ; TODO REMOVE MOCK
-        ;form-key       (:ataruLomakeAvain result)
-        form-key       "e3d634be-2808-49ed-824c-c4aa3e340fa9"
+        form-key       (:ataruLomakeAvain result)
         form           (when form-key (fetch-form-by-key form-key))]
     (if form
       (response/ok

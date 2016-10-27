@@ -17,6 +17,4 @@
 
 (defn get-form-key-for-hakukohde [hakukohde-oid]
   (when-let [hakukohde (get-hakukohde hakukohde-oid)]
-    "e3d634be-2808-49ed-824c-c4aa3e340fa9"
-    ;(:ataruLomakeAvain hakukohde) TODO fix mock
-    ))
+    (:ataruLomakeAvain hakukohde)))
