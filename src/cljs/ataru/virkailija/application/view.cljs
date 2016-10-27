@@ -76,7 +76,7 @@
       (into [:div.application-handling__list]
         (for [application applications
               :let        [id       (:id application)
-                           time      (t/time->str (:modified-time application))
+                           time      (t/time->str (:created-time application))
                            applicant (:applicant-name application)]]
           [:div.application-handling__list-row
            {:on-click #(dispatch [:application/select-application (:id application)])

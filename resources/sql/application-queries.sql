@@ -6,11 +6,11 @@ insert into applications (form_id, key, content, lang, preferred_name, last_name
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.modified_time, coalesce(ar.state, 'received') as state
+  a.created_time, coalesce(ar.state, 'received') as state
 from applications a
 left outer join application_reviews ar on a.id = ar.application_id
 join forms f on f.id = a.form_id and f.key = :form_key
-order by a.modified_time desc;
+order by a.created_time desc;
 
 -- name: yesql-get-application-events
 select event_type, time, new_review_state, application_key, id from application_events where application_id = :application_id;
@@ -19,12 +19,12 @@ select event_type, time, new_review_state, application_key, id from application_
 select id, application_id, modified_time, state, notes, application_key from application_reviews where application_id = :application_id;
 
 -- name: yesql-application-query-by-modified
-select a.id, a.key, a.lang, a.form_id as form, a.modified_time, a.content from applications a
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
 join forms f on f.id = a.form_id and f.key = :form_key
-order by a.modified_time desc;
+order by a.created_time desc;
 
 -- name: yesql-get-application-by-id
-select id, key, lang, form_id as form, modified_time, content from applications where id = :application_id;
+select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
 
 -- name: yesql-get-application-organization-by-id
 -- Get the related form's organization oid for access checks
