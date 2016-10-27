@@ -67,7 +67,7 @@
   (array-map "received"   "Saapunut"
              "processing" "Käsittelyssä"
              "rejected"   "Hylätty"
-             "approved"   "Valittu"
+             "approved"   "Hyväksytty"
              "canceled"   "Peruutettu"))
 
 (defn application-list-contents [applications]
