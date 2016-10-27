@@ -222,54 +222,55 @@
         koodisto-button-value      (str "Koodisto" (if-let [koodisto-name (:title options-koodisto)] (str ": " koodisto-name) ""))
         koodisto-button-id         (str dropdown-id "-koodisto")
         koodisto-popover-expanded? (r/atom false)]
-    [:div.editor-form__button-group
-     [:input
-      {:type      "radio"
-       :class     "editor-form__button editor-form__button--large"
-       :value     custom-button-value
-       :checked   (nil? options-koodisto)
-       :name      dropdown-id
-       :id        custom-button-id
-       :on-change (fn [evt]
-                    (.preventDefault evt)
-                    (reset! koodisto-popover-expanded? false)
-                    (dispatch [:editor/select-custom-multi-options path]))}]
-     [:label
-      {:for   custom-button-id
-       :class "editor-form-button--left-edge"}
-      custom-button-value]
-     [:input
-      {:type      "radio"
-       :class     "editor-form__button editor-form__button--large"
-       :value     koodisto-button-value
-       :checked   (not (nil? options-koodisto))
-       :name      dropdown-id
-       :id        koodisto-button-id
-       :on-change (fn [evt]
-                    (.preventDefault evt)
-                    (reset! koodisto-popover-expanded? true))}]
-     [:label
-      {:for   koodisto-button-id
-       :class "editor-form-button--right-edge"}
-      koodisto-button-value]
-     (when @koodisto-popover-expanded?
-       [:div.editor-form__koodisto-popover
-        [:div.editor-form__koodisto-popover-header "Koodisto"
-         [:a.editor-form__koodisto-popover-close
-          {:on-click (fn [e]
-                       (.preventDefault e)
-                       (reset! koodisto-popover-expanded? false))}
-          [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-        [:ul.editor-form__koodisto-popover-list
-         (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
-                  ^{:key (str "koodisto-" uri)}
-                  [:li.editor-form__koodisto-popover-list-item
-                   [:a.editor-form__koodisto-popover-link
-                    {:on-click (fn [e]
-                                 (.preventDefault e)
-                                 (reset! koodisto-popover-expanded? false)
-                                 (dispatch [:editor/select-koodisto-options uri version title path]))}
-                    title]]))]])]))
+    (fn [path options-koodisto]
+      [:div.editor-form__button-group
+       [:input
+        {:type      "radio"
+         :class     "editor-form__button editor-form__button--large"
+         :value     custom-button-value
+         :checked   (nil? options-koodisto)
+         :name      dropdown-id
+         :id        custom-button-id
+         :on-change (fn [evt]
+                      (.preventDefault evt)
+                      (reset! koodisto-popover-expanded? false)
+                      (dispatch [:editor/select-custom-multi-options path]))}]
+       [:label
+        {:for   custom-button-id
+         :class "editor-form-button--left-edge"}
+        custom-button-value]
+       [:input
+        {:type      "radio"
+         :class     "editor-form__button editor-form__button--large"
+         :value     koodisto-button-value
+         :checked   (not (nil? options-koodisto))
+         :name      dropdown-id
+         :id        koodisto-button-id
+         :on-change (fn [evt]
+                      (.preventDefault evt)
+                      (reset! koodisto-popover-expanded? true))}]
+       [:label
+        {:for   koodisto-button-id
+         :class "editor-form-button--right-edge"}
+        koodisto-button-value]
+       (when @koodisto-popover-expanded?
+         [:div.editor-form__koodisto-popover
+          [:div.editor-form__koodisto-popover-header "Koodisto"
+           [:a.editor-form__koodisto-popover-close
+            {:on-click (fn [e]
+                         (.preventDefault e)
+                         (reset! koodisto-popover-expanded? false))}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+          [:ul.editor-form__koodisto-popover-list
+           (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+                    ^{:key (str "koodisto-" uri)}
+                    [:li.editor-form__koodisto-popover-list-item
+                     [:a.editor-form__koodisto-popover-link
+                      {:on-click (fn [e]
+                                   (.preventDefault e)
+                                   (reset! koodisto-popover-expanded? false)
+                                   (dispatch [:editor/select-koodisto-options uri version title path]))}
+                      title]]))]])])))
 
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
@@ -306,7 +307,7 @@
             (seq [
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
-                   (map-indexed (fn [idx option]
+                   (map-indexed (fn [idx _]
                                   (dropdown-option idx path languages))
                      (:options @value))]
                   ^{:key "options-input-add"}

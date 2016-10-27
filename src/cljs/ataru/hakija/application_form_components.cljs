@@ -234,13 +234,21 @@
                                   [:select.application__form-select
                                    {:value value
                                     :on-change (partial textual-field-change field-descriptor)}
-                                   (map-indexed (fn [idx option]
-                                                  (let [label (non-blank-val (get-in option [:label lang])
-                                                                             (get-in option [:label default-lang]))
-                                                        value (:value option)]
-                                                    ^{:key idx}
-                                                    [:option {:value value} label]))
-                                                (:options field-descriptor))]]]))})))
+                                   (concat
+                                     (when
+                                       (and
+                                         (nil? (:koodisto-source field-descriptor))
+                                         (not (:no-blank-option field-descriptor))
+                                         (not= "" (:value (first (:options field-descriptor)))))
+                                       [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+                                     (map-indexed
+                                       (fn [idx option]
+                                         (let [label (non-blank-val (get-in option [:label lang])
+                                                       (get-in option [:label default-lang]))
+                                               value (:value option)]
+                                           ^{:key idx}
+                                           [:option {:value value} label]))
+                                       (:options field-descriptor)))]]]))})))
 
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))
@@ -296,7 +304,6 @@
                         :children   children} [row-wrapper children]
                        {:fieldClass "formField"
                         :id         (_ :guard (complement visible?))} [:div]
-
                        {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
