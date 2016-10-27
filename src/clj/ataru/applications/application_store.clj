@@ -16,6 +16,8 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
+(def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
+
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
@@ -44,7 +46,7 @@
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
-  (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
+  (assoc (->kebab-case-kw (dissoc application :content))
          :answers
          (mapv (fn [answer]
                  (update answer :label (fn [label]
@@ -57,16 +59,16 @@
 (defn get-application-list
   "Only list with header-level info, not answers"
   [form-key]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_key form-key})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list {:form_key form-key})))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
 (defn get-application-events [application-id]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-events {:application_id application-id})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_id application-id})))
 
 (defn get-application-review [application-id]
-  (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
+  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
 
 (defn get-application-organization-oid [application-id]
   (:organization_oid (first (exec-db :db yesql-get-application-organization-by-id {:application_id application-id}))))
