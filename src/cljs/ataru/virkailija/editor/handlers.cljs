@@ -48,34 +48,6 @@
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
 
-(defn- remove-empty-options
-  [options]
-  (vec (remove #(clojure.string/blank? (:value %)) options)))
-
-(defn- add-empty-option
-  [options]
-  (into [(component/dropdown-option)] options))
-
-(defn- update-options-in-dropdown-field
-  [dropdown-field no-blank-option?]
-  (if (:koodisto-source dropdown-field)
-    (assoc dropdown-field :options [{:value "" :label {:fi ""}}])
-    (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
-          updated-options (-> (:options dropdown-field)
-                              (remove-empty-options)
-                              (add-blank-fn))]
-      (merge dropdown-field {:options updated-options}))))
-
-(defn- update-dropdown-field-options
-  [form]
-  (let [new-content
-        (walk/prewalk
-          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
-             (update-options-in-dropdown-field % (:no-blank-option %))
-             %)
-          (:content form))]
-    (merge form {:content new-content})))
-
 (reg-event-db
   :editor/remove-dropdown-option
   (fn [db [_ & path]]
@@ -217,14 +189,8 @@
     (not=
       ; :id changes when new version is created,
       ; :key remains the same across versions
-      (-> prev
-        ; prevent autosave when adding blank dropdown option
-        (update-dropdown-field-options)
-        (dissoc :created-time :id))
-      (-> current
-        ; prevent autosave when adding blank dropdown option
-        (update-dropdown-field-options)
-        (dissoc :created-time :id)))))
+      (dissoc prev :created-time :id)
+      (dissoc current :created-time :id))))
 
 (defn- handle-fetch-form [db {:keys [key] :as response} _]
   (-> db
@@ -257,7 +223,6 @@
 (defn save-loop [save-chan]
   (go-loop [_ (async/<! save-chan)]
     (let [form (-> @(subscribe [:editor/selected-form])
-                   (update-dropdown-field-options)
                    (dissoc :created-time))
           response-chan (async/chan)]
       (when (not-empty (:content form))
