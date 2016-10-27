@@ -7,12 +7,17 @@
 
 (reg-event-fx
   :application/select-application
-  (fn [{:keys [db]} [_ application-id]]
-    (if (not= application-id (get-in db [:application :selected-id]))
+  (fn [{:keys [db]} [_ application-key]]
+    (if (not= application-key (get-in db [:application :selected-key]))
       (-> {:db db}
-          (assoc-in [:db :application :selected-id] application-id)
+          (assoc-in [:db :application :selected-key] application-key)
           (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc :dispatch [:application/fetch-application application-id])))))
+          (assoc :dispatch [:application/fetch-application application-key])))))
+
+(defn- before?
+  "Check if application2 is created before application1."
+  [application1 application2]
+  true)
 
 (reg-event-db
   :application/fetch-applications
@@ -20,8 +25,20 @@
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?formKey=" form-key)
-      (fn [db aplications-response]
-        (assoc-in db [:application :applications] (:applications aplications-response))))
+      (fn [db applications-response]
+        (println (str "app response: " applications-response))
+        (let [applications (->> (:applications applications-response)
+                                (reduce
+                                  (fn [applications a1]
+                                    (let [key (:key a1)
+                                          a2  (get applications key)]
+                                      (if (or (nil? a2)
+                                              (before? a1 a2))
+                                        (assoc applications key a1)
+                                        applications)))
+                                  {})
+                                (vals))]
+          (assoc-in db [:application :applications] applications))))
     db))
 
 (reg-event-db

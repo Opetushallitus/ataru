@@ -13,10 +13,10 @@ join forms f on f.id = a.form_id and f.key = :form_key
 order by a.created_time desc;
 
 -- name: yesql-get-application-events
-select event_type, time, new_review_state, application_key, id from application_events where application_id = :application_id;
+select event_type, time, new_review_state, application_key, id from application_events where application_key = :application_key;
 
 -- name: yesql-get-application-review
-select id, application_id, modified_time, state, notes, application_key from application_reviews where application_id = :application_id;
+select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
 
 -- name: yesql-application-query-by-modified
 select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
@@ -26,12 +26,21 @@ order by a.created_time desc;
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
 
--- name: yesql-get-application-organization-by-id
+-- name: yesql-get-latest-application-by-key
+with latest_version as (
+    select max(created_time) as latest_time from applications a where a.key = :application_key
+)
+select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+
+-- name: yesql-get-application-organization-by-key
 -- Get the related form's organization oid for access checks
 
+with latest_version as (
+    select max(created_time) as latest_time from applications a where a.key = :application_key
+)
 select f.organization_oid from applications a
-join forms f on f.id = a.form_id
-and a.id = :application_id;
+join latest_version lv on a.created_time = lv.latest_time
+join forms f on f.id = a.form_id;
 
 -- name: yesql-get-application-review-organization-by-id
 -- Get the related form's organization oid for access checks
@@ -69,7 +78,7 @@ update application_events set application_key = :application_key where id = :id;
 
 -- name: yesql-get-application-confirmation-emails
 -- Used by migration version 1.24, should be removed when it is run on production database
-select id from application_confirmation_emails where application_id = :application_id;
+select id from application_confirmation_emails where application_key = :application_key;
 
 -- name: yesql-set-application-key-to-application-confirmation-emails!
 -- Used by migration version 1.24, should be removed when it is run on production database

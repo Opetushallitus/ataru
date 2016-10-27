@@ -33,17 +33,16 @@
   []
   (let [applications (app-store/get-all-applications)]
     (doseq [application applications
-            :let [application-id  (:id application)
-                  application-key (:key application)]]
-      (doseq [application-event (app-store/get-application-events application-id)
+            :let [application-key (:key application)]]
+      (doseq [application-event (app-store/get-application-events application-key)
               :when (nil? (:application-key application-event))
               :let [event-id (:id application-event)]]
         (app-store/set-application-key-to-application-event event-id application-key))
-      (doseq [confirmation-email (app-store/get-application-confirmation-emails application-id)
+      (doseq [confirmation-email (app-store/get-application-confirmation-emails application-key)
               :when (nil? (:application-key confirmation-email))
               :let [confirmation-id (:id confirmation-email)]]
         (app-store/set-application-key-to-application-confirmation-email confirmation-id application-key))
-      (let [application-review (app-store/get-application-review application-id)]
+      (let [application-review (app-store/get-application-review application-key)]
         (when (nil? (:application-key application-review))
           (let [review-id (:id application-review)]
             (app-store/set-application-key-to-application-review review-id application-key)))))))

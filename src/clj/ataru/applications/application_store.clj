@@ -64,14 +64,17 @@
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
-(defn get-application-events [application-id]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-events {:application_id application-id})))
+(defn get-latest-application-by-key [application-key]
+  (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
-(defn get-application-review [application-id]
-  (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
+(defn get-application-events [application-key]
+  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-events {:application_key application-key})))
 
-(defn get-application-organization-oid [application-id]
-  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-id {:application_id application-id}))))
+(defn get-application-review [application-key]
+  (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+
+(defn get-application-organization-oid [application-key]
+  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
 
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
@@ -81,7 +84,7 @@
     (let [connection      {:connection conn}
           app-id          (:application-id review)
           app-key         (:application-key review)
-          old-review      (first (yesql-get-application-review {:application_id app-id} connection))
+          old-review      (first (yesql-get-application-review {:application_key app-key} connection))
           review-to-store (transform-keys ->snake_case review)]
       (println (str "saving application review: " review-to-store))
       (yesql-save-application-review! review-to-store connection)
@@ -128,9 +131,9 @@
 (defn get-application-confirmation-emails
   "Used by migration version 1.24 and should be removed after
    the migration has been run on production database."
-  [application-id]
+  [application-key]
   (mapv (partial transform-keys ->kebab-case-keyword)
-        (exec-db :db yesql-get-application-confirmation-emails {:application_id application-id})))
+        (exec-db :db yesql-get-application-confirmation-emails {:application_key application-key})))
 
 (defn set-application-key-to-application-confirmation-email
   "Used by migration version 1.24 and should be removed after
