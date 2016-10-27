@@ -203,6 +203,16 @@
         (update :editor dissoc :forms)
         (update :editor dissoc :show-remove-confirm-dialog?))))
 
+(reg-event-db
+  :editor/refresh-hakukohteet-from-applications
+  (fn [db _]
+    (http
+      :get
+      "/lomake-editori/api/hakukohteet"
+      (fn [db hakukohteet]
+        (assoc-in db [:editor :hakukohteet] hakukohteet)))
+    db))
+
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
@@ -236,6 +246,13 @@
         handle-fetch-form))
 
 (reg-event-db
+  :editor/select-hakukohde
+  (fn [db [_ hakukohde]]
+    (-> db
+        (update-in [:editor] dissoc :selected-form-key)
+        (assoc-in [:editor :selected-hakukohde] hakukohde))))
+
+(reg-event-db
   :editor/select-form
   (fn [db [_ form-key]]
     (with-form-key [db previous-form-key]
@@ -244,7 +261,9 @@
           (autosave/stop-autosave! (-> db :editor :autosave)))
         (when-let [id (get-in db [:editor :forms form-key :id])]
           (fetch-form-content! id))
-        (assoc-in db [:editor :selected-form-key] form-key)))))
+        (-> db
+            (update-in [:editor] dissoc :selected-hakukohde)
+            (assoc-in [:editor :selected-form-key] form-key))))))
 
 (defn- remove-focus
   [form]

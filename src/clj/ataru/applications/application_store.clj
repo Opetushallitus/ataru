@@ -61,6 +61,10 @@
   [form-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list {:form_key form-key})))
 
+(defn get-application-list-by-hakukohde
+  [form-key hakukohde-oid]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})))
+
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
@@ -95,9 +99,7 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-          (exec-db :db (case (:sort request)
-                         :by-date yesql-application-query-by-modified
-                         yesql-application-query-by-modified)
+          (exec-db :db yesql-application-query-by-modified
                    (dissoc (transform-keys ->snake_case request)
                            :sort)))))
 
@@ -106,3 +108,7 @@
   [application-id person-oid]
   (exec-db :db yesql-add-person-oid!
     {:id application-id :person_oid person-oid}))
+
+(defn get-hakukohteet
+  []
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {})))

@@ -1,16 +1,22 @@
 (ns ataru.applications.application-service
   (:require
-   [ataru.applications.application-access-control :as aac]
-   [ataru.forms.form-access-control :as form-access-control]
-   [ataru.forms.form-store :as form-store]
-   [ataru.koodisto.koodisto :as koodisto]
-   [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.applications.excel-export :as excel]))
+    [ataru.applications.application-access-control :as aac]
+    [ataru.forms.form-access-control :as form-access-control]
+    [ataru.forms.form-store :as form-store]
+    [ataru.koodisto.koodisto :as koodisto]
+    [ataru.applications.application-store :as application-store]
+    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.applications.excel-export :as excel]
+    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
 
 (defn get-application-list [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list form-key)})
+
+(defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
+  (when-let [form-key (tarjonta-client/get-form-key-for-hakukohde hakukohde-oid)] ; TODO maybe avoid remote call
+    (aac/check-form-access form-key session organization-service)
+    {:applications (application-store/get-application-list-by-hakukohde form-key hakukohde-oid)}))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce

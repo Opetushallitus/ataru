@@ -48,7 +48,9 @@
 
 (defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
   (let [result         (tarjonta-client/get-hakukohde hakukohde-oid)
-        form-key       (:ataruLomakeAvain result)
+        ; TODO REMOVE MOCK
+        ;form-key       (:ataruLomakeAvain result)
+        form-key       "e3d634be-2808-49ed-824c-c4aa3e340fa9"
         form           (when form-key (fetch-form-by-key form-key))]
     (if form
       (response/ok
@@ -111,8 +113,9 @@
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
+      :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
       :path-params [hakukohde-oid :- s/Str]
-      :return s/Any
+      :return ataru-schema/FormWithContent
       (fetch-form-by-hakukohde-oid hakukohde-oid))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]

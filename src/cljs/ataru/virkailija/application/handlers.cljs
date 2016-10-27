@@ -20,8 +20,18 @@
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?formKey=" form-key)
-      (fn [db aplications-response]
-        (assoc-in db [:application :applications] (:applications aplications-response))))
+      (fn [db applications-response]
+        (assoc-in db [:application :applications] (:applications applications-response))))
+    db))
+
+(reg-event-db
+  :application/fetch-applications-by-hakukohde
+  (fn [db [_ hakukohde-oid]]
+    (ajax/http
+      :get
+      (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
+      (fn [db applications-response]
+        (assoc-in db [:application :applications] (:applications applications-response))))
     db))
 
 (reg-event-db
