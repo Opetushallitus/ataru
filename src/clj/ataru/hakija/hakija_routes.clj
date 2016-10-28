@@ -6,6 +6,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.validator :as validator]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.hakija.hakija-form-service :as form-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.person-service.person-integration :as person-integration]
@@ -33,30 +34,6 @@
 
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
-
-(defn- fetch-form-by-key [key]
-  (let [form (form-store/fetch-by-key key)]
-    (when (and (some? form)
-               (not (deleted? form)))
-      (-> form
-          (koodisto/populate-form-koodisto-fields)))))
-
-(defn- fetch-form-by-key-response [key]
-  (if-let [form (fetch-form-by-key key)]
-    (response/ok form)
-    (response/not-found)))
-
-(defn- fetch-form-by-hakukohde-oid [hakukohde-oid]
-  (let [result         (tarjonta-client/get-hakukohde hakukohde-oid)
-        form-key       (:ataruLomakeAvain result)
-        form           (when form-key (fetch-form-by-key form-key))]
-    (if form
-      (response/ok
-        (merge form {:hakukohde-oid   hakukohde-oid
-                     :hakukohde-name  (-> result :hakukohteenNimet :kieli_fi)}))
-      (do
-        (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key)
-        (response/not-found)))))
 
 (defn- handle-application [application]
   (info "Received application:" application)
@@ -114,11 +91,15 @@
       :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
       :path-params [hakukohde-oid :- s/Str]
       :return ataru-schema/FormWithContent
-      (fetch-form-by-hakukohde-oid hakukohde-oid))
+      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid hakukohde-oid)]
+        (response/ok form-with-hakukohde)
+        (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
-      (fetch-form-by-key-response key))
+      (if-let [form (form-service/fetch-form-by-key key)]
+        (response/ok form)
+        (response/not-found)))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
