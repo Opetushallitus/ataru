@@ -2,6 +2,7 @@
   (:require
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as app-store]
+    [ataru.applications.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
@@ -31,22 +32,22 @@
   "Make application_events to refer to applications using
    applications.key instead of applications.id"
   []
-  (let [applications (app-store/get-all-applications)]
+  (let [applications (migration-app-store/get-all-applications)]
     (doseq [application applications
             :let [application-id  (:id application)
                   application-key (:key application)]]
-      (doseq [application-event (app-store/get-application-events-by-application-id application-id)
+      (doseq [application-event (migration-app-store/get-application-events-by-application-id application-id)
               :when (nil? (:application-key application-event))
               :let [event-id (:id application-event)]]
-        (app-store/set-application-key-to-application-event event-id application-key))
-      (doseq [confirmation-email (app-store/get-application-confirmation-emails application-id)
+        (migration-app-store/set-application-key-to-application-event event-id application-key))
+      (doseq [confirmation-email (migration-app-store/get-application-confirmation-emails application-id)
               :when (nil? (:application-key confirmation-email))
               :let [confirmation-id (:id confirmation-email)]]
-        (app-store/set-application-key-to-application-confirmation-email confirmation-id application-key))
-      (let [application-review (app-store/get-application-review-by-application-id application-id)]
+        (migration-app-store/set-application-key-to-application-confirmation-email confirmation-id application-key))
+      (let [application-review (migration-app-store/get-application-review-by-application-id application-id)]
         (when (nil? (:application-key application-review))
           (let [review-id (:id application-review)]
-            (app-store/set-application-key-to-application-review review-id application-key)))))))
+            (migration-app-store/set-application-key-to-application-review review-id application-key)))))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
