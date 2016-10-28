@@ -38,17 +38,14 @@
       (doseq [application-event (app-store/get-application-events-by-application-id application-id)
               :when (nil? (:application-key application-event))
               :let [event-id (:id application-event)]]
-        (debug (str "application-event: " application-event))
         (app-store/set-application-key-to-application-event event-id application-key))
       (doseq [confirmation-email (app-store/get-application-confirmation-emails application-id)
               :when (nil? (:application-key confirmation-email))
               :let [confirmation-id (:id confirmation-email)]]
-        (debug (str "confirmation-email: " confirmation-email))
         (app-store/set-application-key-to-application-confirmation-email confirmation-id application-key))
       (let [application-review (app-store/get-application-review-by-application-id application-id)]
         (when (nil? (:application-key application-review))
           (let [review-id (:id application-review)]
-            (debug (str "application-review: " application-review))
             (app-store/set-application-key-to-application-review review-id application-key)))))))
 
 (migrations/defmigration
