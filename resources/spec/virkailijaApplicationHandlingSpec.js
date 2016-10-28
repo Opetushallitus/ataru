@@ -43,7 +43,7 @@
       before(
         function() { closedFormList()[0].click() },
         wait.until(function() {
-          return form2OnList().text() === 'Selaintestilomake2'
+          return form2OnList().text() === 'Lomake: Selaintestilomake2'
         }),
         function() { form2OnList()[0].click() },
         wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })
