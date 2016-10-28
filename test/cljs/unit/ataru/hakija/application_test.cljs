@@ -155,6 +155,8 @@
 
 (def expected-application {:form 37,
                            :lang "fi",
+                           :hakukohde nil,
+                           :hakukohde-name nil,
                            :answers '({:key "G__14",
                                        :value "Jorma",
                                        :fieldType "textField",
