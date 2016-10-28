@@ -137,14 +137,14 @@
    (s/optional-key :modified-time)  org.joda.time.DateTime})
 
 (s/defschema Application
-  {(s/optional-key :key)           s/Str
-   :form                           s/Int
-   :lang                           s/Str
-   :answers                        [Answer]
-   (s/optional-key :id)            s/Int
-   (s/optional-key :hakukohde)     s/Str
-   (s/optional-key :hakukohde-name) s/Str
-   (s/optional-key :modified-time) org.joda.time.DateTime})
+  {(s/optional-key :key)            s/Str
+   :form                            s/Int
+   :lang                            s/Str
+   :answers                         [Answer]
+   (s/optional-key :id)             s/Int
+   (s/optional-key :hakukohde)      (s/maybe s/Str)
+   (s/optional-key :hakukohde-name) (s/maybe s/Str)
+   (s/optional-key :modified-time)  org.joda.time.DateTime})
 
 (def application-states (s/enum "received"
                                 "processing"
