@@ -31,10 +31,10 @@
                                 :key            (str (java.util.UUID/randomUUID))
                                 :lang           (:lang application)
                                 :preferred_name (find-value-from-answers "preferred-name" answers)
-                                :last_name (find-value-from-answers "last-name" answers)
-                                :hakukohde (:hakukohde application)
+                                :last_name      (find-value-from-answers "last-name" answers)
+                                :hakukohde      (:hakukohde application)
                                 :hakukohde_name (:hakukohde-name application)
-                                :content {:answers answers}}
+                                :content        {:answers answers}}
           app-id               (:id (yesql-add-application-query<! application-to-store connection))]
       (yesql-add-application-event! {:application_id   app-id
                                      :event_type       "review-state-change"
