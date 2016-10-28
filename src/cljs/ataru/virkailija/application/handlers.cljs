@@ -26,7 +26,6 @@
       :get
       (str "/lomake-editori/api/applications/list?formKey=" form-key)
       (fn [db applications-response]
-        (println (str "app response: " applications-response))
         (let [applications (->> (:applications applications-response)
                                 (reduce
                                   (fn [applications a1]
