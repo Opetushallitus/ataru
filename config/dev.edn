@@ -11,5 +11,5 @@
                   :opintopolku-logout-url  "https://itest-virkailija.oph.ware.fi/cas/logout?service="
                   :ataru-login-success-url "http://localhost:8350/lomake-editori/auth/cas"
                   :cas-client-url "https://itest-virkailija.oph.ware.fi"}
- :codes-service {:url "https://itest-virkailija.oph.ware.fi/koodisto-service"}
+ :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"}
  :dev {:fake-dependencies true}}

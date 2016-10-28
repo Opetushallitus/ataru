@@ -6,9 +6,11 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.validator :as validator]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.hakija.hakija-form-service :as form-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.person-service.person-integration :as person-integration]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.util.client-error :as client-error]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -32,15 +34,6 @@
 
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
-
-(defn- fetch-form-by-key [key]
-  (let [form (form-store/fetch-by-key key)]
-    (if (and (some? form)
-             (not (deleted? form)))
-      (-> form
-          (koodisto/populate-form-koodisto-fields)
-          (response/ok))
-      (response/not-found form))))
 
 (defn- handle-application [application]
   (info "Received application:" application)
@@ -94,10 +87,19 @@
 (defn api-routes []
   (api/context "/api" []
     :tags ["application-api"]
+    (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
+      :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
+      :path-params [hakukohde-oid :- s/Str]
+      :return ataru-schema/FormWithContent
+      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid hakukohde-oid)]
+        (response/ok form-with-hakukohde)
+        (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
-      (fetch-form-by-key key))
+      (if-let [form (form-service/fetch-form-by-key key)]
+        (response/ok form)
+        (response/not-found)))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
@@ -145,6 +147,10 @@
                                              (api-routes)
                                              (route/resources "/")
                                              (api/undocumented
+                                             (api/GET "/hakukohde/:oid" []
+                                               (render-application))
+                                             (api/GET "/hakukohde/:oid/:lang" []
+                                               (render-application))
                                              (api/GET "/:key" []
                                                (render-application))
                                              (api/GET "/:key/:lang" []

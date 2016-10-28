@@ -22,6 +22,14 @@
   (let [path (cljs-util/get-path)]
     (apply (some-fn key-pred migrated-legacy-applications) (clojure.string/split path #"/"))))
 
+(defn- dispatch-form-load
+  []
+  (let [path (cljs-util/get-path)
+        hakukohde-match (re-matches #"/hakemus/hakukohde/(.+)/?" path)]
+    (if-let [hakukohde-oid (when hakukohde-match (nth hakukohde-match 1))]
+      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid])
+      (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
+
 (defn mount-root []
   (reagent/render [form-view]
                   (.getElementById js/document "app")))
@@ -34,4 +42,4 @@
             js->clj
             (get "enable-re-frisk"))
     (re-frisk/enable-re-frisk!))
-  (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))
+  (dispatch-form-load))

@@ -19,7 +19,7 @@
         submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn [form]
       [:div.application__header-container
-       [:span.application__header (:name form)]
+       [:span.application__header (or (:hakukohde-name form) (:name form))]
        (when (and (not= :submitted @submit-status)
                   (> (count languages) 0))
          [:span.application__header-text
