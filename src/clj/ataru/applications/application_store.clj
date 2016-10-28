@@ -131,15 +131,30 @@
 (defn get-application-confirmation-emails
   "Used by migration version 1.24 and should be removed after
    the migration has been run on production database."
-  [application-key]
+  [application-id]
   (mapv (partial transform-keys ->kebab-case-keyword)
-        (exec-db :db yesql-get-application-confirmation-emails {:application_key application-key})))
+        (exec-db :db yesql-get-application-confirmation-emails {:application_id application-id})))
 
 (defn set-application-key-to-application-confirmation-email
   "Used by migration version 1.24 and should be removed after
    the migration has been run on production database."
   [confirmation-id key]
   (exec-db :db yesql-set-application-key-to-application-confirmation-emails! {:application_key key :id confirmation-id}))
+
+(defn get-application-events-by-application-id
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [application-id]
+  (mapv (partial transform-keys ->kebab-case-keyword)
+        (exec-db :db yesql-get-application-events-by-application-id {:application_id application-id})))
+
+(defn get-application-review-by-application-id
+  "Used by migration version 1.24 and should be removed after
+   the migration has been run on production database."
+  [application-id]
+  (->> (exec-db :db yesql-get-application-review-by-application-id {:application_id application-id})
+       (first)
+       (transform-keys ->kebab-case-keyword)))
 
 (defn add-person-oid
   "Add person OID to an application"
