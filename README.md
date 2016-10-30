@@ -56,7 +56,7 @@ just fake integrations (no organizations etc, hard-coded stuff):
 lein virkailija-dev
 ```
 
-(Above uses config/dev.edn by default, including the
+(Above uses `config/dev.edn` by default, including the
 unit/browser-testing database which will be wiped out when you run tests)
 
 ### Hakija app
@@ -68,7 +68,7 @@ lein figwheel hakija-dev
 Browse to [http://localhost:8351/hakemus/<uuid>](http://localhost:8351/hakemus/<uuid>).
 
 _Note: figwheel nrepl ports now conflict (they are the same and it's not easy to configure
-separate ports in project.clj), so you can run only either hakija/virkailija 
+separate ports in project.clj), so you can run only either hakija/virkailija
 figwheel process at once. You can still run both applications just fine, but the other
  one will have to be either with lein cljsbuild once or auto <id>_
 
@@ -110,7 +110,7 @@ lein spec -t unit
 lein doo phantom test once
 ```
 
-### Browser integration tests
+### Browser tests
 
 To run only browser tests (headless, using phantomJS):
 
@@ -127,23 +127,47 @@ edn-config-files like this:
 :dev {:fake-dependencies true}
 ```
 
-To run browser tests using Chrome, start both virkailija and hakija applications with `CONFIG=config/dev.edn`.
+To run browser tests using a real browser, e.g. Chrome, start both virkailija and hakija applications with:
 
-Hakija tests require `formId=$KEY` query parameter for the `hakija-test.html`. Use key of the lastest form created by
+```
+lein hakija-dev
+```
+
+and
+
+```
+lein virkailija-dev
+```
+
+Tests assume a blank database on which to run and create new
+data to. We assume the DB has been started as instructed in _Backend &
+browser tests_. Now we'll wipe it clean with:
+
+```
+./bin/cibuild.sh nuke-test-db
+```
+
+We'll need a fixture, but to insert that into the DB, we must run the
+migrations in first (since we just wiped everything):
+
+```
+./bin/cibuild.sh run-migrations
+```
+
+And now the fixture:
+
+```
+./bin/lein with-profile dev run -m ataru.fixtures.db.browser-test-db/init-db-fixture
+```
+
+Navigate to [Virkailija tests](http://localhost:8350/lomake-editori/virkailija-test.html)
+
+That will run the tests for virkailija.
+
+Hakija tests [are here](http://localhost:8351/hakemus/hakija-test.html)
+
+Hakija tests require `formId=$KEY` query parameter for the `hakija-test.html`. Use key of the latest form created by
 virkailija tests (`select key from forms order by created_time desc limit 1;`).
-
-### Running integration tests on your browser
-
-* Start the development server
-* Navigate to [http://localhost:8350/lomake-editori/test.html](http://localhost:8350/lomake-editori/test.html)
-
-Note that this assumes a blank database on which to run and create new data to! In other words, you might want to:
-
-* Create a test database (see `config/test.edn` for details)
-* Run your development server with the test profile: `lein virkailija-dev` (uses `config/dev.edn` settings)
-* Wipe the test db between each test run (`lein spec -t ui` will do this automatically).
-
-Alternatively, you can e.g. use Mocha's grep utility to run only the desired tests.
 
 ### ClojureScript unit tests
 
