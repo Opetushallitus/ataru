@@ -114,6 +114,9 @@ case "$command" in
     "run-tests" )
         run-tests
         ;;
+    "nuke-test-db" )
+        nuke-test-db
+        ;;
     "test-integration" )
         test-integration
         ;;
