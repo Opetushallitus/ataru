@@ -121,8 +121,7 @@
                        applications)))
                  {})
          (vals)
-         (sort-by :created-time)
-         (reverse))))
+         (sort-by :created-time))))
 
 (defn add-person-oid
   "Add person OID to an application"
