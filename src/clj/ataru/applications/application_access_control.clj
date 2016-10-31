@@ -8,10 +8,10 @@
     (form-access-control/form-allowed-by-key? form-key session organization-service)
     (throw (user-feedback-exception (str "Lomake " form-key " ei ole sallittu")))))
 
-(defn check-application-access [application-id session organization-service]
+(defn check-application-access [application-key session organization-service]
   (when-not
     (form-access-control/organization-allowed?
       session
       organization-service
-      #(application-store/get-application-organization-oid application-id))
-    (throw (user-feedback-exception (str "Hakemus " application-id " ei ole sallittu")))))
+      #(application-store/get-application-organization-oid application-key))
+    (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))

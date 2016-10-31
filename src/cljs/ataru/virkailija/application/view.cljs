@@ -77,16 +77,16 @@
              "canceled"   "Peruutettu"))
 
 (defn application-list-contents [applications]
-  (let [selected-id (subscribe [:state-query [:application :selected-id]])]
+  (let [selected-key (subscribe [:state-query [:application :selected-key]])]
     (fn [applications]
       (into [:div.application-handling__list]
         (for [application applications
-              :let        [id       (:id application)
-                           time      (t/time->str (:modified-time application))
+              :let        [key       (:key application)
+                           time      (t/time->str (:created-time application))
                            applicant (:applicant-name application)]]
           [:div.application-handling__list-row
-           {:on-click #(dispatch [:application/select-application (:id application)])
-            :class    (when (= @selected-id id)
+           {:on-click #(dispatch [:application/select-application (:key application)])
+            :class    (when (= @selected-key key)
                         "application-handling__list-row--selected")}
            [:span.application-handling__list-row--applicant
             (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
@@ -174,11 +174,11 @@
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
 (defn application-review-area [applications]
-  (let [selected-id                   (subscribe [:state-query [:application :selected-id]])
+  (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        belongs-to-current-form       (fn [id applications] (first (filter #(= id (:id %)) applications)))]
+        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))]
     (fn [applications]
-      (when (belongs-to-current-form @selected-id applications)
+      (when (belongs-to-current-form @selected-key applications)
         [:div.application-handling__container.panel-content
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area

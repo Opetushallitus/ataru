@@ -2,6 +2,7 @@
   (:require [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
+            [clj-time.core :as time]
             [schema.core :as s]
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
@@ -35,13 +36,17 @@
                                 :hakukohde      (:hakukohde application)
                                 :hakukohde_name (:hakukohde-name application)
                                 :content        {:answers answers}}
-          app-id               (:id (yesql-add-application-query<! application-to-store connection))]
+          application          (yesql-add-application-query<! application-to-store connection)
+          app-id               (:id application)
+          app-key              (:key application)]
       (yesql-add-application-event! {:application_id   app-id
+                                     :application_key  app-key
                                      :event_type       "review-state-change"
                                      :new_review_state "received"}
                                     connection)
-      (yesql-add-application-review! {:application_id app-id
-                                      :state          "received"}
+      (yesql-add-application-review! {:application_id  app-id
+                                      :application_key app-key
+                                      :state           "received"}
                                      connection)
       app-id)))
 
@@ -56,26 +61,53 @@
                                            (:en label)))))
                (-> application :content :answers))))
 
+(defn- older?
+  "Check if application given as first argument is older than
+   application given as second argument by comparing :created-time."
+  [a1 a2]
+  (time/before? (:created-time a1)
+                (:created-time a2)))
+
+(defn- latest-versions-only [applications]
+  (->> applications
+       (reduce (fn [applications {:keys [key] :as a1}]
+                 (let [a2 (get applications key)]
+                   (if (or (nil? a2)
+                           (older? a2 a1))
+                     (assoc applications key a1)
+                     applications)))
+               {})
+       (vals)
+       (sort-by :created-time)
+       (vec)))
+
 (defn get-application-list
   "Only list with header-level info, not answers"
   [form-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list {:form_key form-key})))
+  (->> (exec-db :db yesql-get-application-list {:form_key form-key})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application-list-by-hakukohde
   [form-key hakukohde-oid]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})))
+  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
-(defn get-application-events [application-id]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_id application-id})))
+(defn get-latest-application-by-key [application-key]
+  (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
-(defn get-application-review [application-id]
-  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_id application-id}))))
+(defn get-application-events [application-key]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
-(defn get-application-organization-oid [application-id]
-  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-id {:application_id application-id}))))
+(defn get-application-review [application-key]
+  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+
+(defn get-application-organization-oid [application-key]
+  (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
 
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
@@ -84,12 +116,17 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
           app-id          (:application-id review)
-          old-review      (first (yesql-get-application-review {:application_id app-id} connection))
+          app-key         (:application-key review)
+          old-review      (first (yesql-get-application-review {:application_key app-key} connection))
           review-to-store (transform-keys ->snake_case review)]
+      (println (str "saving application review: " review-to-store))
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
         (yesql-add-application-event!
-         {:application_id app-id :event_type "review-state-change" :new_review_state (:state review-to-store)}
+         {:application_id app-id
+          :application_key app-key
+          :event_type "review-state-change"
+          :new_review_state (:state review-to-store)}
          connection)))))
 
 (s/defn get-applications :- [schema/Application]
@@ -98,10 +135,10 @@
                   {:form-key form-key}
                   default-application-request
                   application-request)]
-    (mapv (partial unwrap-application request)
-          (exec-db :db yesql-application-query-by-modified
-                   (dissoc (transform-keys ->snake_case request)
-                           :sort)))))
+    (->> (dissoc (transform-keys ->snake_case request) :sort)
+         (exec-db :db yesql-application-query-by-modified)
+         (mapv (partial unwrap-application request))
+         (latest-versions-only))))
 
 (defn add-person-oid
   "Add person OID to an application"

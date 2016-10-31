@@ -125,10 +125,11 @@
                          (map (partial koodi-uris->human-readable-value form application (:key answer)))))
                   (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
-  (when-let [notes (:notes (application-store/get-application-review (:id application)))]
-    (let [column (+ (apply max (map :column headers))
-                    (count application-meta-fields))]
-      (writer 0 column notes))))
+  (let [application-review (application-store/get-application-review (:key application))]
+    (when-let [notes (:notes application-review)]
+      (let [column (+ (apply max (map :column headers))
+                      (count application-meta-fields))]
+        (writer 0 column notes)))))
 
 (defn pick-form-labels
   [form-content]

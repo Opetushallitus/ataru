@@ -35,8 +35,8 @@
   (around [spec]
     (with-redefs [application-store/exec-db (fn [& _] fixtures/applications)
                   form-store/fetch-by-key (fn [& _] fixtures/form)
-                  application-store/get-application-review (fn [application-id]
-                                                             (when (= application-id 3)
+                  application-store/get-application-review (fn [application-key]
+                                                             (when (= "9d24af7d-f672-4c0e-870f-3c6999f105e0" application-key)
                                                                fixtures/application-review))]
       (spec)))
 

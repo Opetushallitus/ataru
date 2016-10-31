@@ -60,23 +60,23 @@
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-id session organization-service]
-  (let [application (application-store/get-application application-id)
+  [application-key session organization-service]
+  (let [application (application-store/get-latest-application-by-key application-key)
         form        (form-store/fetch-by-id (:form application))
         application (populate-koodisto-fields application form)]
-    (aac/check-application-access application-id session organization-service)
+    (aac/check-application-access application-key session organization-service)
     {:application application
      :form        form
-     :events      (application-store/get-application-events application-id)
-     :review      (application-store/get-application-review application-id)}))
+     :events      (application-store/get-application-events application-key)
+     :review      (application-store/get-application-review application-key)}))
 
 (defn get-excel-report-of-applications [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
   (java.io.ByteArrayInputStream. (excel/export-all-applications form-key)))
 
 (defn save-application-review [review session organization-service]
-  (let [application-id (:application-id review)]
-    (aac/check-application-access application-id session organization-service)
+  (let [application-key (:application-key review)]
+    (aac/check-application-access application-key session organization-service)
     (application-store/save-application-review review)
-    {:review (application-store/get-application-review application-id)
-     :events (application-store/get-application-events application-id)}))
+    {:review (application-store/get-application-review application-key)
+     :events (application-store/get-application-events application-key)}))

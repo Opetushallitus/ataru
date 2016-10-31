@@ -87,6 +87,7 @@
 
 (def application-review
   {:id 1,
+   :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
    :state "received",
    :notes "Some notes about the applicant"})
 

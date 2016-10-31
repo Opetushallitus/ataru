@@ -53,9 +53,9 @@
       (spec)))
 
           (it "should return all applications belonging to a form"
-              (should= expected-applications (map
-                                               #(dissoc % :created-time)
-                                               (store/get-applications form-key {})))))
+              (should=
+                (mapv #(select-keys % [:id :key]) expected-applications)
+                (mapv #(select-keys % [:id :key]) (store/get-applications form-key {})))))
 
 (describe "setting person oid to application"
   (tags :unit)

@@ -134,7 +134,7 @@
    :lang                            s/Str
    :state                           s/Str
    (s/optional-key :applicant-name) (s/maybe s/Str)
-   (s/optional-key :modified-time)  org.joda.time.DateTime})
+   (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (s/defschema Application
   {(s/optional-key :key)            s/Str
@@ -144,7 +144,7 @@
    (s/optional-key :id)             s/Int
    (s/optional-key :hakukohde)      (s/maybe s/Str)
    (s/optional-key :hakukohde-name) (s/maybe s/Str)
-   (s/optional-key :modified-time)  org.joda.time.DateTime})
+   (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (def application-states (s/enum "received"
                                 "processing"
@@ -155,11 +155,14 @@
 (s/defschema Event
   {:event-type                        s/Str
    :time                              org.joda.time.DateTime
+   :id                                s/Int
+   :application-key                   s/Str
    (s/optional-key :new-review-state) application-states})
 
 (s/defschema Review
   {:id                              s/Int
    :application-id                  s/Int
+   :application-key                 s/Str
    (s/optional-key :modified-time)  org.joda.time.DateTime
    :state                           application-states
    :notes                           (s/maybe s/Str)})

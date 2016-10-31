@@ -7,32 +7,33 @@
 
 (reg-event-fx
   :application/select-application
-  (fn [{:keys [db]} [_ application-id]]
-    (if (not= application-id (get-in db [:application :selected-id]))
+  (fn [{:keys [db]} [_ application-key]]
+    (if (not= application-key (get-in db [:application :selected-key]))
       (-> {:db db}
-          (assoc-in [:db :application :selected-id] application-id)
+          (assoc-in [:db :application :selected-key] application-key)
           (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc :dispatch [:application/fetch-application application-id])))))
+          (assoc :dispatch [:application/fetch-application application-key])))))
 
 (reg-event-db
+  :application/handle-fetch-applications-response
+  (fn [db [_ {:keys [applications]}]]
+    (assoc-in db [:application :applications] applications)))
+
+(reg-event-fx
   :application/fetch-applications
-  (fn [db [_ form-key]]
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/list?formKey=" form-key)
-      (fn [db applications-response]
-        (assoc-in db [:application :applications] (:applications applications-response))))
-    db))
+  (fn [{:keys [db]} [_ form-key]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/list?formKey=" form-key)
+            :handler-or-dispatch :application/handle-fetch-applications-response}}))
 
-(reg-event-db
+(reg-event-fx
   :application/fetch-applications-by-hakukohde
-  (fn [db [_ hakukohde-oid]]
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
-      (fn [db applications-response]
-        (assoc-in db [:application :applications] (:applications applications-response))))
-    db))
+  (fn [{:keys [db]} [_ hakukohde-oid]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
+            :handler-or-dispatch :application/handle-fetch-applications-response}}))
 
 (reg-event-db
  :application/review-updated
@@ -72,7 +73,7 @@
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           :application/review-updated
-                                          :override-args {:params (select-keys current [:id :application-id :notes :state])}))})))
+                                          :override-args {:params (select-keys current [:id :application-id :application-key :notes :state])}))})))
 
 (reg-event-db
   :application/fetch-application
