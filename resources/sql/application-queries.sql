@@ -27,7 +27,8 @@ where a.hakukohde = :hakukohde_oid
 order by a.modified_time desc;
 
 -- name: yesql-get-application-events
-select event_type, time, new_review_state, application_key, id from application_events where application_key = :application_key;
+select event_type, time, new_review_state, application_key, id from application_events
+where application_key = :application_key order by time asc;
 
 -- name: yesql-get-application-review
 select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
