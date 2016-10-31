@@ -61,14 +61,38 @@
                                            (:en label)))))
                (-> application :content :answers))))
 
+(defn- older?
+  "Check if application given as first argument is older than
+   application given as second argument by comparing :created-time."
+  [a1 a2]
+  (time/before? (:created-time a1)
+                (:created-time a2)))
+
+(defn- latest-versions-only [applications]
+  (->> applications
+       (reduce (fn [applications {:keys [key] :as a1}]
+                 (let [a2 (get applications key)]
+                   (if (or (nil? a2)
+                           (older? a2 a1))
+                     (assoc applications key a1)
+                     applications)))
+               {})
+       (vals)
+       (sort-by :created-time)
+       (vec)))
+
 (defn get-application-list
   "Only list with header-level info, not answers"
   [form-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list {:form_key form-key})))
+  (->> (exec-db :db yesql-get-application-list {:form_key form-key})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application-list-by-hakukohde
   [form-key hakukohde-oid]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})))
+  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
@@ -105,13 +129,6 @@
           :new_review_state (:state review-to-store)}
          connection)))))
 
-(defn- older?
-  "Check if application given as first argument is older than
-   application given as second argument by comparing :created-time."
-  [a1 a2]
-  (time/before? (:created-time a1)
-                (:created-time a2)))
-
 (s/defn get-applications :- [schema/Application]
   [form-key :- s/Str application-request :- schema/ApplicationRequest]
   (let [request (merge
@@ -121,15 +138,7 @@
     (->> (dissoc (transform-keys ->snake_case request) :sort)
          (exec-db :db yesql-application-query-by-modified)
          (mapv (partial unwrap-application request))
-         (reduce (fn [applications {:keys [key] :as a1}]
-                   (let [a2 (get applications key)]
-                     (if (or (nil? a2)
-                             (older? a2 a1))
-                       (assoc applications key a1)
-                       applications)))
-                 {})
-         (vals)
-         (sort-by :created-time))))
+         (latest-versions-only))))
 
 (defn add-person-oid
   "Add person OID to an application"

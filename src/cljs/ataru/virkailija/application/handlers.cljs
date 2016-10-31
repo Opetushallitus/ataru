@@ -14,30 +14,14 @@
           (assoc-in [:db :application :selected-application-and-form] nil)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
-(defn- before?
-  "Check if application2 is created before application1."
-  [application1 application2]
-  true)
-
-(defn- ->latest-version [applications a1]
-  (let [key (:key a1)
-        a2  (get applications key)]
-    (if (or (nil? a2)
-            (before? a1 a2))
-      (assoc applications key a1)
-      applications)))
-
 (reg-event-db
   :application/fetch-applications
   (fn [db [_ form-key]]
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?formKey=" form-key)
-      (fn [db applications-response]
-        (let [applications (->> (:applications applications-response)
-                                (reduce ->latest-version {})
-                                (vals))]
-          (assoc-in db [:application :applications] applications))))
+      (fn [db {:keys [applications]}]
+        (assoc-in db [:application :applications] applications)))
     db))
 
 (reg-event-db
@@ -46,12 +30,9 @@
     (ajax/http
       :get
       (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
-      (fn [db applications-response]
-        (let [applications (->> (:applications applications-response)
-                                (reduce ->latest-version {})
-                                (vals))]
-          (assoc-in db [:application :applications] applications))))
-      db))
+      (fn [db {:keys [applications]}]
+        (assoc-in db [:application :applications] applications)))
+    db))
 
 (reg-event-db
  :application/review-updated
