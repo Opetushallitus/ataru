@@ -130,7 +130,9 @@
 
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
-        to-event-row (fn [caption] [:div [:span.application-handling__event-timestamp time-str] caption])
+        to-event-row (fn [caption] [:div
+                                    [:span.application-handling__event-timestamp time-str]
+                                    [:span.application-handling__event-caption caption]])
         event-type   (:event-type event)
         event-caption (if (= "review-state-change" event-type)
                         (get application-review-states (:new-review-state event))
