@@ -1,4 +1,4 @@
-(ns ataru.applications.application-migration-store
+(ns ataru.db.migrations.application-migration-store
   (:require [camel-snake-kebab.core :as k]
             [camel-snake-kebab.extras :as t]
             [oph.soresu.common.db :as db]

@@ -2,7 +2,7 @@
   (:require
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as app-store]
-    [ataru.applications.application-migration-store :as migration-app-store]
+    [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
