@@ -103,11 +103,8 @@
                   default-application-request
                   application-request)]
     (mapv (partial unwrap-application request)
-          (exec-db :db (case (:sort request)
-                         :by-date yesql-application-query-by-modified
-                         yesql-application-query-by-modified)
-                   (dissoc (transform-keys ->snake_case request)
-                           :sort)))))
+          (exec-db :db yesql-application-query-by-modified
+                   (dissoc (transform-keys ->snake_case request) :sort)))))
 
 (defn add-person-oid
   "Add person OID to an application"
