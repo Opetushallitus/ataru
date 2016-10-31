@@ -169,6 +169,10 @@ Hakija tests [are here](http://localhost:8351/hakemus/hakija-test.html)
 Hakija tests require `formId=$KEY` query parameter for the `hakija-test.html`. Use key of the latest form created by
 virkailija tests (`select key from forms order by created_time desc limit 1;`).
 
+You can run only some of the tests with Mocha's grep feature, for example:
+
+```http://localhost:8350/lomake-editori/virkailija-test.html?grep=Application```
+
 ### ClojureScript unit tests
 
 ```
