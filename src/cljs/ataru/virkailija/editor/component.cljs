@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [reagent.core :as r]
@@ -201,19 +202,22 @@
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
 (defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
-  (let [multiple-languages? (< 1 (count languages))]
-    [:div.editor-form__multi-options-wrapper-outer
-     {:key (str "options-" option-index)}
-     [:div
-      (cond-> {:key (str "options-" option-index)}
-        multiple-languages?
-        (assoc :class "editor-form__multi-options-wrapper-inner"))
-      (let [option-path [path :options option-index]]
-        (input-fields-with-lang
-          (fn [lang]
-            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
-          languages))]
-     (remove-dropdown-option-button path option-index)]))
+  (let [multiple-languages? (< 1 (count languages))
+        option-path         [path :options option-index]]
+    [:div
+     [:div.editor-form__multi-options-wrapper-outer
+      {:key (str "options-" option-index)}
+      [:div
+       (cond-> {:key (str "options-" option-index)}
+         multiple-languages?
+         (assoc :class "editor-form__multi-options-wrapper-inner"))
+       (input-fields-with-lang
+         (fn [lang]
+           [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+         languages)]
+      [remove-dropdown-option-button path option-index]
+      [followup-question path option-path]]
+     [followup-question-overlay]]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
