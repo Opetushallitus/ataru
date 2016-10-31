@@ -23,6 +23,22 @@
     loadInFrame('http://localhost:8350/lomake-editori/applications/')
   }
 
+  function eventCaptions() {
+    return testFrame().find('.application-handling__event-caption')
+  }
+
+  function applicationRow() {
+    return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)')
+  }
+
+  function notSelectedStates() {
+    return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
+  }
+
+  function reviewHeader() {
+    return testFrame().find('.application-handling__review-header')
+  }
+
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -42,25 +58,25 @@
           form1OnList().click()
         },
         wait.until(function() { return closedFormList().text() ===  'Selaintestilomake1' }),
-        clickElement(function() { return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)') }),
-        wait.until(function() { return testFrame().find('.application-handling__review-header').length > 0 }),
+        clickElement(applicationRow),
+        wait.until(function() { return reviewHeader().length > 0 }),
         function() {
-          var notSelected =  testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
+          var notSelected =  notSelectedStates()
           expect(notSelected.length).to.be.at.least(1)
           firstNotSelected = notSelected.first()
           firstNotSelectedCaption = firstNotSelected.text()
-          eventCountBefore = testFrame().find('.application-handling__event-caption').length
+          eventCountBefore = eventCaptions().length
           expect(eventCountBefore).to.be.at.least(1)
         },
         clickElement(function () { return firstNotSelected }),
-        wait.until(function() { return eventCountBefore < testFrame().find('.application-handling__event-caption').length })
+        wait.until(function() { return eventCountBefore < eventCaptions().length })
       )
       it('has applications', function() {
         expect(closedFormList().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (1)')
       })
       it('Stores an event for review state change', function() {
-        expect(eventCountBefore+1).to.equal(testFrame().find('.application-handling__event-caption').length)
+        expect(eventCountBefore+1).to.equal(eventCaptions().length)
         var lastEventNow = testFrame().find('.application-handling__event-caption').last().text()
         expect(lastEventNow).to.equal(firstNotSelectedCaption)
       })
