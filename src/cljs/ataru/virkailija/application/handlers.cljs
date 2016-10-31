@@ -15,24 +15,25 @@
           (assoc :dispatch [:application/fetch-application application-key])))))
 
 (reg-event-db
-  :application/fetch-applications
-  (fn [db [_ form-key]]
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/list?formKey=" form-key)
-      (fn [db {:keys [applications]}]
-        (assoc-in db [:application :applications] applications)))
-    db))
+  :application/handle-fetch-applications-response
+  (fn [db [_ {:keys [applications]}]]
+    (assoc-in db [:application :applications] applications)))
 
-(reg-event-db
+(reg-event-fx
+  :application/fetch-applications
+  (fn [{:keys [db]} [_ form-key]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/list?formKey=" form-key)
+            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+
+(reg-event-fx
   :application/fetch-applications-by-hakukohde
-  (fn [db [_ hakukohde-oid]]
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
-      (fn [db {:keys [applications]}]
-        (assoc-in db [:application :applications] applications)))
-    db))
+  (fn [{:keys [db]} [_ hakukohde-oid]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
+            :handler-or-dispatch :application/handle-fetch-applications-response}}))
 
 (reg-event-db
  :application/review-updated
