@@ -2,6 +2,7 @@
   (:require [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
+            [clj-time.core :as time]
             [schema.core :as s]
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
@@ -96,15 +97,32 @@
           :new_review_state (:state review-to-store)}
          connection)))))
 
+(defn- older?
+  "Check if application given as first argument is older than
+   application given as second argument by comparing :created-time."
+  [a1 a2]
+  (time/before? (:created-time a1)
+                (:created-time a2)))
+
 (s/defn get-applications :- [schema/Application]
   [form-key :- s/Str application-request :- schema/ApplicationRequest]
   (let [request (merge
                   {:form-key form-key}
                   default-application-request
                   application-request)]
-    (mapv (partial unwrap-application request)
-          (exec-db :db yesql-application-query-by-modified
-                   (dissoc (transform-keys ->snake_case request) :sort)))))
+    (->> (dissoc (transform-keys ->snake_case request) :sort)
+         (exec-db :db yesql-application-query-by-modified)
+         (mapv (partial unwrap-application request))
+         (reduce (fn [applications {:keys [key] :as a1}]
+                   (let [a2 (get applications key)]
+                     (if (or (nil? a2)
+                             (older? a2 a1))
+                       (assoc applications key a1)
+                       applications)))
+                 {})
+         (vals)
+         (sort-by :created-time)
+         (reverse))))
 
 (defn add-person-oid
   "Add person OID to an application"

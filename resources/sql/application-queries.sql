@@ -20,8 +20,7 @@ select id, application_id, modified_time, state, notes, application_key from app
 
 -- name: yesql-application-query-by-modified
 select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
-join forms f on f.id = a.form_id and f.key = :form_key
-order by a.created_time desc;
+join forms f on f.id = a.form_id and f.key = :form_key;
 
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
