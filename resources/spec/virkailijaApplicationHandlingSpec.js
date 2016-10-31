@@ -1,13 +1,17 @@
 (function() {
-  var closedFormList = function() {
+  function closedFormList() {
     return testFrame().find('.application-handling__form-list-closed')
   }
 
-  var form2OnList = function() {
-    return testFrame().find('.application-handling__form-list-open > a > div:contains(Selaintestilomake2)')
+  function form1OnList() {
+    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
   }
 
-  var downloadLink = function() {
+  function form2OnList() {
+    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
+  }
+
+  function downloadLink() {
     return testFrame().find('.application-handling__excel-download-link')
   }
 
@@ -15,13 +19,8 @@
     return elementExists(closedFormList())
   }
 
-  function navigateToApplicationHandlingForm1Selected() {
-    var href = testFrame()
-      .find("#app div.editor-form__list span:contains(Selaintestilomake1)")
-      .closest('a')
-      .attr('href')
-      .replace('/editor/', '/applications/')
-    loadInFrame(href)
+  function navigateToApplicationHandling() {
+    loadInFrame('http://localhost:8350/lomake-editori/applications/')
   }
 
   afterEach(function() {
@@ -31,8 +30,14 @@
   describe('Application handling', function() {
     describe('form 1', function() {
       before(
-        navigateToApplicationHandlingForm1Selected,
-        wait.until(closedFormListExists)
+        navigateToApplicationHandling,
+        wait.until(closedFormListExists),
+        clickElement(closedFormList),
+        function() {
+          // clickElement doesn't work for a href, jquery's click() does:
+          form1OnList().click()
+        },
+        wait.until(function() { return closedFormList().text() ===  'Selaintestilomake1' })
       )
       it('has applications', function() {
         expect(closedFormList().text()).to.equal('Selaintestilomake1')
@@ -43,7 +48,7 @@
       before(
         function() { closedFormList()[0].click() },
         wait.until(function() {
-          return form2OnList().text() === 'Selaintestilomake2'
+          return form2OnList().text() === 'Lomake: Selaintestilomake2'
         }),
         function() { form2OnList()[0].click() },
         wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })

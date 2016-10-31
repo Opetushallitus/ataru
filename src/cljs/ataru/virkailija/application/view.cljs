@@ -18,42 +18,48 @@
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
    {:on-click #(toggle-form-list-open! open)}])
 
-(defn form-list-row [form selected? open]
+(defn form-list-row [name href selected? open]
   [:a.application-handling__form-list-row-link
-    {:href  (str "/lomake-editori/applications/" (:key form))}
+   {:href href}
    (let [row-element [:div.application-handling__form-list-row
-                      {:class (if selected? "application-handling__form-list-selected-row" "")
-                       :on-click (if (not selected?)
-                                   #(toggle-form-list-open! open)
-                                   #(toggle-form-list-open! open))}
-                      (:name form)]]
+                      {:class    (if selected? "application-handling__form-list-selected-row" "")
+                       :on-click #(toggle-form-list-open! open)}
+                      name]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
-(defn form-list-opened [forms selected-form-key open]
-  [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
-   [form-list-arrow-up open]
-   (into [:div.application-handling__form-list-open]
-     (for [[id form] forms
-           :let      [selected? (= id selected-form-key)]]
-       ^{:key id}
-       [form-list-row form selected? open]))])
+(defn form-list-opened [forms hakukohteet selected-form-key selected-hakukohde open]
+  (let [form-rows      (for [[id form] forms
+                             :let [selected? (= id selected-form-key)]]
+                         ^{:key id}
+                         [form-list-row (str "Lomake: " (:name form)) (str "/lomake-editori/applications/" (:key form)) selected? open])
+        hakukohde-rows (for [{:keys [hakukohde hakukohde-name]} hakukohteet
+                             :let [selected? (= hakukohde (:hakukohde selected-hakukohde))]]
+                         ^{:key hakukohde}
+                         [form-list-row (str "Hakukohde: " hakukohde-name) (str "/lomake-editori/applications/hakukohde/" hakukohde) selected? open])]
+    [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
+     [form-list-arrow-up open]
+     (into [:div.application-handling__form-list-open] (into form-rows hakukohde-rows))]))
 
-(defn form-list-closed [selected-form open]
+(defn form-list-closed [selected-form selected-hakukohde open]
   [:div.application-handling__form-list-closed
    {:on-click #(toggle-form-list-open! open)}
-   [:div.application-handling__form-list-row.application-handling__form-list-selected-row (:name selected-form)]
+   [:div.application-handling__form-list-row.application-handling__form-list-selected-row (or
+                                                                                            (:name selected-form)
+                                                                                            (:hakukohde-name selected-hakukohde))]
    [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow]])
 
 (defn form-list []
-  (let [forms            (subscribe [:state-query [:editor :forms]])
-        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
-        selected-form    (subscribe [:editor/selected-form])
-        open             (r/atom false)]
+  (let [forms                  (subscribe [:state-query [:editor :forms]])
+        hakukohteet            (subscribe [:state-query [:editor :hakukohteet]])
+        selected-form-key      (subscribe [:state-query [:editor :selected-form-key]])
+        selected-hakukohde     (subscribe [:state-query [:editor :selected-hakukohde]])
+        selected-form          (subscribe [:editor/selected-form])
+        open                   (r/atom false)]
     (fn []
       [:div.application-handling__form-list-wrapper
        (if @open
-        [form-list-opened @forms @selected-form-key open]
-        [form-list-closed @selected-form open])])))
+        [form-list-opened @forms @hakukohteet @selected-form-key @selected-hakukohde open]
+        [form-list-closed @selected-form @selected-hakukohde open])])))
 
 (defn excel-download-link [applications]
   (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))]
@@ -67,7 +73,7 @@
   (array-map "received"   "Saapunut"
              "processing" "Käsittelyssä"
              "rejected"   "Hylätty"
-             "approved"   "Valittu"
+             "approved"   "Hyväksytty"
              "canceled"   "Peruutettu"))
 
 (defn application-list-contents [applications]

@@ -17,6 +17,8 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
+(def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
+
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
@@ -31,6 +33,8 @@
                                 :lang           (:lang application)
                                 :preferred_name (find-value-from-answers "preferred-name" answers)
                                 :last_name      (find-value-from-answers "last-name" answers)
+                                :hakukohde      (:hakukohde application)
+                                :hakukohde_name (:hakukohde-name application)
                                 :content        {:answers answers}}
           application          (yesql-add-application-query<! application-to-store connection)
           app-id               (:id application)
@@ -47,7 +51,7 @@
       app-id)))
 
 (defn unwrap-application [{:keys [lang]} application]
-  (assoc (transform-keys ->kebab-case-keyword (dissoc application :content))
+  (assoc (->kebab-case-kw (dissoc application :content))
          :answers
          (mapv (fn [answer]
                  (update answer :label (fn [label]
@@ -60,7 +64,11 @@
 (defn get-application-list
   "Only list with header-level info, not answers"
   [form-key]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-list {:form_key form-key})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list {:form_key form-key})))
+
+(defn get-application-list-by-hakukohde
+  [form-key hakukohde-oid]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})))
 
 (defn get-application [application-id]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
@@ -69,10 +77,10 @@
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
 (defn get-application-events [application-key]
-  (mapv #(transform-keys ->kebab-case-keyword %) (exec-db :db yesql-get-application-events {:application_key application-key})))
+  (mapv ->kebab-kase-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
 (defn get-application-review [application-key]
-  (transform-keys ->kebab-case-keyword (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
 
 (defn get-application-organization-oid [application-key]
   (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
@@ -128,3 +136,7 @@
   [application-id person-oid]
   (exec-db :db yesql-add-person-oid!
     {:id application-id :person_oid person-oid}))
+
+(defn get-hakukohteet
+  []
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {})))

@@ -19,6 +19,14 @@
   [application1 application2]
   true)
 
+(defn- ->latest-version [applications a1]
+  (let [key (:key a1)
+        a2  (get applications key)]
+    (if (or (nil? a2)
+            (before? a1 a2))
+      (assoc applications key a1)
+      applications)))
+
 (reg-event-db
   :application/fetch-applications
   (fn [db [_ form-key]]
@@ -27,18 +35,23 @@
       (str "/lomake-editori/api/applications/list?formKey=" form-key)
       (fn [db applications-response]
         (let [applications (->> (:applications applications-response)
-                                (reduce
-                                  (fn [applications a1]
-                                    (let [key (:key a1)
-                                          a2  (get applications key)]
-                                      (if (or (nil? a2)
-                                              (before? a1 a2))
-                                        (assoc applications key a1)
-                                        applications)))
-                                  {})
+                                (reduce ->latest-version {})
                                 (vals))]
           (assoc-in db [:application :applications] applications))))
     db))
+
+(reg-event-db
+  :application/fetch-applications-by-hakukohde
+  (fn [db [_ hakukohde-oid]]
+    (ajax/http
+      :get
+      (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
+      (fn [db applications-response]
+        (let [applications (->> (:applications applications-response)
+                                (reduce ->latest-version {})
+                                (vals))]
+          (assoc-in db [:application :applications] applications)))
+      db))
 
 (reg-event-db
  :application/review-updated

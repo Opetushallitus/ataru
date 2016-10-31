@@ -119,18 +119,21 @@
                    :tags ["applications-api"]
 
                   (api/GET "/list" {session :session}
-                           :query-params [formKey :- s/Str]
+                           :query-params [{formKey :- s/Str nil}
+                                          {hakukohdeOid :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (ok (application-service/get-application-list formKey session organization-service)))
+                           (if formKey
+                             (ok (application-service/get-application-list formKey session organization-service))
+                             (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
                     :return {:application ataru-schema/Application
-                                    :events      [ataru-schema/Event]
-                                    :review      ataru-schema/Review
-                                    :form        ataru-schema/FormWithContent}
+                             :events      [ataru-schema/Event]
+                             :review      ataru-schema/Review
+                             :form        ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service)))
 
                    (api/PUT "/review" {session :session}
@@ -151,6 +154,13 @@
                       :headers {"Content-Type" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
                       :body    (application-service/get-excel-report-of-applications form-key session organization-service)}))
+
+                 (api/GET "/hakukohteet" []
+                          :summary "List hakukohde information found for applications stored in system"
+                          :return [{:hakukohde      s/Str
+                                    :hakukohde-name s/Str
+                                    :form-key       s/Str}]
+                          (ok (ataru.applications.application-store/get-hakukohteet)))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]

@@ -1,67 +1,67 @@
-var addNewFormLink = function() {
-  return testFrame().find('.editor-form__form-controls-container a')
-}
-
-var formTitleField = function() {
-  return testFrame().find('.editor-form__form-name-input')
-}
-
-function editorPageIsLoaded() {
-  return elementExists(addNewFormLink())
-}
-
-function formList() {
-  return testFrame().find('.editor-form__list')
-}
-
-function formListItems(n) {
-  if ($.isNumeric(n)) {
-    return formList().find('a').eq(n)
-  } else {
-    return formList().find('a')
-  }
-}
-
-function personInfoModule() {
-  return testFrame()
-      .find(".editor-form__module-wrapper header:contains('Henkilötiedot')");
-}
-
-function formComponents() {
-  return testFrame().find('.editor-form__component-wrapper')
-}
-
-function formSections() {
-  return testFrame().find('.editor-form__section_wrapper')
-}
-
-function clickComponentMenuItem(title) {
-  function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
-  return clickElement(menuItem)
-}
-
-function clickRepeatingAnswers(question) {
-  return function() {
-    return testFrame()
-      .find("input.editor-form__text-field")
-      .filter(function() {
-        return this.value === question
-      })
-      .parent().parent().parent()
-      .find(".editor-form__checkbox-wrapper label:contains('Vastaaja voi')")
-      .prev().click()
-  }
-}
-
-function clickInfoTextCheckbox(selector) {
-  return function() {
-    return selector()
-      .find(".editor-form__info-component-checkbox > input")
-      .click()
-  }
-}
-
 (function() {
+  function addNewFormLink() {
+    return testFrame().find('.editor-form__control-button--enabled')
+  }
+
+  function formTitleField () {
+    return testFrame().find('.editor-form__form-name-input')
+  }
+
+  function editorPageIsLoaded() {
+    return elementExists(addNewFormLink())
+  }
+
+  function formList() {
+    return testFrame().find('.editor-form__list')
+  }
+
+  function formListItems(n) {
+    if ($.isNumeric(n)) {
+      return formList().find('a').eq(n)
+    } else {
+      return formList().find('a')
+    }
+  }
+
+  function personInfoModule() {
+    return testFrame()
+      .find(".editor-form__module-wrapper header:contains('Henkilötiedot')");
+  }
+
+  function formComponents() {
+    return testFrame().find('.editor-form__component-wrapper')
+  }
+
+  function formSections() {
+    return testFrame().find('.editor-form__section_wrapper')
+  }
+
+  function clickComponentMenuItem(title) {
+    function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
+    return clickElement(menuItem)
+  }
+
+  function clickRepeatingAnswers(question) {
+    return function() {
+      return testFrame()
+        .find("input.editor-form__text-field")
+        .filter(function() {
+          return this.value === question
+        })
+        .parent().parent().parent()
+        .find(".editor-form__checkbox-wrapper label:contains('Vastaaja voi')")
+        .prev().click()
+    }
+  }
+
+  function clickInfoTextCheckbox(selector) {
+    return function() {
+      return selector()
+        .find(".editor-form__info-component-checkbox > input")
+        .click()
+    }
+  }
+
   before(function () {
     loadInFrame('http://localhost:8350/lomake-editori/')
   })

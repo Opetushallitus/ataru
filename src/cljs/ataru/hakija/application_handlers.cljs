@@ -27,6 +27,16 @@
              :url (str "/hakemus/api/form/" form-key)
              :handler :application/handle-form})))
 
+(defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
+  (ajax/get
+    (str "/hakemus/api/hakukohde/" hakukohde-oid)
+    :application/handle-form)
+  db)
+
+(reg-event-db
+  :application/get-latest-form-by-hakukohde
+  get-latest-form-by-hakukohde)
+
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
