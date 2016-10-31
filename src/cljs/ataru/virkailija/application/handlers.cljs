@@ -50,7 +50,7 @@
         (let [applications (->> (:applications applications-response)
                                 (reduce ->latest-version {})
                                 (vals))]
-          (assoc-in db [:application :applications] applications)))
+          (assoc-in db [:application :applications] applications))))
       db))
 
 (reg-event-db
