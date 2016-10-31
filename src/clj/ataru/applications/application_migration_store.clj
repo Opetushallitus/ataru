@@ -4,7 +4,7 @@
             [oph.soresu.common.db :as db]
             [yesql.core :as sql]))
 
-(sql/defqueries "sql/application-migration-queries.sql")
+(sql/defqueries "sql/migration-1.24-queries.sql")
 
 (defn get-all-applications
   "Used by migration version 1.24 and should be removed after
