@@ -77,7 +77,7 @@
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
 (defn get-application-events [application-key]
-  (mapv ->kebab-kase-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))

@@ -59,7 +59,7 @@
   (refresh-person-info-modules))
 
 (migrations/defmigration
-  migrate-application-versioning "1.24"
+  migrate-application-versioning "1.25"
   "Change references to applications.id to be references to applications.key"
   (application-id->application-key))
 
