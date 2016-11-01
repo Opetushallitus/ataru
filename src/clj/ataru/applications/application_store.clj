@@ -113,6 +113,10 @@
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
+(defn set-application-secret [{:keys [id]} secret]
+  (exec-db :db yesql-set-application-secret! {:id     id
+                                              :secret secret}))
+
 (defn save-application-review [review]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}

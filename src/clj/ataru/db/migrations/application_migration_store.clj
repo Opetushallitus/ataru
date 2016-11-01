@@ -5,6 +5,7 @@
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/migration-1.25-queries.sql")
+(sql/defqueries "sql/migration-1.28-queries.sql")
 
 (defn get-all-applications
   []
@@ -38,3 +39,6 @@
   (->> (db/exec :db yesql-get-application-review-by-application-id {:application_id application-id})
        (first)
        (t/transform-keys k/->kebab-case-keyword)))
+
+(defn get-application-secret [{:keys [id]}]
+  (-> (db/exec :db yesql-get-application-secret {:id id})))
