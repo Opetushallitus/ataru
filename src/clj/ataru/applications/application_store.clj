@@ -6,7 +6,8 @@
             [schema.core :as s]
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [crypto.random :as crypto]))
 
 (defqueries "sql/application-queries.sql")
 
@@ -35,7 +36,8 @@
                                 :last_name      (find-value-from-answers "last-name" answers)
                                 :hakukohde      (:hakukohde application)
                                 :hakukohde_name (:hakukohde-name application)
-                                :content        {:answers answers}}
+                                :content        {:answers answers}
+                                :secret         (crypto/url-part 128)}
           application          (yesql-add-application-query<! application-to-store connection)
           app-id               (:id application)
           app-key              (:key application)]
