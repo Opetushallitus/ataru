@@ -133,6 +133,7 @@
    :key                             s/Str
    :lang                            s/Str
    :state                           s/Str
+   :secret                          s/Str
    (s/optional-key :applicant-name) (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
@@ -140,6 +141,7 @@
   {(s/optional-key :key)            s/Str
    :form                            s/Int
    :lang                            s/Str
+   :secret                          s/Str
    :answers                         [Answer]
    (s/optional-key :id)             s/Int
    (s/optional-key :hakukohde)      (s/maybe s/Str)

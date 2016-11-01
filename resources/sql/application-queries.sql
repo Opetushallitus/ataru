@@ -9,7 +9,8 @@ values
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, coalesce(ar.state, 'received') as state
+  a.created_time, coalesce(ar.state, 'received') as state,
+  a.secret
 from applications a
 left outer join application_reviews ar on a.id = ar.application_id
 join forms f on f.id = a.form_id and f.key = :form_key
@@ -19,7 +20,8 @@ order by a.created_time desc;
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.modified_time, coalesce(ar.state, 'received') as state
+  a.modified_time, coalesce(ar.state, 'received') as state,
+  a.secret
 from applications a
   left outer join application_reviews ar on a.id = ar.application_id
   join forms f on f.id = a.form_id and f.key = :form_key
@@ -34,17 +36,17 @@ where application_key = :application_key order by time asc;
 select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
 
 -- name: yesql-application-query-by-modified
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, a.secret from applications a
 join forms f on f.id = a.form_id and f.key = :form_key;
 
 -- name: yesql-get-application-by-id
-select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
+select id, key, lang, form_id as form, created_time, content, a.secret from applications where id = :application_id;
 
 -- name: yesql-get-latest-application-by-key
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.key = :application_key
 )
-select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+select id, key, lang, form_id as form, created_time, content, secret from applications a join latest_version lv on a.created_time = lv.latest_time;
 
 -- name: yesql-get-application-organization-by-key
 -- Get the related form's organization oid for access checks
