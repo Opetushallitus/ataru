@@ -40,7 +40,7 @@ select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, a.secr
 join forms f on f.id = a.form_id and f.key = :form_key;
 
 -- name: yesql-get-application-by-id
-select id, key, lang, form_id as form, created_time, content, a.secret from applications where id = :application_id;
+select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;
 
 -- name: yesql-get-latest-application-by-key
 with latest_version as (
