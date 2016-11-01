@@ -90,7 +90,3 @@ select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
 from applications a
 join forms f on a.form_id = f.id
 where f.deleted is not true and hakukohde is not null and hakukohde_name is not null;
-
--- name: yesql-set-application-secret!
--- Set secret to application
-update applications set secret = :secret where id = :id;

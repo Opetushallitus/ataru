@@ -1,7 +1,6 @@
 (ns ataru.db.migrations
   (:require
     [ataru.forms.form-store :as store]
-    [ataru.applications.application-store :as app-store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [crypto.random :as c]
@@ -68,7 +67,7 @@
         secrets      (reduce secrets->keys {} applications)]
     (doseq [{:keys [key] :as application} applications
             :let [secret (get secrets key)]]
-      (app-store/set-application-secret application secret))))
+      (migration-app-store/set-application-secret application secret))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"

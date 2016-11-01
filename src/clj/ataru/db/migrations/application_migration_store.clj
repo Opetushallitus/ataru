@@ -41,4 +41,8 @@
        (t/transform-keys k/->kebab-case-keyword)))
 
 (defn get-application-secret [{:keys [id]}]
-  (-> (db/exec :db yesql-get-application-secret {:id id})))
+  (db/exec :db yesql-get-application-secret {:id id}))
+
+(defn set-application-secret [{:keys [id]} secret]
+  (db/exec :db yesql-set-application-secret! {:id     id
+                                              :secret secret}))
