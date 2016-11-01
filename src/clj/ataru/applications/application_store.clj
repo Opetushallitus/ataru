@@ -79,6 +79,7 @@
                {})
        (vals)
        (sort-by :created-time)
+       (reverse)
        (vec)))
 
 (defn get-application-list

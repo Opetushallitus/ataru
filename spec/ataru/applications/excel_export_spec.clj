@@ -56,11 +56,11 @@
             (verify-row applications-sheet 0
               ["Id" "Lähetysaika" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "Muistiinpanot"])
             (verify-row applications-sheet 1
-              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 15:30:55" "1" "2" "3" "4" "5" "6" nil nil])
+              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 09:00:00" "a" "b" "d" "e" nil "g" "f" "Some notes about the applicant"])
             (verify-row applications-sheet 2
               ["956ae57b-8bd2-42c5-90ac-82bd0a4fd31f" "2016-06-15 17:30:55" "Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee" nil])
             (verify-row applications-sheet 3
-              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 09:00:00" "a" "b" "d" "e" nil "g" "f" "Some notes about the applicant"])
+              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 15:30:55" "1" "2" "3" "4" "5" "6" nil nil])
             (verify-pane-information applications-sheet))
           (finally
             (.delete file))))))
