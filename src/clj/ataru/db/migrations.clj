@@ -53,7 +53,7 @@
 (defn- secrets->keys
   [secrets {:keys [key]}]
   (if-not (contains? secrets key)
-    (let [secret (c/url-part 256)]
+    (let [secret (c/url-part 128)]
       (assoc secrets key secret))
     secrets))
 
