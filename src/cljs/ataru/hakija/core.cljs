@@ -12,15 +12,9 @@
 
 (enable-console-print!)
 
-(def ^:private key-pred
-  (partial re-matches #"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
-
-(def ^:private migrated-legacy-applications
-  (partial re-matches #"^\d.*-initial-system-generated-key"))
-
 (defn- form-key-from-url []
   (let [path (cljs-util/get-path)]
-    (apply (some-fn key-pred migrated-legacy-applications) (clojure.string/split path #"/"))))
+    (nth (clojure.string/split path #"/") 2)))
 
 (defn- dispatch-form-load
   []
