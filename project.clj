@@ -53,7 +53,8 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.apache.poi/poi-ooxml "3.15-beta1"]
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
-                 [org.clojure/core.cache "0.6.5"]]
+                 [org.clojure/core.cache "0.6.5"]
+                 [org.clojure/tools.nrepl "0.2.12"]]
 
   :min-lein-version "2.5.3"
 
@@ -86,7 +87,9 @@
 
   :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
 
-  :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
+  :clean-targets ^{:protect false} ["resources/public/js/compiled"
+                                    "resources/public/css"
+                                    "target"
                                     "test/js"
                                     "resources/public/js/test"
                                     "out"
@@ -172,7 +175,6 @@
              :dev {:dependencies [[com.cemerick/piggieback "0.2.1"]
                                   [figwheel-sidecar "0.5.8"]
                                   [refactor-nrepl "2.2.0"]
-                                  [org.clojure/tools.nrepl "0.2.12"]
                                   [snipsnap "0.1.0" :exclusions [org.clojure/clojure]]
                                   [reloaded.repl "0.2.1"]
                                   [ring/ring-mock "0.3.0"]
