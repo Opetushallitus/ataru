@@ -11,6 +11,11 @@ export PATH=/data00/oph/java/jdk1.8.0_60/bin:$PATH
 echo "Lein version:"
 ./bin/lein version
 
+clean() {
+    echo "Cleaning everything"
+    ./bin/lein clean
+}
+
 compile-less() {
     echo "Compiling less"
     ./bin/lein less once
@@ -34,11 +39,6 @@ build-clojurescript-virkailija() {
 build-clojurescript-hakija() {
     echo "Building hakija clojurescript"
     ./bin/lein cljsbuild once hakija-min
-}
-
-create-uberjar() {
-    echo "Creating uberjar"
-    ./bin/lein uberjar
 }
 
 test-clojure() {
@@ -65,6 +65,16 @@ nuke-test-db() {
     ./bin/lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
 }
 
+create-uberjar() {
+    clean
+    build-clojurescript-hakija
+    build-clojurescript-virkailija
+    compile-less
+    process-resources
+    echo "Creating uberjar"
+    ./bin/lein uberjar
+}
+
 run-tests() {
     echo "Starting test run"
     ./bin/lein clean
@@ -77,11 +87,6 @@ run-tests() {
     build-clojurescript-virkailija
     build-clojurescript-hakija
     test-browser
-}
-
-clean() {
-    echo "Cleaning everything"
-    ./bin/lein clean
 }
 
 command="$1"
