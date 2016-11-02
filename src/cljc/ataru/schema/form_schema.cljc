@@ -25,6 +25,8 @@
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
 
+(declare FormField)
+
 (s/defschema Form {(s/optional-key :id)           s/Int
                    :name                          s/Str
                    (s/optional-key :key)          s/Str
@@ -41,7 +43,8 @@
 
 (s/defschema Option {:value                  s/Str
                      (s/optional-key :label) LocalizedString
-                     (s/optional-key :default-value) (s/maybe s/Bool)})
+                     (s/optional-key :default-value) (s/maybe s/Bool)
+                     (s/optional-key :followup) FormField})
 
 (s/defschema Button {:fieldClass              (s/eq "button")
                      :id                      s/Str
