@@ -44,8 +44,7 @@
             {:fieldClass "formField"
              :fieldType "dropdown"
              :options (options :guard followup/followups?)}
-            [ec/dropdown content path
-             {:followup-render soresu->reagent}]
+            [ec/dropdown content path soresu->reagent]
 
             {:fieldClass "formField" :fieldType "dropdown"}
             [ec/dropdown content path]

@@ -23,7 +23,9 @@
                                               (= :children (second path))
                                               (= "Lomakeosio" component-name)))]
       [:li.form__add-component-toolbar--list-item
-       [:a {:on-click (partial generator generate-fn)}
+       [:a {:on-click (fn [evt]
+                        (.preventDefault evt)
+                        (generator generate-fn))}
         component-name]])))
 
 (defn add-component [path]
@@ -31,8 +33,7 @@
    [component-toolbar
     path
     toolbar-elements
-    (fn [generate-fn evt]
-      (.preventDefault evt)
+    (fn [generate-fn]
       (dispatch [:generate-component generate-fn path]))]
    [:div.plus-component
     [:span "+"]]])

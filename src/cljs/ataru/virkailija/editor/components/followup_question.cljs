@@ -46,24 +46,27 @@
 (defn followup-question-overlay [followup-renderer path option-path]
   (let [layer-visible?     (subscribe [:editor/followup-overlay path option-path :visible?])
         followup-component (when followup-renderer
-                             (subscribe (spy [:editor/get-component-value (flatten [option-path :followup])])))]
+                             (subscribe [:editor/get-component-value (flatten [option-path :followup])]))]
     (fn [followup-renderer path option-path]
-      (when @layer-visible?
-        [:div.editor-form__followup-editor-outer
-         [:div.editor-form__followup-editor
-          (when-let [followup (and followup-component @followup-component)]
-            ; this is actually calling, but it cannot be directly required because of
-            ; circular dependencies
-            ; ataru.virkailija.editor.core/soresu->reagent
-            [followup-renderer followup (spy (flatten [option-path :followup]))])
-          [toolbar/followup-add-component path
-           (fn [generate-fn]
-             (dispatch [:editor/generate-followup-component generate-fn path option-path]))]]]))))
+      (when (or @layer-visible? (and followup-component @followup-component))
+        [:div.editor-form__followup-question-overlay-outer
+         [:div.editor-form__followup-question-overlay
+          (if-let [followup (and followup-component @followup-component)]
+            ; this is actually calling ataru.virkailija.editor.core/soresu->reagent,
+            ; because of circular dependencies it cannot be directly required
+            [followup-renderer followup (flatten [option-path :followup])]
+            [toolbar/followup-add-component path
+             (fn [generate-fn]
+               (dispatch [:editor/generate-followup-component generate-fn path option-path]))])]]))))
 
 (defn followup-question [path option-path]
-  (let [layer-visible? (subscribe [:editor/followup-overlay path option-path :visible?])]
+  (let [layer-visible?      (subscribe [:editor/followup-overlay path option-path :visible?])
+        followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followup])])
+        ; disallow nesting followup questions
+        top-level-followup? (nil? ((set path) :followup))]
     (fn [path option-path]
-      [:div.editor-form__followup-questions
-       (if @layer-visible?
-         [:a {:on-click #(dispatch [:editor/followup-overlay-close path option-path])} "Poista Lisäkysymys"]
-         [:a {:on-click #(dispatch [:editor/followup-overlay-open path option-path])} "Lisäkysymys"])])))
+      [:div.editor-form__followup-question
+       (when top-level-followup?
+         (if (or @layer-visible? @followup-component)
+           [:a {:on-click #(dispatch [:editor/followup-overlay-close path option-path])} "Poista Lisäkysymys"]
+           [:a {:on-click #(dispatch [:editor/followup-overlay-open path option-path])} "Lisäkysymys"]))])))
