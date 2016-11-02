@@ -22,7 +22,8 @@
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div
-     [ec/drag-n-drop-spacer path content]
+     (when-not ((set path) :followup)
+       [ec/drag-n-drop-spacer path content])
 
      (match content
             {:module module}
