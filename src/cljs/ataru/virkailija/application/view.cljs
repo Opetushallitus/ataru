@@ -6,7 +6,7 @@
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
             [ataru.application-common.application-readonly :as readonly-contents]
-            [ataru.cljs-util :refer [wrap-scroll-to]]
+            [ataru.cljs-util :refer [wrap-scroll-to classnames]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn toggle-form-list-open! [open]
@@ -18,24 +18,26 @@
   [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
    {:on-click #(toggle-form-list-open! open)}])
 
-(defn form-list-row [name href selected? open]
+(defn form-list-row [name href selected? deleted? open]
   [:a.application-handling__form-list-row-link
    {:href href}
    (let [row-element [:div.application-handling__form-list-row
-                      {:class    (if selected? "application-handling__form-list-selected-row" "")
-                       :on-click #(toggle-form-list-open! open)}
-                      name]]
+                      {:class (classnames {:application-handling__form-list-selected-row selected?
+                                           :application-handling__form-list-deleted-row deleted?})
+                              :on-click #(toggle-form-list-open! open)}
+                      (str name (if deleted? " (poistettu) ") "")]]
      (if selected? [wrap-scroll-to row-element] row-element))])
 
 (defn form-list-opened [forms hakukohteet selected-form-key selected-hakukohde open]
   (let [form-rows      (for [[id form] forms
-                             :let [selected? (= id selected-form-key)]]
+                             :let [selected? (= id selected-form-key)
+                                   deleted? (:deleted form)]]
                          ^{:key id}
-                         [form-list-row (str "Lomake: " (:name form)) (str "/lomake-editori/applications/" (:key form)) selected? open])
+                         [form-list-row (str "Lomake – " (:name form)) (str "/lomake-editori/applications/" (:key form)) selected? deleted? open])
         hakukohde-rows (for [{:keys [hakukohde hakukohde-name]} hakukohteet
                              :let [selected? (= hakukohde (:hakukohde selected-hakukohde))]]
                          ^{:key hakukohde}
-                         [form-list-row (str "Hakukohde: " hakukohde-name) (str "/lomake-editori/applications/hakukohde/" hakukohde) selected? open])]
+                         [form-list-row (str "Hakukohde – " hakukohde-name) (str "/lomake-editori/applications/hakukohde/" hakukohde) selected? false open])]
     [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
      [form-list-arrow-up open]
      (into [:div.application-handling__form-list-open] (into form-rows hakukohde-rows))]))

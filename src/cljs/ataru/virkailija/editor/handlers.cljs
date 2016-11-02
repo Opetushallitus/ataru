@@ -27,16 +27,23 @@
 
 (reg-event-db :editor/get-user-info get-user-info)
 
-(defn sorted-by-time [m]
+
+(defn- sorted-by-time-and-deletedness [m]
   (into (sorted-map-by
           (fn [k1 k2]
-            (let [v1 (-> (get m k1) :created-time)
-                  v2 (-> (get m k2) :created-time)]
-              (match [v1 v2]
-                     [nil nil] 0
-                     [_   nil] 1
-                     [nil   _] -1
-                     :else (c/after? v1 v2)))))
+            (let [v1 (get m k1)
+                  v2 (get m k2)
+                  v1-deleted? (:deleted v1)
+                  v2-deleted? (:deleted v2)
+                  v1-created (:created v1)
+                  v2-created (:created v2)]
+              (cond
+                (and v1-deleted? (not v2-deleted?)) 1
+                (and v2-deleted? (not v1-deleted?)) -1
+                (and (nil? v1-created) (nil? v2-created) 0)
+                (nil? v2-created) 1
+                (nil? v1-created) -1
+                :else (c/after? v1-created v2-created)))))
         m))
 
 (defn- remove-nth
@@ -184,15 +191,28 @@
   (update form :languages
     (partial mapv keyword)))
 
-(defn refresh-forms []
-  (http
-    :get
-    "/lomake-editori/api/forms"
-    (fn [db {:keys [forms]}]
-      (assoc-in db [:editor :forms] (->> forms
-                                         (mapv languages->kwd)
-                                         (util/group-by-first :key)
-                                         (sorted-by-time))))))
+(defn refresh-forms
+  ([include-deleted?]
+   (http
+     :get
+     (str "/lomake-editori/api/forms" (if include-deleted? "?include-deleted=true" ""))
+     (fn [db {:keys [forms]}]
+       (assoc-in db [:editor :forms] (->> forms
+                                          (mapv languages->kwd)
+                                          (util/group-by-first :key)
+                                          (sorted-by-time-and-deletedness))))))
+  ([]
+    (refresh-forms false)))
+
+(reg-event-db
+  :editor/refresh-forms-with-deleteds
+  (fn [db _]
+    (when-let [autosave (-> db :editor :autosave)]
+      (autosave/stop-autosave! autosave))
+    (refresh-forms true)
+    (-> db
+        (update :editor dissoc :forms)
+        (update :editor dissoc :show-remove-confirm-dialog?))))
 
 (reg-event-db
   :editor/refresh-forms

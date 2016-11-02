@@ -87,12 +87,12 @@
             (assoc form :deleted true)
             (first organization-oids)))))))
 
-(defn get-forms [session organization-service]
+(defn get-forms [include-deleted? session organization-service]
   (let [organization-oids (org-oids session)]
     ;; OPH organization members can see everything when they're given the correct privilege
     (cond
       (some #{oph-organization} organization-oids)
-      {:forms (form-store/get-all-forms)}
+      {:forms (form-store/get-all-forms include-deleted?)}
 
       ;; If the user has no organization connected with the required user right, we'll show nothing
       (empty? organization-oids)
@@ -100,4 +100,4 @@
 
       :else
       (let [all-oids (all-org-oids organization-service organization-oids)]
-        {:forms (form-store/get-forms all-oids)}))))
+        {:forms (form-store/get-forms include-deleted? all-oids)}))))
