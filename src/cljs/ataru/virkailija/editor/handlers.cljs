@@ -54,11 +54,12 @@
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
 
-(reg-event-db
+(reg-event-fx
   :editor/remove-dropdown-option
-  (fn [db [_ & path]]
-    (let [option-path (current-form-content-path db [path])]
-      (update-in db (drop-last option-path) remove-nth (last option-path)))))
+  (fn [cofx [_ & path]]
+    (let [option-path (current-form-content-path (:db cofx) [path])]
+      {:db (update-in (:db cofx) (drop-last option-path) remove-nth (last option-path))
+       :dispatch [:editor/remove-followup-question (first path)]})))
 
 (reg-event-db
   :editor/add-dropdown-option

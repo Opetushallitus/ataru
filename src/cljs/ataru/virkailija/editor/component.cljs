@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
@@ -195,18 +196,17 @@
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
 (defn- remove-dropdown-option-button [path option-index]
-  {:key (str "remove-option-" option-index)}
   [:a.editor-form__multi-options-remove--cross {:on-click (fn [evt]
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
-(defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
+(defn- dropdown-option [option-index path languages & {:keys [header? followup-renderer] :or {header? false}}]
   (let [multiple-languages? (< 1 (count languages))
         option-path         [path :options option-index]]
+    ^{:key (str "options-" option-index)}
     [:div
      [:div.editor-form__multi-options-wrapper-outer
-      {:key (str "options-" option-index)}
       [:div
        (cond-> {:key (str "options-" option-index)}
          multiple-languages?
@@ -217,7 +217,7 @@
          languages)]
       [remove-dropdown-option-button path option-index]
       [followup-question path option-path]]
-     [followup-question-overlay]]))
+     [followup-question-overlay followup-renderer path option-path]]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
@@ -276,12 +276,12 @@
                                    (dispatch [:editor/select-koodisto-options uri version title path]))}
                       title]]))]])])))
 
-(defn dropdown [initial-content path]
+(defn dropdown [initial-content path followup-renderer]
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path]) 
         animation-effect (fade-out-effect path)]
-    (fn [initial-content path]
+    (fn [initial-content path followup-renderer]
       (let [languages  @languages
             field-type (:fieldType @value)]
         [:div.editor-form__component-wrapper
@@ -312,7 +312,7 @@
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
                    (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages))
+                                  (dropdown-option idx path languages :followup-renderer followup-renderer))
                      (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
@@ -321,34 +321,6 @@
                                  (.preventDefault evt)
                                  (dispatch [:editor/add-dropdown-option path]))}
                     [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
-
-(def ^:private toolbar-elements
-  {"Lomakeosio"                component/form-section
-   "Tekstikenttä"              component/text-field
-   "Tekstialue"                component/text-area
-   "Pudotusvalikko"            component/dropdown
-   "Lista, monta valittavissa" component/multiple-choice})
-
-(defn ^:private component-toolbar [path]
-  (fn [path]
-    (into [:ul.form__add-component-toolbar--list]
-          (for [[component-name generate-fn] toolbar-elements
-                :when                        (not (and
-                                                    (vector? path)
-                                                    (= :children (second path))
-                                                    (= "Lomakeosio" component-name)))]
-            [:li.form__add-component-toolbar--list-item
-             [:a {:on-click (fn [evt]
-                              (.preventDefault evt)
-                              (dispatch [:generate-component generate-fn path]))}
-              component-name]]))))
-
-(defn add-component [path]
-  (fn [path]
-    [:div.editor-form__add-component-toolbar
-     [component-toolbar path]
-     [:div.plus-component
-      [:span "+"]]]))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
@@ -401,7 +373,7 @@
              :header? true)]]
          children
          [drag-n-drop-spacer (conj path :children (count children))]
-         [add-component (conj path :children (count children))]]))))
+         [toolbar/add-component (conj path :children (count children))]]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]

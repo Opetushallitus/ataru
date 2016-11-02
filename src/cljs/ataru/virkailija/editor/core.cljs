@@ -1,47 +1,56 @@
 (ns ataru.virkailija.editor.core
   (:require [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.component :as ec]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub-raw]]
+            [ataru.virkailija.editor.components.toolbar :as toolbar]
+            [ataru.virkailija.editor.components.followup-question :as followup]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub-raw reg-sub]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
             [taoensso.timbre :refer-macros [spy debug error]]))
 
-(reg-sub-raw
+(reg-sub
   :editor/get-component-value
   (fn [db [_ & path]]
-    (reaction (get-in @db
-                      (flatten (concat
-                                 [:editor :forms (-> @db :editor :selected-form-key) :content]
-                                 path))))))
+    (get-in db
+      (flatten
+        (concat
+          [:editor :forms (-> db :editor :selected-form-key) :content]
+          path)))))
 
 (defn soresu->reagent [{:keys [children] :as content} path]
   (fn [{:keys [children] :as content} path]
     [:div
      [ec/drag-n-drop-spacer path content]
 
-     (match [content]
-            [{:module module}]
+     (match content
+            {:module module}
             [ec/module path]
 
-            [{:fieldClass "wrapperElement"
-              :children   children}]
+            {:fieldClass "wrapperElement"
+             :children   children}
             (let [children (for [[index child] (zipmap (range) children)]
                              ^{:key index}
                              [soresu->reagent child (conj path :children index)])]
               [ec/component-group content path children])
 
-            [{:fieldClass "formField" :fieldType "textField"}]
+            {:fieldClass "formField" :fieldType "textField"}
             [ec/text-field content path]
 
-            [{:fieldClass "formField" :fieldType "textArea"}]
+            {:fieldClass "formField" :fieldType "textArea"}
             [ec/text-area content path]
 
-            [{:fieldClass "formField" :fieldType "dropdown"}]
+            {:fieldClass "formField"
+             :fieldType "dropdown"
+             :options (options :guard followup/followups?)}
+            [ec/dropdown content path
+             {:followup-render soresu->reagent}]
+
+            {:fieldClass "formField" :fieldType "dropdown"}
             [ec/dropdown content path]
 
-            [{:fieldClass "formField" :fieldType "multipleChoice"}]
+            {:fieldClass "formField" :fieldType "multipleChoice"}
             [ec/dropdown content path]
 
             :else (do
@@ -57,5 +66,5 @@
                   :when             (not-empty @content)]
               [soresu->reagent json-blob [index]]))
         (conj [ec/drag-n-drop-spacer [(count @content)]])
-        (conj [ec/add-component (count @content)])))))
+        (conj [toolbar/add-component (count @content)])))))
 
