@@ -26,7 +26,9 @@
 (reg-event-db
   :editor/followup-overlay-close
   (fn [db [_ path option-path]]
-    (assoc-in db [:editor :followup-overlay path option-path :visible?] false)))
+    (-> db
+      (assoc-in [:editor :followup-overlay path option-path :visible?] false)
+      (update-in (flatten [:editor :forms (-> db :editor :selected-form-key) :content path (drop 1 option-path)]) dissoc :followup))))
 
 (reg-event-db
   :editor/add-followup-question
@@ -34,11 +36,6 @@
     (do
       (flatten-path db path option-path)
       db)))
-
-(reg-event-db
-  :editor/remove-followup-question
-  (fn [db [_ path]]
-    (update-in db [:editor :followup-overlay] dissoc (vec path))))
 
 (reg-event-db
   :editor/generate-followup-component
