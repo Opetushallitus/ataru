@@ -259,6 +259,12 @@
     (or (f db)
         db)))
 
+(reg-event-fx
+  :state-update-fx
+  (fn [cofx [_ f]]
+    (or (f cofx)
+        (dissoc cofx :event))))
+
 (reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
