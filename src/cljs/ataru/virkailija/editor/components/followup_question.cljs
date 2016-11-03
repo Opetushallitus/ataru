@@ -15,39 +15,36 @@
   (some some? (map :followup options)))
 
 (reg-sub :editor/followup-overlay
-  (fn [db [_ path option-path]]
-    (get-in db [:editor :followup-overlay path option-path :visible?])))
+  (fn [db [_ option-path]]
+    (get-in db [:editor :followup-overlay option-path :visible?])))
 
 (reg-event-db
   :editor/followup-overlay-open
-  (fn [db [_ path option-path]]
-    (assoc-in db [:editor :followup-overlay path option-path :visible?] true)))
+  (fn [db [_ option-path]]
+    (assoc-in db [:editor :followup-overlay option-path :visible?] true)))
 
 (reg-event-db
   :editor/followup-overlay-close
-  (fn [db [_ path option-path]]
-    (-> db
-      (assoc-in [:editor :followup-overlay path option-path :visible?] false)
-      (update-in (flatten [:editor :forms (-> db :editor :selected-form-key) :content path (drop 1 option-path)]) dissoc :followup))))
+  (fn [db [_ option-path]]
+    (assoc-in db [:editor :followup-overlay option-path :visible?] false)))
 
-(reg-event-db
-  :editor/add-followup-question
-  (fn [db [_ path option-path]]
-    (do
-      (flatten-path db path option-path)
-      db)))
+(reg-event-fx
+  :editor/followup-remove
+  (fn [cofx [_ final-path]]
+    {:db       (update-in (:db cofx) (flatten-path (:db cofx) (butlast final-path)) dissoc :followup)
+     :dispatch [:editor/followup-overlay-close final-path final-path]}))
 
 (reg-event-db
   :editor/generate-followup-component
-  (fn [db [_ generate-fn path option-path]]
+  (fn [db [_ generate-fn option-path]]
     (let [component (generate-fn)]
-      (assoc-in db (flatten-path db path (drop 1 option-path) :followup) component))))
+      (assoc-in db (flatten-path db option-path :followup) component))))
 
-(defn followup-question-overlay [followup-renderer path option-path]
-  (let [layer-visible?     (subscribe [:editor/followup-overlay path option-path :visible?])
+(defn followup-question-overlay [followup-renderer option-path]
+  (let [layer-visible?     (subscribe [:editor/followup-overlay option-path :visible?])
         followup-component (when followup-renderer
                              (subscribe [:editor/get-component-value (flatten [option-path :followup])]))]
-    (fn [followup-renderer path option-path]
+    (fn [followup-renderer option-path]
       (when (or @layer-visible? (and followup-component @followup-component))
         [:div.editor-form__followup-question-overlay-outer
          [:div.editor-form__followup-question-overlay
@@ -55,18 +52,19 @@
             ; this is actually calling ataru.virkailija.editor.core/soresu->reagent,
             ; because of circular dependencies it cannot be directly required
             [followup-renderer followup (flatten [option-path :followup])]
-            [toolbar/followup-add-component path
+            [toolbar/followup-add-component option-path
              (fn [generate-fn]
-               (dispatch [:editor/generate-followup-component generate-fn path option-path]))])]]))))
+               (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]))))
 
-(defn followup-question [path option-path]
-  (let [layer-visible?      (subscribe [:editor/followup-overlay path option-path :visible?])
+(defn followup-question [option-path]
+  (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
         followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followup])])
         ; disallow nesting followup questions
-        top-level-followup? (nil? ((set path) :followup))]
-    (fn [path option-path]
+        top-level-followup? (nil? ((set option-path) :followup))]
+    (fn [option-path]
       [:div.editor-form__followup-question
        (when top-level-followup?
-         (if (or @layer-visible? @followup-component)
-           [:a {:on-click #(dispatch [:editor/followup-overlay-close path option-path])} "Poista Lisäkysymys"]
-           [:a {:on-click #(dispatch [:editor/followup-overlay-open path option-path])} "Lisäkysymys"]))])))
+         (match [@followup-component @layer-visible?]
+           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Poista Lisäkysymys"]
+           [(_ :guard some?) _] nil
+           :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymys"]))])))

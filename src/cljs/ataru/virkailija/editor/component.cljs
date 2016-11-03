@@ -216,8 +216,8 @@
            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
          languages)]
       [remove-dropdown-option-button path option-index]
-      [followup-question path option-path]]
-     [followup-question-overlay followup-renderer path option-path]]))
+      [followup-question option-path]]
+     [followup-question-overlay followup-renderer option-path]]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
@@ -304,8 +304,9 @@
          [info-component path initial-content]
 
          [:div.editor-form__multi-options_wrapper
-          [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-          [dropdown-multi-options path @options-koodisto]
+          [:div.editor-form--padded
+           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+           [dropdown-multi-options path @options-koodisto]]
 
           (when (nil? @options-koodisto)
             (seq [

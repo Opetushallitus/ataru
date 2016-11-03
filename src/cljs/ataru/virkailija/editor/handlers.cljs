@@ -5,10 +5,11 @@
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as pm]
-            [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
+            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
@@ -153,10 +154,14 @@
       "animationend"
       #(do
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
-         (dispatch [:state-update
-                    (fn [db_]
-                      (-> (remove-component db_ path)
-                          (update-in [:editor :forms-meta] assoc path :removed)))])))
+         (dispatch [:state-update-fx
+                    (fn [{:keys [db]}]
+                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)
+                            followup? (= :followup (last path))]
+                        (if followup?
+                          {:db forms-meta-db
+                           :dispatch [:editor/followup-remove path]}
+                          {:db (remove-component forms-meta-db path)})))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-db

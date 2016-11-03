@@ -38,8 +38,8 @@
    [:div.plus-component
     [:span "+"]]])
 
-(defn followup-add-component [path generator]
+(defn followup-add-component [option-path generator]
   [:div.editor-form__add-component-toolbar
-   [component-toolbar path followup-toolbar-elements generator]
+   [component-toolbar option-path followup-toolbar-elements generator]
    [:div.plus-component
     [:span "+"]]])
