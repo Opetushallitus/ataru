@@ -117,10 +117,10 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (handle-application application))
-    (api/GET "/application/:application-key/:secret" []
+    (api/GET "/application/:application-key" []
       :summary "Get submitted application"
-      :path-params [application-key :- s/Str
-                    secret :- s/Str]
+      :path-params [application-key :- s/Str]
+      :query-params [secret :- s/Str]
       :return ataru-schema/Application
       (get-application application-key secret))
     (api/POST "/client-error" []
