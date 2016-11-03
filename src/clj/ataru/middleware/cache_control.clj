@@ -1,17 +1,20 @@
 (ns ataru.middleware.cache-control
-  (:require [ring.util.response :as response]))
+  (:require
+   [clojure.string :as string]
+   [ring.util.response :as response]))
+
+(def one-month-in-seconds (* 60 60 24 30))
+(def cache-for-a-long-time (str "public, max-age=" one-month-in-seconds))
+(def do-not-cache-at-all "no-store")
+(def resource-suffixes-to-cache ["css" "js" "jpg" "jpeg" "png"])
+
+(defn is-resource [uri]
+  (some true? (map #(string/ends-with? uri (str "." %)) resource-suffixes-to-cache)))
 
 (defn wrap-cache-control
   [handler]
   (fn [req]
     (let [resp  (handler req)
           uri   (:uri req)
-          cache (cond
-                  (= uri "/") "no-cache"
-                  (or (= uri "/lomake-editori") (= uri "/lomake-editori/")) "no-cache"
-                  (clojure.string/starts-with? uri "/lomake-editori/auth") "no-store"
-                  (clojure.string/starts-with? uri "/lomake-editori/api") "no-store"
-                  (clojure.string/starts-with? uri "/lomake-editori/editor") "no-cache"
-                  (clojure.string/starts-with? uri "/lomake-editori/applications") "no-cache"
-                  :else "max-age=86400")]
+          cache (if (is-resource uri) cache-for-a-long-time do-not-cache-at-all)]
       (response/header resp "Cache-Control" cache))))

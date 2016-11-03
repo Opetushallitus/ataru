@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes
-  (:require [ataru.buildversion :refer [buildversion-routes]]
+  (:require [ataru.middleware.cache-control :as cache-control]
+            [ataru.buildversion :refer [buildversion-routes]]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.application-email-confirmation :as application-email]
             [ataru.background-job.job :as job]
@@ -167,7 +168,8 @@
                                                      (>= status 400)
                                                      (clojure.string/starts-with? uri "/hakemus/api/"))
                                                (#'middleware-logger/post-logger options request response totaltime))))
-                            (wrap-gzip))))
+                            (wrap-gzip)
+                            (cache-control/wrap-cache-control))))
 
   (stop [this]
     this))
