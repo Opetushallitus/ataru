@@ -13,6 +13,7 @@
                  [binaryage/devtools "0.8.2"]
                  [re-frisk "0.2.2"] ; will only be used in development side
                  [venantius/accountant "0.1.7"]
+                 [com.cemerick/url "0.1.1"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.1"]

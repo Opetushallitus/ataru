@@ -8,6 +8,7 @@
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
+            [ataru.hakija.hakija-fx] ;; required although no explicit dependency
             [clojure.string :as str]))
 
 (enable-console-print!)

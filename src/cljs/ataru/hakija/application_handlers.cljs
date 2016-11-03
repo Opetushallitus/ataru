@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch inject-cofx]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -10,9 +10,10 @@
                                               extract-wrapper-sections]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn initialize-db [_ _]
-  {:form nil
-   :application {:answers {}}})
+(defn initialize-db [cofx _]
+  {:db {:form         nil
+        :application  {:answers {}}
+        :query-params (:query-params cofx)}})
 
 (reg-event-fx
   :application/get-latest-form-by-key
@@ -100,8 +101,9 @@
   :application/handle-form
   handle-form)
 
-(reg-event-db
+(reg-event-fx
   :application/initialize-db
+  [(inject-cofx :query-params)]
   initialize-db)
 
 (defn set-application-field [db [_ key values]]
