@@ -14,18 +14,13 @@
   {:form nil
    :application {:answers {}}})
 
-(reg-fx
-  :event
-  (fn [& event]
-    (debug event)))
-
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [cofx [_ form-key]]
-    (assoc cofx
-      :http {:method :get
-             :url (str "/hakemus/api/form/" form-key)
-             :handler :application/handle-form})))
+  (fn [{:keys [db]} [_ form-key]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/api/form/" form-key)
+            :handler :application/handle-form}}))
 
 (defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
   (ajax/get
