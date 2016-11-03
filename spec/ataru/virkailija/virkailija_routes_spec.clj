@@ -45,8 +45,8 @@
   (it "should have text/html as content type"
     (should-have-header "Content-Type" "text/html; charset=utf-8" @resp))
 
-  (it "should have Cache-Control: no-cache header"
-    (should-have-header "Cache-Control" "no-cache" @resp)))
+  (it "should have Cache-Control: no-store header"
+    (should-have-header "Cache-Control" "no-store" @resp)))
 
 (describe "Getting a static resource"
   (tags :unit)
@@ -56,8 +56,8 @@
   (it "should provide the resource found from the resources/ directory"
     (should-not-be-nil @resp))
 
-  (it "should have Cache-Control: max-age=86400 header"
-    (should-have-header "Cache-Control" "max-age=86400" @resp)))
+  (it "should have Cache-Control: max-age  header"
+    (should-have-header "Cache-Control" "public, max-age=2592000" @resp)))
 
 (describe "Storing a form"
   (tags :unit)

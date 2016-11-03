@@ -19,15 +19,15 @@
 (describe "cache-control middleware"
   (tags :unit)
 
-  (it "should add Cache-Control: max-age=86400 header for static resources"
+  (it "should add Cache-Control: max-age header for static resources"
     (with-resp [resp "/lomake-editori/static-resource.js"]
       (should-not-be-nil resp)
-      (should-have-header "Cache-Control" "max-age=86400" resp)))
+      (should-have-header "Cache-Control" "public, max-age=2592000" resp)))
 
-  (it "should add Cache-Control: no-cache header for app root"
+  (it "should add Cache-Control: no-store header for app root"
     (with-resp [resp "/lomake-editori/"]
       (should-not-be-nil resp)
-      (should-have-header "Cache-Control" "no-cache" resp)))
+      (should-have-header "Cache-Control" "no-store" resp)))
 
   (it "should add Cache-Control: no-store for requests to /lomake-editori/api"
     (with-resp [resp "/lomake-editori/api/forms"]
