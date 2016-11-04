@@ -83,15 +83,16 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn- handle-get-application [db [_ application]]
-  (->> (:answers application)
-       (reduce (fn [result {:keys [key value]}]
-                 (assoc result (keyword key) value))
-               {})
-       (reduce-kv (fn [db answer-key value]
-                    (update-in db [:application :answers answer-key]
-                      merge {:value value :valid true}))
-                  db)))
+(defn- handle-get-application [db [_ secret application]]
+  (let [db (assoc-in db [:application :secret] secret)]
+    (->> (:answers application)
+         (reduce (fn [result {:keys [key value]}]
+                   (assoc result (keyword key) value))
+                 {})
+         (reduce-kv (fn [db answer-key value]
+                      (update-in db [:application :answers answer-key]
+                        merge {:value value :valid true}))
+                    db))))
 
 (reg-event-db :application/handle-get-application
   handle-get-application)
@@ -108,7 +109,7 @@
       (some? application-secret)
       (assoc :http {:method  :get
                     :url     (str "/hakemus/api/application?secret=" application-secret)
-                    :handler :application/handle-get-application}))))
+                    :handler [:application/handle-get-application application-secret]}))))
 
 (reg-event-db
   :flasher
