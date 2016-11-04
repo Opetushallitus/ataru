@@ -14,7 +14,7 @@
           (assoc-in [:db :application :selected-application-and-form] nil)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
-(defn- maybe-change-state [application selected-application-key review-state-id]
+(defn- update-state-of-selected-application [application selected-application-key review-state-id]
   (if (= selected-application-key (:key application))
     (assoc application :state review-state-id)
     application))
@@ -27,7 +27,7 @@
          (update-in [:application :review] assoc :state review-state-id)
          (assoc-in [:application :applications]
                    (mapv
-                    #(maybe-change-state % selected-key review-state-id)
+                    #(update-state-of-selected-application % selected-key review-state-id)
                     (get-in db [:application :applications])))))))
 
 (reg-event-db
