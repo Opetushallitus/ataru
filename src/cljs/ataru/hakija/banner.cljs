@@ -53,7 +53,8 @@
              :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang   (subscribe [:application/form-language])
+        secret (subscribe [:state-query [:application :secret]])]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
@@ -66,9 +67,9 @@
                     {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
                      :on-click #(dispatch [:application/submit-form])}
                     (case @lang
-                      :fi "LÄHETÄ HAKEMUS"
-                      :sv "SKICKA ANSÖKAN"
-                      :en "SEND APPLICATION")]))))
+                      :fi (if (some? @secret) "LÄHETÄ MUUTOKSET" "LÄHETÄ HAKEMUS")
+                      :sv (if (some? @secret) "SCICKA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
+                      :en (if (some? @secret) "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])
