@@ -86,11 +86,10 @@ where application_id = :application_id;
 update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
--- Get application info from applications whose forms are still active
-select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
-from applications a
-join forms f on a.form_id = f.id
-where f.deleted is not true and hakukohde is not null and hakukohde_name is not null;
+-- Get hakukohde info from applications
+select distinct hakukohde, hakukohde_name
+from applications
+where hakukohde is not null and hakukohde_name is not null;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get applications for form-key/hakukohde

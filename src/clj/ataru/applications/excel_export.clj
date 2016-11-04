@@ -40,6 +40,12 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
+(def ^:private form-meta-hakukohde-fields
+  [{:label "Hakukohde"
+    :field :hakukohde}
+   {:label "Hakukohteen OID"
+    :field :hakukohde-oid}])
+
 (def ^:private application-meta-fields
   [{:label "Id"
     :field :key}
@@ -151,14 +157,14 @@
                    {:header header :column idx})
                  all-labels)))
 
-(defn export-all-applications [form-key]
-  (let [workbook (XSSFWorkbook.)
-        form (form-store/fetch-by-key form-key)
-        form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
-        applications-sheet (.createSheet workbook "Hakemukset")
-        applications (application-store/get-applications form-key {})
+(defn- export-applications
+  [applications form-key]
+  (let [workbook                (XSSFWorkbook.)
+        form                    (form-store/fetch-by-key form-key)
+        form-meta-sheet         (.createSheet workbook "Lomakkeen tiedot")
+        applications-sheet      (.createSheet workbook "Hakemukset")
         application-meta-fields (indexed-meta-fields application-meta-fields)
-        headers (extract-headers applications form)]
+        headers                 (extract-headers applications form)]
     (when (not-empty form)
       (write-form-meta! (make-writer form-meta-sheet 0) form (indexed-meta-fields form-meta-fields))
       (write-headers! (make-writer applications-sheet 0) headers application-meta-fields)
@@ -172,13 +178,22 @@
       (.write workbook stream)
       (.toByteArray stream))))
 
-(defn filename
+(defn export-all-form-applications
   [form-key]
-  (let [form (form-store/fetch-by-key form-key)
+  (export-applications (application-store/get-applications-for-form form-key {}) form-key))
+
+(defn export-all-hakukohde-applications
+  [form-key hakukohde-oid]
+  (export-applications (application-store/get-applications-for-hakukohde form-key hakukohde-oid) form-key))
+
+(defn filename
+  [form-key hakukohde-oid]
+  (let [form           (form-store/fetch-by-key form-key)
         sanitized-name (-> (:name form)
                            (string/replace #"[\s]+" "-")
                            (string/replace #"[^\w-]+" ""))
-        time (time-formatter (t/now) filename-time-format)]
-    (str sanitized-name "_" form-key "_" time ".xlsx")))
+        time           (time-formatter (t/now) filename-time-format)]
+    (str sanitized-name "_" form-key "_" (if hakukohde-oid (str hakukohde-oid "_") "") time ".xlsx")))
+
 
 
