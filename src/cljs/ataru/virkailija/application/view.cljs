@@ -178,7 +178,7 @@
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))]
     (fn [applications]
       (when (belongs-to-current-form @selected-key applications)
-        [:div.application-handling__container.panel-content
+        [:div.panel-content
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
@@ -189,7 +189,7 @@
     (fn []
       [:div
        [:div.application-handling__overview
-        [:div.application-handling__container.panel-content
+        [:div.panel-content
           [:div.application-handling__header
             [form-list]
             [excel-download-link @applications]]

@@ -2,11 +2,19 @@
 @bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
-@blue-border-color: #06526B; 
+@blue-border-color: #06526B;
 
 .application-handling__overview {
   background-color: @very-light-gray;
   border-bottom: 1px solid @bottom-separator-color;
+  ::-webkit-scrollbar {
+    width: 7px;
+    background-color: @light-gray;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #9B9B9B;
+    border-radius: 5px;
+  }
 }
 
 .application-handling__header {
