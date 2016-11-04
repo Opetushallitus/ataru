@@ -10,10 +10,9 @@
                                               extract-wrapper-sections]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn initialize-db [cofx _]
-  {:db {:form         nil
-        :application  {:answers {}}
-        :query-params (:query-params cofx)}})
+(defn initialize-db [_ _]
+  {:form        nil
+   :application {:answers {}}})
 
 (reg-event-fx
   :application/get-latest-form-by-key
@@ -101,9 +100,8 @@
   :application/handle-form
   handle-form)
 
-(reg-event-fx
+(reg-event-db
   :application/initialize-db
-  [(inject-cofx :query-params)]
   initialize-db)
 
 (defn set-application-field [db [_ key values]]
