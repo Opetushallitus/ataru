@@ -8,9 +8,9 @@
 
 (re-frame/reg-cofx
   :query-params
-  (fn [{:keys [db]} _]
+  (fn [cofx _]
     (let [query-params (-> (.. js/window -location -href)
                            (url/url)
                            (:query)
                            (->kebab-case-kw))]
-      (assoc db :query-params query-params))))
+      (assoc cofx :query-params query-params))))
