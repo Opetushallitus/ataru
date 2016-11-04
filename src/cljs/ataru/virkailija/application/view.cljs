@@ -124,7 +124,7 @@
     (fn []
       (into
        [:div.application-handling__review-state-container
-        [:div.application-handling__review-header "Tilanne"]]
+        [:div.application-handling__review-header "Tila"]]
        (mapv (partial review-state-row @review-state) application-review-states)))))
 
 (defn event-row [event]
