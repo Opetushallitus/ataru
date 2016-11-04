@@ -182,7 +182,8 @@
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
          ; dynamically made changes to the text-field value.
          :default-value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor)}]])))
+         :on-change (partial textual-field-change field-descriptor)
+         :value (textual-field-value field-descriptor @application)}]])))
 
 (declare render-field)
 
