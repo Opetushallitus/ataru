@@ -96,12 +96,20 @@
              (get application-review-states (:state application))
              "Tuntematon")]])))))
 
+(defn state-filter-controls []
+  [:span.application-handling__filter-state
+   [:div.application-handling__filter-state-selection-arrow-down]
+   [:a {:on-click #(println "tila clicked")} "Tila"]
+   [:div.application-handling__filter-state-selection
+    [:div.application-handling__filter-state-selection-row "Hyväksytty"]
+    [:div.application-handling__filter-state-selection-row "Hylätty"]]])
+
 (defn application-list [applications]
   [:div
    [:div.application-handling__list-header.application-handling__list-row
     [:span.application-handling__list-row--applicant "Hakija"]
     [:span.application-handling__list-row--time "Saapunut"]
-    [:span.application-handling__list-row--state "Tila"]]
+    [:span.application-handling__list-row--state [state-filter-controls]]]
    [application-list-contents applications]])
 
 (defn application-contents [{:keys [form application]}]
