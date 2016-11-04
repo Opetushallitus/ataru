@@ -103,6 +103,11 @@
 (defn get-latest-application-by-key [application-key]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
+(defn get-latest-application-by-secret [secret]
+  (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
+       (first)
+       (unwrap-application {:lang "fi"})))
+
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
