@@ -47,7 +47,13 @@ select id, key, lang, form_id as form, created_time, content from applications w
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.key = :application_key
 )
-select id, key, secret, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+
+-- name: yesql-get-latest-application-by-secret
+with latest_version as (
+    select max(created_time) as latest_time from applications a where a.secret = :secret
+)
+select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
 
 -- name: yesql-get-application-organization-by-key
 -- Get the related form's organization oid for access checks

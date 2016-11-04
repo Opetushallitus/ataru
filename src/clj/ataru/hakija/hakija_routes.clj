@@ -59,16 +59,15 @@
         (info "Started person creation job (to person service) with job id" person-service-job-id)
         (response/ok {:id application-id})))))
 
-(defn- get-application [key secret]
-  (let [application (application-store/get-latest-application-by-key key)]
-    (if (= (:secret application) secret)
+(defn- get-application [secret]
+  (let [application (application-store/get-latest-application-by-secret secret)]
+    (if (some? (:id application))
       (do
+        (println application)
         (info (str "Getting application " (:id application) " with answers"))
         (response/ok (dissoc application :secret)))
       (do
-        (info (str "Not returning application " (:id application)))
-        (info (str "Provided secret: " secret))
-        (info (str "Application secret: " (:secret application)))
+        (info (str "Not returning application for provided secret " secret))
         (response/not-found)))))
 
 (defn- handle-client-error [error-details]
@@ -117,12 +116,11 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (handle-application application))
-    (api/GET "/application/:application-key" []
+    (api/GET "/application" []
       :summary "Get submitted application"
-      :path-params [application-key :- s/Str]
       :query-params [secret :- s/Str]
       :return ataru-schema/Application
-      (get-application application-key secret))
+      (get-application secret))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]
