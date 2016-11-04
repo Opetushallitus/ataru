@@ -14,6 +14,22 @@
           (assoc-in [:db :application :selected-application-and-form] nil)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
+(defn- maybe-change-state [application selected-application-key review-state-id]
+  (if (= selected-application-key (:key application))
+    (assoc application :state review-state-id)
+    application))
+
+(reg-event-db
+ :application/update-review-state
+ (fn [db [_ review-state-id]]
+   (let [selected-key (get-in db [:application :selected-key])]
+     (-> db
+         (update-in [:application :review] assoc :state review-state-id)
+         (assoc-in [:application :applications]
+                   (mapv
+                    #(maybe-change-state % selected-key review-state-id)
+                    (get-in db [:application :applications])))))))
+
 (reg-event-db
   :application/handle-fetch-applications-response
   (fn [db [_ {:keys [applications]}]]

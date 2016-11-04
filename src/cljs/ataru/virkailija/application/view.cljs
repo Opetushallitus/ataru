@@ -116,8 +116,7 @@
         {:src "/lomake-editori/images/icon_check.png"}]
        review-state-label]
       [:div.application-handling__review-state-row
-       {:on-click (fn [evt]
-                    (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :state review-state-id))]))}
+       {:on-click #(dispatch [:application/update-review-state review-state-id])}
        review-state-label])))
 
 (defn application-review-state []
