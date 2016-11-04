@@ -83,21 +83,41 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn handle-form [db [_ form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language))]
-    (-> db
-        (assoc :form form)
-        (assoc :application {:answers (create-initial-answers form)})
-        (assoc :wrapper-sections (extract-wrapper-sections form)))))
+(defn- handle-get-application [db [_ application]]
+  (->> (:answers application)
+       (reduce (fn [result {:keys [key value]}]
+                 (assoc result (keyword key) value))
+               {})
+       (reduce-kv (fn [db answer-key value]
+                    (update-in db [:application :answers answer-key]
+                      merge {:value value :valid true}))
+                  db)))
+
+(reg-event-db :application/handle-get-application
+  handle-get-application)
+
+(defn handle-form [{:keys [db query-params]} [_ form]]
+  (let [form               (-> (languages->kwd form)
+                               (set-form-language))
+        db                 (-> db
+                               (assoc :form form)
+                               (assoc :application {:answers (create-initial-answers form)})
+                               (assoc :wrapper-sections (extract-wrapper-sections form)))
+        application-secret (:modify query-params)]
+    (cond-> {:db db}
+      (some? application-secret)
+      (assoc :http {:method  :get
+                    :url     (str "/hakemus/api/application?secret=" application-secret)
+                    :handler :application/handle-get-application}))))
 
 (reg-event-db
   :flasher
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-form
+  [(inject-cofx :query-params)]
   handle-form)
 
 (reg-event-db
