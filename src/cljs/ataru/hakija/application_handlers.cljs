@@ -23,13 +23,13 @@
             :url     (str "/hakemus/api/form/" form-key)
             :handler :application/handle-form}}))
 
-(defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
-  (ajax/get
-    (str "/hakemus/api/hakukohde/" hakukohde-oid)
-    :application/handle-form)
-  db)
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
+          :handler :application/handle-form}})
 
-(reg-event-db
+(reg-event-fx
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
 
