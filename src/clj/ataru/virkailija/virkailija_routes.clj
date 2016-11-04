@@ -125,7 +125,7 @@
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (if formKey
-                             (ok (application-service/get-application-list formKey session organization-service))
+                             (ok (application-service/get-application-list-by-form formKey session organization-service))
                              (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))))
 
                   (api/GET "/:application-key" {session :session}

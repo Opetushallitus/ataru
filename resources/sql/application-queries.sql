@@ -5,14 +5,15 @@ insert into applications
 values
 (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :hakukohde_name, :secret);
 
--- name: yesql-get-application-list
+-- name: yesql-get-application-list-by-form
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
   a.created_time, coalesce(ar.state, 'received') as state
 from applications a
-left outer join application_reviews ar on a.id = ar.application_id
-join forms f on f.id = a.form_id and f.key = :form_key
+  left outer join application_reviews ar on a.id = ar.application_id
+  join forms f on f.id = a.form_id and f.key = :form_key
+where a.hakukohde is null
 order by a.created_time desc;
 
 -- name: yesql-get-application-list-by-hakukohde
@@ -34,8 +35,10 @@ where application_key = :application_key order by time asc;
 select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
 
 -- name: yesql-application-query-by-modified
+-- Gets applications only for forms (omits hakukohde applications)
 select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
-join forms f on f.id = a.form_id and f.key = :form_key;
+join forms f on f.id = a.form_id and f.key = :form_key
+where a.hakukohde is null;
 
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
@@ -88,3 +91,15 @@ select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
 from applications a
 join forms f on a.form_id = f.id
 where f.deleted is not true and hakukohde is not null and hakukohde_name is not null;
+
+-- name: yesql-application-query-for-hakukohde
+-- Get applications for form-key/hakukohde
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content
+FROM applications a
+  JOIN forms f ON f.id = a.form_id AND f.key = :form_key AND a.hakukohde = :hakukohde-oid;
