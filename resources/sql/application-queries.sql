@@ -100,6 +100,8 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content
+  a.content,
+  a.hakukohde,
+  a.hakukohde_name
 FROM applications a
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key AND a.hakukohde = :hakukohde_oid;

@@ -148,16 +148,22 @@
                                  session
                                  organization-service)))
 
+                   (api/GET "/excel/:form-key" {session :session}
+                            :path-params [form-key :- s/Str]
+                            :summary  "Return Excel export of the form and applications for it."
+                            {:status  200
+                             :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                       "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
+                             :body    (application-service/get-excel-report-of-applications-by-form form-key session organization-service)})
+
                    (api/GET "/excel/:form-key/:hakukohde-oid" {session :session}
-                     :path-params [form-key :- s/Str
-                                   {hakukohde-oid :- s/Str nil}]
-                     :summary  "Return Excel export of the form and applications for it."
+                            :path-params [form-key :- s/Str
+                                          hakukohde-oid :- s/Str]
+                            :summary "Return Excel export of the form and hakukohde and applications for it."
                             {:status  200
                              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                        "Content-Disposition" (str "attachment; filename=" (excel/filename form-key hakukohde-oid))}
-                             :body    (if hakukohde-oid
-                                        (application-service/get-excel-report-of-applications-by-hakukohde form-key hakukohde-oid session organization-service)
-                                        (application-service/get-excel-report-of-applications-by-form form-key session organization-service))}))
+                             :body    (application-service/get-excel-report-of-applications-by-hakukohde form-key hakukohde-oid session organization-service)}))
 
                  (api/GET "/hakukohteet" []
                           :summary "List hakukohde information found for applications stored in system"
