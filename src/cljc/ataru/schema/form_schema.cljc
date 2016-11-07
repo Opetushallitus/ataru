@@ -144,7 +144,8 @@
    (s/optional-key :id)             s/Int
    (s/optional-key :hakukohde)      (s/maybe s/Str)
    (s/optional-key :hakukohde-name) (s/maybe s/Str)
-   (s/optional-key :created-time)   org.joda.time.DateTime})
+   (s/optional-key :created-time)   org.joda.time.DateTime
+   (s/optional-key :secret)         s/Str})
 
 (def application-states (s/enum "received"
                                 "processing"

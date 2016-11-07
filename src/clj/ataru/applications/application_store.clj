@@ -23,45 +23,64 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn add-new-application
-  "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection           {:connection conn}
-          answers              (:answers application)
-          application-to-store {:form_id        (:form application)
-                                :key            (str (java.util.UUID/randomUUID))
-                                :lang           (:lang application)
-                                :preferred_name (find-value-from-answers "preferred-name" answers)
-                                :last_name      (find-value-from-answers "last-name" answers)
-                                :hakukohde      (:hakukohde application)
-                                :hakukohde_name (:hakukohde-name application)
-                                :content        {:answers answers}
-                                :secret         (crypto/url-part 128)}
-          application          (yesql-add-application-query<! application-to-store connection)
-          app-id               (:id application)
-          app-key              (:key application)]
-      (yesql-add-application-event! {:application_id   app-id
-                                     :application_key  app-key
-                                     :event_type       "review-state-change"
-                                     :new_review_state "received"}
-                                    connection)
-      (yesql-add-application-review! {:application_id  app-id
-                                      :application_key app-key
-                                      :state           "received"}
-                                     connection)
-      app-id)))
-
 (defn unwrap-application [{:keys [lang]} application]
   (assoc (->kebab-case-kw (dissoc application :content))
-         :answers
-         (mapv (fn [answer]
-                 (update answer :label (fn [label]
-                                         (or
-                                           (:fi label)
-                                           (:sv label)
-                                           (:en label)))))
-               (-> application :content :answers))))
+    :answers
+    (mapv (fn [answer]
+            (update answer :label (fn [label]
+                                    (or
+                                      (:fi label)
+                                      (:sv label)
+                                      (:en label)))))
+          (-> application :content :answers))))
+
+(defn add-new-application
+  "Add application and also initial metadata (event for receiving application, and initial review record)"
+  [application & [conn]]
+  (letfn [(add-application [application conn]
+            (let [connection           {:connection conn}
+                  answers              (:answers application)
+                  secret               (:secret application)
+                  application-to-store {:form_id        (:form application)
+                                        :key            (or (:key application)
+                                                            (str (java.util.UUID/randomUUID)))
+                                        :lang           (:lang application)
+                                        :preferred_name (find-value-from-answers "preferred-name" answers)
+                                        :last_name      (find-value-from-answers "last-name" answers)
+                                        :hakukohde      (:hakukohde application)
+                                        :hakukohde_name (:hakukohde-name application)
+                                        :content        {:answers answers}
+                                        :secret         (or secret (crypto/url-part 128))}
+                  application          (yesql-add-application-query<! application-to-store connection)
+                  app-id               (:id application)
+                  app-key              (:key application)]
+              (when-not secret
+                (yesql-add-application-event! {:application_id   app-id
+                                               :application_key  app-key
+                                               :event_type       "review-state-change"
+                                               :new_review_state "received"}
+                                              connection)
+                (yesql-add-application-review! {:application_id  app-id
+                                                :application_key app-key
+                                                :state           "received"}
+                                               connection))
+              app-id))]
+    (if (some? conn)
+      (add-application application conn)
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (add-application application conn)))))
+
+(defn- get-latest-version-and-lock-for-update [secret lang conn]
+  (when-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
+    (unwrap-application {:lang lang} application)))
+
+(defn add-application-or-increment-version! [{:keys [lang secret] :as application}]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [previous-version (get-latest-version-and-lock-for-update secret lang conn)
+          application (cond-> application
+                        (some? previous-version)
+                        (merge (select-keys previous-version [:key :secret])))]
+      (add-new-application application conn))))
 
 (defn- older?
   "Check if application given as first argument is older than
