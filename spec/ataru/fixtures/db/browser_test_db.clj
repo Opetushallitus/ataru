@@ -1,9 +1,11 @@
 (ns ataru.fixtures.db.browser-test-db
   "Database fixture, insert test-data to DB"
   (:require [yesql.core :refer [defqueries]]
+            [clojure.java.jdbc :as jdbc]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
-            [ataru.fixtures.application :as app-fixture]))
+            [ataru.fixtures.application :as app-fixture]
+            [oph.soresu.common.db :as db]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -51,4 +53,5 @@
 (defn init-db-fixture []
   (form-store/create-form-or-increment-version! form1 "1.2.246.562.10.0439845")
   (form-store/create-form-or-increment-version! form2 "1.2.246.562.10.0439845")
-  (application-store/add-new-application application1))
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (application-store/add-new-application application1 conn)))
