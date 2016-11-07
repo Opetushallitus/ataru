@@ -7,7 +7,8 @@
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
-            [crypto.random :as crypto]))
+            [crypto.random :as crypto]
+            [taoensso.timbre :refer [info]]))
 
 (defqueries "sql/application-queries.sql")
 
@@ -69,13 +70,19 @@
   (when-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application {:lang lang} application)))
 
-(defn add-application-or-increment-version! [{:keys [lang secret] :as application}]
+(defn add-application-or-increment-version! [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [previous-version (get-latest-version-and-lock-for-update secret lang conn)
-          application (cond-> application
-                        (some? previous-version)
-                        (merge (select-keys previous-version [:key :secret])))]
-      (add-new-application application conn))))
+    (let [old-application (get-latest-version-and-lock-for-update secret lang conn)]
+      (cond
+        (some? old-application)
+        (do
+          (info (str "Updating application with key " (:key old-application) " based on valid application secret, retaining key and secret from previous version"))
+          (add-new-application (merge new-application (select-keys old-application [:key :secret])) conn))
+
+        (nil? old-application)
+        (do
+          (info (str "Inserting completely new application"))
+          (add-new-application (dissoc new-application :key :secret) conn))))))
 
 (defn- older?
   "Check if application given as first argument is older than
