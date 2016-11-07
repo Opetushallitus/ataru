@@ -74,9 +74,9 @@
   (aac/check-form-access form-key session organization-service)
   (java.io.ByteArrayInputStream. (excel/export-all-form-applications form-key)))
 
-(defn get-excel-report-of-applications-by-hakukohde [hakukohde-oid session organization-service]
+(defn get-excel-report-of-applications-by-hakukohde [form-key hakukohde-oid session organization-service]
   (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications hakukohde-oid form-key)))
+  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key hakukohde-oid)))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]

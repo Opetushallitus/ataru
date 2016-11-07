@@ -20,12 +20,12 @@ order by a.created_time desc;
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.modified_time, coalesce(ar.state, 'received') as state
+  a.created_time, coalesce(ar.state, 'received') as state
 from applications a
   left outer join application_reviews ar on a.id = ar.application_id
   join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde = :hakukohde_oid
-order by a.modified_time desc;
+order by a.created_time desc;
 
 -- name: yesql-get-application-events
 select event_type, time, new_review_state, application_key, id from application_events
@@ -87,8 +87,9 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-select distinct hakukohde, hakukohde_name
-from applications
+select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
+from applications a
+  join forms f on a.form_id = f.id
 where hakukohde is not null and hakukohde_name is not null;
 
 -- name: yesql-application-query-for-hakukohde
@@ -101,4 +102,4 @@ SELECT
   a.created_time,
   a.content
 FROM applications a
-  JOIN forms f ON f.id = a.form_id AND f.key = :form_key AND a.hakukohde = :hakukohde-oid;
+  JOIN forms f ON f.id = a.form_id AND f.key = :form_key AND a.hakukohde = :hakukohde_oid;

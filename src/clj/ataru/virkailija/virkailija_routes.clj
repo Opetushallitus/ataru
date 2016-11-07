@@ -156,7 +156,7 @@
                              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                        "Content-Disposition" (str "attachment; filename=" (excel/filename form-key hakukohde-oid))}
                              :body    (if hakukohde-oid
-                                        (application-service/get-excel-report-of-applications-by-hakukohde form-key hakukohde-oid organization-service)
+                                        (application-service/get-excel-report-of-applications-by-hakukohde form-key hakukohde-oid session organization-service)
                                         (application-service/get-excel-report-of-applications-by-form form-key session organization-service))}))
 
                  (api/GET "/hakukohteet" []

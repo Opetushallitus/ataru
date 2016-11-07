@@ -146,8 +146,8 @@
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [form-key :- s/Str hakukohde-oid :- s/Str]
-  (->> (exec-db :db yesql-application-query-for-hakukohde {:form-key form-key :hakukohde-oid hakukohde-oid})
-       (mapv (partial unwrap-application {:lang "fi"}))
+  (->> (exec-db :db yesql-application-query-for-hakukohde {:form_key form-key :hakukohde_oid hakukohde-oid})
+       (mapv (partial unwrap-application {}))
        (latest-versions-only)))
 
 (defn add-person-oid

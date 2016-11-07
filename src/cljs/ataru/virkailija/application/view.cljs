@@ -65,7 +65,7 @@
 
 (defn excel-download-link [applications]
   (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))
-        hakukohde (reaction @(subscribe [:editor/selected-hakukohde]))]
+        hakukohde (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))]
     (fn [applications]
       (when (> (count applications) 0)
         (let [url (if @form-key
