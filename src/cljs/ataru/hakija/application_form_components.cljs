@@ -11,6 +11,8 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(declare render-field)
+
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -210,6 +212,19 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
+(defn dropdown-followup [lang value field-descriptor]
+  (when-let [followup (and
+                        value
+                        (some->> (:options field-descriptor)
+                          (eduction (comp
+                                      (filter :followup)
+                                      (filter #(= (-> % :label lang) value))
+                                      (map :followup)))
+                          not-empty
+                          first))]
+    [:div.application__form-dropdown-followup
+     [render-field followup]]))
+
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
@@ -225,30 +240,33 @@
                                                          (get (answer-key field-descriptor))
                                                          :value)
                                                      "")]
-                                [div-kwd
-                                 [label field-descriptor]
-                                 [:div.application__form-text-input-info-text
-                                  [info-text field-descriptor]]
-                                 [:div.application__form-select-wrapper
-                                  [:span.application__form-select-arrow]
-                                  [:select.application__form-select
+                                [:div.application__form-field-wrapper
+                                 [div-kwd
+                                  [label field-descriptor]
+                                  [:div.application__form-text-input-info-text
+                                   [info-text field-descriptor]]
+                                  [:div.application__form-select-wrapper
+                                   [:span.application__form-select-arrow]
+                                   [:select.application__form-select
                                    {:value value
                                     :on-change (partial textual-field-change field-descriptor)}
-                                   (concat
-                                     (when
-                                       (and
-                                         (nil? (:koodisto-source field-descriptor))
-                                         (not (:no-blank-option field-descriptor))
-                                         (not= "" (:value (first (:options field-descriptor)))))
-                                       [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-                                     (map-indexed
-                                       (fn [idx option]
-                                         (let [label (non-blank-val (get-in option [:label lang])
-                                                       (get-in option [:label default-lang]))
-                                               value (:value option)]
-                                           ^{:key idx}
-                                           [:option {:value value} label]))
-                                       (:options field-descriptor)))]]]))})))
+                                    (concat
+                                      (when
+                                          (and
+                                            (nil? (:koodisto-source field-descriptor))
+                                            (not (:no-blank-option field-descriptor))
+                                            (not= "" (:value (first (:options field-descriptor)))))
+                                        [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+                                      (map-indexed
+                                        (fn [idx option]
+                                          (let [label        (non-blank-val (get-in option [:label lang])
+                                                               (get-in option [:label default-lang]))
+                                                option-value (:value option)]
+                                            ^{:key idx}
+                                            [:option {:value option-value} label]))
+                                        (:options field-descriptor)))]]]
+
+                                 [dropdown-followup lang value field-descriptor]]))})))
 
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))
