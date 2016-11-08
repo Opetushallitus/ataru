@@ -108,7 +108,7 @@
     (cond-> {:db db}
       (some? application-secret)
       (assoc :http {:method  :get
-                    :url     (str "/hakemus/api/application?secret=" application-secret "&form-key=" (:key form))
+                    :url     (str "/hakemus/api/application?secret=" application-secret)
                     :handler [:application/handle-get-application application-secret]}))))
 
 (reg-event-db
