@@ -8,8 +8,7 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.application-common.fx]))
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -128,8 +127,7 @@
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
-     :delayed-dispatch {:dispatch-vec [:application/merge-submitted-answers answers]
-                        :timeout      1000}}))
+     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]}))
 
 (reg-event-db
   :flasher
