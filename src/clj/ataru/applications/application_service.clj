@@ -61,7 +61,7 @@
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service]
-  (let [application (application-store/get-latest-application-by-key application-key)
+  (let [application (dissoc (application-store/get-latest-application-by-key application-key) :secret)
         form        (form-store/fetch-by-id (:form application))
         application (populate-koodisto-fields application form)]
     (aac/check-application-access application-key session organization-service)

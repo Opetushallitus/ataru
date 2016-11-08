@@ -45,11 +45,14 @@
     {:key (name ans-key) :value value :fieldType field-type :label label}))
 
 (defn create-application-to-submit [application form lang]
-  {:form           (:id form)
-   :lang           lang
-   :hakukohde      (:hakukohde-oid form)
-   :hakukohde-name (:hakukohde-name form)
-   :answers        (create-answers-to-submit (:answers application) form)})
+  (let [secret (:secret application)]
+    (cond-> {:form           (:id form)
+             :lang           lang
+             :hakukohde      (:hakukohde-oid form)
+             :hakukohde-name (:hakukohde-name form)
+             :answers        (create-answers-to-submit (:answers application) form)}
+      (some? secret)
+      (assoc :secret secret))))
 
 (defn extract-wrapper-sections [form]
   (map #(select-keys % [:id :label :children])

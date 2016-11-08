@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch inject-cofx]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -11,29 +11,24 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn initialize-db [_ _]
-  {:form nil
+  {:form        nil
    :application {:answers {}}})
-
-(reg-fx
-  :event
-  (fn [& event]
-    (debug event)))
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [cofx [_ form-key]]
-    (assoc cofx
-      :http {:method :get
-             :url (str "/hakemus/api/form/" form-key)
-             :handler :application/handle-form})))
+  (fn [{:keys [db]} [_ form-key]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/api/form/" form-key)
+            :handler :application/handle-form}}))
 
-(defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
-  (ajax/get
-    (str "/hakemus/api/hakukohde/" hakukohde-oid)
-    :application/handle-form)
-  db)
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
+          :handler :application/handle-form}})
 
-(reg-event-db
+(reg-event-fx
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
 
@@ -88,21 +83,42 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn handle-form [db [_ form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language))]
-    (-> db
-        (assoc :form form)
-        (assoc :application {:answers (create-initial-answers form)})
-        (assoc :wrapper-sections (extract-wrapper-sections form)))))
+(defn- handle-get-application [db [_ secret application]]
+  (let [db (assoc-in db [:application :secret] secret)]
+    (->> (:answers application)
+         (reduce (fn [result {:keys [key value]}]
+                   (assoc result (keyword key) value))
+                 {})
+         (reduce-kv (fn [db answer-key value]
+                      (update-in db [:application :answers answer-key]
+                        merge {:value value :valid true}))
+                    db))))
+
+(reg-event-db :application/handle-get-application
+  handle-get-application)
+
+(defn handle-form [{:keys [db query-params]} [_ form]]
+  (let [form               (-> (languages->kwd form)
+                               (set-form-language))
+        db                 (-> db
+                               (assoc :form form)
+                               (assoc :application {:answers (create-initial-answers form)})
+                               (assoc :wrapper-sections (extract-wrapper-sections form)))
+        application-secret (:modify query-params)]
+    (cond-> {:db db}
+      (some? application-secret)
+      (assoc :http {:method  :get
+                    :url     (str "/hakemus/api/application?secret=" application-secret)
+                    :handler [:application/handle-get-application application-secret]}))))
 
 (reg-event-db
   :flasher
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-form
+  [(inject-cofx :query-params)]
   handle-form)
 
 (reg-event-db
