@@ -23,5 +23,6 @@
        :password "{{ataru_cas_password}}"}
  :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
  :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}
+ :tarjonta-service {:hakukohde-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
        :hakija-base-path "{{ataru_hakija_log_path}}"}}
