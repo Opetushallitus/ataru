@@ -17,5 +17,5 @@
         form           (when form-key (fetch-form-by-key form-key))]
     (if form
       (merge form {:hakukohde-oid  hakukohde-oid
-                   :hakukohde-name (-> result :hakukohteenNimet :kieli_fi)}))
-      (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key)))
+                   :hakukohde-name (-> result :hakukohteenNimet :kieli_fi)})
+      (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
