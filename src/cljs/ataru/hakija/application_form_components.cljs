@@ -215,7 +215,6 @@
 
 (defn dropdown-followup [lang value field-descriptor]
   (let [prev (r/atom @value)
-        display (r/atom true)
         resolve-followup (fn [current-value]
                            (and
                              current-value
@@ -230,12 +229,15 @@
       {:component-did-update (fn []
                                (let [previous @prev]
                                  (when-not (= previous (reset! prev @value))
-                                   (do
-                                     (dispatch [:application/set-application-field (answer-key (resolve-followup previous))])
-                                     (reset! display false)
-                                     (js/setTimeout (fn [] (reset! display true)) 100)))))
+                                   (let [previous-followup (resolve-followup previous)
+                                         current-followup  (resolve-followup @value)]
+                                     (dispatch [:state-update-fx
+                                                (fn [{:keys [db]}]
+                                                  {:db (->
+                                                         (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
+                                                         (update-in [:application :ui (answer-key current-followup)] assoc :visible? true))})])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followup (and @display (resolve-followup @value))]
+                               (when-let [followup (and (resolve-followup @value))]
                                  [:div.application__form-dropdown-followup
                                   [render-field followup]]))})))
 
