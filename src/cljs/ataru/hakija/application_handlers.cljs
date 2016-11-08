@@ -103,7 +103,6 @@
       (mapv keyword languages))))
 
 (defn- merge-submitted-answers [db [_ submitted-answers]]
-  (println (str "merge-submitted-answers"))
   (update-in db [:application :answers]
     (fn [answers]
       (reduce (fn [answers {:keys [key value]}]
