@@ -11,8 +11,8 @@
 (defn flatten-path [db & parts]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
 
-(defn followups? [options]
-  (some some? (map :followup options)))
+(defn followups? [dropdown-options]
+  (some some? (map :followup dropdown-options)))
 
 (reg-sub :editor/followup-overlay
   (fn [db [_ option-path]]

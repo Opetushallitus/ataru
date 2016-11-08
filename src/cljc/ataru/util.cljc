@@ -26,6 +26,13 @@
          :children   children}
         (flatten-form-fields children)
 
+        {:fieldType "dropdown"
+         :options options}
+        (cons field
+          (some->> options
+            (filter :followup)
+            (map :followup)))
+
         :else field))))
 
 (defn answers-by-key [answers]
