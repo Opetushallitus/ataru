@@ -13,7 +13,7 @@
                    (-> response :body (json/parse-string true) :result))]
     (if result
       result
-      (warn "could not retrieve hakukohde details" status hakukohde-oid))))
+      (warn "could not retrieve hakukohde details" url status))))
 
 (defn get-form-key-for-hakukohde [hakukohde-oid]
   (when-let [hakukohde (get-hakukohde hakukohde-oid)]
