@@ -186,7 +186,9 @@
 (defn set-application-field [db [_ key values]]
   (let [path                [:application :answers key]
         current-answer-data (get-in db path)]
-    (assoc-in db path (merge current-answer-data values))))
+    (assoc-in db path
+      (when values
+        (merge current-answer-data values)))))
 
 (reg-event-db
   :application/set-application-field

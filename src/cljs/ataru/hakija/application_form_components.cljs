@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
@@ -47,9 +48,9 @@
         value  (or (first
                      (eduction
                        (comp (filter :default-value)
-                             (map :value))
+                         (map :value))
                        (:options dropdown-data)))
-                   (-> select .-value))
+                 (-> select .-value))
         valid? (field-value-valid? dropdown-data value)]
     (if-not (some? secret)
       (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
@@ -213,33 +214,47 @@
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
 (defn dropdown-followup [lang value field-descriptor]
-  (when-let [followup (and
-                        value
-                        (some->> (:options field-descriptor)
-                          (eduction (comp
-                                      (filter :followup)
-                                      (filter #(= (-> % :label lang) value))
-                                      (map :followup)))
-                          not-empty
-                          first))]
-    [:div.application__form-dropdown-followup
-     [render-field followup]]))
+  (let [prev (r/atom @value)
+        display (r/atom true)
+        resolve-followup (fn [current-value]
+                           (and
+                             current-value
+                             (some->> (:options field-descriptor)
+                               (eduction (comp
+                                           (filter :followup)
+                                           (filter #(= (-> % :label lang) current-value))
+                                           (map :followup)))
+                               not-empty
+                               first)))]
+    (r/create-class
+      {:component-did-update (fn []
+                               (let [previous @prev]
+                                 (when-not (= previous (reset! prev @value))
+                                   (do
+                                     (dispatch [:application/set-application-field (answer-key (resolve-followup previous))])
+                                     (reset! display false)
+                                     (js/setTimeout (fn [] (reset! display true)) 100)))))
+       :reagent-render       (fn [lang value field-descriptor]
+                               (when-let [followup (and @display (resolve-followup @value))]
+                                 [:div.application__form-dropdown-followup
+                                  [render-field followup]]))})))
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        secret       (subscribe [:state-query [:application :secret]])]
+        secret       (subscribe [:state-query [:application :secret]])
+        value        (reaction
+                       (or (-> (:answers @application)
+                             (get (answer-key field-descriptor))
+                             :value)
+                         ""))]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
-                                    default-lang @default-lang
-                                    value        (or (-> (:answers @application)
-                                                         (get (answer-key field-descriptor))
-                                                         :value)
-                                                     "")]
+                                    default-lang @default-lang]
                                 [:div.application__form-field-wrapper
                                  [div-kwd
                                   [label field-descriptor]
@@ -248,8 +263,8 @@
                                   [:div.application__form-select-wrapper
                                    [:span.application__form-select-arrow]
                                    [:select.application__form-select
-                                   {:value value
-                                    :on-change (partial textual-field-change field-descriptor)}
+                                    {:value @value
+                                     :on-change (partial textual-field-change field-descriptor)}
                                     (concat
                                       (when
                                           (and
