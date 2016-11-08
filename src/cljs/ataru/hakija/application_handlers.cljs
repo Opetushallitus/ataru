@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch inject-cofx]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -8,25 +8,45 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.application-common.fx]))
 
 (defn initialize-db [_ _]
   {:form        nil
    :application {:answers {}}})
 
+(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key]}]]
+  {:db       (assoc-in db [:application :secret] secret)
+   :dispatch [:application/get-latest-form-by-key form-key answers]})
+
+(reg-event-fx
+  :application/handle-get-application
+  handle-get-application)
+
+(defn- get-application-by-secret
+  [{:keys [db]} [_ secret]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/application?secret=" secret)
+          :handler [:application/handle-get-application secret]}})
+
+(reg-event-fx
+  :application/get-application-by-secret
+  get-application-by-secret)
+
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [{:keys [db]} [_ form-key]]
+  (fn [{:keys [db]} [_ form-key answers]]
     {:db   db
      :http {:method  :get
             :url     (str "/hakemus/api/form/" form-key)
-            :handler :application/handle-form}}))
+            :handler [:application/handle-form answers]}}))
 
 (defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
-          :handler :application/handle-form}})
+          :handler [:application/handle-form nil]}})
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
@@ -83,33 +103,33 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn- handle-get-application [db [_ secret application]]
-  (let [db (assoc-in db [:application :secret] secret)]
-    (->> (:answers application)
-         (reduce (fn [result {:keys [key value]}]
-                   (assoc result (keyword key) value))
-                 {})
-         (reduce-kv (fn [db answer-key value]
-                      (update-in db [:application :answers answer-key]
-                        merge {:value value :valid true}))
-                    db))))
+(defn- merge-submitted-answers [db [_ submitted-answers]]
+  (println (str "merge-submitted-answers"))
+  (update-in db [:application :answers]
+    (fn [answers]
+      (reduce (fn [answers {:keys [key value]}]
+                (update answers (keyword key)
+                  merge {:valid true :value value}))
+              answers
+              submitted-answers))))
 
-(reg-event-db :application/handle-get-application
-  handle-get-application)
+(reg-event-db
+  :application/merge-submitted-answers
+  merge-submitted-answers)
 
-(defn handle-form [{:keys [db query-params]} [_ form]]
-  (let [form               (-> (languages->kwd form)
-                               (set-form-language))
-        db                 (-> db
-                               (assoc :form form)
-                               (assoc :application {:answers (create-initial-answers form)})
-                               (assoc :wrapper-sections (extract-wrapper-sections form)))
-        application-secret (:modify query-params)]
-    (cond-> {:db db}
-      (some? application-secret)
-      (assoc :http {:method  :get
-                    :url     (str "/hakemus/api/application?secret=" application-secret)
-                    :handler [:application/handle-get-application application-secret]}))))
+(defn handle-form [{:keys [db]} [_ answers form]]
+  (let [form (-> (languages->kwd form)
+                 (set-form-language))
+        db   (-> db
+                 (assoc :form form)
+                 (assoc-in [:application :answers] (create-initial-answers form))
+                 (assoc :wrapper-sections (extract-wrapper-sections form)))]
+    {:db               db
+     ;; Previously submitted answers must currently be merged to the app db
+     ;; after a delay or rules will ruin them and the application will not
+     ;; look completely as valid (eg. SSN field will be blank)
+     :delayed-dispatch {:dispatch-vec [:application/merge-submitted-answers answers]
+                        :timeout      1000}}))
 
 (reg-event-db
   :flasher
@@ -118,7 +138,6 @@
 
 (reg-event-fx
   :application/handle-form
-  [(inject-cofx :query-params)]
   handle-form)
 
 (reg-event-db

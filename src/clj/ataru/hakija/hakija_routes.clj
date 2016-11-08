@@ -173,6 +173,8 @@
                                              (api/GET "/:key" []
                                                (render-application))
                                              (api/GET "/:key/:lang" []
+                                               (render-application))
+                                             (api/GET "/" []
                                                (render-application))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
