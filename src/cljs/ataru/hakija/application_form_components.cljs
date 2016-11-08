@@ -224,14 +224,14 @@
                                                          :value)
                                                      "")]
                                 [div-kwd
-                                 {:on-change (partial textual-field-change field-descriptor)}
                                  [label field-descriptor]
                                  [:div.application__form-text-input-info-text
                                   [info-text field-descriptor]]
                                  [:div.application__form-select-wrapper
                                   [:span.application__form-select-arrow]
                                   [:select.application__form-select
-                                   {:value value}
+                                   {:value value
+                                    :on-change (partial textual-field-change field-descriptor)}
                                    (map-indexed (fn [idx option]
                                                   (let [label (non-blank-val (get-in option [:label lang])
                                                                              (get-in option [:label default-lang]))
