@@ -50,13 +50,13 @@
                                   (should= :db ds-key)
                                   (should= "yesql-application-query-by-modified" (-> query-fn .meta :name))
                                   (should= {:form_key "abcdefghjkl"} params)
-                                  fixtures/applications)]
+                                  (filter #(nil? (:hakukohde %)) fixtures/applications))]
       (spec)))
 
           (it "should return all applications belonging to a form"
               (should=
                 (mapv #(select-keys % [:id :key]) expected-applications)
-                (mapv #(select-keys % [:id :key]) (store/get-applications form-key {})))))
+                (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key {})))))
 
 (describe "setting person oid to application"
   (tags :unit)
