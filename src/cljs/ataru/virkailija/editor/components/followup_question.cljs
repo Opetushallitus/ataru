@@ -40,18 +40,15 @@
     (let [component (generate-fn)]
       (assoc-in db (flatten-path db option-path :followup) component))))
 
-(defn followup-question-overlay [followup-renderer option-path]
+(defn followup-question-overlay [option-path]
   (let [layer-visible?     (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component (when followup-renderer
-                             (subscribe [:editor/get-component-value (flatten [option-path :followup])]))]
-    (fn [followup-renderer option-path]
-      (when (or @layer-visible? (and followup-component @followup-component))
+        followup-component (subscribe [:editor/get-component-value (flatten [option-path :followup])])]
+    (fn [option-path]
+      (when (or @layer-visible? @followup-component)
         [:div.editor-form__followup-question-overlay-outer
          [:div.editor-form__followup-question-overlay
-          (if-let [followup (and followup-component @followup-component)]
-            ; this is actually calling ataru.virkailija.editor.core/soresu->reagent,
-            ; because of circular dependencies it cannot be directly required
-            [followup-renderer followup (flatten [option-path :followup])]
+          (if-let [followup @followup-component]
+            [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
             [toolbar/followup-add-component option-path
              (fn [generate-fn]
                (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]))))

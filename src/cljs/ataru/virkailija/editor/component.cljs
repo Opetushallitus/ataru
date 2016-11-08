@@ -201,7 +201,7 @@
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
-(defn- dropdown-option [option-index path languages & {:keys [header? followup-renderer] :or {header? false}}]
+(defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
   (let [multiple-languages? (< 1 (count languages))
         option-path         [path :options option-index]]
     ^{:key (str "options-" option-index)}
@@ -217,7 +217,7 @@
          languages)]
       [remove-dropdown-option-button path option-index]
       [followup-question option-path]]
-     [followup-question-overlay followup-renderer option-path]]))
+     [followup-question-overlay option-path]]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
@@ -276,12 +276,12 @@
                                    (dispatch [:editor/select-koodisto-options uri version title path]))}
                       title]]))]])])))
 
-(defn dropdown [initial-content path followup-renderer]
+(defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path]) 
         animation-effect (fade-out-effect path)]
-    (fn [initial-content path followup-renderer]
+    (fn [initial-content path]
       (let [languages  @languages
             field-type (:fieldType @value)]
         [:div.editor-form__component-wrapper
@@ -313,7 +313,7 @@
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
                    (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages :followup-renderer followup-renderer))
+                                  (dropdown-option idx path languages))
                      (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
