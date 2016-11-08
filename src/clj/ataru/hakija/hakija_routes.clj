@@ -59,25 +59,17 @@
         (info "Started person creation job (to person service) with job id" person-service-job-id)
         (response/ok {:id application-id})))))
 
-(defn- get-application [secret form-key]
-  (let [application (application-store/get-latest-application-by-secret secret)
-        form        (form-store/fetch-by-id (:form application))]
+(defn- get-application [secret]
+  (let [application (application-store/get-latest-application-by-secret secret)]
     (cond
-      (and (some? (:id application))
-           (= form-key (:key form)))
+      (some? (:id application))
       (do
         (info (str "Getting application " (:id application) " with answers"))
         (response/ok (dissoc application :secret)))
 
-      (and (some? (:id application))
-           (not= form-key (:key form)))
-      (do
-        (warn (str "Mismatching form keys (key in database: " (:key form) ", key from the client: " form-key ") when getting application by secret, returning HTTP 404 for security reasons"))
-        (response/not-found))
-
       :else
       (do
-        (info (str "Failed to get application belonging to form " form-key " by secret, returning HTTP 404"))
+        (info (str "Failed to get application belonging by secret, returning HTTP 404"))
         (response/not-found)))))
 
 (defn- handle-client-error [error-details]
@@ -128,10 +120,9 @@
       (handle-application application))
     (api/GET "/application" []
       :summary "Get submitted application"
-      :query-params [form-key :- s/Str
-                     secret :- s/Str]
+      :query-params [secret :- s/Str]
       :return ataru-schema/Application
-      (get-application secret form-key))
+      (get-application secret))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]
