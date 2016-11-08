@@ -92,8 +92,7 @@
                                     "target"
                                     "test/js"
                                     "resources/public/js/test"
-                                    "out"
-                                    "node_modules"]
+                                    "out"]
 
   :auto-clean false
 

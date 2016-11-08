@@ -88,9 +88,10 @@
                                :organization-names (org-names session)}))
 
                  (api/GET "/forms" {session :session}
+                   :query-params [{include-deleted :- s/Bool false}]
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms session organization-service)))
+                   (ok (access-controlled-form/get-forms include-deleted session organization-service)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]

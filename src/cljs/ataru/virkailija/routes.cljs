@@ -44,7 +44,7 @@
        (dispatch [:editor/select-form (:key form)]))))
 
   (defroute #"^/lomake-editori/applications/" []
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-with-deleteds])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
     (dispatch-after-state
      :predicate
@@ -59,7 +59,7 @@
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-with-deleteds])
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -72,7 +72,7 @@
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-with-deleteds])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
     (dispatch-after-state
      :predicate

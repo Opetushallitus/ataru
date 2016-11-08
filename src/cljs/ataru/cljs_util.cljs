@@ -1,5 +1,6 @@
 (ns ataru.cljs-util
-  (:require [cljs.core.match :refer-macros [match]]
+  (:require [clojure.string :refer [join]]
+            [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader :refer [read-string]]
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch subscribe]]
@@ -102,3 +103,20 @@
 
 (defn get-path []
   (.. js/window -location -pathname))
+
+(defn- classnames-map [m]
+  (reduce-kv (fn [acc k v]
+               (if v
+                 (conj acc (name k))
+                 acc))
+             [] m))
+
+(defn classnames [& args]
+  "Works more or less like https://github.com/JedWatson/classnames
+  (classnames :a :b \"c\" {:d (true? true) :e false} :f) => \"a b c d f\""
+  (join " " (reduce (fn [acc e]
+                      (if (map? e)
+                        (into acc (classnames-map e))
+                        (conj acc (name e))))
+                    [] args)))
+

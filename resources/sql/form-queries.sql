@@ -7,6 +7,27 @@ and   (f.organization_oid in (:authorized_organization_oids) or f.organization_o
 and   (f.deleted is null or f.deleted = false)
 order by created_time desc;
 
+-- name: yesql-get-forms-with-deleteds-in-use-query
+-- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version. Includes deleted forms that have been used in application.
+SELECT
+  f.id,
+  f.key,
+  f.name,
+  f.created_by,
+  f.created_time,
+  f.languages,
+  f.deleted
+FROM forms f
+WHERE f.key IN (SELECT f2.key
+                FROM forms f2
+                  LEFT JOIN applications a ON f2.id = a.form_id
+                GROUP BY f2.key
+                HAVING (count(a.id) > 0) OR every(f2.deleted IS NOT TRUE))
+      AND (f.organization_oid IN (:authorized_organization_oids) OR f.organization_oid IS NULL)
+      AND f.created_time = (SELECT max(created_time)
+                            FROM forms f3
+                            WHERE f.key = f3.key);
+
 -- name: yesql-get-all-forms-query
 -- Get all stored forms, without content. Use the latest version.
 select id, key, name, created_by, created_time, languages
@@ -14,6 +35,26 @@ from forms f
 where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
 and   (f.deleted is null or f.deleted = false)
 order by created_time desc;
+
+-- name: yesql-get-all-forms-with-deleteds-in-use-query
+-- Get all stored forms, without content. Use the latest version. Includes deleted forms that have been used in application.
+SELECT
+  f.id,
+  f.key,
+  f.name,
+  f.created_by,
+  f.created_time,
+  f.languages,
+  f.deleted
+FROM forms f
+WHERE f.key IN (SELECT f2.key
+                FROM forms f2
+                  LEFT JOIN applications a ON f2.id = a.form_id
+                GROUP BY f2.key
+                HAVING (count(a.id) > 0) OR every(f2.deleted IS NOT TRUE))
+      AND f.created_time = (SELECT max(created_time)
+                            FROM forms f3
+                            WHERE f.key = f3.key);
 
 -- name: yesql-add-form<!
 -- Add form
