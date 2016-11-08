@@ -40,7 +40,9 @@
 
 (defn- have-any-application-in-db
   []
-  (let [app-count (count (soresu-db/exec :db yesql-get-application-list {:form_key (:key @form)}))]
+  (let [app-count
+        (+ (count (soresu-db/exec :db yesql-get-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
+           (count (soresu-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
 (defmacro add-spec
@@ -54,6 +56,11 @@
   [application-id]
   (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
     (= (:form application-fixtures/person-info-form-application) (:form actual))))
+
+(defn- have-application-for-hakukohde-in-db
+  [application-id]
+  (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
+    (= (:form application-fixtures/person-info-form-application-for-hakukohde) (:form actual))))
 
 (describe "POST /application"
   (tags :unit)
@@ -69,6 +76,11 @@
     (with-response resp application-fixtures/person-info-form-application
       (should= 200  (:status resp))
       (should (have-application-in-db (get-in resp [:body :id])))))
+
+  (it "should validate application for hakukohde"
+      (with-response resp application-fixtures/person-info-form-application-for-hakukohde
+                     (should= 200 (:status resp))
+                     (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
 
   (add-spec "should not validate form with blank required field" form-blank-required-field)
 
