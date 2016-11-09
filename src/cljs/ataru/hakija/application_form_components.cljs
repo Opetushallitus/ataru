@@ -240,6 +240,16 @@
                                                     [:option {:value value} label]))
                                                 (:options field-descriptor))]]]))})))
 
+(defn- multiple-choice-option-checked? [options idx value]
+  (cond
+    (vector? options)
+    (some (partial = value) options)
+
+    (contains? options idx)
+    (true? (get-in options [idx :selected]))
+
+    :else false))
+
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
@@ -265,7 +275,7 @@
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
-                       :checked   (true? (get-in options [idx :selected]))
+                       :checked   (multiple-choice-option-checked? options idx value)
                        :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]

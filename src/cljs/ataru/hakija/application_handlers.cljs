@@ -105,9 +105,11 @@
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (update-in db [:application :answers]
     (fn [answers]
-      (reduce (fn [answers {:keys [key value]}]
-                (update answers (keyword key)
-                  merge {:valid true :value value}))
+      (reduce (fn [answers {:keys [key value fieldType]}]
+                (update answers (keyword key) merge
+                  (cond-> {:valid true :value value}
+                    (= fieldType "multipleChoice")
+                    (assoc :options (clojure.string/split value #"\s*,\s*")))))
               answers
               submitted-answers))))
 
