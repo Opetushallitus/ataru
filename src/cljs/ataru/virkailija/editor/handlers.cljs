@@ -389,6 +389,18 @@
 
 (reg-event-fx :editor/remove-form remove-form)
 
+(reg-event-fx
+  :editor/refresh-forms-in-use
+  (fn [_ _]
+    {:http {:method              :get
+            :path                "/lomake-editori/api/forms-in-use"
+            :handler-or-dispatch :editor/update-forms-in-use}}))
+
+(reg-event-db
+  :editor/update-forms-in-use
+  (fn [db [_ result]]
+    (assoc-in db [:editor :forms-in-use] result)))
+
 (reg-event-db
   :editor/change-form-name
   (fn [db [_ new-form-name]]

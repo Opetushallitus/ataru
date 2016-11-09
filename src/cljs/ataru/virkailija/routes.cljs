@@ -30,11 +30,13 @@
   (defroute "/lomake-editori/editor" []
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/select-form nil])
-    (dispatch [:editor/refresh-forms]))
+    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-in-use]))
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-in-use])
     (dispatch-after-state
      :predicate
      (fn [db]
