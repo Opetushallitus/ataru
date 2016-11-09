@@ -29,9 +29,10 @@
         {:fieldType "dropdown"
          :options options}
         (cons field
-          (some->> options
+          (->> options
             (filter :followup)
-            (map :followup)))
+            (map :followup)
+            (map #(assoc % :followup? true))))
 
         :else field))))
 

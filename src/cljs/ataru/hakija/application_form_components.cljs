@@ -3,6 +3,7 @@
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
                                                            textual-field-value
@@ -215,29 +216,20 @@
 
 (defn dropdown-followup [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followup (fn [current-value]
-                           (and
-                             current-value
-                             (some->> (:options field-descriptor)
-                               (eduction (comp
-                                           (filter :followup)
-                                           (filter #(= (-> % :label lang) current-value))
-                                           (map :followup)))
-                               not-empty
-                               first)))]
+        resolve-followup (partial followup/resolve-followup (:options field-descriptor) lang)]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
                                  (when-not (= previous (reset! prev @value))
                                    (let [previous-followup (resolve-followup previous)
                                          current-followup  (resolve-followup @value)]
-                                     (dispatch [:state-update-fx
-                                                (fn [{:keys [db]}]
-                                                  {:db (->
-                                                         (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
-                                                         (update-in [:application :ui (answer-key current-followup)] assoc :visible? true))})])))))
+                                     (dispatch [:state-update
+                                                (fn [db]
+                                                  (->
+                                                    (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
+                                                    (update-in [:application :ui (answer-key current-followup)] assoc :visible? true)))])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followup (and (resolve-followup @value))]
+                               (when-let [followup (resolve-followup @value)]
                                  [:div.application__form-dropdown-followup
                                   [render-field followup]]))})))
 

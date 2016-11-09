@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
+            [ataru.util :as autil]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -177,7 +178,9 @@
 
 (reg-event-fx
   :application/handle-form
-  handle-form)
+  (fn [{:keys [db]} [_ form]]
+    {:db (handle-form db form)
+     :dispatch [:application/set-followup-visibility-to-false]}))
 
 (reg-event-db
   :application/initialize-db
@@ -286,3 +289,12 @@
     (update-in db [:application :answers multiple-choice-id]
       (fn [answer]
         (toggle-multiple-choice-option answer option-value validators)))))
+
+(reg-event-db
+  :application/set-followup-visibility-to-false
+  (fn [db _]
+    (assoc-in db [:application :ui]
+      (->> (autil/flatten-form-fields (:content (:form db)))
+        (filter :followup?)
+        (map (fn [field] {(keyword (:id field)) {:visible? false}}))
+        (reduce merge)))))

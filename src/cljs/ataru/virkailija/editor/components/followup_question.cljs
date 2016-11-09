@@ -14,6 +14,17 @@
 (defn followups? [dropdown-options]
   (some some? (map :followup dropdown-options)))
 
+(defn resolve-followup [dropdown-options lang value]
+  (and
+    value
+    (some->> dropdown-options
+      (eduction (comp
+                  (filter :followup)
+                  (filter #(= (-> % :label lang) value))
+                  (map :followup)))
+      not-empty
+      first)))
+
 (reg-sub :editor/followup-overlay
   (fn [db [_ option-path]]
     (get-in db [:editor :followup-overlay option-path :visible?])))
