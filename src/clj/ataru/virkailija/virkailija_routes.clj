@@ -12,6 +12,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -92,6 +93,11 @@
                    :summary "Return all forms."
                    :return {:forms [ataru-schema/Form]}
                    (ok (access-controlled-form/get-forms include-deleted session organization-service)))
+
+                 (api/GET "/forms-in-use" {session :session}
+                          :summary "Return a map of form->haku currently in use in tarjonta-service"
+                          :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
+                          (ok (tarjonta-service/get-forms-in-use)))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]

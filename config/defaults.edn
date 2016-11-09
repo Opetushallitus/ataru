@@ -6,7 +6,8 @@
        :port-number 5432
        :schema "public"}
  :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
- :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"}
+ :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"
+                    :forms-in-use-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/ataru/all"}
  :public-config {:applicant {:service_url "http://localhost:8351"}}
  :background-job {:exec-interval-seconds 15}
  :log {:virkailija-base-path "."
