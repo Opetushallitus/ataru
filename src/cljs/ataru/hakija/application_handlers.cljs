@@ -105,9 +105,8 @@
 (defn- toggle-multiple-choice-option [answer option-value validators]
   (let [answer (update-in answer [:options option-value] not)
         value  (->> (:options answer)
-                    (vals)
-                    (filter :selected)
-                    (map :value)
+                    (filter (comp true? second))
+                    (map first)
                     (clojure.string/join ", "))
         valid  (if (not-empty validators)
                  (every? true? (map #(validator/validate % value) validators))
