@@ -65,7 +65,7 @@
       (some? (:id application))
       (do
         (info (str "Getting application " (:id application) " with answers"))
-        (response/ok (dissoc application :secret)))
+        (response/ok application))
 
       :else
       (do
