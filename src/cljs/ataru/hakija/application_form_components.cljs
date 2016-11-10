@@ -3,7 +3,6 @@
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
                                                            textual-field-value
@@ -216,7 +215,7 @@
 
 (defn dropdown-followup [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followup (partial followup/resolve-followup (:options field-descriptor) lang)]
+        resolve-followup (partial util/resolve-followup (:options field-descriptor) lang)]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]

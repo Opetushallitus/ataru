@@ -79,23 +79,29 @@
          :fieldType  (:or "dropdown" "multipleChoice")
          :validators validators
          :options    options}
-        (let [koodisto-source (:koodisto-source field)
-              allowed-values  (if koodisto-source
-                                (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
-                                (allowed-values options))
-              answers         (if (= "multipleChoice" (:fieldType field))
-                                (mapcat
-                                  #(clojure.string/split % #", ")
-                                  (filter not-empty answers))
-                                answers)]
+        (let [koodisto-source  (:koodisto-source field)
+              allowed-values   (if koodisto-source
+                                 (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
+                                 (allowed-values options))
+              answers          (set
+                                 (if (= "multipleChoice" (:fieldType field))
+                                   (mapcat
+                                     #(clojure.string/split % #", ")
+                                     (filter not-empty answers))
+                                   answers))]
           (build-results
             answers-by-key
             (concat results
               {id {:passed? (and
                               (or
                                 (nil? allowed-values)
-                                (clojure.set/subset? (set answers) allowed-values))
-                              (passes-all? validators answers))}})
+                                (clojure.set/subset? answers allowed-values))
+                              (passes-all? validators answers))}}
+              (when-let [followups (not-empty (map :followup (filter :followup options)))]
+                (build-results
+                  answers-by-key
+                  results
+                  followups)))
             forms))
 
         {:fieldClass "formField"

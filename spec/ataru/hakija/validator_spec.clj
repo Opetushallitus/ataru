@@ -153,4 +153,37 @@
                     :else form))
                 (:content f)))
           :047da62c-9afe-4e28-bfe8-5b50b21b4277
+          :passed?)))
+
+  (it "fails validation when followup field is set required and no answer"
+      (should-not
+        (-> (validator/build-results
+              answers-by-key
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
+                    (assoc form :validators ["required"])
+                    :else form))
+                (:content f)))
+            :fbe3522d-6f1d-4e05-85e3-4e716146c686
+            :passed?)))
+
+  (it "passes validation when followup field is set required and answer is provided"
+      (should
+        (-> (validator/build-results
+              (->
+                (update a :answers conj {:key "fbe3522d-6f1d-4e05-85e3-4e716146c686" :value "perustelu"})
+                :answers
+                util/answers-by-key)
+              []
+              (clojure.walk/postwalk
+                (fn [form]
+                  (match form
+                    {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
+                    (assoc form :validators ["required"])
+                    :else form))
+                (:content f)))
+          :fbe3522d-6f1d-4e05-85e3-4e716146c686
           :passed?))))
