@@ -124,15 +124,22 @@
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (update-in db [:application :answers]
     (fn [answers]
-      (reduce (fn [answers {:keys [fieldType key value]}]
+      (reduce (fn [answers {:keys [key value] :as answer}]
                 (let [answer-key (keyword key)]
-                  (case fieldType
-                    "multipleChoice"
+                  (match answer
+                    {:fieldType "multipleChoice"}
                     (update answers answer-key (partial merge-multiple-choice-option-values value))
 
-                    "dropdown"
+                    {:fieldType "dropdown"}
                     (update answers answer-key merge {:valid true :value (clojure.string/split value #"\s*,\s*")})
 
+                    {:fieldType "textField" :value (_ :guard vector?)}
+                    (update answers answer-key merge
+                      {:valid true :values (map (fn [value]
+                                                  {:valid true :value value})
+                                                (:value answer))})
+
+                    :else
                     (update answers answer-key merge {:valid true :value value}))))
               answers
               submitted-answers))))
