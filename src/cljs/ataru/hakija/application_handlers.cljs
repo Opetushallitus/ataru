@@ -120,28 +120,41 @@
             answer
             options)))
 
+(defn- set-ssn-field-visibility [db]
+  (let [ssn               (get-in db [:application :answers :ssn :value])
+        nationality       (get-in db [:application :answers :nationality :value])
+        toggle-ssn-fields (partial rules/run-rule {:toggle-ssn-based-fields nil})]
+    (if (and (not= nationality "246")
+             (clojure.string/blank? ssn))
+      (-> db
+          (update-in [:application :answers :have-finnish-ssn] merge {:valid true :value false})
+          (toggle-ssn-fields))
+      db)))
+
 (defn- merge-submitted-answers [db [_ submitted-answers]]
-  (update-in db [:application :answers]
-    (fn [answers]
-      (reduce (fn [answers {:keys [key value] :as answer}]
-                (let [answer-key (keyword key)]
-                  (match answer
-                    {:fieldType "multipleChoice"}
-                    (update answers answer-key (partial merge-multiple-choice-option-values value))
+  (-> db
+      (update-in [:application :answers]
+        (fn [answers]
+          (reduce (fn [answers {:keys [key value] :as answer}]
+                    (let [answer-key (keyword key)]
+                      (match answer
+                        {:fieldType "multipleChoice"}
+                        (update answers answer-key (partial merge-multiple-choice-option-values value))
 
-                    {:fieldType "dropdown"}
-                    (update answers answer-key merge {:valid true :value value})
+                        {:fieldType "dropdown"}
+                        (update answers answer-key merge {:valid true :value value})
 
-                    {:fieldType "textField" :value (_ :guard vector?)}
-                    (update answers answer-key merge
-                      {:valid true :values (map (fn [value]
-                                                  {:valid true :value value})
-                                                (:value answer))})
+                        {:fieldType "textField" :value (_ :guard vector?)}
+                        (update answers answer-key merge
+                          {:valid true :values (map (fn [value]
+                                                      {:valid true :value value})
+                                                    (:value answer))})
 
-                    :else
-                    (update answers answer-key merge {:valid true :value value}))))
-              answers
-              submitted-answers))))
+                        :else
+                        (update answers answer-key merge {:valid true :value value}))))
+                  answers
+                  submitted-answers)))
+      (set-ssn-field-visibility)))
 
 (reg-event-db
   :application/merge-submitted-answers
