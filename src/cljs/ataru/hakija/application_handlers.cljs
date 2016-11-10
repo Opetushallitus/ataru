@@ -130,7 +130,7 @@
                     (update answers answer-key (partial merge-multiple-choice-option-values value))
 
                     {:fieldType "dropdown"}
-                    (update answers answer-key merge {:valid true :value (clojure.string/split value #"\s*,\s*")})
+                    (update answers answer-key merge {:valid true :value value})
 
                     {:fieldType "textField" :value (_ :guard vector?)}
                     (update answers answer-key merge
