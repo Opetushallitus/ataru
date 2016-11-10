@@ -134,7 +134,9 @@
           value (or
                   (when (or (seq? value-or-values) (vector? value-or-values))
                     (->> value-or-values
-                         (map (partial koodi-uris->human-readable-value form application (:key answer)))))
+                         (map (partial koodi-uris->human-readable-value form application (:key answer)))
+                         (interpose "\n")
+                         (apply str)))
                   (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (let [application-review (application-store/get-application-review (:key application))]
