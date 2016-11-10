@@ -102,14 +102,35 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- toggle-multiple-choice-option [answer option-value validators]
+  (let [answer (update-in answer [:options option-value] not)
+        value  (->> (:options answer)
+                    (vals)
+                    (filter :selected)
+                    (map :value)
+                    (clojure.string/join ", "))
+        valid  (if (not-empty validators)
+                 (every? true? (map #(validator/validate % value) validators))
+                 true)]
+    (merge answer {:value value :valid valid})))
+
+(defn- merge-multiple-choice-option-values [value answer]
+  (let [options (clojure.string/split value #"\s*,\s*")]
+    (reduce (fn [answer option-value]
+              (toggle-multiple-choice-option answer option-value nil))
+            answer
+            options)))
+
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (update-in db [:application :answers]
     (fn [answers]
-      (reduce (fn [answers {:keys [key value fieldType]}]
-                (update answers (keyword key) merge
-                  (cond-> {:valid true :value value}
-                    (= fieldType "multipleChoice")
-                    (assoc :options (clojure.string/split value #"\s*,\s*")))))
+      (reduce (fn [answers {:keys [fieldType key value]}]
+                (let [answer-key (keyword key)]
+                  (case fieldType
+                    "multipleChoice"
+                    (update answers answer-key (partial merge-multiple-choice-option-values value))
+
+                    (update answers answer-key merge {:valid true :value answer-key}))))
               answers
               submitted-answers))))
 
@@ -234,18 +255,7 @@
 
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id idx option-value validators]]
-    (let [db    (-> db
-                    (assoc-in [:application :answers multiple-choice-id :options idx :value] option-value)
-                    (update-in [:application :answers multiple-choice-id :options idx :selected] not))
-          value (->> (get-in db [:application :answers multiple-choice-id :options])
-                     (vals)
-                     (filter :selected)
-                     (map :value)
-                     (clojure.string/join ", "))
-          valid (if (not-empty validators)
-                  (every? true? (map #(validator/validate % value) validators))
-                  true)]
-      (-> db
-          (assoc-in [:application :answers multiple-choice-id :value] value)
-          (assoc-in [:application :answers multiple-choice-id :valid] valid)))))
+  (fn [db [_ multiple-choice-id option-value validators]]
+    (update-in db [:application :answers multiple-choice-id]
+      (fn [answer]
+        (toggle-multiple-choice-option answer option-value validators)))))

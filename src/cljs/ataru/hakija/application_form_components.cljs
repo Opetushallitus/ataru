@@ -240,15 +240,8 @@
                                                     [:option {:value value} label]))
                                                 (:options field-descriptor))]]]))})))
 
-(defn- multiple-choice-option-checked? [options idx value]
-  (cond
-    (vector? options)
-    (some (partial = value) options)
-
-    (contains? options idx)
-    (true? (get-in options [idx :selected]))
-
-    :else false))
+(defn- multiple-choice-option-checked? [options value]
+  (true? (get options value)))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
@@ -266,7 +259,7 @@
           [info-text field-descriptor]]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
-           (map-indexed (fn [idx option]
+           (map (fn [option]
                   (let [label     (non-blank-val (get-in option [:label lang])
                                                  (get-in option [:label default-lang]))
                         value     (:value option)
@@ -275,11 +268,11 @@
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
-                       :checked   (multiple-choice-option-checked? options idx value)
+                       :checked   (multiple-choice-option-checked? options value)
                        :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
-                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
                      [:label
                       {:for option-id}
                       label]]))
