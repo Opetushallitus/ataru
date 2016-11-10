@@ -49,7 +49,9 @@
                              (let [koodisto-uri         (get-in koodisto-fields [key :uri])
                                    version              (get-in koodisto-fields [key :version])
                                    koodisto             (koodisto/get-koodisto-options koodisto-uri version)
-                                   human-readable-value (->> (clojure.string/split koodi-value #"\s*,\s*")
+                                   human-readable-value (->> (cond-> koodi-value
+                                                               (string? koodi-value)
+                                                               (clojure.string/split #"\s*,\s*"))
                                                              (map (fn [koodi-uri]
                                                                     (let [koodi (get-koodi koodisto koodi-uri)]
                                                                       (get-in koodi [:label lang])))))]
