@@ -96,13 +96,23 @@
              (get application-review-states (:state application))
              "Tuntematon")]])))))
 
+(defn icon-check []
+  [:img.application-handling__review-state-selected-icon
+   {:src "/lomake-editori/images/icon_check.png"}])
+
 (defn state-filter-controls []
   [:span.application-handling__filter-state
-   [:div.application-handling__filter-state-selection-arrow-down]
+
    [:a {:on-click #(println "tila clicked")} "Tila"]
-   [:div.application-handling__filter-state-selection
-    [:div.application-handling__filter-state-selection-row "Hyväksytty"]
-    [:div.application-handling__filter-state-selection-row "Hylätty"]]])
+   (into [:div.application-handling__filter-state-selection]
+
+    (mapv
+     (fn [review-state]
+       [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selected-row
+        [icon-check]
+        (second review-state)])
+     application-review-states))
+   [:div.application-handling__filter-state-selection-arrow-down]])
 
 (defn application-list [applications]
   [:div
@@ -120,8 +130,7 @@
         review-state-label (second review-state)]
     (if (= current-review-state review-state-id)
       [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-       [:img.application-handling__review-state-selected-icon
-        {:src "/lomake-editori/images/icon_check.png"}]
+       [icon-check]
        review-state-label]
       [:div.application-handling__review-state-row
        {:on-click #(dispatch [:application/update-review-state review-state-id])}
