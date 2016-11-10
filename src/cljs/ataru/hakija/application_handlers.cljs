@@ -130,7 +130,10 @@
                     "multipleChoice"
                     (update answers answer-key (partial merge-multiple-choice-option-values value))
 
-                    (update answers answer-key merge {:valid true :value answer-key}))))
+                    "dropdown"
+                    (update answers answer-key merge {:valid true :value (clojure.string/split value #"\s*,\s*")})
+
+                    (update answers answer-key merge {:valid true :value value}))))
               answers
               submitted-answers))))
 
