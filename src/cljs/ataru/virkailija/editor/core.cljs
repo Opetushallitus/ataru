@@ -3,6 +3,7 @@
             [ataru.virkailija.editor.component :as ec]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :as followup]
+            [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub-raw reg-sub]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
@@ -44,7 +45,7 @@
 
             {:fieldClass "formField"
              :fieldType "dropdown"
-             :options (options :guard followup/followups?)}
+             :options (options :guard util/followups?)}
             [ec/dropdown content path soresu->reagent]
 
             {:fieldClass "formField" :fieldType "dropdown"}
