@@ -60,6 +60,12 @@
         clojure.string/lower-case
         keyword)))
 
+(defn- followup [application lang ui followups]
+  (into [:div]
+    (for [{:keys [followup]} followups
+          :when              (get-in ui [(keyword (:id followup)) :visible?] true)]
+      [field followup application lang])))
+
 (defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [form application]
@@ -70,4 +76,9 @@
           (into [:div.application__readonly-container]
             (for [content (:content form)
                   :when (get-in @ui [(keyword (:id content)) :visible?] true)]
-              [field content application lang])))))))
+              (if-let [followups (not-empty (filter :followup (:options content)))]
+                [:div
+                 [field content application lang]
+                 [followup application lang @ui followups]]
+
+                [field content application lang]))))))))
