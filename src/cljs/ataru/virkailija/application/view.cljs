@@ -95,9 +95,14 @@
    {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn state-filter-controls []
-  (let [application-filter (subscribe [:state-query [:application :filter]])
-        filter-opened      (r/atom false)
-        toggle-filter-opened (fn [evt] (reset! filter-opened (not @filter-opened)) nil)]
+  (let [application-filter   (subscribe [:state-query [:application :filter]])
+        filter-opened        (r/atom false)
+        toggle-filter-opened (fn [evt] (reset! filter-opened (not @filter-opened)) nil)
+        toggle-filter        (fn [review-state-id selected]
+                               (let [new-application-filter (if selected
+                                                              (remove #(= review-state-id %) @application-filter)
+                                                              (conj @application-filter review-state-id))]
+                                 (dispatch [:state-update (fn [db _] (assoc-in db [:application :filter] new-application-filter))])))]
     (fn []
       [:span.application-handling__filter-state
        [:a
@@ -110,7 +115,8 @@
                   (let [review-state-id (first review-state)
                         filter-selected (some #{review-state-id} @application-filter) ]
                     [:div.application-handling__filter-state-selection-row
-                     {:class (if filter-selected ".application-handling__filter-state-selected-row" "")}
+                     {:class    (if filter-selected "application-handling__filter-state-selected-row" "")
+                      :on-click #(toggle-filter review-state-id filter-selected)}
                      (if filter-selected [icon-check] nil)
                      (second review-state)]))
                 application-review-states)))
