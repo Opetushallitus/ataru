@@ -223,7 +223,7 @@
   (let [dropdown-id                (util/new-uuid)
         custom-button-value        "Omat vastausvaihtoehdot"
         custom-button-id           (str dropdown-id "-custom")
-        koodisto-button-value      (str "Koodisto" (if-let [koodisto-name (:title options-koodisto)] (str ": " koodisto-name) ""))
+        koodisto-button-value      (reaction (str "Koodisto" (if-let [koodisto-name (:title @options-koodisto)] (str ": " koodisto-name) "")))
         koodisto-button-id         (str dropdown-id "-koodisto")
         koodisto-popover-expanded? (r/atom false)]
     (fn [path options-koodisto]
@@ -232,7 +232,7 @@
         {:type      "radio"
          :class     "editor-form__button editor-form__button--large"
          :value     custom-button-value
-         :checked   (nil? options-koodisto)
+         :checked   (nil? @options-koodisto)
          :name      dropdown-id
          :id        custom-button-id
          :on-change (fn [evt]
@@ -246,7 +246,7 @@
        [:input
         {:type      "radio"
          :class     "editor-form__button editor-form__button--large"
-         :value     koodisto-button-value
+         :value     @koodisto-button-value
          :checked   (not (nil? options-koodisto))
          :name      dropdown-id
          :id        koodisto-button-id
@@ -256,7 +256,7 @@
        [:label
         {:for   koodisto-button-id
          :class "editor-form-button--right-edge"}
-        koodisto-button-value]
+        @koodisto-button-value]
        (when @koodisto-popover-expanded?
          [:div.editor-form__koodisto-popover
           [:div.editor-form__koodisto-popover-header "Koodisto"
@@ -306,7 +306,7 @@
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-           [dropdown-multi-options path @options-koodisto]]
+           [dropdown-multi-options path options-koodisto]]
 
           (when (nil? @options-koodisto)
             (seq [
