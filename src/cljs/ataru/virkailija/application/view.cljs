@@ -5,6 +5,7 @@
             [cljs-time.format :as f]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.review-states :refer [application-review-states]]
             [ataru.application-common.application-readonly :as readonly-contents]
             [ataru.cljs-util :refer [wrap-scroll-to]]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -69,13 +70,6 @@
          {:href (str "/lomake-editori/api/applications/excel/" @form-key)}
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
-(def application-review-states
-  (array-map "received"   "Saapunut"
-             "processing" "Käsittelyssä"
-             "rejected"   "Hylätty"
-             "approved"   "Hyväksytty"
-             "canceled"   "Peruutettu"))
-
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])]
     (fn [applications]
@@ -101,18 +95,26 @@
    {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn state-filter-controls []
-  [:span.application-handling__filter-state
-
-   [:a {:on-click #(println "tila clicked")} "Tila"]
-   (into [:div.application-handling__filter-state-selection]
-
-    (mapv
-     (fn [review-state]
-       [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selected-row
-        [icon-check]
-        (second review-state)])
-     application-review-states))
-   [:div.application-handling__filter-state-selection-arrow-down]])
+  (let [application-filter (subscribe [:state-query [:application :filter]])
+        filter-opened      (r/atom false)
+        toggle-filter-opened (fn [evt] (println "on-click") (reset! filter-opened (not @filter-opened)) nil)]
+    (fn []
+      [:span.application-handling__filter-state
+       [:a
+        {:on-click toggle-filter-opened}
+        "Tila"]
+       (when @filter-opened
+         (into [:div.application-handling__filter-state-selection]
+               (mapv
+                (fn [review-state]
+                  (let [review-state-id (first review-state)
+                        filter-selected (some #{review-state-id} @application-filter) ]
+                    [:div.application-handling__filter-state-selection-row
+                     {:class (if filter-selected ".application-handling__filter-state-selected-row" "")}
+                     (if filter-selected [icon-check] nil)
+                     (second review-state)]))
+                application-review-states)))
+       [:div.application-handling__filter-state-selection-arrow-down]])))
 
 (defn application-list [applications]
   [:div
