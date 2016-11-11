@@ -35,8 +35,7 @@
   (-> (component/dropdown-option)
       (merge {:value value :label labels}
              (when default-value
-               {:default-value default-value}))
-      (dissoc :focus?)))
+               {:default-value default-value}))))
 
 (defn ^:private nationality-component
   []
@@ -137,26 +136,22 @@
 
 (defn person-info-module
   []
-  (clojure.walk/prewalk
-    (fn [x]
-      (if (map? x)
-        (dissoc x :focus?)
-        x))
-    (merge (component/form-section) {:label {:fi "Henkilötiedot"
-                                             :sv "Personuppgifter"
-                                             :en "Personal information"}
-                                     :label-amendment {:fi "(Osio lisätään automaattisesti lomakkeelle)"
-                                                       :sv "Partitionen automatiskt lägga formen"
-                                                       :en "The section will be automatically added to the application"}
-                                     :children [(first-name-section)
-                                                (last-name-component)
-                                                (nationality-component)
-                                                (have-finnish-ssn-component)
-                                                (ssn-birthdate-gender-wrapper)
-                                                (email-component)
-                                                (phone-component)
-                                                (street-address-component)
-                                                (postal-office-section)
-                                                (home-town-component)
-                                                (native-language-section)]
-                                     :module :person-info})))
+  (merge (component/form-section)
+    {:label           {:fi "Henkilötiedot"
+                       :sv "Personuppgifter"
+                       :en "Personal information"}
+     :label-amendment {:fi "(Osio lisätään automaattisesti lomakkeelle)"
+                       :sv "Partitionen automatiskt lägga formen"
+                       :en "The section will be automatically added to the application"}
+     :children        [(first-name-section)
+                       (last-name-component)
+                       (nationality-component)
+                       (have-finnish-ssn-component)
+                       (ssn-birthdate-gender-wrapper)
+                       (email-component)
+                       (phone-component)
+                       (street-address-component)
+                       (postal-office-section)
+                       (home-town-component)
+                       (native-language-section)]
+     :module          :person-info}))
