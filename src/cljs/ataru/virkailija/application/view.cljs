@@ -97,7 +97,7 @@
 (defn state-filter-controls []
   (let [application-filter (subscribe [:state-query [:application :filter]])
         filter-opened      (r/atom false)
-        toggle-filter-opened (fn [evt] (println "on-click") (reset! filter-opened (not @filter-opened)) nil)]
+        toggle-filter-opened (fn [evt] (reset! filter-opened (not @filter-opened)) nil)]
     (fn []
       [:span.application-handling__filter-state
        [:a
