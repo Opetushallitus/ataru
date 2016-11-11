@@ -137,21 +137,23 @@
         (fn [answers]
           (reduce (fn [answers {:keys [key value] :as answer}]
                     (let [answer-key (keyword key)]
-                      (match answer
-                        {:fieldType "multipleChoice"}
-                        (update answers answer-key (partial merge-multiple-choice-option-values value))
+                      (if (contains? answers answer-key)
+                        (match answer
+                          {:fieldType "multipleChoice"}
+                          (update answers answer-key (partial merge-multiple-choice-option-values value))
 
-                        {:fieldType "dropdown"}
-                        (update answers answer-key merge {:valid true :value value})
+                          {:fieldType "dropdown"}
+                          (update answers answer-key merge {:valid true :value value})
 
-                        {:fieldType "textField" :value (_ :guard vector?)}
-                        (update answers answer-key merge
-                          {:valid true :values (map (fn [value]
-                                                      {:valid true :value value})
-                                                    (:value answer))})
+                          {:fieldType "textField" :value (_ :guard vector?)}
+                          (update answers answer-key merge
+                            {:valid true :values (map (fn [value]
+                                                        {:valid true :value value})
+                                                      (:value answer))})
 
-                        :else
-                        (update answers answer-key merge {:valid true :value value}))))
+                          :else
+                          (update answers answer-key merge {:valid true :value value}))
+                        answers)))
                   answers
                   submitted-answers)))
       (set-ssn-field-visibility)))
