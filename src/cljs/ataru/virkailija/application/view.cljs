@@ -115,7 +115,7 @@
                (mapv
                 (fn [review-state]
                   (let [review-state-id (first review-state)
-                        filter-selected (some #{review-state-id} @application-filter) ]
+                        filter-selected (some #{review-state-id} @application-filter)]
                     [:div.application-handling__filter-state-selection-row
                      {:class    (if filter-selected "application-handling__filter-state-selected-row" "")
                       :on-click #(toggle-filter review-state-id filter-selected)}
@@ -202,9 +202,12 @@
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))]
+        review-state                  (subscribe [:state-query [:application :review :state]])
+        application-filter            (subscribe [:state-query [:application :filter]])
+        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
+        included-in-filter            (fn [review-state filter] (some #{review-state} filter) )]
     (fn [applications]
-      (when (belongs-to-current-form @selected-key applications)
+      (when (and (included-in-filter @review-state @application-filter) (belongs-to-current-form @selected-key applications))
         [:div.panel-content
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
