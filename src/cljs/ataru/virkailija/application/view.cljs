@@ -71,24 +71,26 @@
          (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
 
 (defn application-list-contents [applications]
-  (let [selected-key (subscribe [:state-query [:application :selected-key]])]
+  (let [selected-key       (subscribe [:state-query [:application :selected-key]])
+        application-filter (subscribe [:state-query [:application :filter]])]
     (fn [applications]
       (into [:div.application-handling__list]
-        (for [application applications
-              :let        [key       (:key application)
-                           time      (t/time->str (:created-time application))
-                           applicant (:applicant-name application)]]
-          [:div.application-handling__list-row
-           {:on-click #(dispatch [:application/select-application (:key application)])
-            :class    (when (= @selected-key key)
-                        "application-handling__list-row--selected")}
-           [:span.application-handling__list-row--applicant
-            (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-           [:span.application-handling__list-row--time time]
-           [:span.application-handling__list-row--state
-            (or
-             (get application-review-states (:state application))
-             "Tuntematon")]])))))
+            (for [application applications
+                  :let        [key       (:key application)
+                               time      (t/time->str (:created-time application))
+                               applicant (:applicant-name application)]
+                  :when       (some #{(:state application)} @application-filter)]
+              [:div.application-handling__list-row
+               {:on-click #(dispatch [:application/select-application (:key application)])
+                :class    (when (= @selected-key key)
+                            "application-handling__list-row--selected")}
+               [:span.application-handling__list-row--applicant
+                (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+               [:span.application-handling__list-row--time time]
+               [:span.application-handling__list-row--state
+                (or
+                 (get application-review-states (:state application))
+                 "Tuntematon")]])))))
 
 (defn icon-check []
   [:img.application-handling__review-state-selected-icon
