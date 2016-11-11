@@ -64,12 +64,16 @@
         [form-list-closed @selected-form @selected-hakukohde open])])))
 
 (defn excel-download-link [applications]
-  (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))]
+  (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))
+        hakukohde (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))]
     (fn [applications]
       (when (> (count applications) 0)
-        [:a.application-handling__excel-download-link
-         {:href (str "/lomake-editori/api/applications/excel/" @form-key)}
-         (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")]))))
+        (let [url (if @form-key
+                    (str "/lomake-editori/api/applications/excel/" @form-key)
+                    (str "/lomake-editori/api/applications/excel/" (:form-key @hakukohde) "/" (:hakukohde @hakukohde)))]
+          [:a.application-handling__excel-download-link
+           {:href url}
+           (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
 (def application-review-states
   (array-map "received"   "Saapunut"

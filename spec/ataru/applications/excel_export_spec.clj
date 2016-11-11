@@ -33,7 +33,7 @@
   (tags :unit)
 
   (around [spec]
-    (with-redefs [application-store/exec-db (fn [& _] fixtures/applications)
+    (with-redefs [application-store/exec-db (fn [& _] (filter #(nil? (:hakukohde %)) fixtures/applications))
                   form-store/fetch-by-key (fn [& _] fixtures/form)
                   application-store/get-application-review (fn [application-key]
                                                              (when (= "9d24af7d-f672-4c0e-870f-3c6999f105e0" application-key)
@@ -44,7 +44,7 @@
       (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
-            (->> (j2ee/export-all-applications "abcdefghjkl")
+            (->> (j2ee/export-all-form-applications "abcdefghjkl")
                  (.write output)))
           (let [workbook           (WorkbookFactory/create file)
                 metadata-sheet     (.getSheetAt workbook 0)

@@ -84,14 +84,15 @@
        (reverse)
        (vec)))
 
-(defn get-application-list
-  "Only list with header-level info, not answers"
+(defn get-application-list-by-form
+  "Only list with header-level info, not answers. Does NOT include applications associated with any hakukohde."
   [form-key]
-  (->> (exec-db :db yesql-get-application-list {:form_key form-key})
+  (->> (exec-db :db yesql-get-application-list-by-form {:form_key form-key})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
 (defn get-application-list-by-hakukohde
+  "Only list with header-level info, not answers. ONLYS include applications associated with given hakukohde."
   [form-key hakukohde-oid]
   (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})
        (map ->kebab-case-kw)
@@ -132,7 +133,7 @@
           :new_review_state (:state review-to-store)}
          connection)))))
 
-(s/defn get-applications :- [schema/Application]
+(s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str application-request :- schema/ApplicationRequest]
   (let [request (merge
                   {:form-key form-key}
@@ -142,6 +143,12 @@
          (exec-db :db yesql-application-query-by-modified)
          (mapv (partial unwrap-application request))
          (latest-versions-only))))
+
+(s/defn get-applications-for-hakukohde :- [schema/Application]
+  [form-key :- s/Str hakukohde-oid :- s/Str]
+  (->> (exec-db :db yesql-application-query-for-hakukohde {:form_key form-key :hakukohde_oid hakukohde-oid})
+       (mapv (partial unwrap-application {}))
+       (latest-versions-only)))
 
 (defn add-person-oid
   "Add person OID to an application"

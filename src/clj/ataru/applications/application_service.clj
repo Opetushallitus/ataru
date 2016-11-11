@@ -9,9 +9,9 @@
     [ataru.applications.excel-export :as excel]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
 
-(defn get-application-list [form-key session organization-service]
+(defn get-application-list-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
-  {:applications (application-store/get-application-list form-key)})
+  {:applications (application-store/get-application-list-by-form form-key)})
 
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
   (when-let [form-key (tarjonta-client/get-form-key-for-hakukohde hakukohde-oid)] ; TODO maybe avoid remote call
@@ -70,9 +70,13 @@
      :events      (application-store/get-application-events application-key)
      :review      (application-store/get-application-review application-key)}))
 
-(defn get-excel-report-of-applications [form-key session organization-service]
+(defn get-excel-report-of-applications-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-applications form-key)))
+  (java.io.ByteArrayInputStream. (excel/export-all-form-applications form-key)))
+
+(defn get-excel-report-of-applications-by-hakukohde [form-key hakukohde-oid session organization-service]
+  (aac/check-form-access form-key session organization-service)
+  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key hakukohde-oid)))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]

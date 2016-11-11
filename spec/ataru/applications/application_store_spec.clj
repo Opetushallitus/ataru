@@ -40,7 +40,11 @@
               {:key "G__14", :label "Viides kysymys", :value "5", :fieldType "textField"}
               {:key "G__47", :label "Kuudes kysymys", :value "6", :fieldType "textField"}]}])
 
-(def oid "1.2.246.562.24.96282369159")
+(def expected-hakukohde-application-ids [5 4])
+
+(def person-oid "1.2.246.562.24.96282369159")
+
+(def hakukohde-oid "1.2.246.562.29.11111111110")
 
 (describe "get-applications"
           (tags :unit)
@@ -50,23 +54,39 @@
                                   (should= :db ds-key)
                                   (should= "yesql-application-query-by-modified" (-> query-fn .meta :name))
                                   (should= {:form_key "abcdefghjkl"} params)
-                                  fixtures/applications)]
+                                  (filter #(nil? (:hakukohde %)) fixtures/applications))]
       (spec)))
 
           (it "should return all applications belonging to a form"
               (should=
                 (mapv #(select-keys % [:id :key]) expected-applications)
-                (mapv #(select-keys % [:id :key]) (store/get-applications form-key {})))))
+                (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key {})))))
+
+(describe "get-applications"
+          (tags :unit)
+
+          (around [spec]
+                  (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                                (should= :db ds-key)
+                                                (should= "yesql-application-query-for-hakukohde" (-> query-fn .meta :name))
+                                                (should= {:form_key "abcdefghjkl" :hakukohde_oid hakukohde-oid} params)
+                                                (filter #(and (= (:hakukohde %) hakukohde-oid) (= (:form_id %) 703)) fixtures/applications))]
+                    (spec)))
+
+          (it "should return all applications belonging to a hakukohde"
+              (should=
+                expected-hakukohde-application-ids
+                (mapv :id (store/get-applications-for-hakukohde form-key hakukohde-oid)))))
 
 (describe "setting person oid to application"
-  (tags :unit)
+          (tags :unit)
 
-  (it "should set person oid to the application"
-    (let [expected (assoc (first fixtures/applications) :person-oid oid)]
-      (with-redefs [store/exec-db (fn [ds-key query-fn params]
+          (it "should set person oid to the application"
+              (let [expected (assoc (first fixtures/applications) :person-oid person-oid)]
+                (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                     (should= :db ds-key)
                                     (should= "yesql-add-person-oid!" (-> query-fn .meta :name))
-                                    (should= {:id 1 :person_oid oid} params)
+                                    (should= {:id 1 :person_oid person-oid} params)
                                     expected)]
-        (should= expected
-                 (store/add-person-oid (:id expected) oid))))))
+                  (should= expected
+                           (store/add-person-oid (:id expected) person-oid))))))

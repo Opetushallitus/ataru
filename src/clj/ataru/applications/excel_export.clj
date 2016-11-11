@@ -40,6 +40,15 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
+(def ^:private hakukohde-form-meta-fields
+  (into form-meta-fields
+        [{:label "Hakukohde"
+          :field :hakukohde-name
+          :from  :applications}
+         {:label "Hakukohteen OID"
+          :field :hakukohde
+          :from  :applications}]))
+
 (def ^:private application-meta-fields
   [{:label "Id"
     :field :key}
@@ -69,11 +78,14 @@
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
-  [writer form fields]
+  [writer form applications fields]
   (doseq [meta-field fields]
-    (let [col (:column meta-field)
-          value ((:field meta-field) form)
-          formatter (or (:format-fn meta-field) identity)]
+    (let [col        (:column meta-field)
+          value-from (case (:from meta-field)
+                       :applications (first applications)
+                       form)
+          value      ((:field meta-field) value-from)
+          formatter  (or (:format-fn meta-field) identity)]
       (writer 0 col (:label meta-field))
       (writer 1 col (formatter value)))))
 
@@ -151,16 +163,16 @@
                    {:header header :column idx})
                  all-labels)))
 
-(defn export-all-applications [form-key]
-  (let [workbook (XSSFWorkbook.)
-        form (form-store/fetch-by-key form-key)
-        form-meta-sheet (.createSheet workbook "Lomakkeen tiedot")
-        applications-sheet (.createSheet workbook "Hakemukset")
-        applications (application-store/get-applications form-key {})
+(defn- export-applications
+  [applications form-key indexed-form-meta-fields]
+  (let [workbook                (XSSFWorkbook.)
+        form                    (form-store/fetch-by-key form-key)
+        form-meta-sheet         (.createSheet workbook "Lomakkeen tiedot")
+        applications-sheet      (.createSheet workbook "Hakemukset")
         application-meta-fields (indexed-meta-fields application-meta-fields)
-        headers (extract-headers applications form)]
+        headers                 (extract-headers applications form)]
     (when (not-empty form)
-      (write-form-meta! (make-writer form-meta-sheet 0) form (indexed-meta-fields form-meta-fields))
+      (write-form-meta! (make-writer form-meta-sheet 0) form applications indexed-form-meta-fields)
       (write-headers! (make-writer applications-sheet 0) headers application-meta-fields)
       (dorun (map-indexed
                (fn [idx application]
@@ -172,13 +184,28 @@
       (.write workbook stream)
       (.toByteArray stream))))
 
-(defn filename
+(defn export-all-form-applications
   [form-key]
-  (let [form (form-store/fetch-by-key form-key)
-        sanitized-name (-> (:name form)
-                           (string/replace #"[\s]+" "-")
-                           (string/replace #"[^\w-]+" ""))
-        time (time-formatter (t/now) filename-time-format)]
-    (str sanitized-name "_" form-key "_" time ".xlsx")))
+  (let [applications (application-store/get-applications-for-form form-key {})
+        meta-fields  (indexed-meta-fields form-meta-fields)]
+    (export-applications applications form-key meta-fields)))
+
+(defn export-all-hakukohde-applications
+  [form-key hakukohde-oid]
+  (let [applications (application-store/get-applications-for-hakukohde form-key hakukohde-oid)
+        meta-fields  (indexed-meta-fields hakukohde-form-meta-fields)]
+    (export-applications applications form-key meta-fields)))
+
+(defn filename
+  ([form-key hakukohde-oid]
+   (let [form           (form-store/fetch-by-key form-key)
+         sanitized-name (-> (or (:name form))
+                            (string/replace #"[\s]+" "-")
+                            (string/replace #"[^\w-]+" ""))
+         time           (time-formatter (t/now) filename-time-format)]
+     (str sanitized-name "_" form-key "_" (if hakukohde-oid (str hakukohde-oid "_") "") time ".xlsx")))
+  ([form-key]
+    (filename form-key nil)))
+
 
 
