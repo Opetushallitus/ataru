@@ -205,9 +205,10 @@
         review-state                  (subscribe [:state-query [:application :review :state]])
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
-        included-in-filter            (fn [review-state filter] (some #{review-state} filter) )]
+        included-in-filter            (fn [review-state filter] (some #{review-state} filter))]
     (fn [applications]
-      (when (and (included-in-filter @review-state @application-filter) (belongs-to-current-form @selected-key applications))
+      (when (and (included-in-filter @review-state @application-filter)
+                 (belongs-to-current-form @selected-key applications))
         [:div.panel-content
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
