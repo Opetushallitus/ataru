@@ -38,7 +38,7 @@
 
 (defn- handle-application [application]
   (info "Received application:" application)
-  (let [form        (form-store/fetch-latest-version (:form application))
+  (let [form        (form-store/fetch-by-id (:form application))
         validatorf  (fn [f] (validator/valid-application? application f))]
     (match [form application]
       [(_ :guard deleted?) _]
