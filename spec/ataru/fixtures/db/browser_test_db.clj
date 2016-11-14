@@ -43,7 +43,7 @@
 
 (def application1 {:form 1,
                    :lang "fi",
-                   :key "application-key",
+                   :key "application-key1",
                    :answers
                          [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value "47",
@@ -58,8 +58,27 @@
                            :key "ssn",
                            :value "020202A0202"}]})
 
+(def application2 {:form 1,
+                   :lang "fi",
+                   :key "application-key2",
+                   :answers
+                         [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
+                           :value "39",
+                           :fieldType "textField",}
+                          {:fieldType "textField",
+                           :key "preferred-name",
+                           :value "Ari"}
+                          {:fieldType "textField",
+                           :key "last-name",
+                           :value "Vatanen"}
+                          {:fieldType "textField",
+                           :key "ssn",
+                           :value "141196-933S"}]})
+
 (defn init-db-fixture []
   (form-store/create-form-or-increment-version! form1 "1.2.246.562.10.0439845")
   (form-store/create-form-or-increment-version! form2 "1.2.246.562.10.0439845")
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (application-store/add-new-application application1 conn)))
+    (application-store/add-new-application application1 conn)
+    (application-store/add-new-application application2 conn)))
+
