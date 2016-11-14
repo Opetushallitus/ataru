@@ -30,10 +30,15 @@
                     #(update-state-of-selected-application % selected-key review-state-id)
                     (get-in db [:application :applications])))))))
 
+(defn review-state-counts [applications]
+  (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
+
 (reg-event-db
   :application/handle-fetch-applications-response
   (fn [db [_ {:keys [applications]}]]
-    (assoc-in db [:application :applications] applications)))
+    (-> db
+        (assoc-in [:application :applications] applications)
+        (assoc-in [:application :review-state-counts] (review-state-counts applications)))))
 
 (reg-event-fx
   :application/fetch-applications

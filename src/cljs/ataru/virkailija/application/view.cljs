@@ -103,9 +103,11 @@
     (dispatch [:state-update (fn [db _] (assoc-in db [:application :filter] new-application-filter))])))
 
 (defn state-filter-controls []
-  (let [application-filter   (subscribe [:state-query [:application :filter]])
-        filter-opened        (r/atom false)
-        toggle-filter-opened (fn [evt] (reset! filter-opened (not @filter-opened)))]
+  (let [application-filter     (subscribe [:state-query [:application :filter]])
+        review-state-counts    (subscribe [:state-query [:application :review-state-counts]])
+        filter-opened          (r/atom false)
+        toggle-filter-opened   (fn [_] (reset! filter-opened (not @filter-opened)))
+        get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
       [:span.application-handling__filter-state
        [:a
@@ -121,7 +123,10 @@
                      {:class    (if filter-selected "application-handling__filter-state-selected-row" "")
                       :on-click #(toggle-filter @application-filter review-state-id filter-selected)}
                      (if filter-selected [icon-check] nil)
-                     (second review-state)]))
+                     (str (second review-state)
+                          " ("
+                          (get-review-state-count @review-state-counts review-state-id)
+                          ")")]))
                 application-review-states)))
        [:div.application-handling__filter-state-selection-arrow-down]])))
 
