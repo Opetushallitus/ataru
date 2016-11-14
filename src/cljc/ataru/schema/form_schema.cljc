@@ -123,9 +123,9 @@
                                                "textArea"
                                                "dropdown"
                                                "multipleChoice"])
-                     :label (s/cond-pre
-                              LocalizedString
-                              s/Str)})
+                     (s/optional-key :label) (s/maybe (s/cond-pre
+                                                       LocalizedString
+                                                       s/Str))})
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo

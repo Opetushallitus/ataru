@@ -47,8 +47,16 @@
                    :answers
                          [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value "47",
-                           :fieldType "textField",
-                           :label {:fi "Kengännumero", :sv ""}}]})
+                           :fieldType "textField",}
+                          {:fieldType "textField",
+                           :key "first-name",
+                           :value "Seija Susanna"}
+                          {:fieldType "textField",
+                           :key "last-name",
+                           :value "Kuikeloinen"}
+                          {:fieldType "textField",
+                           :key "ssn",
+                           :value "020202A0202"}]})
 
 (defn init-db-fixture []
   (form-store/create-form-or-increment-version! form1 "1.2.246.562.10.0439845")
