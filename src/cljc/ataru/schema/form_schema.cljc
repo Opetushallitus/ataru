@@ -115,14 +115,14 @@
   (merge Form
          {:content [(s/if (comp some? :children) WrapperElement FormField)]}))
 
-(s/defschema Answer {:key s/Str,
-                     :value (s/cond-pre s/Str
-                                        s/Int
-                                        [s/Str])
-                     :fieldType (apply s/enum ["textField"
-                                               "textArea"
-                                               "dropdown"
-                                               "multipleChoice"])
+(s/defschema Answer {:key                    s/Str,
+                     :value                  (s/cond-pre s/Str
+                                                         s/Int
+                                                         [s/Str])
+                     :fieldType              (apply s/enum ["textField"
+                                                            "textArea"
+                                                            "dropdown"
+                                                            "multipleChoice"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
                                                        LocalizedString
                                                        s/Str))})

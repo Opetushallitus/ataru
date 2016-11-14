@@ -49,7 +49,7 @@
                            :value "47",
                            :fieldType "textField",}
                           {:fieldType "textField",
-                           :key "first-name",
+                           :key "preferred-name",
                            :value "Seija Susanna"}
                           {:fieldType "textField",
                            :key "last-name",
