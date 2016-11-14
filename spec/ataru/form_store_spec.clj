@@ -6,8 +6,7 @@
             [ataru.forms.form-store :as store]
             [taoensso.timbre :refer [spy debug]]
             [oph.soresu.common.db :as soresu-db]
-            [yesql.core :as sql]
-            [manual-migrations :as migrations])
+            [yesql.core :as sql])
   (:import
    (clojure.lang ExceptionInfo)))
 

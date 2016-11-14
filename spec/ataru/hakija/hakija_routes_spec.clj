@@ -5,7 +5,6 @@
             [ataru.hakija.application-email-confirmation :as application-email]
             [ataru.hakija.hakija-routes :as routes]
             [cheshire.core :as json]
-            [manual-migrations :as migrations]
             [oph.soresu.common.db :as soresu-db]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]

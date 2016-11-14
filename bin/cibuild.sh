@@ -57,7 +57,7 @@ test-browser() {
 
 run-migrations() {
     echo "Running migrations"
-    ./bin/lein with-profile dev run -m manual-migrations/migrate
+    ./bin/lein with-profile dev run -m ataru.db.migrations/migrate
 }
 
 nuke-test-db() {
