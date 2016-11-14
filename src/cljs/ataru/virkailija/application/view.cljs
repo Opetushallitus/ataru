@@ -128,7 +128,7 @@
                           (get-review-state-count @review-state-counts review-state-id)
                           ")")]))
                 application-review-states)))
-       [:div.application-handling__filter-state-selection-arrow-down]])))
+       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-down])])))
 
 (defn application-list [applications]
   [:div

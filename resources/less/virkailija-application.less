@@ -143,14 +143,24 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection-arrow-down {
-  position: absolute;
   top: -10px;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 9px solid white;
+  width: 21px;
+  height: 15px;
+  position: absolute;
+  overflow: hidden;
   z-index: 11;
+}
+
+.application-handling__filter-state-selection-arrow-down:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  transform: rotate(135deg);
+  top: -5px;
+  left: 4px;
+  box-shadow: 1px 2px 5px #b3b3b3;
 }
 
 .application-handling__list {
