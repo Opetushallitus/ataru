@@ -5,6 +5,7 @@
             [cljs-time.format :as f]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.review-states :refer [application-review-states]]
             [ataru.application-common.application-readonly :as readonly-contents]
             [ataru.cljs-util :refer [wrap-scroll-to classnames]]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -75,39 +76,72 @@
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
-(def application-review-states
-  (array-map "received"   "Saapunut"
-             "processing" "Käsittelyssä"
-             "rejected"   "Hylätty"
-             "approved"   "Hyväksytty"
-             "canceled"   "Peruutettu"))
-
 (defn application-list-contents [applications]
-  (let [selected-key (subscribe [:state-query [:application :selected-key]])]
+  (let [selected-key       (subscribe [:state-query [:application :selected-key]])
+        application-filter (subscribe [:state-query [:application :filter]])]
     (fn [applications]
       (into [:div.application-handling__list]
-        (for [application applications
-              :let        [key       (:key application)
-                           time      (t/time->str (:created-time application))
-                           applicant (:applicant-name application)]]
-          [:div.application-handling__list-row
-           {:on-click #(dispatch [:application/select-application (:key application)])
-            :class    (when (= @selected-key key)
-                        "application-handling__list-row--selected")}
-           [:span.application-handling__list-row--applicant
-            (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-           [:span.application-handling__list-row--time time]
-           [:span.application-handling__list-row--state
-            (or
-             (get application-review-states (:state application))
-             "Tuntematon")]])))))
+            (for [application applications
+                  :let        [key       (:key application)
+                               time      (t/time->str (:created-time application))
+                               applicant (:applicant-name application)]
+                  :when       (some #{(:state application)} @application-filter)]
+              [:div.application-handling__list-row
+               {:on-click #(dispatch [:application/select-application (:key application)])
+                :class    (when (= @selected-key key)
+                            "application-handling__list-row--selected")}
+               [:span.application-handling__list-row--applicant
+                (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+               [:span.application-handling__list-row--time time]
+               [:span.application-handling__list-row--state
+                (or
+                 (get application-review-states (:state application))
+                 "Tuntematon")]])))))
+
+(defn icon-check []
+  [:img.application-handling__review-state-selected-icon
+   {:src "/lomake-editori/images/icon_check.png"}])
+
+(defn toggle-filter [application-filter review-state-id selected]
+  (let [new-application-filter (if selected
+                                 (remove #(= review-state-id %) application-filter)
+                                 (conj application-filter review-state-id))]
+    (dispatch [:state-update (fn [db _] (assoc-in db [:application :filter] new-application-filter))])))
+
+(defn state-filter-controls []
+  (let [application-filter     (subscribe [:state-query [:application :filter]])
+        review-state-counts    (subscribe [:state-query [:application :review-state-counts]])
+        filter-opened          (r/atom false)
+        toggle-filter-opened   (fn [_] (reset! filter-opened (not @filter-opened)))
+        get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
+    (fn []
+      [:span.application-handling__filter-state
+       [:a
+        {:on-click toggle-filter-opened}
+        "Tila"]
+       (when @filter-opened
+         (into [:div.application-handling__filter-state-selection]
+               (mapv
+                (fn [review-state]
+                  (let [review-state-id (first review-state)
+                        filter-selected (some #{review-state-id} @application-filter)]
+                    [:div.application-handling__filter-state-selection-row
+                     {:class    (if filter-selected "application-handling__filter-state-selected-row" "")
+                      :on-click #(toggle-filter @application-filter review-state-id filter-selected)}
+                     (if filter-selected [icon-check] nil)
+                     (str (second review-state)
+                          " ("
+                          (get-review-state-count @review-state-counts review-state-id)
+                          ")")]))
+                application-review-states)))
+       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-down])])))
 
 (defn application-list [applications]
   [:div
    [:div.application-handling__list-header.application-handling__list-row
     [:span.application-handling__list-row--applicant "Hakija"]
     [:span.application-handling__list-row--time "Saapunut"]
-    [:span.application-handling__list-row--state "Tila"]]
+    [:span.application-handling__list-row--state [state-filter-controls]]]
    [application-list-contents applications]])
 
 (defn application-contents [{:keys [form application]}]
@@ -118,12 +152,10 @@
         review-state-label (second review-state)]
     (if (= current-review-state review-state-id)
       [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-       [:img.application-handling__review-state-selected-icon
-        {:src "/lomake-editori/images/icon_check.png"}]
+       [icon-check]
        review-state-label]
       [:div.application-handling__review-state-row
-       {:on-click (fn [evt]
-                    (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :state review-state-id))]))}
+       {:on-click #(dispatch [:application/update-review-state review-state-id])}
        review-state-label])))
 
 (defn application-review-state []
@@ -131,7 +163,7 @@
     (fn []
       (into
        [:div.application-handling__review-state-container
-        [:div.application-handling__review-header "Tilanne"]]
+        [:div.application-handling__review-header "Tila"]]
        (mapv (partial review-state-row @review-state) application-review-states)))))
 
 (defn event-row [event]
@@ -182,10 +214,14 @@
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))]
+        review-state                  (subscribe [:state-query [:application :review :state]])
+        application-filter            (subscribe [:state-query [:application :filter]])
+        belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
+        included-in-filter            (fn [review-state filter] (some #{review-state} filter))]
     (fn [applications]
-      (when (belongs-to-current-form @selected-key applications)
-        [:div.application-handling__container.panel-content
+      (when (and (included-in-filter @review-state @application-filter)
+                 (belongs-to-current-form @selected-key applications))
+        [:div.panel-content
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
@@ -196,7 +232,7 @@
     (fn []
       [:div
        [:div.application-handling__overview
-        [:div.application-handling__container.panel-content
+        [:div.panel-content
           [:div.application-handling__header
             [form-list]
             [excel-download-link @applications]]

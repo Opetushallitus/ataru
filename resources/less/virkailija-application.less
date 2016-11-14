@@ -2,11 +2,19 @@
 @bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
-@blue-border-color: #06526B; 
+@blue-border-color: #06526B;
 
 .application-handling__overview {
   background-color: @very-light-gray;
   border-bottom: 1px solid @bottom-separator-color;
+  ::-webkit-scrollbar {
+    width: 7px;
+    background-color: @light-gray;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #9B9B9B;
+    border-radius: 5px;
+  }
 }
 
 .application-handling__header {
@@ -81,7 +89,7 @@
 
 .application-handling__form-list-open-wrapper .application-handling__form-list-arrow {
   position: absolute;
-  z-index: 2;
+  z-index: 11;
   right: 20px;
   top: 8px;
 }
@@ -106,6 +114,59 @@ and (max-width: 1000px) {
   }
 }
 
+.application-handling__filter-state {
+  position: relative;
+}
+
+.application-handling__filter-state-selection {
+  border-radius: 2px;
+  text-transform: uppercase;
+  position: absolute;
+  z-index: 10;
+  top: -147px;
+  left: -56px;
+  text-align: start;
+  background-color: white;
+  min-width: 170px;
+  padding: 11px;
+  box-shadow: 1px 2px 5px #b3b3b3;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.application-handling__filter-state-selection-row {
+  color: @gray;
+  margin-bottom: 5px;
+  margin-left: 26px;
+  cursor: pointer;
+}
+
+.application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
+  margin-left: 10px;
+  color: @pale-blue;
+}
+
+.application-handling__filter-state-selection-arrow-down {
+  top: -10px;
+  width: 21px;
+  height: 15px;
+  position: absolute;
+  overflow: hidden;
+  z-index: 11;
+}
+
+.application-handling__filter-state-selection-arrow-down:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  transform: rotate(135deg);
+  top: -5px;
+  left: 4px;
+  box-shadow: 1px 2px 5px #b3b3b3;
+}
+
 .application-handling__list {
   cursor: pointer;
   overflow: auto;
@@ -128,6 +189,7 @@ and (max-width: 1000px) {
 .application-handling__list-header {
   color: #5E5E5E;
   font-size: 14px;
+  margin-right: 8px;
 }
 
 .application-handling__list-row--selected {
@@ -149,7 +211,6 @@ and (max-width: 1000px) {
 .application-handling__list-row--state {
   width: 15%;
   display: inline-block;
-  text-align: right;
 }
 
 .application-handling__review-area {

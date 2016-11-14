@@ -1,4 +1,5 @@
-(ns ataru.virkailija.db)
+(ns ataru.virkailija.db
+  (:require [ataru.virkailija.application.review-states :refer [application-review-states]]))
 
 (def default-db
   {:editor {:forms nil
@@ -6,4 +7,5 @@
             :selected-form-key nil}
    ; Initial active panel on page load.
    :active-panel :editor
-   :application {:review {}}})
+   :application {:review {}
+                 :filter (mapv first application-review-states)}})
