@@ -73,7 +73,7 @@
       )
       it('has applications', function() {
         expect(closedFormList().text()).to.equal('Selaintestilomake1')
-        expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (1)')
+        expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (2)')
       })
       it('Stores an event for review state change', function() {
         expect(eventCountBefore+1).to.equal(eventCaptions().length)
