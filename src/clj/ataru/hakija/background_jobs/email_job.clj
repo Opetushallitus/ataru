@@ -6,10 +6,10 @@
    [cheshire.core :as json]
    [oph.soresu.common.config :refer [config]]))
 
-(defn viestintapalvelu-address []
+(defn- viestintapalvelu-address []
   (get-in config [:email :email-service-url]))
 
-(defn send-email [from recipients subject body]
+(defn- send-email [from recipients subject body]
   (let [url                 (viestintapalvelu-address)
         wrapped-recipients  (mapv (fn [rcp] {:email rcp}) recipients)
         response            @(http/post url {:headers {"content-type" "application/json"}
