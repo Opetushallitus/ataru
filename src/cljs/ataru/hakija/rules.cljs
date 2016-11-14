@@ -8,12 +8,12 @@
   [db _]
   (let [nationality      (-> db :application :answers :nationality)
         hide-both-fields #(-> db
-                             (update-in [:application :answers :birth-date] merge no-required-answer)
-                             (update-in [:application :answers :ssn] merge no-required-answer)
-                             (update-in [:application :ui :birth-date] assoc :visible? false)
-                             (update-in [:application :ui :ssn] assoc :visible? false)
-                             (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
-                             (update-in [:application :ui :gender] assoc :visible? false))]
+                              (update-in [:application :answers :birth-date] merge no-required-answer)
+                              (update-in [:application :answers :ssn] merge no-required-answer)
+                              (update-in [:application :ui :birth-date] assoc :visible? false)
+                              (update-in [:application :ui :ssn] assoc :visible? false)
+                              (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
+                              (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
         "246"
@@ -82,40 +82,43 @@
 
 (defn- toggle-ssn-based-fields
   [db _]
-  (if (and (nil? (get-in db [:application :secret]))
-           (= "true" (-> db :application :answers :have-finnish-ssn :value)))
-    (do
-      (-> db
-          (update-in [:application :ui :ssn] assoc :visible? true)
-          (update-in [:application :ui :gender] assoc :visible? false)
-          (update-in [:application :ui :birth-date] assoc :visible? false)))
-    (do
-      (-> db
-          (update-in [:application :ui :ssn] assoc :visible? false)
-          (update-in [:application :ui :gender] assoc :visible? true)
-          (update-in [:application :ui :birth-date] assoc :visible? true)
-          (update-in [:application :answers :ssn] merge {:value "" :valid true})))))
+  (if (= "true" (-> db :application :answers :have-finnish-ssn :value))
+    (-> db
+        (assoc-in [:application :ui :ssn :visible?] true)
+        (assoc-in [:application :ui :gender :visible?] false)
+        (assoc-in [:application :ui :birth-date :visible?] false))
+    (-> db
+        (assoc-in [:application :ui :ssn :visible?] false)
+        (assoc-in [:application :ui :gender :visible?] true)
+        (assoc-in [:application :ui :birth-date :visible?] true)
+        (update-in [:application :answers :ssn] merge {:value "" :valid true}))))
 
 (defn- toggle-ssn-based-fields-for-existing-application
   [db _]
-  (let [ssn         (get-in db [:application :answers :ssn :value])
+  (let [have-ssn?   (not (clojure.string/blank? (get-in db [:application :answers :ssn :value])))
         nationality (get-in db [:application :answers :nationality :value])
         secret      (get-in db [:application :secret])]
-    (if (and (some? secret)
-             (not= nationality "246")
-             (clojure.string/blank? ssn))
+    (match [secret nationality]
+      [(_ :guard nil?) _]
+      db
+
+      [_ "246"]
       (do
         (-> db
-            (update-in [:application :ui :ssn] assoc :visible? false)
-            (update-in [:application :ui :gender] assoc :visible? true)
-            (update-in [:application :ui :birth-date] assoc :visible? true)
-            (update-in [:application :ui :have-finnish-ssn] assoc :visible? true)))
+            (assoc-in [:application :ui :ssn :visible?] true)
+            (assoc-in [:application :ui :gender :visible?] false)
+            (assoc-in [:application :ui :birth-date :visible?] false)
+            (assoc-in [:application :ui :have-finnish-ssn :visible?] false)
+            (assoc-in [:application :answers :have-finnish-ssn :value] "true")))
+
+      :else
       (do
         (-> db
-            (update-in [:application :ui :ssn] assoc :visible? true)
-            (update-in [:application :ui :gender] assoc :visible? false)
-            (update-in [:application :ui :birth-date] assoc :visible? false)
-            (update-in [:application :ui :have-finnish-ssn] assoc :visible? false))))))
+            (assoc-in [:application :ui :ssn :visible?] have-ssn?)
+            (assoc-in [:application :ui :gender :visible?] (not have-ssn?))
+            (assoc-in [:application :ui :birth-date :visible?] (not have-ssn?))
+            (assoc-in [:application :ui :have-finnish-ssn :visible?] true)
+            (assoc-in [:application :answers :have-finnish-ssn :value] (str have-ssn?)))))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule

@@ -128,7 +128,10 @@
       (update-in [:application :answers]
         (fn [answers]
           (reduce (fn [answers {:keys [key value] :as answer}]
-                    (let [answer-key (keyword key)]
+                    (let [answer-key (keyword key)
+                          value      (cond-> value
+                                       (vector? value)
+                                       (first))]
                       (if (contains? answers answer-key)
                         (match answer
                           {:fieldType "multipleChoice"}

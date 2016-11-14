@@ -40,7 +40,7 @@
         (dispatch [:application/run-rule rules])))))
 
 (defn- init-dropdown-value
-  [dropdown-data lang this]
+  [dropdown-data lang secret this]
   (let [select (-> (r/dom-node this) (.querySelector "select"))
         value  (or (first
                      (eduction
@@ -49,7 +49,8 @@
                        (:options dropdown-data)))
                    (-> select .-value))
         valid? (field-value-valid? dropdown-data value)]
-    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}])
+    (if-not (some? secret)
+      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
@@ -213,9 +214,10 @@
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        secret       (subscribe [:state-query [:application :secret]])]
     (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor @lang)
+      {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
                                     default-lang @default-lang
