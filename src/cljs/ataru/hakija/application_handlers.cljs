@@ -121,15 +121,7 @@
             options)))
 
 (defn- set-ssn-field-visibility [db]
-  (let [ssn               (get-in db [:application :answers :ssn :value])
-        nationality       (get-in db [:application :answers :nationality :value])
-        toggle-ssn-fields (partial rules/run-rule {:toggle-ssn-based-fields nil})]
-    (if (and (not= nationality "246")
-             (clojure.string/blank? ssn))
-      (-> db
-          (update-in [:application :answers :have-finnish-ssn] merge {:valid true :value false})
-          (toggle-ssn-fields))
-      db)))
+  (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
 
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (-> db

@@ -82,8 +82,8 @@
 
 (defn- toggle-ssn-based-fields
   [db _]
-  (if (= "true"
-         (-> db :application :answers :have-finnish-ssn :value))
+  (if (and (nil? (get-in db [:application :secret]))
+           (= "true" (-> db :application :answers :have-finnish-ssn :value)))
     (do
       (-> db
           (update-in [:application :ui :ssn] assoc :visible? true)
@@ -96,6 +96,27 @@
           (update-in [:application :ui :birth-date] assoc :visible? true)
           (update-in [:application :answers :ssn] merge {:value "" :valid true})))))
 
+(defn- toggle-ssn-based-fields-for-existing-application
+  [db _]
+  (let [ssn         (get-in db [:application :answers :ssn :value])
+        nationality (get-in db [:application :answers :nationality :value])
+        secret      (get-in db [:application :secret])]
+    (if (and (some? secret)
+             (not= nationality "246")
+             (clojure.string/blank? ssn))
+      (do
+        (-> db
+            (update-in [:application :ui :ssn] assoc :visible? false)
+            (update-in [:application :ui :gender] assoc :visible? true)
+            (update-in [:application :ui :birth-date] assoc :visible? true)
+            (update-in [:application :ui :have-finnish-ssn] assoc :visible? true)))
+      (do
+        (-> db
+            (update-in [:application :ui :ssn] assoc :visible? true)
+            (update-in [:application :ui :gender] assoc :visible? false)
+            (update-in [:application :ui :birth-date] assoc :visible? false)
+            (update-in [:application :ui :have-finnish-ssn] assoc :visible? false))))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :swap-ssn-birthdate-based-on-nationality
@@ -106,6 +127,8 @@
     select-postal-office-based-on-postal-code
     :toggle-ssn-based-fields
     toggle-ssn-based-fields
+    :toggle-ssn-based-fields-for-existing-application
+    toggle-ssn-based-fields-for-existing-application
     nil))
 
 (defn extract-rules [content]
