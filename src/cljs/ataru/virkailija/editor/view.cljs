@@ -10,28 +10,31 @@
             [ataru.virkailija.routes :as routes]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn form-row [form selected?]
+(defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
    {:href  (str "/lomake-editori/editor/" (:key form))
     :class (when selected? "editor-form__selected-row")
     :on-click routes/anchor-click-handler}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
-   [:span.editor-form__list-form-editor (:created-by form)]])
+   [:span.editor-form__list-form-editor (:created-by form)]
+   [:span.editor-form__list-form-used-in-haku-count (if (< 0 used-in-haku-count) used-in-haku-count "")]])
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
-        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])]
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
+        forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
     (fn []
       (into (if @selected-form-key
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
             (for [[key form] @forms
-                  :let [selected? (= key @selected-form-key)]]
+                  :let [selected? (= key @selected-form-key)
+                        used-in-haku-count (count (get forms-in-use @selected-form-key))]]
               ^{:key key}
               (if selected?
-                [wrap-scroll-to [form-row form selected?]]
-                [form-row form selected?]))))))
+                [wrap-scroll-to [form-row form selected? used-in-haku-count]]
+                [form-row form selected? used-in-haku-count]))))))
 
 (defn- add-form []
   [:a.editor-form__control-button.editor-form__control-button--enabled
