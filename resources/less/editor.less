@@ -101,11 +101,25 @@
   vertical-align: top;
 }
 
+.editor-form__list-form-used-in-haku-count {
+  border-radius: 50%;
+  padding: 0 6px;
+  background-color: @selected-blue;
+  border: 2px solid @selected-blue;
+  color: #fff;
+  position: absolute;
+  right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 18px;
+}
+
 .editor-form__row {
   padding: 0.5em;
   margin: 0;
   color: @blue-text-color;
   display: block;
+  position: relative;
 }
 
 .editor-form__selected-row {
@@ -114,6 +128,12 @@
   color: #fff;
   .editor-form__list-form-editor {
     color: #fff;
+  }
+
+  .editor-form__list-form-used-in-haku-count {
+    background-color: #fff;
+    color: @selected-blue;
+    border-color: #fff;
   }
 }
 

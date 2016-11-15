@@ -18,7 +18,8 @@
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
-   [:span.editor-form__list-form-used-in-haku-count (if (< 0 used-in-haku-count) used-in-haku-count "")]])
+   (when (< 0 used-in-haku-count)
+     [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
