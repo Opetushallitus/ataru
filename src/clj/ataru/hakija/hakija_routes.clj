@@ -38,19 +38,19 @@
 
 (defn- handle-application [application]
   (info "Received application:" application)
-  (let [form (form-store/fetch-latest-version (:form application))
-        validatorf (fn [f] (validator/valid-application? application f))]
-    (match form
-      (_ :guard deleted?)
+  (let [form        (form-store/fetch-by-id (:form application))
+        validatorf  (fn [f] (validator/valid-application? application f))]
+    (match [form application]
+      [(_ :guard deleted?) _]
       (do (warn (str "Form " (:id form) " deleted!"))
           (response/bad-request {:passed? false :failures {:response "Lomake on poistettu"}}))
 
-      ({:passed?  false
-        :failures failures} :<< validatorf)
+      [({:passed?  false
+        :failures failures} :<< validatorf) _]
       (response/bad-request failures)
 
       :else
-      (let [application-id        (application-store/add-new-application application)
+      (let [application-id        (application-store/add-application-or-increment-version! application)
             person-service-job-id (job/start-job hakija-jobs/job-definitions
                                     (:type person-integration/job-definition)
                                     {:application-id application-id})]
@@ -58,6 +58,19 @@
         (info "Stored application with id:" application-id)
         (info "Started person creation job (to person service) with job id" person-service-job-id)
         (response/ok {:id application-id})))))
+
+(defn- get-application [secret]
+  (let [application (application-store/get-latest-application-by-secret secret)]
+    (cond
+      (some? (:id application))
+      (do
+        (info (str "Getting application " (:id application) " with answers"))
+        (response/ok application))
+
+      :else
+      (do
+        (info (str "Failed to get application belonging by secret, returning HTTP 404"))
+        (response/not-found)))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
@@ -105,6 +118,11 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (handle-application application))
+    (api/GET "/application" []
+      :summary "Get submitted application"
+      :query-params [secret :- s/Str]
+      :return ataru-schema/Application
+      (get-application secret))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]
@@ -155,6 +173,8 @@
                                              (api/GET "/:key" []
                                                (render-application))
                                              (api/GET "/:key/:lang" []
+                                               (render-application))
+                                             (api/GET "/" []
                                                (render-application))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger

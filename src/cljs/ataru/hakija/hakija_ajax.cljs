@@ -6,10 +6,23 @@
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 
+(defn- handler-fn [handler-kw & {:keys [default]}]
+  (fn [response]
+    (let [dispatch-vec (match handler-kw
+                         (_ :guard nil?)
+                         [default response]
+
+                         (handler-vec :guard vector?)
+                         (conj handler-vec response)
+
+                         :else
+                         [handler-kw response])]
+      (dispatch dispatch-vec))))
+
 (defn- params [handler-kw error-handler-kw]
   (merge
-    {:handler (fn [response] (dispatch [(or handler-kw :application/default-http-ok-handler) response]))
-     :error-handler (fn [response] (dispatch [(or error-handler-kw :application/default-handle-error) response]))}
+    {:handler       (handler-fn handler-kw :default :application/default-http-ok-handler)
+     :error-handler (handler-fn error-handler-kw :default :application/default-handle-error)}
     json-params))
 
 (defn get [path & [handler-kw error-handler-kw]]

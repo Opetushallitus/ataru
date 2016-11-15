@@ -11,29 +11,43 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn initialize-db [_ _]
-  {:form nil
+  {:form        nil
    :application {:answers {}}})
 
-(reg-fx
-  :event
-  (fn [& event]
-    (debug event)))
+(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key]}]]
+  {:db       (assoc-in db [:application :secret] secret)
+   :dispatch [:application/get-latest-form-by-key form-key answers]})
+
+(reg-event-fx
+  :application/handle-get-application
+  handle-get-application)
+
+(defn- get-application-by-secret
+  [{:keys [db]} [_ secret]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/application?secret=" secret)
+          :handler [:application/handle-get-application secret]}})
+
+(reg-event-fx
+  :application/get-application-by-secret
+  get-application-by-secret)
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [cofx [_ form-key]]
-    (assoc cofx
-      :http {:method :get
-             :url (str "/hakemus/api/form/" form-key)
-             :handler :application/handle-form})))
+  (fn [{:keys [db]} [_ form-key answers]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/api/form/" form-key)
+            :handler [:application/handle-form answers]}}))
 
-(defn- get-latest-form-by-hakukohde [db [_ hakukohde-oid]]
-  (ajax/get
-    (str "/hakemus/api/hakukohde/" hakukohde-oid)
-    :application/handle-form)
-  db)
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
+          :handler [:application/handle-form nil]}})
 
-(reg-event-db
+(reg-event-fx
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
 
@@ -88,20 +102,80 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn handle-form [db [_ form]]
+(defn- toggle-multiple-choice-option [answer option-value validators]
+  (let [answer (update-in answer [:options option-value] not)
+        value  (->> (:options answer)
+                    (filter (comp true? second))
+                    (map first)
+                    (clojure.string/join ", "))
+        valid  (if (not-empty validators)
+                 (every? true? (map #(validator/validate % value) validators))
+                 true)]
+    (merge answer {:value value :valid valid})))
+
+(defn- merge-multiple-choice-option-values [value answer]
+  (let [options (clojure.string/split value #"\s*,\s*")]
+    (reduce (fn [answer option-value]
+              (toggle-multiple-choice-option answer option-value nil))
+            answer
+            options)))
+
+(defn- set-ssn-field-visibility [db]
+  (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
+
+(defn- merge-submitted-answers [db [_ submitted-answers]]
+  (-> db
+      (update-in [:application :answers]
+        (fn [answers]
+          (reduce (fn [answers {:keys [key value] :as answer}]
+                    (let [answer-key (keyword key)
+                          value      (cond-> value
+                                       (vector? value)
+                                       (first))]
+                      (if (contains? answers answer-key)
+                        (match answer
+                          {:fieldType "multipleChoice"}
+                          (update answers answer-key (partial merge-multiple-choice-option-values value))
+
+                          {:fieldType "dropdown"}
+                          (update answers answer-key merge {:valid true :value value})
+
+                          {:fieldType "textField" :value (_ :guard vector?)}
+                          (update answers answer-key merge
+                            {:valid true :values (map (fn [value]
+                                                        {:valid true :value value})
+                                                      (:value answer))})
+
+                          :else
+                          (update answers answer-key merge {:valid true :value value}))
+                        answers)))
+                  answers
+                  submitted-answers)))
+      (set-ssn-field-visibility)))
+
+(reg-event-db
+  :application/merge-submitted-answers
+  merge-submitted-answers)
+
+(defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
-                 (set-form-language))]
-    (-> db
-        (assoc :form form)
-        (assoc :application {:answers (create-initial-answers form)})
-        (assoc :wrapper-sections (extract-wrapper-sections form)))))
+                 (set-form-language))
+        db   (-> db
+                 (assoc :form form)
+                 (assoc-in [:application :answers] (create-initial-answers form))
+                 (assoc :wrapper-sections (extract-wrapper-sections form)))]
+    {:db               db
+     ;; Previously submitted answers must currently be merged to the app db
+     ;; after a delay or rules will ruin them and the application will not
+     ;; look completely as valid (eg. SSN field will be blank)
+     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]}))
 
 (reg-event-db
   :flasher
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-form
   handle-form)
 
@@ -200,18 +274,7 @@
 
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id idx option-value validators]]
-    (let [db    (-> db
-                    (assoc-in [:application :answers multiple-choice-id :options idx :value] option-value)
-                    (update-in [:application :answers multiple-choice-id :options idx :selected] not))
-          value (->> (get-in db [:application :answers multiple-choice-id :options])
-                     (vals)
-                     (filter :selected)
-                     (map :value)
-                     (clojure.string/join ", "))
-          valid (if (not-empty validators)
-                  (every? true? (map #(validator/validate % value) validators))
-                  true)]
-      (-> db
-          (assoc-in [:application :answers multiple-choice-id :value] value)
-          (assoc-in [:application :answers multiple-choice-id :valid] valid)))))
+  (fn [db [_ multiple-choice-id option-value validators]]
+    (update-in db [:application :answers multiple-choice-id]
+      (fn [answer]
+        (toggle-multiple-choice-option answer option-value validators)))))

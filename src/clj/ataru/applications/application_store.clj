@@ -7,7 +7,8 @@
             [oph.soresu.common.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
-            [crypto.random :as crypto]))
+            [crypto.random :as crypto]
+            [taoensso.timbre :refer [info]]))
 
 (defqueries "sql/application-queries.sql")
 
@@ -23,24 +24,37 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
+(defn unwrap-application [{:keys [lang]} application]
+  (assoc (->kebab-case-kw (dissoc application :content))
+    :answers
+    (mapv (fn [answer]
+            (update answer :label (fn [label]
+                                    (or
+                                      (:fi label)
+                                      (:sv label)
+                                      (:en label)))))
+          (-> application :content :answers))))
+
 (defn add-new-application
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection           {:connection conn}
-          answers              (:answers application)
-          application-to-store {:form_id        (:form application)
-                                :key            (str (java.util.UUID/randomUUID))
-                                :lang           (:lang application)
-                                :preferred_name (find-value-from-answers "preferred-name" answers)
-                                :last_name      (find-value-from-answers "last-name" answers)
-                                :hakukohde      (:hakukohde application)
-                                :hakukohde_name (:hakukohde-name application)
-                                :content        {:answers answers}
-                                :secret         (crypto/url-part 128)}
-          application          (yesql-add-application-query<! application-to-store connection)
-          app-id               (:id application)
-          app-key              (:key application)]
+  [application conn]
+  (let [connection           {:connection conn}
+        answers              (:answers application)
+        secret               (:secret application)
+        application-to-store {:form_id        (:form application)
+                              :key            (or (:key application)
+                                                  (str (java.util.UUID/randomUUID)))
+                              :lang           (:lang application)
+                              :preferred_name (find-value-from-answers "preferred-name" answers)
+                              :last_name      (find-value-from-answers "last-name" answers)
+                              :hakukohde      (:hakukohde application)
+                              :hakukohde_name (:hakukohde-name application)
+                              :content        {:answers answers}
+                              :secret         (or secret (crypto/url-part 128))}
+        application          (yesql-add-application-query<! application-to-store connection)
+        app-id               (:id application)
+        app-key              (:key application)]
+    (when-not secret
       (yesql-add-application-event! {:application_id   app-id
                                      :application_key  app-key
                                      :event_type       "review-state-change"
@@ -49,19 +63,26 @@
       (yesql-add-application-review! {:application_id  app-id
                                       :application_key app-key
                                       :state           "received"}
-                                     connection)
-      app-id)))
+                                     connection))
+    app-id))
 
-(defn unwrap-application [{:keys [lang]} application]
-  (assoc (->kebab-case-kw (dissoc application :content))
-         :answers
-         (mapv (fn [answer]
-                 (update answer :label (fn [label]
-                                         (or
-                                           (:fi label)
-                                           (:sv label)
-                                           (:en label)))))
-               (-> application :content :answers))))
+(defn- get-latest-version-and-lock-for-update [secret lang conn]
+  (when-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
+    (unwrap-application {:lang lang} application)))
+
+(defn add-application-or-increment-version! [{:keys [lang secret] :as new-application}]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [old-application (get-latest-version-and-lock-for-update secret lang conn)]
+      (cond
+        (some? old-application)
+        (do
+          (info (str "Updating application with key " (:key old-application) " based on valid application secret, retaining key and secret from previous version"))
+          (add-new-application (merge new-application (select-keys old-application [:key :secret])) conn))
+
+        (nil? old-application)
+        (do
+          (info (str "Inserting completely new application"))
+          (add-new-application (dissoc new-application :key :secret) conn))))))
 
 (defn- older?
   "Check if application given as first argument is older than
@@ -103,6 +124,11 @@
 
 (defn get-latest-application-by-key [application-key]
   (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
+
+(defn get-latest-application-by-secret [secret]
+  (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
+       (first)
+       (unwrap-application {:lang "fi"})))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))

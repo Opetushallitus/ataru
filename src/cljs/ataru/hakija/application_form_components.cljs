@@ -40,7 +40,7 @@
         (dispatch [:application/run-rule rules])))))
 
 (defn- init-dropdown-value
-  [dropdown-data lang this]
+  [dropdown-data lang secret this]
   (let [select (-> (r/dom-node this) (.querySelector "select"))
         value  (or (first
                      (eduction
@@ -49,7 +49,8 @@
                        (:options dropdown-data)))
                    (-> select .-value))
         valid? (field-value-valid? dropdown-data value)]
-    (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}])
+    (if-not (some? secret)
+      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
@@ -182,7 +183,8 @@
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
          ; dynamically made changes to the text-field value.
          :default-value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor)}]])))
+         :on-change (partial textual-field-change field-descriptor)
+         :value (textual-field-value field-descriptor @application)}]])))
 
 (declare render-field)
 
@@ -212,9 +214,10 @@
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        secret       (subscribe [:state-query [:application :secret]])]
     (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor @lang)
+      {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
                                     default-lang @default-lang
@@ -223,14 +226,14 @@
                                                          :value)
                                                      "")]
                                 [div-kwd
-                                 {:on-change (partial textual-field-change field-descriptor)}
                                  [label field-descriptor]
                                  [:div.application__form-text-input-info-text
                                   [info-text field-descriptor]]
                                  [:div.application__form-select-wrapper
                                   [:span.application__form-select-arrow]
                                   [:select.application__form-select
-                                   {:value value}
+                                   {:value value
+                                    :on-change (partial textual-field-change field-descriptor)}
                                    (map-indexed (fn [idx option]
                                                   (let [label (non-blank-val (get-in option [:label lang])
                                                                              (get-in option [:label default-lang]))
@@ -238,6 +241,9 @@
                                                     ^{:key idx}
                                                     [:option {:value value} label]))
                                                 (:options field-descriptor))]]]))})))
+
+(defn- multiple-choice-option-checked? [options value]
+  (true? (get options value)))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
@@ -255,7 +261,7 @@
           [info-text field-descriptor]]
          [:div.application__form-outer-checkbox-container
           [:div ; prevents inner div items from reserving full space of the outer checkbox container
-           (map-indexed (fn [idx option]
+           (map (fn [option]
                   (let [label     (non-blank-val (get-in option [:label lang])
                                                  (get-in option [:label default-lang]))
                         value     (:value option)
@@ -264,11 +270,11 @@
                      [:input.application__form-checkbox
                       {:id        option-id
                        :type      "checkbox"
-                       :checked   (true? (get-in options [idx :selected]))
+                       :checked   (multiple-choice-option-checked? options value)
                        :value     value
                        :on-change (fn [event]
                                     (let [value (.. event -target -value)]
-                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id idx value (:validators field-descriptor)])))}]
+                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
                      [:label
                       {:for option-id}
                       label]]))
