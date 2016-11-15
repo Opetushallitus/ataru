@@ -39,10 +39,6 @@
     return testFrame().find('.application-handling__review-header')
   }
 
-  function filterLink() {
-    return testFrame().find('.application-handling__filter-state a')
-  }
-
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -88,27 +84,52 @@
     describe('application filtering', function() {
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
-        expect(testFrame().find('.application-handling__filter-state-selected-row').length).to.equal(5)
-        expect(testFrame().find('.application-handling__list .application-handling__list-row--state').length).to.equal(2)
+        expect(includedFilters()).to.equal(5)
+        expect(applicationStates().length).to.equal(2)
 
-        var stateOfFirstApplication = testFrame().find('.application-handling__list .application-handling__list-row--state').eq(0).text()
-        var stateOfSecondApplication = testFrame().find('.application-handling__list .application-handling__list-row--state').eq(1).text()
+        var stateOfFirstApplication = applicationStates().eq(0).text()
+        var stateOfSecondApplication = applicationStates().eq(1).text()
 
-        testFrame().find('.application-handling__filter-state-selected-row:contains(' + stateOfFirstApplication + ')').click()
+        filterOutBasedOnFirstApplicationState(stateOfFirstApplication)
         wait.until(function() {
           var expectedFilteredCount = stateOfFirstApplication === stateOfSecondApplication ? 0 : 1
-          return testFrame().find('.application-handling__list .application-handling__list-row--state').length === expectedFilteredCount
+          return filteredApplicationsCount() === expectedFilteredCount
         })()
         .then(function() {
-          testFrame().find('.application-handling__filter-state-selection-row:contains(' + stateOfFirstApplication + ')').click()
+          filterInBasedOnFirstApplicationState(stateOfFirstApplication)
           return wait.until(function() {
-            return testFrame().find('.application-handling__list .application-handling__list-row--state').length === 2
+            return filteredApplicationsCount() === 2
           })()
         })
         .then(function() {
           done()
         })
       })
+
+      function filterOutBasedOnFirstApplicationState(stateOfFirstApplication) {
+        testFrame().find('.application-handling__filter-state-selected-row:contains(' + stateOfFirstApplication + ')').click()
+      }
+
+      function filterInBasedOnFirstApplicationState(stateOfFirstApplication) {
+        testFrame().find('.application-handling__filter-state-selection-row:contains(' + stateOfFirstApplication + ')').click()
+      }
+
+      function includedFilters() {
+        return testFrame().find('.application-handling__filter-state-selected-row').length
+      }
+
+      function filterLink() {
+        return testFrame().find('.application-handling__filter-state a')
+      }
+
+      function applicationStates() {
+        return testFrame().find('.application-handling__list .application-handling__list-row--state')
+      }
+
+      function filteredApplicationsCount() {
+        return testFrame().find('.application-handling__list .application-handling__list-row--state').length
+      }
+
     })
     describe('form 2 (no applications)', function() {
       before(
