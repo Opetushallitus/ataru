@@ -39,6 +39,10 @@
     return testFrame().find('.application-handling__review-header')
   }
 
+  function filterLink() {
+    return testFrame().find('.application-handling__filter-state a')
+  }
+
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -75,10 +79,35 @@
         expect(closedFormList().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (2)')
       })
-      it('Stores an event for review state change', function() {
+      it('stores an event for review state change', function() {
         expect(eventCountBefore+1).to.equal(eventCaptions().length)
         var lastEventNow = testFrame().find('.application-handling__event-caption').last().text()
         expect(lastEventNow).to.equal(firstNotSelectedCaption)
+      })
+    })
+    describe('application filtering', function() {
+      before(clickElement(filterLink))
+      it('reduces application list', function(done) {
+        expect(testFrame().find('.application-handling__filter-state-selected-row').length).to.equal(5)
+        expect(testFrame().find('.application-handling__list .application-handling__list-row--state').length).to.equal(2)
+
+        var stateOfFirstApplication = testFrame().find('.application-handling__list .application-handling__list-row--state').eq(0).text()
+        var stateOfSecondApplication = testFrame().find('.application-handling__list .application-handling__list-row--state').eq(1).text()
+
+        testFrame().find('.application-handling__filter-state-selected-row:contains(' + stateOfFirstApplication + ')').click()
+        wait.until(function() {
+          var expectedFilteredCount = stateOfFirstApplication === stateOfSecondApplication ? 0 : 1
+          return testFrame().find('.application-handling__list .application-handling__list-row--state').length === expectedFilteredCount
+        })()
+        .then(function() {
+          testFrame().find('.application-handling__filter-state-selection-row:contains(' + stateOfFirstApplication + ')').click()
+          return wait.until(function() {
+            return testFrame().find('.application-handling__list .application-handling__list-row--state').length === 2
+          })()
+        })
+        .then(function() {
+          done()
+        })
       })
     })
     describe('form 2 (no applications)', function() {
