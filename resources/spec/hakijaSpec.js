@@ -131,11 +131,12 @@
         setNthFieldInputValue(12, 'Tekstikentän vastaus'),
         // TODO: repeating field 13
         setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
-        setNthFieldOption(15, 'Toinen vaihtoehto'),
-        setNthFieldOption(16, '120'),
-        clickNthFieldRadio(17, 'Kolmas vaihtoehto', true),
-        clickNthFieldRadio(18, 'Arkkitehti', true),
-        setNthFieldValue(19, 'textarea', 'Toisen pakollisen tekstialueen vastaus')
+        setNthFieldOption(15, 'Kolmas vaihtoehto'),
+        setNthFieldInputValue(16, 'Jatkokysymyksen vastaus'),
+        setNthFieldOption(17, '120'),
+        clickNthFieldRadio(18, 'Kolmas vaihtoehto', true),
+        clickNthFieldRadio(19, 'Arkkitehti', true),
+        setNthFieldValue(20, 'textarea', 'Toisen pakollisen tekstialueen vastaus')
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
@@ -153,7 +154,7 @@
 
       it('shows submitted form', function() {
         var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
-        var expectedValues = ["Etunimi", "Etunimi", "Sukunimi", "Suomi", "020202A0202", "test@example.com", "0123456789", "Katutie 12 B", "40100", "JYVÄSKYLÄ", "Jyväskylä", "suomi", "Tekstikentän vastaus", "", "Pakollisen tekstialueen vastaus", "Toinen vaihtoehto", "Lisensiaatin tutkinto", "Kolmas vaihtoehto", "Arkkitehti", "Toisen pakollisen tekstialueen vastaus", ""]
+        var expectedValues = ["Etunimi", "Etunimi", "Sukunimi", "Suomi", "020202A0202", "test@example.com", "0123456789", "Katutie 12 B", "40100", "JYVÄSKYLÄ", "Jyväskylä", "suomi", "Tekstikentän vastaus", "", "Pakollisen tekstialueen vastaus", "Kolmas vaihtoehto", "Jatkokysymyksen vastaus", "Lisensiaatin tutkinto", "Kolmas vaihtoehto", "Arkkitehti", "Toisen pakollisen tekstialueen vastaus", ""]
         expect(displayedValues).to.eql(expectedValues)
       })
     })
