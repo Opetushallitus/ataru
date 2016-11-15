@@ -27,14 +27,15 @@
                           data)))
 
 (defn create-email [application-id]
-  (let [application    (application-store/get-application application-id)
-        translations   (get-translations (keyword (:lang application)))
-        subject        (:subject translations)
-        recipient      (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
-        template       "templates/email_confirmation_template.html"
-        edit-url       (str (get-in config [:public-config :applicant :service_url]) "/hakemus?modify=" (:secret application))
-        body           (selmer/render-file template (merge {:application-edit-url edit-url}
-                                                           (dissoc translations :subject)))]
+  (let [application  (application-store/get-application application-id)
+        translations (get-translations (keyword (:lang application)))
+        subject      (:subject translations)
+        recipient    (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
+        template     "templates/email_confirmation_template.html"
+        service-url  (get-in config [:public-config :applicant :service_url])
+        body         (selmer/render-file template (merge {:service-url service-url
+                                                          :secret      (:secret application)}
+                                                         (dissoc translations :subject)))]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject

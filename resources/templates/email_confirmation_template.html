@@ -4,28 +4,30 @@
     <title></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>
-<table>
-    <tr>
-        <td>{{application-received-text}}</td>
-    </tr>
-    <tr>
-        <td>{{modify-link-text}}</td>
-    </tr>
-    <tr>
-        <td>{{best-regards}},<br>
-            Opintopolku.fi
-        </td>
-    </tr>
-    <tr>
-        <td>-</td>
-    </tr>
-    <tr>
-        <td>
-            {{application-can-be-found-here}}:<br>
-            <a href="{{application-edit-url}}">{{application-edit-url}}</a>
-        </td>
-    </tr>
-</table>
+<body style="font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0px;">
+<p style="background-color: #239FC9; padding: 30px 20px; margin: 0px;">
+    <img src="http://localhost:8351/hakemus/images/opintopolku_large-fi.png"
+         alt="Opintopolku.fi">
+</p>
+<p style="font-size: 24px; padding-left: 20px; padding-right: 20px; padding-top: 40px; margin: 0px;">
+    {{application-received-text}}
+</p>
+<p style="padding-left: 20px; padding-right: 20px; padding-top: 40px; margin: 0px;">
+    {{modify-link-text}}
+</p>
+<p style="padding-left: 20px; padding-right: 20px; padding-top: 20px; margin: 0px;">
+    {{best-regards}},<br>
+    Opintopolku.fi
+</p>
+<p style="padding-left: 20px; padding-right: 20px; padding-top: 20px; margin: 0px;">-</p>
+<p style="padding-left: 20px; padding-right: 20px; padding-top: 20px; margin: 0px;">
+    {{application-can-be-found-here}}:
+</p>
+<p style="padding-left: 20px; padding-right: 20px; padding-top: 20px; margin: 0px;">
+<span style="background-color: #F6FBFD; display: inline-block; padding: 10px;">
+                <a style="color: #0093C4;"
+                   href="{{service-url}}/hakemus?modify={{secret}}">{{service-url}}/hakemus?modify={{secret}}</a>
+            </span>
+</p>
 </body>
 </html>
