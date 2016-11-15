@@ -177,11 +177,10 @@
         [:div.editor-form__module-wrapper
          [:div.editor-form__module-fields
           [:span.editor-form__used-in-haku-count (str (count (keys form-used-in-hakus)))]
-          [:span.editor-form__used-in-haku-count-details-wrapper
-           [:span.editor-form__used-in-haku-heading "Lomake on käytössä!"]
-           [:ul.editor-form__used-in-haku-list
-            (for [haku (vals form-used-in-hakus)]
-              [:li {:key (str "form-used-in-haku_" (:haku-oid haku))} [:a {:href (str "/tarjonta-service/url/goes/here/" (:haku-oid haku))} (:haku-name haku)]])]]]]))))
+          [:span.editor-form__used-in-haku-heading "Lomake on käytössä!"]
+          [:ul.editor-form__used-in-haku-list
+           (for [haku (vals form-used-in-hakus)]
+             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))} [:a {:href (str "/tarjonta-service/url/goes/here/" (:haku-oid haku))} (:haku-name haku)]])]]]))))
 
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]
