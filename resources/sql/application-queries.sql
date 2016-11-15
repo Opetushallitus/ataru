@@ -41,7 +41,7 @@ join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde is null;
 
 -- name: yesql-get-application-by-id
-select id, key, lang, form_id as form, created_time, content from applications where id = :application_id;
+select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;
 
 -- name: yesql-get-latest-application-by-key
 with latest_version as (
