@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 
 @editor-control-button-hover-blue: #00B5EF;
 @editor-control-button-confirm-red: #E44E4E;
@@ -102,16 +103,9 @@
 }
 
 .editor-form__list-form-used-in-haku-count {
-  border-radius: 50%;
-  padding: 0 6px;
-  background-color: @selected-blue;
-  border: 2px solid @selected-blue;
-  color: #fff;
+  .solid-disc-number;
   position: absolute;
   right: 10px;
-  font-size: 12px;
-  font-weight: bold;
-  line-height: 18px;
 }
 
 .editor-form__row {
@@ -131,9 +125,7 @@
   }
 
   .editor-form__list-form-used-in-haku-count {
-    background-color: #fff;
-    color: @selected-blue;
-    border-color: #fff;
+    .solid-disc-number-inversed;
   }
 }
 
@@ -173,6 +165,23 @@
   border-radius: 2px;
   margin: 10px 0 5px 0;
   font-weight: 600;
+}
+
+.editor-form__used-in-haku-count {
+  .solid-disc-number;
+}
+
+.editor-form__used-in-haku-count-details-wrapper {
+  padding-left: 17px;
+}
+
+.editor-form__used-in-haku-heading {
+  font-weight: 600;
+}
+
+.editor-form__used-in-haku-list {
+  list-style: none;
+  margin-bottom: 0;
 }
 
 .editor-form__section_wrapper {
