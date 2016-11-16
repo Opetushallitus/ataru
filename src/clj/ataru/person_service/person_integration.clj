@@ -37,7 +37,6 @@
 
 (defn upsert-and-log-person [person-service application-id]
   (let [person-to-send (-> (application-store/get-application application-id)
-                           (dissoc :secret)
                            (extract-person))]
     (log/info "Sending person" person-to-send)
     (.upsert-person person-service person-to-send)))
