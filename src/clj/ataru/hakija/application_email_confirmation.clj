@@ -1,7 +1,6 @@
 (ns ataru.hakija.application-email-confirmation
   "Application-specific email confirmation init logic"
   (:require
-    [clojure.java.io :as io]
     [taoensso.timbre :as log]
     [selmer.parser :as selmer]
     [ataru.applications.application-store :as application-store]
