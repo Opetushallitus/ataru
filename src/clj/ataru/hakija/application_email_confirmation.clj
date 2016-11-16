@@ -8,23 +8,18 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.background-jobs.email-job :as email-job]
     [oph.soresu.common.config :refer [config]]
-    [clojure.java.io :as io]
-    [clojure.edn :as edn])
-  (:import [java.io FileReader PushbackReader]))
+    [clojure.edn :as edn]))
 
 (defn- get-translations [lang]
-  (with-open [reader (-> "translations/email_confirmation.edn"
-                         io/resource
-                         io/file
-                         FileReader.
-                         PushbackReader.)]
-    (let [data (edn/read reader)]
-      (clojure.walk/prewalk (fn [x]
-                              (cond-> x
-                                (and (map? x)
-                                     (contains? x lang))
-                                (get lang)))
-                            data))))
+  (let [data (-> "translations/email_confirmation.edn"
+                 slurp
+                 edn/read-string)]
+    (clojure.walk/prewalk (fn [x]
+                            (cond-> x
+                              (and (map? x)
+                                   (contains? x lang))
+                              (get lang)))
+                          data)))
 
 (defn create-email [application-id]
   (let [application  (application-store/get-application application-id)
