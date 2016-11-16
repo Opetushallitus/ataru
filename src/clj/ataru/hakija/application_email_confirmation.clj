@@ -10,16 +10,17 @@
     [oph.soresu.common.config :refer [config]]
     [clojure.edn :as edn]))
 
+(def ^:private translations (-> "translations/email_confirmation.edn"
+                                slurp
+                                edn/read-string))
+
 (defn- get-translations [lang]
-  (let [data (-> "translations/email_confirmation.edn"
-                 slurp
-                 edn/read-string)]
-    (clojure.walk/prewalk (fn [x]
-                            (cond-> x
-                              (and (map? x)
-                                   (contains? x lang))
-                              (get lang)))
-                          data)))
+  (clojure.walk/prewalk (fn [x]
+                          (cond-> x
+                            (and (map? x)
+                                 (contains? x lang))
+                            (get lang)))
+                        translations))
 
 (defn create-email [application-id]
   (let [application  (application-store/get-application application-id)
