@@ -5,7 +5,10 @@
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [cemerick.url :as url]
+            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
+            [camel-snake-kebab.extras :refer [transform-keys]]))
 
 (defn wrap-debug [f]
   (fn [& args]
@@ -120,3 +123,13 @@
                         (conj acc (name e))))
                     [] args)))
 
+(def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
+
+(defn extract-query-params
+  "Returns query params as map with keywordized keys
+   ?param=foo&biz=42 -> {:param \"foo\" :biz \"42\"}"
+  []
+  (-> (.. js/window -location -href)
+      (url/url)
+      (:query)
+      (->kebab-case-kw)))

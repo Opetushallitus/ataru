@@ -8,10 +8,8 @@
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
-            [clojure.string :as str]
-            [cemerick.url :as url]
-            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-            [camel-snake-kebab.extras :refer [transform-keys]]))
+            [ataru.cljs-util :as cljs-util]
+            [clojure.string :as str]))
 
 (enable-console-print!)
 
@@ -19,20 +17,12 @@
   (let [path (cljs-util/get-path)]
     (nth (clojure.string/split path #"/") 2)))
 
-(def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
-
-(defn- extract-query-params []
-  (-> (.. js/window -location -href)
-      (url/url)
-      (:query)
-      (->kebab-case-kw)))
-
 (defn- dispatch-form-load
   []
   (let [path            (cljs-util/get-path)
         hakukohde-match (re-matches #"/hakemus/hakukohde/(.+)/?" path)
         hakukohde-oid   (when hakukohde-match (nth hakukohde-match 1))
-        secret          (:modify (extract-query-params))]
+        secret          (:modify (cljs-util/extract-query-params))]
     (cond
       (some? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid])
