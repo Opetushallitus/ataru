@@ -36,7 +36,8 @@
       (assoc basic-fields :birthDate (extract-birth-date application)))))
 
 (defn upsert-and-log-person [person-service application-id]
-  (let [person-to-send (extract-person (application-store/get-application application-id))]
+  (let [person-to-send (-> (application-store/get-application application-id)
+                           (extract-person))]
     (log/info "Sending person" person-to-send)
     (.upsert-person person-service person-to-send)))
 
