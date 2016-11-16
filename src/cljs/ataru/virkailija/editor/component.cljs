@@ -116,13 +116,15 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
                  languages)))
 
-(defn info-component [path initial-content]
+(defn info-addon
+  "Info text which is added to an existing component"
+  [path]
   (let [id        (util/new-uuid)
         checked?  (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
         languages (subscribe [:editor/languages])]
-    (fn [path initial-data]
-      [:div.editor-form__info-component-wrapper
-       [:div.editor-form__info-component-checkbox
+    (fn [path]
+      [:div.editor-form__info-addon-wrapper
+       [:div.editor-form__info-addon-checkbox
         [:input {:id        id
                  :type      "checkbox"
                  :checked   @checked?
@@ -132,11 +134,15 @@
                                          path :params :info-text :label]))}]
         [:label {:for id} "Kysymys sisältää ohjetekstin"]]
        (when @checked?
-         [:div.editor-form__info-component-inputs
+         [:div.editor-form__info-addon-inputs
           (input-fields-with-lang
             (fn [lang]
               [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
             @languages)])])))
+
+(defn info-component
+  "Info text which is a standalone component"
+  [path])
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
@@ -187,7 +193,7 @@
          (when-not (= "Tekstialue" header-label)
            [repeater-checkbox path initial-content])]]
 
-       [info-component path initial-content]])))
+       [info-addon path]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -301,7 +307,7 @@
           [:div.editor-form__checkbox-wrapper
            [required-checkbox path initial-content]]]
 
-         [info-component path initial-content]
+         [info-addon path initial-content]
 
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
