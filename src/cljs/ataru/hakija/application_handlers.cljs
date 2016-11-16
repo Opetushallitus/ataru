@@ -169,7 +169,8 @@
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
-     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]}))
+     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
+     :dispatch [:application/set-followup-visibility-to-false]}))
 
 (reg-event-db
   :flasher
@@ -178,9 +179,7 @@
 
 (reg-event-fx
   :application/handle-form
-  (fn [{:keys [db]} [_ form]]
-    {:db (handle-form db form)
-     :dispatch [:application/set-followup-visibility-to-false]}))
+  handle-form)
 
 (reg-event-db
   :application/initialize-db
