@@ -180,7 +180,9 @@
           [:span.editor-form__used-in-haku-heading "Lomake on käytössä!"]
           [:ul.editor-form__used-in-haku-list
            (for [haku (vals form-used-in-hakus)]
-             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))} [:a {:href (str "/tarjonta-service/url/goes/here/" (:haku-oid haku))} (:haku-name haku)]])]]]))))
+             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
+              [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
+                   :target "_blank"} (:haku-name haku)]])]]]))))
 
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]
