@@ -50,7 +50,7 @@
                               :hakukohde      (:hakukohde application)
                               :hakukohde_name (:hakukohde-name application)
                               :content        {:answers answers}
-                              :secret         (or secret (crypto/url-part 128))}
+                              :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)
         app-id               (:id application)
         app-key              (:key application)]

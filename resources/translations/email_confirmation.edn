@@ -1,6 +1,6 @@
-{:subject {:fi "Opintopolku.fi - Hakemuksesi on vastaanotettu"
-           :sv "Opintopolku.fi - Din ansökan har tagits emot"
-           :en "Opintopolku.fi - Your application has been received"}
+{:subject {:fi "Opintopolku - Hakemuksesi on vastaanotettu"
+           :sv "Opintopolku - Din ansökan har tagits emot"
+           :en "Opintopolku - Your application has been received"}
  :application-received-text {:fi "Hakemuksesi on vastaanotettu."
                              :en "Your application has been received."
                              :sv "Din ansökan har tagits emot."}
