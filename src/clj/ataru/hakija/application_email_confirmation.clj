@@ -13,18 +13,18 @@
   (:import [java.io FileReader PushbackReader]))
 
 (defn- get-translations [lang]
-  (let [data (-> "translations/email_confirmation.edn"
-                 io/resource
-                 io/file
-                 FileReader.
-                 PushbackReader.
-                 edn/read)]
-    (clojure.walk/prewalk (fn [x]
-                            (cond-> x
-                              (and (map? x)
-                                   (contains? x lang))
-                              (get lang)))
-                          data)))
+  (with-open [reader (-> "translations/email_confirmation.edn"
+                         io/resource
+                         io/file
+                         FileReader.
+                         PushbackReader.)]
+    (let [data (edn/read reader)]
+      (clojure.walk/prewalk (fn [x]
+                              (cond-> x
+                                (and (map? x)
+                                     (contains? x lang))
+                                (get lang)))
+                            data))))
 
 (defn create-email [application-id]
   (let [application  (application-store/get-application application-id)
