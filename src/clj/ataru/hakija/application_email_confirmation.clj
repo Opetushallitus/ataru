@@ -8,14 +8,8 @@
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.background-jobs.email-job :as email-job]
-    [oph.soresu.common.config :refer [config]]
-    [clojure.edn :as edn]))
-
-(def ^:private translations (-> "translations/email_confirmation.edn"
-                                io/resource
-                                io/file
-                                slurp
-                                edn/read-string))
+    [ataru.translations.email-confirmation :as translations]
+    [oph.soresu.common.config :refer [config]]))
 
 (defn- get-translations [lang]
   (clojure.walk/prewalk (fn [x]
@@ -23,7 +17,7 @@
                             (and (map? x)
                                  (contains? x lang))
                             (get lang)))
-                        translations))
+                        translations/email-confirmation-translations))
 
 (defn create-email [application-id]
   (let [application  (application-store/get-application application-id)
