@@ -10,28 +10,32 @@
             [ataru.virkailija.routes :as routes]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn form-row [form selected?]
+(defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
    {:href  (str "/lomake-editori/editor/" (:key form))
     :class (when selected? "editor-form__selected-row")
     :on-click routes/anchor-click-handler}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
-   [:span.editor-form__list-form-editor (:created-by form)]])
+   [:span.editor-form__list-form-editor (:created-by form)]
+   (when (< 0 used-in-haku-count)
+     [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
 (defn form-list []
   (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
-        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])]
+        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
+        forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
     (fn []
       (into (if @selected-form-key
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
             (for [[key form] @forms
-                  :let [selected? (= key @selected-form-key)]]
-              ^{:key key}
+                  :let [selected? (= key @selected-form-key)
+                        used-in-haku-count (count (keys (get @forms-in-use (keyword key))))]]
+              ^{:key (str "form-list-item-" key)}
               (if selected?
-                [wrap-scroll-to [form-row form selected?]]
-                [form-row form selected?]))))))
+                [wrap-scroll-to [form-row form selected? used-in-haku-count]]
+                [form-row form selected? used-in-haku-count]))))))
 
 (defn- add-form []
   [:a.editor-form__control-button.editor-form__control-button--enabled
@@ -98,11 +102,11 @@
                                   (dispatch [:set-state [:editor :new-form-created?] false]))))
        :reagent-render      (fn []
                               [:input.editor-form__form-name-input
-                               {:key         (:key @form) ; needed to trigger component-did-update
-                                :type        "text"
+                               {:key           (str "editor-name-" (:key @form)) ; needed to trigger component-did-update
+                                :type          "text"
                                 :default-value @form-name
-                                :placeholder "Lomakkeen nimi"
-                                :on-change   #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
+                                :placeholder   "Lomakkeen nimi"
+                                :on-change     #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
 (def ^:private lang-versions
   {:fi "Suomi"
@@ -165,14 +169,32 @@
                  (lang-checkbox lang-kwd (some #{lang-kwd} languages)))
                (keys lang-versions))]]))))
 
+(defn form-in-use-warning
+  [form]
+  (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
+    (fn [form]
+      (when-let [form-used-in-hakus ((keyword (:key form)) @forms-in-use)]
+        [:div.editor-form__module-wrapper
+         [:div.editor-form__module-fields
+          [:span.editor-form__used-in-haku-count (str (count (keys form-used-in-hakus)))]
+          [:span.editor-form__used-in-haku-heading.animated.flash "Lomake on käytössä!"]
+          [:ul.editor-form__used-in-haku-list
+           (for [haku (vals form-used-in-hakus)]
+             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
+              [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
+                   :target "_blank"} (:haku-name haku)]])]]]))))
+
 (defn editor-panel []
-  (let [form (subscribe [:editor/selected-form])]
+  (let [form         (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
          [:div
           [editor-name]
-          [language-toolbar @form]]
+          ^{:key (str "language-toolbar-" (:key @form))}
+          [language-toolbar @form]
+          ^{:key (str "form-in-use-warning-" (:key @form))}
+          [form-in-use-warning @form]]
          [c/editor]]))))
 
 (defn editor []

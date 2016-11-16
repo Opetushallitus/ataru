@@ -5,7 +5,8 @@
     [org.httpkit.client :as http]
     [taoensso.timbre :refer [warn]]))
 
-(defn get-hakukohde [hakukohde-oid]
+(defn get-hakukohde
+  [hakukohde-oid]
   (let [url      (str (get-in config [:tarjonta-service :hakukohde-base-url]) hakukohde-oid)
         response @(http/get url)
         status   (:status response)
@@ -14,6 +15,12 @@
     (if result
       result
       (warn "could not retrieve hakukohde details" url status))))
+
+(defn get-forms-in-use
+  []
+  (let [url      (get-in config [:tarjonta-service :forms-in-use-url])
+        response @(http/get url)]
+    (-> response :body (json/parse-string true) :result)))
 
 (defn get-form-key-for-hakukohde [hakukohde-oid]
   (when-let [hakukohde (get-hakukohde hakukohde-oid)]

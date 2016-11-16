@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 
 @editor-control-button-hover-blue: #00B5EF;
 @editor-control-button-confirm-red: #E44E4E;
@@ -101,11 +102,18 @@
   vertical-align: top;
 }
 
+.editor-form__list-form-used-in-haku-count {
+  .solid-disc-number;
+  position: absolute;
+  right: 10px;
+}
+
 .editor-form__row {
   padding: 0.5em;
   margin: 0;
   color: @blue-text-color;
   display: block;
+  position: relative;
 }
 
 .editor-form__selected-row {
@@ -114,6 +122,10 @@
   color: #fff;
   .editor-form__list-form-editor {
     color: #fff;
+  }
+
+  .editor-form__list-form-used-in-haku-count {
+    .solid-disc-number-inversed;
   }
 }
 
@@ -153,6 +165,21 @@
   border-radius: 2px;
   margin: 10px 0 5px 0;
   font-weight: 600;
+}
+
+.editor-form__used-in-haku-count {
+  .solid-disc-number;
+}
+
+.editor-form__used-in-haku-heading {
+  padding-left: 14px;
+  font-weight: 600;
+}
+
+.editor-form__used-in-haku-list {
+  list-style: none;
+  margin-bottom: 0;
+  margin-left: -4px;
 }
 
 .editor-form__section_wrapper {
