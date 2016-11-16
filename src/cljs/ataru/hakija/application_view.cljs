@@ -3,6 +3,7 @@
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.application-common.application-readonly :as readonly-view]
+            [ataru.cljs-util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]))
 
@@ -16,12 +17,14 @@
         languages     (filter
                         (partial not= selected-lang)
                         (:languages form))
-        submit-status (subscribe [:state-query [:application :submit-status]])]
+        submit-status (subscribe [:state-query [:application :submit-status]])
+        secret        (:modify (util/extract-query-params))]
     (fn [form]
       [:div.application__header-container
        [:span.application__header (or (:hakukohde-name form) (:name form))]
        (when (and (not= :submitted @submit-status)
-                  (> (count languages) 0))
+                  (> (count languages) 0)
+                  (nil? secret))
          [:span.application__header-text
           (map-indexed (fn [idx lang]
                          (cond-> [:span {:key (name lang)}
