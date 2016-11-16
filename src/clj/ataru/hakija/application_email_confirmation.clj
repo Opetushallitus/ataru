@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-email-confirmation
   "Application-specific email confirmation init logic"
   (:require
+    [clojure.java.io :as io]
     [taoensso.timbre :as log]
     [selmer.parser :as selmer]
     [ataru.applications.application-store :as application-store]
@@ -11,6 +12,8 @@
     [clojure.edn :as edn]))
 
 (def ^:private translations (-> "translations/email_confirmation.edn"
+                                io/resource
+                                io/file
                                 slurp
                                 edn/read-string))
 
