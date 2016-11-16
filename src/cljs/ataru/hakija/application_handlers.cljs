@@ -14,8 +14,10 @@
   {:form        nil
    :application {:answers {}}})
 
-(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key]}]]
-  {:db       (assoc-in db [:application :secret] secret)
+(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang]}]]
+  {:db       (-> db
+                 (assoc-in [:application :secret] secret)
+                 (assoc-in [:form :selected-language] (keyword lang)))
    :dispatch [:application/get-latest-form-by-key form-key answers]})
 
 (reg-event-fx
@@ -81,14 +83,12 @@
                 :error-handler :application/handle-submit-error}
      :dispatch  [:application/clear-error]}))
 
-(def ^:private lang-pattern #"/(\w{2})$")
-
 (defn- get-lang-from-path [supported-langs]
-  ((set supported-langs)
-   (some->> (util/get-path)
-     (re-find lang-pattern)
-     second
-     keyword)))
+  (when-let [lang (-> (util/extract-query-params)
+                      :lang
+                      keyword)]
+    (when (some (partial = lang) supported-langs)
+      lang)))
 
 (defn- set-form-language [form & [lang]]
   (let [supported-langs (:languages form)
@@ -157,11 +157,18 @@
   :application/merge-submitted-answers
   merge-submitted-answers)
 
+(defn- p [x]
+  (println (str x))
+  x)
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))
         db   (-> db
-                 (assoc :form form)
+                 (update :form (fn [{:keys [selected-language]}]
+                                 (cond-> form
+                                   (some? selected-language)
+                                   (assoc :selected-language selected-language))))
                  (assoc-in [:application :answers] (create-initial-answers form))
                  (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db               db
