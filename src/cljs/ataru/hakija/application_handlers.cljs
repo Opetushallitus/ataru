@@ -157,10 +157,6 @@
   :application/merge-submitted-answers
   merge-submitted-answers)
 
-(defn- p [x]
-  (println (str x))
-  x)
-
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))
