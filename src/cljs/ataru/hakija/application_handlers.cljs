@@ -14,10 +14,11 @@
   {:form        nil
    :application {:answers {}}})
 
-(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang]}]]
+(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang hakukohde-name]}]]
   {:db       (-> db
                  (assoc-in [:application :secret] secret)
-                 (assoc-in [:form :selected-language] (keyword lang)))
+                 (assoc-in [:form :selected-language] (keyword lang))
+                 (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch [:application/get-latest-form-by-key form-key answers]})
 
 (reg-event-fx
@@ -161,10 +162,13 @@
   (let [form (-> (languages->kwd form)
                  (set-form-language))
         db   (-> db
-                 (update :form (fn [{:keys [selected-language]}]
+                 (update :form (fn [{:keys [selected-language hakukohde-name]}]
                                  (cond-> form
                                    (some? selected-language)
-                                   (assoc :selected-language selected-language))))
+                                   (assoc :selected-language selected-language)
+
+                                   (some? hakukohde-name)
+                                   (assoc :hakukohde-name hakukohde-name))))
                  (assoc-in [:application :answers] (create-initial-answers form))
                  (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db               db

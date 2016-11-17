@@ -53,7 +53,7 @@ select id, key, lang, form_id as form, created_time, content from applications a
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.secret = :secret
 )
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, f.key as form_key
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, f.key as form_key, a.hakukohde_name
 from applications a
 join latest_version lv on a.created_time = lv.latest_time
 join forms f on a.form_id = f.id;
