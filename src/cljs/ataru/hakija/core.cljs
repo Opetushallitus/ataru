@@ -14,8 +14,9 @@
 (enable-console-print!)
 
 (defn- form-key-from-url []
-  (let [path (cljs-util/get-path)]
-    (nth (clojure.string/split path #"/") 2)))
+  (-> (cljs-util/get-path)
+      (clojure.string/split #"/")
+      (nth 2)))
 
 (defn- dispatch-form-load
   []
