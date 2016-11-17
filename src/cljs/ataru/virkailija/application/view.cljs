@@ -77,15 +77,13 @@
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
 (defn application-list-contents [applications]
-  (let [selected-key       (subscribe [:state-query [:application :selected-key]])
-        application-filter (subscribe [:state-query [:application :filter]])]
+  (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
     (fn [applications]
       (into [:div.application-handling__list]
             (for [application applications
                   :let        [key       (:key application)
                                time      (t/time->str (:created-time application))
-                               applicant (:applicant-name application)]
-                  :when       (some #{(:state application)} @application-filter)]
+                               applicant (:applicant-name application)]]
               [:div.application-handling__list-row
                {:on-click #(dispatch [:application/select-application (:key application)])
                 :class    (when (= @selected-key key)
@@ -228,13 +226,16 @@
           [application-review]]]))))
 
 (defn application []
-  (let [applications (subscribe [:state-query [:application :applications]])]
+  (let [applications       (subscribe [:state-query [:application :applications]])
+        application-filter (subscribe [:state-query [:application :filter]])
+        include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
     (fn []
-      [:div
-       [:div.application-handling__overview
-        [:div.panel-content
-          [:div.application-handling__header
+      (let [filtered-applications (include-filtered @application-filter @applications)]
+        [:div
+         [:div.application-handling__overview
+          [:div.panel-content
+           [:div.application-handling__header
             [form-list]
-            [excel-download-link @applications]]
-          [application-list @applications]]]
-       [application-review-area @applications]])))
+            [excel-download-link filtered-applications]]
+           [application-list filtered-applications]]]
+         [application-review-area filtered-applications]]))))
