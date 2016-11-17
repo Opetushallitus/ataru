@@ -26,6 +26,9 @@
                          :detail   response}])
     response))
 
+(defn- include-csrf-header? [method]
+  (some (partial = method) [:post :put :delete]))
+
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
             :get    GET
@@ -56,6 +59,8 @@
                                                [nil] nil
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
                                       temporal/parse-times)}
+              (when (include-csrf-header? method)
+                {:headers {"X-CSRF-Token" js/csrf}})
               override-args))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]

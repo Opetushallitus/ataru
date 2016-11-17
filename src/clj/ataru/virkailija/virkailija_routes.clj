@@ -57,7 +57,8 @@
   (let [config (json/generate-string (or (:public-config config) {}))]
     (selmer/render-file "templates/virkailija.html"
                         {:cache-fingerprint cache-fingerprint
-                         :config            config})))
+                         :config            config
+                         :csrf              ring.middleware.anti-forgery/*anti-forgery-token*})))
 
 (api/defroutes app-routes
   (api/undocumented
@@ -244,7 +245,6 @@
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
-                                               (update :security dissoc :content-type-options :anti-forgery)
                                                (update :responses dissoc :content-types)))
                             (wrap-with-logger
                               :debug identity
