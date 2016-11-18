@@ -26,7 +26,7 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
-            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
+            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -54,11 +54,15 @@
 
 (defn render-virkailija-page
   []
-  (let [config (json/generate-string (or (:public-config config) {}))]
-    (selmer/render-file "templates/virkailija.html"
-                        {:cache-fingerprint cache-fingerprint
-                         :config            config
-                         :csrf              ring.middleware.anti-forgery/*anti-forgery-token*})))
+  (let [config     (json/generate-string (or (:public-config config) {}))
+        csrf-token ring.middleware.anti-forgery/*anti-forgery-token*]
+    (-> (selmer/render-file "templates/virkailija.html"
+                            {:cache-fingerprint cache-fingerprint
+                             :config            config
+                             :csrf              csrf-token})
+        (ok)
+        (content-type "text/html")
+        (set-cookie "CSRF" csrf-token))))
 
 (api/defroutes app-routes
   (api/undocumented
