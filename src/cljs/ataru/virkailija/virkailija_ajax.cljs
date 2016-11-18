@@ -3,7 +3,8 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.temporal :as temporal]
             [ajax.core :refer [GET POST PUT DELETE]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]])
+  (:import [goog.net Cookies]))
 
 (defn dispatch-flasher-error-msg
   [method response]
@@ -60,7 +61,11 @@
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
                                       temporal/parse-times)}
               (when (include-csrf-header? method)
-                {:headers {"X-CSRF-Token" js/csrf}})
+                (let [csrf-token (-> js/document
+                                     Cookies.
+                                     (.get "CSRF")
+                                     js/decodeURIComponent)]
+                  {:headers {"X-CSRF-Token" csrf-token}}))
               override-args))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]
