@@ -248,7 +248,8 @@
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
-                                               (update :responses dissoc :content-types)))
+                                               (update :responses dissoc :content-types)
+                                               (assoc-in [:session :root] "/lomake-editori")))
                             (wrap-with-logger
                               :debug identity
                               :info  (fn [x] (info x))
