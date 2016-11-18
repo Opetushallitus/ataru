@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-form-components
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
@@ -10,6 +11,8 @@
             [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
+
+(declare render-field)
 
 (defn- text-field-size->class [size]
   (match size
@@ -45,9 +48,9 @@
         value  (or (first
                      (eduction
                        (comp (filter :default-value)
-                             (map :value))
+                         (map :value))
                        (:options dropdown-data)))
-                   (-> select .-value))
+                 (-> select .-value))
         valid? (field-value-valid? dropdown-data value)]
     (if-not (some? secret)
       (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
@@ -210,37 +213,68 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
+(defn dropdown-followup [lang value field-descriptor]
+  (let [prev (r/atom @value)
+        resolve-followup (partial util/resolve-followup (:options field-descriptor) lang)]
+    (r/create-class
+      {:component-did-update (fn []
+                               (let [previous @prev]
+                                 (when-not (= previous (reset! prev @value))
+                                   (let [previous-followup (resolve-followup previous)
+                                         current-followup  (resolve-followup @value)]
+                                     (dispatch [:state-update
+                                                (fn [db]
+                                                  (->
+                                                    (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
+                                                    (update-in [:application :ui (answer-key current-followup)] assoc :visible? true)))])))))
+       :reagent-render       (fn [lang value field-descriptor]
+                               (when-let [followup (resolve-followup @value)]
+                                 [:div.application__form-dropdown-followup
+                                  [render-field followup]]))})))
+
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        secret       (subscribe [:state-query [:application :secret]])]
+        secret       (subscribe [:state-query [:application :secret]])
+        value        (reaction
+                       (or (-> (:answers @application)
+                             (get (answer-key field-descriptor))
+                             :value)
+                         ""))]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
-                                    default-lang @default-lang
-                                    value        (or (-> (:answers @application)
-                                                         (get (answer-key field-descriptor))
-                                                         :value)
-                                                     "")]
-                                [div-kwd
-                                 [label field-descriptor]
-                                 [:div.application__form-text-input-info-text
-                                  [info-text field-descriptor]]
-                                 [:div.application__form-select-wrapper
-                                  [:span.application__form-select-arrow]
-                                  [:select.application__form-select
-                                   {:value value
-                                    :on-change (partial textual-field-change field-descriptor)}
-                                   (map-indexed (fn [idx option]
-                                                  (let [label (non-blank-val (get-in option [:label lang])
-                                                                             (get-in option [:label default-lang]))
-                                                        value (:value option)]
-                                                    ^{:key idx}
-                                                    [:option {:value value} label]))
-                                                (:options field-descriptor))]]]))})))
+                                    default-lang @default-lang]
+                                [:div.application__form-field-wrapper
+                                 [div-kwd
+                                  [label field-descriptor]
+                                  [:div.application__form-text-input-info-text
+                                   [info-text field-descriptor]]
+                                  [:div.application__form-select-wrapper
+                                   [:span.application__form-select-arrow]
+                                   [:select.application__form-select
+                                    {:value @value
+                                     :on-change (partial textual-field-change field-descriptor)}
+                                    (concat
+                                      (when
+                                          (and
+                                            (nil? (:koodisto-source field-descriptor))
+                                            (not (:no-blank-option field-descriptor))
+                                            (not= "" (:value (first (:options field-descriptor)))))
+                                        [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+                                      (map-indexed
+                                        (fn [idx option]
+                                          (let [label        (non-blank-val (get-in option [:label lang])
+                                                               (get-in option [:label default-lang]))
+                                                option-value (:value option)]
+                                            ^{:key idx}
+                                            [:option {:value option-value} label]))
+                                        (:options field-descriptor)))]]]
+
+                                 [dropdown-followup lang value field-descriptor]]))})))
 
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))
@@ -296,7 +330,6 @@
                         :children   children} [row-wrapper children]
                        {:fieldClass "formField"
                         :id         (_ :guard (complement visible?))} [:div]
-
                        {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]

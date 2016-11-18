@@ -24,7 +24,6 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-
 (s/defschema Form {(s/optional-key :id)           s/Int
                    :name                          s/Str
                    (s/optional-key :key)          s/Str
@@ -38,10 +37,6 @@
                               (s/optional-key :en) s/Str})
 
 (s/defschema Module (s/enum :person-info))
-
-(s/defschema Option {:value                  s/Str
-                     (s/optional-key :label) LocalizedString
-                     (s/optional-key :default-value) (s/maybe s/Bool)})
 
 (s/defschema Button {:fieldClass              (s/eq "button")
                      :id                      s/Str
@@ -63,7 +58,10 @@
                                                            :version s/Int
                                                            (s/optional-key :default-option) s/Any
                                                            (s/optional-key :title) s/Str}
-                        (s/optional-key :options) [Option]
+                        (s/optional-key :options) [{:value                          s/Str
+                                                    (s/optional-key :label)         LocalizedString
+                                                    (s/optional-key :default-value) (s/maybe s/Bool)
+                                                    (s/optional-key :followup)      (s/recursive #'FormField)}]
                         :fieldType (apply s/enum ["textField"
                                                   "textArea"
                                                   "nameField"

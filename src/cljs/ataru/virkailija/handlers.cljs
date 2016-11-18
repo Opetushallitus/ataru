@@ -24,6 +24,12 @@
     (or (f db)
         db)))
 
+(reg-event-fx
+  :state-update-fx
+  (fn [cofx [_ f]]
+    (or (f cofx)
+      (dissoc cofx :event))))
+
 (reg-event-db
  :set-active-panel
  (fn [db [_ active-panel]]

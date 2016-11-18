@@ -26,6 +26,14 @@
          :children   children}
         (flatten-form-fields children)
 
+        {:fieldType "dropdown"
+         :options options}
+        (cons field
+          (->> options
+            (filter :followup)
+            (map :followup)
+            (map #(assoc % :followup? true))))
+
         :else field))))
 
 (defn answers-by-key [answers]
@@ -47,3 +55,17 @@
                           (get answers-by-key (keyword id))})
                   rest-of-fields)
                 acc)))})))
+
+(defn followups? [dropdown-options]
+  (some some? (map :followup dropdown-options)))
+
+(defn resolve-followup [dropdown-options lang value]
+  (and
+    value
+    (some->> dropdown-options
+      (eduction (comp
+                  (filter :followup)
+                  (filter #(= (-> % :label lang) value))
+                  (map :followup)))
+      not-empty
+      first)))

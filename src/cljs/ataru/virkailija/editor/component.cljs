@@ -1,5 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.editor.components.toolbar :as toolbar]
+            [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [reagent.core :as r]
@@ -62,7 +64,7 @@
 (defn- text-header
   [label path & {:keys [form-section?]}]
   [:div.editor-form__header-wrapper
-   {:draggable true
+   {:draggable (nil? ((set path) :followup))
     :on-drag-start (on-drag-start path)
     :on-drag-over prevent-default}
    [:header.editor-form__component-header label]
@@ -76,7 +78,7 @@
 
 (defn input-field [path lang dispatch-fn {:keys [class]}]
   (let [component (subscribe [:editor/get-component-value path])
-        focus?    (reaction (:focus? @component))
+        focus?    (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
         value     (reaction (get-in @component [:label lang]))
         languages (subscribe [:editor/languages])]
     (r/create-class
@@ -194,34 +196,91 @@
   [text-component initial-content path :header-label "Tekstialue" :size-label "Tekstialueen koko"])
 
 (defn- remove-dropdown-option-button [path option-index]
-  {:key (str "remove-option-" option-index)}
   [:a.editor-form__multi-options-remove--cross {:on-click (fn [evt]
                    (.preventDefault evt)
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
 (defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
-  (let [multiple-languages? (< 1 (count languages))]
-    [:div.editor-form__multi-options-wrapper-outer
-     {:key (str "options-" option-index)}
-     [:div
-      (cond-> {:key (str "options-" option-index)}
-        multiple-languages?
-        (assoc :class "editor-form__multi-options-wrapper-inner"))
-      (let [option-path [path :options option-index]]
-        (input-fields-with-lang
-          (fn [lang]
-            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
-          languages))]
-     (remove-dropdown-option-button path option-index)]))
+  (let [multiple-languages? (< 1 (count languages))
+        option-path         [path :options option-index]]
+    ^{:key (str "options-" option-index)}
+    [:div
+     [:div.editor-form__multi-options-wrapper-outer
+      [:div
+       (cond-> {:key (str "options-" option-index)}
+         multiple-languages?
+         (assoc :class "editor-form__multi-options-wrapper-inner"))
+       (input-fields-with-lang
+         (fn [lang]
+           [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+         languages)]
+      [remove-dropdown-option-button path option-index]
+      [followup-question option-path]]
+     [followup-question-overlay option-path]]))
+
+(defn- dropdown-multi-options [path options-koodisto]
+  (let [dropdown-id                (util/new-uuid)
+        custom-button-value        "Omat vastausvaihtoehdot"
+        custom-button-id           (str dropdown-id "-custom")
+        koodisto-button-value      (reaction (str "Koodisto" (if-let [koodisto-name (:title @options-koodisto)] (str ": " koodisto-name) "")))
+        koodisto-button-id         (str dropdown-id "-koodisto")
+        koodisto-popover-expanded? (r/atom false)]
+    (fn [path options-koodisto]
+      [:div.editor-form__button-group
+       [:input
+        {:type      "radio"
+         :class     "editor-form__button editor-form__button--large"
+         :value     custom-button-value
+         :checked   (nil? @options-koodisto)
+         :name      dropdown-id
+         :id        custom-button-id
+         :on-change (fn [evt]
+                      (.preventDefault evt)
+                      (reset! koodisto-popover-expanded? false)
+                      (dispatch [:editor/select-custom-multi-options path]))}]
+       [:label
+        {:for   custom-button-id
+         :class "editor-form-button--left-edge"}
+        custom-button-value]
+       [:input
+        {:type      "radio"
+         :class     "editor-form__button editor-form__button--large"
+         :value     @koodisto-button-value
+         :checked   (not (nil? @options-koodisto))
+         :name      dropdown-id
+         :id        koodisto-button-id
+         :on-change (fn [evt]
+                      (.preventDefault evt)
+                      (reset! koodisto-popover-expanded? true))}]
+       [:label
+        {:for   koodisto-button-id
+         :class "editor-form-button--right-edge"}
+        @koodisto-button-value]
+       (when @koodisto-popover-expanded?
+         [:div.editor-form__koodisto-popover
+          [:div.editor-form__koodisto-popover-header "Koodisto"
+           [:a.editor-form__koodisto-popover-close
+            {:on-click (fn [e]
+                         (.preventDefault e)
+                         (reset! koodisto-popover-expanded? false))}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+          [:ul.editor-form__koodisto-popover-list
+           (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+                    ^{:key (str "koodisto-" uri)}
+                    [:li.editor-form__koodisto-popover-list-item
+                     [:a.editor-form__koodisto-popover-link
+                      {:on-click (fn [e]
+                                   (.preventDefault e)
+                                   (reset! koodisto-popover-expanded? false)
+                                   (dispatch [:editor/select-koodisto-options uri version title path]))}
+                      title]]))]])])))
 
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
-        value            (subscribe [:editor/get-component-value path])
-        dropdown-id      (util/new-uuid)
-        animation-effect (fade-out-effect path)
-        koodisto-popover-expanded? (r/atom false)]
+        value            (subscribe [:editor/get-component-value path]) 
+        animation-effect (fade-out-effect path)]
     (fn [initial-content path]
       (let [languages  @languages
             field-type (:fieldType @value)]
@@ -245,72 +304,17 @@
          [info-component path initial-content]
 
          [:div.editor-form__multi-options_wrapper
-          [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-          (let [custom-button-value        "Omat vastausvaihtoehdot"
-                custom-button-id           (str dropdown-id "-custom")
-                koodisto-button-value      (str "Koodisto" (if-let [koodisto-name (:title @options-koodisto)] (str ": " koodisto-name) ""))
-                koodisto-button-id         (str dropdown-id "-koodisto")]
-            [:div.editor-form__button-group
-             [:input
-              {:type      "radio"
-               :class     "editor-form__button editor-form__button--large"
-               :value     custom-button-value
-               :checked   (nil? @options-koodisto)
-               :name      dropdown-id
-               :id        custom-button-id
-               :on-change (fn [evt]
-                            (.preventDefault evt)
-                            (reset! koodisto-popover-expanded? false)
-                            (dispatch [:editor/select-custom-multi-options path]))}]
-             [:label
-              {:for   custom-button-id
-               :class "editor-form-button--left-edge"}
-              custom-button-value]
-             [:input
-              {:type      "radio"
-               :class     "editor-form__button editor-form__button--large"
-               :value     koodisto-button-value
-               :checked   (not (nil? @options-koodisto))
-               :name      dropdown-id
-               :id        koodisto-button-id
-               :on-change (fn [evt]
-                            (.preventDefault evt)
-                            (reset! koodisto-popover-expanded? true))}]
-             [:label
-              {:for   koodisto-button-id
-               :class "editor-form-button--right-edge"}
-              koodisto-button-value]
-             (when @koodisto-popover-expanded?
-               [:div.editor-form__koodisto-popover
-                [:div.editor-form__koodisto-popover-header "Koodisto"
-                 [:a.editor-form__koodisto-popover-close
-                  {:on-click (fn [e]
-                               (.preventDefault e)
-                               (reset! koodisto-popover-expanded? false))}
-                  [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-                [:ul.editor-form__koodisto-popover-list
-                 (doall (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
-                          ^{:key (str "koodisto-" uri)}
-                          [:li.editor-form__koodisto-popover-list-item
-                           [:a.editor-form__koodisto-popover-link {:on-click (fn [e]
-                                                                               (.preventDefault e)
-                                                                               (reset! koodisto-popover-expanded? false)
-                                                                               (dispatch [:editor/select-koodisto-options uri version title path]))}
-                            title]]))]])])
+          [:div.editor-form--padded
+           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+           [dropdown-multi-options path options-koodisto]]
 
           (when (nil? @options-koodisto)
             (seq [
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
-                   (let [options (:options @value)]
-                     (->> options
-                          (map-indexed (fn [idx option]
-                                         (when-not (and (= "dropdown" field-type)
-                                                        (clojure.string/blank? (:value option))
-                                                        (= idx 0)
-                                                        (> (count options) 1))
-                                           (dropdown-option idx path languages))))
-                          (remove nil?)))]
+                   (map-indexed (fn [idx _]
+                                  (dropdown-option idx path languages))
+                     (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
                    [:a
@@ -318,34 +322,6 @@
                                  (.preventDefault evt)
                                  (dispatch [:editor/add-dropdown-option path]))}
                     [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
-
-(def ^:private toolbar-elements
-  {"Lomakeosio"                component/form-section
-   "Tekstikenttä"              component/text-field
-   "Tekstialue"                component/text-area
-   "Pudotusvalikko"            component/dropdown
-   "Lista, monta valittavissa" component/multiple-choice})
-
-(defn ^:private component-toolbar [path]
-  (fn [path]
-    (into [:ul.form__add-component-toolbar--list]
-          (for [[component-name generate-fn] toolbar-elements
-                :when                        (not (and
-                                                    (vector? path)
-                                                    (= :children (second path))
-                                                    (= "Lomakeosio" component-name)))]
-            [:li.form__add-component-toolbar--list-item
-             [:a {:on-click (fn [evt]
-                              (.preventDefault evt)
-                              (dispatch [:generate-component generate-fn path]))}
-              component-name]]))))
-
-(defn add-component [path]
-  (fn [path]
-    [:div.editor-form__add-component-toolbar
-     [component-toolbar path]
-     [:div.plus-component
-      [:span "+"]]]))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
@@ -398,7 +374,7 @@
              :header? true)]]
          children
          [drag-n-drop-spacer (conj path :children (count children))]
-         [add-component (conj path :children (count children))]]))))
+         [toolbar/add-component (conj path :children (count children))]]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]

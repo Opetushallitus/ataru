@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
+            [ataru.util :as autil]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -175,7 +176,8 @@
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
-     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]}))
+     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
+     :dispatch [:application/set-followup-visibility-to-false]}))
 
 (reg-event-db
   :flasher
@@ -193,7 +195,9 @@
 (defn set-application-field [db [_ key values]]
   (let [path                [:application :answers key]
         current-answer-data (get-in db path)]
-    (assoc-in db path (merge current-answer-data values))))
+    (assoc-in db path
+      (when values
+        (merge current-answer-data values)))))
 
 (reg-event-db
   :application/set-application-field
@@ -266,6 +270,12 @@
     (or (f db)
         db)))
 
+(reg-event-fx
+  :state-update-fx
+  (fn [cofx [_ f]]
+    (or (f cofx)
+        (dissoc cofx :event))))
+
 (reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
@@ -285,3 +295,12 @@
     (update-in db [:application :answers multiple-choice-id]
       (fn [answer]
         (toggle-multiple-choice-option answer option-value validators)))))
+
+(reg-event-db
+  :application/set-followup-visibility-to-false
+  (fn [db _]
+    (assoc-in db [:application :ui]
+      (->> (autil/flatten-form-fields (:content (:form db)))
+        (filter :followup?)
+        (map (fn [field] {(keyword (:id field)) {:visible? false}}))
+        (reduce merge)))))

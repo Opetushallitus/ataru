@@ -17,10 +17,10 @@
 
 (defn answers->valid-status [all-answers ui]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
-        invalid-fields (for [[key answers]
-                             (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
-                             :when (and (not (:valid answers)) (get-in ui [key :visible?] true))]
-                         (assoc (select-keys answers [:label]) :key key))]
+        invalid-fields  (for [[key answers]
+                              (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
+                              :when (and key (not (:valid answers)) (get-in ui [key :visible?] true))]
+                          (assoc (select-keys answers [:label]) :key key))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
                        false

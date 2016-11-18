@@ -591,6 +591,34 @@
      :fieldType "multipleChoice",
      :fieldClass "formField"}
 
+    {:id         "b05a6057-2c65-40a8-9312-c837429f44bb",
+     :label      {:fi "Pohjakoulutus/ylin koulutus/tutkinto, josta on todistus", :sv ""},
+     :params     {},
+     :options
+     [{:label {:fi "Lukio", :sv ""},
+       :value "Lukio",
+       :followup
+       {:id         "5d8023b1-22c6-4388-8bd4-8e3634fc78ef",
+        :label      {:fi "NONIIN", :sv ""},
+        :params     {:info-text {:label nil}},
+        :fieldType  "textField",
+        :fieldClass "formField"}}
+      {:label {:fi "Ammatillinen peruskoulu", :sv ""},
+       :value "Ammatillinen peruskoulu",
+       :followup
+       {:id         "fbe3522d-6f1d-4e05-85e3-4e716146c686",
+        :label      {:fi "Ois yks kysymys vielä", :sv ""},
+        :params     {},
+        :fieldType  "textField",
+        :fieldClass "formField"}}
+      {:label    {:fi "Ammattitutkinto", :sv ""},
+       :value    "Ammattitutkinto",
+       :followup {:id "62d37b52-3237-4f7f-9e78-df373b0b5c79", :label {:fi "", :sv ""}, :params {}, :fieldType "textArea", :fieldClass "formField"}}
+      {:label {:fi "Erikoisammattitutkinto", :sv ""}, :value "Erikoisammattitutkinto"}
+      {:label {:fi "Opisto/ammattikorkeakoulu", :sv ""}, :value "Opisto/ammattikorkeakoulu"}
+      {:label {:fi "Yliopisto", :sv ""}, :value "Yliopisto"}],
+     :fieldType  "dropdown",
+     :fieldClass "formField"}
     ],
    :fieldType "fieldset",
    :fieldClass "wrapperElement",

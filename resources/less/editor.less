@@ -8,6 +8,10 @@
   padding-top: 100px;
 }
 
+.editor-form--padded {
+  padding-left: 14px;
+}
+
 .editor-form__container {
   padding: 14px 85px 15px 85px;
   background-color: @very-light-gray;
@@ -185,6 +189,7 @@
 .editor-form__section_wrapper {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
+  padding-bottom: 14px;
 }
 
 .editor-form__module-wrapper {
@@ -223,6 +228,7 @@
 
 .editor-form__component-wrapper {
   border: 1px solid @section-gray-border;
+  background-color: white;
   border-radius: 2px;
   margin: 0px 11px;
 }
@@ -249,10 +255,9 @@
 
 .editor-form__text-field-wrapper {
   padding: 10px 14px 0px;
-  margin-right: 61px;
+  margin-right: 31px;
   display: flex;
   flex-flow: column nowrap;
-  justify-content: flex-end;
   flex-basis: 390px;
 }
 
@@ -282,7 +287,8 @@
 }
 
 .editor-form__multi-options_wrapper {
-  padding: 10px 14px 5px;
+  padding-top: 10px;
+  padding-bottom: 5px;
   width: 100%;
 }
 
@@ -290,7 +296,7 @@
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
-  margin-bottom: 20px;
+  margin: 10px 14px;
 }
 
 .editor-form__multi-options-remove--cross {
@@ -334,6 +340,7 @@
 
 .editor-form__add-dropdown-item {
   padding-bottom: 30px;
+  margin: 0 14px;
 }
 
 form > div > .editor-form__component-wrapper {
@@ -351,7 +358,7 @@ form > div > .editor-form__component-wrapper {
   display: flex;
   flex-flow: column nowrap;
   padding: 10px 14px 20px;
-  margin-right: 61px;
+  margin-right: 31px;
 }
 
 .editor-form__button-group {
@@ -470,7 +477,6 @@ form > div > .editor-form__component-wrapper {
   border: 1px dashed @section-gray-border;
   border-radius: 2px;
   background-color: #F7F7F7;
-  margin-bottom: 14px;
   padding: 0.5em;
   height: 43px;
   color: @selected-blue;
@@ -586,7 +592,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__koodisto-popover-link {
-  color: #2a2a2a;
+  color: #2a2a2a; 
   padding: 10px;
   display: block;
   width: 100%;
@@ -596,4 +602,22 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__info-component-inputs {
+}
+
+.editor-form__followup-question {
+  margin-left: 30px;
+}
+
+.editor-form__followup-question-overlay-outer {
+  border-top: 1px solid @section-gray-border;
+  border-bottom: 1px solid @section-gray-border;
+  background-color: #fcfcfc;
+  width: 100%;
+}
+
+.editor-form__followup-question-overlay {
+  margin: 14px;
+  .editor-form__component-wrapper {
+    margin: 0;
+  }
 }

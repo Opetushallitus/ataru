@@ -5,10 +5,11 @@
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as pm]
-            [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.dev.lomake :as dev]
+            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.editor.handlers-macros :refer-macros [with-path-and-index]]
             [ataru.virkailija.routes :refer [set-history!]]
@@ -54,45 +55,21 @@
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
 
-(defn- remove-empty-options
-  [options]
-  (vec (remove #(clojure.string/blank? (:value %)) options)))
-
-(defn- add-empty-option
-  [options]
-  (into [(component/dropdown-option)] options))
-
-(defn- update-options-in-dropdown-field
-  [dropdown-field no-blank-option?]
-  (if (:koodisto-source dropdown-field)
-    (assoc dropdown-field :options [{:value "" :label {:fi ""}}])
-    (let [add-blank-fn    (if no-blank-option? identity add-empty-option)
-          updated-options (-> (:options dropdown-field)
-                              (remove-empty-options)
-                              (add-blank-fn))]
-      (merge dropdown-field {:options updated-options}))))
-
-(defn- update-dropdown-field-options
-  [form]
-  (let [new-content
-        (walk/prewalk
-          #(if (and (= (:fieldType %) "dropdown") (= (:fieldClass %) "formField"))
-             (update-options-in-dropdown-field % (:no-blank-option %))
-             %)
-          (:content form))]
-    (merge form {:content new-content})))
-
-(reg-event-db
+(reg-event-fx
   :editor/remove-dropdown-option
-  (fn [db [_ & path]]
-    (let [option-path (current-form-content-path db [path])]
-      (update-in db (drop-last option-path) remove-nth (last option-path)))))
+  (fn [cofx [_ & path]]
+    (let [option-path (current-form-content-path (:db cofx) [path])]
+      {:db (update-in (:db cofx) (drop-last option-path) remove-nth (last option-path))
+       :dispatch [:editor/remove-followup-question (first path)]})))
 
 (reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
-    (let [dropdown-path (current-form-content-path db [path :options])]
-      (update-in db dropdown-path into [(ataru.virkailija.component-data.component/dropdown-option)]))))
+    (let [dropdown-path (current-form-content-path db [path :options])
+          component     (ataru.virkailija.component-data.component/dropdown-option)]
+      (->
+        (update-in db dropdown-path into [component])
+        (assoc-in [:editor :ui (:id component) :focus?] true)))))
 
 (reg-event-db
   :editor/set-dropdown-option-value
@@ -145,12 +122,14 @@
 (defn generate-component
   [db [_ generate-fn path]]
   (with-form-key [db form-key]
-    (let [form-key       (get-in db [:editor :selected-form-key])
-          path-vec      (current-form-content-path db [path])
-          component     (generate-fn)]
-      (if (zero? (last path-vec))
-        (assoc-in db (butlast path-vec) [component])
-        (assoc-in db path-vec component)))))
+    (let [form-key  (get-in db [:editor :selected-form-key])
+          path-vec  (current-form-content-path db [path])
+          component (generate-fn)]
+      (->
+        (if (zero? (last path-vec))
+          (assoc-in db (butlast path-vec) [component])
+          (assoc-in db path-vec component))
+        (assoc-in [:editor :ui (:id component) :focus?] true)))))
 
 (reg-event-db :generate-component generate-component)
 
@@ -175,10 +154,14 @@
       "animationend"
       #(do
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
-         (dispatch [:state-update
-                    (fn [db_]
-                      (-> (remove-component db_ path)
-                          (update-in [:editor :forms-meta] assoc path :removed)))])))
+         (dispatch [:state-update-fx
+                    (fn [{:keys [db]}]
+                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)
+                            followup? (= :followup (last path))]
+                        (if followup?
+                          {:db forms-meta-db
+                           :dispatch [:editor/followup-remove path]}
+                          {:db (remove-component forms-meta-db path)})))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-db
@@ -241,17 +224,12 @@
     (not=
       ; :id changes when new version is created,
       ; :key remains the same across versions
-      (-> prev
-        ; prevent autosave when adding blank dropdown option
-        (update-dropdown-field-options)
-        (dissoc :created-time :id))
-      (-> current
-        ; prevent autosave when adding blank dropdown option
-        (update-dropdown-field-options)
-        (dissoc :created-time :id)))))
+      (dissoc prev :created-time :id)
+      (dissoc current :created-time :id))))
 
 (defn- handle-fetch-form [db {:keys [key] :as response} _]
   (-> db
+      (update :editor dissoc :ui)
       (assoc-in [:editor :forms key] (languages->kwd response))
       (assoc-in [:editor :autosave]
         (autosave/interval-loop {:subscribe-path    [:editor :forms key]
@@ -284,22 +262,11 @@
             (update-in [:editor] dissoc :selected-hakukohde)
             (assoc-in [:editor :selected-form-key] form-key))))))
 
-(defn- remove-focus
-  [form]
-  (clojure.walk/prewalk
-    (fn [x]
-      (if (map? x)
-        (dissoc x :focus?)
-        x))
-    form))
-
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
 (defn save-loop [save-chan]
   (go-loop [_ (async/<! save-chan)]
     (let [form (-> @(subscribe [:editor/selected-form])
-                   (update-dropdown-field-options)
-                   (remove-focus)
                    (dissoc :created-time))
           response-chan (async/chan)]
       (when (not-empty (:content form))
@@ -361,9 +328,7 @@
 (defn- copy-form [db _]
   (let [form-id (get-in db [:editor :selected-form-key])
         form    (-> (get-in db [:editor :forms form-id])
-                    (update :name (fn [name]
-                                    (str name " - KOPIO")))
-                    (remove-focus))]
+                    (update :name str " - KOPIO"))]
     (post-new-form form)
     db))
 
@@ -485,18 +450,22 @@
 (defn- toggle-language [db [_ lang]]
   (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
         lang-path (conj form-path :languages)]
-    (->> (update-in db lang-path
-           (fn [languages]
-             (let [languages (or languages [:fi])]
-               (cond
-                 (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
-                                                         (conj languages lang))
-                 (> (count languages) 1) (filter (partial not= lang) languages)
-                 :else languages))))
-         (clojure.walk/prewalk
-           (fn [x]
-             (if (= [:focus? true] x)
-               [:focus? false]
-               x))))))
+    (->
+      (update-in db lang-path
+        (fn [languages]
+          (let [languages (or languages [:fi])]
+            (cond
+              (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
+                                               (conj languages lang))
+              (> (count languages) 1)        (filter (partial not= lang) languages)
+              :else                          languages))))
+      (update-in [:editor :ui]
+        (fn [ui]
+          (clojure.walk/prewalk
+            (fn [x]
+              (if (= [:focus? true] x)
+                [:focus? false]
+                x))
+            ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)

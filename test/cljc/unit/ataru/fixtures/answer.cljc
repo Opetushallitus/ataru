@@ -64,5 +64,8 @@
     {:key       "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0",
      :label     "Viides kysymys",
      :value     "Ensimmäinen vaihtoehto, Toinen vaihtoehto, Kolmas vaihtoehto"
-     :fieldType "multipleChoice"}]})
+     :fieldType "multipleChoice"}
+    {:key       "b05a6057-2c65-40a8-9312-c837429f44bb"
+     :fieldType "dropdown"
+     :value     ""}]})
 

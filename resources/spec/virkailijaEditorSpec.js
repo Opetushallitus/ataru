@@ -30,6 +30,8 @@
 
   function formComponents() {
     return testFrame().find('.editor-form__component-wrapper')
+      // exclude followup question components
+      .not('.editor-form__followup-question-overlay  > div > .editor-form__component-wrapper')
   }
 
   function formSections() {
@@ -161,19 +163,23 @@
           setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__info-component-checkbox label') }),
-          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-component-inputs input') }, 'Kolmannen kysymyksen ohjeteksti')
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-component-inputs input') }, 'Kolmannen kysymyksen ohjeteksti'),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question:eq(2) a') }),
+          clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay a:contains("Tekstikenttä")') }),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Jatkokysymys")
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(4)
           expect(formComponents().eq(3).find('.editor-form__text-field:first').val()).to.equal('Kolmas kysymys')
           expect(formComponents().eq(3).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
-          expect(formComponents().eq(3).find('.editor-form__multi-options-container input').length).to.equal(4)
-          var options = _.map(formComponents().eq(3).find('.editor-form__multi-options-container input'), function(inputField) {
+          expect(formComponents().eq(3).find('.editor-form__multi-options-container input').not('.editor-form__followup-question-overlay input').length).to.equal(4)
+          var options = _.map(formComponents().eq(3).find('.editor-form__multi-options-container input').not('.editor-form__followup-question-overlay input'), function(inputField) {
             return $(inputField).val()
           })
           expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])
           expect(formComponents().eq(3).find('.editor-form__info-component-checkbox input').prop('checked')).to.equal(true)
           expect(formComponents().eq(3).find('.editor-form__info-component-inputs input').val()).to.equal('Kolmannen kysymyksen ohjeteksti')
+          expect(formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field').val()).to.equal("Jatkokysymys")
         })
       })
 
