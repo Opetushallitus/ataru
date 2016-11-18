@@ -247,7 +247,7 @@
         {:type      "radio"
          :class     "editor-form__button editor-form__button--large"
          :value     @koodisto-button-value
-         :checked   (not (nil? options-koodisto))
+         :checked   (not (nil? @options-koodisto))
          :name      dropdown-id
          :id        koodisto-button-id
          :on-change (fn [evt]
