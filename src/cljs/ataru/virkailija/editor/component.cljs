@@ -140,10 +140,6 @@
               [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
             @languages)])])))
 
-(defn info-component
-  "Info text which is a standalone component"
-  [path])
-
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         size             (subscribe [:editor/get-component-value path :params :size])
@@ -402,3 +398,20 @@
         [:span.editor-form__module-fields-label "Sisältää kentät:"]
         " "
         (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])))
+
+(defn info-element
+  "Info text which is a standalone component"
+  [initial-content path]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [initial-content path]
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
+       [text-header "Infokenttä" path]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Ohjeteksti"]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)]])))

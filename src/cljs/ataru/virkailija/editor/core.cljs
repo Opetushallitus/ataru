@@ -54,6 +54,9 @@
             {:fieldClass "formField" :fieldType "multipleChoice"}
             [ec/dropdown content path]
 
+            {:fieldClass "infoElement"}
+            [ec/info-element content path]
+
             :else (do
                     (error content)
                     (throw "error" content)))]))

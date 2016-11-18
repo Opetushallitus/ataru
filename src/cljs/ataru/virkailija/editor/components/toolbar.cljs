@@ -10,7 +10,7 @@
    "Tekstialue"                component/text-area
    "Pudotusvalikko"            component/dropdown
    "Lista, monta valittavissa" component/multiple-choice
-   "Infokenttä"                component/info-component})
+   "Infokenttä"                component/info-element})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
