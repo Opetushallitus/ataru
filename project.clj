@@ -30,7 +30,7 @@
                  [metosin/compojure-api "1.1.9"]
                  [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1"]
-                 [http-kit "2.1.18"]
+                 [http-kit "2.2.0"]
                  [ring "1.4.0"]
                  [ring/ring-defaults "0.2.0"]
                  [ring/ring-json "0.4.0"]
