@@ -139,7 +139,7 @@
   (some (partial = method) [:post :put :delete]))
 
 (defn csrf-token []
-  (-> js/document
-      Cookies.
-      (.get "CSRF")
-      js/decodeURIComponent))
+  (when-let [token (-> js/document
+                  Cookies.
+                  (.get "CSRF"))]
+    (js/decodeURIComponent token)))
