@@ -61,10 +61,10 @@
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
                                       temporal/parse-times)}
               (when (include-csrf-header? method)
-                (let [csrf-token (-> js/document
-                                     Cookies.
-                                     (.get "CSRF")
-                                     js/decodeURIComponent)]
+                (when-let [csrf-token (-> js/document
+                                          Cookies.
+                                          (.get "CSRF")
+                                          js/decodeURIComponent)]
                   {:headers {"CSRF" csrf-token}}))
               override-args))))
 
