@@ -65,7 +65,7 @@
                                      Cookies.
                                      (.get "CSRF")
                                      js/decodeURIComponent)]
-                  {:headers {"X-CSRF-Token" csrf-token}}))
+                  {:headers {"CSRF" csrf-token}}))
               override-args))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]
