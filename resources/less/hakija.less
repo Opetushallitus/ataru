@@ -331,13 +331,16 @@
   box-shadow: none;
   border: 1px dashed #ccc;
 }
-.application__form-repeatable-text-wrap input.application__form-text-input--disabled ::-webkit-input-placeholder {
+.application__form-repeatable-text-wrap input.application__form-text-input--disabled:enabled::-webkit-input-placeholder {
   color: #4194bf;
 }
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled:focus {
   background: #fff;
   border: 1px solid #AEAEAE;
   box-shadow: inset 0px 1px 4px 0px rgba(0,0,0,0.20);
+}
+.application__form-repeatable-text-wrap input.application__form-text-input--disabled:focus::-webkit-input-placeholder{
+  color: #fff;
 }
 .application__form-field-error {
   background: #ffe9e9;
