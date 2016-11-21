@@ -77,7 +77,7 @@
                                                   "namedAttachment"
                                                   "koodistoField"])})
 
-(s/defschema InfoElement {:fieldClass (s/eq "infoElement")
+(s/defschema InfoElement {:fieldClass "infoElement"
                           :id s/Str
                           :fieldType (apply s/enum ["h1"
                                                     "h3"
@@ -111,7 +111,7 @@
 
 (s/defschema FormWithContent
   (merge Form
-         {:content [(s/if (comp some? :children) WrapperElement FormField)]}))
+         {:content [(s/if (comp some? :children) WrapperElement BasicElement)]}))
 
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str

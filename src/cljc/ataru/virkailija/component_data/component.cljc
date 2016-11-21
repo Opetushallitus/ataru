@@ -66,6 +66,6 @@
    :fieldType  "p"
    :id         (util/component-id)
    :params     {}
-   :label      {} ; LocalizedString
-   :text       {} ; LocalizedString
+   :label      {:fi ""} ; LocalizedString
+   :text       {:fi ""} ; LocalizedString
    })
