@@ -76,10 +76,13 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
-(defn input-field [path lang dispatch-fn {:keys [class]}]
+(defn input-field [path lang dispatch-fn {:keys [class value-fn]}]
   (let [component (subscribe [:editor/get-component-value path])
         focus?    (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value     (reaction (get-in @component [:label lang]))
+        value     (or
+                    (when value-fn
+                      (reaction (value-fn @component)))
+                    (reaction (get-in @component [:label lang])))
         languages (subscribe [:editor/languages])]
     (r/create-class
       {:component-did-mount (fn [component]
@@ -409,9 +412,17 @@
        {:class @animation-effect}
        [text-header "Infokenttä" path]
        [:div.editor-form__text-field-wrapper
-        [:header.editor-form__component-item-header "Ohjeteksti"]
+        [:header.editor-form__component-item-header "Otsikko"]
         (input-fields-with-lang
           (fn [lang]
             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Ohjeteksti"]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+             {:value-fn (fn [component] (get-in component [:text lang]))}])
           @languages
           :header? true)]])))
