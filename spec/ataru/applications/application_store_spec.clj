@@ -60,7 +60,7 @@
           (it "should return all applications belonging to a form"
               (should=
                 (mapv #(select-keys % [:id :key]) expected-applications)
-                (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key {})))))
+                (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key)))))
 
 (describe "get-applications"
           (tags :unit)

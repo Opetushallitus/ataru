@@ -34,11 +34,13 @@ where application_key = :application_key order by time asc;
 -- name: yesql-get-application-review
 select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
 
--- name: yesql-application-query-by-modified
+-- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content from applications a
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, coalesce(ar.state, 'received') as state
+from applications a
 join forms f on f.id = a.form_id and f.key = :form_key
-where a.hakukohde is null;
+left outer join application_reviews ar on a.id = ar.application_id
+where a.hakukohde is null and state in (:filtered_states);
 
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;

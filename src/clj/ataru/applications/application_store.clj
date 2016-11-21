@@ -12,9 +12,6 @@
 
 (defqueries "sql/application-queries.sql")
 
-(defonce default-application-request
-  {:sort :by-date})
-
 (defn- exec-db
   [ds-key query params]
   (db/exec ds-key query params))
@@ -24,7 +21,7 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn unwrap-application [{:keys [lang]} application]
+(defn unwrap-application [application]
   (assoc (->kebab-case-kw (dissoc application :content))
     :answers
     (mapv (fn [answer]
@@ -68,7 +65,7 @@
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
   (when-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
-    (unwrap-application {:lang lang} application)))
+    (unwrap-application application)))
 
 (defn add-application-or-increment-version! [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -120,15 +117,15 @@
        (latest-versions-only)))
 
 (defn get-application [application-id]
-  (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
+  (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
 (defn get-latest-application-by-key [application-key]
-  (unwrap-application {:lang "fi"} (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
+  (unwrap-application (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
 (defn get-latest-application-by-secret [secret]
   (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
        (first)
-       (unwrap-application {:lang "fi"})))
+       (unwrap-application)))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
@@ -160,15 +157,11 @@
          connection)))))
 
 (s/defn get-applications-for-form :- [schema/Application]
-  [form-key :- s/Str application-request :- schema/ApplicationRequest]
-  (let [request (merge
-                  {:form-key form-key}
-                  default-application-request
-                  application-request)]
-    (->> (dissoc (transform-keys ->snake_case request) :sort)
-         (exec-db :db yesql-application-query-by-modified)
-         (mapv (partial unwrap-application request))
-         (latest-versions-only))))
+  [form-key :- s/Str filtered-states :- [s/Str]]
+  (->> {:form_key form-key :filtered_states filtered-states}
+       (exec-db :db yesql-get-applications-for-form)
+       (mapv unwrap-application)
+       (latest-versions-only)))
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [form-key :- s/Str hakukohde-oid :- s/Str]

@@ -187,8 +187,8 @@
       (.toByteArray stream))))
 
 (defn export-all-form-applications
-  [form-key]
-  (let [applications (application-store/get-applications-for-form form-key {})
+  [form-key filtered-states]
+  (let [applications (application-store/get-applications-for-form form-key filtered-states)
         meta-fields  (indexed-meta-fields form-meta-fields)]
     (export-applications applications form-key meta-fields)))
 

@@ -156,11 +156,16 @@
 
                    (api/GET "/excel/:form-key" {session :session}
                             :path-params [form-key :- s/Str]
+                            :query-params [{state :- [s/Str] nil}]
                             :summary  "Return Excel export of the form and applications for it."
                             {:status  200
                              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                        "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-                             :body    (application-service/get-excel-report-of-applications-by-form form-key session organization-service)})
+                             :body    (application-service/get-excel-report-of-applications-by-form
+                                       form-key
+                                       state
+                                       session
+                                       organization-service)})
 
                    (api/GET "/excel/:form-key/:hakukohde-oid" {session :session}
                             :path-params [form-key :- s/Str
@@ -169,7 +174,11 @@
                             {:status  200
                              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                        "Content-Disposition" (str "attachment; filename=" (excel/filename form-key hakukohde-oid))}
-                             :body    (application-service/get-excel-report-of-applications-by-hakukohde form-key hakukohde-oid session organization-service)}))
+                             :body    (application-service/get-excel-report-of-applications-by-hakukohde
+                                       form-key
+                                       hakukohde-oid
+                                       session
+                                       organization-service)}))
 
                  (api/GET "/hakukohteet" []
                           :summary "List hakukohde information found for applications stored in system"
