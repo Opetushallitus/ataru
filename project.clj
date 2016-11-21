@@ -24,7 +24,7 @@
                  [jayq "2.5.4"]
 
                  ;clojure
-                 [compojure "1.5.0"]
+                 [compojure "1.5.1"]
                  [crypto-random "1.2.0"]
                  [com.stuartsierra/component "0.3.1"]
                  [metosin/compojure-api "1.1.2"]
