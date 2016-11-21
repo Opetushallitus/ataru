@@ -7,7 +7,7 @@
                  [re-frame "0.8.0"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [oph/soresu "0.1.7-SNAPSHOT"]
+                 [oph/soresu "0.1.8-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.8"]
                  [binaryage/devtools "0.8.3"]
