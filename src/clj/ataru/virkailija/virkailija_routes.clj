@@ -26,7 +26,7 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
-            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type]]
+            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -55,9 +55,11 @@
 (defn render-virkailija-page
   []
   (let [config (json/generate-string (or (:public-config config) {}))]
-    (selmer/render-file "templates/virkailija.html"
-                        {:cache-fingerprint cache-fingerprint
-                         :config            config})))
+    (-> (selmer/render-file "templates/virkailija.html"
+                            {:cache-fingerprint cache-fingerprint
+                             :config            config})
+        (ok)
+        (content-type "text/html"))))
 
 (api/defroutes app-routes
   (api/undocumented
@@ -244,8 +246,9 @@
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
+                                               (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)
-                                               (update :responses dissoc :content-types)))
+                                               (assoc-in [:session :root] "/lomake-editori")))
                             (wrap-with-logger
                               :debug identity
                               :info  (fn [x] (info x))

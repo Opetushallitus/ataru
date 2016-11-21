@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-ajax
   (:require [re-frame.core :refer [dispatch]]
             [cljs.core.match :refer-macros [match]]
+            [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
             [ajax.core :refer [GET POST PUT DELETE]]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -56,6 +57,9 @@
                                                [nil] nil
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
                                       temporal/parse-times)}
+              (when (util/include-csrf-header? method)
+                (when-let [csrf-token (util/csrf-token)]
+                  {:headers {"CSRF" csrf-token}}))
               override-args))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]

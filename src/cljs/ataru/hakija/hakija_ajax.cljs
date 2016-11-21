@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-ajax
   (:require [re-frame.core :refer [dispatch reg-fx]]
+            [ataru.cljs-util :as util]
             [cljs.core.match :refer-macros [match]]
             [ajax.core :refer [GET POST]])
   (:refer-clojure :exclude [get]))
@@ -29,7 +30,10 @@
   (GET path (params handler-kw error-handler-kw)))
 
 (defn post [path post-data & [handler-kw error-handler-kw]]
-  (POST path (merge {:params post-data} (params handler-kw error-handler-kw))))
+  (let [params (cond-> (merge {:params post-data} (params handler-kw error-handler-kw))
+                 (util/include-csrf-header? :post)
+                 (assoc-in [:headers "CSRF"] (util/csrf-token)))]
+    (POST path params)))
 
 (reg-fx
   :http
