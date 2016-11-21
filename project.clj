@@ -46,7 +46,7 @@
                  [org.postgresql/postgresql "9.4.1212"]
                  [clj-time "0.12.2"]
                  [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
-                 [cheshire/cheshire "5.5.0"]
+                 [cheshire/cheshire "5.6.3"]
                  [selmer "1.0.4"]
                  [metosin/ring-http-response "0.6.5"]
                  [oph/clj-util "0.1.0"]
