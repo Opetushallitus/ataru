@@ -136,7 +136,7 @@
       (->kebab-case-kw)))
 
 (defn include-csrf-header? [method]
-  (some (partial = method) [:post :put :delete]))
+  (contains? #{:post :put :delete} method))
 
 (defn csrf-token []
   (when-let [token (-> js/document
