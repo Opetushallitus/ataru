@@ -36,7 +36,7 @@
                  [ring/ring-json "0.4.0"]
                  [ring-ratelimit "0.2.2"]
                  [bk/ring-gzip "0.1.1"]
-                 [buddy/buddy-auth "0.13.0"]
+                 [buddy/buddy-auth "1.3.0"]
                  [yesql "0.5.2"]
                  [org.flywaydb/flyway-core "3.2.1"]
                  [camel-snake-kebab "0.3.2"]
