@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.review-states)
+(ns ataru.application.review-states)
 
 (def application-review-states
   (array-map "received"   "Saapunut"

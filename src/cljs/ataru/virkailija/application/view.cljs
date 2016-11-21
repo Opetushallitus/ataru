@@ -6,7 +6,7 @@
             [cljs-time.format :as f]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
-            [ataru.virkailija.application.review-states :refer [application-review-states]]
+            [ataru.application.review-states :refer [application-review-states]]
             [ataru.application-common.application-readonly :as readonly-contents]
             [ataru.cljs-util :refer [wrap-scroll-to classnames]]
             [taoensso.timbre :refer-macros [spy debug]]))

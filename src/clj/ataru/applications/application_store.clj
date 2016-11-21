@@ -146,7 +146,6 @@
           app-key         (:application-key review)
           old-review      (first (yesql-get-application-review {:application_key app-key} connection))
           review-to-store (transform-keys ->snake_case review)]
-      (println (str "saving application review: " review-to-store))
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
         (yesql-add-application-event!
