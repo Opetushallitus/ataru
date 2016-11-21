@@ -81,7 +81,7 @@
             [lein-doo "0.1.7"]
             [lein-figwheel "0.5.8"]
             [lein-less "1.7.5"]
-            [lein-ancient "0.6.8"]
+            [lein-ancient "0.6.10"]
             [lein-environ "1.0.2"]
             [lein-resource "15.10.2"]
             [speclj "3.3.0"]]
