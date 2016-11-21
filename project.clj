@@ -182,7 +182,7 @@
                                   [speclj-junit "0.0.10"]]
                    :plugins [[refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
-                             [lein-cljfmt "0.5.1"]]
+                             [lein-cljfmt "0.5.6"]]
                    :source-paths ["dev/clj" "test/cljc/unit"]
                    :resource-paths ["dev-resources"]
                    :env {:dev? true}}
