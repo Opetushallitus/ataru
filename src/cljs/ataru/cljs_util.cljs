@@ -8,7 +8,8 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-            [camel-snake-kebab.extras :refer [transform-keys]]))
+            [camel-snake-kebab.extras :refer [transform-keys]])
+  (:import [goog.net Cookies]))
 
 (defn wrap-debug [f]
   (fn [& args]
@@ -133,3 +134,12 @@
       (url/url)
       (:query)
       (->kebab-case-kw)))
+
+(defn include-csrf-header? [method]
+  (some (partial = method) [:post :put :delete]))
+
+(defn csrf-token []
+  (-> js/document
+      Cookies.
+      (.get "CSRF")
+      js/decodeURIComponent))

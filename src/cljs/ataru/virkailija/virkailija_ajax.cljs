@@ -1,10 +1,10 @@
 (ns ataru.virkailija.virkailija-ajax
   (:require [re-frame.core :refer [dispatch]]
             [cljs.core.match :refer-macros [match]]
+            [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
             [ajax.core :refer [GET POST PUT DELETE]]
-            [taoensso.timbre :refer-macros [spy debug]])
-  (:import [goog.net Cookies]))
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn dispatch-flasher-error-msg
   [method response]
@@ -26,9 +26,6 @@
                          :error-type error-type
                          :detail   response}])
     response))
-
-(defn- include-csrf-header? [method]
-  (some (partial = method) [:post :put :delete]))
 
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
@@ -60,11 +57,8 @@
                                                [nil] nil
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
                                       temporal/parse-times)}
-              (when (include-csrf-header? method)
-                (when-let [csrf-token (-> js/document
-                                          Cookies.
-                                          (.get "CSRF")
-                                          js/decodeURIComponent)]
+              (when (util/include-csrf-header? method)
+                (when-let [csrf-token (util/csrf-token)]
                   {:headers {"CSRF" csrf-token}}))
               override-args))))
 
