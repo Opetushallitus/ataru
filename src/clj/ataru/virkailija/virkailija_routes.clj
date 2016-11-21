@@ -54,14 +54,12 @@
 
 (defn render-virkailija-page
   []
-  (let [config     (json/generate-string (or (:public-config config) {}))
-        csrf-token ring.middleware.anti-forgery/*anti-forgery-token*]
+  (let [config (json/generate-string (or (:public-config config) {}))]
     (-> (selmer/render-file "templates/virkailija.html"
                             {:cache-fingerprint cache-fingerprint
                              :config            config})
         (ok)
-        (content-type "text/html")
-        (set-cookie "CSRF" csrf-token))))
+        (content-type "text/html"))))
 
 (api/defroutes app-routes
   (api/undocumented
@@ -249,6 +247,7 @@
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
                                                (update :responses dissoc :content-types)
+                                               (update :security dissoc :content-type-options :anti-forgery)
                                                (assoc-in [:session :root] "/lomake-editori")))
                             (wrap-with-logger
                               :debug identity
