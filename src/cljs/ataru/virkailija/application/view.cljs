@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.view
-  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+  (:require [clojure.string :as string]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [cljs-time.format :as f]
@@ -64,13 +65,14 @@
         [form-list-opened @forms @hakukohteet @selected-form-key @selected-hakukohde open]
         [form-list-closed @selected-form @selected-hakukohde open])])))
 
-(defn excel-download-link [applications]
-  (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))
-        hakukohde (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))]
-    (fn [applications]
+(defn excel-download-link [applications application-filter]
+  (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
+        hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
+        query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
+    (fn [applications application-filter]
       (when (> (count applications) 0)
         (let [url (if @form-key
-                    (str "/lomake-editori/api/applications/excel/" @form-key)
+                    (str "/lomake-editori/api/applications/excel/" @form-key (query-string application-filter))
                     (str "/lomake-editori/api/applications/excel/" (:form-key @hakukohde) "/" (:hakukohde @hakukohde)))]
           [:a.application-handling__excel-download-link
            {:href url}
@@ -236,6 +238,6 @@
           [:div.panel-content
            [:div.application-handling__header
             [form-list]
-            [excel-download-link filtered-applications]]
+            [excel-download-link filtered-applications @application-filter]]
            [application-list filtered-applications]]]
          [application-review-area filtered-applications]]))))
