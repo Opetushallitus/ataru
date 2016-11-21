@@ -78,7 +78,7 @@
   :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.4"]
-            [lein-doo "0.1.6"]
+            [lein-doo "0.1.7"]
             [lein-figwheel "0.5.8"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.8"]
