@@ -176,7 +176,7 @@
                                   [figwheel-sidecar "0.5.8"]
                                   [refactor-nrepl "2.2.0"]
                                   [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                  [reloaded.repl "0.2.1"]
+                                  [reloaded.repl "0.2.3"]
                                   [ring/ring-mock "0.3.0"]
                                   [speclj "3.3.2"]
                                   [speclj-junit "0.0.10"]]
