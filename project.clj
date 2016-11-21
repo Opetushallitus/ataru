@@ -83,7 +83,7 @@
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-environ "1.1.0"]
-            [lein-resource "15.10.2"]
+            [lein-resource "16.11.1"]
             [speclj "3.3.0"]]
 
   :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
