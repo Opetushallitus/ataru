@@ -39,7 +39,7 @@
                  [buddy/buddy-auth "1.3.0"]
                  [yesql "0.5.3"]
                  [org.flywaydb/flyway-core "3.2.1"]
-                 [camel-snake-kebab "0.3.2"]
+                 [camel-snake-kebab "0.4.0"]
                  [environ "1.0.2"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojure/java.jdbc "0.4.2"]
