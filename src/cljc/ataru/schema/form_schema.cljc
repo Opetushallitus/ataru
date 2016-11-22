@@ -77,7 +77,7 @@
                                                   "namedAttachment"
                                                   "koodistoField"])})
 
-(s/defschema InfoElement {:fieldClass "infoElement"
+(s/defschema InfoElement {:fieldClass (s/eq "infoElement")
                           :id s/Str
                           :fieldType (apply s/enum ["h1"
                                                     "h3"
