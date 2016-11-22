@@ -72,8 +72,14 @@
     (fn [applications application-filter]
       (when (> (count applications) 0)
         (let [url (if @form-key
-                    (str "/lomake-editori/api/applications/excel/" @form-key (query-string application-filter))
-                    (str "/lomake-editori/api/applications/excel/" (:form-key @hakukohde) "/" (:hakukohde @hakukohde)))]
+                    (str "/lomake-editori/api/applications/excel/"
+                         @form-key
+                         (query-string application-filter))
+                    (str "/lomake-editori/api/applications/excel/"
+                         (:form-key @hakukohde)
+                         "/"
+                         (:hakukohde @hakukohde)
+                         (query-string application-filter)))]
           [:a.application-handling__excel-download-link
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))

@@ -72,13 +72,15 @@
      :events      (application-store/get-application-events application-key)
      :review      (application-store/get-application-review application-key)}))
 
-(defn get-excel-report-of-applications-by-form [form-key filtered-states session organization-service]
+(defn get-excel-report-of-applications-by-form
+  [form-key filtered-states session organization-service]
   (aac/check-form-access form-key session organization-service)
   (java.io.ByteArrayInputStream. (excel/export-all-form-applications form-key filtered-states)))
 
-(defn get-excel-report-of-applications-by-hakukohde [form-key hakukohde-oid session organization-service]
+(defn get-excel-report-of-applications-by-hakukohde
+  [form-key filtered-states hakukohde-oid session organization-service]
   (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key hakukohde-oid)))
+  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key filtered-states hakukohde-oid)))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]

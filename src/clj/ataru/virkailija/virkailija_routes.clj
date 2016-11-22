@@ -170,12 +170,14 @@
                    (api/GET "/excel/:form-key/:hakukohde-oid" {session :session}
                             :path-params [form-key :- s/Str
                                           hakukohde-oid :- s/Str]
+                            :query-params [{state :- [s/Str] nil}]
                             :summary "Return Excel export of the form and hakukohde and applications for it."
                             {:status  200
                              :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                        "Content-Disposition" (str "attachment; filename=" (excel/filename form-key hakukohde-oid))}
                              :body    (application-service/get-excel-report-of-applications-by-hakukohde
                                        form-key
+                                       state
                                        hakukohde-oid
                                        session
                                        organization-service)}))

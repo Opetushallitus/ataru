@@ -163,9 +163,14 @@
        (latest-versions-only)))
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
-  [form-key :- s/Str hakukohde-oid :- s/Str]
-  (->> (exec-db :db yesql-application-query-for-hakukohde {:form_key form-key :hakukohde_oid hakukohde-oid})
-       (mapv (partial unwrap-application {}))
+  [form-key :- s/Str
+   filtered-states :- [s/Str]
+   hakukohde-oid :- s/Str]
+  (->> (exec-db :db yesql-get-applications-for-hakukohde
+                {:form_key        form-key
+                 :filtered_states filtered-states
+                 :hakukohde_oid   hakukohde-oid})
+       (mapv (partial unwrap-application))
        (latest-versions-only)))
 
 (defn add-person-oid
