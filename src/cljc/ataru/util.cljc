@@ -19,7 +19,8 @@
 
 (defn flatten-form-fields [fields]
   (flatten
-    (for [field fields]
+    (for [field fields
+          :when (not= "infoElement" (:fieldClass field))]
       (match
         field
         {:fieldClass "wrapperElement"
