@@ -78,11 +78,36 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
+(defn- link-detected-paragraph [text]
+  (let [words   (for [word (clojure.string/split text #"\s")
+                      :let [as-url (url/url word)]]
+                  (if (not-empty (:host as-url))
+                    [:a {:key  (str as-url)
+                         :href (str as-url)}
+                     (:host as-url)]
+                    (if (empty? word)
+                      [:br]
+                      word)))
+        reducer (fn [acc word-or-url]
+                  (if (string? word-or-url)
+                    (update acc :words str
+                      (str word-or-url " "))
+                    (->
+                      (update acc :result concat [(:words acc) word-or-url " "])
+                      (dissoc :words))))]
+    (vec
+      (cons :p.no-margin
+        (->
+          (reduce reducer {} words)
+          (as-> reduction
+              [(:result reduction) (:words reduction)]))))))
+
+
 (defn info-text [field-descriptor]
   (let [language (subscribe [:application/form-language])]
     (fn [field-descriptor]
       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-        [:div.application__form-info-text info]))))
+        [:div.application__form-info-text [link-detected-paragraph info]]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (keyword (:id field-descriptor))
@@ -319,32 +344,11 @@
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
         header   (some-> (get-in field-descriptor [:label @language]))
-        text     (some-> (get-in field-descriptor [:text @language]))
-        words    (for [word (clojure.string/split text #"\s")
-                       :let [as-url (url/url word)]]
-                   (if (not-empty (:host as-url))
-                     [:a {:key (str as-url)
-                          :href (str as-url)}
-                      (:host as-url)]
-                     (if (empty? word)
-                       [:br]
-                       word)))
-        reducer   (fn [acc word-or-url]
-                    (if (string? word-or-url)
-                      (update acc :words str
-                        (str word-or-url " "))
-                      (->
-                        (update acc :result concat [(:words acc) word-or-url " "])
-                        (dissoc :words))))]
+        text     (some-> (get-in field-descriptor [:text @language]))]
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])
-     (vec
-       (cons :p
-         (->
-           (reduce reducer {} words)
-           (as-> reduction
-               [(:result reduction) (:words reduction)]))))]))
+     [link-detected-paragraph text]]))
 
 (defn render-field
   [field-descriptor & args]
