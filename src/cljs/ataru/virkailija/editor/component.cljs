@@ -76,7 +76,8 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
-(defn input-field [path lang dispatch-fn {:keys [class value-fn]}]
+(defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
+                                          :or   {tag :input}}]
   (let [component (subscribe [:editor/get-component-value path])
         focus?    (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
         value     (or
@@ -92,12 +93,11 @@
                                 (let [dom-node (r/dom-node component)]
                                   (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
-                              [:input.editor-form__text-field
-                               (cond-> {:value     @value
-                                        :on-change dispatch-fn
-                                        :on-drop   prevent-default}
-                                 (not (clojure.string/blank? class))
-                                 (assoc :class class))])})))
+                              [tag
+                               {:class     (str "editor-form__text-field " (when-not (empty? class) class))
+                                :value     @value
+                                :on-change dispatch-fn
+                                :on-drop   prevent-default}])})))
 
 (defn- add-multi-lang-class [field-spec]
   (let [multi-lang-class "editor-form__text-field-wrapper--with-label"]
@@ -423,6 +423,7 @@
         (input-fields-with-lang
           (fn [lang]
             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
-             {:value-fn (fn [component] (get-in component [:text lang]))}])
+             {:value-fn (fn [component] (get-in component [:text lang]))
+              :tag :textarea}])
           @languages
           :header? true)]])))
