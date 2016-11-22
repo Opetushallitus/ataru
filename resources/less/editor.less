@@ -606,17 +606,44 @@ form > div > .editor-form__component-wrapper {
 
 .editor-form__followup-question {
   margin-left: 30px;
+  a { font-size: 14px; }
+}
+
+.editor-form__followup-indicator {
+  position: absolute;
+  top: -9px;
+  left: 529px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 9px solid @section-gray-border;
+}
+
+.editor-form__followup-indicator-inlay {
+  position: absolute;
+  top: -7px;
+  left: 530px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 8px solid #fcfcfc;
+}
+
+.editor-form__followup-question-overlay-parent {
+  position: relative;
 }
 
 .editor-form__followup-question-overlay-outer {
-  border-top: 1px solid @section-gray-border;
-  border-bottom: 1px solid @section-gray-border;
-  background-color: #fcfcfc;
   width: 100%;
 }
 
 .editor-form__followup-question-overlay {
-  margin: 14px;
+  border-top: 1px solid @section-gray-border;
+  border-bottom: 1px solid @section-gray-border;
+  background-color: #fcfcfc;
+  padding: 14px;
   .editor-form__component-wrapper {
     margin: 0;
   }

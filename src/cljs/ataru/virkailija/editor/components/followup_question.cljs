@@ -42,13 +42,18 @@
         followup-component (subscribe [:editor/get-component-value (flatten [option-path :followup])])]
     (fn [option-path]
       (when (or @layer-visible? @followup-component)
-        [:div.editor-form__followup-question-overlay-outer
-         [:div.editor-form__followup-question-overlay
-          (if-let [followup @followup-component]
-            [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
-            [toolbar/followup-add-component option-path
-             (fn [generate-fn]
-               (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]))))
+        [:div.editor-form__followup-question-overlay-parent
+         [:div.editor-form__followup-question-overlay-outer
+          (when (and @layer-visible? (nil? @followup-component))
+            [:div.editor-form__followup-indicator])
+          (when (and @layer-visible? (nil? @followup-component))
+            [:div.editor-form__followup-indicator-inlay])
+          [:div.editor-form__followup-question-overlay
+           (if-let [followup @followup-component]
+             [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
+             [toolbar/followup-add-component option-path
+              (fn [generate-fn]
+                (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]]))))
 
 (defn followup-question [option-path]
   (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
@@ -59,6 +64,6 @@
       [:div.editor-form__followup-question
        (when top-level-followup?
          (match [@followup-component @layer-visible?]
-           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Poista Lisäkysymys"]
+           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymys"]
            [(_ :guard some?) _] nil
            :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymys"]))])))
