@@ -2,6 +2,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
+            [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                            required-hint
@@ -77,11 +78,36 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
+(defn- link-detected-paragraph [text]
+  (let [words   (for [word (clojure.string/split text #"\s")
+                      :let [as-url (url/url word)]]
+                  (if (not-empty (:host as-url))
+                    [:a {:key  (str as-url)
+                         :href (str as-url)}
+                     (:host as-url)]
+                    (if (empty? word)
+                      [:br]
+                      word)))
+        reducer (fn [acc word-or-url]
+                  (if (string? word-or-url)
+                    (update acc :words str
+                      (str word-or-url " "))
+                    (->
+                      (update acc :result concat [(:words acc) word-or-url " "])
+                      (dissoc :words))))]
+    (vec
+      (cons :p.no-margin
+        (->
+          (reduce reducer {} words)
+          (as-> reduction
+              [(:result reduction) (:words reduction)]))))))
+
+
 (defn info-text [field-descriptor]
   (let [language (subscribe [:application/form-language])]
     (fn [field-descriptor]
       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-        [:div.application__form-info-text info]))))
+        [:div.application__form-info-text [link-detected-paragraph info]]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (keyword (:id field-descriptor))
@@ -239,7 +265,8 @@
         default-lang (subscribe [:application/default-language])
         secret       (subscribe [:state-query [:application :secret]])
         value        (reaction
-                       (or (-> (:answers @application)
+                       (or (->
+                             (:answers @application)
                              (get (answer-key field-descriptor))
                              :value)
                          ""))]
@@ -314,9 +341,18 @@
                       label]]))
                 (:options field-descriptor))]]]))))
 
+(defn info-element [field-descriptor]
+  (let [language (subscribe [:application/form-language])
+        header   (some-> (get-in field-descriptor [:label @language]))
+        text     (some-> (get-in field-descriptor [:text @language]))]
+    [:div.application__form-info-element.application__form-field
+     (when (not-empty header)
+       [:label.application__form-field-label [:span header]])
+     [link-detected-paragraph text]]))
+
 (defn render-field
   [field-descriptor & args]
-  (let [ui (subscribe [:state-query [:application :ui]])
+  (let [ui       (subscribe [:state-query [:application :ui]])
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
@@ -334,7 +370,8 @@
                        {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor])
+                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                       {:fieldClass "infoElement"} [info-element field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 

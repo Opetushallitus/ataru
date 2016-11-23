@@ -147,14 +147,16 @@
 
 (defn pick-form-labels
   [form-content]
-  (flatten
-    (reduce
-      (fn [acc form-element]
-        (if (< 0 (count (:children form-element)))
-          (into acc [(pick-form-labels (:children form-element))])
-          (into acc [(-> form-element :label :fi)])))
-      []
-      form-content)))
+  (->> (flatten
+        (reduce
+          (fn [acc form-element]
+            (if (< 0 (count (:children form-element)))
+              (into acc [(pick-form-labels (:children form-element))])
+              (into acc [(when (not= "infoElement" (:fieldClass form-element))
+                           (-> form-element :label :fi))])))
+          []
+          form-content))
+    (filter some?)))
 
 (defn- extract-headers
   [applications form]

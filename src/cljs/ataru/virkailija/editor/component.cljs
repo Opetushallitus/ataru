@@ -76,10 +76,14 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
-(defn input-field [path lang dispatch-fn {:keys [class]}]
+(defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
+                                          :or   {tag :input}}]
   (let [component (subscribe [:editor/get-component-value path])
         focus?    (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value     (reaction (get-in @component [:label lang]))
+        value     (or
+                    (when value-fn
+                      (reaction (value-fn @component)))
+                    (reaction (get-in @component [:label lang])))
         languages (subscribe [:editor/languages])]
     (r/create-class
       {:component-did-mount (fn [component]
@@ -89,12 +93,11 @@
                                 (let [dom-node (r/dom-node component)]
                                   (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
-                              [:input.editor-form__text-field
-                               (cond-> {:value     @value
-                                        :on-change dispatch-fn
-                                        :on-drop   prevent-default}
-                                 (not (clojure.string/blank? class))
-                                 (assoc :class class))])})))
+                              [tag
+                               {:class     (str "editor-form__text-field " (when-not (empty? class) class))
+                                :value     @value
+                                :on-change dispatch-fn
+                                :on-drop   prevent-default}])})))
 
 (defn- add-multi-lang-class [field-spec]
   (let [multi-lang-class "editor-form__text-field-wrapper--with-label"]
@@ -116,13 +119,15 @@
                         [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
                  languages)))
 
-(defn info-component [path initial-content]
+(defn info-addon
+  "Info text which is added to an existing component"
+  [path]
   (let [id        (util/new-uuid)
         checked?  (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
         languages (subscribe [:editor/languages])]
-    (fn [path initial-data]
-      [:div.editor-form__info-component-wrapper
-       [:div.editor-form__info-component-checkbox
+    (fn [path]
+      [:div.editor-form__info-addon-wrapper
+       [:div.editor-form__info-addon-checkbox
         [:input {:id        id
                  :type      "checkbox"
                  :checked   @checked?
@@ -132,7 +137,7 @@
                                          path :params :info-text :label]))}]
         [:label {:for id} "Kysymys sisältää ohjetekstin"]]
        (when @checked?
-         [:div.editor-form__info-component-inputs
+         [:div.editor-form__info-addon-inputs
           (input-fields-with-lang
             (fn [lang]
               [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
@@ -187,7 +192,7 @@
          (when-not (= "Tekstialue" header-label)
            [repeater-checkbox path initial-content])]]
 
-       [info-component path initial-content]])))
+       [info-addon path]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -301,7 +306,7 @@
           [:div.editor-form__checkbox-wrapper
            [required-checkbox path initial-content]]]
 
-         [info-component path initial-content]
+         [info-addon path initial-content]
 
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
@@ -396,3 +401,29 @@
         [:span.editor-form__module-fields-label "Sisältää kentät:"]
         " "
         (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])))
+
+(defn info-element
+  "Info text which is a standalone component"
+  [initial-content path]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [initial-content path]
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
+       [text-header "Infokenttä" path]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Otsikko"]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Ohjeteksti"]
+        (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+             {:value-fn (fn [component] (get-in component [:text lang]))
+              :tag :textarea}])
+          @languages
+          :header? true)]])))

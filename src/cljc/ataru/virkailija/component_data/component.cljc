@@ -60,3 +60,12 @@
    :id         (util/component-id)
    :children   child-components
    :params     {}})
+
+(defn info-element []
+  {:fieldClass "infoElement"
+   :fieldType  "p"
+   :id         (util/component-id)
+   :params     {}
+   :label      {:fi ""} ; LocalizedString
+   :text       {:fi ""} ; LocalizedString
+   })
