@@ -57,7 +57,7 @@
   (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
         followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followup])])
         ; disallow nesting followup questions
-        top-level-followup? (nil? ((set option-path) :followup))]
+        top-level-followup? (nil? ((set (flatten option-path)) :followup))]
     (fn [option-path]
       [:div.editor-form__followup-question
        (when top-level-followup?
