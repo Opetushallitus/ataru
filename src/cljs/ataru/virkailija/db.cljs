@@ -1,5 +1,5 @@
 (ns ataru.virkailija.db
-  (:require [ataru.virkailija.application.review-states :refer [application-review-states]]))
+  (:require [ataru.application.review-states :refer [application-review-states]]))
 
 (def default-db
   {:editor {:forms nil

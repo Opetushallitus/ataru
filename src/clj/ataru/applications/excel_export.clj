@@ -4,6 +4,7 @@
            [org.apache.poi.xssf.usermodel XSSFWorkbook]
            [org.joda.time.format DateTimeFormat])
   (:require [ataru.forms.form-store :as form-store]
+            [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [clj-time.core :as t]
@@ -26,6 +27,9 @@
    (f/unparse formatter date-time))
   ([date-time]
     (time-formatter date-time modified-time-format)))
+
+(defn state-formatter [state]
+  (or (get application-review-states state) "Tuntematon"))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -54,7 +58,10 @@
     :field :key}
    {:label "Lähetysaika"
     :field :created-time
-    :format-fn time-formatter}])
+    :format-fn time-formatter}
+   {:label "Tila"
+    :field :state
+    :format-fn state-formatter}])
 
 (defn- indexed-meta-fields
   [fields]
@@ -160,9 +167,9 @@
 
 (defn- extract-headers
   [applications form]
-  (let [labels-in-form (pick-form-labels (:content form))
+  (let [labels-in-form         (pick-form-labels (:content form))
         labels-in-applications (mapcat #(map :label (:answers %)) applications)
-        all-labels (distinct (concat labels-in-form labels-in-applications ["Muistiinpanot"]))]
+        all-labels             (distinct (concat labels-in-form labels-in-applications ["Muistiinpanot"]))]
     (map-indexed (fn [idx header]
                    {:header header :column idx})
                  all-labels)))
@@ -189,14 +196,14 @@
       (.toByteArray stream))))
 
 (defn export-all-form-applications
-  [form-key]
-  (let [applications (application-store/get-applications-for-form form-key {})
+  [form-key filtered-states]
+  (let [applications (application-store/get-applications-for-form form-key filtered-states)
         meta-fields  (indexed-meta-fields form-meta-fields)]
     (export-applications applications form-key meta-fields)))
 
 (defn export-all-hakukohde-applications
-  [form-key hakukohde-oid]
-  (let [applications (application-store/get-applications-for-hakukohde form-key hakukohde-oid)
+  [form-key filtered-states hakukohde-oid]
+  (let [applications (application-store/get-applications-for-hakukohde form-key filtered-states hakukohde-oid)
         meta-fields  (indexed-meta-fields hakukohde-form-meta-fields)]
     (export-applications applications form-key meta-fields)))
 

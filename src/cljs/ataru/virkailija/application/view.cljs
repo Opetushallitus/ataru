@@ -1,11 +1,12 @@
 (ns ataru.virkailija.application.view
-  (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+  (:require [clojure.string :as string]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [cljs-time.format :as f]
             [ataru.virkailija.temporal :as t]
             [ataru.virkailija.application.handlers]
-            [ataru.virkailija.application.review-states :refer [application-review-states]]
+            [ataru.application.review-states :refer [application-review-states]]
             [ataru.application-common.application-readonly :as readonly-contents]
             [ataru.cljs-util :refer [wrap-scroll-to classnames]]
             [taoensso.timbre :refer-macros [spy debug]]))
@@ -64,28 +65,33 @@
         [form-list-opened @forms @hakukohteet @selected-form-key @selected-hakukohde open]
         [form-list-closed @selected-form @selected-hakukohde open])])))
 
-(defn excel-download-link [applications]
-  (let [form-key (reaction (:key @(subscribe [:editor/selected-form])))
-        hakukohde (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))]
-    (fn [applications]
+(defn excel-download-link [applications application-filter]
+  (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
+        hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
+        query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
+    (fn [applications application-filter]
       (when (> (count applications) 0)
         (let [url (if @form-key
-                    (str "/lomake-editori/api/applications/excel/" @form-key)
-                    (str "/lomake-editori/api/applications/excel/" (:form-key @hakukohde) "/" (:hakukohde @hakukohde)))]
+                    (str "/lomake-editori/api/applications/excel/"
+                         @form-key
+                         (query-string application-filter))
+                    (str "/lomake-editori/api/applications/excel/"
+                         (:form-key @hakukohde)
+                         "/"
+                         (:hakukohde @hakukohde)
+                         (query-string application-filter)))]
           [:a.application-handling__excel-download-link
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
 (defn application-list-contents [applications]
-  (let [selected-key       (subscribe [:state-query [:application :selected-key]])
-        application-filter (subscribe [:state-query [:application :filter]])]
+  (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
     (fn [applications]
       (into [:div.application-handling__list]
             (for [application applications
                   :let        [key       (:key application)
                                time      (t/time->str (:created-time application))
-                               applicant (:applicant-name application)]
-                  :when       (some #{(:state application)} @application-filter)]
+                               applicant (:applicant-name application)]]
               [:div.application-handling__list-row
                {:on-click #(dispatch [:application/select-application (:key application)])
                 :class    (when (= @selected-key key)
@@ -228,13 +234,16 @@
           [application-review]]]))))
 
 (defn application []
-  (let [applications (subscribe [:state-query [:application :applications]])]
+  (let [applications       (subscribe [:state-query [:application :applications]])
+        application-filter (subscribe [:state-query [:application :filter]])
+        include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
     (fn []
-      [:div
-       [:div.application-handling__overview
-        [:div.panel-content
-          [:div.application-handling__header
+      (let [filtered-applications (include-filtered @application-filter @applications)]
+        [:div
+         [:div.application-handling__overview
+          [:div.panel-content
+           [:div.application-handling__header
             [form-list]
-            [excel-download-link @applications]]
-          [application-list @applications]]]
-       [application-review-area @applications]])))
+            [excel-download-link filtered-applications @application-filter]]
+           [application-list filtered-applications]]]
+         [application-review-area filtered-applications]]))))
