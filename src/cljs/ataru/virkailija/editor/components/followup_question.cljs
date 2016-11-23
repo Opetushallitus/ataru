@@ -44,10 +44,8 @@
       (when (or @layer-visible? @followup-component)
         [:div.editor-form__followup-question-overlay-parent
          [:div.editor-form__followup-question-overlay-outer
-          (when (and @layer-visible? (nil? @followup-component))
-            [:div.editor-form__followup-indicator])
-          (when (and @layer-visible? (nil? @followup-component))
-            [:div.editor-form__followup-indicator-inlay])
+          [:div.editor-form__followup-indicator]
+          [:div.editor-form__followup-indicator-inlay]
           [:div.editor-form__followup-question-overlay
            (if-let [followup @followup-component]
              [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
@@ -65,5 +63,5 @@
        (when top-level-followup?
          (match [@followup-component @layer-visible?]
            [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymys"]
-           [(_ :guard some?) _] nil
+           [(_ :guard some?) _] "Lisäkysymys"
            :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymys"]))])))
