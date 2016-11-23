@@ -19,19 +19,20 @@
     (assoc application :state review-state-id)
     application))
 
+(defn review-state-counts [applications]
+  (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
+
 (reg-event-db
  :application/update-review-state
  (fn [db [_ review-state-id]]
-   (let [selected-key (get-in db [:application :selected-key])]
+   (let [selected-key         (get-in db [:application :selected-key])
+         updated-applications (mapv
+                               #(update-state-of-selected-application % selected-key review-state-id)
+                               (get-in db [:application :applications]))]
      (-> db
          (update-in [:application :review] assoc :state review-state-id)
-         (assoc-in [:application :applications]
-                   (mapv
-                    #(update-state-of-selected-application % selected-key review-state-id)
-                    (get-in db [:application :applications])))))))
-
-(defn review-state-counts [applications]
-  (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
+         (assoc-in [:application :applications] updated-applications)
+         (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
 (reg-event-db
   :application/handle-fetch-applications-response
