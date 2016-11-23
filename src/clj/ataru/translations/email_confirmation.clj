@@ -7,9 +7,9 @@
    :application-received-text     {:fi "Hakemuksesi on vastaanotettu."
                                    :en "Your application has been received."
                                    :sv "Din ansökan har tagits emot."}
-   :modify-link-text              {:fi "Allaolevan linkin kautta löydät hakemuksesi. Voit milloin tahansa käydä muokkaamassa tietojasi aina siihen asti, kunnes hakemus on otettu käsittelyyn."
-                                   :en "You can view and modify your application using the link below. Application can be modified until it is being reviewed."
-                                   :sv "Via länken nedan hittar du din ansökan. Du kan alltid gå till mass redigera dina data på alla gånger tills Kunes ansökan övervägs."}
+   :modify-link-text              {:fi "Allaolevan linkin kautta löydät hakemuksesi. Voit muokata tietojasi hakuajan päättymiseen asti."
+                                   :en "You can view and modify your application using the link below. Application can be modified till the end of the application period."
+                                   :sv "Via länken nedan hittar du din ansökan. Du kan granska och bearbeta din ansökningsblankett under ansökningstiden "}
    :best-regards                  {:fi "terveisin"
                                    :sv "Med vänliga hälsningar"
                                    :en "Best Regards"}
