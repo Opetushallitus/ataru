@@ -100,7 +100,7 @@
               (when-let [followups (not-empty (eduction (comp
                                                           (filter :followup)
                                                           (filter (fn [followup]
-                                                                    (= answers (wrap-coll (:value followup)))))
+                                                                    (= (seq answers) (wrap-coll (:value followup)))))
                                                           (map :followup))
                                                 options))]
                 (build-results

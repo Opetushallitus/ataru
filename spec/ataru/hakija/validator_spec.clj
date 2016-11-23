@@ -51,13 +51,7 @@
        ; multipleChoice
        :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 {:passed? true}
        ; dropdown "Pohjakoulutus"
-       :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}
-       ; followup question
-       :62d37b52-3237-4f7f-9e78-df373b0b5c79 {:passed? true}
-       ; followup question
-       :5d8023b1-22c6-4388-8bd4-8e3634fc78ef {:passed? true}
-       ; followup question
-       :fbe3522d-6f1d-4e05-85e3-4e716146c686 {:passed? true}}
+       :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
       (validator/build-results answers-by-key
         []
         (:content f))))
@@ -185,7 +179,8 @@
               (->
                 (update a :answers conj {:key "fbe3522d-6f1d-4e05-85e3-4e716146c686" :value "perustelu"})
                 :answers
-                util/answers-by-key)
+                util/answers-by-key
+                (assoc :b05a6057-2c65-40a8-9312-c837429f44bb {:key "b05a6057-2c65-40a8-9312-c837429f44bb", :fieldType "dropdown", :value "Ammatillinen peruskoulu"}))
               []
               (clojure.walk/postwalk
                 (fn [form]
