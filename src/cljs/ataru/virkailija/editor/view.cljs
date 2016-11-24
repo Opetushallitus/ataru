@@ -137,17 +137,15 @@
      text]))
 
 (defn language-toolbar [form]
-  (let [languages           (subscribe [:editor/languages])
-        explicitly-visible? (r/atom false)
-        visible?            (reaction (or @explicitly-visible?
-                                          (> (count @languages) 1)))]
+  (let [languages (subscribe [:editor/languages])
+        visible? (r/atom false)]
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__language-toolbar-outer
          [:div.editor-form__language-toolbar-inner
           [:a
            {:on-click (fn [_]
-                        (reset! explicitly-visible? (not @visible?))
+                        (swap! visible? not)
                         nil)}
            "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
