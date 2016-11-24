@@ -138,7 +138,7 @@
 
 (defn language-toolbar [form]
   (let [languages (subscribe [:editor/languages])
-        visible?  (r/atom true)]
+        visible? (r/atom false)]
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__language-toolbar-outer
@@ -147,7 +147,7 @@
            {:on-click (fn [_]
                         (swap! visible? not)
                         nil)}
-           "Kieliversiot "
+           (str "Kieliversiot (" (->> languages (map (comp clojure.string/upper-case name)) (clojure.string/join ", ")) ") ")
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
           [:span.editor-form__language-toolbar-header-text
@@ -166,7 +166,7 @@
           (when-not @visible?
             {:style {:display "none"}})
           (map (fn [lang-kwd]
-                 (lang-checkbox lang-kwd (some #{lang-kwd} languages)))
+                 (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
                (keys lang-versions))]]))))
 
 (defn form-in-use-warning
