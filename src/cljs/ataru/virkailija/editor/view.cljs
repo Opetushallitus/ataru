@@ -166,7 +166,7 @@
           (when-not @visible?
             {:style {:display "none"}})
           (map (fn [lang-kwd]
-                 (lang-checkbox lang-kwd (some #{lang-kwd} languages)))
+                 (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
                (keys lang-versions))]]))))
 
 (defn form-in-use-warning
