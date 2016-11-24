@@ -3,10 +3,10 @@
 update forms set id = :new_id where id = :old_id;
 
 -- name: yesql-delete-fixture-application-review!
-delete from application_reviews where application_id = (select id from applications where form_id = :form_id);
+delete from application_reviews where application_key = (select key from applications where form_id = :form_id);
 
 -- name: yesql-delete-fixture-application-events!
-delete from application_events where application_id = (select id from applications where form_id = :form_id);
+delete from application_events where application_key = (select key from applications where form_id = :form_id);
 
 
 -- name: yesql-delete-fixture-application!
