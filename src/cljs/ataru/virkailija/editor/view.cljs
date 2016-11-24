@@ -147,7 +147,7 @@
            {:on-click (fn [_]
                         (swap! visible? not)
                         nil)}
-           "Kieliversiot "
+           (str "Kieliversiot (" (->> languages (map (comp clojure.string/upper-case name)) (clojure.string/join ", ")) ") ")
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
           [:span.editor-form__language-toolbar-header-text
