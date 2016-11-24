@@ -161,7 +161,6 @@
 
 (s/defschema Review
   {:id                              s/Int
-   :application-id                  s/Int
    :application-key                 s/Str
    (s/optional-key :modified-time)  org.joda.time.DateTime
    :state                           application-states

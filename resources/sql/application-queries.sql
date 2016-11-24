@@ -11,7 +11,7 @@ select a.id,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
   a.created_time, coalesce(ar.state, 'received') as state
 from applications a
-  left outer join application_reviews ar on a.id = ar.application_id
+  left outer join application_reviews ar on a.key = ar.application_key
   join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde is null
 order by a.created_time desc;
@@ -22,7 +22,7 @@ select a.id,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
   a.created_time, coalesce(ar.state, 'received') as state
 from applications a
-  left outer join application_reviews ar on a.id = ar.application_id
+  left outer join application_reviews ar on a.key = ar.application_key
   join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde = :hakukohde_oid
 order by a.created_time desc;
@@ -32,14 +32,16 @@ select event_type, time, new_review_state, application_key, id from application_
 where application_key = :application_key order by time asc;
 
 -- name: yesql-get-application-review
-select id, application_id, modified_time, state, notes, application_key from application_reviews where application_key = :application_key;
+select id, modified_time, state, notes, application_key
+from application_reviews
+where application_key = :application_key;
 
 -- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
 select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, coalesce(ar.state, 'received') as state
 from applications a
 join forms f on f.id = a.form_id and f.key = :form_key
-left outer join application_reviews ar on a.id = ar.application_id
+left outer join application_reviews ar on a.key = ar.application_key
 where a.hakukohde is null and state in (:filtered_states);
 
 -- name: yesql-get-applications-for-hakukohde
@@ -56,7 +58,7 @@ select
   coalesce(ar.state, 'received') as state
 from applications a
 join forms f on f.id = a.form_id and f.key = :form_key and a.hakukohde = :hakukohde_oid
-left outer join application_reviews ar on a.id = ar.application_id
+left outer join application_reviews ar on a.key = ar.application_key
 where state in (:filtered_states);
 
 -- name: yesql-get-application-by-id
@@ -98,22 +100,23 @@ join forms f on f.id = a.form_id;
 
 select f.organization_oid
 from application_reviews ar
-join applications a on a.id = ar.application_id
+join applications a on a.key = ar.application_key
 join forms f on f.id = a.form_id
 and ar.id = :review_id;
 
 -- name: yesql-add-application-event!
 -- Add application event
-insert into application_events (application_id, application_key, event_type, new_review_state) values (:application_id, :application_key, :event_type, :new_review_state);
+insert into application_events (application_key, event_type, new_review_state)
+values (:application_key, :event_type, :new_review_state);
 
 -- name: yesql-add-application-review!
 -- Add application review
-insert into application_reviews (application_id, application_key, state) values (:application_id, :application_key, :state);
+insert into application_reviews (application_key, state) values (:application_key, :state);
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
 update application_reviews set notes = :notes, modified_time = now(), state = :state
-where application_id = :application_id;
+where application_key = :application_key;
 
 -- name: yesql-add-person-oid!
 -- Add person OID to an application

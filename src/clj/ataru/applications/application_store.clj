@@ -52,13 +52,11 @@
         app-id               (:id application)
         app-key              (:key application)]
     (when-not secret
-      (yesql-add-application-event! {:application_id   app-id
-                                     :application_key  app-key
+      (yesql-add-application-event! {:application_key  app-key
                                      :event_type       "review-state-change"
                                      :new_review_state "received"}
                                     connection)
-      (yesql-add-application-review! {:application_id  app-id
-                                      :application_key app-key
+      (yesql-add-application-review! {:application_key app-key
                                       :state           "received"}
                                      connection))
     app-id))
@@ -142,15 +140,13 @@
 (defn save-application-review [review]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
-          app-id          (:application-id review)
           app-key         (:application-key review)
           old-review      (first (yesql-get-application-review {:application_key app-key} connection))
           review-to-store (transform-keys ->snake_case review)]
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
         (yesql-add-application-event!
-         {:application_id app-id
-          :application_key app-key
+         {:application_key app-key
           :event_type "review-state-change"
           :new_review_state (:state review-to-store)}
          connection)))))
