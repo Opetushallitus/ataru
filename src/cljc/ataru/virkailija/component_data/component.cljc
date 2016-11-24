@@ -18,7 +18,7 @@
   {:fieldClass "wrapperElement"
    :fieldType  "fieldset"
    :id         (util/component-id)
-   :label      {:fi "Osion nimi" :sv "Avsnitt namn"}
+   :label      {:fi "" :sv ""}
    :children   []
    :params     {}})
 

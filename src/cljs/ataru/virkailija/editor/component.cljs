@@ -371,10 +371,7 @@
            [:header.editor-form__component-item-header "Osion nimi"]
            (input-fields-with-lang
              (fn [lang]
-               [:input.editor-form__text-field
-                {:value     (get-in value [:label lang])
-                 :on-change #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])
-                 :on-drop   prevent-default}])
+               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
              languages
              :header? true)]]
          children
