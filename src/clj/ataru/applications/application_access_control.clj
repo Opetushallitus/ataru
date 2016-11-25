@@ -8,6 +8,15 @@
     (form-access-control/form-allowed-by-key? form-key session organization-service)
     (throw (user-feedback-exception (str "Lomake " form-key " ei ole sallittu")))))
 
+(defn check-form-access-by-id [form-id session organization-service]
+  (when-not
+    (form-access-control/form-allowed-by-id? form-id session organization-service)
+    (throw (user-feedback-exception (str "Lomake " form-id " ei ole sallittu")))))
+
+(defn check-forms-accesses [form-ids session organization-service]
+  (doseq [form-id form-ids]
+    (check-form-access form-id session organization-service)))
+
 (defn check-application-access [application-key session organization-service]
   (when-not
     (form-access-control/organization-allowed?

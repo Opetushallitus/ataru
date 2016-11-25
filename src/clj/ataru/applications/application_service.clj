@@ -14,9 +14,9 @@
   {:applications (application-store/get-application-list-by-form form-key)})
 
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (when-let [form-key (tarjonta-client/get-form-key-for-hakukohde hakukohde-oid)] ; TODO maybe avoid remote call
-    (aac/check-form-access form-key session organization-service)
-    {:applications (application-store/get-application-list-by-hakukohde form-key hakukohde-oid)}))
+  (let [applications (application-store/get-applications-for-hakukohde hakukohde-oid)]
+    (aac/check-forms-accesses (map :form applications) session organization-service)
+    {:applications (application-store/get-application-list-by-hakukohde hakukohde-oid)}))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
