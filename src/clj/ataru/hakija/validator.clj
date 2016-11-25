@@ -84,11 +84,12 @@
                                  (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
                                  (allowed-values options))
               answers          (set
-                                 (if (= "multipleChoice" (:fieldType field))
-                                   (mapcat
-                                     #(clojure.string/split % #", ")
-                                     (filter not-empty answers))
-                                   answers))]
+                                 (->> (if (= "multipleChoice" (:fieldType field))
+                                        (mapcat
+                                          #(clojure.string/split % #", ")
+                                          (filter not-empty answers))
+                                        answers)
+                                      (filter (comp not clojure.string/blank?))))]
           (build-results
             answers-by-key
             (concat results
