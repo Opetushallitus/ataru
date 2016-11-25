@@ -427,3 +427,22 @@
               :tag :textarea}])
           @languages
           :header? true)]])))
+
+(defn adjacent-fieldset [content path children]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [content path children]
+      [:div.editor-form__component-wrapper
+       [:div.editor-form__component-row-wrapper
+        {:class @animation-effect}
+        [text-header "Vierekkäiset kentät" path]
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Kysymys"]
+         (input-fields-with-lang
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
+        [:div.editor-form__checkbox-wrapper
+         [repeater-checkbox path content]]
+        [info-addon path]]])))

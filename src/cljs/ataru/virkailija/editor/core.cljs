@@ -20,8 +20,8 @@
           [:editor :forms (-> db :editor :selected-form-key) :content]
           path)))))
 
-(defn soresu->reagent [{:keys [children] :as content} path]
-  (fn [{:keys [children] :as content} path]
+(defn soresu->reagent [content path]
+  (fn [content path]
     [:div
      (when-not ((set path) :followup)
        [ec/drag-n-drop-spacer path content])
@@ -29,6 +29,11 @@
      (match content
             {:module module}
             [ec/module path]
+
+            {:fieldClass "wrapperElement"
+             :fieldType "adjacentfieldset"
+             :children children}
+            [ec/adjacent-fieldset content path children]
 
             {:fieldClass "wrapperElement"
              :children   children}
@@ -42,11 +47,6 @@
 
             {:fieldClass "formField" :fieldType "textArea"}
             [ec/text-area content path]
-
-            {:fieldClass "formField"
-             :fieldType "dropdown"
-             :options (options :guard util/followups?)}
-            [ec/dropdown content path soresu->reagent]
 
             {:fieldClass "formField" :fieldType "dropdown"}
             [ec/dropdown content path]

@@ -11,13 +11,18 @@
    "Pudotusvalikko"                component/dropdown
    "Painikkeet, yksi valittavissa" component/single-choice-button
    "Lista, monta valittavissa"     component/multiple-choice
-   "Infokenttä"                    component/info-element})
+   "Infokenttä"                    component/info-element
+   "Vierekkäiset kentät"           component/adjacent-fieldset})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
     ["Tekstikenttä" "Tekstialue" "Pudotusvalikko" "Lista, monta valittavissa" "Infokenttä" "Painikkeet, yksi valittavissa"]))
 
-(defn ^:private component-toolbar [path toolbar generator]
+(def ^:private adjacent-fieldset-toolbar-elements
+  (select-keys toolbar-elements
+    ["Tekstikenttä"]))
+
+(defn- component-toolbar [path toolbar generator]
   (into [:ul.form__add-component-toolbar--list]
     (for [[component-name generate-fn] toolbar
           :when                        (not (and
@@ -40,8 +45,14 @@
    [:div.plus-component
     [:span "+"]]])
 
-(defn followup-add-component [option-path generator]
+(defn custom-add-component [toolbar path generator]
   [:div.editor-form__add-component-toolbar
-   [component-toolbar option-path followup-toolbar-elements generator]
+   [component-toolbar path toolbar generator]
    [:div.plus-component
     [:span "+"]]])
+
+(defn followup-toolbar [option-path generator]
+  [custom-add-component followup-toolbar-elements option-path generator])
+
+(defn adjacent-fieldset-toolbar [path generator]
+  [custom-add-component adjacent-fieldset-toolbar-elements path generator])

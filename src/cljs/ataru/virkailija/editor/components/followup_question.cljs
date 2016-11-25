@@ -49,7 +49,7 @@
           [:div.editor-form__followup-question-overlay
            (if-let [followup @followup-component]
              [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
-             [toolbar/followup-add-component option-path
+             [toolbar/followup-toolbar option-path
               (fn [generate-fn]
                 (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]]))))
 
