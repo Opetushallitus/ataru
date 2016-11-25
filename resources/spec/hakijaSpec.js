@@ -154,7 +154,29 @@
 
       it('shows submitted form', function() {
         var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
-        var expectedValues = ["Etunimi", "Etunimi", "Sukunimi", "Suomi", "020202A0202", "test@example.com", "0123456789", "Katutie 12 B", "40100", "JYVÄSKYLÄ", "Jyväskylä", "suomi", "Tekstikentän vastaus", "", "Pakollisen tekstialueen vastaus", "Kolmas vaihtoehto", "Jatkokysymyksen vastaus", "Lisensiaatin tutkinto", "Kolmas vaihtoehto", "Arkkitehti", "Toisen pakollisen tekstialueen vastaus", ""]
+        var expectedValues = ["Etunimi",
+                              "Etunimi",
+                              "Sukunimi",
+                              "Suomi",
+                              "020202A0202",
+                              "test@example.com",
+                              "0123456789",
+                              "Katutie 12 B",
+                              "40100",
+                              "JYVÄSKYLÄ",
+                              "Jyväskylä",
+                              "suomi",
+                              "Tekstikentän vastaus",
+                              "",
+                              "Pakollisen tekstialueen vastaus",
+                              "Kolmas vaihtoehto",
+                              "Jatkokysymyksen vastaus",
+                              "Lisensiaatin tutkinto",
+                              "Kolmas vaihtoehto",
+                              "Arkkitehti",
+                              "Toisen pakollisen tekstialueen vastaus",
+                              "",
+                              ""]
         expect(displayedValues).to.eql(expectedValues)
       })
     })
