@@ -70,6 +70,13 @@
    :text       {:fi ""} ; LocalizedString
    })
 
+(defn adjacent-fieldset []
+  {:id         (util/component-id)
+   :fieldClass "wrapperElement"
+   :label      {:fi ""}
+   :fieldType  "adjacentfieldset"
+   :children   []})
+   
 (defn single-choice-button []
   {:fieldClass "formField"
    :fieldType  "singleChoice"

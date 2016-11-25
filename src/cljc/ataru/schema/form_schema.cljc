@@ -49,7 +49,6 @@
                         (s/optional-key :validators) [(apply s/enum (keys validator/validators))]
                         (s/optional-key :rules) {s/Keyword s/Any}
                         (s/optional-key :label) LocalizedString
-                        (s/optional-key :helpText) LocalizedString
                         (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params) s/Any
                         (s/optional-key :no-blank-option) s/Bool
@@ -64,17 +63,9 @@
                                                     (s/optional-key :followup)      (s/recursive #'FormField)}]
                         :fieldType (apply s/enum ["textField"
                                                   "textArea"
-                                                  "nameField"
-                                                  "emailField"
-                                                  "moneyField"
-                                                  "finnishBusinessIdField"
-                                                  "iban"
-                                                  "bic"
                                                   "dropdown"
                                                   "singleChoice"
                                                   "multipleChoice"
-                                                  "checkboxButton"
-                                                  "namedAttachment"
                                                   "koodistoField"])})
 
 (s/defschema InfoElement {:fieldClass (s/eq "infoElement")
@@ -97,7 +88,7 @@
 
 (s/defschema WrapperElement {:fieldClass              (apply s/enum ["wrapperElement"])
                              :id                      s/Str
-                             :fieldType               (apply s/enum ["theme" "fieldset" "growingFieldset" "growingFieldsetChild" "rowcontainer" ])
+                             :fieldType               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                [(s/conditional #(= "wrapperElement" (:fieldClass %))
                                                          (s/recursive #'WrapperElement)
                                                          :else
@@ -106,7 +97,6 @@
                              (s/optional-key :params) s/Any
                              (s/optional-key :label)  LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :helpText) LocalizedString
                              (s/optional-key :module) Module})
 
 (s/defschema FormWithContent
