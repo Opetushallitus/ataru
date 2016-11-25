@@ -267,6 +267,25 @@
         })
       })
 
+      /*
+       * This field is not supposed to be filled in the application tests, they should ignore it and submitting should
+       * work because this is optional. This was added because of regression: optional dropdown failed the server-side
+       * validation.
+       */
+      describe('second dropdown from koodisto (optional)', function() {
+        before(
+            clickComponentMenuItem('Pudotusvalikko'),
+            setTextFieldValue(function() { return formComponents().eq(10).find('.editor-form__text-field')}, 'Viimeinen kysymys'),
+            clickElement(function() { return formComponents().eq(10).find('.editor-form__multi-options_wrapper label:contains("Koodisto")')}),
+            clickElement(function() { return formComponents().eq(10).find('.editor-form__koodisto-popover a:contains("Tutkinto")') })
+        )
+        it('selected correctly', function() {
+          expect(formComponents()).to.have.length(11)
+          expect(formComponents().eq(10).find('.editor-form__multi-options_wrapper label:eq(1)').text()).to.equal("Koodisto: Tutkinto")
+        })
+      })
+
+
       describe('autosave', function () {
         before(
           wait.until(function() {
