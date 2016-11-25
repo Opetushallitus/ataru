@@ -203,7 +203,7 @@
 
 (defn export-all-hakukohde-applications
   [form-key filtered-states hakukohde-oid]
-  (let [applications (application-store/get-applications-for-hakukohde form-key filtered-states hakukohde-oid)
+  (let [applications (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
         meta-fields  (indexed-meta-fields hakukohde-form-meta-fields)]
     (export-applications applications form-key meta-fields)))
 

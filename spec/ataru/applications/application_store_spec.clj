@@ -69,8 +69,7 @@
                   (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                                 (should= :db ds-key)
                                                 (should= "yesql-get-applications-for-hakukohde" (-> query-fn .meta :name))
-                                                (should= {:form_key        "abcdefghjkl"
-                                                          :filtered_states ["received"]
+                                                (should= {:filtered_states ["received"]
                                                           :hakukohde_oid   hakukohde-oid}
                                                           params)
                                                 (filter #(and (= (:hakukohde %) hakukohde-oid) (= (:form_id %) 703)) fixtures/applications))]
@@ -79,7 +78,7 @@
           (it "should return all applications belonging to a hakukohde"
               (should=
                 expected-hakukohde-application-ids
-                (mapv :id (store/get-applications-for-hakukohde form-key ["received"] hakukohde-oid)))))
+                (mapv :id (store/get-applications-for-hakukohde ["received"] hakukohde-oid)))))
 
 (describe "setting person oid to application"
           (tags :unit)
