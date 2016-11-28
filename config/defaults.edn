@@ -5,6 +5,7 @@
        :server-name "localhost"
        :port-number 5432
        :schema "public"}
+ :session {:timeout 28800}
  :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
  :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"
                     :forms-in-use-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/ataru/all"}

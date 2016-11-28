@@ -26,13 +26,15 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
+            [ring.middleware.session-timeout :as session-timeout]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [com.stuartsierra.component :as component]
-            [clout.core :as clout]))
+            [clout.core :as clout]
+            [ring.util.http-response :as response]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -255,6 +257,8 @@
                                   (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
+                            (session-timeout/wrap-idle-session-timeout {:timeout (get-in config [:session :timeout] 28800)
+                                                                        :timeout-response (response/unauthorized (json/generate-string {:code "session-timeout"}))})
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
                                                (update :responses dissoc :content-types)
