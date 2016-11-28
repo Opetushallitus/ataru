@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [dispatch reg-fx]]
             [ataru.cljs-util :as util]
             [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST]])
+            [ajax.core :refer [GET POST PUT]])
   (:refer-clojure :exclude [get]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
@@ -35,11 +35,18 @@
                  (assoc-in [:headers "CSRF"] (util/csrf-token)))]
     (POST path params)))
 
+(defn put [path post-data & [handler-kw error-handler-kw]]
+  (let [params (cond-> (merge {:params post-data} (params handler-kw error-handler-kw))
+                 (util/include-csrf-header? :put)
+                 (assoc-in [:headers "CSRF"] (util/csrf-token)))]
+    (PUT path params)))
+
 (reg-fx
   :http
   (fn [{:keys [method post-data url handler error-handler]}]
     (let [f (case method
               :post (partial post url post-data)
+              :put  (partial put url post-data)
               :get  (partial get url))]
       (f handler error-handler))))
 

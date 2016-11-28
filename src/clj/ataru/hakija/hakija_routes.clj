@@ -118,6 +118,11 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (handle-application application))
+    (api/PUT "/application" []
+      :summary "Edit application"
+      :body [application ataru-schema/Application]
+      (println "Edit application" application)
+      (response/ok {}))
     (api/GET "/application" []
       :summary "Get submitted application"
       :query-params [secret :- s/Str]
