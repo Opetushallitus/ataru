@@ -125,6 +125,19 @@
     (select-keys answers-by-key (keys failed-results))
     failed-results))
 
+(defn- validate-meta-fields [application]
+  (reduce-kv
+    (fn [failed-results k v]
+      (let [validator-fn (case k
+                           :lang (fn [v] (contains? #{"fi" "sv" "en"} v))
+                           (fn [_] true))
+            valid?       (validator-fn v)]
+        (cond-> failed-results
+          (not valid?)
+          (assoc k v))))
+    {}
+    (dissoc application :answers)))
+
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
@@ -139,14 +152,20 @@
          results (build-results answers-by-key [] (:content form))
          failed-results (some->>
                           (into {} (filter #(not (:passed? (second %))) results))
-                          (build-failed-results answers-by-key))]
+                          (build-failed-results answers-by-key))
+         failed-meta-fields (validate-meta-fields application)]
      (when (not (empty? extra-answers))
        (warn "Extra answers in application" (apply str extra-answers)))
      (when (not (empty? failed-results))
        (warn "Validation failed in application fields" failed-results))
+     (when (not (empty? failed-meta-fields))
+       (warn "Validation failed in application meta fields " (str failed-meta-fields)))
      {:passed?
       (and
         (empty? extra-answers)
-        (empty? failed-results))
+        (empty? failed-results)
+        (empty? failed-meta-fields))
       :failures
-      failed-results})))
+      (merge
+        failed-results
+        failed-meta-fields)})))
