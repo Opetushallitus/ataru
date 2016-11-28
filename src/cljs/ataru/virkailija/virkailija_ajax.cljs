@@ -27,12 +27,18 @@
                          :detail   response}])
     response))
 
+(defn- redirect [url]
+  (set! (.. js/window -location -href) url))
+
 (defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
   (let [f (case method
             :get    GET
             :post   POST
             :put    PUT
-            :delete DELETE)]
+            :delete DELETE)
+        error-handler (comp
+                        (or (:error-handler override-args) identity)
+                        (partial dispatch-flasher-error-msg method))]
     (dispatch [:flasher {:loading? true
                          :message  (match method
                                      (:or :post :put) "Tietoja tallennetaan"
@@ -42,9 +48,14 @@
        (merge {:response-format :json
                :format          :json
                :keywords?       true
-               :error-handler   (comp
-                                  (or (:error-handler override-args) identity)
-                                  (partial dispatch-flasher-error-msg method))
+               :error-handler   (fn [request]
+                                  (match request
+                                    {:status 401
+                                     :response {:redirect url}}
+                                    (redirect url)
+
+                                    :else
+                                    (error-handler request)))
                :handler         (comp (fn [response]
                                         (dispatch [:flasher {:loading? false
                                                              :message

@@ -2,10 +2,12 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
+            [ataru.middleware.session-timeout :as session-timeout]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
@@ -26,7 +28,6 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
-            [ring.middleware.session-timeout :as session-timeout]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
             [ring.util.response :refer [redirect]]
             [schema.core :as s]
@@ -257,8 +258,7 @@
                                   (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
-                            (session-timeout/wrap-idle-session-timeout {:timeout (get-in config [:session :timeout] 28800)
-                                                                        :timeout-response (response/unauthorized (json/generate-string {:code "session-timeout"}))})
+                            (session-timeout/wrap-idle-session-timeout)
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
                                                (update :responses dissoc :content-types)
