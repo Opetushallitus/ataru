@@ -26,7 +26,7 @@
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
                                              (:type person-integration/job-definition)
                                              {:application-id application-id})]
-    (application-email/start-email-confirmation-job application-id)
+    (application-email/start-email-submit-confirmation-job application-id)
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
@@ -49,5 +49,7 @@
          :as validation-result}
         (upsert-application application)]
     (if passed?
-      {:passed? true :id application-id}
+      (do
+        (application-email/start-email-edit-confirmation-job application-id)
+        {:passed? true :id application-id})
       validation-result)))

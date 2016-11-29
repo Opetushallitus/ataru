@@ -18,25 +18,38 @@
                             (get lang)))
                         translations/email-confirmation-translations))
 
-(defn create-email [application-id]
-  (let [application  (application-store/get-application application-id)
-        translations (get-translations (keyword (:lang application)))
-        subject      (:subject translations)
-        recipient    (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
-        template     "templates/email_confirmation_template.html"
-        service-url  (get-in config [:public-config :applicant :service_url])
-        body         (selmer/render-file template (merge {:service-url service-url
-                                                          :secret      (:secret application)}
-                                                         (dissoc translations :subject)))]
+(defn create-email [application-id action-text-key]
+  (let [application                   (application-store/get-application application-id)
+        translations                  (get-translations (keyword (:lang application)))
+        action-text                   (get translations action-text-key)
+        translations-with-action-text (assoc translations :application-action-text action-text)
+        subject                       (:subject translations)
+        recipient                     (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
+        service-url                   (get-in config [:public-config :applicant :service_url])
+        body                          (selmer/render-file
+                                       "templates/email_confirmation_template.html"
+                                       (merge {:service-url service-url
+                                               :secret      (:secret application)}
+                                              translations-with-action-text))]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject
      :body       body}))
 
-(defn start-email-confirmation-job [application-id]
-  (let [email  (create-email application-id)
-        job-id (job/start-job hakija-jobs/job-definitions
-                              (:type email-job/job-definition)
-                              (create-email application-id))]
-    (log/info "Started email sending job (to viestintäpalvelu) with job id" job-id ":")
+(defn start-email-job [application-id action-text-key]
+  (let [email    (create-email
+                  application-id
+                  action-text-key)
+        job-type (:type email-job/job-definition)
+        job-id   (job/start-job
+                  hakija-jobs/job-definitions
+                  job-type
+                  email)]
+    (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
     (log/info email)))
+
+(defn start-email-submit-confirmation-job [application-id]
+  (start-email-job application-id :application-received-text))
+
+(defn start-email-edit-confirmation-job [application-id]
+  (start-email-job application-id :application-edited-text))
