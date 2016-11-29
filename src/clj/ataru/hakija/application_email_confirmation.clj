@@ -18,11 +18,15 @@
                             (get lang)))
                         translations/email-confirmation-translations))
 
-(defn create-email [application-id action-text-key]
+(defn- get-differing-translations [raw-translations translation-mappings]
+  (into {} (map (fn [[key value]] [value (key raw-translations)]) translation-mappings)))
+
+(defn create-email [application-id translation-mappings]
   (let [application                   (application-store/get-application application-id)
-        translations                  (get-translations (keyword (:lang application)))
-        action-text                   (get translations action-text-key)
-        translations-with-action-text (assoc translations :application-action-text action-text)
+        raw-translations              (get-translations (keyword (:lang application)))
+        translations                  (merge
+                                       raw-translations
+                                       (get-differing-translations raw-translations translation-mappings))
         subject                       (:subject translations)
         recipient                     (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
         service-url                   (get-in config [:public-config :applicant :service_url])
@@ -30,16 +34,16 @@
                                        "templates/email_confirmation_template.html"
                                        (merge {:service-url service-url
                                                :secret      (:secret application)}
-                                              translations-with-action-text))]
+                                              translations))]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject
      :body       body}))
 
-(defn start-email-job [application-id action-text-key]
+(defn start-email-job [application-id translation-mappings]
   (let [email    (create-email
                   application-id
-                  action-text-key)
+                  translation-mappings)
         job-type (:type email-job/job-definition)
         job-id   (job/start-job
                   hakija-jobs/job-definitions
@@ -49,7 +53,9 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job [application-id]
-  (start-email-job application-id :application-received-text))
+  (start-email-job application-id {:application-received-text    :application-action-text
+                                   :application-received-subject :subject}))
 
 (defn start-email-edit-confirmation-job [application-id]
-  (start-email-job application-id :application-edited-text))
+  (start-email-job application-id {:application-edited-text    :application-action-text
+                                   :application-edited-subject :subject}))

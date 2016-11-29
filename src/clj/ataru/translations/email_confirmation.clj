@@ -1,8 +1,11 @@
 (ns ataru.translations.email-confirmation)
 
 (def email-confirmation-translations
-  {:subject                       {:fi "Opintopolku - Hakemuksesi on vastaanotettu"
+  {:application-received-subject  {:fi "Opintopolku - Hakemuksesi on vastaanotettu"
                                    :sv "Opintopolku - Din ansökan har tagits emot"
+                                   :en "Opintopolku - Your application has been received"}
+   :application-edited-subject    {:fi "Opintopolku - Hakemuksesi on päivitetty"
+                                   :sv "Opintopolku - Din ansökan har updaterats"
                                    :en "Opintopolku - Your application has been received"}
    :application-received-text     {:fi "Hakemuksesi on vastaanotettu."
                                    :en "Your application has been received."
