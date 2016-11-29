@@ -10,8 +10,11 @@
   (quot (System/currentTimeMillis) 1000))
 
 (defn- wrap-session-timeout? [{:keys [uri]}]
-  (and (not (clojure.string/starts-with? uri "/auth"))
-       (not (clojure.string/starts-with? uri "/cas"))))
+  (println (str "check session: " uri))
+  (and (not (clojure.string/starts-with? uri "/lomake-editori/auth"))
+       (not (clojure.string/starts-with? uri "/lomake-editori/cas"))
+       (not (clojure.string/starts-with? uri "/lomake-editori/js"))
+       (not (clojure.string/starts-with? uri "/lomake-editori/css"))))
 
 (defn- timeout-handler [{:keys [uri]}]
   (let [auth-url (auth-utils/cas-auth-url)]
