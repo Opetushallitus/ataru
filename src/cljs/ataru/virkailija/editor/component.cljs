@@ -444,5 +444,7 @@
            @languages
            :header? true)]
         [:div.editor-form__checkbox-wrapper
-         [repeater-checkbox path content]]
-        [info-addon path]]])))
+         [repeater-checkbox path content]]]
+       [info-addon path]
+
+       [toolbar/adjacent-fieldset-toolbar]])))
