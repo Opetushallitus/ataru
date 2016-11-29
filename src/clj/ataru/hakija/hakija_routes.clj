@@ -2,21 +2,13 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.applications.application-store :as application-store]
-            [ataru.hakija.application-email-confirmation :as application-email]
-            [ataru.background-job.job :as job]
-            [ataru.forms.form-store :as form-store]
-            [ataru.hakija.validator :as validator]
-            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as form-service]
+            [ataru.hakija.hakija-application-service :as application-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
-            [ataru.person-service.person-integration :as person-integration]
-            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.util.client-error :as client-error]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
-            [clojure.string :as string]
-            [clj-time.core :as t]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
@@ -36,38 +28,12 @@
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
 
-(defn- handle-application [application]
-  (info "Received application:" application)
-  (let [form        (form-store/fetch-by-id (:form application))
-        validatorf  (fn [f] (validator/valid-application? application f))]
-    (match [form application]
-      [(_ :guard deleted?) _]
-      (do (warn (str "Form " (:id form) " deleted!"))
-          (response/bad-request {:passed? false :failures {:response "Lomake on poistettu"}}))
-
-      [({:passed?  false
-        :failures failures} :<< validatorf) _]
-      (response/bad-request failures)
-
-      :else
-      (let [application-id        (application-store/add-application-or-increment-version! application)
-            person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                    (:type person-integration/job-definition)
-                                    {:application-id application-id})]
-        (application-email/start-email-confirmation-job application-id)
-        (info "Stored application with id:" application-id)
-        (info "Started person creation job (to person service) with job id" person-service-job-id)
-        (response/ok {:id application-id})))))
-
 (defn- get-application [secret]
   (let [application (application-store/get-latest-application-by-secret secret)]
-    (cond
-      (some? (:id application))
+    (if application
       (do
         (info (str "Getting application " (:id application) " with answers"))
         (response/ok application))
-
-      :else
       (do
         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
         (response/not-found)))))
@@ -117,7 +83,12 @@
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
-      (handle-application application))
+      (match (application-service/handle-application-submit application)
+        {:passed? false :failures failures}
+        (response/bad-request {:failures failures})
+
+        {:passed? true :id application-id}
+        (response/ok {:id application-id})))
     (api/PUT "/application" []
       :summary "Edit application"
       :body [application ataru-schema/Application]
