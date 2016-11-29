@@ -92,8 +92,12 @@
     (api/PUT "/application" []
       :summary "Edit application"
       :body [application ataru-schema/Application]
-      (println "Edit application" application)
-      (response/ok {}))
+      (match (application-service/handle-application-edit application)
+        {:passed? false :failures failures}
+        (response/bad-request {:failures failures})
+
+        {:passed? true :id application-id}
+        (response/ok {:id application-id})))
     (api/GET "/application" []
       :summary "Get submitted application"
       :query-params [secret :- s/Str]

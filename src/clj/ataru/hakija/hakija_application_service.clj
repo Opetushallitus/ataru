@@ -15,19 +15,7 @@
         {:passed?        true
          :application-id application-id}))
 
-;; (defn add-application-old [application]
-;;   (let [form              (form-store/fetch-by-id (:form application))
-;;         validation-result (validator/valid-application? application form)]
-;;     (cond
-;;       (:deleted form)
-;;       (handle-deleted (:id form))
-
-;;       (:passed? validation-result)
-;;       (store-and-log application)
-
-;;       :else validation-result)))
-
-(defn add-application [application]
+(defn upsert-application [application]
   (let [form              (form-store/fetch-by-id (:form application))
         validation-result (validator/valid-application? application form)]
     (if (:passed? validation-result)
@@ -39,7 +27,6 @@
                                              (:type person-integration/job-definition)
                                              {:application-id application-id})]
     (application-email/start-email-confirmation-job application-id)
-    (log/info "Stored application with id:" application-id)
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
@@ -49,7 +36,18 @@
          failures :failures
          application-id :application-id
          :as validation-result}
-        (add-application application)]
+        (upsert-application application)]
     (if passed?
       (start-submit-jobs application-id)
+      validation-result)))
+
+(defn handle-application-edit [application]
+  (log/info "Application edited:" application)
+  (let [{passed? :passed?
+         failures :failures
+         application-id :application-id
+         :as validation-result}
+        (upsert-application application)]
+    (if passed?
+      {:passed? true :id application-id}
       validation-result)))
