@@ -251,14 +251,14 @@
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
+                                resource-routes
                                 (api/middleware [auth-middleware/with-authentication user-feedback/wrap-user-feedback]
-                                  resource-routes
-                                  app-routes
-                                  (api-routes this)
+                                  (api/middleware [session-timeout/wrap-idle-session-timeout]
+                                    app-routes
+                                    (api-routes this))
                                   (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
-                            (session-timeout/wrap-idle-session-timeout)
                             (wrap-defaults (-> site-defaults
                                                (update :session assoc :store (create-store))
                                                (update :responses dissoc :content-types)
