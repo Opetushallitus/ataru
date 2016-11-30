@@ -175,11 +175,11 @@
        (mapv (partial review-state-row @review-state) application-review-states)))))
 
 (defn event-caption [event]
-  (match (:event-type event)
+  (case (:event-type event)
     "review-state-change"     (get application-review-states (:new-review-state event))
     "updated-by-applicant"    "Päivitetty"
     "received-from-applicant" "Saapunut"
-    :else                     "Tuntematon"))
+    "Tuntematon"))
 
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))

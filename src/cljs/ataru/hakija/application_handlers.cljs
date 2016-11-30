@@ -80,7 +80,7 @@
   :application/submit
   (fn [{:keys [db]} _]
     (send-application db :submit)
-    {:db       (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
+    {:db       (assoc-in db [:application :submit-status] :submitting)
      :http     {:method        :post
                 :url           "/hakemus/api/application"
                 :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
@@ -90,7 +90,6 @@
 (reg-event-fx
   :application/edit
   (fn [{:keys [db]} _]
-    (println "EDIT FORM SUBMIT POST STUB")
     (send-application db :put)))
 
 (defn- get-lang-from-path [supported-langs]
