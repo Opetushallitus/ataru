@@ -4,7 +4,7 @@
             [oph.soresu.common.config :refer [config]]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [taoensso.timbre :refer [spy debug]]
+            [taoensso.timbre :refer [spy debug info]]
             [clojure.core.match :refer [match]]))
 
 (defn- url->relative [url-from-session]
@@ -18,8 +18,12 @@
     (api/undocumented
       (api/GET "/cas" [ticket :as request]
                (let [redirect-url (if-let [url-from-session (get-in request [:session :original-url])]
-                                    (url->relative url-from-session)
-                                    "/lomake-editori")]
+                                    (let [url (url->relative url-from-session)]
+                                      (info "redirect to original url" url-from-session url)
+                                      url)
+                                    (do
+                                      (info "redirect to /lomake-editori")
+                                      "/lomake-editori"))]
                  (login (if (-> config :dev :fake-dependencies)
                           (str (System/currentTimeMillis))
                           ticket)
