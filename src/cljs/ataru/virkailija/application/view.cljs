@@ -1,15 +1,17 @@
 (ns ataru.virkailija.application.view
-  (:require [clojure.string :as string]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.ratom :refer-macros [reaction]]
-            [reagent.core :as r]
-            [cljs-time.format :as f]
-            [ataru.virkailija.temporal :as t]
-            [ataru.virkailija.application.handlers]
-            [ataru.application.review-states :refer [application-review-states]]
-            [ataru.application-common.application-readonly :as readonly-contents]
-            [ataru.cljs-util :refer [wrap-scroll-to classnames]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+  (:require
+   [cljs.core.match :refer-macros [match]]
+   [clojure.string :as string]
+   [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+   [reagent.ratom :refer-macros [reaction]]
+   [reagent.core :as r]
+   [cljs-time.format :as f]
+   [ataru.virkailija.temporal :as t]
+   [ataru.virkailija.application.handlers]
+   [ataru.application.review-states :refer [application-review-states]]
+   [ataru.application-common.application-readonly :as readonly-contents]
+   [ataru.cljs-util :refer [wrap-scroll-to classnames]]
+   [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn toggle-form-list-open! [open]
   (swap! open not)
@@ -172,15 +174,20 @@
         [:div.application-handling__review-header "Tila"]]
        (mapv (partial review-state-row @review-state) application-review-states)))))
 
+(defn event-caption [event]
+  (match (:event-type event)
+    "review-state-change"     (get application-review-states (:new-review-state event))
+    "updated-by-applicant"    "Päivitetty"
+    "received-from-applicant" "Saapunut"
+    :else                     "Tuntematon"))
+
 (defn event-row [event]
   (let [time-str     (t/time->short-str (:time event))
         to-event-row (fn [caption] [:div
                                     [:span.application-handling__event-timestamp time-str]
                                     [:span.application-handling__event-caption caption]])
         event-type   (:event-type event)
-        event-caption (if (= "review-state-change" event-type)
-                        (get application-review-states (:new-review-state event))
-                        "Tuntematon")]
+        event-caption (event-caption event)]
     (to-event-row event-caption)))
 
 (defn application-review-events []

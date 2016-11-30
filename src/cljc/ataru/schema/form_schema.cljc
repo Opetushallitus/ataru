@@ -152,12 +152,16 @@
                                 "approved"
                                 "canceled"))
 
+(def event-types (s/enum "updated-by-applicant"
+                         "received-from-applicant"
+                         "review-state-change"))
+
 (s/defschema Event
-  {:event-type                        s/Str
+  {:event-type                        event-types
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) application-states})
+   (s/optional-key :new-review-state) (s/maybe application-states)})
 
 (s/defschema Review
   {:id                              s/Int

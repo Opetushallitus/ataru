@@ -54,13 +54,13 @@
     (if secret
       (do
         (yesql-add-application-event! {:application_key  app-key
-                                       :event_type       "review-state-change"
-                                       :new_review_state "updated"}
+                                       :event_type       "updated-by-applicant"
+                                       :new_review_state  nil}
                                       connection))
       (do
         (yesql-add-application-event! {:application_key  app-key
-                                       :event_type       "review-state-change"
-                                       :new_review_state "received"}
+                                       :event_type       "received-from-applicant"
+                                       :new_review_state  nil}
                                       connection)
         (yesql-add-application-review! {:application_key app-key
                                         :state           "received"}
