@@ -259,6 +259,7 @@
                                                (update :session assoc :store (create-store))
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)
+                                               (assoc-in [:session :cookie-attrs :secure] (not (:dev? env)))
                                                (assoc-in [:session :root] "/lomake-editori")))
                             (wrap-with-logger
                               :debug identity
