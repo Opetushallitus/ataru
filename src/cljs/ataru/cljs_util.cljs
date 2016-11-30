@@ -143,3 +143,6 @@
                   Cookies.
                   (.get "CSRF"))]
     (js/decodeURIComponent token)))
+
+(defn flatten-path [db & parts]
+  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
