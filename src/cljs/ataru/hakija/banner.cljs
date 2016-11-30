@@ -1,5 +1,6 @@
 (ns ataru.hakija.banner
   (:require [re-frame.core :refer [subscribe dispatch]]
+            [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]))
 
@@ -53,8 +54,9 @@
              :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [lang   (subscribe [:application/form-language])
-        secret (subscribe [:state-query [:application :secret]])]
+  (let [lang    (subscribe [:application/form-language])
+        secret  (subscribe [:state-query [:application :secret]])
+        editing (reaction (some? @secret))]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
@@ -65,11 +67,13 @@
                                                                      :en "The application has been sent")]]
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
-                     :on-click #(dispatch [:application/submit-form])}
+                     :on-click #(if @editing
+                                  (dispatch [:application/edit])
+                                  (dispatch [:application/submit]))}
                     (case @lang
-                      :fi (if (some? @secret) "LÄHETÄ MUUTOKSET" "LÄHETÄ HAKEMUS")
-                      :sv (if (some? @secret) "SCICKA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
-                      :en (if (some? @secret) "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
+                      :fi (if @editing "LÄHETÄ MUUTOKSET" "LÄHETÄ HAKEMUS")
+                      :sv (if @editing "SCICKA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
+                      :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
   (let [valid-status (subscribe [:application/valid-status])

@@ -32,7 +32,7 @@
                                       (:en label)))))
           (-> application :content :answers))))
 
-(defn add-new-application
+(defn add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application conn]
   (let [connection           {:connection conn}
@@ -51,14 +51,20 @@
         application          (yesql-add-application-query<! application-to-store connection)
         app-id               (:id application)
         app-key              (:key application)]
-    (when-not secret
-      (yesql-add-application-event! {:application_key  app-key
-                                     :event_type       "review-state-change"
-                                     :new_review_state "received"}
-                                    connection)
-      (yesql-add-application-review! {:application_key app-key
-                                      :state           "received"}
-                                     connection))
+    (if secret
+      (do
+        (yesql-add-application-event! {:application_key  app-key
+                                       :event_type       "updated-by-applicant"
+                                       :new_review_state  nil}
+                                      connection))
+      (do
+        (yesql-add-application-event! {:application_key  app-key
+                                       :event_type       "received-from-applicant"
+                                       :new_review_state  nil}
+                                      connection)
+        (yesql-add-application-review! {:application_key app-key
+                                        :state           "received"}
+                                       connection)))
     app-id))
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
@@ -72,12 +78,12 @@
         (some? old-application)
         (do
           (info (str "Updating application with key " (:key old-application) " based on valid application secret, retaining key and secret from previous version"))
-          (add-new-application (merge new-application (select-keys old-application [:key :secret])) conn))
+          (add-new-application-version (merge new-application (select-keys old-application [:key :secret])) conn))
 
         (nil? old-application)
         (do
           (info (str "Inserting completely new application"))
-          (add-new-application (dissoc new-application :key :secret) conn))))))
+          (add-new-application-version (dissoc new-application :key :secret) conn))))))
 
 (defn- older?
   "Check if application given as first argument is older than

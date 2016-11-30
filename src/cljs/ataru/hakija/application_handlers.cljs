@@ -58,6 +58,14 @@
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
+(defn send-application [db method]
+  {:db       (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
+   :http     {:method        method
+              :url           "/hakemus/api/application"
+              :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
+              :handler       :application/handle-submit-response
+              :error-handler :application/handle-submit-error}})
+
 (reg-event-db
   :application/handle-submit-response
   handle-submit)
@@ -66,24 +74,23 @@
   :application/handle-submit-error
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
-             (assoc :error {:message "Tapahtui virhe " :detail response}))
-     :dispatch-later [{:ms 30000 :dispatch [:application/clear-error]}]}))
-
-(reg-event-db
-  :application/clear-error
-  (fn [db _]
-    (dissoc db :error)))
+             (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
 (reg-event-fx
-  :application/submit-form
+  :application/submit
   (fn [{:keys [db]} _]
+    (send-application db :submit)
     {:db       (assoc-in db [:application :submit-status] :submitting)
      :http     {:method        :post
                 :url           "/hakemus/api/application"
                 :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
                 :handler       :application/handle-submit-response
-                :error-handler :application/handle-submit-error}
-     :dispatch  [:application/clear-error]}))
+                :error-handler :application/handle-submit-error}}))
+
+(reg-event-fx
+  :application/edit
+  (fn [{:keys [db]} _]
+    (send-application db :put)))
 
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
