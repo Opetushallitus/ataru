@@ -2,10 +2,12 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
+            [ataru.middleware.session-timeout :as session-timeout]
             [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
+            [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
@@ -32,7 +34,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
             [com.stuartsierra.component :as component]
-            [clout.core :as clout]))
+            [clout.core :as clout]
+            [ring.util.http-response :as response]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -248,10 +251,11 @@
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
+                                resource-routes
                                 (api/middleware [auth-middleware/with-authentication user-feedback/wrap-user-feedback]
-                                  resource-routes
-                                  app-routes
-                                  (api-routes this)
+                                  (api/middleware [session-timeout/wrap-idle-session-timeout]
+                                    app-routes
+                                    (api-routes this))
                                   (auth-routes (:organization-service this))))
                               (api/undocumented
                                 (route/not-found "Not found")))

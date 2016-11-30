@@ -12,4 +12,4 @@ update sessions set data = :data where key = :key;
 
 -- name: yesql-delete-session-query!
 -- Deletes session
-delete from session where key = :key;
+delete from sessions where key = :key;

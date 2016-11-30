@@ -51,6 +51,7 @@
                  [metosin/ring-http-response "0.8.0"]
                  [oph/clj-util "0.1.0"]
                  [ring.middleware.logger "0.5.0"]
+                 [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.apache.poi/poi-ooxml "3.15"]
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
