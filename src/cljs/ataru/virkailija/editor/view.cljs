@@ -188,8 +188,10 @@
   (fn []
     [:div.editor-form__close-form-row
      [:a.editor-form__control-button.editor-form__control-button--enabled
-      {:on-click (fn [evt]
-                   (.preventDefault evt))}
+      {:href     "/lomake-editori/editor/"
+       :on-click (fn [event]
+                   (dispatch [:set-state [:editor :selected-form-key] nil])
+                   (routes/anchor-click-handler event))}
       "Sulje lomake"]]))
 
 (defn editor-panel []
