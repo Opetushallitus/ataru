@@ -2,7 +2,8 @@
   (:require
    [ataru.virkailija.component-data.component :as component]
    [re-frame.core :as c :refer [dispatch]]
-   [reagent.core :as r]))
+   [reagent.core :as r]
+   [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
   {"Lomakeosio"                    component/form-section
@@ -12,15 +13,15 @@
    "Painikkeet, yksi valittavissa" component/single-choice-button
    "Lista, monta valittavissa"     component/multiple-choice
    "Infokenttä"                    component/info-element
-   "Vierekkäiset kentät"           component/adjacent-fieldset})
+   "Vierekkäiset tekstikentät"     component/adjacent-fieldset})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
     ["Tekstikenttä" "Tekstialue" "Pudotusvalikko" "Lista, monta valittavissa" "Infokenttä" "Painikkeet, yksi valittavissa"]))
 
 (def ^:private adjacent-fieldset-toolbar-elements
-  (select-keys toolbar-elements
-    ["Tekstikenttä"]))
+  {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
+                    component/text-field)})
 
 (defn- component-toolbar [path toolbar generator]
   (into [:ul.form__add-component-toolbar--list]

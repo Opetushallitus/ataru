@@ -21,49 +21,54 @@
           path)))))
 
 (defn soresu->reagent [content path]
-  (fn [content path]
-    [:div
-     (when-not ((set path) :followup)
-       [ec/drag-n-drop-spacer path content])
+  (let [render-children (fn [children]
+                          (for [[index child] (zipmap (range) children)]
+                            ^{:key index}
+                            [soresu->reagent child (conj path :children index)]))]
+    (fn [content path]
+      [:div
+       (when-not ((set path) :followup)
+         [ec/drag-n-drop-spacer path content])
 
-     (match content
-            {:module module}
-            [ec/module path]
+       (match content
+         {:module module}
+         [ec/module path]
 
-            {:fieldClass "wrapperElement"
-             :fieldType "adjacentfieldset"
-             :children children}
-            [ec/adjacent-fieldset content path children]
+         {:fieldClass "wrapperElement"
+          :fieldType  "adjacentfieldset"
+          :children   children}
+         [ec/adjacent-fieldset content path (render-children children)]
 
-            {:fieldClass "wrapperElement"
-             :children   children}
-            (let [children (for [[index child] (zipmap (range) children)]
-                             ^{:key index}
-                             [soresu->reagent child (conj path :children index)])]
-              [ec/component-group content path children])
+         {:fieldClass "wrapperElement"
+          :children   children}
+         [ec/component-group content path (render-children children)]
 
-            {:fieldClass "formField" :fieldType "textField"}
-            [ec/text-field content path]
+         {:fieldClass "formField" :fieldType "textField"
+          :params {:adjacent true}}
+         [ec/adjacent-text-field content path]
 
-            {:fieldClass "formField" :fieldType "textArea"}
-            [ec/text-area content path]
+         {:fieldClass "formField" :fieldType "textField"}
+         [ec/text-field content path]
 
-            {:fieldClass "formField" :fieldType "dropdown"}
-            [ec/dropdown content path]
+         {:fieldClass "formField" :fieldType "textArea"}
+         [ec/text-area content path]
 
-            {:fieldClass "formField" :fieldType "multipleChoice"}
-            [ec/dropdown content path]
+         {:fieldClass "formField" :fieldType "dropdown"}
+         [ec/dropdown content path]
 
-            {:fieldClass "infoElement"}
-            [ec/info-element content path]
+         {:fieldClass "formField" :fieldType "multipleChoice"}
+         [ec/dropdown content path]
+
+         {:fieldClass "infoElement"}
+         [ec/info-element content path]
 
             {:fieldClass "formField"
              :fieldType "singleChoice"}
             [ec/dropdown content path]
 
-            :else (do
-                    (error content)
-                    (throw "error" content)))]))
+         :else (do
+                 (error content)
+                 (throw "error" content)))])))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
