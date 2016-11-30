@@ -9,20 +9,20 @@
    [ataru.hakija.validator :as validator]
    [ataru.applications.application-store :as application-store]))
 
-(defn- store-and-log [application]
-  (let [application-id (application-store/add-application-or-increment-version! application)]
-        (log/info "Stored application with id: " application-id)
-        {:passed?        true
-         :application-id application-id}))
+(defn- store-and-log [application store-fn]
+  (let [application-id (store-fn application)]
+    (log/info "Stored application with id: " application-id)
+    {:passed?        true
+     :application-id application-id}))
 
-(defn upsert-application [application]
+(defn- validate-and-store [application store-fn]
   (let [form              (form-store/fetch-by-id (:form application))
         validation-result (validator/valid-application? application form)]
     (if (:passed? validation-result)
-      (store-and-log application)
+      (store-and-log application store-fn)
       validation-result)))
 
-(defn start-submit-jobs [application-id]
+(defn- start-submit-jobs [application-id]
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
                                              (:type person-integration/job-definition)
                                              {:application-id application-id})]
@@ -33,10 +33,9 @@
 (defn handle-application-submit [application]
   (log/info "Application submitted:" application)
   (let [{passed? :passed?
-         failures :failures
          application-id :application-id
          :as validation-result}
-        (upsert-application application)]
+        (validate-and-store application application-store/add-application)]
     (if passed?
       (start-submit-jobs application-id)
       validation-result)))
@@ -44,10 +43,9 @@
 (defn handle-application-edit [application]
   (log/info "Application edited:" application)
   (let [{passed? :passed?
-         failures :failures
          application-id :application-id
          :as validation-result}
-        (upsert-application application)]
+        (validate-and-store application application-store/update-application)]
     (if passed?
       (do
         (application-email/start-email-edit-confirmation-job application-id)
