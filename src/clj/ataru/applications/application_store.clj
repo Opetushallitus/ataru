@@ -108,9 +108,9 @@
        (latest-versions-only)))
 
 (defn get-application-list-by-hakukohde
-  "Only list with header-level info, not answers. ONLYS include applications associated with given hakukohde."
-  [form-key hakukohde-oid]
-  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid :form_key form-key})
+  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
+  [hakukohde-oid]
+  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
@@ -159,12 +159,10 @@
        (latest-versions-only)))
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
-  [form-key :- s/Str
-   filtered-states :- [s/Str]
+  [filtered-states :- [s/Str]
    hakukohde-oid :- s/Str]
   (->> (exec-db :db yesql-get-applications-for-hakukohde
-                {:form_key        form-key
-                 :filtered_states filtered-states
+                {:filtered_states filtered-states
                  :hakukohde_oid   hakukohde-oid})
        (mapv (partial unwrap-application))
        (latest-versions-only)))

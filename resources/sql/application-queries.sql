@@ -20,10 +20,10 @@ order by a.created_time desc;
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, coalesce(ar.state, 'received') as state
+  a.created_time, coalesce(ar.state, 'received') as state,
+  a.form_id
 from applications a
   left outer join application_reviews ar on a.key = ar.application_key
-  join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde = :hakukohde_oid
 order by a.created_time desc;
 
@@ -57,9 +57,9 @@ select
   a.hakukohde_name,
   coalesce(ar.state, 'received') as state
 from applications a
-join forms f on f.id = a.form_id and f.key = :form_key and a.hakukohde = :hakukohde_oid
 left outer join application_reviews ar on a.key = ar.application_key
-where state in (:filtered_states);
+where state in (:filtered_states)
+and a.hakukohde = :hakukohde_oid;
 
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;
@@ -128,3 +128,17 @@ select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
 from applications a
   join forms f on a.form_id = f.id
 where hakukohde is not null and hakukohde_name is not null;
+
+-- name: yesql-application-query-for-hakukohde
+-- Get all applications for hakukohde
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.hakukohde,
+  a.hakukohde_name
+FROM applications a
+WHERE a.hakukohde = :hakukohde_oid;
