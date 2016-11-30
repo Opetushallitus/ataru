@@ -12,7 +12,7 @@
       (response/found auth-url))))
 
 (defn- timeout-options []
-  {:timeout         (get-in config [:session :timeout])
+  {:timeout         (get-in config [:session :timeout] 28800)
    :timeout-handler ataru.middleware.session-timeout/timeout-handler})
 
 (defn wrap-idle-session-timeout [handler]
