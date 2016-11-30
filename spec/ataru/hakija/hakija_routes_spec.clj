@@ -65,7 +65,7 @@
   (tags :unit)
 
   (around [spec]
-    (with-redefs [application-email/start-email-confirmation-job (fn [_])]
+    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])]
       (spec)))
 
   (before
