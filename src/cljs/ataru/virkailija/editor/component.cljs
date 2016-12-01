@@ -445,17 +445,19 @@
            :header? true)]
         [:div.editor-form__checkbox-wrapper
          [repeater-checkbox path content]]]
+
        [info-addon path]
 
        [:p.editor-form__adjacent-fieldset-info "Lisää max 3 vierekkäistä kenttää"]
 
-       children
+       [:div.editor-form__adjacent-fieldset-container
+        children
 
-       (when (-> (count children) (< 3))
-         [toolbar/adjacent-fieldset-toolbar
-          (concat path [:children])
-          (fn [component-fn]
-            (dispatch [:generate-component component-fn (spy (concat path [:children (count children)]))]))])])))
+        (when (-> (count children) (< 3))
+          [toolbar/adjacent-fieldset-toolbar
+           (concat path [:children])
+           (fn [component-fn]
+             (dispatch [:generate-component component-fn (spy (concat path [:children (count children)]))]))])]])))
 
 (defn adjacent-text-field [content path]
   (let [languages        (subscribe [:editor/languages])
