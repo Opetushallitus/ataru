@@ -11,7 +11,7 @@
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.8"]
                  [binaryage/devtools "0.8.3"]
-                 [re-frisk "0.2.2"] ; will only be used in development side
+                 [re-frisk "0.3.1"] ; will only be used in development side
                  [venantius/accountant "0.1.7"]
                  [com.cemerick/url "0.1.1"]
 
