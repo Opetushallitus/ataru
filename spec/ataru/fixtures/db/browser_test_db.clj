@@ -79,6 +79,6 @@
   (form-store/create-form-or-increment-version! form1 "1.2.246.562.10.0439845")
   (form-store/create-form-or-increment-version! form2 "1.2.246.562.10.0439845")
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (application-store/add-new-application-version application1 conn)
-    (application-store/add-new-application-version application2 conn)))
+    (application-store/add-application application1)
+    (application-store/add-application application2)))
 

@@ -32,7 +32,7 @@
                                       (:en label)))))
           (-> application :content :answers))))
 
-(defn add-new-application-version
+(defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application conn]
   (let [connection           {:connection conn}
