@@ -184,12 +184,23 @@
               [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
                    :target "_blank"} (:haku-name haku)]])]]]))))
 
+(defn- close-form []
+  (fn []
+    [:div.editor-form__close-form-row
+     [:a.editor-form__control-button.editor-form__control-button--enabled
+      {:href     "/lomake-editori/editor"
+       :on-click (fn [event]
+                   (dispatch [:set-state [:editor :selected-form-key] nil])
+                   (routes/anchor-click-handler event))}
+      "Sulje lomake"]]))
+
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]
     (fn []
       (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
         [:div.panel-content
          [:div
+          [close-form]
           [editor-name]
           ^{:key (str "language-toolbar-" (:key @form))}
           [language-toolbar @form]
