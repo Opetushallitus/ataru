@@ -32,7 +32,7 @@
                                       (:en label)))))
           (-> application :content :answers))))
 
-(defn add-new-application-version
+(defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application conn]
   (let [connection           {:connection conn}
@@ -48,42 +48,41 @@
                               :hakukohde_name (:hakukohde-name application)
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
-        application          (yesql-add-application-query<! application-to-store connection)
-        app-id               (:id application)
-        app-key              (:key application)]
-    (if secret
-      (do
-        (yesql-add-application-event! {:application_key  app-key
-                                       :event_type       "updated-by-applicant"
-                                       :new_review_state  nil}
-                                      connection))
-      (do
-        (yesql-add-application-event! {:application_key  app-key
-                                       :event_type       "received-from-applicant"
-                                       :new_review_state  nil}
-                                      connection)
-        (yesql-add-application-review! {:application_key app-key
-                                        :state           "received"}
-                                       connection)))
-    app-id))
+        application          (yesql-add-application-query<! application-to-store connection)]
+    application))
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
-  (when-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
-    (unwrap-application application)))
+  (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
+    (unwrap-application application)
+    (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
-(defn add-application-or-increment-version! [{:keys [lang secret] :as new-application}]
+(defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [old-application (get-latest-version-and-lock-for-update secret lang conn)]
-      (cond
-        (some? old-application)
-        (do
-          (info (str "Updating application with key " (:key old-application) " based on valid application secret, retaining key and secret from previous version"))
-          (add-new-application-version (merge new-application (select-keys old-application [:key :secret])) conn))
+    (info (str "Inserting new application"))
+    (let [{app-id :id app-key :key} (add-new-application-version new-application conn)
+          connection                {:connection conn}]
+      (yesql-add-application-event! {:application_key  app-key
+                                     :event_type       "received-from-applicant"
+                                     :new_review_state nil}
+                                    connection)
+      (yesql-add-application-review! {:application_key app-key
+                                      :state           "received"}
+                                     connection)
+      app-id)))
 
-        (nil? old-application)
-        (do
-          (info (str "Inserting completely new application"))
-          (add-new-application-version (dissoc new-application :key :secret) conn))))))
+(defn update-application [{:keys [lang secret] :as new-application}]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
+          {app-id :id app-key :key} (add-new-application-version
+                                     (merge new-application (select-keys old-application [:key :secret])) conn)]
+      (info (str "Updating application with key "
+                 (:key old-application)
+                 " based on valid application secret, retaining key and secret from previous version"))
+      (yesql-add-application-event! {:application_key  app-key
+                                     :event_type       "updated-by-applicant"
+                                     :new_review_state nil}
+                                    {:connection conn})
+      app-id)))
 
 (defn- older?
   "Check if application given as first argument is older than
