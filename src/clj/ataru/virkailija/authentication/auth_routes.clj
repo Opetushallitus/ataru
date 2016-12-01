@@ -7,23 +7,24 @@
             [taoensso.timbre :refer [spy debug info]]
             [clojure.core.match :refer [match]]))
 
-(defn- url->relative [url-from-session]
-  (let [{:keys [path query anchor]} (url/url url-from-session)]
-    (str path
-         (when (some? query) (url/map->query query))
-         (when (some? anchor) (str "#" anchor)))))
+(defn- rewrite-url-for-environment [url-from-session]
+  "Ensure that https is used when available (due to https termination on non-development environments)"
+  (let [{:keys [host path query anchor]} (url/url url-from-session)]
+    (if (:dev? env)
+      url-from-session
+      (str "https://"
+           host
+           path
+           (when (some? query) (url/map->query query))
+           (when (some? anchor) (str "#" anchor))))))
 
 (defn auth-routes [organization-service]
   (api/context "/auth" []
     (api/undocumented
       (api/GET "/cas" [ticket :as request]
                (let [redirect-url (if-let [url-from-session (get-in request [:session :original-url])]
-                                    (let [url (url->relative url-from-session)]
-                                      (info "redirect to original url" url-from-session url)
-                                      url)
-                                    (do
-                                      (info "redirect to /lomake-editori")
-                                      "/lomake-editori"))]
+                                    (rewrite-url-for-environment url-from-session)
+                                    (get-in config [:public-config :virkailija :service-url]))]
                  (login (if (-> config :dev :fake-dependencies)
                           (str (System/currentTimeMillis))
                           ticket)
