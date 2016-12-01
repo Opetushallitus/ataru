@@ -25,7 +25,7 @@
     (should= 302 (:status @resp)))
 
   (it "should redirect to /lomake-editori/"
-    (should-have-header "Location" "http://localhost/lomake-editori/" @resp)))
+    (should-have-header "Location" "http://localhost:8350/lomake-editori/" @resp)))
 
 (describe "GET /lomake-editori/"
   (tags :unit)

@@ -215,15 +215,19 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
+(defn redirect-to-service-url
+  []
+  (redirect (get-in config [:public-config :virkailija :service_url])))
+
 (api/defroutes redirect-routes
   (api/undocumented
-    (api/GET "/" [] (redirect "/lomake-editori/"))
+    (api/GET "/" [] (redirect-to-service-url))
     ;; NOTE: This is now needed because of the way web-server is
     ;; Set up on test and other environments. If you want
     ;; to remove this, test the setup with some local web server
     ;; with proxy_pass /lomake-editori -> <clj server>/lomake-editori
     ;; and verify that it works on test environment as well.
-    (api/GET "/lomake-editori" [] (redirect "/lomake-editori/"))))
+    (api/GET "/lomake-editori" [] (redirect-to-service-url))))
 
 (defrecord Handler []
   component/Lifecycle
