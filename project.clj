@@ -42,7 +42,7 @@
                  [camel-snake-kebab "0.4.0"]
                  [environ "1.1.0"]
                  [org.clojure/core.async "0.2.395"]
-                 [org.clojure/java.jdbc "0.4.2"]
+                 [org.clojure/java.jdbc "0.6.1"]
                  [org.postgresql/postgresql "9.4-1201-jdbc41"]
                  [clj-time "0.12.2"]
                  [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
