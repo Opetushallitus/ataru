@@ -7,7 +7,7 @@
                  [re-frame "0.8.0"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [oph/soresu "0.1.10-SNAPSHOT"]
+                 [oph/soresu "0.1.11-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.8"]
                  [binaryage/devtools "0.8.3"]
@@ -37,7 +37,7 @@
                  [ring-ratelimit "0.2.2"]
                  [bk/ring-gzip "0.1.1"]
                  [buddy/buddy-auth "1.3.0"]
-                 [yesql "0.5.2"]
+                 [yesql "0.5.3"]
                  [org.flywaydb/flyway-core "3.2.1"]
                  [camel-snake-kebab "0.4.0"]
                  [environ "1.1.0"]
