@@ -312,7 +312,7 @@
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-           [dropdown-multi-options path options-koodisto]]
+           (when-not (= field-type "radioButton") [dropdown-multi-options path options-koodisto])]
 
           (when (nil? @options-koodisto)
             (seq [
