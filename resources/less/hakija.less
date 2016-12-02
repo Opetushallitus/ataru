@@ -444,6 +444,44 @@
   margin-right: 6px;
 }
 
+.application__form-radio-button-outer-container {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application__form-radio-button {
+  display: none;
+}
+
+.application__form-radio-button + label {
+  align-items: center;
+  background-color: @multiple-choice-not-selected-background;
+  border-radius: 2px;
+  color: @text-color;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  justify-content: flex-start;
+  padding: 0px 19px;
+  min-width: 100px;
+}
+
+.application__form-radio-button-outer-container > .application__form-radio-button-inner-container:not(:last-child) {
+  margin-right: 1px;
+}
+
+.application__form-radio-button:checked + label {
+  color: @white;
+  background-color: @section-header-text;
+}
+
+.application__form-radio-button:checked + label::before {
+  content: url('/hakemus/images/icon_check.png');
+  margin-bottom: 2px;
+  margin-right: 6px;
+}
+
 @media only screen
 and (max-width: @desktop-content-width) {
   .application__wrapper-heading {

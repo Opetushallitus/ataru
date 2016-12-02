@@ -122,6 +122,14 @@
                  true)]
     (merge answer {:value value :valid valid})))
 
+(defn- toggle-radio-button-option [db [_ radio-button-id value validators]]
+  (update-in db [:application :answers radio-button-id]
+    (fn [answer]
+      (let [valid? (if (not-empty validators)
+                     (every? true? (map #(validator/validate % value) validators)))]
+        (merge answer {:value value
+                       :valid valid?})))))
+
 (defn- merge-multiple-choice-option-values [value answer]
   (let [options (clojure.string/split value #"\s*,\s*")]
     (reduce (fn [answer option-value]
@@ -302,6 +310,10 @@
     (update-in db [:application :answers multiple-choice-id]
       (fn [answer]
         (toggle-multiple-choice-option answer option-value validators)))))
+
+(reg-event-db
+  :application/toggle-radio-button-option
+  toggle-radio-button-option)
 
 (reg-event-db
   :application/set-followup-visibility-to-false

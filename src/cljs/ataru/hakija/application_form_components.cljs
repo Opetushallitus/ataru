@@ -341,6 +341,37 @@
                       label]]))
                 (:options field-descriptor))]]]))))
 
+(defn radio-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+  (let [radio-button-id (answer-key field-descriptor)
+        lang            (subscribe [:application/form-language])
+        default-lang    (subscribe [:application/default-language])
+        selected-value  (subscribe [:state-query [:application :answers radio-button-id :value]])]
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+      (let [lang           @lang
+            default-lang   @default-lang
+            selected-value @selected-value]
+        [div-kwd
+         [label field-descriptor]
+         [:div.application__form-radio-button-outer-container
+          (map (fn [option]
+                 (let [label        (non-blank-val (get-in option [:label lang])
+                                                   (get-in option [:label default-lang]))
+                       option-value (:value option)
+                       option-id    (util/component-id)]
+                   [:div.application__form-radio-button-inner-container {:key option-id}
+                    [:input.application__form-radio-button
+                     {:id        option-id
+                      :type      "radio"
+                      :checked   (= option-value selected-value)
+                      :value     option-value
+                      :on-change (fn [event]
+                                   (let [value (.. event -target -value)]
+                                     (dispatch [:application/toggle-radio-button-option radio-button-id value (:validators field-descriptor)])))}]
+                    [:label
+                     {:for option-id}
+                     label]]))
+               (:options field-descriptor))]]))))
+
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
         header   (some-> (get-in field-descriptor [:label @language]))
@@ -371,6 +402,7 @@
                        {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                        {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                       {:fieldClass "formField" :fieldType "radioButton"} [radio-button field-descriptor]
                        {:fieldClass "infoElement"} [info-element field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
