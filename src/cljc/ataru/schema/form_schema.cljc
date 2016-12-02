@@ -120,7 +120,8 @@
                      :fieldType              (apply s/enum ["textField"
                                                             "textArea"
                                                             "dropdown"
-                                                            "multipleChoice"])
+                                                            "multipleChoice"
+                                                            "radioButton"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
                                                        LocalizedString
                                                        s/Str))})
