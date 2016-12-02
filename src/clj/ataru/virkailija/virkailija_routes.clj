@@ -27,6 +27,7 @@
             [oph.soresu.common.config :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.session :as ring-session]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
             [ring.util.response :refer [redirect]]
@@ -75,6 +76,12 @@
   (if (:dev? env)
     (selmer/render-file filename {})
     (not-found "Not found")))
+
+(defn- wrap-database-backed-session [handler]
+  (ring-session/wrap-session handler
+                             {:root "/lomake-editori"
+                              :cookie-attrs {:secure (not (:dev? env))}
+                              :store (create-store)}))
 
 (api/defroutes test-routes
   (api/undocumented
@@ -208,7 +215,7 @@
 
 (api/defroutes resource-routes
   (api/undocumented
-    (route/resources "/")))
+    (route/resources "/lomake-editori")))
 
 (api/defroutes rich-routes
   (api/undocumented
@@ -252,11 +259,13 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
+                              resource-routes
                               (api/context "/lomake-editori" []
                                 buildversion-routes
                                 test-routes
-                                resource-routes
-                                (api/middleware [auth-middleware/with-authentication user-feedback/wrap-user-feedback]
+                                (api/middleware [user-feedback/wrap-user-feedback
+                                                 wrap-database-backed-session
+                                                 auth-middleware/with-authentication]
                                   (api/middleware [session-timeout/wrap-idle-session-timeout]
                                     app-routes
                                     (api-routes this))
@@ -264,11 +273,9 @@
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
-                                               (update :session assoc :store (create-store))
+                                               (assoc :session nil)
                                                (update :responses dissoc :content-types)
-                                               (update :security dissoc :content-type-options :anti-forgery)
-                                               (assoc-in [:session :cookie-attrs :secure] (not (:dev? env)))
-                                               (assoc-in [:session :root] "/lomake-editori")))
+                                               (update :security dissoc :content-type-options :anti-forgery)))
                             (wrap-with-logger
                               :debug identity
                               :info  (fn [x] (info x))
