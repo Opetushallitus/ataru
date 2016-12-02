@@ -118,7 +118,7 @@
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
-       [label field-descriptor size-class]
+       [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:input.application__form-text-input
@@ -145,7 +145,7 @@
                        (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
-              [label field-descriptor size-class]
+              [label field-descriptor]
               [:div.application__form-text-input-info-text
                [info-text field-descriptor]]]
         (cons
@@ -381,6 +381,38 @@
        [:label.application__form-field-label [:span header]])
      [link-detected-paragraph text]]))
 
+(defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
+  (let [language     (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])
+        header       (some-> (get-in field-descriptor [:label @language]))
+        info-text    (some-> (get-in field-descriptor [:params :info-text :label @language]))
+        repeatable?  (-> field-descriptor :params :repeatable)
+        answers      (subscribe [:state-query [:application :answers]])]
+    (fn [{:keys [children] :as field-descriptor}]
+      [:div.application__form-field
+       [label field-descriptor]
+       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+         [:div.application__form-info-text [link-detected-paragraph info]])
+       [:div.application__form-adjacent-text-fields-wrapper
+        (doall (for [child children
+                     :let  [id     (keyword (:id child))
+                            value  (get-in @answers [id :value])
+                            valid? (get-in @answers [id :valid])]]
+                 ^{:key id}
+                 [:div.application__form-adjacent-row
+                  [label child]
+                  [:input.application__form-text-input
+                   {:id          id
+                    :type        "text"
+                    :placeholder (when-let [input-hint (-> child :params :placeholder)]
+                                   (non-blank-val (get input-hint @language)
+                                     (get input-hint @default-lang)))
+                    :class       (if (show-text-field-error-class? child value valid?)
+                                   " application__form-field-error"
+                                   " application__form-text-input--normal")
+                    :value       value
+                    :on-change   (partial textual-field-change child)}]]))]])))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -403,7 +435,8 @@
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                        {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                        {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                       {:fieldClass "infoElement"} [info-element field-descriptor])
+                       {:fieldClass "infoElement"} [info-element field-descriptor]
+                       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 
