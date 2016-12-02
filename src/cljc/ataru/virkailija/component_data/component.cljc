@@ -69,3 +69,11 @@
    :label      {:fi ""} ; LocalizedString
    :text       {:fi ""} ; LocalizedString
    })
+
+(defn radio-button []
+  {:fieldClass "formField"
+   :fieldType  "radioButton"
+   :id         (util/component-id)
+   :label      {:fi "" :sv ""}
+   :params     {}
+   :options    []})

@@ -293,6 +293,7 @@
          {:class @animation-effect}
          (let [header (case field-type
                         "dropdown"       "Pudotusvalikko"
+                        "radioButton"    "Lista, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
          [:div.editor-form__multi-question-wrapper

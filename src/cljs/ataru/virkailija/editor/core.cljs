@@ -57,6 +57,10 @@
             {:fieldClass "infoElement"}
             [ec/info-element content path]
 
+            {:fieldClass "formField"
+             :fieldType "radioButton"}
+            [ec/dropdown content path]
+
             :else (do
                     (error content)
                     (throw "error" content)))]))
