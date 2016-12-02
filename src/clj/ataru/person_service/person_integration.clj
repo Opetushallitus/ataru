@@ -30,9 +30,9 @@
                       :nativeLanguage (extract-field application "language")
                       :nationality    (extract-field application "nationality")
                       :idpEntitys     [{:idpEntityId "oppijaToken" :identifier email}]}
-        person-id    (clojure.string/upper-case (extract-field application "ssn"))]
+        person-id    (extract-field application "ssn")]
     (if person-id
-      (assoc basic-fields :personId person-id)
+      (assoc basic-fields :personId (clojure.string/upper-case person-id))
       (assoc basic-fields :birthDate (extract-birth-date application)))))
 
 (defn upsert-and-log-person [person-service application-id]
