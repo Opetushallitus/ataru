@@ -15,7 +15,7 @@
 
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
   (let [applications (application-store/get-application-list-by-hakukohde hakukohde-oid)]
-    (aac/check-forms-accesses (map :form_id applications) session organization-service)
+    (aac/check-forms-accesses (map :form applications) session organization-service)
     {:applications applications}))
 
 (defn- extract-koodisto-fields [field-descriptor-list]

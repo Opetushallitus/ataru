@@ -21,7 +21,7 @@ select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
   a.created_time, coalesce(ar.state, 'received') as state,
-  a.form_id
+  a.form_id as form
 from applications a
   left outer join application_reviews ar on a.key = ar.application_key
 where a.hakukohde = :hakukohde_oid
