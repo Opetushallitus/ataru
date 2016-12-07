@@ -47,7 +47,7 @@
                  [clj-time "0.12.2"]
                  [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.6.3"]
-                 [selmer "1.10.1"]
+                 [selmer "1.10.2"]
                  [metosin/ring-http-response "0.8.0"]
                  [oph/clj-util "0.1.0"]
                  [ring.middleware.logger "0.5.0"]
