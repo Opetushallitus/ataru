@@ -36,13 +36,12 @@
 .application-handling__form-list-open {
   position: absolute;
   width: 100%;
-  max-height: 200px;
-  overflow: auto;
   background-color: #fafafa;
   border-radius: 2px;
   border: solid 1px #E5E4E4;
-  box-shadow: 0px 0px 2px 0px rgba(0,0,0,0.12), 0px 2px 2px 0px rgba(0,0,0,0.24);
-  z-index: 12;
+  box-shadow: 0 0 2px 0 rgba(0,0,0,0.12), 0 2px 2px 0 rgba(0,0,0,0.24);
+  z-index: 1;
+  margin: -5px 0 20px -13px;
 }
 
 .application-handling__form-list-open::-webkit-scrollbar {
@@ -63,8 +62,9 @@
   cursor: pointer;
   font-size: 16px;
   color: @text-color;
-  line-height: 37px;
-  padding: 0 13px 0 13px;
+  line-height: 125%;
+  padding: 8px 13px;
+  margin-left: 35px;
 }
 
 .application-handling__form-list-row:hover {
@@ -93,11 +93,16 @@
 }
 
 .application-handling__form-list-open-wrapper .application-handling__form-list-arrow {
-  display: none;
+  z-index: 4;
 }
 
 .application-handling__form-list-deleted-row {
   color: @disabled-list-item-color;
+}
+
+.application-handling__form-list-open-wrapper .application-handling__form-list-selected-row, .application-handling__form-list-open-wrapper .application-handling__form-list-selected-row:hover{
+	background: #00526c;
+	color: #fff;
 }
 
 .application-handling__excel-download-link {
