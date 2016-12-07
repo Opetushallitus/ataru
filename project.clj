@@ -180,7 +180,7 @@
                                   [reloaded.repl "0.2.3"]
                                   [ring/ring-mock "0.3.0"]
                                   [speclj "3.3.2"]
-                                  [speclj-junit "0.0.10"]]
+                                  [speclj-junit "0.0.11-20151116.130002-1"]]
                    :plugins [[refactor-nrepl "2.2.0"]
                              [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                              [lein-cljfmt "0.5.6"]]
