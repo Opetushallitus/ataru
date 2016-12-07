@@ -9,13 +9,13 @@
    "Tekstikenttä"              component/text-field
    "Tekstialue"                component/text-area
    "Pudotusvalikko"            component/dropdown
-   "Lista, yksi valittavissa"  component/radio-button
+   "Painikkeet, yksi valittavissa"  component/radio-button
    "Lista, monta valittavissa" component/multiple-choice
    "Infokenttä"                component/info-element})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
-    ["Tekstikenttä" "Tekstialue" "Pudotusvalikko" "Lista, monta valittavissa" "Infokenttä" "Lista, yksi valittavissa"]))
+    ["Tekstikenttä" "Tekstialue" "Pudotusvalikko" "Lista, monta valittavissa" "Infokenttä" "Painikkeet, yksi valittavissa"]))
 
 (defn ^:private component-toolbar [path toolbar generator]
   (into [:ul.form__add-component-toolbar--list]
