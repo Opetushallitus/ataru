@@ -131,6 +131,7 @@
    :key                             s/Str
    :lang                            s/Str
    :state                           s/Str
+   (s/optional-key :form)           s/Int
    (s/optional-key :applicant-name) (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
