@@ -177,7 +177,7 @@
 (defn event-caption [event]
   (case (:event-type event)
     "review-state-change"     (get application-review-states (:new-review-state event))
-    "updated-by-applicant"    "Päivitetty"
+    "updated-by-applicant"    "Hakija muokannut hakemusta"
     "received-from-applicant" "Saapunut"
     "Tuntematon"))
 
