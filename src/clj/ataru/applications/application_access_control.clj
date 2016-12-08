@@ -15,7 +15,7 @@
 
 (defn check-forms-accesses [form-ids session organization-service]
   (doseq [form-id form-ids]
-    (check-form-access form-id session organization-service)))
+    (check-form-access-by-id form-id session organization-service)))
 
 (defn check-application-access [application-key session organization-service]
   (when-not
