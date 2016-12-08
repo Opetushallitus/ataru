@@ -120,12 +120,16 @@
 .editor-form__row {
   padding: 0.5em;
   margin: 0;
-  color: @blue-text-color;
+  color: #2a2a2a;
   display: block;
   position: relative;
 }
 
-.editor-form__selected-row {
+.editor-form__row:hover {
+  background: #f5f5f5;
+}
+
+.editor-form__selected-row, .editor-form__selected-row:hover {
   border-radius: 2px;
   background-color: @selected-blue;
   color: #fff;
