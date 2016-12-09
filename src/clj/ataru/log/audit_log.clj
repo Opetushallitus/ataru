@@ -6,6 +6,10 @@
             [cheshire.core :as json])
   (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]))
 
+(def operation-new "lisäys")
+(def operation-modify "muutos")
+(def operation-delete "poisto")
+
 (def ^:private app-id (app-utils/get-app-id))
 
 (def ^:private service-name (case app-id
@@ -23,20 +27,10 @@
   (->> (c/now)
        (f/unparse date-time-formatter)))
 
-(defn- operation [new-object old-object]
-  (cond
-    (empty? old-object)
-    "lisäys"
-
-    (:deleted new-object)
-    "poisto"
-
-    :else "muutos"))
-
 (defn log
-  ([new-object id organization-oid]
-   (log new-object nil id organization-oid))
-  ([new-object old-object id organization-oid]
+  ([new-object id organization-oid operation]
+   (log new-object nil id organization-oid operation))
+  ([new-object old-object id organization-oid operation]
    {:pre [(some? new-object)
           (some? id)
           (some? organization-oid)]}
@@ -44,7 +38,7 @@
          message    (json/generate-string (p/diff old-object new-object))
          log-map    {CommonLogMessageFields/ID        id
                      CommonLogMessageFields/TIMESTAMP (timestamp)
-                     CommonLogMessageFields/OPERAATIO (operation new-object old-object)
+                     CommonLogMessageFields/OPERAATIO operation
                      CommonLogMessageFields/MESSAGE   message
                      "organizationOid"                organization-oid
                      "logSeq"                         (str (rand-int 1000000000))}]

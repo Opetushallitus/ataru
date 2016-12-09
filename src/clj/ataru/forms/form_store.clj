@@ -145,12 +145,14 @@
             (audit-log/log new-form
                            latest-version
                            log-id
-                           organization-oid)
+                           organization-oid
+                           (if (:deleted new-form) audit-log/operation-delete audit-log/operation-modify))
             new-form))))
     (let [new-form         (create-new-form! (-> form (dissoc :key) (assoc :organization-oid organization-oid)))
           log-id           (:created-by new-form)
           organization-oid (:organization-oid new-form)]
       (audit-log/log new-form
                      log-id
-                     organization-oid)
+                     organization-oid
+                     audit-log/operation-new)
       new-form)))
