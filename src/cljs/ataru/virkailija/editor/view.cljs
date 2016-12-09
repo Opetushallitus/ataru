@@ -177,7 +177,7 @@
         [:div.editor-form__module-wrapper
          [:div.editor-form__module-fields
           [:span.editor-form__used-in-haku-count (str (count (keys form-used-in-hakus)))]
-          [:span.editor-form__used-in-haku-heading.animated.flash "Lomake on käytössä:"]
+          [:span.editor-form__used-in-haku-heading.animated.flash "Lomake on käytössä"]
           [:ul.editor-form__used-in-haku-list
            (for [haku (vals form-used-in-hakus)]
              [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
