@@ -339,3 +339,14 @@
                               (not-empty answers)
                               []))]
           (vec (concat init [value] (rest last))))))))
+
+(reg-event-db
+  :application/add-adjacent-fields
+  (fn [db [_ field-descriptor]]
+    (reduce (fn [db' id]
+              (update-in db'
+                [:application :answers id :values]
+                (fn [answers]
+                  (conj answers {:value nil :valid false}))))
+      db
+      (map (comp keyword :id) (:children field-descriptor)))))

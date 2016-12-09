@@ -392,10 +392,12 @@
         (fn [index children]
           (map
             (fn [child]
-              {:value-index index
-               :child       child
-               :value       (get-in adjacent [(keyword (:id child)) :values index :value])
-               :valid?      (get-in adjacent [(keyword (:id child)) :values index :valid])})
+              (let [id (keyword (:id child))]
+                {:id          id
+                 :value-index index
+                 :child       child
+                 :value       (get-in adjacent [id :values index :value])
+                 :valid?      (get-in adjacent [id :values index :valid])}))
             children))
         (repeat count-of-answers children)))))
 
@@ -419,12 +421,13 @@
        (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
          [:div.application__form-info-text [link-detected-paragraph info]])
        [:div.application__form-adjacent-text-fields-wrapper
-        (doall (for [{:keys [value-index child value valid?]} (spawn-children-based-on-answers children @answers)
-                     :let  [id     (keyword (:id child))
-                            fid    (str value-index "-" (:id child))]]
+        (doall (for [[counter {:keys [id value-index child value valid?]}]
+                     (zipmap (range) (spawn-children-based-on-answers children @answers))
+                     :let  [fid    (str value-index "-" (:id child))]]
                  ^{:key fid}
                  [:div.application__form-adjacent-row
-                  [label child]
+                  (when (-> counter (< 3))
+                    [label child])
                   [:input.application__form-text-input
                    {:id          fid
                     :type        "text"
@@ -437,8 +440,8 @@
                     :value       value
                     :on-change   (partial adjacent-field-change child id value-index)}]]))]
        [:a {:on-click (fn [evt]
-                     (.preventDefault evt)
-                     (dispatch [:application/add-adjacent-fields (:id field-descriptor)]))}
+                        (.preventDefault evt)
+                        (dispatch [:application/add-adjacent-fields field-descriptor]))}
         [:i.zmdi.zmdi-plus-square] " Lisää"]])))
 
 (defn render-field

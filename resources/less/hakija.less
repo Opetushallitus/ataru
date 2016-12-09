@@ -578,14 +578,17 @@ and (max-width: @desktop-content-width) {
 
 .application__form-adjacent-text-fields-wrapper {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .application__form-adjacent-row {
   display: flex;
-  width: 100%;
-  flex-flow: column nowrap;
-  margin-left: 1em;
+  flex-flow: column wrap;
+  margin-right: 1em;
+  margin-bottom: 1em;
 }
-.application__form-adjacent-row:first-of-type {
+
+.application__form-adjacent-row:nth-child(4n) {
   margin-left: 0em;
+  flex-basis: 0%;
 }
