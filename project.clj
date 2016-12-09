@@ -30,6 +30,7 @@
                  [metosin/compojure-api "1.1.9"]
                  [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1"]
+                 [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
                  [ring "1.5.0"]
                  [ring/ring-defaults "0.2.1"]
