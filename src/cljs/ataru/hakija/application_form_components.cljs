@@ -5,9 +5,9 @@
             [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
-                                                           required-hint
-                                                           textual-field-value
-                                                           scroll-to-anchor]]
+                                                                       required-hint
+                                                                       textual-field-value
+                                                                       scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -381,28 +381,52 @@
        [:label.application__form-field-label [:span header]])
      [link-detected-paragraph text]]))
 
+(defn spawn-children-based-on-answers [children answers]
+  (let [child-ids        (map (comp keyword :id) children)
+        adjacent         (select-keys answers child-ids)
+        count-of-answers (reduce max
+                           1 ; by default displays one row
+                           (map (comp count :values second) adjacent))]
+    (flatten
+      (map-indexed
+        (fn [index children]
+          (map
+            (fn [child]
+              {:value-index index
+               :child       child
+               :value       (get-in adjacent [(keyword (:id child)) :values index :value])
+               :valid?      (get-in adjacent [(keyword (:id child)) :values index :valid])})
+            children))
+        (repeat count-of-answers children)))))
+
 (defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
-  (let [language     (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
-        header       (some-> (get-in field-descriptor [:label @language]))
-        info-text    (some-> (get-in field-descriptor [:params :info-text :label @language]))
-        repeatable?  (-> field-descriptor :params :repeatable)
-        answers      (subscribe [:state-query [:application :answers]])]
+  (let [language              (subscribe [:application/form-language])
+        default-lang          (subscribe [:application/default-language])
+        header                (some-> (get-in field-descriptor [:label @language]))
+        info-text             (some-> (get-in field-descriptor [:params :info-text :label @language]))
+        repeatable?           (-> field-descriptor :params :repeatable)
+        answers               (subscribe [:state-query [:application :answers]])
+        adjacent-field-change (fn [child id idx event]
+                                (let [value  (some-> event .-target .-value)
+                                      valid? (field-value-valid? child value)]
+                                  (dispatch [:application/set-adjacent-field-answer
+                                             id
+                                             idx
+                                             {:value value :valid valid?}])))]
     (fn [{:keys [children] :as field-descriptor}]
       [:div.application__form-field
        [label field-descriptor]
        (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
          [:div.application__form-info-text [link-detected-paragraph info]])
        [:div.application__form-adjacent-text-fields-wrapper
-        (doall (for [child children
+        (doall (for [{:keys [value-index child value valid?]} (spawn-children-based-on-answers children @answers)
                      :let  [id     (keyword (:id child))
-                            value  (get-in @answers [id :value])
-                            valid? (get-in @answers [id :valid])]]
-                 ^{:key id}
+                            fid    (str value-index "-" (:id child))]]
+                 ^{:key fid}
                  [:div.application__form-adjacent-row
                   [label child]
                   [:input.application__form-text-input
-                   {:id          id
+                   {:id          fid
                     :type        "text"
                     :placeholder (when-let [input-hint (-> child :params :placeholder)]
                                    (non-blank-val (get input-hint @language)
@@ -411,7 +435,11 @@
                                    " application__form-field-error"
                                    " application__form-text-input--normal")
                     :value       value
-                    :on-change   (partial textual-field-change child)}]]))]])))
+                    :on-change   (partial adjacent-field-change child id value-index)}]]))]
+       [:a {:on-click (fn [evt]
+                     (.preventDefault evt)
+                     (dispatch [:application/add-adjacent-fields (:id field-descriptor)]))}
+        [:i.zmdi.zmdi-plus-square] " Lisää"]])))
 
 (defn render-field
   [field-descriptor & args]

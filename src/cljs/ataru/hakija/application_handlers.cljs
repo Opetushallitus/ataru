@@ -327,3 +327,15 @@
         (filter :followup?)
         (map (fn [field] {(keyword (:id field)) {:visible? false}}))
         (reduce merge)))))
+
+(reg-event-db
+  :application/set-adjacent-field-answer
+  (fn [db [_ id idx value]]
+    (update-in db [:application :answers id :values]
+      (fn [answers]
+        (let [[init last] (split-at
+                            idx
+                            (or
+                              (not-empty answers)
+                              []))]
+          (vec (concat init [value] (rest last))))))))
