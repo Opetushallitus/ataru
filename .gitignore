@@ -22,3 +22,4 @@ config/speclj.edn
 config/ui-test.edn
 .swp
 /logs
+.oracle_jre_usage
