@@ -49,7 +49,7 @@
   [{:key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81",
   :lang "fi",
     :created-time (c/date-time 2016 6 15 12 30 55)
-    :state "received"
+    :state "unprocessed"
   :form_id 703
   :id 1
   :content
@@ -63,7 +63,7 @@
  {:key "956ae57b-8bd2-42c5-90ac-82bd0a4fd31f",
   :lang "fi",
   :created-time (c/date-time 2016 6 15 14 30 55)
-  :state "received"
+  :state "unprocessed"
   :form_id 703
   :id 2
   :content
@@ -76,7 +76,7 @@
  {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
   :lang "fi",
   :created-time (c/date-time 2016 6 16 6 0 0)
-  :state "received"
+  :state "unprocessed"
   :form_id 703
   :id 3
   :content
@@ -90,7 +90,7 @@
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e1",
     :lang "fi",
     :created-time (c/date-time 2016 6 16 6 10 0)
-    :state "received"
+    :state "unprocessed"
     :form_id 703
     :id 4
     :hakukohde "1.2.246.562.29.11111111110"
@@ -106,7 +106,7 @@
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e2",
     :lang "fi",
     :created-time (c/date-time 2016 6 16 6 15 0)
-    :state "received"
+    :state "unprocessed"
     :form_id 703
     :id 5
     :hakukohde "1.2.246.562.29.11111111110"
@@ -122,7 +122,7 @@
    {:key "9d24af7d-f672-4c0e-870f-3c6999f105e3",
     :lang "fi",
     :created-time (c/date-time 2016 6 16 7 15 0)
-    :state "received"
+    :state "unprocessed"
     :form_id 703
     :id 6
     :hakukohde "1.2.246.562.29.11111111119"
@@ -139,7 +139,7 @@
 (def application-review
   {:id 1,
    :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
-   :state "received",
+   :state "unprocessed",
    :notes "Some notes about the applicant"})
 
 (def person-info-form-application {:form 2147483647,

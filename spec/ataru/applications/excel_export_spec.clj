@@ -44,7 +44,7 @@
       (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
-            (->> (j2ee/export-all-form-applications "abcdefghjkl" ["received"])
+            (->> (j2ee/export-all-form-applications "abcdefghjkl" ["unprocessed"])
                  (.write output)))
           (let [workbook           (WorkbookFactory/create file)
                 metadata-sheet     (.getSheetAt workbook 0)
