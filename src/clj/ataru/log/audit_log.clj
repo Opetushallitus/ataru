@@ -10,16 +10,20 @@
 (def operation-modify "muutos")
 (def operation-delete "poisto")
 
-(def ^:private app-id (app-utils/get-app-id))
+(defn- service-name []
+  (case (app-utils/get-app-id)
+    :virkailija "ataru-virkailija"
+    :hakija "ataru-hakija"))
 
-(def ^:private service-name (case app-id
-                              :virkailija "ataru-virkailija"
-                              :hakija "ataru-hakija"))
+(defn- application-type []
+  (case (app-utils/get-app-id)
+    :virkailija ApplicationType/VIRKAILIJA
+    :hakija ApplicationType/OPISKELIJA))
 
-(def ^:private application-type (case app-id
-                                  :virkailija ApplicationType/VIRKAILIJA
-                                  :hakija ApplicationType/OPISKELIJA))
-(def ^:private logger (Audit. service-name application-type))
+(def ^:private logger (atom nil))
+
+(defn- get-logger []
+  (or @logger (reset! logger (Audit. (service-name) (application-type)))))
 
 (def ^:private date-time-formatter (f/formatter :date-time))
 
@@ -41,6 +45,7 @@
                      CommonLogMessageFields/OPERAATIO operation
                      CommonLogMessageFields/MESSAGE   message
                      "organizationOid"                organization-oid
-                     "logSeq"                         (str (rand-int 1000000000))}]
+                     "logSeq"                         (str (rand-int 1000000000))}
+         logger     (get-logger)]
      (->> (proxy [AbstractLogMessage] [log-map])
           (.log logger)))))
