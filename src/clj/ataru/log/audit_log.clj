@@ -35,9 +35,13 @@
   ([new-object params]
    (log new-object nil params))
   ([new-object old-object {:keys [id operation organization-oid]}]
-   {:pre [(some? new-object)
-          (some? id)
-          (some? operation)]}
+   {:pre [(or (and (string? new-object)
+                   (nil? old-object))
+              (and (map? new-object)
+                   (or (nil? old-object)
+                       (map? old-object))))
+          (not (clojure.string/blank? id))
+          (not (clojure.string/blank? operation))]}
    (let [old-object (or old-object {})
          message    (json/generate-string (p/diff old-object new-object))
          log-map    (cond-> {CommonLogMessageFields/ID        id
