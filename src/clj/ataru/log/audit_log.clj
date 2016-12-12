@@ -3,6 +3,7 @@
             [clj-json-patch.core :as p]
             [clj-time.core :as c]
             [clj-time.format :as f]
+            [clojure.core.match :as m]
             [cheshire.core :as json])
   (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]))
 
@@ -31,26 +32,36 @@
   (->> (c/now)
        (f/unparse date-time-formatter)))
 
+(defn- map-or-vec? [x]
+  (or (map? x)
+      (vector? x)))
+
 (defn log
   ([new-object params]
    (log new-object nil params))
   ([new-object old-object {:keys [id operation organization-oid]}]
-   {:pre [(or (and (string? new-object)
+   {:pre [(or (and (or (string? new-object)
+                       (map-or-vec? new-object))
                    (nil? old-object))
-              (and (map? new-object)
-                   (or (nil? old-object)
-                       (map? old-object))))
+              (some? (p/diff new-object old-object)))
           (not (clojure.string/blank? id))
           (not (clojure.string/blank? operation))]}
-   (let [old-object (or old-object {})
-         message    (json/generate-string (p/diff old-object new-object))
-         log-map    (cond-> {CommonLogMessageFields/ID        id
-                             CommonLogMessageFields/TIMESTAMP (timestamp)
-                             CommonLogMessageFields/OPERAATIO operation
-                             CommonLogMessageFields/MESSAGE   message
-                             "logSeq"                         (str (rand-int 1000000000))}
-                      (some? organization-oid)
-                      (assoc "organizationOid" organization-oid))
-         logger     (get-logger)]
+   (let [message (m/match [new-object old-object]
+                          [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
+                          (json/generate-string (p/diff old-object new-object))
+
+                          [(_ :guard map-or-vec?) (_ :guard nil?)]
+                          (json/generate-string new-object)
+
+                          [(_ :guard string?) _]
+                          new-object)
+         log-map (cond-> {CommonLogMessageFields/ID        id
+                          CommonLogMessageFields/TIMESTAMP (timestamp)
+                          CommonLogMessageFields/OPERAATIO operation
+                          CommonLogMessageFields/MESSAGE   message
+                          "logSeq"                         (str (rand-int 1000000000))}
+                   (some? organization-oid)
+                   (assoc "organizationOid" organization-oid))
+         logger  (get-logger)]
      (->> (proxy [AbstractLogMessage] [log-map])
           (.log logger)))))
