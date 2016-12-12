@@ -21,3 +21,4 @@ config/docker-test.edn
 config/speclj.edn
 config/ui-test.edn
 .swp
+/logs
