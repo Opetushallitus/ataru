@@ -9,16 +9,16 @@
   (when-not (env :dev?)
     (let [log-kwd  (case app-id
                      :virkailija :virkailija-base-path
-                     :hakija     :hakija-base-path)
+                     :hakija :hakija-base-path)
           path     (get-in config [:log log-kwd])
           filename (str (name app-id) ".log")]
       (timbre/merge-config! {:appenders
-                             {:println      {:enabled? false}
-                              :standard-out {:enabled? false}
-                              :spit         {:enabled? false}
-                              :rotor        (rotor/rotor-appender
-                                              {:max-size (* 10 1024 1024)
-                                               :backlog  10
-                                               :path     (str path "/" filename)})}
-                             :timestamp-opts {:pattern "yyyy-MM-dd HH:mm:ss ZZ"
+                                             {:println      {:enabled? false}
+                                              :standard-out {:enabled? false}
+                                              :spit         {:enabled? false}
+                                              :rotor        (rotor/rotor-appender
+                                                              {:max-size (* 10 1024 1024)
+                                                               :backlog  10
+                                                               :path     (str path "/" filename)})}
+                             :timestamp-opts {:pattern  "yyyy-MM-dd HH:mm:ss ZZ"
                                               :timezone (TimeZone/getTimeZone "Europe/Helsinki")}}))))
