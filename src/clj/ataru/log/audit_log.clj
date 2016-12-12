@@ -10,6 +10,7 @@
 (def operation-new "lisäys")
 (def operation-modify "muutos")
 (def operation-delete "poisto")
+(def operation-login "kirjautuminen")
 
 (defn- service-name []
   (case (app-utils/get-app-id)

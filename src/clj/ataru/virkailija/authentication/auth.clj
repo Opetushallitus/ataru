@@ -5,7 +5,8 @@
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
             [taoensso.timbre :refer [info spy error]]
-            [oph.soresu.common.config :refer [config]])
+            [oph.soresu.common.config :refer [config]]
+            [ataru.log.audit-log :as audit-log])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (def cas-client-url (-> config :authentication :cas-client-url))
@@ -31,6 +32,8 @@
       (if-let [username (cas-login ticket ataru-login-success-url)]
         (let [user-organizations (.get-direct-organizations organization-service username)]
           (info "username" username "logged in, redirect to" redirect-url)
+          (audit-log/log (vec user-organizations) {:id        username
+                                                   :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username username :ticket ticket :organizations user-organizations}})))
         (redirect-to-logged-out-page))
