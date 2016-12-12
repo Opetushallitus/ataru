@@ -32,20 +32,21 @@
        (f/unparse date-time-formatter)))
 
 (defn log
-  ([new-object id organization-oid operation]
-   (log new-object nil id organization-oid operation))
-  ([new-object old-object id organization-oid operation]
+  ([new-object params]
+   (log new-object nil params))
+  ([new-object old-object {:keys [id operation organization-oid]}]
    {:pre [(some? new-object)
           (some? id)
-          (some? organization-oid)]}
+          (some? operation)]}
    (let [old-object (or old-object {})
          message    (json/generate-string (p/diff old-object new-object))
-         log-map    {CommonLogMessageFields/ID        id
-                     CommonLogMessageFields/TIMESTAMP (timestamp)
-                     CommonLogMessageFields/OPERAATIO operation
-                     CommonLogMessageFields/MESSAGE   message
-                     "organizationOid"                organization-oid
-                     "logSeq"                         (str (rand-int 1000000000))}
+         log-map    (cond-> {CommonLogMessageFields/ID        id
+                             CommonLogMessageFields/TIMESTAMP (timestamp)
+                             CommonLogMessageFields/OPERAATIO operation
+                             CommonLogMessageFields/MESSAGE   message
+                             "logSeq"                         (str (rand-int 1000000000))}
+                      (some? organization-oid)
+                      (assoc "organizationOid" organization-oid))
          logger     (get-logger)]
      (->> (proxy [AbstractLogMessage] [log-map])
           (.log logger)))))
