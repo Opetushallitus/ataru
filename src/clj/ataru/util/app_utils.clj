@@ -1,10 +1,13 @@
 (ns ataru.util.app-utils
-  (:require [environ.core :refer [env]]))
+  (:require [clojure.core.match :as m]
+            [environ.core :refer [env]]))
 
 (defn get-app-id
   ([]
    (get-app-id nil))
   ([[app-id & _]]
-   (keyword
-     (or app-id
-         (:app env)))))
+   (let [app-id (keyword (or app-id (:app env)))]
+     (m/match app-id
+       :ataru-editori :virkailija
+       :ataru-hakija  :hakija
+       app-id         app-id))))
