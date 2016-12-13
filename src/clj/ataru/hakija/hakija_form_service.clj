@@ -18,7 +18,7 @@
     (if form
       (merge form {:hakukohde-oid      hakukohde-oid
                    :haku-tarjoaja-name (-> result :tarjoajaNimet :fi)
-                   :hakuaika-dates     {:start (-> result :hakuaikaAlkuPvm)
-                                        :end   (-> result :hakuaikaLoppuPvm)}
+                   :hakuaika-dates     {:start (:hakuaikaAlkuPvm result)
+                                        :end   (:hakuaikaLoppuPvm result)}
                    :hakukohde-name     (-> result :hakukohteenNimet :kieli_fi)})
       (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
