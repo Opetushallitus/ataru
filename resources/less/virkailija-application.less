@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 @bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
@@ -74,7 +75,7 @@
 
 .application-handling__form-list-closed .application-handling__form-list-row {
   font-size: 24px;
-  font-weight: 600;
+  .semibold;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
@@ -245,12 +246,12 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading {
   color: @text-color;
-  font-weight: 600;
+  .semibold;
 }
 
 .application-handling__review-header {
   color: #2a2a2a;
-  font-weight: 600;
+  .semibold;
   margin-bottom: 16px;
 }
 
@@ -332,7 +333,7 @@ and (max-width: 1000px) {
   flex-flow: row nowrap;
   justify-content: space-between;
   min-width: 230px;
-  font-weight: 600;
+  .semibold;
   max-width: 610px;
 }
 
