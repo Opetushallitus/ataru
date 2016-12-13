@@ -38,31 +38,29 @@
       (vector? x)))
 
 (defn log
-  ([new-object params]
-   (log new-object nil params))
-  ([new-object old-object {:keys [id operation organization-oid]}]
-   {:pre [(or (and (or (string? new-object)
-                       (map-or-vec? new-object))
-                   (nil? old-object))
-              (some? (p/diff new-object old-object)))
-          (not (clojure.string/blank? id))
-          (not (clojure.string/blank? operation))]}
-   (let [message (m/match [new-object old-object]
-                          [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
-                          (json/generate-string (p/diff old-object new-object))
+  [{:keys [new old id operation organization-oid]}]
+  {:pre [(or (and (or (string? new)
+                      (map-or-vec? new))
+                  (nil? old))
+             (some? (p/diff new old)))
+         (not (clojure.string/blank? id))
+         (not (clojure.string/blank? operation))]}
+  (let [message (m/match [new old]
+                         [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
+                         (json/generate-string (p/diff old new))
 
-                          [(_ :guard map-or-vec?) (_ :guard nil?)]
-                          (json/generate-string new-object)
+                         [(_ :guard map-or-vec?) (_ :guard nil?)]
+                         (json/generate-string new)
 
-                          [(_ :guard string?) _]
-                          new-object)
-         log-map (cond-> {CommonLogMessageFields/ID        id
-                          CommonLogMessageFields/TIMESTAMP (timestamp)
-                          CommonLogMessageFields/OPERAATIO operation
-                          CommonLogMessageFields/MESSAGE   message
-                          "logSeq"                         (str (rand-int 1000000000))}
-                   (some? organization-oid)
-                   (assoc "organizationOid" organization-oid))
-         logger  (get-logger)]
-     (->> (proxy [AbstractLogMessage] [log-map])
-          (.log logger)))))
+                         [(_ :guard string?) _]
+                         new)
+        log-map (cond-> {CommonLogMessageFields/ID        id
+                         CommonLogMessageFields/TIMESTAMP (timestamp)
+                         CommonLogMessageFields/OPERAATIO operation
+                         CommonLogMessageFields/MESSAGE   message
+                         "logSeq"                         (str (rand-int 1000000000))}
+                  (some? organization-oid)
+                  (assoc "organizationOid" organization-oid))
+        logger  (get-logger)]
+    (->> (proxy [AbstractLogMessage] [log-map])
+         (.log logger))))

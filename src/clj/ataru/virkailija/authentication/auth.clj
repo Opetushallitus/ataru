@@ -32,8 +32,9 @@
       (if-let [username (cas-login ticket ataru-login-success-url)]
         (let [user-organizations (.get-direct-organizations organization-service username)]
           (info "username" username "logged in, redirect to" redirect-url)
-          (audit-log/log (vec user-organizations) {:id        username
-                                                   :operation audit-log/operation-login})
+          (audit-log/log {:new       (vec user-organizations)
+                          :id        username
+                          :operation audit-log/operation-login})
           (-> (resp/redirect redirect-url)
               (assoc :session {:identity {:username username :ticket ticket :organizations user-organizations}})))
         (redirect-to-logged-out-page))
