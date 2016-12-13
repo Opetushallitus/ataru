@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
-  (:require [ataru.schema.form-schema :as schema]
+  (:require [ataru.log.audit-log :as audit-log]
+            [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -49,7 +50,26 @@
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)]
-    application))
+    (unwrap-application application)))
+
+(def ^:private ssn-pred (comp (partial = "ssn") :key))
+
+(defn- extract-ssn [application]
+  (->> (:answers application)
+       (filter ssn-pred)
+       (first)
+       :value))
+
+(defn- do-audit-log
+  ([new-application]
+   (do-audit-log new-application nil))
+  ([new-application old-application]
+   (let [id (extract-ssn new-application)]
+     (audit-log/log (cond-> {:new       new-application
+                             :id        id
+                             :operation (if (nil? old-application) audit-log/operation-new audit-log/operation-modify)}
+                      (some? old-application)
+                      (assoc :old old-application))))))
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
@@ -59,30 +79,32 @@
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{app-id :id app-key :key} (add-new-application-version new-application conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application conn)
           connection                {:connection conn}]
-      (yesql-add-application-event! {:application_key  app-key
+      (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil}
                                     connection)
-      (yesql-add-application-review! {:application_key app-key
+      (yesql-add-application-review! {:application_key key
                                       :state           "received"}
                                      connection)
-      app-id)))
+      (do-audit-log new-application)
+      id)))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
-          {app-id :id app-key :key} (add-new-application-version
-                                     (merge new-application (select-keys old-application [:key :secret])) conn)]
+          {:keys [id key] :as new-application} (add-new-application-version
+                                                 (merge new-application (select-keys old-application [:key :secret])) conn)]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
-      (yesql-add-application-event! {:application_key  app-key
+      (yesql-add-application-event! {:application_key  key
                                      :event_type       "updated-by-applicant"
                                      :new_review_state nil}
                                     {:connection conn})
-      app-id)))
+      (do-audit-log new-application old-application)
+      id)))
 
 (defn- older?
   "Check if application given as first argument is older than

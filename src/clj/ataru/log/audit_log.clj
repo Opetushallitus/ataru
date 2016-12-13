@@ -80,5 +80,5 @@
   [params]
   (try
     (do-log params)
-    (catch Exception e
-      (log/error e "Failed to create an audit log entry"))))
+    (catch Throwable t
+      (log/error t "Failed to create an audit log entry"))))
