@@ -38,6 +38,13 @@
       (vector? x)))
 
 (defn log
+  "Create an audit log entry. Provide map with :new and optional :old
+   values to log.
+
+   When both values are provided, both of them must be of same type and
+   either a vector or a map. An RFC6902 compliant patch is logged.
+
+   If only :new value is provided, it can also be a String."
   [{:keys [new old id operation organization-oid]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
