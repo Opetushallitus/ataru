@@ -4,7 +4,8 @@
             [clj-time.core :as c]
             [clj-time.format :as f]
             [clojure.core.match :as m]
-            [cheshire.core :as json])
+            [cheshire.core :as json]
+            [taoensso.timbre :as log])
   (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]))
 
 (def operation-new "lisäys")
@@ -41,15 +42,7 @@
 
 (def ^:private not-blank? (comp not clojure.string/blank?))
 
-(defn log
-  "Create an audit log entry. Provide map with :new and optional :old
-   values to log.
-
-   When both values are provided, both of them must be of same type and
-   either a vector or a map. An RFC6902 compliant patch is logged.
-
-   If only :new value is provided, it can also be a String."
-  [{:keys [new old id operation organization-oid]}]
+(defn- do-log [{:keys [new old id operation organization-oid]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
@@ -75,3 +68,17 @@
         logger  (get-logger)]
     (->> (proxy [AbstractLogMessage] [log-map])
          (.log logger))))
+
+(defn log
+  "Create an audit log entry. Provide map with :new and optional :old
+   values to log.
+
+   When both values are provided, both of them must be of same type and
+   either a vector or a map. An RFC6902 compliant patch is logged.
+
+   If only :new value is provided, it can also be a String."
+  [params]
+  (try
+    (do-log params)
+    (catch Exception e
+      (log/error e "Failed to create an audit log entry"))))
