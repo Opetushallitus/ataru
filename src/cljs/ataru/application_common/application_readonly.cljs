@@ -12,7 +12,8 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]))
+                                                                       scroll-to-anchor]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn text [field-descriptor application lang]
   [:div.application__form-field
@@ -47,10 +48,42 @@
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
 
+(defn dospy [v]
+  (spy v))
+
+(defn fieldset [field-descriptor application lang children]
+  [:div.application__form-field
+   [:label.application__form-field-label
+    (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+   [:table
+    [:thead
+     (into [:tr]
+       (for [child children]
+         [:th (str (-> child :label lang)) (required-hint field-descriptor)]))]
+    (doall
+      (for [[child values] (->>
+                             (map answer-key children)
+                             (select-keys (:answers application))
+                             (map (comp
+                                    (fn [values]
+                                      (map
+                                        (comp (fnil :value :blank))
+                                        values))
+                                    :values
+                                    second))
+                             (apply map vector)
+                             (map vector children))]
+        (into
+          [:tr {:key (:id child)}]
+          (for [value values]
+            [:td (when (not= :blank value)
+                   value)]))))]])
+
 (defn field [content application lang]
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))
