@@ -7,10 +7,8 @@
 (defn configure-logging! [app-id]
   (when-not (env :dev?)
     (let [log-kwd  (case app-id
-                     :virkailija    :virkailija-base-path
-                     :hakija        :hakija-base-path
-                     :ataru-editori :virkailija-base-path
-                     :ataru-hakija  :hakija-base-path)
+                     :virkailija :virkailija-base-path
+                     :hakija     :hakija-base-path)
           path     (get-in config [:log log-kwd])
           filename (str (name app-id) ".log")]
       (timbre/merge-config! {:appenders
