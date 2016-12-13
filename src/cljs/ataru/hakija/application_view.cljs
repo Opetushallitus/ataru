@@ -14,7 +14,7 @@
    :sv "På svenska"
    :en "In English"})
 
-(def date-format (formatter "dd.MM.yyyy"))
+(def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
   (let [selected-lang    (:selected-language form)
