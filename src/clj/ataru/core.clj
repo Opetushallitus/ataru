@@ -1,6 +1,7 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh]]
+            [ataru.log.audit-log :as audit-log]
             [ataru.util.app-utils :as app-utils]
             [ataru.timbre-config :as timbre-config]
             [ataru.virkailija.virkailija-system :as virkailija-system]
@@ -47,6 +48,7 @@
   (let [app-id         (app-utils/get-app-id args)
         system-fn      (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
+    (audit-log/init-audit-logging!)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
     (when-not system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
