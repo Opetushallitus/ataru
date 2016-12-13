@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-application-service
   (:require
    [taoensso.timbre :as log]
+   [ataru.log.audit-log :as audit-log]
    [ataru.background-job.job :as job]
    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
    [ataru.hakija.application-email-confirmation :as application-email]
@@ -9,9 +10,24 @@
    [ataru.hakija.validator :as validator]
    [ataru.applications.application-store :as application-store]))
 
+(def ^:private is-ssn? (partial = "ssn"))
+
+(defn- extract-ssn [application]
+  (->> (:answers application)
+       (filter (comp is-ssn? :key))
+       (first)
+       :value))
+
+(defn- do-audit-log [application]
+  (let [id (extract-ssn application)]
+    (audit-log/log {:new       application
+                    :id        id
+                    :operation audit-log/operation-new})))
+
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
     (log/info "Stored application with id: " application-id)
+    (do-audit-log application)
     {:passed?        true
      :application-id application-id}))
 
