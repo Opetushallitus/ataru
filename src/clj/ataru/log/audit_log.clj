@@ -39,6 +39,8 @@
 
 (def ^:private log-seq (atom 0))
 
+(def ^:private not-blank? (comp not clojure.string/blank?))
+
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old
    values to log.
@@ -52,7 +54,7 @@
                       (map-or-vec? new))
                   (nil? old))
              (some? (p/diff new old)))
-         (not (clojure.string/blank? id))
+         (not-blank? id)
          (some #{operation} [operation-new operation-modify operation-delete operation-login])]}
   (let [message (m/match [new old]
                          [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
@@ -68,7 +70,7 @@
                          CommonLogMessageFields/OPERAATIO operation
                          CommonLogMessageFields/MESSAGE   message
                          "logSeq"                         (str (swap! log-seq inc))}
-                  (some? organization-oid)
+                  (not-blank? organization-oid)
                   (assoc "organizationOid" organization-oid))
         logger  (get-logger)]
     (->> (proxy [AbstractLogMessage] [log-map])
