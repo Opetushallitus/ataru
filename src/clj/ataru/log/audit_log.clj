@@ -51,7 +51,7 @@
                   (nil? old))
              (some? (p/diff new old)))
          (not (clojure.string/blank? id))
-         (not (clojure.string/blank? operation))]}
+         (some #{operation} [operation-new operation-modify operation-delete operation-login])]}
   (let [message (m/match [new old]
                          [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
                          (json/generate-string (p/diff old new))
