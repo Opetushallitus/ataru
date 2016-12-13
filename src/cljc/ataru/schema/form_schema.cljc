@@ -147,10 +147,13 @@
    (s/optional-key :secret)         s/Str
    (s/optional-key :form-key)       s/Str})
 
-(def application-states (s/enum "received"
+(def application-states (s/enum "unprocessed"
                                 "processing"
-                                "rejected"
-                                "approved"
+                                "invited-to-interview"
+                                "invited-to-exam"
+                                "not-selected"
+                                "selected"
+                                "applicant-has-accepted"
                                 "canceled"))
 
 (def event-types (s/enum "updated-by-applicant"
