@@ -37,6 +37,8 @@
   (or (map? x)
       (vector? x)))
 
+(def ^:private log-seq (atom 0))
+
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old
    values to log.
@@ -65,7 +67,7 @@
                          CommonLogMessageFields/TIMESTAMP (timestamp)
                          CommonLogMessageFields/OPERAATIO operation
                          CommonLogMessageFields/MESSAGE   message
-                         "logSeq"                         (str (rand-int 1000000000))}
+                         "logSeq"                         (str (swap! log-seq inc))}
                   (some? organization-oid)
                   (assoc "organizationOid" organization-oid))
         logger  (get-logger)]
