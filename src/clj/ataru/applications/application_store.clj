@@ -60,17 +60,6 @@
        (first)
        :value))
 
-(defn- do-audit-log
-  ([new-application]
-   (do-audit-log new-application nil))
-  ([new-application old-application]
-   (let [id (extract-ssn new-application)]
-     (audit-log/log (cond-> {:new       new-application
-                             :id        id
-                             :operation (if (nil? old-application) audit-log/operation-new audit-log/operation-modify)}
-                      (some? old-application)
-                      (assoc :old old-application))))))
-
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application application)
@@ -88,7 +77,9 @@
       (yesql-add-application-review! {:application_key key
                                       :state           "received"}
                                      connection)
-      (do-audit-log new-application)
+      (audit-log/log {:new       new-application
+                      :operation audit-log/operation-new
+                      :id        (extract-ssn new-application)})
       id)))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
@@ -103,7 +94,10 @@
                                      :event_type       "updated-by-applicant"
                                      :new_review_state nil}
                                     {:connection conn})
-      (do-audit-log new-application old-application)
+      (audit-log/log {:new       new-application
+                      :old       old-application
+                      :operation audit-log/operation-modify
+                      :id        (extract-ssn new-application)})
       id)))
 
 (defn- older?
@@ -164,19 +158,31 @@
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
-(defn save-application-review [review]
+(defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection      {:connection conn}
-          app-key         (:application-key review)
-          old-review      (first (yesql-get-application-review {:application_key app-key} connection))
-          review-to-store (transform-keys ->snake_case review)]
+    (let [connection       {:connection conn}
+          app-key          (:application-key review)
+          old-review       (first (yesql-get-application-review {:application_key app-key} connection))
+          review-to-store  (transform-keys ->snake_case review)
+          username         (get-in session [:identity :username])
+          organization-oid (get-in session [:identity :organizations 0 :oid])]
+      (audit-log/log {:new              review-to-store
+                      :old              old-review
+                      :id               username
+                      :operation        audit-log/operation-modify
+                      :organization-oid organization-oid})
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
-        (yesql-add-application-event!
-         {:application_key app-key
-          :event_type "review-state-change"
-          :new_review_state (:state review-to-store)}
-         connection)))))
+        (let [application-event {:application_key  app-key
+                                 :event_type       "review-state-change"
+                                 :new_review_state (:state review-to-store)}]
+          (yesql-add-application-event!
+            application-event
+            connection)
+          (audit-log/log {:new              application-event
+                          :id               username
+                          :operation        audit-log/operation-new
+                          :organization-oid organization-oid}))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]
