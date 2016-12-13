@@ -16,6 +16,9 @@
         form-key       (:ataruLomakeAvain result)
         form           (when form-key (fetch-form-by-key form-key))]
     (if form
-      (merge form {:hakukohde-oid  hakukohde-oid
-                   :hakukohde-name (-> result :hakukohteenNimet :kieli_fi)})
+      (merge form {:hakukohde-oid      hakukohde-oid
+                   :haku-tarjoaja-name (-> result :tarjoajaNimet :fi)
+                   :hakuaika-dates     {:start (-> result :hakuaikaAlkuPvm)
+                                        :end   (-> result :hakuaikaLoppuPvm)}
+                   :hakukohde-name     (-> result :hakukohteenNimet :kieli_fi)})
       (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
