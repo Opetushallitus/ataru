@@ -397,7 +397,7 @@
                  :value-index index
                  :child       child
                  :value       (get-in adjacent [id :values index :value])
-                 :valid?      (get-in adjacent [id :values index :valid])}))
+                 :valid?      (boolean (get-in adjacent [id :values index :valid]))}))
             children))
         (repeat count-of-answers children)))))
 
@@ -412,6 +412,7 @@
                                 (let [value  (some-> event .-target .-value)
                                       valid? (field-value-valid? child value)]
                                   (dispatch [:application/set-adjacent-field-answer
+                                             child
                                              id
                                              idx
                                              {:value value :valid valid?}])))]
@@ -422,7 +423,7 @@
          [:div.application__form-info-text [link-detected-paragraph info]])
        [:div.application__form-adjacent-text-fields-wrapper
         (doall (for [[counter {:keys [id value-index child value valid?]}]
-                     (zipmap (range) (spawn-children-based-on-answers children @answers))
+                     (map vector (range) (spawn-children-based-on-answers children @answers))
                      :let  [fid    (str value-index "-" (:id child))]]
                  ^{:key fid}
                  [:div.application__form-adjacent-row
@@ -431,11 +432,10 @@
                   [:input.application__form-text-input
                    {:id          fid
                     :type        "text"
-                    :placeholder (when-let [input-hint (-> child :params :placeholder)]
-                                   (non-blank-val (get input-hint @language)
-                                     (get input-hint @default-lang)))
-                    :class       (if (show-text-field-error-class? child value valid?)
+                    :class       (match [valid? ((set (:validators child)) "required")]
+                                   [false (_ :guard some?)]
                                    " application__form-field-error"
+                                   :else
                                    " application__form-text-input--normal")
                     :value       value
                     :on-change   (partial adjacent-field-change child id value-index)}]]))]

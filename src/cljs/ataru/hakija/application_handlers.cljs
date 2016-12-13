@@ -330,15 +330,26 @@
 
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ id idx value]]
-    (update-in db [:application :answers id :values]
-      (fn [answers]
-        (let [[init last] (split-at
-                            idx
-                            (or
-                              (not-empty answers)
-                              []))]
-          (vec (concat init [value] (rest last))))))))
+  (fn [db [_ field-descriptor id idx value]]
+    (-> (update-in db [:application :answers id :values]
+          (fn [answers]
+            (let [[init last] (split-at
+                                idx
+                                (or
+                                  (not-empty answers)
+                                  []))]
+              (vec (concat init [value] (rest last))))))
+        (update-in [:application :answers id]
+          (fn [{:keys [values] :as answer}]
+            (let [required? (some? ((set (:validators field-descriptor)) "required"))]
+              (assoc answer :valid
+                (boolean
+                  (some->>
+                    (map :valid (or
+                                  (not-empty values)
+                                  [{:valid (not required?)}]))
+                    not-empty
+                    (every? true?))))))))))
 
 (reg-event-db
   :application/add-adjacent-fields
@@ -347,6 +358,9 @@
               (update-in db'
                 [:application :answers id :values]
                 (fn [answers]
-                  (conj answers {:value nil :valid false}))))
+                  (conj
+                    (or answers
+                      [{:value nil :valid false}])
+                    {:value nil :valid false}))))
       db
       (map (comp keyword :id) (:children field-descriptor)))))

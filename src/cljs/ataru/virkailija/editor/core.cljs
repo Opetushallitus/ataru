@@ -22,7 +22,7 @@
 
 (defn soresu->reagent [content path]
   (let [render-children (fn [children]
-                          (for [[index child] (zipmap (range) children)]
+                          (for [[index child] (map vector (range) children)]
                             ^{:key index}
                             [soresu->reagent child (conj path :children index)]))]
     (fn [content path]
@@ -75,7 +75,7 @@
         content (reaction (:content @form))]
     (fn []
       (-> (into [:section.editor-form]
-            (for [[index json-blob] (zipmap (range) @content)
+            (for [[index json-blob] (map vector (range) @content)
                   :when             (not-empty @content)]
               [soresu->reagent json-blob [index]]))
         (conj [ec/drag-n-drop-spacer [(count @content)]])
