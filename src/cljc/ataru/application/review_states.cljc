@@ -1,8 +1,11 @@
 (ns ataru.application.review-states)
 
 (def application-review-states
-  (array-map "unprocessed"   "Käsittelemättä"
-             "processing"    "Käsittelyssä"
-             "rejected"      "Hylätty"
-             "approved"      "Hyväksytty"
-             "canceled"      "Peruutettu"))
+  (array-map "unprocessed"            "Käsittelemättä"
+             "processing"             "Käsittelyssä"
+             "invited-to-interview"   "Kutsuttu haastatteluun"
+             "invited-to-exam"        "Kutsuttu valintakokeeseen"
+             "not-selected"           "Ei valittu"
+             "selected"               "Valittu"
+             "applicant-has-accepted" "Vastaanottanut"
+             "canceled"               "Perunut"))

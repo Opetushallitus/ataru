@@ -149,8 +149,11 @@
 
 (def application-states (s/enum "unprocessed"
                                 "processing"
-                                "rejected"
-                                "approved"
+                                "invited-to-interview"
+                                "invited-to-exam"
+                                "not-selected"
+                                "selected"
+                                "applicant-has-accepted"
                                 "canceled"))
 
 (def event-types (s/enum "updated-by-applicant"
