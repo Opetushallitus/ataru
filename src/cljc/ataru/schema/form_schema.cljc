@@ -154,6 +154,7 @@
                                 "not-selected"
                                 "selected"
                                 "applicant-has-accepted"
+                                "rejected"
                                 "canceled"))
 
 (def event-types (s/enum "updated-by-applicant"

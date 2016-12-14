@@ -8,4 +8,5 @@
              "not-selected"           "Ei valittu"
              "selected"               "Valittu"
              "applicant-has-accepted" "Vastaanottanut"
+             "rejected"               "Hylätty"
              "canceled"               "Perunut"))
