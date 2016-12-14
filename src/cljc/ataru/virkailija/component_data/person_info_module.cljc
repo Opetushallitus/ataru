@@ -68,10 +68,10 @@
 (defn ^:private gender-section
   []
   (-> (component/dropdown)
-      (merge (component/dropdown) {:label      {:fi "Sukupuoli" :sv "Kön" :en "Gender"}
-                                   :validators [:required]
-                                   :id         :gender
-                                   :koodisto-source {:uri "sukupuoli" :version 1}})))
+      (merge {:label           {:fi "Sukupuoli" :sv "Kön" :en "Gender"}
+              :validators      [:required]
+              :id              :gender
+              :koodisto-source {:uri "sukupuoli" :version 1}})))
 
 (defn ^:private birthdate-and-gender-component
   []

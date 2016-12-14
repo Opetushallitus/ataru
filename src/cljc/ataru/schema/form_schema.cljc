@@ -71,7 +71,7 @@
                                                   "iban"
                                                   "bic"
                                                   "dropdown"
-                                                  "radioButton"
+                                                  "singleChoice"
                                                   "multipleChoice"
                                                   "checkboxButton"
                                                   "namedAttachment"
@@ -120,7 +120,8 @@
                      :fieldType              (apply s/enum ["textField"
                                                             "textArea"
                                                             "dropdown"
-                                                            "multipleChoice"])
+                                                            "multipleChoice"
+                                                            "singleChoice"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
                                                        LocalizedString
                                                        s/Str))})

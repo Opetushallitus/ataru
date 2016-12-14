@@ -206,7 +206,7 @@
                    (dispatch [:editor/remove-dropdown-option path :options option-index]))}
    [:i.zmdi.zmdi-close.zmdi-hc-lg]])
 
-(defn- dropdown-option [option-index path languages & {:keys [header?] :or {header? false}}]
+(defn- dropdown-option [option-index path languages & {:keys [header? include-followup?] :or {header? false include-followup? true} :as opts}]
   (let [multiple-languages? (< 1 (count languages))
         option-path         [path :options option-index]]
     ^{:key (str "options-" option-index)}
@@ -221,8 +221,10 @@
            [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
          languages)]
       [remove-dropdown-option-button path option-index]
-      [followup-question option-path]]
-     [followup-question-overlay option-path]]))
+      (when include-followup?
+        [followup-question option-path])]
+     (when include-followup?
+       [followup-question-overlay option-path])]))
 
 (defn- dropdown-multi-options [path options-koodisto]
   (let [dropdown-id                (util/new-uuid)
@@ -293,6 +295,7 @@
          {:class @animation-effect}
          (let [header (case field-type
                         "dropdown"       "Pudotusvalikko"
+                        "singleChoice"   "Painikkeet, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
          [:div.editor-form__multi-question-wrapper
@@ -311,14 +314,14 @@
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-           [dropdown-multi-options path options-koodisto]]
+           (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
 
           (when (nil? @options-koodisto)
             (seq [
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
                    (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages))
+                                  (dropdown-option idx path languages :include-followup? (not= field-type "singleChoice")))
                      (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item

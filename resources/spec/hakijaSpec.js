@@ -78,10 +78,10 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(22)
+        expect(formFields().length).to.equal(23)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(invalidFieldsStatus().text()).to.equal('12 pakollista tietoa puuttuu')
+        expect(invalidFieldsStatus().text()).to.equal('13 pakollista tietoa puuttuu')
         expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
       })
@@ -118,7 +118,7 @@
           expect(formFields().eq(3).find('select').val()).to.equal('246')
           expect(formFields().eq(9).find('input').val()).to.equal('JYVÄSKYLÄ')
           expect(formFields().eq(11).find('select').val()).to.equal('FI')
-          expect(invalidFieldsStatus().text()).to.equal('2 pakollista tietoa puuttuu')
+          expect(invalidFieldsStatus().text()).to.equal('3 pakollista tietoa puuttuu')
           expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         })
       })
@@ -136,7 +136,8 @@
         setNthFieldOption(17, '120'),
         clickNthFieldRadio(18, 'Kolmas vaihtoehto', true),
         clickNthFieldRadio(19, 'Arkkitehti', true),
-        setNthFieldValue(20, 'textarea', 'Toisen pakollisen tekstialueen vastaus')
+        setNthFieldValue(20, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
+        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
@@ -176,7 +177,8 @@
                               "Arkkitehti",
                               "Toisen pakollisen tekstialueen vastaus",
                               "",
-                              ""]
+                              "",
+                              "Ensimmäinen vaihtoehto"]
         expect(displayedValues).to.eql(expectedValues)
       })
     })
