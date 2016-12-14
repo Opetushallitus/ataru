@@ -163,9 +163,9 @@
 
                           {:fieldType "textField" :value (_ :guard vector?)}
                           (update answers answer-key merge
-                            {:valid true :values (map (fn [value]
-                                                        {:valid true :value value})
-                                                      (:value answer))})
+                            {:valid true :values (mapv (fn [value]
+                                                         {:valid true :value value})
+                                                   (:value answer))})
 
                           :else
                           (update answers answer-key merge {:valid true :value value}))
