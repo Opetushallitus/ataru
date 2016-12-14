@@ -21,6 +21,12 @@
       (assoc-in [:headers "Content-Type"] "application/json")
       (assoc :body (json/generate-string body))))
 
+(defn- create-params [cas-session-id body]
+  (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
+           :follow-redirects false}
+    (some? body)
+    (request-with-json-body body)))
+
 (defn- cas-http [client method url & [body]]
   (let [cas-client     (:client client)
         cas-params     (:params client)
@@ -30,15 +36,11 @@
                          :post http/post)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params))))
-    (let [params (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)}
-                          :follow-redirects false}
-                   (some? body)
-                   (request-with-json-body body))
-          resp   @(http-fn url params)]
+    (let [resp @(http-fn url (create-params cas-session-id body))]
       (if (= 302 (:status resp))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params)))
-          @(http-fn url params))
+          @(http-fn url (create-params cas-session-id body)))
         resp))))
 
 (defn cas-authenticated-get [client url]
