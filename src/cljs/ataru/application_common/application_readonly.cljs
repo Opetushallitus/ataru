@@ -55,7 +55,7 @@
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:table
+   [:table.application__readonly-adjacent
     [:thead
      (into [:tr]
        (for [child children]

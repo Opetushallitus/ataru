@@ -444,6 +444,22 @@
   margin-right: 6px;
 }
 
+.application__readonly-adjacent {
+  * {
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+  }
+
+  th {
+    padding-right: 2em;
+  }
+
+  th:last-of-type {
+    padding-right: 0;
+  }
+}
+
 .application__form-single-choice-button-outer-container {
   display: flex;
   flex-flow: row nowrap;
@@ -579,16 +595,15 @@ and (max-width: @desktop-content-width) {
 .application__form-adjacent-text-fields-wrapper {
   display: flex;
   flex-wrap: wrap;
+  a {
+    align-self: flex-end;
+    margin-bottom: 20px;
+  }
 }
 
 .application__form-adjacent-row {
   display: flex;
   flex-flow: column wrap;
-  margin-right: 1em;
-  margin-bottom: 1em;
-}
-
-.application__form-adjacent-row:nth-child(4n) {
-  margin-left: 0em;
-  flex-basis: 0%;
+  margin-right: 10px;
+  margin-bottom: 10px;
 }

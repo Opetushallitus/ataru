@@ -421,24 +421,39 @@
        [label field-descriptor]
        (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
          [:div.application__form-info-text [link-detected-paragraph info]])
-       [:div.application__form-adjacent-text-fields-wrapper
-        (doall (for [[counter {:keys [id value-index child value valid?]}]
-                     (map vector (range) (spawn-children-based-on-answers children @answers))
-                     :let  [fid    (str value-index "-" (:id child))]]
-                 ^{:key fid}
-                 [:div.application__form-adjacent-row
-                  (when (-> counter (< 3))
-                    [label child])
-                  [:input.application__form-text-input
-                   {:id          fid
-                    :type        "text"
-                    :class       (match [valid? ((set (:validators child)) "required")]
-                                   [false (_ :guard some?)]
-                                   " application__form-field-error"
-                                   :else
-                                   " application__form-text-input--normal")
-                    :value       value
-                    :on-change   (partial adjacent-field-change child id value-index)}]]))]
+       [:div
+        (doall (for [[rowcount row]
+                     (->> (spawn-children-based-on-answers children @answers)
+                          ; counter
+                          (map vector (range))
+                          ; children grouped into a row
+                          (partition (count children))
+                          ; rowcount
+                          (map vector (range)))]
+                 (into
+                   ^{:key (->> row second second (select-keys [:value-index :id]) (apply str "-" rowcount))}
+                   [:div.application__form-adjacent-text-fields-wrapper
+                    (for [[counter {:keys [id value-index child value valid?]}] row
+                          :let  [fid (str value-index "-" (:id child))]]
+                      ^{:key fid}
+                      [:div.application__form-adjacent-row
+                       (when (-> counter (< (count children)))
+                         [label child])
+                       [:input.application__form-text-input
+                        {:id        fid
+                         :type      "text"
+                         :class     (match [valid? ((set (:validators child)) "required")]
+                                      [false (_ :guard some?)]
+                                      " application__form-field-error"
+                                      :else
+                                      " application__form-text-input--normal")
+                         :value     value
+                         :on-change (partial adjacent-field-change child id value-index)}]])
+                    (when (pos? rowcount)
+                      [:a {:on-click (fn [evt]
+                                       (.preventDefault evt)
+                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
+                       [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
        [:a {:on-click (fn [evt]
                         (.preventDefault evt)
                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
