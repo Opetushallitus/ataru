@@ -53,7 +53,7 @@
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "radioButton")} (text content application lang)))
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

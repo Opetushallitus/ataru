@@ -209,7 +209,6 @@
 (defn- dropdown-option [option-index path languages & {:keys [header? include-followup?] :or {header? false include-followup? true} :as opts}]
   (let [multiple-languages? (< 1 (count languages))
         option-path         [path :options option-index]]
-    (println "dd-option" opts path include-followup?)
     ^{:key (str "options-" option-index)}
     [:div
      [:div.editor-form__multi-options-wrapper-outer
@@ -296,7 +295,7 @@
          {:class @animation-effect}
          (let [header (case field-type
                         "dropdown"       "Pudotusvalikko"
-                        "radioButton"    "Painikkeet, yksi valittavissa"
+                        "singleChoice"   "Painikkeet, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
          [:div.editor-form__multi-question-wrapper
@@ -315,14 +314,14 @@
          [:div.editor-form__multi-options_wrapper
           [:div.editor-form--padded
            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-           (when-not (= field-type "radioButton") [dropdown-multi-options path options-koodisto])]
+           (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
 
           (when (nil? @options-koodisto)
             (seq [
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
                    (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages :include-followup? (not= field-type "radioButton")))
+                                  (dropdown-option idx path languages :include-followup? (not= field-type "singleChoice")))
                      (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item

@@ -70,9 +70,9 @@
    :text       {:fi ""} ; LocalizedString
    })
 
-(defn radio-button []
+(defn single-choice-button []
   {:fieldClass "formField"
-   :fieldType  "radioButton"
+   :fieldType  "singleChoice"
    :id         (util/component-id)
    :label      {:fi "" :sv ""}
    :params     {}

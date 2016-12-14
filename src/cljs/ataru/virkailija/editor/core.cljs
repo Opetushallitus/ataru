@@ -58,7 +58,7 @@
             [ec/info-element content path]
 
             {:fieldClass "formField"
-             :fieldType "radioButton"}
+             :fieldType "singleChoice"}
             [ec/dropdown content path]
 
             :else (do

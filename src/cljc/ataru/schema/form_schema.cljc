@@ -71,7 +71,7 @@
                                                   "iban"
                                                   "bic"
                                                   "dropdown"
-                                                  "radioButton"
+                                                  "singleChoice"
                                                   "multipleChoice"
                                                   "checkboxButton"
                                                   "namedAttachment"
@@ -121,7 +121,7 @@
                                                             "textArea"
                                                             "dropdown"
                                                             "multipleChoice"
-                                                            "radioButton"])
+                                                            "singleChoice"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
                                                        LocalizedString
                                                        s/Str))})

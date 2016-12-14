@@ -5,13 +5,13 @@
    [reagent.core :as r]))
 
 (def ^:private toolbar-elements
-  {"Lomakeosio"                component/form-section
-   "Tekstikenttä"              component/text-field
-   "Tekstialue"                component/text-area
-   "Pudotusvalikko"            component/dropdown
-   "Painikkeet, yksi valittavissa"  component/radio-button
-   "Lista, monta valittavissa" component/multiple-choice
-   "Infokenttä"                component/info-element})
+  {"Lomakeosio"                    component/form-section
+   "Tekstikenttä"                  component/text-field
+   "Tekstialue"                    component/text-area
+   "Pudotusvalikko"                component/dropdown
+   "Painikkeet, yksi valittavissa" component/single-choice-button
+   "Lista, monta valittavissa"     component/multiple-choice
+   "Infokenttä"                    component/info-element})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements

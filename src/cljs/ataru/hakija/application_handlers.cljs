@@ -122,8 +122,8 @@
                  true)]
     (merge answer {:value value :valid valid})))
 
-(defn- toggle-radio-button-option [db [_ radio-button-id value validators]]
-  (let [button-path   [:application :answers radio-button-id]
+(defn- select-single-choice-button [db [_ button-id value validators]]
+  (let [button-path   [:application :answers button-id]
         current-value (:value (get-in db button-path))
         new-value     (when (not= value current-value) value)]
     (update-in db button-path
@@ -316,8 +316,8 @@
         (toggle-multiple-choice-option answer option-value validators)))))
 
 (reg-event-db
-  :application/toggle-radio-button-option
-  toggle-radio-button-option)
+  :application/select-single-choice-button
+  select-single-choice-button)
 
 (reg-event-db
   :application/set-followup-visibility-to-false
