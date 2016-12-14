@@ -361,7 +361,7 @@
                    [:div.application__form-radio-button-inner-container {:key option-id}
                     [:input.application__form-radio-button
                      {:id        option-id
-                      :type      "radio"
+                      :type      "checkbox"
                       :checked   (= option-value selected-value)
                       :value     option-value
                       :on-change (fn [event]

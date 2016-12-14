@@ -123,12 +123,16 @@
     (merge answer {:value value :valid valid})))
 
 (defn- toggle-radio-button-option [db [_ radio-button-id value validators]]
-  (update-in db [:application :answers radio-button-id]
-    (fn [answer]
-      (let [valid? (if (not-empty validators)
-                     (every? true? (map #(validator/validate % value) validators)))]
-        (merge answer {:value value
-                       :valid valid?})))))
+  (let [button-path   [:application :answers radio-button-id]
+        current-value (:value (get-in db button-path))
+        new-value     (when (not= value current-value) value)]
+    (update-in db button-path
+               (fn [answer]
+                 (let [valid? (if (not-empty validators)
+                                (every? true? (map #(validator/validate % new-value) validators))
+                                true)]
+                   (merge answer {:value new-value
+                                  :valid valid?}))))))
 
 (defn- merge-multiple-choice-option-values [value answer]
   (let [options (clojure.string/split value #"\s*,\s*")]
