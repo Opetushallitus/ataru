@@ -198,18 +198,42 @@
          [:div.application-handling__review-header "Tapahtumat"]]
         (mapv event-row @events)))))
 
+(defn update-review-field [field convert-fn evt]
+  (let [new-value (-> evt .-target .-value)]
+    (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc field (convert-fn new-value)))])))
+
+(defn convert-score [review new-value]
+  (let [maybe-number (js/Number new-value)]
+    (cond
+      (= "" new-value)
+      nil
+
+      ;; JS NaN is the only thing not equal with itself
+      ;; and this is the way to detect it
+      (not= maybe-number maybe-number)
+      (:score review)
+
+      :else
+      maybe-number)))
+
 (defn application-review-notes []
   (let [review (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
-        review->notes-str (fn [review] (if-let [notes (:notes @review)] notes ""))]
+        review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
     (fn []
       [:div
+       [:div.application-handling__review-header "Hakijan arviointi"]
        [:div.application-handling__review-header "Muistiinpanot"]
        [:textarea.application-handling__review-notes
-        {:value (review->notes-str review)
-         :on-change (fn [evt]
-                      (let [new-value (-> evt .-target .-value)]
-                        (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :notes new-value))])))}]])))
+        {:value (review-field->str review :notes)
+         :on-change (partial update-review-field :notes identity)}]
+       [:div.application-handling__review-header "Pisteet"]
+       [:input.application-handling__score-input
+        {:type "text"
+         :max-length "3"
+         :size "3"
+         :value (review-field->str review :score)
+         :on-change (partial update-review-field :score (partial convert-score @review))}]])))
 
 (defn application-review []
   [:div.application-handling__review

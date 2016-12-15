@@ -95,7 +95,12 @@
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           :application/review-updated
-                                          :override-args {:params (select-keys current [:id :application-id :application-key :notes :state])}))})))
+                                          :override-args {:params (select-keys current [:id
+                                                                                        :application-id
+                                                                                        :application-key
+                                                                                        :notes
+                                                                                        :score
+                                                                                        :state])}))})))
 
 (reg-event-db
   :application/fetch-application

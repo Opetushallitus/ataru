@@ -32,7 +32,7 @@ select event_type, time, new_review_state, application_key, id from application_
 where application_key = :application_key order by time asc;
 
 -- name: yesql-get-application-review
-select id, modified_time, state, notes, application_key
+select id, modified_time, state, notes, score, application_key
 from application_reviews
 where application_key = :application_key;
 
@@ -110,12 +110,17 @@ insert into application_events (application_key, event_type, new_review_state)
 values (:application_key, :event_type, :new_review_state);
 
 -- name: yesql-add-application-review!
--- Add application review
+-- Add application review, initially it doesn't have all fields. This is just a "skeleton"
 insert into application_reviews (application_key, state) values (:application_key, :state);
 
 -- name: yesql-save-application-review!
 -- Save modifications for existing review record
-update application_reviews set notes = :notes, modified_time = now(), state = :state
+update application_reviews
+set
+notes = :notes,
+score = :score,
+modified_time = now(),
+state = :state
 where application_key = :application_key;
 
 -- name: yesql-add-person-oid!
