@@ -48,8 +48,20 @@
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
 
-(defn dospy [v]
-  (spy v))
+(defn- extract-values [children answers]
+  (let [child-answers  (->> (map answer-key children)
+                            (select-keys answers))
+        ; applicant side stores values as hashmaps
+        applicant-side (map (comp
+                              (fn [values]
+                                (map :value values))
+                              :values
+                              second))
+        ; editor side loads values as vectors of strings
+        editor-side    (map (comp :value second))]
+    (apply map vector (filter not-empty (concat
+                             (eduction applicant-side child-answers)
+                             (eduction editor-side child-answers))))))
 
 (defn fieldset [field-descriptor application lang children]
   [:div.application__form-field
@@ -62,21 +74,11 @@
          [:th (str (-> child :label lang)) (required-hint field-descriptor)]))]
     [:tbody
      (doall
-       (for [[child values] (->>
-                              (map answer-key children)
-                              (select-keys (:answers application))
-                              (map (comp
-                                     (fn [values]
-                                       (map :value values))
-                                     :values
-                                     second))
-                              (apply map vector)
-                              (map vector children))]
+       (for [[child values] (map vector children (extract-values children (:answers application)))]
          (into
            [:tr {:key (:id child)}]
            (for [value values]
-             [:td (when (not= :blank value)
-                    value)]))))]]])
+             [:td value]))))]]])
 
 (defn field [content application lang]
   (match content
