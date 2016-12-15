@@ -60,24 +60,23 @@
      (into [:tr]
        (for [child children]
          [:th (str (-> child :label lang)) (required-hint field-descriptor)]))]
-    (doall
-      (for [[child values] (->>
-                             (map answer-key children)
-                             (select-keys (:answers application))
-                             (map (comp
-                                    (fn [values]
-                                      (map
-                                        (comp (fnil :value :blank))
-                                        values))
-                                    :values
-                                    second))
-                             (apply map vector)
-                             (map vector children))]
-        (into
-          [:tr {:key (:id child)}]
-          (for [value values]
-            [:td (when (not= :blank value)
-                   value)]))))]])
+    [:tbody
+     (doall
+       (for [[child values] (->>
+                              (map answer-key children)
+                              (select-keys (:answers application))
+                              (map (comp
+                                     (fn [values]
+                                       (map :value values))
+                                     :values
+                                     second))
+                              (apply map vector)
+                              (map vector children))]
+         (into
+           [:tr {:key (:id child)}]
+           (for [value values]
+             [:td (when (not= :blank value)
+                    value)]))))]]])
 
 (defn field [content application lang]
   (match content
