@@ -169,10 +169,11 @@
 (defn application-review-state []
   (let [review-state (subscribe [:state-query [:application :review :state]])]
     (fn []
-      (into
-       [:div.application-handling__review-state-container
-        [:div.application-handling__review-header "Tila"]]
-       (mapv (partial review-state-row @review-state) application-review-states)))))
+      [:div.application-handling__review-state-container
+       [:div.application-handling__review-header "Tila"]
+       (into
+        [:div]
+        (mapv (partial review-state-row @review-state) application-review-states))])))
 
 (defn event-caption [event]
   (case (:event-type event)
@@ -221,19 +222,21 @@
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
     (fn []
-      [:div
+      [:div.application-handling__review-inputs
        [:div.application-handling__review-header "Hakijan arviointi"]
-       [:div.application-handling__review-header "Muistiinpanot"]
-       [:textarea.application-handling__review-notes
-        {:value (review-field->str review :notes)
-         :on-change (partial update-review-field :notes identity)}]
-       [:div.application-handling__review-header "Pisteet"]
-       [:input.application-handling__score-input
-        {:type "text"
-         :max-length "3"
-         :size "3"
-         :value (review-field->str review :score)
-         :on-change (partial update-review-field :score (partial convert-score @review))}]])))
+       [:div.application-handling__review-row
+        [:div.application-handling__review-sub-header "Muistiinpanot"]
+        [:textarea.application-handling__review-notes
+         {:value (review-field->str review :notes)
+          :on-change (partial update-review-field :notes identity)}]]
+       [:div.application-handling__review-row
+        [:div.application-handling__review-sub-header "Pisteet"]
+        [:input.application-handling__score-input
+         {:type "text"
+          :max-length "3"
+          :size "3"
+          :value (review-field->str review :score)
+          :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
 (defn application-review []
   [:div.application-handling__review

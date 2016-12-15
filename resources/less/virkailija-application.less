@@ -253,10 +253,20 @@ and (max-width: 1000px) {
   color: @text-color;
   .semibold;
   margin-bottom: 16px;
+  min-width: 120px;
+}
+
+.application-handling__review-row {
+  display: flex;
+}
+
+.application-handling__review-sub-header {
+  width: 120px;
 }
 
 .application-handling__review-state-container {
   margin-bottom: 20px;
+  display: flex;
 }
 
 .application-handling__review-state-row {
@@ -297,14 +307,25 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-notes {
-  width: 100%;
+  width: 229px;
   height: 100px;
   border: solid 1px @blue-border-color;
   margin-bottom: 30px;
   border-radius: 2px;
-  font-size: 16px;
-  padding: 11px;
+  font-size: 14px;
+  padding: 6px;
   color: #1A1919;
+}
+
+.application-handling__review-inputs {
+  margin-bottom: 20px;
+}
+
+.application-handling__score-input {
+  border-radius: 2px;
+  border: solid 1px @blue-border-color;
+  font-size: 14px;
+  padding: 6px;
 }
 
 /*
