@@ -70,6 +70,9 @@
     (info (str "Inserting new application"))
     (let [{:keys [id key] :as new-application} (add-new-application-version new-application conn)
           connection                {:connection conn}]
+      (audit-log/log {:new       new-application
+                      :operation audit-log/operation-new
+                      :id        (extract-ssn new-application)})
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil}
@@ -77,9 +80,6 @@
       (yesql-add-application-review! {:application_key key
                                       :state           "received"}
                                      connection)
-      (audit-log/log {:new       new-application
-                      :operation audit-log/operation-new
-                      :id        (extract-ssn new-application)})
       id)))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
