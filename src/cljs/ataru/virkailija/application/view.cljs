@@ -167,7 +167,7 @@
     (if (= current-review-state review-state-id)
       (review-state-selected-row review-state-label)
       [:div.application-handling__review-state-row
-       {:on-click #(dispatch [:application/update-review-state review-state-id])}
+       {:on-click #(dispatch [:application/update-review-field :state review-state-id])}
        review-state-label])))
 
 (defn opened-review-state-list [review-state]
@@ -215,7 +215,7 @@
 
 (defn update-review-field [field convert-fn evt]
   (let [new-value (-> evt .-target .-value)]
-    (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc field (convert-fn new-value)))])))
+    (dispatch [:application/update-review-field field (convert-fn new-value)])))
 
 (defn convert-score [review new-value]
   (let [maybe-number (js/Number new-value)]

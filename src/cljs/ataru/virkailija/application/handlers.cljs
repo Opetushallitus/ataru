@@ -14,23 +14,27 @@
           (assoc-in [:db :application :selected-application-and-form] nil)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
-(defn- update-state-of-selected-application [application selected-application-key review-state-id]
-  (if (= selected-application-key (:key application))
-    (assoc application :state review-state-id)
-    application))
-
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
 
+(defn- update-review-field-of-selected-application-in-list
+  [application selected-application-key field value]
+  (if (= selected-application-key (:key application))
+    (assoc application field value)
+    application))
+
 (reg-event-db
- :application/update-review-state
- (fn [db [_ review-state-id]]
+ :application/update-review-field
+ (fn [db [_ field value]]
    (let [selected-key         (get-in db [:application :selected-key])
-         updated-applications (mapv
-                               #(update-state-of-selected-application % selected-key review-state-id)
-                               (get-in db [:application :applications]))]
+         application-list     (get-in db [:application :applications])
+         updated-applications (if (some #{field} [:state :score])
+                                (mapv
+                                 #(update-review-field-of-selected-application-in-list % selected-key field value)
+                                 application-list)
+                                application-list)]
      (-> db
-         (update-in [:application :review] assoc :state review-state-id)
+         (update-in [:application :review] assoc field value)
          (assoc-in [:application :applications] updated-applications)
          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
