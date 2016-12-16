@@ -437,8 +437,9 @@
                           :let  [fid (str value-index "-" (:id child))]]
                       ^{:key fid}
                       [:div.application__form-adjacent-row
-                       (when (-> counter (< (count children)))
-                         [label child])
+                       [:div {:class (when (-> counter (>= (count children)))
+                                       "application__form-adjacent-row--mobile-only")}
+                        [label  child]]
                        [:input.application__form-text-input
                         {:id        fid
                          :type      "text"
@@ -453,11 +454,13 @@
                       [:a {:on-click (fn [evt]
                                        (.preventDefault evt)
                                        (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
-                       [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
+                       [:span.application__form-adjacent-row--mobile-only
+                        "Poista rivi"]
+                       [:application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
        [:a {:on-click (fn [evt]
                         (.preventDefault evt)
                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
-        [:i.zmdi.zmdi-plus-square] " Lisää"]])))
+        [:i.zmdi.zmdi-plus-square] " Lisää rivi"]])))
 
 (defn render-field
   [field-descriptor & args]
