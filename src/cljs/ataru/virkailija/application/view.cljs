@@ -101,6 +101,10 @@
                [:span.application-handling__list-row--applicant
                 (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
                [:span.application-handling__list-row--time time]
+               [:span.application-handling__list-row--score
+                (or
+                 (get application-review-states (:score application))
+                 "")]
                [:span.application-handling__list-row--state
                 (or
                  (get application-review-states (:state application))
@@ -149,6 +153,7 @@
    [:div.application-handling__list-header.application-handling__list-row
     [:span.application-handling__list-row--applicant "Hakija"]
     [:span.application-handling__list-row--time "Saapunut"]
+    [:span.application-handling__list-row--score "Pisteet"]
     [:span.application-handling__list-row--state [state-filter-controls]]]
    [application-list-contents applications]])
 
