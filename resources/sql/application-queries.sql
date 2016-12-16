@@ -9,9 +9,9 @@ values
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, coalesce(ar.state, 'unprocessed') as state
+  a.created_time, ar.state as state
 from applications a
-  left outer join application_reviews ar on a.key = ar.application_key
+  join application_reviews ar on a.key = ar.application_key
   join forms f on f.id = a.form_id and f.key = :form_key
 where a.hakukohde is null
 order by a.created_time desc;
@@ -20,10 +20,10 @@ order by a.created_time desc;
 select a.id,
   a.key, a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, coalesce(ar.state, 'unprocessed') as state,
+  a.created_time, ar.state as state,
   a.form_id as form
 from applications a
-  left outer join application_reviews ar on a.key = ar.application_key
+  join application_reviews ar on a.key = ar.application_key
 where a.hakukohde = :hakukohde_oid
 order by a.created_time desc;
 
@@ -38,10 +38,10 @@ where application_key = :application_key;
 
 -- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, coalesce(ar.state, 'unprocessed') as state
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, ar.state as state
 from applications a
 join forms f on f.id = a.form_id and f.key = :form_key
-left outer join application_reviews ar on a.key = ar.application_key
+join application_reviews ar on a.key = ar.application_key
 where a.hakukohde is null and state in (:filtered_states);
 
 -- name: yesql-get-applications-for-hakukohde
@@ -55,9 +55,9 @@ select
   a.content,
   a.hakukohde,
   a.hakukohde_name,
-  coalesce(ar.state, 'unprocessed') as state
+  ar.state as state
 from applications a
-left outer join application_reviews ar on a.key = ar.application_key
+join application_reviews ar on a.key = ar.application_key
 where state in (:filtered_states)
 and a.hakukohde = :hakukohde_oid;
 
