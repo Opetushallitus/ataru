@@ -1,17 +1,21 @@
 (ns ataru.log.audit-log
   (:require [ataru.util.app-utils :as app-utils]
-            [clj-json-patch.core :as p]
             [clj-time.core :as c]
             [clj-time.format :as f]
             [clojure.core.match :as m]
             [cheshire.core :as json]
             [taoensso.timbre :as log])
-  (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]))
+  (:import [fi.vm.sade.auditlog Audit ApplicationType CommonLogMessageFields AbstractLogMessage]
+           [org.joda.time DateTime]
+           [com.fasterxml.jackson.databind ObjectMapper]
+           [com.github.fge.jsonpatch.diff JsonDiff]))
 
 (def operation-new "lisäys")
 (def operation-modify "muutos")
 (def operation-delete "poisto")
 (def operation-login "kirjautuminen")
+
+(def ^:private object-mapper (ObjectMapper.))
 
 (defn- service-name []
   (case (app-utils/get-app-id)
@@ -39,22 +43,46 @@
 
 (def ^:private not-blank? (comp not clojure.string/blank?))
 
+(defn- diff [old new]
+  (let [old-str (json/generate-string old)
+        new-str (json/generate-string new)
+        diff-node (JsonDiff/asJsonPatch (.readTree object-mapper old-str)
+                                        (.readTree object-mapper new-str))]
+    (.writeValueAsString object-mapper diff-node)))
+
+(defn- get-message [new old]
+  (m/match [new old]
+           [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
+           (diff old new)
+
+           [(_ :guard map-or-vec?) (_ :guard nil?)]
+           (json/generate-string new)
+
+           [(_ :guard string?) _]
+           new))
+
+(defn- date->str [x]
+  (cond->> x
+    (instance? DateTime x)
+    (f/unparse date-time-formatter)))
+
+(defn- transform-values [t coll]
+  (clojure.walk/prewalk (fn [x]
+                          (cond->> x
+                            (map? x)
+                            (into {} (map (fn [[k v]] [k (t v)])))))
+                        coll))
+
 (defn- do-log [{:keys [new old id operation organization-oid]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
-             (some? (p/diff new old)))
+             (and (map-or-vec? old)
+                  (map-or-vec? new)))
          (not-blank? id)
          (some #{operation} [operation-new operation-modify operation-delete operation-login])]}
-  (let [message (m/match [new old]
-                         [(_ :guard map-or-vec?) (_ :guard map-or-vec?)]
-                         (json/generate-string (p/diff old new))
-
-                         [(_ :guard map-or-vec?) (_ :guard nil?)]
-                         (json/generate-string new)
-
-                         [(_ :guard string?) _]
-                         new)
+  (let [message (get-message (transform-values date->str new)
+                             (transform-values date->str old))
         log-map (cond-> {CommonLogMessageFields/ID        id
                          CommonLogMessageFields/TIMESTAMP (timestamp)
                          CommonLogMessageFields/OPERAATIO operation

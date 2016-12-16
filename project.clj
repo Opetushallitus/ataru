@@ -26,7 +26,7 @@
                  ;clojure
                  [compojure "1.5.1"]
                  [crypto-random "1.2.0"]
-                 [clj-json-patch "0.1.4"]
+                 [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.1"]
                  [metosin/compojure-api "1.1.9"]
                  [com.stuartsierra/component "0.3.1"]
