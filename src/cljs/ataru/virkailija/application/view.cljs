@@ -102,9 +102,7 @@
                 (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
                [:span.application-handling__list-row--time time]
                [:span.application-handling__list-row--score
-                (or
-                 (get application-review-states (:score application))
-                 "")]
+                (or (:score application) "")]
                [:span.application-handling__list-row--state
                 (or
                  (get application-review-states (:state application))

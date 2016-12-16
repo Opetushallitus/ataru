@@ -7,9 +7,12 @@ values
 
 -- name: yesql-get-application-list-by-form
 select a.id,
-  a.key, a.lang,
+  a.key,
+  a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, ar.state as state
+  a.created_time,
+  ar.state as state,
+  ar.score as score
 from applications a
   join application_reviews ar on a.key = ar.application_key
   join forms f on f.id = a.form_id and f.key = :form_key
@@ -18,9 +21,12 @@ order by a.created_time desc;
 
 -- name: yesql-get-application-list-by-hakukohde
 select a.id,
-  a.key, a.lang,
+  a.key,
+  a.lang,
   a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time, ar.state as state,
+  a.created_time,
+  ar.state as state,
+  ar.score as score,
   a.form_id as form
 from applications a
   join application_reviews ar on a.key = ar.application_key
