@@ -89,9 +89,10 @@
                          CommonLogMessageFields/MESSAGE   message
                          "logSeq"                         (str (swap! log-seq inc))}
                   (not-blank? organization-oid)
-                  (assoc "organizationOid" organization-oid))]
+                  (assoc "organizationOid" organization-oid))
+        logger  (or @logger (reset! logger (Audit. (service-name) (application-type))))]
     (->> (proxy [AbstractLogMessage] [log-map])
-         (.log @logger))))
+         (.log logger))))
 
 (defn log
   "Create an audit log entry. Provide map with :new and optional :old
@@ -106,6 +107,3 @@
     (do-log params)
     (catch Throwable t
       (log/error t "Failed to create an audit log entry"))))
-
-(defn init-audit-logging! []
-  (reset! logger (Audit. (service-name) (application-type))))

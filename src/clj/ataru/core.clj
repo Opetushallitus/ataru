@@ -48,7 +48,6 @@
   (let [app-id         (app-utils/get-app-id args)
         system-fn      (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
-    (audit-log/init-audit-logging!)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
     (when-not system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
