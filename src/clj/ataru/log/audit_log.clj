@@ -20,12 +20,14 @@
 (defn- service-name []
   (case (app-utils/get-app-id)
     :virkailija "ataru-virkailija"
-    :hakija "ataru-hakija"))
+    :hakija "ataru-hakija"
+    "ataru"))
 
 (defn- application-type []
   (case (app-utils/get-app-id)
     :virkailija ApplicationType/VIRKAILIJA
-    :hakija ApplicationType/OPISKELIJA))
+    :hakija ApplicationType/OPISKELIJA
+    ApplicationType/BACKEND))
 
 (def ^:private logger (atom nil))
 
