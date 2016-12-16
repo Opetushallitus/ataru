@@ -155,25 +155,36 @@
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
+(defn review-state-selected-row [label]
+  [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+   [icon-check] label])
+
 (defn review-state-row [current-review-state review-state]
-  (let [review-state-id (first review-state)
-        review-state-label (second review-state)]
+  (let [[review-state-id review-state-label] review-state]
     (if (= current-review-state review-state-id)
-      [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-       [icon-check]
-       review-state-label]
+      (review-state-selected-row review-state-label)
       [:div.application-handling__review-state-row
        {:on-click #(dispatch [:application/update-review-state review-state-id])}
        review-state-label])))
 
+(defn opened-review-state-list [review-state]
+  (mapv (partial review-state-row @review-state) application-review-states))
+
 (defn application-review-state []
-  (let [review-state (subscribe [:state-query [:application :review :state]])]
+  (let [review-state (subscribe [:state-query [:application :review :state]])
+        list-opened  (r/atom false)
+        list-click   (fn [evt] (reset! list-opened (not @list-opened)))]
     (fn []
       [:div.application-handling__review-state-container
        [:div.application-handling__review-header "Tila"]
-       (into
-        [:div]
-        (mapv (partial review-state-row @review-state) application-review-states))])))
+       (if @list-opened
+         [:div.application-handling__review-state-list-opened-anchor
+          (into [:div.application-handling__review-state-list-opened
+                 {:on-click list-click}]
+                (opened-review-state-list review-state))]
+         [:div
+          {:on-click list-click}
+          (review-state-selected-row (get application-review-states @review-state))])])))
 
 (defn event-caption [event]
   (case (:event-type event)
@@ -217,7 +228,7 @@
       :else
       maybe-number)))
 
-(defn application-review-notes []
+(defn application-review-inputs []
   (let [review (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
@@ -241,7 +252,7 @@
 (defn application-review []
   [:div.application-handling__review
    [application-review-state]
-   [application-review-notes]
+   [application-review-inputs]
    [application-review-events]])
 
 (defn application-heading [application]
