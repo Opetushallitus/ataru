@@ -82,6 +82,14 @@
                                      connection)
       id)))
 
+(defn- form->form-id [{:keys [form] :as application}]
+  (assoc (dissoc application :form) :form-id form))
+
+(defn- application->loggable-form [{:keys [form] :as application}]
+  (cond-> (select-keys application [:id :key :form-id :answers])
+    (some? form)
+    (form->form-id)))
+
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
@@ -94,8 +102,8 @@
                                      :event_type       "updated-by-applicant"
                                      :new_review_state nil}
                                     {:connection conn})
-      (audit-log/log {:new       new-application
-                      :old       old-application
+      (audit-log/log {:new       (application->loggable-form new-application)
+                      :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
                       :id        (extract-ssn new-application)})
       id)))
