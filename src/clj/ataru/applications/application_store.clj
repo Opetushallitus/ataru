@@ -78,7 +78,7 @@
                                      :new_review_state nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
-                                      :state           "received"}
+                                      :state           "unprocessed"}
                                      connection)
       id)))
 

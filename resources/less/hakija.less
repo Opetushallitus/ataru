@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 @banner-height: 33px;
 @field-margin-left: 245px;
 @form-select-width: 305px;
@@ -88,12 +89,12 @@
 
 .application__form-field-label {
   font-size: 14px;
-  color: #2a2a2a;
+  color: @text-color;
   margin-bottom: 6px;
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
-  font-weight: 600;
+  .semibold;
   max-width: 610px;
 }
 
@@ -117,7 +118,7 @@
   position: absolute;
   width: 245px;
   h2 {
-    color: #2a2a2a;
+    color: @text-color;
     font-size: 16px;
     font-weight: normal;
     text-transform: uppercase;
@@ -217,10 +218,22 @@
   margin-bottom: 20px;
   margin-top: 40px;
 }
+.application__sub-header-container {
+  margin: -15px 0 15px;
+}
+.application__sub-header-organization {
+  .semibold;
+  color: @text-color;
+}
+.application__sub-header-dates {
+  margin-left: 20px;
+  font-size: 14px;
+  color: @gray-of-the-beast;
+}
 .application__header {
   font-size: 24px;
-  font-weight: 400;
-  color: #2A2A2A;
+  font-weight: normal;
+  color: @text-color;
   margin: 0px;
   max-width: 800px;
 }
@@ -431,6 +444,53 @@
   margin-right: 6px;
 }
 
+.application__form-single-choice-button-outer-container {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application__form-single-choice-button {
+  display: none;
+}
+
+.application__form-single-choice-button + label {
+  align-items: center;
+  background-color: @multiple-choice-not-selected-background;
+  color: @text-color;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  justify-content: center;
+  padding: 0px 19px;
+  min-width: 100px;
+}
+
+.application__form-single-choice-button-inner-container:first-child label {
+  border-radius: 3px 0 0 3px;
+}
+
+.application__form-single-choice-button-inner-container:last-child label {
+  border-radius: 0 3px 3px 0;
+}
+
+.application__form-single-choice-button-outer-container > .application__form-single-choice-button-inner-container:not(:last-child) {
+  margin-right: 1px;
+}
+
+.application__form-single-choice-button:checked + label {
+  color: @white;
+  background-color: @section-header-text;
+}
+
+.application__form-single-choice-button:checked + label::before {
+  content: url('/hakemus/images/icon_check.png');
+  margin-bottom: 2px;
+  margin-right: 6px;
+  margin-left: -20px;
+  padding-left: 7px;
+}
+
 @media only screen
 and (max-width: @desktop-content-width) {
   .application__wrapper-heading {
@@ -479,6 +539,10 @@ and (max-width: @desktop-content-width) {
     margin-left: 10px;
     margin-right: 10px;
     margin-top: 20px;
+  }
+  .application__sub-header-container {
+    margin-left: 10px;
+    margin-right: 10px;
   }
   .application__form-content-area {
     margin-top: 90px;

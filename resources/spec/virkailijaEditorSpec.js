@@ -285,6 +285,24 @@
         })
       })
 
+      describe('semantic radio button', function() {
+        before(
+          clickComponentMenuItem('Painikkeet, yksi valittavissa'),
+          setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__text-field') }, 'Lyhyen listan kysymys'),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__checkbox-wrapper label') }),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Ensimmäinen vaihtoehto'),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
+          setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto')
+        )
+        it('has expected contents', function() {
+          expect(formComponents()).to.have.length(12)
+          expect(formComponents().eq(11).find('.editor-form__text-field:first').val()).to.equal('Lyhyen listan kysymys')
+          expect(formComponents().eq(11).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
+          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(1) .editor-form__text-field').val()).to.equal('Ensimmäinen vaihtoehto')
+          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(2) .editor-form__text-field').val()).to.equal('Toinen vaihtoehto')
+        })
+      })
 
       describe('autosave', function () {
         before(

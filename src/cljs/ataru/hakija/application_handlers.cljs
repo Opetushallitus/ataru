@@ -122,6 +122,18 @@
                  true)]
     (merge answer {:value value :valid valid})))
 
+(defn- select-single-choice-button [db [_ button-id value validators]]
+  (let [button-path   [:application :answers button-id]
+        current-value (:value (get-in db button-path))
+        new-value     (when (not= value current-value) value)]
+    (update-in db button-path
+               (fn [answer]
+                 (let [valid? (if (not-empty validators)
+                                (every? true? (map #(validator/validate % new-value) validators))
+                                true)]
+                   (merge answer {:value new-value
+                                  :valid valid?}))))))
+
 (defn- merge-multiple-choice-option-values [value answer]
   (let [options (clojure.string/split value #"\s*,\s*")]
     (reduce (fn [answer option-value]
@@ -302,6 +314,10 @@
     (update-in db [:application :answers multiple-choice-id]
       (fn [answer]
         (toggle-multiple-choice-option answer option-value validators)))))
+
+(reg-event-db
+  :application/select-single-choice-button
+  select-single-choice-button)
 
 (reg-event-db
   :application/set-followup-visibility-to-false

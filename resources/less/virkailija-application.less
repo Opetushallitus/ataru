@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 @bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
@@ -40,7 +41,7 @@
   border-radius: 2px;
   border: solid 1px #E5E4E4;
   box-shadow: 0 0 2px 0 rgba(0,0,0,0.12), 0 2px 2px 0 rgba(0,0,0,0.24);
-  z-index: 1;
+  z-index: 15;
   margin: -5px 0 20px -13px;
 }
 
@@ -69,11 +70,12 @@
 
 .application-handling__form-list-row:hover {
   background: #f5f5f5;
+  border-radius: 3px;
 }
 
 .application-handling__form-list-closed .application-handling__form-list-row {
   font-size: 24px;
-  font-weight: 600;
+  .semibold;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
@@ -103,6 +105,7 @@
 .application-handling__form-list-open-wrapper .application-handling__form-list-selected-row, .application-handling__form-list-open-wrapper .application-handling__form-list-selected-row:hover{
 	background: #00526c;
 	color: #fff;
+    border-radius: 3px;
 }
 
 .application-handling__excel-download-link {
@@ -130,11 +133,11 @@ and (max-width: 1000px) {
   text-transform: uppercase;
   position: absolute;
   z-index: 10;
-  top: -147px;
+  top: 30px;
   left: -56px;
   text-align: start;
   background-color: white;
-  min-width: 170px;
+  min-width: 263px;
   padding: 11px;
   box-shadow: 1px 2px 5px #b3b3b3;
   font-size: 13px;
@@ -154,7 +157,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection-arrow-down {
-  top: -10px;
+  top: 15px;
   width: 21px;
   height: 15px;
   position: absolute;
@@ -169,9 +172,9 @@ and (max-width: 1000px) {
   height: 10px;
   background: white;
   transform: rotate(135deg);
-  top: -5px;
-  left: 4px;
-  box-shadow: 1px 2px 5px #b3b3b3;
+  top: 10px;
+  left: 7px;
+  box-shadow: 0px -1px 3px #b3b3b3;
 }
 
 .application-handling__list {
@@ -179,18 +182,21 @@ and (max-width: 1000px) {
   overflow: auto;
   max-height: 120px;
   margin-bottom: 15px;
-  font-weight: 600;
 }
 
 .application-handling__list-row {
   padding: 0.5em;
   margin: 0;
-  color: @blue-text-color;
   display: block;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
   }
+}
+
+.application-handling__list-row:hover {
+  background: #f5f5f5;
+  border-radius: 3px;
 }
 
 .application-handling__list-header {
@@ -199,14 +205,18 @@ and (max-width: 1000px) {
   margin-right: 8px;
 }
 
-.application-handling__list-row--selected {
-  border-radius: 2px;
+.application-handling__list-row--selected, .application-handling__list-row--selected:hover {
+  border-radius: 3px;
   background-color: @selected-blue;
-  color: white;
+  color: #fff;
+}
+
+.application-handling__list-header:hover {
+  background: none;
 }
 
 .application-handling__list-row--applicant {
-  width: 50%;
+  width: 40%;
   display: inline-block;
 }
 
@@ -216,7 +226,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  width: 15%;
+  width: 25%;
   display: inline-block;
 }
 
@@ -236,12 +246,12 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading {
   color: @text-color;
-  font-weight: 600;
+  .semibold;
 }
 
 .application-handling__review-header {
-  color: #2a2a2a;
-  font-weight: 600;
+  color: @text-color;
+  .semibold;
   margin-bottom: 16px;
 }
 
@@ -266,7 +276,7 @@ and (max-width: 1000px) {
   border-radius: 2px;
   margin-left: 0;
   padding-left: 3px;
-  width: 220px;
+  width: 230px;
   display: inline-block;
   text-transform: uppercase;
 }
@@ -288,7 +298,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-notes {
   width: 100%;
-  height: 323px;
+  height: 100px;
   border: solid 1px @blue-border-color;
   margin-bottom: 30px;
   border-radius: 2px;
@@ -317,13 +327,13 @@ and (max-width: 1000px) {
 
 .application__form-field-label {
   font-size: 14px;
-  color: #2a2a2a;
+  color: @text-color;
   margin-bottom: 6px;
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
   min-width: 230px;
-  font-weight: 600;
+  .semibold;
   max-width: 610px;
 }
 
@@ -346,7 +356,7 @@ and (max-width: 1000px) {
   position: absolute;
   width: 245px;
   h2 {
-    color: #2a2a2a;
+    color: @text-color;
     font-size: 16px;
     font-weight: normal;
     text-transform: uppercase;

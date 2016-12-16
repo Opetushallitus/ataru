@@ -5,34 +5,54 @@
             [ataru.application-common.application-readonly :as readonly-view]
             [ataru.cljs-util :as util]
             [re-frame.core :refer [subscribe dispatch]]
-            [cljs.core.match :refer-macros [match]]))
+            [cljs.core.match :refer-macros [match]]
+            [cljs-time.format :refer [unparse formatter]]
+            [cljs-time.coerce :refer [from-long]]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
    :sv "På svenska"
    :en "In English"})
 
+(def date-format (formatter "d.M.yyyy"))
+
 (defn application-header [form]
-  (let [selected-lang (:selected-language form)
-        languages     (filter
-                        (partial not= selected-lang)
-                        (:languages form))
-        submit-status (subscribe [:state-query [:application :submit-status]])
-        secret        (:modify (util/extract-query-params))]
+  (let [selected-lang     (:selected-language form)
+        languages         (filter
+                            (partial not= selected-lang)
+                            (:languages form))
+        submit-status     (subscribe [:state-query [:application :submit-status]])
+        secret            (:modify (util/extract-query-params))
+        hakukohde-name    (:hakukohde-name form)
+        haku-tarjoja-name (:haku-tarjoaja-name form)
+        apply-start-date  (-> form :hakuaika-dates :start)
+        apply-end-date    (-> form :hakuaika-dates :end)
+        apply-dates       (when hakukohde-name
+                            (if (and apply-start-date apply-end-date)
+                              (str "Hakuaika: "
+                                   (unparse date-format (from-long apply-start-date))
+                                   " - "
+                                   (unparse date-format (from-long apply-end-date)))
+                              "Jatkuva haku"))]
     (fn [form]
-      [:div.application__header-container
-       [:span.application__header (or (:hakukohde-name form) (:name form))]
-       (when (and (not= :submitted @submit-status)
-                  (> (count languages) 0)
-                  (nil? secret))
-         [:span.application__header-text
-          (map-indexed (fn [idx lang]
-                         (cond-> [:span {:key (name lang)}
-                                  [:a {:href (str "/hakemus/" (:key form) "?lang=" (name lang))}
-                                   (get language-names lang)]]
-                           (> (dec (count languages)) idx)
-                           (conj [:span.application__header-language-link-separator " | "])))
-                       languages)])])))
+      [:div
+       [:div.application__header-container
+        [:span.application__header (or hakukohde-name (:name form))]
+        (when (and (not= :submitted @submit-status)
+                   (> (count languages) 0)
+                   (nil? secret))
+          [:span.application__header-text
+           (map-indexed (fn [idx lang]
+                          (cond-> [:span {:key (name lang)}
+                                   [:a {:href (str "/hakemus/" (:key form) "?lang=" (name lang))}
+                                    (get language-names lang)]]
+                                  (> (dec (count languages)) idx)
+                                  (conj [:span.application__header-language-link-separator " | "])))
+                        languages)])]
+       (when (and haku-tarjoja-name apply-dates)
+         [:div.application__sub-header-container
+          [:span.application__sub-header-organization haku-tarjoja-name]
+          [:span.application__sub-header-dates apply-dates]])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]

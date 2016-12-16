@@ -71,7 +71,7 @@
                                                   "iban"
                                                   "bic"
                                                   "dropdown"
-                                                  "radioButton"
+                                                  "singleChoice"
                                                   "multipleChoice"
                                                   "checkboxButton"
                                                   "namedAttachment"
@@ -120,7 +120,8 @@
                      :fieldType              (apply s/enum ["textField"
                                                             "textArea"
                                                             "dropdown"
-                                                            "multipleChoice"])
+                                                            "multipleChoice"
+                                                            "singleChoice"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
                                                        LocalizedString
                                                        s/Str))})
@@ -147,10 +148,14 @@
    (s/optional-key :secret)         s/Str
    (s/optional-key :form-key)       s/Str})
 
-(def application-states (s/enum "received"
+(def application-states (s/enum "unprocessed"
                                 "processing"
+                                "invited-to-interview"
+                                "invited-to-exam"
+                                "not-selected"
+                                "selected"
+                                "applicant-has-accepted"
                                 "rejected"
-                                "approved"
                                 "canceled"))
 
 (def event-types (s/enum "updated-by-applicant"

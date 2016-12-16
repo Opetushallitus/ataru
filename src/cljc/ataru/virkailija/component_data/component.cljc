@@ -69,3 +69,11 @@
    :label      {:fi ""} ; LocalizedString
    :text       {:fi ""} ; LocalizedString
    })
+
+(defn single-choice-button []
+  {:fieldClass "formField"
+   :fieldType  "singleChoice"
+   :id         (util/component-id)
+   :label      {:fi "" :sv ""}
+   :params     {}
+   :options    []})

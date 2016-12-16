@@ -5,7 +5,7 @@
 @editor-control-button-confirm-red: #E44E4E;
 
 .main-container {
-  padding-top: 100px;
+  padding-top: 70px;
 }
 
 .editor-form--padded {
@@ -46,7 +46,7 @@
     font-size: 24px;
     font-family: @paragraph-font;
     color: @text-color;
-    font-weight: 600;
+    .semibold;
     margin-bottom: 14px;
 }
 
@@ -120,12 +120,17 @@
 .editor-form__row {
   padding: 0.5em;
   margin: 0;
-  color: @blue-text-color;
+  color: @text-color;
   display: block;
   position: relative;
 }
 
-.editor-form__selected-row {
+.editor-form__row:hover {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.editor-form__selected-row, .editor-form__selected-row:hover {
   border-radius: 2px;
   background-color: @selected-blue;
   color: #fff;
@@ -145,9 +150,9 @@
   display: flex;
   height: 25px;
   justify-content: center;
-  left: 20px;
+  left: 10px;
   position: absolute;
-  top: 20px;
+  top: 10px;
   width: 25px;
 }
 
@@ -167,6 +172,7 @@
   display: flex;
   flex-flow: column nowrap;
   margin-bottom: 15px;
+  font-size: 15px;
 }
 
 .editor-form__language-toolbar-inner {
@@ -182,7 +188,7 @@
 }
 
 .editor-form__language-toolbar-header-text {
-  color: @link-color;
+  color: #666;
 }
 
 .editor-form__language-toolbar-checkbox {
@@ -198,7 +204,7 @@
   box-shadow: inset 0 0px 4px #ccc;
   border-radius: 2px;
   margin: 10px 0 5px 0;
-  font-weight: 600;
+  .semibold;
 }
 
 .editor-form__used-in-haku-count {
@@ -207,7 +213,7 @@
 
 .editor-form__used-in-haku-heading {
   padding-left: 10px;
-  font-weight: 600;
+  .semibold;
 }
 
 .editor-form__used-in-haku-list {
@@ -414,6 +420,7 @@ form > div > .editor-form__component-wrapper {
   cursor: pointer;
   background-color: @not-selected-button-background;
   color: @not-selected-button-text;
+  margin-right: 1px;
 }
 
 .editor-form__button--large + label {
@@ -501,6 +508,7 @@ form > div > .editor-form__component-wrapper {
 .editor-form__checkbox-label {
   color: @blue-text-color;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .editor-form__add-component-toolbar {
@@ -605,7 +613,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__koodisto-popover-close {
-  color: #2a2a2a;
+  color: @text-color;
   position: absolute;
   right: 10px;
 }
@@ -625,7 +633,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__koodisto-popover-link {
-  color: #2a2a2a; 
+  color: @text-color;
   padding: 10px;
   display: block;
   width: 100%;
