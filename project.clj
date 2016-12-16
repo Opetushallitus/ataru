@@ -193,11 +193,13 @@
              :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
                                                :server-port 3449}
                                     :env {:app "virkailija"}
-                                    :jvm-opts ^:replace ["-Duser.home=."]}]
+                                    :jvm-opts ^:replace ["-Dapp=virkailija"
+                                                         "-Duser.home=."]}]
              :hakija-dev [:dev {:figwheel {:nrepl-port  3336
                                            :server-port 3450}
                                 :env {:app "hakija"}
-                                :jvm-opts ^:replace ["-Duser.home=."]}]
+                                :jvm-opts ^:replace ["-Dapp=hakija"
+                                                     "-Duser.home=."]}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "virkailija-dev" "run" "virkailija"]
