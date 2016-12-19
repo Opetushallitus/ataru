@@ -60,13 +60,11 @@
 (defn followups? [dropdown-options]
   (some some? (map :followup dropdown-options)))
 
-(defn resolve-followup [dropdown-options lang value]
+(defn resolve-followup [dropdown-options value]
   (and
     value
     (some->> dropdown-options
-      (eduction (comp
-                  (filter :followup)
-                  (filter #(= (-> % :label lang) value))
-                  (map :followup)))
-      not-empty
-      first)))
+             (filter (comp (partial = value) :value))
+             (map :followup)
+             (not-empty)
+             (first))))
