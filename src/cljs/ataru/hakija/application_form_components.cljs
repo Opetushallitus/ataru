@@ -241,7 +241,7 @@
 
 (defn dropdown-followup [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followup (partial util/resolve-followup (:options field-descriptor) lang)]
+        resolve-followup (partial util/resolve-followup (:options field-descriptor))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
