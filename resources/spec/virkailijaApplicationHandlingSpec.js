@@ -31,6 +31,10 @@
     return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)')
   }
 
+  function selectedState() {
+    return testFrame().find('.application-handling__review-state-selected-row')
+  }
+
   function notSelectedStates() {
     return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
   }
@@ -60,6 +64,8 @@
         wait.until(function() { return closedFormList().text() ===  'Selaintestilomake1' }),
         clickElement(applicationRow),
         wait.until(function() { return reviewHeader().length > 0 }),
+        clickElement(selectedState),
+        wait.until(function() { return notSelectedStates().length > 1 }),
         function() {
           var notSelected =  notSelectedStates()
           expect(notSelected.length).to.be.at.least(1)
