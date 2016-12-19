@@ -87,16 +87,18 @@
         expect(lastEventNow).to.equal(firstNotSelectedCaption)
       })
       it('Successfully stores notes and score for an application', function(done) {
-        setTextFieldValue(function() { return testFrame().find('.application-handling__review-notes') }, 'Reipas kaveri')()
+        setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(function() {
-          return setTextFieldValue(function() { return testFrame().find('.application-handling__score-input') }, '31')()
+          return setTextFieldValue(score, '31')()
         })
         .then(function() {
-          expect(testFrame().find('.application-handling__review-notes').val()).to.equal('Reipas kaveri')
-          expect(testFrame().find('.application-handling__score-input').val()).to.equal('31')
+          expect(reviewNotes().val()).to.equal('Reipas kaveri')
+          expect(score().val()).to.equal('31')
           done()
         })
       })
+      function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
+      function score() { return testFrame().find('.application-handling__score-input') }
     })
     describe('application filtering', function() {
       before(clickElement(filterLink))
