@@ -90,23 +90,25 @@
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(setTextFieldValue(score, '31'))
         .then(clickElement(secondApplication))
-        .then(wait.until(function() {
-            return testFrame().find('.application-handling__review-area-main-heading').text() === 'Seija Susanna Kuikeloinen, 020202A0202'
-          }))
+        .then(wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')))
         .then(function() {
           expect(reviewNotes().val()).to.equal('')
           expect(score().val()).to.equal('')
         })
         .then(clickElement(firstApplication))
-        .then(wait.until(function() {
-            return testFrame().find('.application-handling__review-area-main-heading').text() === 'Ari Vatanen, 141196-933S'
-          }))
+        .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
         .then(function () {
           expect(reviewNotes().val()).to.equal('Reipas kaveri')
           expect(score().val()).to.equal('31')
           done()
         }).fail(done)
       })
+
+      function applicationHeadingIs(expected) {
+        return function() {
+          return testFrame().find('.application-handling__review-area-main-heading').text() === expected
+        }
+      }
 
       function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)') }
 
