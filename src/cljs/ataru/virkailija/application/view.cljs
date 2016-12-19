@@ -247,8 +247,8 @@
         [:div.application-handling__review-sub-header "Pisteet"]
         [:input.application-handling__score-input
          {:type "text"
-          :max-length "3"
-          :size "3"
+          :max-length "2"
+          :size "2"
           :value (review-field->str review :score)
           :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
