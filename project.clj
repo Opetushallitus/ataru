@@ -171,7 +171,8 @@
              :extra-values {:version "0.1.0-SNAPSHOT"
                             :buildTime ~(.format
                                           (java.text.SimpleDateFormat. "yyyyMMdd-HHmm")
-                                          (java.util.Date.) )}
+                                          (java.util.Date.) )
+                            :githash  ~(System/getenv "githash")}
              :silent false}
 
   :profiles {:repl {:plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
