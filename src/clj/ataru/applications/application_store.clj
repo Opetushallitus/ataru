@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
-  (:require [ataru.schema.form-schema :as schema]
+  (:require [ataru.log.audit-log :as audit-log]
+            [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -49,7 +50,15 @@
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)]
-    application))
+    (unwrap-application application)))
+
+(def ^:private ssn-pred (comp (partial = "ssn") :key))
+
+(defn- extract-ssn [application]
+  (->> (:answers application)
+       (filter ssn-pred)
+       (first)
+       :value))
 
 (defn- get-latest-version-and-lock-for-update [secret lang conn]
   (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
@@ -59,30 +68,45 @@
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
-    (let [{app-id :id app-key :key} (add-new-application-version new-application conn)
+    (let [{:keys [id key] :as new-application} (add-new-application-version new-application conn)
           connection                {:connection conn}]
-      (yesql-add-application-event! {:application_key  app-key
+      (audit-log/log {:new       new-application
+                      :operation audit-log/operation-new
+                      :id        (extract-ssn new-application)})
+      (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil}
                                     connection)
-      (yesql-add-application-review! {:application_key app-key
+      (yesql-add-application-review! {:application_key key
                                       :state           "unprocessed"}
                                      connection)
-      app-id)))
+      id)))
+
+(defn- form->form-id [{:keys [form] :as application}]
+  (assoc (dissoc application :form) :form-id form))
+
+(defn- application->loggable-form [{:keys [form] :as application}]
+  (cond-> (select-keys application [:id :key :form-id :answers])
+    (some? form)
+    (form->form-id)))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
-          {app-id :id app-key :key} (add-new-application-version
-                                     (merge new-application (select-keys old-application [:key :secret])) conn)]
+          {:keys [id key] :as new-application} (add-new-application-version
+                                                 (merge new-application (select-keys old-application [:key :secret])) conn)]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
-      (yesql-add-application-event! {:application_key  app-key
+      (yesql-add-application-event! {:application_key  key
                                      :event_type       "updated-by-applicant"
                                      :new_review_state nil}
                                     {:connection conn})
-      app-id)))
+      (audit-log/log {:new       (application->loggable-form new-application)
+                      :old       (application->loggable-form old-application)
+                      :operation audit-log/operation-modify
+                      :id        (extract-ssn new-application)})
+      id)))
 
 (defn- older?
   "Check if application given as first argument is older than
@@ -142,19 +166,31 @@
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
-(defn save-application-review [review]
+(defn save-application-review [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection      {:connection conn}
-          app-key         (:application-key review)
-          old-review      (first (yesql-get-application-review {:application_key app-key} connection))
-          review-to-store (transform-keys ->snake_case review)]
+    (let [connection       {:connection conn}
+          app-key          (:application-key review)
+          old-review       (first (yesql-get-application-review {:application_key app-key} connection))
+          review-to-store  (transform-keys ->snake_case review)
+          username         (get-in session [:identity :username])
+          organization-oid (get-in session [:identity :organizations 0 :oid])]
+      (audit-log/log {:new              review-to-store
+                      :old              old-review
+                      :id               username
+                      :operation        audit-log/operation-modify
+                      :organization-oid organization-oid})
       (yesql-save-application-review! review-to-store connection)
       (when (not= (:state old-review) (:state review-to-store))
-        (yesql-add-application-event!
-         {:application_key app-key
-          :event_type "review-state-change"
-          :new_review_state (:state review-to-store)}
-         connection)))))
+        (let [application-event {:application_key  app-key
+                                 :event_type       "review-state-change"
+                                 :new_review_state (:state review-to-store)}]
+          (yesql-add-application-event!
+            application-event
+            connection)
+          (audit-log/log {:new              application-event
+                          :id               username
+                          :operation        audit-log/operation-new
+                          :organization-oid organization-oid}))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]

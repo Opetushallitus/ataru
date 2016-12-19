@@ -85,6 +85,6 @@
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]
     (aac/check-application-access application-key session organization-service)
-    (application-store/save-application-review review)
+    (application-store/save-application-review review session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)}))

@@ -26,10 +26,12 @@
                  ;clojure
                  [compojure "1.5.1"]
                  [crypto-random "1.2.0"]
+                 [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.1"]
                  [metosin/compojure-api "1.1.9"]
                  [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1"]
+                 [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
                  [ring "1.5.0"]
                  [ring/ring-defaults "0.2.1"]
@@ -189,9 +191,15 @@
                    :env {:dev? true}}
 
              :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
-                                               :server-port 3449}}]
+                                               :server-port 3449}
+                                    :env {:app "virkailija"}
+                                    :jvm-opts ^:replace ["-Dapp=virkailija"
+                                                         "-Duser.home=."]}]
              :hakija-dev [:dev {:figwheel {:nrepl-port  3336
-                                           :server-port 3450}}]
+                                           :server-port 3450}
+                                :env {:app "hakija"}
+                                :jvm-opts ^:replace ["-Dapp=hakija"
+                                                     "-Duser.home=."]}]
              :uberjar {:aot :all
                        :resource-paths ["resources"]}}
   :aliases {"virkailija-dev" ["with-profile" "virkailija-dev" "run" "virkailija"]

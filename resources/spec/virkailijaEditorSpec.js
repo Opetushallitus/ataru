@@ -307,7 +307,7 @@
       describe('autosave', function () {
         before(
           wait.until(function() {
-            return testFrame().find('.top-banner .flasher').css('opacity') > 0
+            return testFrame().find('.top-banner .flasher span').text() === 'Kaikki muutokset tallennettu'
           }, 5000)
         )
         it('notification shows success', function() {

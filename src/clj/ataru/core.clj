@@ -1,6 +1,8 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh]]
+            [ataru.log.audit-log :as audit-log]
+            [ataru.util.app-utils :as app-utils]
             [ataru.timbre-config :as timbre-config]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
@@ -38,17 +40,12 @@
                        (component/stop system))
                      (dissoc old-system :system)))))
 
-(defn- get-app-id [[app-id & _]]
-  (keyword
-    (or app-id
-        (:app env))))
-
 (defn restart []
   (stop)
   (start))
 
 (defn -main [& args]
-  (let [app-id         (get-app-id args)
+  (let [app-id         (app-utils/get-app-id args)
         system-fn      (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
