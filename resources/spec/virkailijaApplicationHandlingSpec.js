@@ -86,6 +86,17 @@
         var lastEventNow = testFrame().find('.application-handling__event-caption').last().text()
         expect(lastEventNow).to.equal(firstNotSelectedCaption)
       })
+      it('Successfully stores notes and score for an application', function(done) {
+        setTextFieldValue(function() { return testFrame().find('.application-handling__review-notes') }, 'Reipas kaveri')()
+        .then(function() {
+          return setTextFieldValue(function() { return testFrame().find('.application-handling__score-input') }, '31')()
+        })
+        .then(function() {
+          expect(testFrame().find('.application-handling__review-notes').val()).to.equal('Reipas kaveri')
+          expect(testFrame().find('.application-handling__score-input').val()).to.equal('31')
+          done()
+        })
+      })
     })
     describe('application filtering', function() {
       before(clickElement(filterLink))
