@@ -92,12 +92,38 @@
           return setTextFieldValue(score, '31')()
         })
         .then(function() {
+          return clickElement(secondApplication)()
+        })
+        .then(function () {
+          return wait.until(function() {
+            return testFrame().find('.application-handling__review-area-main-heading').text() === 'Seija Susanna Kuikeloinen, 020202A0202'
+          })()
+        })
+        .then(function() {
+          expect(reviewNotes().val()).to.equal('')
+          expect(score().val()).to.equal('')
+        })
+        .then(function() {
+          return clickElement(firstApplication)()
+        })
+        .then(function () {
+          return wait.until(function() {
+            return testFrame().find('.application-handling__review-area-main-heading').text() === 'Ari Vatanen, 141196-933S'
+          })()
+        })
+        .then(function () {
           expect(reviewNotes().val()).to.equal('Reipas kaveri')
           expect(score().val()).to.equal('31')
           done()
-        })
+        }).fail(done)
       })
+
+      function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)') }
+
+      function secondApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)') }
+
       function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
+
       function score() { return testFrame().find('.application-handling__score-input') }
     })
     describe('application filtering', function() {
@@ -122,7 +148,7 @@
         })
         .then(function() {
           done()
-        })
+        }).fail(done)
       })
 
       function filterOutBasedOnFirstApplicationState(stateOfFirstApplication) {
