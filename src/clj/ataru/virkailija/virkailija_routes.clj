@@ -109,7 +109,7 @@
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->haku currently in use in tarjonta-service"
                           :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
-                          (ok (tarjonta-service/get-forms-in-use)))
+                          (ok (tarjonta-service/get-forms-in-use organization-service (-> session :identity :username))))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]
