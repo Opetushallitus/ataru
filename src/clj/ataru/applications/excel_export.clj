@@ -63,6 +63,8 @@
     :field :state
     :format-fn state-formatter}])
 
+(def ^:private review-headers ["Muistiinpanot" "Pisteet"])
+
 (defn- indexed-meta-fields
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
@@ -136,21 +138,26 @@
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
-    (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
+    (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value-or-values (-> (:value answer))
-          value (or
-                  (when (or (seq? value-or-values) (vector? value-or-values))
-                    (->> value-or-values
-                         (map (partial koodi-uris->human-readable-value form application (:key answer)))
-                         (interpose "\n")
-                         (apply str)))
-                  (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
+          value           (or
+                           (when (or (seq? value-or-values) (vector? value-or-values))
+                             (->> value-or-values
+                                  (map (partial koodi-uris->human-readable-value form application (:key answer)))
+                                  (interpose "\n")
+                                  (apply str)))
+                           (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
-  (let [application-review (application-store/get-application-review (:key application))]
-    (when-let [notes (:notes application-review)]
-      (let [column (+ (apply max (map :column headers))
-                      (count application-meta-fields))]
-        (writer 0 column notes)))))
+  (let [application-review  (application-store/get-application-review (:key application))
+        beef-header-count   (- (apply max (map :column headers)) (count review-headers))
+        prev-header-count   (+ beef-header-count
+                               (count application-meta-fields))
+        notes-column        (inc prev-header-count)
+        score-column        (inc notes-column)
+        notes               (:notes application-review)
+        score               (:score application-review)]
+    (when notes (writer 0 notes-column notes))
+    (when score (writer 0 score-column score))))
 
 (defn pick-form-labels
   [form-content]
@@ -169,7 +176,7 @@
   [applications form]
   (let [labels-in-form         (pick-form-labels (:content form))
         labels-in-applications (mapcat #(map :label (:answers %)) applications)
-        all-labels             (distinct (concat labels-in-form labels-in-applications ["Muistiinpanot"]))]
+        all-labels             (distinct (concat labels-in-form labels-in-applications review-headers))]
     (map-indexed (fn [idx header]
                    {:header header :column idx})
                  all-labels)))

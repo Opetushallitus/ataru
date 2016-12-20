@@ -132,6 +132,7 @@
    :key                             s/Str
    :lang                            s/Str
    :state                           s/Str
+   :score                           (s/maybe s/Int)
    (s/optional-key :form)           s/Int
    (s/optional-key :applicant-name) (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime})
@@ -170,14 +171,12 @@
    (s/optional-key :new-review-state) (s/maybe application-states)})
 
 (s/defschema Review
-  {:id                              s/Int
-   :application-key                 s/Str
-   (s/optional-key :modified-time)  org.joda.time.DateTime
-   :state                           application-states
-   :notes                           (s/maybe s/Str)})
-
-(s/defschema ApplicationRequest
-  {(s/optional-key :sort) (s/enum :by-date)})
+  {:id                             s/Int
+   :application-key                s/Str
+   (s/optional-key :modified-time) org.joda.time.DateTime
+   :state                          application-states
+   (s/optional-key :score)         (s/maybe s/Int)
+   :notes                          (s/maybe s/Str)})
 
 (def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
 

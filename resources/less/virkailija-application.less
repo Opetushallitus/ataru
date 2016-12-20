@@ -221,12 +221,17 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--time {
-  width: 35%;
+  width: 30%;
+  display: inline-block;
+}
+
+.application-handling__list-row--score {
+  width: 10%;
   display: inline-block;
 }
 
 .application-handling__list-row--state {
-  width: 25%;
+  width: 20%;
   display: inline-block;
 }
 
@@ -253,30 +258,57 @@ and (max-width: 1000px) {
   color: @text-color;
   .semibold;
   margin-bottom: 16px;
+  min-width: 120px;
+}
+
+.application-handling__review-row {
+  display: flex;
+}
+
+.application-handling__review-sub-header {
+  width: 120px;
+  color: black;
 }
 
 .application-handling__review-state-container {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  display: flex;
+}
+
+.application-handling__review-state-list-opened-anchor {
+  position: relative;
+}
+
+.application-handling__review-state-list-opened {
+  position: absolute;
+  background-color: @very-light-gray;
+  border: solid @gray 1px;
+  border-radius: 2px;
+  box-shadow: 1px 2px 5px #b3b3b3;
 }
 
 .application-handling__review-state-row {
   position: relative;
-  color: @gray;
+  color: #8e8e8e;
   padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 20px;
-  margin-bottom: 5px;
+  padding-bottom: 7px;
+  padding-left: 26px;
+  margin-bottom: 3px;
   text-transform: uppercase;
   cursor: pointer;
 }
 
+.application-handling__review-state-row:hover {
+  background-color: white;
+}
+
 .application-handling__review-state-row.application-handling__review-state-selected-row {
   color: @text-color;
-  border: solid 1px @blue-border-color;
+  background-color: #ece9e9;
   border-radius: 2px;
   margin-left: 0;
-  padding-left: 3px;
-  width: 230px;
+  padding-left: 9px;
+  width: 240px;
   display: inline-block;
   text-transform: uppercase;
 }
@@ -297,14 +329,25 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-notes {
-  width: 100%;
+  width: 240px;
   height: 100px;
   border: solid 1px @blue-border-color;
   margin-bottom: 30px;
   border-radius: 2px;
-  font-size: 16px;
-  padding: 11px;
+  font-size: 14px;
+  padding: 4px 8px;
   color: #1A1919;
+}
+
+.application-handling__review-inputs {
+  margin-bottom: 20px;
+}
+
+.application-handling__score-input {
+  border-radius: 2px;
+  border: solid 1px @blue-border-color;
+  font-size: 14px;
+  padding: 6px;
 }
 
 /*

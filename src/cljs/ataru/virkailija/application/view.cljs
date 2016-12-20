@@ -101,6 +101,8 @@
                [:span.application-handling__list-row--applicant
                 (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
                [:span.application-handling__list-row--time time]
+               [:span.application-handling__list-row--score
+                (or (:score application) "")]
                [:span.application-handling__list-row--state
                 (or
                  (get application-review-states (:state application))
@@ -149,30 +151,43 @@
    [:div.application-handling__list-header.application-handling__list-row
     [:span.application-handling__list-row--applicant "Hakija"]
     [:span.application-handling__list-row--time "Saapunut"]
+    [:span.application-handling__list-row--score "Pisteet"]
     [:span.application-handling__list-row--state [state-filter-controls]]]
    [application-list-contents applications]])
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
+(defn review-state-selected-row [label]
+  [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+   [icon-check] label])
+
 (defn review-state-row [current-review-state review-state]
-  (let [review-state-id (first review-state)
-        review-state-label (second review-state)]
+  (let [[review-state-id review-state-label] review-state]
     (if (= current-review-state review-state-id)
-      [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-       [icon-check]
-       review-state-label]
+      (review-state-selected-row review-state-label)
       [:div.application-handling__review-state-row
-       {:on-click #(dispatch [:application/update-review-state review-state-id])}
+       {:on-click #(dispatch [:application/update-review-field :state review-state-id])}
        review-state-label])))
 
+(defn opened-review-state-list [review-state]
+  (mapv (partial review-state-row @review-state) application-review-states))
+
 (defn application-review-state []
-  (let [review-state (subscribe [:state-query [:application :review :state]])]
+  (let [review-state (subscribe [:state-query [:application :review :state]])
+        list-opened  (r/atom false)
+        list-click   (fn [evt] (swap! list-opened not))]
     (fn []
-      (into
-       [:div.application-handling__review-state-container
-        [:div.application-handling__review-header "Tila"]]
-       (mapv (partial review-state-row @review-state) application-review-states)))))
+      [:div.application-handling__review-state-container
+       [:div.application-handling__review-header "Tila"]
+       (if @list-opened
+         [:div.application-handling__review-state-list-opened-anchor
+          (into [:div.application-handling__review-state-list-opened
+                 {:on-click list-click}]
+                (opened-review-state-list review-state))]
+         [:div
+          {:on-click list-click}
+          (review-state-selected-row (get application-review-states @review-state))])])))
 
 (defn event-caption [event]
   (case (:event-type event)
@@ -198,23 +213,49 @@
          [:div.application-handling__review-header "Tapahtumat"]]
         (mapv event-row @events)))))
 
-(defn application-review-notes []
+(defn update-review-field [field convert-fn evt]
+  (let [new-value (-> evt .-target .-value)]
+    (dispatch [:application/update-review-field field (convert-fn new-value)])))
+
+(defn convert-score [review new-value]
+  (let [maybe-number (js/Number new-value)]
+    (cond
+      (= "" new-value)
+      nil
+
+      ;; JS NaN is the only thing not equal with itself
+      ;; and this is the way to detect it
+      (not= maybe-number maybe-number)
+      (:score review)
+
+      :else
+      maybe-number)))
+
+(defn application-review-inputs []
   (let [review (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
-        review->notes-str (fn [review] (if-let [notes (:notes @review)] notes ""))]
+        review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
     (fn []
-      [:div
-       [:div.application-handling__review-header "Muistiinpanot"]
-       [:textarea.application-handling__review-notes
-        {:value (review->notes-str review)
-         :on-change (fn [evt]
-                      (let [new-value (-> evt .-target .-value)]
-                        (dispatch [:state-update (fn [db _] (update-in db [:application :review] assoc :notes new-value))])))}]])))
+      [:div.application-handling__review-inputs
+       [:div.application-handling__review-header "Hakijan arviointi"]
+       [:div.application-handling__review-row
+        [:div.application-handling__review-sub-header "Muistiinpanot"]
+        [:textarea.application-handling__review-notes
+         {:value (review-field->str review :notes)
+          :on-change (partial update-review-field :notes identity)}]]
+       [:div.application-handling__review-row
+        [:div.application-handling__review-sub-header "Pisteet"]
+        [:input.application-handling__score-input
+         {:type "text"
+          :max-length "2"
+          :size "2"
+          :value (review-field->str review :score)
+          :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
 (defn application-review []
   [:div.application-handling__review
    [application-review-state]
-   [application-review-notes]
+   [application-review-inputs]
    [application-review-events]])
 
 (defn application-heading [application]
