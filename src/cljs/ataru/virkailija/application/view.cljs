@@ -176,7 +176,7 @@
 (defn application-review-state []
   (let [review-state (subscribe [:state-query [:application :review :state]])
         list-opened  (r/atom false)
-        list-click   (fn [evt] (reset! list-opened (not @list-opened)))]
+        list-click   (fn [evt] (swap! list-opened not))]
     (fn []
       [:div.application-handling__review-state-container
        [:div.application-handling__review-header "Tila"]
