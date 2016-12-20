@@ -63,6 +63,8 @@
                              (randomize-phone-number (extract-value application "phone")))
         email            (or (get-in application [key :email])
                              (str first-name "." last-name "@devnull.com"))
+        postal-code      (or (get-in application [key :postal-code])
+                             (apply str (take 5 (repeatedly #(rand-int 9)))))
         anonymize-answer (fn [{:keys [key value] :as answer}]
                            (let [value (case key
                                          "first-name" first-name
@@ -74,6 +76,9 @@
                                                  :female "020202A0202")
                                          "phone" phone
                                          "email" email
+                                         "postal-code" postal-code
+                                         "postal-office" "Helsinki"
+                                         "home-town" "Äkäslompolo"
                                          value)]
                              (assoc answer :value value)))
         content          (clojure.walk/prewalk (fn [x]
@@ -86,12 +91,13 @@
                                              :content        content})]
     (cond-> (update applications :applications conj application)
       (not (contains? applications key))
-      (update key merge {:gender     gender
-                         :first-name first-name
-                         :last-name  last-name
-                         :address    address
-                         :phone      phone
-                         :email      email}))))
+      (update key merge {:gender      gender
+                         :first-name  first-name
+                         :last-name   last-name
+                         :address     address
+                         :phone       phone
+                         :email       email
+                         :postal-code postal-code}))))
 
 (defn anonymize-data []
   (doseq [application (->> (application-store/get-all-applications)
