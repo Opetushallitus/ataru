@@ -194,3 +194,11 @@ Swagger specs for the APIs can be found at the following locations:
 
 * Applicant API: <http://localhost:8351/hakemus/swagger.json>
 * Officer API: <http://localhost:8350/lomake-editori/swagger.json>
+
+## Anonymize data
+
+Application data can be anonymized as follows:
+
+```
+CONFIG=path-to-application-config.edn lein anonymize-data
+```
