@@ -39,6 +39,20 @@
          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
 (reg-event-db
+ :application/update-sort
+ (fn [db [_ column-id]]
+   (let [current-sort (get-in db [:application :sort])]
+     (if (= column-id (:column current-sort))
+       (update-in db
+                  [:application :sort]
+                  assoc
+                  :order
+                  (if (= :ascending (:order current-sort))
+                    :descending
+                    :ascending))
+       (assoc-in db [:application :sort] {:column column-id :order :descending})))))
+
+(reg-event-db
   :application/handle-fetch-applications-response
   (fn [db [_ {:keys [applications]}]]
     (-> db

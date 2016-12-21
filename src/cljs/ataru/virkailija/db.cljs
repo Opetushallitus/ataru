@@ -8,4 +8,6 @@
    ; Initial active panel on page load.
    :active-panel :editor
    :application {:review {}
-                 :filter (mapv first application-review-states)}})
+                 :filter (mapv first application-review-states)
+                 :sort {:column :time
+                        :order :descending}}})

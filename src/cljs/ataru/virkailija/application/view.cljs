@@ -146,12 +146,36 @@
                 application-review-states)))
        (when @filter-opened [:div.application-handling__filter-state-selection-arrow-down])])))
 
+(defn sortable-column-click [column-id evt]
+  (dispatch [:application/update-sort column-id]))
+
+(defn application-list-basic-column-header [column-id css-class heading]
+  (let [application-sort (subscribe [:state-query [:application :sort]])]
+    (fn [column-id css-class heading]
+      [:span
+       {:class    css-class
+        :on-click (partial sortable-column-click column-id)}
+       heading
+       (when (= column-id (:column @application-sort))
+         (if (= :ascending (:order @application-sort))
+           [:i.zmdi.zmdi-chevron-down]
+           [:i.zmdi.zmdi-chevron-up]))])))
+
 (defn application-list [applications]
   [:div
    [:div.application-handling__list-header.application-handling__list-row
-    [:span.application-handling__list-row--applicant "Hakija"]
-    [:span.application-handling__list-row--time "Saapunut"]
-    [:span.application-handling__list-row--score "Pisteet"]
+    [application-list-basic-column-header
+     :applicant
+     "application-handling__list-row--applicant"
+     "Hakija"]
+    [application-list-basic-column-header
+     :time
+     "application-handling__list-row--time"
+     "Saapunut"]
+    [application-list-basic-column-header
+     :score
+     "application-handling__list-row--score"
+     "Pisteet"]
     [:span.application-handling__list-row--state [state-filter-controls]]]
    [application-list-contents applications]])
 
