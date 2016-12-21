@@ -437,7 +437,7 @@
         {:class @animation-effect}
         [text-header "Vierekkäiset tekstikentät" path]
         [:div.editor-form__text-field-wrapper
-         [:header.editor-form__component-item-header "Kysymys"]
+         [:header.editor-form__component-item-header "Otsikko"]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
