@@ -60,8 +60,8 @@
         ; editor side loads values as vectors of strings
         editor-side    (map (comp :value second))]
     (apply map vector (filter not-empty (concat
-                             (eduction applicant-side child-answers)
-                             (eduction editor-side child-answers))))))
+                                          (eduction applicant-side child-answers)
+                                          (eduction editor-side child-answers))))))
 
 (defn fieldset [field-descriptor application lang children]
   [:div.application__form-field
@@ -74,9 +74,9 @@
          [:th (str (-> child :label lang)) (required-hint field-descriptor)]))]
     [:tbody
      (doall
-       (for [[child values] (map vector children (extract-values children (:answers application)))]
+       (for [[idx values] (map vector (range) (extract-values children (:answers application)))]
          (into
-           [:tr {:key (:id child)}]
+           [:tr {:key (str idx "-" (apply str values))}]
            (for [value values]
              [:td value]))))]]])
 
