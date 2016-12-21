@@ -201,7 +201,7 @@
   [applications form]
   (let [labels-in-form         (pick-form-labels (:content form))
         labels-in-applications (mapcat #(map (fn [answer] (vals (select-keys answer [:key :label]))) (:answers %)) applications)
-        all-labels             (distinct (concat labels-in-form labels-in-applications review-headers))]
+        all-labels             (distinct (concat labels-in-form labels-in-applications (map vector (repeat nil) review-headers)))
         decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
     (for [[idx [id header]] (map vector (range) all-labels)
           :when             (string? header)]
