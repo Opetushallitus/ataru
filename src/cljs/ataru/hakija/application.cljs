@@ -47,7 +47,7 @@
     {:key (name ans-key)
      :value (or
               value
-              (map :value values))
+              (map (fn [v] (or (:value v) "")) values))
      :fieldType field-type
      :label label}))
 
