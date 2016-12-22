@@ -20,7 +20,7 @@
 
 (defn form-list-arrow [open]
   [:i.zmdi.application-handling__form-list-arrow
-   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
+   {:class (if @open "zmdi-chevron-down" "zmdi-chevron-up")}])
 
 (defn form-list-header []
   (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
@@ -90,6 +90,7 @@
         [excel-download-link filtered-applications application-filter]]
        [:div.application-handling__form-list-column-wrapper
         (when-not @open {:style {:display "none"}})
+        [:div.application-handling__form-list-indicator]
         [hakukohde-column]
         [forms-column]]])))
 
