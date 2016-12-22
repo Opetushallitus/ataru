@@ -1,5 +1,7 @@
 (ns ataru.virkailija.db
-  (:require [ataru.application.review-states :refer [application-review-states]]))
+  (:require
+   [ataru.application.review-states :refer [application-review-states]]
+   [ataru.virkailija.application-sorting :as application-sorting]))
 
 (def default-db
   {:editor {:forms nil
@@ -9,5 +11,4 @@
    :active-panel :editor
    :application {:review {}
                  :filter (mapv first application-review-states)
-                 :sort {:column :created-time
-                        :order :descending}}})
+                 :sort application-sorting/initial-sort}})

@@ -2,7 +2,7 @@
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
-            [ataru.virkailija.temporal :as t]
+            [ataru.virkailija.application-sorting :as application-sorting]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -39,23 +39,6 @@
          (assoc-in [:application :applications] updated-applications)
          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
-
-(def application-sort-column-fns
-  {:score
-   {:ascending (fn [x y ] (< (:score x) (:score y)))
-    :descending (fn [x y ] (> (:score x) (:score y)))}
-   :applicant-name
-   {:ascending (fn [x y] (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y))))
-    :descending (fn [x y] (- (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y)))))}
-   :created-time
-   {:ascending (fn [x y]
-                 (< (t/time->long (:created-time x)) (t/time->long (:created-time y))))
-    :descending (fn [x y]
-                  (> (t/time->long (:created-time x)) (t/time->long (:created-time y))))}})
-
-(defn sort-by-column [applications column-id order]
-  (sort (get-in application-sort-column-fns [column-id order]) applications))
-
 (reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
@@ -73,14 +56,14 @@
             new-order)
            (assoc-in
             [:application :applications]
-            (sort-by-column current-applications column-id new-order)))
+            (application-sorting/sort-by-column current-applications column-id new-order)))
        (-> db
            (assoc-in
             [:application :sort]
             {:column column-id :order :descending})
            (assoc-in
             [:application :applications]
-            (sort-by-column current-applications column-id :descending)))))))
+            (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
 (reg-event-db
   :application/handle-fetch-applications-response
