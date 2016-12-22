@@ -50,7 +50,7 @@
 
 (defn- extract-values [children answers]
   (let [child-answers  (->> (map answer-key children)
-                            (select-keys answers))
+                         (select-keys answers))
         ; applicant side stores values as hashmaps
         applicant-side (map (comp
                               (fn [values]
@@ -59,9 +59,13 @@
                               second))
         ; editor side loads values as vectors of strings
         editor-side    (map (comp :value second))]
-    (apply map vector (filter not-empty (concat
-                                          (eduction applicant-side child-answers)
-                                          (eduction editor-side child-answers))))))
+    (when-let [concatenated-answers (->>
+                                      (concat
+                                        (eduction applicant-side child-answers)
+                                        (eduction editor-side child-answers))
+                                      (filter not-empty)
+                                      not-empty)]
+      (apply map vector concatenated-answers))))
 
 (defn fieldset [field-descriptor application lang children]
   [:div.application__form-field
