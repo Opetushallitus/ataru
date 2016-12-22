@@ -157,7 +157,7 @@
         :on-click (partial sortable-column-click column-id)}
        heading
        (when (= column-id (:column @application-sort))
-         (if (= :ascending (:order @application-sort))
+         (if (= :descending (:order @application-sort))
            [:i.zmdi.zmdi-chevron-down]
            [:i.zmdi.zmdi-chevron-up]))])))
 
