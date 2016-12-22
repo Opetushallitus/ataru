@@ -127,16 +127,20 @@
         clickElement(scoreColumn)()
             .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
             .then(function() {
-              expect(_.isEqual(applicantNames(), ["Seija Susanna Kuikeloinen", "Ari Vatanen"])).to.be.true
+              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
             })
             .then(clickElement(scoreColumn))
             .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
             .then(function() {
-              expect(_.isEqual(applicantNames(), ["Ari Vatanen", "Seija Susanna Kuikeloinen"])).to.be.true
+              expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
               done()
             })
             .fail(done)
       })
+
+      function expectApplicants(expected) {
+        expect(_.isEqual(applicantNames(), expected)).to.be.true
+      }
 
       function firstApplicantNameIs(expected) {
         return function() { return applicantNames()[0] === expected }
