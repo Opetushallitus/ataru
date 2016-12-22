@@ -38,27 +38,44 @@
          (assoc-in [:application :applications] updated-applications)
          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
-(defn sort-by-column [applications column]
-  applications)
+
+(def application-sort-column-fns
+  {:score
+   {:ascending (fn [x y ] (> (:score x) (:score y)))
+    :descending (fn [x y ] (< (:score x) (:score y)))}
+   :applicant-name
+   {:ascending (fn [x y] (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y))))
+    :descending (fn [x y] (- (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y)))))}
+   })
+
+(defn sort-by-column [applications column-id order]
+  (sort (get-in application-sort-column-fns [column-id order]) applications))
 
 (reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
-   (let [current-sort (get-in db [:application :sort])
-         new-order    (if (= :ascending (:order current-sort))
-                        :descending
-                        :ascending)]
+   (let [current-applications (get-in db [:application :applications])
+         current-sort         (get-in db [:application :sort])
+         new-order            (if (= :ascending (:order current-sort))
+                                :descending
+                                :ascending)]
      (if (= column-id (:column current-sort))
        (-> db
            (update-in
             [:application :sort]
             assoc
             :order
-            new-order))
+            new-order)
+           (assoc-in
+            [:application :applications]
+            (sort-by-column current-applications column-id new-order)))
        (-> db
            (assoc-in
             [:application :sort]
-            {:column column-id :order :descending}))))))
+            {:column column-id :order :descending})
+           (assoc-in
+            [:application :applications]
+            (sort-by-column current-applications column-id :descending)))))))
 
 (reg-event-db
   :application/handle-fetch-applications-response

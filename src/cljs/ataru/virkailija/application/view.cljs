@@ -165,11 +165,11 @@
   [:div
    [:div.application-handling__list-header.application-handling__list-row
     [application-list-basic-column-header
-     :applicant
+     :applicant-name
      "application-handling__list-row--applicant"
      "Hakija"]
     [application-list-basic-column-header
-     :time
+     :created-time
      "application-handling__list-row--time"
      "Saapunut"]
     [application-list-basic-column-header
