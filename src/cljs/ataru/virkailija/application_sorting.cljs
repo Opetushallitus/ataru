@@ -4,10 +4,13 @@
 
 (def initial-sort {:column :created-time :order :descending})
 
+(defn- score-sort [compare-fn x y]
+  (compare-fn (:score x) (:score y)))
+
 (def application-sort-column-fns
   {:score
-   {:ascending (fn [x y ] (< (:score x) (:score y)))
-    :descending (fn [x y ] (> (:score x) (:score y)))}
+   {:ascending (partial score-sort <)
+    :descending (partial score-sort >)}
    :applicant-name
    {:ascending (fn [x y] (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y))))
     :descending (fn [x y] (- (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y)))))}
