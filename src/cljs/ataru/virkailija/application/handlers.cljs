@@ -70,7 +70,8 @@
   (fn [db [_ {:keys [applications]}]]
     (-> db
         (assoc-in [:application :applications] applications)
-        (assoc-in [:application :review-state-counts] (review-state-counts applications)))))
+        (assoc-in [:application :review-state-counts] (review-state-counts applications))
+        (assoc-in [:application :sort] application-sorting/initial-sort))))
 
 (reg-event-fx
   :application/fetch-applications
