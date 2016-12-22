@@ -18,54 +18,46 @@
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
 
-(defn form-list-arrow-up [open]
-  [:i.zmdi.zmdi-chevron-up.application-handling__form-list-arrow
-   {:on-click #(toggle-form-list-open! open)}])
+(defn form-list-arrow [open]
+  [:i.zmdi.application-handling__form-list-arrow
+   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
 
-(defn form-list-row [name href selected? deleted? open]
-  [:a.application-handling__form-list-row-link
-   {:href href}
-   (let [row-element [:div.application-handling__form-list-row
-                      {:class (classnames {:application-handling__form-list-selected-row selected?
-                                           :application-handling__form-list-deleted-row deleted?})
-                              :on-click #(toggle-form-list-open! open)}
-                      (str name (if deleted? " (poistettu) ") "")]]
-     (if selected? [wrap-scroll-to row-element] row-element))])
-
-(defn form-list-opened [forms hakukohteet selected-form-key selected-hakukohde open]
-  (let [form-rows      (for [[id form] forms
-                             :let [selected? (= id selected-form-key)
-                                   deleted? (:deleted form)]]
-                         ^{:key id}
-                         [form-list-row (str "Lomake – " (:name form)) (str "/lomake-editori/applications/" (:key form)) selected? deleted? open])
-        hakukohde-rows (for [{:keys [hakukohde hakukohde-name]} hakukohteet
-                             :let [selected? (= hakukohde (:hakukohde selected-hakukohde))]]
-                         ^{:key hakukohde}
-                         [form-list-row (str "Hakukohde – " hakukohde-name) (str "/lomake-editori/applications/hakukohde/" hakukohde) selected? false open])]
-    [:div.application-handling__form-list-open-wrapper ;; We need this wrapper to anchor up-arrow to be seen at all scroll-levels of the list
-     [form-list-arrow-up open]
-     (into [:div.application-handling__form-list-open] (into form-rows hakukohde-rows))]))
-
-(defn form-list-closed [selected-form selected-hakukohde open]
-  [:div.application-handling__form-list-closed
-   {:on-click #(toggle-form-list-open! open)}
-   [:div.application-handling__form-list-row.application-handling__form-list-selected-row (or
-                                                                                            (:name selected-form)
-                                                                                            (:hakukohde-name selected-hakukohde))]
-   [:i.zmdi.zmdi-chevron-down.application-handling__form-list-arrow]])
-
-(defn form-list []
-  (let [forms                  (subscribe [:state-query [:editor :forms]])
-        hakukohteet            (subscribe [:state-query [:editor :hakukohteet]])
-        selected-form-key      (subscribe [:state-query [:editor :selected-form-key]])
-        selected-hakukohde     (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form          (subscribe [:editor/selected-form])
-        open                   (r/atom false)]
+(defn form-list-header []
+  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
+        selected-form      (subscribe [:editor/selected-form])]
     (fn []
-      [:div.application-handling__form-list-wrapper
-       (if @open
-        [form-list-opened @forms @hakukohteet @selected-form-key @selected-hakukohde open]
-        [form-list-closed @selected-form @selected-hakukohde open])])))
+      [:div.application-handling__form-list-header
+       (or (:name @selected-form)
+           (:hakukohde-name @selected-hakukohde))])))
+
+(defn form-list-form-link [{:keys [name deleted]}]
+  [:div.application-handling__form-list-link-container
+   [:a (cond-> {:href "#"}
+         (true? deleted)
+         (assoc :class "application-handling__form-list-link--deleted"))
+    name]])
+
+(defn form-list-column [forms header-text]
+  [:div.application-handling__form-list-column
+   [:span.application-handling__form-list-column-header header-text]
+   (map form-list-form-link forms)])
+
+(defn hakukohde->form-list-item [{:keys [hakukohde-name]}]
+  {:name hakukohde-name})
+
+(defn hakukohde-column []
+  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
+                                   (map hakukohde->form-list-item)))]
+    (fn []
+      [form-list-column @hakukohteet "Hakukohde"])))
+
+(defn forms-column []
+  (let [forms (reaction (->> @(subscribe [:state-query [:editor :forms]])
+                             (reduce-kv (fn [forms _ form]
+                                          (conj forms form))
+                                        [])))]
+    (fn []
+      [form-list-column @forms "Lomake"])))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
@@ -85,6 +77,21 @@
           [:a.application-handling__excel-download-link
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
+
+(defn form-list [filtered-applications application-filter]
+  (let [open (r/atom false)]
+    (fn [filtered-applications application-filter]
+      [:div.application-handling__form-list-wrapper
+       [:div.application-handling__header
+        {:on-click #(toggle-form-list-open! open)}
+        [:div
+         [form-list-arrow open]
+         [form-list-header]]
+        [excel-download-link filtered-applications application-filter]]
+       [:div.application-handling__form-list-column-wrapper
+        (when-not @open {:style {:display "none"}})
+        [hakukohde-column]
+        [forms-column]]])))
 
 (defn application-list-contents [applications]
   (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
@@ -290,8 +297,6 @@
         [:div
          [:div.application-handling__overview
           [:div.panel-content
-           [:div.application-handling__header
-            [form-list]
-            [excel-download-link filtered-applications @application-filter]]
+           [form-list filtered-applications @application-filter]
            [application-list filtered-applications]]]
          [application-review-area filtered-applications]]))))

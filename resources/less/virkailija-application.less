@@ -20,10 +20,43 @@
 
 .application-handling__header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
+  justify-content: space-between;
   padding-bottom: 20px;
   border-bottom: 1px solid @bottom-separator-color;
   margin-bottom: 10px;
+}
+
+.application-handling__form-list-column-wrapper {
+  background-color: @application-form-list-background-color;
+  display: flex;
+  flex-flow: row nowrap;
+  padding-left: 20px;
+  padding-right: 20px;
+  position: absolute;
+  top: 35px;
+  width: 100%;
+}
+
+.application-handling__form-list-column {
+  display: flex;
+  flex: 0 0 50%;
+  flex-flow: column nowrap;
+}
+
+.application-handling__form-list-column-header {
+  border-bottom: 1px solid #E3ECEF;
+  padding: 10px 20px;
+}
+
+.application-handling__form-list-link-container {
+  padding-right: 20px;
+  padding-left: 20px;
+  padding-top: 10px;
+}
+
+.application-handling__form-list-link-container:last-of-type {
+  padding-bottom: 10px;
 }
 
 .application-handling__form-list-wrapper {
@@ -32,6 +65,7 @@
   width: 100%;
   min-width: 300px;
   margin-right: 20px;
+  z-index: 15;
 }
 
 .application-handling__form-list-open {
@@ -59,6 +93,15 @@
   text-decoration: none;
 }
 
+.application-handling__form-list-header {
+  font-size: 24px;
+  .semibold;
+  padding: 0 10px 0 0;
+  display: inline-block;
+  line-height: 100%;
+  margin-left: 15px;
+}
+
 .application-handling__form-list-row {
   cursor: pointer;
   font-size: 16px;
@@ -79,7 +122,7 @@
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 23px;
+  margin-left: 10px;
 }
 
 .application-handling__form-list-closed .application-handling__form-list-row:hover {
@@ -90,15 +133,13 @@
   color: #06526B;
   cursor: pointer;
   font-size: 26px;
-  position: absolute;
-  left: 0;
 }
 
 .application-handling__form-list-open-wrapper .application-handling__form-list-arrow {
   z-index: 4;
 }
 
-.application-handling__form-list-deleted-row {
+.application-handling__form-list-link--deleted {
   color: @disabled-list-item-color;
 }
 
