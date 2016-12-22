@@ -42,6 +42,7 @@
   display: flex;
   flex: 0 0 50%;
   flex-flow: column nowrap;
+  min-width: 285px;
 }
 
 .application-handling__form-list-column-header {
@@ -401,6 +402,10 @@ and (max-width: @desktop-content-width) {
    */
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
+  }
+
+  .application-handling__form-list-column-wrapper {
+    flex-flow: row wrap;
   }
 }
 
