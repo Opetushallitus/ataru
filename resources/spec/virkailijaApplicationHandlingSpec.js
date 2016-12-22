@@ -124,7 +124,18 @@
 
     describe ('Application sorting', function () {
       it('Sorting by score works (descending first)', function(done) {
-        clickElement(scoreColumn)()
+        var firstApplicantNameBeforeAnySorting = null
+        wait.until(applicantNamesExist)()
+            .then(function() {
+              firstApplicantNameBeforeAnySorting = firstApplicantName()
+            })
+            .then(clickElement(timeColumn))
+            .then(wait.until(function() {
+              // We can't really know the initial time order exactly, the inserts in
+              // fixture are so close
+              return firstApplicantName() !== firstApplicantNameBeforeAnySorting
+            }))
+            .then(clickElement(scoreColumn))
             .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
             .then(function() {
               expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
@@ -152,8 +163,14 @@
         expect(_.isEqual(applicantNames(), expected)).to.be.true
       }
 
+      function firstApplicantName() { return applicantNames()[0] }
+
       function firstApplicantNameIs(expected) {
-        return function() { return applicantNames()[0] === expected }
+        return function() { return firstApplicantName() === expected }
+      }
+
+      function applicantNamesExist() {
+        return function() { return applicantNames().length > 0 }
       }
 
       function applicantNames() {
@@ -170,6 +187,10 @@
 
       function applicantColumn() {
         return testFrame().find('.application-handling__list-row--applicant')
+      }
+
+      function timeColumn() {
+        return testFrame().find('.application-handling__list-row--time')
       }
 
     })
