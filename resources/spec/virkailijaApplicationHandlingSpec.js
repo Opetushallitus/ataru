@@ -127,17 +127,16 @@
         clickElement(function () { return testFrame().find('.application-handling__list-row--score') })()
             .then(wait.until(function() { return applicantNames()[0] === "Seija Susanna Kuikeloinen" }))
             .then(function() {
-              // Seija has higher score now (applied above)
-              expect(applicantNames()[0]).to.equal("Seija Susanna Kuikeloinen")
-              expect(applicantNames()[1]).to.equal("Ari Vatanen")
+              expect(_.isEqual(applicantNames(), ["Seija Susanna Kuikeloinen", "Ari Vatanen"])).to.be.true
               done()
             }).fail(done)
       })
       function applicantNames() {
-        return  testFrame()
-                .find('.application-handling__list-row--applicant')
-                .map(function(x, y) { return $(y).text(); })
-                .filter(function(x, y) { return y !== 'Hakija'; });
+        var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant')
+        return _(scoreColumnObjects)
+            .map(function (obj) { return $(obj).text() })
+            .filter(function (val) { return val !== 'Hakija' })
+            .value()
       }
     })
     describe('application filtering', function() {
