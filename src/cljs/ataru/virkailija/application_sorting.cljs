@@ -7,6 +7,10 @@
 (defn- score-sort [compare-fn x y]
   (compare-fn (:score x) (:score y)))
 
+(defn- date-sort [compare-fn x y]
+  (compare-fn (t/time->long (:created-time x))
+              (t/time->long (:created-time y))))
+
 (def application-sort-column-fns
   {:score
    {:ascending (partial score-sort <)
@@ -15,10 +19,8 @@
    {:ascending (fn [x y] (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y))))
     :descending (fn [x y] (- (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y)))))}
    :created-time
-   {:ascending (fn [x y]
-                 (< (t/time->long (:created-time x)) (t/time->long (:created-time y))))
-    :descending (fn [x y]
-                  (> (t/time->long (:created-time x)) (t/time->long (:created-time y))))}})
+   {:ascending (partial date-sort <)
+    :descending (partial date-sort >)}})
 
 (defn sort-by-column [applications column-id order]
   (sort (get-in application-sort-column-fns [column-id order]) applications))
