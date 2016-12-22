@@ -141,9 +141,9 @@
             return filteredApplicationsCount() === 2
           })()
         })
-        .then(function() {
-          done()
-        }).fail(done)
+        .then(clickElement(filterLink))
+        .then(done)
+        .fail(done)
       })
 
       function filterOutBasedOnFirstApplicationState(stateOfFirstApplication) {
