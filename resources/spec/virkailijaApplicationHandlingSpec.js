@@ -87,19 +87,22 @@
         expect(lastEventNow).to.equal(firstNotSelectedCaption)
       })
       it('Successfully stores notes and score for an application', function(done) {
+        var scoreForVatanen = Math.floor((Math.random() * 50) + 1)
+        var scoreForKuikeloinen = (scoreForVatanen + 5)
+
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
-        .then(setTextFieldValue(score, '31'))
+        .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
         .then(wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')))
         .then(function() {
           expect(reviewNotes().val()).to.equal('')
-          expect(score().val()).to.equal('')
         })
+        .then(setTextFieldValue(score, scoreForKuikeloinen))
         .then(clickElement(firstApplication))
         .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
         .then(function () {
           expect(reviewNotes().val()).to.equal('Reipas kaveri')
-          expect(score().val()).to.equal('31')
+          expect(score().val()).to.equal(scoreForVatanen + '')
           done()
         }).fail(done)
       })
