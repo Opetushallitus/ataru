@@ -133,8 +133,18 @@
             .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
             .then(function() {
               expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
-              done()
             })
+            .then(clickElement(applicantColumn))
+            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
+            .then(function() {
+              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
+            })
+            .then(clickElement(applicantColumn))
+            .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
+            .then(function() {
+              expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
+            })
+            .then(done)
             .fail(done)
       })
 
@@ -157,6 +167,11 @@
       function scoreColumn() {
         return testFrame().find('.application-handling__list-row--score')
       }
+
+      function applicantColumn() {
+        return testFrame().find('.application-handling__list-row--applicant')
+      }
+
     })
     describe('application filtering', function() {
       before(clickElement(filterLink))
