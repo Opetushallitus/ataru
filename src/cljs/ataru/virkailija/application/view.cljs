@@ -30,17 +30,19 @@
        (or (:name @selected-form)
            (:hakukohde-name @selected-hakukohde))])))
 
-(defn form-list-form-link [{:keys [name deleted]}]
-  [:div.application-handling__form-list-link-container
-   [:a (cond-> {:href "#"}
-         (true? deleted)
-         (assoc :class "application-handling__form-list-link--deleted"))
-    name]])
+(defn form-list-form-link [idx {:keys [name deleted]}]
+  (let [key (str "form-list-item-" idx)]
+    [:div.application-handling__form-list-link-container
+     {:key key}
+     [:a (cond-> {:href "#"}
+           (true? deleted)
+           (assoc :class "application-handling__form-list-link--deleted"))
+      name]]))
 
 (defn form-list-column [forms header-text]
   [:div.application-handling__form-list-column
    [:span.application-handling__form-list-column-header header-text]
-   (map form-list-form-link forms)])
+   (map-indexed form-list-form-link forms)])
 
 (defn hakukohde->form-list-item [{:keys [hakukohde-name]}]
   {:name hakukohde-name})
