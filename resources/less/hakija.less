@@ -444,20 +444,19 @@
   margin-right: 6px;
 }
 
-.application__readonly-adjacent {
-  * {
-    font-size: 14px;
-    margin: 0;
-    padding: 0;
-  }
+.application__readonly-adjacent * {
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+}
 
-  th {
-    padding-right: 2em;
-  }
+th.application__readonly-adjacent--header {
+  padding-right: 3em;
+  padding-left: 0;
+}
 
-  th:last-of-type {
-    padding-right: 0;
-  }
+th.application__readonly-adjacent--header:last-of-type {
+  padding-right: 0;
 }
 
 .application__form-single-choice-button-outer-container {

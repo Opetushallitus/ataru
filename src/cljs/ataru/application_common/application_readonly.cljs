@@ -71,7 +71,7 @@
     [:thead
      (into [:tr]
        (for [child children]
-         [:th (str (-> child :label lang)) (required-hint field-descriptor)]))]
+         [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
     [:tbody
      (doall
        (for [[idx values] (map vector (range) (extract-values children (:answers application)))]
