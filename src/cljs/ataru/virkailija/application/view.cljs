@@ -78,21 +78,28 @@
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
+(defn form-list-search []
+  [:div.application-handling__form-list-search-row
+   [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
+    {:type "text"}]])
+
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
     (fn [filtered-applications application-filter]
-      [:div.application-handling__form-list-wrapper
+      [:div.application-handling__form-list-wrapper-outer
        [:div.application-handling__header
         {:on-click #(toggle-form-list-open! open)}
         [:div
          [form-list-arrow open]
          [form-list-header]]
         [excel-download-link filtered-applications application-filter]]
-       [:div.application-handling__form-list-column-wrapper
+       [:div.application-handling__form-list-wrapper-inner
         (when-not @open {:style {:display "none"}})
-        [:div.application-handling__form-list-indicator]
-        [hakukohde-column]
-        [forms-column]]])))
+        [form-list-search]
+        [:div.application-handling__form-list-column-wrapper
+         [:div.application-handling__form-list-indicator]
+         [hakukohde-column]
+         [forms-column]]]])))
 
 (defn application-list-contents [applications]
   (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
