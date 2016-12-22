@@ -9,5 +9,5 @@
    :active-panel :editor
    :application {:review {}
                  :filter (mapv first application-review-states)
-                 :sort {:column :time
+                 :sort {:column :created-time
                         :order :descending}}})
