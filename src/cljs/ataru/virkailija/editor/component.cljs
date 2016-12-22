@@ -448,8 +448,6 @@
 
        [info-addon path]
 
-       [:p.editor-form__adjacent-fieldset-info "Lisää max 3 vierekkäistä kenttää"]
-
        [:div.editor-form__adjacent-fieldset-container
         children
 
