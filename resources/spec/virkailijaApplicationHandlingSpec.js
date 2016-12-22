@@ -124,19 +124,34 @@
 
     describe ('Application sorting', function () {
       it('Sorting by score works (descending first)', function(done) {
-        clickElement(function () { return testFrame().find('.application-handling__list-row--score') })()
-            .then(wait.until(function() { return applicantNames()[0] === "Seija Susanna Kuikeloinen" }))
+        clickElement(scoreColumn)()
+            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
             .then(function() {
               expect(_.isEqual(applicantNames(), ["Seija Susanna Kuikeloinen", "Ari Vatanen"])).to.be.true
+            })
+            .then(clickElement(scoreColumn))
+            .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
+            .then(function() {
+              expect(_.isEqual(applicantNames(), ["Ari Vatanen", "Seija Susanna Kuikeloinen"])).to.be.true
               done()
-            }).fail(done)
+            })
+            .fail(done)
       })
+
+      function firstApplicantNameIs(expected) {
+        return function() { return applicantNames()[0] === expected }
+      }
+
       function applicantNames() {
         var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant')
         return _(scoreColumnObjects)
             .map(function (obj) { return $(obj).text() })
             .filter(function (val) { return val !== 'Hakija' })
             .value()
+      }
+
+      function scoreColumn() {
+        return testFrame().find('.application-handling__list-row--score')
       }
     })
     describe('application filtering', function() {
