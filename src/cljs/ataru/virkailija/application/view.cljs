@@ -155,11 +155,12 @@
       [:span
        {:class    css-class
         :on-click (partial sortable-column-click column-id)}
-       heading
+       [:span.application-handling__basic-list-basic-column-header
+        heading]
        (when (= column-id (:column @application-sort))
          (if (= :descending (:order @application-sort))
-           [:i.zmdi.zmdi-chevron-down]
-           [:i.zmdi.zmdi-chevron-up]))])))
+           [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
+           [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
 
 (defn application-list [applications]
   [:div
