@@ -68,21 +68,22 @@
       (apply map vector concatenated-answers))))
 
 (defn fieldset [field-descriptor application lang children]
-  [:div.application__form-field
-   [:label.application__form-field-label
-    (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:table.application__readonly-adjacent
-    [:thead
-     (into [:tr]
-       (for [child children]
-         [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-    [:tbody
-     (doall
-       (for [[idx values] (map vector (range) (extract-values children (:answers application)))]
-         (into
-           [:tr {:key (str idx "-" (apply str values))}]
-           (for [value values]
-             [:td value]))))]]])
+  (when-let [fieldset-answers (extract-values children (:answers application))]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [:table.application__readonly-adjacent
+      [:thead
+       (into [:tr]
+         (for [child children]
+           [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
+      [:tbody
+       (doall
+         (for [[idx values] (map vector (range) fieldset-answers)]
+           (into
+             [:tr {:key (str idx "-" (apply str values))}]
+             (for [value values]
+               [:td value]))))]]]))
 
 (defn field [content application lang]
   (match content
