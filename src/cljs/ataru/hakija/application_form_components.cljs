@@ -5,9 +5,9 @@
             [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
-                                                           required-hint
-                                                           textual-field-value
-                                                           scroll-to-anchor]]
+                                                                       required-hint
+                                                                       textual-field-value
+                                                                       scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -118,7 +118,7 @@
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
-       [label field-descriptor size-class]
+       [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:input.application__form-text-input
@@ -145,7 +145,7 @@
                        (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
-              [label field-descriptor size-class]
+              [label field-descriptor]
               [:div.application__form-text-input-info-text
                [info-text field-descriptor]]]
         (cons
@@ -381,6 +381,87 @@
        [:label.application__form-field-label [:span header]])
      [link-detected-paragraph text]]))
 
+(defn spawn-children-based-on-answers [children answers]
+  (let [child-ids        (map (comp keyword :id) children)
+        adjacent         (select-keys answers child-ids)
+        count-of-answers (reduce max
+                           1 ; by default displays one row
+                           (map (comp count :values second) adjacent))]
+    (flatten
+      (map-indexed
+        (fn [index children]
+          (map
+            (fn [child]
+              (let [id (keyword (:id child))]
+                {:id          id
+                 :value-index index
+                 :child       child
+                 :value       (get-in adjacent [id :values index :value])
+                 :valid?      (boolean (get-in adjacent [id :values index :valid]))}))
+            children))
+        (repeat count-of-answers children)))))
+
+(defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
+  (let [language              (subscribe [:application/form-language])
+        default-lang          (subscribe [:application/default-language])
+        header                (some-> (get-in field-descriptor [:label @language]))
+        info-text             (some-> (get-in field-descriptor [:params :info-text :label @language]))
+        repeatable?           (-> field-descriptor :params :repeatable)
+        answers               (subscribe [:state-query [:application :answers]])
+        adjacent-field-change (fn [child id idx event]
+                                (let [value  (some-> event .-target .-value)
+                                      valid? (field-value-valid? child value)]
+                                  (dispatch [:application/set-adjacent-field-answer
+                                             child
+                                             id
+                                             idx
+                                             {:value value :valid valid?}])))]
+    (fn [{:keys [children] :as field-descriptor}]
+      [:div.application__form-field
+       [label field-descriptor]
+       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+         [:div.application__form-info-text [link-detected-paragraph info]])
+       [:div
+        (doall (for [[rowcount row]
+                     (->> (spawn-children-based-on-answers children @answers)
+                          ; counter
+                          (map vector (range))
+                          ; children grouped into a row
+                          (partition (count children))
+                          ; rowcount
+                          (map vector (range)))]
+                 (into
+                   ^{:key (->> row second second (select-keys [:value-index :id]) (apply str "-" rowcount))}
+                   [:div.application__form-adjacent-text-fields-wrapper
+                    (for [[counter {:keys [id value-index child value valid?]}] row
+                          :let  [fid (str value-index "-" (:id child))]]
+                      ^{:key fid}
+                      [:div.application__form-adjacent-row
+                       [:div {:class (when (-> counter (>= (count children)))
+                                       "application__form-adjacent-row--mobile-only")}
+                        [label  child]]
+                       [:input.application__form-text-input
+                        {:id        fid
+                         :type      "text"
+                         :class     (match [valid? ((set (:validators child)) "required")]
+                                      [false (_ :guard some?)]
+                                      " application__form-field-error"
+                                      :else
+                                      " application__form-text-input--normal")
+                         :value     value
+                         :on-change (partial adjacent-field-change child id value-index)}]])
+                    (when (pos? rowcount)
+                      [:a {:on-click (fn [evt]
+                                       (.preventDefault evt)
+                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
+                       [:span.application__form-adjacent-row--mobile-only
+                        "Poista rivi"]
+                       [:application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
+       [:a {:on-click (fn [evt]
+                        (.preventDefault evt)
+                        (dispatch [:application/add-adjacent-fields field-descriptor]))}
+        [:i.zmdi.zmdi-plus-square] " Lisää rivi"]])))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -403,7 +484,8 @@
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                        {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                        {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                       {:fieldClass "infoElement"} [info-element field-descriptor])
+                       {:fieldClass "infoElement"} [info-element field-descriptor]
+                       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 
