@@ -121,6 +121,25 @@
 
       function score() { return testFrame().find('.application-handling__score-input') }
     })
+
+    describe ('Application sorting', function () {
+      it('Sorting by score works (descending first)', function(done) {
+        clickElement(function () { return testFrame().find('.application-handling__list-row--score') })()
+            .then(wait.until(function() { return applicantNames()[0] === "Seija Susanna Kuikeloinen" }))
+            .then(function() {
+              // Seija has higher score now (applied above)
+              expect(applicantNames()[0]).to.equal("Seija Susanna Kuikeloinen")
+              expect(applicantNames()[1]).to.equal("Ari Vatanen")
+              done()
+            }).fail(done)
+      })
+      function applicantNames() {
+        return  testFrame()
+                .find('.application-handling__list-row--applicant')
+                .map(function(x, y) { return $(y).text(); })
+                .filter(function(x, y) { return y !== 'Hakija'; });
+      }
+    })
     describe('application filtering', function() {
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
@@ -169,7 +188,6 @@
       function filteredApplicationsCount() {
         return testFrame().find('.application-handling__list .application-handling__list-row--state').length
       }
-
     })
     describe('form 2 (no applications)', function() {
       before(
