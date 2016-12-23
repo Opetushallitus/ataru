@@ -1,54 +1,11 @@
 (function() {
-  function closedFormList() {
-    return testFrame().find('.application-handling__form-list-closed')
-  }
-
-  function form1OnList() {
-    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
-  }
-
-  function form2OnList() {
-    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
-  }
-
-  function downloadLink() {
-    return testFrame().find('.application-handling__excel-download-link')
-  }
-
-  function closedFormListExists() {
-    return elementExists(closedFormList())
-  }
-
-  function navigateToApplicationHandling() {
-    loadInFrame('http://localhost:8350/lomake-editori/applications/')
-  }
-
-  function eventCaptions() {
-    return testFrame().find('.application-handling__event-caption')
-  }
-
-  function applicationRow() {
-    return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)')
-  }
-
-  function selectedState() {
-    return testFrame().find('.application-handling__review-state-selected-row')
-  }
-
-  function notSelectedStates() {
-    return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
-  }
-
-  function reviewHeader() {
-    return testFrame().find('.application-handling__review-header')
-  }
 
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
 
   describe('Application handling', function() {
-    describe('form 1', function() {
+    describe('for first form', function() {
       // Tie these to describe-scope instead of global
       var firstNotSelected = null;
       var eventCountBefore = null;
@@ -120,10 +77,42 @@
       function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
 
       function score() { return testFrame().find('.application-handling__score-input') }
+
+      function form1OnList() {
+        return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
+      }
+
+      function closedFormListExists() {
+        return elementExists(closedFormList())
+      }
+
+      function navigateToApplicationHandling() {
+        loadInFrame('http://localhost:8350/lomake-editori/applications/')
+      }
+
+      function eventCaptions() {
+        return testFrame().find('.application-handling__event-caption')
+      }
+
+      function applicationRow() {
+        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)')
+      }
+
+      function selectedState() {
+        return testFrame().find('.application-handling__review-state-selected-row')
+      }
+
+      function notSelectedStates() {
+        return testFrame().find('.application-handling__review-state-row:not(.application-handling__review-state-selected-row)')
+      }
+
+      function reviewHeader() {
+        return testFrame().find('.application-handling__review-header')
+      }
     })
 
     describe ('Application sorting', function () {
-      it('Sorting by score works (descending first)', function(done) {
+      it('Sorting by sortable columns works', function(done) {
         var firstApplicantNameBeforeAnySorting = null
         wait.until(applicantNamesExist)()
             .then(function() {
@@ -194,6 +183,7 @@
       }
 
     })
+
     describe('application filtering', function() {
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
@@ -243,7 +233,8 @@
         return testFrame().find('.application-handling__list .application-handling__list-row--state').length
       }
     })
-    describe('form 2 (no applications)', function() {
+
+    describe('second form', function() {
       before(
         function() { closedFormList()[0].click() },
         wait.until(function() {
@@ -257,5 +248,17 @@
         expect(downloadLink()).to.have.length(0)
       })
     })
+
+    function form2OnList() {
+      return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
+    }
   })
+
+  function downloadLink() {
+    return testFrame().find('.application-handling__excel-download-link')
+  }
+
+  function closedFormList() {
+    return testFrame().find('.application-handling__form-list-closed')
+  }
 })();
