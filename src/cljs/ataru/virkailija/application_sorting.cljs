@@ -12,7 +12,10 @@
               (t/time->long (:created-time y))))
 
 (defn- applicant-sort [order-fn x y]
-  (order-fn (compare (clojure.string/lower-case (:applicant-name x)) (clojure.string/lower-case (:applicant-name y)))))
+  (order-fn
+   (compare
+    (clojure.string/lower-case (:applicant-name x))
+    (clojure.string/lower-case (:applicant-name y)))))
 
 (def application-sort-column-fns
   {:score
