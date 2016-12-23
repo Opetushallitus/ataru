@@ -36,8 +36,7 @@
                            from-index))
 
 (defn match-text [text search-term]
-  (if (or (clojure.string/blank? search-term)
-          (< (count search-term) 2))
+  (if (clojure.string/blank? search-term)
     [{:text text :hilight false}]
     (loop [res           []
            current-index 0]
@@ -68,22 +67,33 @@
        (assoc :class "application-handling__form-list-link--hilight"))
      text]))
 
+(def hilighted-parts? (comp (partial some (comp true? :hilight)) :text))
+
 (defn form-list-column [forms header-text]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
     (fn [forms header-text]
-      [:div.application-handling__form-list-column
-       [:span.application-handling__form-list-column-header header-text]
-       (->> forms
-            (map-indexed (fn [idx {:keys [name deleted]}]
-                           (let [key  (str "form-list-item-" idx)
-                                 text (map-indexed hilighted-text->span (match-text name @search-term))]
-                             [:div.application-handling__form-list-link-container
-                              {:key key}
-                              [:a (cond-> {:href "#"}
-                                    (true? deleted)
-                                    (assoc :class "application-handling__form-list-link--deleted"))
-                               text]])))
-            (doall))])))
+      (let [forms (cond->> (map (fn [{:keys [name deleted]}]
+                                  {:deleted deleted
+                                   :text    (match-text name @search-term)}) forms)
+                    (not (clojure.string/blank? @search-term))
+                    (filter hilighted-parts?))]
+        [:div.application-handling__form-list-column
+         [:span.application-handling__form-list-column-header
+          (when (and (not (clojure.string/blank? @search-term))
+                     (empty? forms))
+            {:class "application-handling__form-list-column-header--no-results"})
+          header-text]
+         (->> forms
+              (map-indexed (fn [idx {:keys [deleted text]}]
+                             (let [key  (str "form-list-item-" idx)
+                                   text (map-indexed hilighted-text->span text)]
+                               [:div.application-handling__form-list-link-container
+                                {:key key}
+                                [:a (cond-> {:href "#"}
+                                      (true? deleted)
+                                      (assoc :class "application-handling__form-list-link--deleted"))
+                                 text]])))
+              (doall))]))))
 
 (defn hakukohde->form-list-item [{:keys [hakukohde-name]}]
   {:name hakukohde-name})
