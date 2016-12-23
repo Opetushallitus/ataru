@@ -119,3 +119,8 @@
           (update-application-details application-response)
           (start-application-review-autosave))))
     (assoc db [:application :review-autosave] nil)))
+
+(reg-event-db
+  :application/search-form-list
+  (fn [db [_ search-term]]
+    (assoc-in db [:application :search-term] search-term)))

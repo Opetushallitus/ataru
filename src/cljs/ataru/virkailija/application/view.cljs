@@ -30,19 +30,60 @@
        (or (:name @selected-form)
            (:hakukohde-name @selected-hakukohde))])))
 
-(defn form-list-form-link [idx {:keys [name deleted]}]
-  (let [key (str "form-list-item-" idx)]
-    [:div.application-handling__form-list-link-container
-     {:key key}
-     [:a (cond-> {:href "#"}
-           (true? deleted)
-           (assoc :class "application-handling__form-list-link--deleted"))
-      name]]))
+(defn index-of [s val from-index]
+  (clojure.string/index-of (clojure.string/lower-case s)
+                           (clojure.string/lower-case val)
+                           from-index))
+
+(defn match-text [text search-term]
+  (if (or (clojure.string/blank? search-term)
+          (< (count search-term) 2))
+    [{:text text :hilight false}]
+    (loop [res           []
+           current-index 0]
+      (let [match-index (index-of text search-term current-index)]
+        (cond
+          (nil? match-index)
+          (conj res {:text    (subs text current-index)
+                     :hilight false})
+
+          (< current-index match-index)
+          (recur (conj res
+                       {:text    (subs text current-index match-index)
+                        :hilight false}
+                       {:text    (subs text match-index (+ (count search-term) match-index))
+                        :hilight true})
+                 (+ match-index (count search-term)))
+
+          :else
+          (recur (conj res {:text    (subs text current-index (+ (count search-term) current-index))
+                            :hilight true})
+                 (+ current-index (count search-term))))))))
+
+(defn hilighted-text->span [idx {:keys [text hilight]}]
+  (let [key (str "hilight-" idx)]
+    [:span
+     (cond-> {:key key}
+       (true? hilight)
+       (assoc :class "application-handling__form-list-link--hilight"))
+     text]))
 
 (defn form-list-column [forms header-text]
-  [:div.application-handling__form-list-column
-   [:span.application-handling__form-list-column-header header-text]
-   (map-indexed form-list-form-link forms)])
+  (let [search-term (subscribe [:state-query [:application :search-term]])]
+    (fn [forms header-text]
+      [:div.application-handling__form-list-column
+       [:span.application-handling__form-list-column-header header-text]
+       (->> forms
+            (map-indexed (fn [idx {:keys [name deleted]}]
+                           (let [key  (str "form-list-item-" idx)
+                                 text (map-indexed hilighted-text->span (match-text name @search-term))]
+                             [:div.application-handling__form-list-link-container
+                              {:key key}
+                              [:a (cond-> {:href "#"}
+                                    (true? deleted)
+                                    (assoc :class "application-handling__form-list-link--deleted"))
+                               text]])))
+            (doall))])))
 
 (defn hakukohde->form-list-item [{:keys [hakukohde-name]}]
   {:name hakukohde-name})
@@ -83,7 +124,10 @@
 (defn form-list-search []
   [:div.application-handling__form-list-search-row
    [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
-    {:type "text"}]])
+    {:type      "text"
+     :on-change (fn [event]
+                  (let [search-term (.. event -target -value)]
+                    (dispatch [:application/search-form-list search-term])))}]])
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
