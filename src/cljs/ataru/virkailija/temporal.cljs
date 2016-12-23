@@ -1,6 +1,7 @@
 (ns ataru.virkailija.temporal
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
+            [cljs-time.coerce :as coerce]
             [goog.date :as gd]
             [clojure.walk :refer [postwalk]]
             [taoensso.timbre :refer-macros [spy warn]]))
@@ -49,6 +50,9 @@
   (str (with-dow google-date)
        "na "
        (time->short-str google-date)))
+
+(defn time->long [google-date]
+  (coerce/to-long google-date))
 
 (defonce iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
 

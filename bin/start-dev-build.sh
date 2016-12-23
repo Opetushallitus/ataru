@@ -28,6 +28,8 @@ done
 
 SESSION=$USER
 
+./bin/lein clean
+
 tmux -2 new-session -d -s $SESSION
 
 tmux new-window -t $SESSION:1 -n 'Ataru'
@@ -42,14 +44,17 @@ tmux split-window -v
 tmux select-pane -t 0
 tmux send-keys "CONFIG=$VIRKAILIJA_CONFIG ./bin/lein virkailija-dev" C-m
 
+# Might be cargo-culting, but attempt to reduce apparent issues of starting two clj compiles exactly at the same time
+sleep 1
+
 tmux select-pane -t 1
-tmux send-keys "./bin/lein figwheel-virkailija" C-m
+tmux send-keys "CONFIG=$HAKIJA_CONFIG ./bin/lein hakija-dev" C-m
 
 tmux select-pane -t 2
 tmux send-keys "./bin/lein less auto" C-m
 
 tmux select-pane -t 3
-tmux send-keys "CONFIG=$HAKIJA_CONFIG ./bin/lein hakija-dev" C-m
+tmux send-keys "./bin/lein figwheel-virkailija" C-m
 
 tmux split-window -v
 
