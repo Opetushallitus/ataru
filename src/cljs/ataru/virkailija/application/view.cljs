@@ -67,7 +67,7 @@
        (assoc :class "application-handling__form-list-link--hilight"))
      text]))
 
-(def hilighted-parts? (comp (partial some (comp true? :hilight)) :text))
+(def hilighted-parts? (comp (partial some :hilight) :text))
 
 (defn form-list-column [forms header-text]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
