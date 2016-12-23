@@ -67,7 +67,7 @@
        (assoc :class "application-handling__form-list-link--hilight"))
      text]))
 
-(def hilighted-parts? (comp (partial some :hilight) :text))
+(def text-with-hilighted-parts (comp (partial some :hilight) :text))
 
 (defn form-list-column [forms header-text]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
@@ -76,7 +76,7 @@
                                   {:deleted deleted
                                    :text    (match-text name @search-term)}) forms)
                     (not (clojure.string/blank? @search-term))
-                    (filter hilighted-parts?))]
+                    (filter text-with-hilighted-parts))]
         [:div.application-handling__form-list-column
          [:span.application-handling__form-list-column-header
           (when (and (not (clojure.string/blank? @search-term))
