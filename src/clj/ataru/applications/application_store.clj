@@ -229,4 +229,3 @@
   (->> (exec-db :db yesql-get-application-count-with-deleteds-by-form-key {:form_key form-key})
        (map :application_count)
        (first)))
-

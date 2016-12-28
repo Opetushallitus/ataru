@@ -135,10 +135,11 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
+select distinct a.hakukohde, a.hakukohde_name, f.key as form_key, count(a.id) as application_count
 from applications a
   join forms f on a.form_id = f.id
-where hakukohde is not null and hakukohde_name is not null;
+where hakukohde is not null and hakukohde_name is not null
+group by a.hakukohde, a.hakukohde_name, f.key;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
@@ -170,4 +171,3 @@ FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
 WHERE f.key = :form_key
 AND (a.hakukohde IS NULL OR a.hakukohde = '');
-
