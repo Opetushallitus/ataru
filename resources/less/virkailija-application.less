@@ -18,94 +18,127 @@
   }
 }
 
-.application-handling__header {
+.application-handling__form-list-search-row {
   display: flex;
-  align-items: flex-start;
-  padding-bottom: 20px;
-  border-bottom: 1px solid @bottom-separator-color;
-  margin-bottom: 10px;
+  flex-flow: row nowrap;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
-.application-handling__form-list-wrapper {
+.application-handling__form-list-search-row-item {
+  flex: 0 0 50%;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.application-handling__form-list-search-input {
+  border: 1px solid @section-header-text;
+  border-radius: 2px;
+  color: @text-color;
+  font-size: 16px;
+  height: 43px;
+  padding: 10px 28px 11px 14px;
+}
+
+.application-handling__form-list-wrapper-outer {
   position: relative;
   display: inline-block;
   width: 100%;
   min-width: 300px;
   margin-right: 20px;
-}
-
-.application-handling__form-list-open {
-  position: absolute;
-  width: 100%;
-  background-color: #fafafa;
-  border-radius: 2px;
-  border: solid 1px #E5E4E4;
-  box-shadow: 0 0 2px 0 rgba(0,0,0,0.12), 0 2px 2px 0 rgba(0,0,0,0.24);
   z-index: 15;
-  margin: -5px 0 20px -13px;
 }
 
-.application-handling__form-list-open::-webkit-scrollbar {
-  width: 7px;
-  background-color: #f2f2f2;
+.application-handling__form-list-wrapper-inner {
+  background-color: @application-form-list-background-color;
+  max-height: calc(~"100vh - 170px");
+  overflow-y: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+  position: absolute;
+  top: 45px;
+  width: 100%;
 }
 
-.application-handling__form-list-open::-webkit-scrollbar-thumb {
+.application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
   background-color: #9B9B9B;
   border-radius: 5px;
 }
 
-.application-handling__form-list-row-link {
-  text-decoration: none;
+.application-handling__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid @bottom-separator-color;
+  margin-bottom: 10px;
+  padding-left: 15px;
 }
 
-.application-handling__form-list-row {
-  cursor: pointer;
-  font-size: 16px;
-  color: @text-color;
-  line-height: 125%;
-  padding: 8px 13px;
-  margin-left: 35px;
+.application-handling__form-list-column-wrapper {
+  display: flex;
+  flex-flow: row nowrap;
 }
 
-.application-handling__form-list-row:hover {
-  background: #f5f5f5;
-  border-radius: 3px;
+.application-handling__form-list-indicator {
+  position: absolute;
+  top: 36px;
+  left: 11px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 9px solid @application-form-list-background-color;
 }
 
-.application-handling__form-list-closed .application-handling__form-list-row {
+.application-handling__form-list-column {
+  display: flex;
+  flex: 0 0 50%;
+  flex-flow: column nowrap;
+  min-width: 250px;
+}
+
+.application-handling__form-list-column-header {
+  border-bottom: 1px solid #E3ECEF;
+  padding: 10px 20px;
+}
+
+.application-handling__form-list-column-header--no-results {
+  color: @disabled-list-item-color;
+}
+
+.application-handling__form-list-link-container {
+  padding-right: 20px;
+  padding-left: 20px;
+  padding-top: 10px;
+}
+
+.application-handling__form-list-link-container:last-of-type {
+  padding-bottom: 10px;
+}
+
+.application-handling__form-list-link--hilight {
+  background-color: @application-form-list-hilight-background-color;
+  color: @white;
+}
+
+.application-handling__form-list-header {
   font-size: 24px;
   .semibold;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 23px;
-}
-
-.application-handling__form-list-closed .application-handling__form-list-row:hover {
-  background: none;
+  margin-left: 15px;
 }
 
 .application-handling__form-list-arrow {
   color: #06526B;
   cursor: pointer;
   font-size: 26px;
-  position: absolute;
-  left: 0;
 }
 
-.application-handling__form-list-open-wrapper .application-handling__form-list-arrow {
-  z-index: 4;
-}
-
-.application-handling__form-list-deleted-row {
+.application-handling__form-list-link--deleted {
   color: @disabled-list-item-color;
-}
-
-.application-handling__form-list-open-wrapper .application-handling__form-list-selected-row, .application-handling__form-list-open-wrapper .application-handling__form-list-selected-row:hover{
-	background: #00526c;
-	color: #fff;
-    border-radius: 3px;
 }
 
 .application-handling__excel-download-link {
@@ -434,6 +467,14 @@ and (max-width: @desktop-content-width) {
    */
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
+  }
+
+  .application-handling__form-list-column-wrapper {
+    flex-flow: row wrap;
+  }
+
+  .application-handling__form-list-column {
+    flex: 1 0 50%;
   }
 }
 
