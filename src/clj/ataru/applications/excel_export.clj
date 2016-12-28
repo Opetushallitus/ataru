@@ -7,12 +7,13 @@
             [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.util :as util]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy]]))
+            [taoensso.timbre :refer [spy debug]]))
 
 (def tz (t/default-time-zone))
 
@@ -102,7 +103,7 @@
   (doseq [meta-field meta-fields]
     (writer 0 (:column meta-field) (:label meta-field)))
   (doseq [header headers]
-    (writer 0 (+ (:column header) (count meta-fields)) (:header header))))
+    (writer 0 (+ (:column header) (count meta-fields)) (:decorated-header header))))
 
 (defn- get-field-descriptor [field-descriptors key]
   (loop [field-descriptors field-descriptors]
@@ -161,25 +162,52 @@
 
 (defn pick-form-labels
   [form-content]
-  (->> (flatten
-        (reduce
-          (fn [acc form-element]
-            (if (< 0 (count (:children form-element)))
-              (into acc [(pick-form-labels (:children form-element))])
-              (into acc [(when (not= "infoElement" (:fieldClass form-element))
-                           (-> form-element :label :fi))])))
-          []
-          form-content))
-    (filter some?)))
+  (->> (reduce
+         (fn [acc form-element]
+           (if (< 0 (count (:children form-element)))
+             (into acc (pick-form-labels (:children form-element)))
+             (concat acc (when-let [label (and (not= "infoElement" (:fieldClass form-element)))]
+                           [[(:id form-element) (-> form-element :label :fi)]]))))
+         []
+         form-content)))
+
+(defn- find-parent [element fields]
+  (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))]
+    (reduce
+      (fn [parent field]
+        (or
+          (when (and (= "wrapperElement" (:fieldClass field))
+                  (not-empty (:children field))
+                  (contains-element? (:children field)))
+            field)
+          (when (not-empty (:children field))
+            (or parent
+              (find-parent element (:children field))))
+          parent))
+      nil
+      fields)))
+
+(defn- decorate [flat-fields fields id header]
+  (let [element (first (filter #(= (:id %) id) flat-fields))]
+    (match element
+      {:params {:adjacent true}}
+      (if-let [parent-element (find-parent element fields)]
+        (str (-> parent-element :label :fi) " - " header)
+        header)
+
+      :else header)))
 
 (defn- extract-headers
   [applications form]
   (let [labels-in-form         (pick-form-labels (:content form))
-        labels-in-applications (mapcat #(map :label (:answers %)) applications)
-        all-labels             (distinct (concat labels-in-form labels-in-applications review-headers))]
-    (map-indexed (fn [idx header]
-                   {:header header :column idx})
-                 all-labels)))
+        labels-in-applications (mapcat #(map (fn [answer] (vals (select-keys answer [:key :label]))) (:answers %)) applications)
+        all-labels             (distinct (concat labels-in-form labels-in-applications (map vector (repeat nil) review-headers)))
+        decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
+    (for [[idx [id header]] (map vector (range) all-labels)
+          :when             (string? header)]
+      {:decorated-header (decorator id header)
+       :header           header
+       :column           idx})))
 
 (defn- export-applications
   [applications form-key indexed-form-meta-fields]

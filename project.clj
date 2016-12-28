@@ -206,7 +206,8 @@
   :aliases {"virkailija-dev" ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev" ["with-profile" "hakija-dev" "run" "hakija"]
             "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
-            "figwheel-hakija" ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]})
+            "figwheel-hakija" ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]
+            "anonymize-data" ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]})
 
 
 

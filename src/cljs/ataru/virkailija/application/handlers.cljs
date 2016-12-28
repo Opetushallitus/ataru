@@ -2,6 +2,7 @@
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
+            [ataru.virkailija.application-sorting :as application-sorting]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -39,11 +40,38 @@
          (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
 
 (reg-event-db
+ :application/update-sort
+ (fn [db [_ column-id]]
+   (let [current-applications (get-in db [:application :applications])
+         current-sort         (get-in db [:application :sort])
+         new-order            (if (= :ascending (:order current-sort))
+                                :descending
+                                :ascending)]
+     (if (= column-id (:column current-sort))
+       (-> db
+           (update-in
+            [:application :sort]
+            assoc
+            :order
+            new-order)
+           (assoc-in
+            [:application :applications]
+            (application-sorting/sort-by-column current-applications column-id new-order)))
+       (-> db
+           (assoc-in
+            [:application :sort]
+            {:column column-id :order :descending})
+           (assoc-in
+            [:application :applications]
+            (application-sorting/sort-by-column current-applications column-id :descending)))))))
+
+(reg-event-db
   :application/handle-fetch-applications-response
   (fn [db [_ {:keys [applications]}]]
     (-> db
         (assoc-in [:application :applications] applications)
-        (assoc-in [:application :review-state-counts] (review-state-counts applications)))))
+        (assoc-in [:application :review-state-counts] (review-state-counts applications))
+        (assoc-in [:application :sort] application-sorting/initial-sort))))
 
 (reg-event-fx
   :application/fetch-applications

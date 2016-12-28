@@ -12,7 +12,8 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]))
+                                                                       scroll-to-anchor]]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn text [field-descriptor application lang]
   [:div.application__form-field
@@ -47,10 +48,48 @@
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
 
+(defn- extract-values [children answers]
+  (let [child-answers  (->> (map answer-key children)
+                         (select-keys answers))
+        ; applicant side stores values as hashmaps
+        applicant-side (map (comp
+                              (fn [values]
+                                (map :value values))
+                              :values
+                              second))
+        ; editor side loads values as vectors of strings
+        editor-side    (map (comp :value second))]
+    (when-let [concatenated-answers (->>
+                                      (concat
+                                        (eduction applicant-side child-answers)
+                                        (eduction editor-side child-answers))
+                                      (filter not-empty)
+                                      not-empty)]
+      (apply map vector concatenated-answers))))
+
+(defn fieldset [field-descriptor application lang children]
+  (when-let [fieldset-answers (extract-values children (:answers application))]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [:table.application__readonly-adjacent
+      [:thead
+       (into [:tr]
+         (for [child children]
+           [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
+      [:tbody
+       (doall
+         (for [[idx values] (map vector (range) fieldset-answers)]
+           (into
+             [:tr {:key (str idx "-" (apply str values))}]
+             (for [value values]
+               [:td value]))))]]]))
+
 (defn field [content application lang]
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))

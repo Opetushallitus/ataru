@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.components.followup-question
   (:require
+    [ataru.cljs-util :as util]
     [ataru.virkailija.component-data.component :as component]
     [ataru.virkailija.editor.components.toolbar :as toolbar]
     [cljs.core.match :refer-macros [match]]
@@ -7,9 +8,6 @@
     [reagent.core :as r]
     [reagent.ratom :refer-macros [reaction]]
     [taoensso.timbre :refer-macros [spy debug]]))
-
-(defn flatten-path [db & parts]
-  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
 
 (reg-sub :editor/followup-overlay
   (fn [db [_ option-path]]
@@ -28,14 +26,14 @@
 (reg-event-fx
   :editor/followup-remove
   (fn [cofx [_ final-path]]
-    {:db       (update-in (:db cofx) (flatten-path (:db cofx) (butlast final-path)) dissoc :followup)
+    {:db       (update-in (:db cofx) (util/flatten-path (:db cofx) (butlast final-path)) dissoc :followup)
      :dispatch [:editor/followup-overlay-close final-path final-path]}))
 
 (reg-event-db
   :editor/generate-followup-component
   (fn [db [_ generate-fn option-path]]
     (let [component (generate-fn)]
-      (assoc-in db (flatten-path db option-path :followup) component))))
+      (assoc-in db (util/flatten-path db option-path :followup) component))))
 
 (defn followup-question-overlay [option-path]
   (let [layer-visible?     (subscribe [:editor/followup-overlay option-path :visible?])
@@ -49,7 +47,7 @@
           [:div.editor-form__followup-question-overlay
            (if-let [followup @followup-component]
              [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
-             [toolbar/followup-add-component option-path
+             [toolbar/followup-toolbar option-path
               (fn [generate-fn]
                 (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]]))))
 

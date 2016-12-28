@@ -163,9 +163,10 @@
 
                           {:fieldType "textField" :value (_ :guard vector?)}
                           (update answers answer-key merge
-                            {:valid true :values (map (fn [value]
-                                                        {:valid true :value value})
-                                                      (:value answer))})
+                            {:valid true
+                             :values (mapv (fn [value]
+                                             {:valid true :value value})
+                                       (:value answer))})
 
                           :else
                           (update answers answer-key merge {:valid true :value value}))
@@ -327,3 +328,53 @@
         (filter :followup?)
         (map (fn [field] {(keyword (:id field)) {:visible? false}}))
         (reduce merge)))))
+
+(reg-event-db
+  :application/set-adjacent-field-answer
+  (fn [db [_ field-descriptor id idx value]]
+    (-> (update-in db [:application :answers id :values]
+          (fn [answers]
+            (let [[init last] (split-at
+                                idx
+                                (or
+                                  (not-empty answers)
+                                  []))]
+              (vec (concat init [value] (rest last))))))
+        (update-in [:application :answers id]
+          (fn [{:keys [values] :as answer}]
+            (let [required? (some? ((set (:validators field-descriptor)) "required"))]
+              (assoc answer :valid
+                (boolean
+                  (some->>
+                    (map :valid (or
+                                  (not-empty values)
+                                  [{:valid (not required?)}]))
+                    not-empty
+                    (every? true?))))))))))
+
+(reg-event-db
+  :application/add-adjacent-fields
+  (fn [db [_ field-descriptor]]
+    (reduce (fn [db' id]
+              (update-in db'
+                [:application :answers id :values]
+                (fn [answers]
+                  (conj
+                    (or answers
+                      [{:value nil :valid false}])
+                    {:value nil :valid false}))))
+      db
+      (map (comp keyword :id) (:children field-descriptor)))))
+
+(reg-event-db
+  :application/remove-adjacent-field
+  (fn [db [_ field-descriptor index]]
+    (reduce (fn [db' id]
+              (update-in db'
+                [:application :answers id :values]
+                (fn [answers]
+                  (vec (concat
+                         (subvec answers 0 index)
+                         (subvec answers (inc index)))))))
+      db
+      (map (comp keyword :id) (:children field-descriptor)))))
