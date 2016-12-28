@@ -1,6 +1,6 @@
 (function() {
   function closedFormList() {
-    return testFrame().find('.application-handling__header .zmdi-chevron-up ~ .application-handling__form-list-header')
+    return testFrame().find('.application-handling__header .zmdi-chevron-up + .application-handling__form-list-header')
   }
 
   function form1OnList() {
