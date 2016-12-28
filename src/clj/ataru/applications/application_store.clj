@@ -221,11 +221,11 @@
 (defn get-unprocessed-application-count-by-form-key
   [form-key]
   (->> (exec-db :db yesql-get-unprocessed-application-count-by-form-key {:form_key form-key})
-       (map :application_count)
+       (map :unprocessed_application_count)
        (first)))
 
 (defn get-unprocessed-application-count-with-deleteds-by-form-key
   [form-key]
   (->> (exec-db :db yesql-get-unprocessed-application-count-with-deleteds-by-form-key {:form_key form-key})
-       (map :application_count)
+       (map :unprocessed_application_count)
        (first)))

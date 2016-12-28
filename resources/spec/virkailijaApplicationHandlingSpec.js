@@ -78,7 +78,7 @@
       function score() { return testFrame().find('.application-handling__score-input') }
 
       function form1OnList() {
-        return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
+        return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake1)')
       }
 
       function closedFormListExists() {
@@ -249,7 +249,7 @@
     })
 
     function form2OnList() {
-      return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
+      return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake2)')
     }
   })
 
@@ -258,6 +258,6 @@
   }
 
   function closedFormList() {
-    return testFrame().find('.application-handling__form-list-closed')
+    return testFrame().find('.application-handling__header .zmdi-chevron-up + .application-handling__form-list-header')
   }
 })();
