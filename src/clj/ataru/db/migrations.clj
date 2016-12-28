@@ -108,7 +108,7 @@
   (populate-application-secrets))
 
 (migrations/defmigration
-  migrate-application-haku-ids "1.35"
+  migrate-application-haku-ids "1.36"
   "Add haku oids to applications (from tarjonta-service) with hakukohde data"
   (add-haku-details-for-applications))
 
