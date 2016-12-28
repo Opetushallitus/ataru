@@ -1,5 +1,6 @@
 (ns ataru.forms.form-access-control
   (:require
+   [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
    [ataru.virkailija.user.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
@@ -87,17 +88,25 @@
             (assoc form :deleted true)
             (first organization-oids)))))))
 
+(defn- application-count->form [{:keys [key] :as form} include-deleted?]
+  (let [count-fn          (if include-deleted?
+                            application-store/get-application-count-by-form-key
+                            application-store/get-application-count-with-deleteds-by-form-key)
+        application-count (count-fn key)]
+    (assoc form :application-count application-count)))
+
 (defn get-forms [include-deleted? session organization-service]
-  (let [organization-oids (org-oids session)]
-    ;; OPH organization members can see everything when they're given the correct privilege
-    (cond
-      (some #{oph-organization} organization-oids)
-      {:forms (form-store/get-all-forms include-deleted?)}
+  (let [organization-oids (org-oids session)
+        ;; OPH organization members can see everything when they're given the correct privilege
+        forms             (->> (cond
+                                 (some #{oph-organization} organization-oids)
+                                 (form-store/get-all-forms include-deleted?)
 
-      ;; If the user has no organization connected with the required user right, we'll show nothing
-      (empty? organization-oids)
-      {:forms []}
+                                 (empty? organization-oids)
+                                 []
 
-      :else
-      (let [all-oids (all-org-oids organization-service organization-oids)]
-        {:forms (form-store/get-forms include-deleted? all-oids)}))))
+                                 :else
+                                 (let [all-oids (all-org-oids organization-service organization-oids)]
+                                   (form-store/get-forms include-deleted? all-oids)))
+                               (map #(application-count->form % include-deleted?)))]
+    {:forms forms}))

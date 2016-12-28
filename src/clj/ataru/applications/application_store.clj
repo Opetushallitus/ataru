@@ -217,3 +217,16 @@
 (defn get-hakukohteet
   []
   (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {})))
+
+(defn get-application-count-by-form-key
+  [form-key]
+  (->> (exec-db :db yesql-get-application-count-by-form-key {:form_key form-key})
+       (map :application_count)
+       (first)))
+
+(defn get-application-count-with-deleteds-by-form-key
+  [form-key]
+  (->> (exec-db :db yesql-get-application-count-with-deleteds-by-form-key {:form_key form-key})
+       (map :application_count)
+       (first)))
+
