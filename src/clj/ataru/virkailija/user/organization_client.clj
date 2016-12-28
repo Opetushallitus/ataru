@@ -12,6 +12,8 @@
 
 (def org-name-path "/hae/nimi?aktiiviset=true&suunnitellut=true&lakkautetut=false&oid=")
 
+(def group-path "/ryhmat")
+
 (defn read-body
   [resp]
   (-> resp :body (json/parse-string true)))
@@ -71,3 +73,14 @@
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
+
+(defn get-groups
+  "returns a sequence of {:name <group-name> :oid <group-oid>} maps containing all the
+   groups within organization service"
+  [cas-client]
+  {:pre [(some? (base-address))]}
+  (let [response (cas-client/cas-authenticated-get cas-client
+                                                   (str (base-address) group-path))]
+    (if (= 200 (:status response))
+      (->> response read-body (map org-node->map))
+      (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
