@@ -57,6 +57,8 @@
              :lang           lang
              :hakukohde      (:hakukohde-oid form)
              :hakukohde-name (:hakukohde-name form)
+             :haku           (:haku-oid form)
+             :haku-name      (:haku-name form)
              :answers        (create-answers-to-submit (:answers application) form)}
       (some? secret)
       (assoc :secret secret))))
