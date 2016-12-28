@@ -28,9 +28,9 @@
                    :name                          s/Str
                    (s/optional-key :key)          s/Str
                    (s/optional-key :created-by)   s/Str
-                   (s/optional-key :created-time) #?(:clj org.joda.time.DateTime
-                                                      :cljs s/Str)
-                   s/Any                           s/Any})
+                   (s/optional-key :created-time) #?(:clj  org.joda.time.DateTime
+                                                     :cljs s/Str)
+                   s/Any                          s/Any})
 
 (s/defschema LocalizedString {:fi                  s/Str
                               (s/optional-key :sv) s/Str
@@ -44,60 +44,60 @@
                      (s/optional-key :params) s/Any
                      :fieldType               s/Keyword})
 
-(s/defschema FormField {:fieldClass (s/eq "formField")
-                        :id s/Str
-                        (s/optional-key :validators) [(apply s/enum (keys validator/validators))]
-                        (s/optional-key :rules) {s/Keyword s/Any}
-                        (s/optional-key :label) LocalizedString
-                        (s/optional-key :initialValue) (s/cond-pre LocalizedString s/Int)
-                        (s/optional-key :params) s/Any
-                        (s/optional-key :no-blank-option) s/Bool
+(s/defschema FormField {:fieldClass                            (s/eq "formField")
+                        :id                                    s/Str
+                        (s/optional-key :validators)           [(apply s/enum (keys validator/validators))]
+                        (s/optional-key :rules)                {s/Keyword s/Any}
+                        (s/optional-key :label)                LocalizedString
+                        (s/optional-key :initialValue)         (s/cond-pre LocalizedString s/Int)
+                        (s/optional-key :params)               s/Any
+                        (s/optional-key :no-blank-option)      s/Bool
                         (s/optional-key :exclude-from-answers) s/Bool
-                        (s/optional-key :koodisto-source) {:uri s/Str
-                                                           :version s/Int
-                                                           (s/optional-key :default-option) s/Any
-                                                           (s/optional-key :title) s/Str}
-                        (s/optional-key :options) [{:value                          s/Str
-                                                    (s/optional-key :label)         LocalizedString
-                                                    (s/optional-key :default-value) (s/maybe s/Bool)
-                                                    (s/optional-key :followup)      (s/recursive #'FormField)}]
-                        :fieldType (apply s/enum ["textField"
-                                                  "textArea"
-                                                  "dropdown"
-                                                  "singleChoice"
-                                                  "multipleChoice"
-                                                  "koodistoField"])})
+                        (s/optional-key :koodisto-source)      {:uri                             s/Str
+                                                                :version                         s/Int
+                                                                (s/optional-key :default-option) s/Any
+                                                                (s/optional-key :title)          s/Str}
+                        (s/optional-key :options)              [{:value                          s/Str
+                                                                 (s/optional-key :label)         LocalizedString
+                                                                 (s/optional-key :default-value) (s/maybe s/Bool)
+                                                                 (s/optional-key :followup)      (s/recursive #'FormField)}]
+                        :fieldType                             (apply s/enum ["textField"
+                                                                              "textArea"
+                                                                              "dropdown"
+                                                                              "singleChoice"
+                                                                              "multipleChoice"
+                                                                              "koodistoField"])})
 
-(s/defschema InfoElement {:fieldClass (s/eq "infoElement")
-                          :id s/Str
-                          :fieldType (apply s/enum ["h1"
-                                                    "h3"
-                                                    "link"
-                                                    "p"
-                                                    "bulletList"
-                                                    "dateRange"
-                                                    "endOfDateRange"])
+(s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
+                          :id                      s/Str
+                          :fieldType               (apply s/enum ["h1"
+                                                                  "h3"
+                                                                  "link"
+                                                                  "p"
+                                                                  "bulletList"
+                                                                  "dateRange"
+                                                                  "endOfDateRange"])
                           (s/optional-key :params) s/Any
-                          (s/optional-key :label) LocalizedString
-                          (s/optional-key :text) LocalizedString})
+                          (s/optional-key :label)  LocalizedString
+                          (s/optional-key :text)   LocalizedString})
 
 (s/defschema BasicElement (s/conditional
                             #(= "formField" (:fieldClass %)) FormField
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass              (apply s/enum ["wrapperElement"])
-                             :id                      s/Str
-                             :fieldType               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                [(s/conditional #(= "wrapperElement" (:fieldClass %))
-                                                         (s/recursive #'WrapperElement)
-                                                         :else
-                                                         BasicElement)]
+(s/defschema WrapperElement {:fieldClass                       (apply s/enum ["wrapperElement"])
+                             :id                               s/Str
+                             :fieldType                        (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
+                             :children                         [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                                                                               (s/recursive #'WrapperElement)
+                                                                               :else
+                                                                               BasicElement)]
                              (s/optional-key :child-validator) (s/enum :one-of)
-                             (s/optional-key :params) s/Any
-                             (s/optional-key :label)  LocalizedString
+                             (s/optional-key :params)          s/Any
+                             (s/optional-key :label)           LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module) Module})
+                             (s/optional-key :module)          Module})
 
 (s/defschema FormWithContent
   (merge Form
@@ -113,8 +113,8 @@
                                                             "multipleChoice"
                                                             "singleChoice"])
                      (s/optional-key :label) (s/maybe (s/cond-pre
-                                                       LocalizedString
-                                                       s/Str))})
+                                                        LocalizedString
+                                                        s/Str))})
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
