@@ -3,10 +3,11 @@
     [ataru.forms.form-store :as store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
+    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [crypto.random :as c]
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
-    [taoensso.timbre :refer [spy debug]])
+    [taoensso.timbre :refer [spy debug info error]])
   (:use [oph.soresu.common.config :only [config]]))
 
 (defn- update-person-info-module
@@ -69,6 +70,23 @@
             :let [secret (get secrets key)]]
       (migration-app-store/set-application-secret application secret))))
 
+(defn- get-haku-for-hakukohde
+  [hakukohde-oid]
+  (info "Loading hakukohde" hakukohde-oid)
+  (when-let [haku-oid (:hakuOid (tarjonta-client/get-hakukohde hakukohde-oid))]
+    (tarjonta-client/get-haku haku-oid)))
+
+(def memo-get-haku-for-hakukohde (memoize get-haku-for-hakukohde))
+
+(defn- add-haku-details-for-applications
+  []
+  (doseq [{:keys [id hakukohde]} (migration-app-store/get-applications-without-haku)]
+    (if-let [haku (memo-get-haku-for-hakukohde hakukohde)]
+      (do
+        (migration-app-store/update-application-add-haku id haku)
+        (info "Updated haku details for application" id))
+      (error "Could not update haku for application" id "with hakukohde" hakukohde))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -88,6 +106,11 @@
   migrate-application-secrets "1.28"
   "Add a secret key to each application in database"
   (populate-application-secrets))
+
+(migrations/defmigration
+  migrate-application-haku-ids "1.35"
+  "Add haku oids to applications (from tarjonta-service) with hakukohde data"
+  (add-haku-details-for-applications))
 
 (defn migrate
   []

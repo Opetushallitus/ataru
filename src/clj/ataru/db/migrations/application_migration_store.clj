@@ -6,6 +6,7 @@
 
 (sql/defqueries "sql/migration-1.25-queries.sql")
 (sql/defqueries "sql/migration-1.28-queries.sql")
+(sql/defqueries "sql/migration-1.35-queries.sql")
 
 (defn get-all-applications
   []
@@ -46,3 +47,13 @@
 (defn set-application-secret [{:keys [id]} secret]
   (db/exec :db yesql-set-application-secret! {:id     id
                                               :secret secret}))
+
+(defn get-applications-without-haku
+  []
+  (db/exec :db yesql-get-applications-with-hakukohde-and-without-haku {}))
+
+(defn update-application-add-haku
+  [application-id haku]
+  (db/exec :db yesql-add-haku-to-application! {:application_id application-id
+                                               :haku           (:oid haku)
+                                               :haku_name      (-> haku :nimi :kieli_fi)}))

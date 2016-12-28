@@ -36,6 +36,7 @@
         response @(http/get (str url query))]
     (-> response :body (json/parse-string true) :result)))
 
-(defn get-form-key-for-hakukohde [hakukohde-oid]
-                                 (when-let [hakukohde (get-hakukohde hakukohde-oid)]
-                                   (:ataruLomakeAvain hakukohde)))
+(defn get-form-key-for-hakukohde
+  [hakukohde-oid]
+  (when-let [hakukohde (get-hakukohde hakukohde-oid)]
+    (:ataruLomakeAvain hakukohde)))
