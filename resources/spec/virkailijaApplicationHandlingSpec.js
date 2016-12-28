@@ -1,14 +1,14 @@
 (function() {
   function closedFormList() {
-    return testFrame().find('.application-handling__form-list-closed')
+    return testFrame().find('.application-handling__header .zmdi-chevron-up ~ .application-handling__form-list-header')
   }
 
   function form1OnList() {
-    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
+    return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake1)')
   }
 
   function form2OnList() {
-    return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
+    return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake2)')
   }
 
   function downloadLink() {
@@ -172,7 +172,7 @@
       before(
         function() { closedFormList()[0].click() },
         wait.until(function() {
-          return form2OnList().text() === 'Lomake – Selaintestilomake2'
+          return form2OnList().text() === 'Selaintestilomake2'
         }),
         function() { form2OnList()[0].click() },
         wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })
