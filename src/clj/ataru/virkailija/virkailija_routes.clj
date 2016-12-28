@@ -196,10 +196,10 @@
 
                  (api/GET "/hakukohteet" []
                           :summary "List hakukohde information found for applications stored in system"
-                          :return [{:hakukohde         s/Str
-                                    :hakukohde-name    s/Str
-                                    :form-key          s/Str
-                                    :application-count s/Int}]
+                          :return [{:hakukohde                     s/Str
+                                    :hakukohde-name                s/Str
+                                    :form-key                      s/Str
+                                    :unprocessed-application-count s/Int}]
                           (ok (ataru.applications.application-store/get-hakukohteet)))
 
                  (api/context "/koodisto" []

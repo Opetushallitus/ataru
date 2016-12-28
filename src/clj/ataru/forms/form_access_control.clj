@@ -90,10 +90,10 @@
 
 (defn- application-count->form [{:keys [key] :as form} include-deleted?]
   (let [count-fn          (if include-deleted?
-                            application-store/get-application-count-by-form-key
-                            application-store/get-application-count-with-deleteds-by-form-key)
+                            application-store/get-unprocessed-application-count-by-form-key
+                            application-store/get-unprocessed-application-count-with-deleteds-by-form-key)
         application-count (count-fn key)]
-    (assoc form :application-count application-count)))
+    (assoc form :unprocessed-application-count application-count)))
 
 (defn get-forms [include-deleted? session organization-service]
   (let [organization-oids (org-oids session)
