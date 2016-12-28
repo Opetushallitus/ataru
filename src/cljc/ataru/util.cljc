@@ -31,8 +31,7 @@
          :options options}
         (cons field
           (->> options
-            (filter :followup)
-            (map :followup)
+            (mapcat :followups)
             (map #(assoc % :followup? true))))
 
         :else field))))
@@ -58,13 +57,11 @@
                 acc)))})))
 
 (defn followups? [dropdown-options]
-  (some some? (map :followup dropdown-options)))
+  (some some? (mapcat :followups dropdown-options)))
 
-(defn resolve-followup [dropdown-options value]
+(defn resolve-followups [dropdown-options value]
   (and
     value
-    (some->> dropdown-options
-             (filter (comp (partial = value) :value))
-             (map :followup)
-             (not-empty)
-             (first))))
+    (->> dropdown-options
+         (filter (comp (partial = value) :value))
+         (mapcat :followups))))

@@ -100,11 +100,16 @@
         clojure.string/lower-case
         keyword)))
 
-(defn- followup [application lang ui followups]
-  (into [:div]
-    (for [{:keys [followup]} followups
-          :when              (get-in ui [(keyword (:id followup)) :visible?] true)]
-      [field followup application lang])))
+(defn- followups [followups content application lang]
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [followups content application lang]
+      [:div
+       [field content application lang]
+       (into [:div]
+         (for [followup followups
+               :when    (get-in @ui [(keyword (:id followup)) :visible?] true)]
+           [:div
+            [field followup application lang]]))])))
 
 (defn readonly-fields [form application]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -116,9 +121,6 @@
           (into [:div.application__readonly-container]
             (for [content (:content form)
                   :when (get-in @ui [(keyword (:id content)) :visible?] true)]
-              (if-let [followups (not-empty (filter :followup (:options content)))]
-                [:div
-                 [field content application lang]
-                 [followup application lang @ui followups]]
-
+              (if-let [followups (not-empty (mapcat :followups (:options content)))]
+                [followups followups content application lang]
                 [field content application lang]))))))))

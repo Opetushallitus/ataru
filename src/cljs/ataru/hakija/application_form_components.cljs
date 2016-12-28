@@ -239,24 +239,27 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
-(defn dropdown-followup [lang value field-descriptor]
+(defn dropdown-followups [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followup (partial util/resolve-followup (:options field-descriptor))]
+        resolve-followups (partial util/resolve-followup (:options field-descriptor))
+        toggle-visibility (fn [visible? db' followup]
+                            (update-in db [:application :ui (answer-key followup)] assoc :visible? visible?))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
                                  (when-not (= previous (reset! prev @value))
-                                   (let [previous-followup (resolve-followup previous)
-                                         current-followup  (resolve-followup @value)]
+                                   (let [previous-followups (resolve-followups previous)
+                                         current-followups  (resolve-followups @value)]
                                      (dispatch [:state-update
                                                 (fn [db]
-                                                  (->
-                                                    (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
-                                                    (update-in [:application :ui (answer-key current-followup)] assoc :visible? true)))])))))
+                                                  (let [reduced (reduce (partial false) db previous-followups)]
+                                                    (reduce (partial true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followup (resolve-followup @value)]
-                                 [:div.application__form-dropdown-followup
-                                  [render-field followup]]))})))
+                               (when-let [followups (resolve-followups @value)]
+                                 (into [:div.application__form-dropdown-followups]
+                                   (for [followup followups]
+                                     [:div.application__form-dropdown-followup
+                                      [render-field followup]]))))})))
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -301,7 +304,7 @@
                                             [:option {:value option-value} label]))
                                         (:options field-descriptor)))]]]
 
-                                 [dropdown-followup lang value field-descriptor]]))})))
+                                 [dropdown-followups lang value field-descriptor]]))})))
 
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))

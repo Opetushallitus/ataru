@@ -61,7 +61,7 @@
                         (s/optional-key :options)              [{:value                          s/Str
                                                                  (s/optional-key :label)         LocalizedString
                                                                  (s/optional-key :default-value) (s/maybe s/Bool)
-                                                                 (s/optional-key :followup)      (s/recursive #'FormField)}]
+                                                                 (s/optional-key :followups)     [(s/recursive #'FormField)]}]
                         :fieldType                             (apply s/enum ["textField"
                                                                               "textArea"
                                                                               "dropdown"
