@@ -27,7 +27,7 @@
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
 
-(defn get-orgs-from-cache-or-service [all-orgs-cache cas-client direct-oids]
+(defn get-orgs-from-cache-or-client [all-orgs-cache cas-client direct-oids]
   (let [cache-key (join "-" direct-oids)]
     ;; According to this:
     ;; https://github.com/clojure/core.cache/wiki/Using
@@ -40,6 +40,20 @@
         (swap! all-orgs-cache cache/miss cache-key orgs)
         orgs))))
 
+(defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
+
+(defn get-group-from-cache-or-client [org-cache cas-client group-oid]
+  {:pre [(group-oid? group-oid)]}
+  (if (cache/has? @org-cache group-oid)
+      (let [groups (cache/lookup @org-cache group-oid)]
+        (swap! org-cache cache/hit group-oid)
+        groups)
+      (let [groups (org-client/get-groups cas-client)]
+        (swap! org-cache cache/miss group-oid groups)
+        orgs)))
+
+(def group-oid-prefix "1.2.246.562.28")
+
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
@@ -49,12 +63,19 @@
     (ldap-client/get-organization-oids (:ldap-connection this) user-name))
 
   (get-direct-organizations [this user-name]
-    (let [direct-oids (get-direct-organization-oids this user-name)]
+    (let [direct-oids                  (get-direct-organization-oids this user-name)
+          [group-oids normal-org-oids] (split-with group-oid? direct-oids)
+          normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client this) %) normal-org-oids))
+          groups                       (map (partial
+                                             get-groups-from-cache-or-client
+                                             (:all-orgs-cache this)
+                                             (:clas-client this))
+                                            group-oids)]
       ; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
-      (remove nil? (map #(org-client/get-organization (:cas-client this) %) direct-oids))))
+      (concat normal-orgs groups)))
 
   (get-all-organizations [this direct-organization-oids-for-user]
-    (get-orgs-from-cache-or-service
+    (get-orgs-from-cache-or-client
      (:all-orgs-cache this)
      (:cas-client this)
      direct-organization-oids-for-user))
