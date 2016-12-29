@@ -4,7 +4,7 @@
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.293"]
                  [reagent "0.6.0"]   ; react in clojure
-                 [re-frame "0.8.0"]  ; flux for re-agent
+                 [re-frame "0.9.1"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
                  [oph/soresu "0.1.11-SNAPSHOT"]
