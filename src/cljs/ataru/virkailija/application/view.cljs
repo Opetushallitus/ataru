@@ -143,11 +143,12 @@
 
 (defn form-list-search []
   [:div.application-handling__form-list-search-row
-   [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
-    {:type      "text"
-     :on-change (fn [event]
-                  (let [search-term (.. event -target -value)]
-                    (dispatch [:application/search-form-list search-term])))}]])
+   [:div.application-handling__form-list-column
+    [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
+     {:type      "text"
+      :on-change (fn [event]
+                   (let [search-term (.. event -target -value)]
+                     (dispatch [:application/search-form-list search-term])))}]]])
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
