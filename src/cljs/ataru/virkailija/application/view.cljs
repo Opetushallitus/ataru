@@ -149,7 +149,7 @@
       :on-change (fn [event]
                    (let [search-term (.. event -target -value)]
                      (dispatch [:application/search-form-list search-term])))}]]
-   [:div.application-handling__form-list-column.application-handling__form-list-close-container
+   [:div.application-handling__form-list-close-container
     [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
      {:on-click #(toggle-form-list-open! open)}]]])
 

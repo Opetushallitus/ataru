@@ -26,8 +26,9 @@
 }
 
 .application-handling__form-list-close-container {
-  align-items: flex-end;
-  justify-content: flex-start;
+  display: flex;
+  flex: 0 1 50%;
+  justify-content: flex-end;
 }
 
 .application-handling__form-list-close-button {
@@ -100,6 +101,13 @@
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-bottom: 9px solid @application-form-list-background-color;
+}
+
+.application-handling__form-list-search-input-container {
+  display: flex;
+  flex: 0 0 50%;
+  flex-flow: column nowrap;
+  min-width: 250px;
 }
 
 .application-handling__form-list-column {
