@@ -154,6 +154,7 @@
    [:div.application-handling__form-list-column
     [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
      {:type      "text"
+      :value     @(subscribe [:state-query [:application :search-term]])
       :on-change (fn [event]
                    (let [search-term (.. event -target -value)]
                      (dispatch [:application/search-form-list search-term])))}]]
