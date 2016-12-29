@@ -27,7 +27,7 @@
                             [soresu->reagent child (conj path :children index)]))]
     (fn [content path]
       [:div
-       (when-not ((set path) :followup)
+       (when-not ((set path) :followups)
          [ec/drag-n-drop-spacer path content])
 
        (match content
@@ -62,9 +62,9 @@
          {:fieldClass "infoElement"}
          [ec/info-element content path]
 
-            {:fieldClass "formField"
-             :fieldType "singleChoice"}
-            [ec/dropdown content path]
+         {:fieldClass "formField"
+          :fieldType "singleChoice"}
+         [ec/dropdown content path]
 
          :else (do
                  (error content)
