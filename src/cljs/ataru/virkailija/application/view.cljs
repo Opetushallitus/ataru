@@ -141,14 +141,17 @@
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
-(defn form-list-search []
+(defn form-list-search [open]
   [:div.application-handling__form-list-search-row
    [:div.application-handling__form-list-column
     [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
      {:type      "text"
       :on-change (fn [event]
                    (let [search-term (.. event -target -value)]
-                     (dispatch [:application/search-form-list search-term])))}]]])
+                     (dispatch [:application/search-form-list search-term])))}]]
+   [:div.application-handling__form-list-column.application-handling__form-list-close-container
+    [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
+     {:on-click #(toggle-form-list-open! open)}]]])
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
@@ -164,7 +167,7 @@
         (when-not @open {:style {:display "none"}})]
        [:div.application-handling__form-list-wrapper-inner
         (when-not @open {:style {:display "none"}})
-        [form-list-search]
+        [form-list-search open]
         [:div.application-handling__form-list-column-wrapper
          [hakukohde-column open]
          [forms-column open]]]])))
