@@ -63,5 +63,5 @@
   (and
     value
     (->> dropdown-options
-         (filter (comp (partial = value) :value))
-         (mapcat :followups))))
+        (filter (comp (partial = value) :value))
+      (mapcat :followups))))

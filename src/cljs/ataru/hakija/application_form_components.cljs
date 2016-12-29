@@ -241,8 +241,8 @@
 
 (defn dropdown-followups [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followups (partial util/resolve-followup (:options field-descriptor))
-        toggle-visibility (fn [visible? db' followup]
+        resolve-followups (partial util/resolve-followups (:options field-descriptor))
+        toggle-visibility (fn [visible? db followup]
                             (update-in db [:application :ui (answer-key followup)] assoc :visible? visible?))]
     (r/create-class
       {:component-did-update (fn []

@@ -21,10 +21,10 @@
           path)))))
 
 (defn soresu->reagent [content path]
-  (let [render-children (fn [children]
+  (let [render-children (fn [children & [new-path]]
                           (for [[index child] (map vector (range) children)]
                             ^{:key index}
-                            [soresu->reagent child (conj path :children index)]))]
+                            [soresu->reagent child (spy (conj (vec path) :children index))]))]
     (fn [content path]
       [:div
        (when-not ((set path) :followups)
@@ -41,7 +41,7 @@
 
          {:fieldClass "wrapperElement"
           :children   children}
-         [ec/component-group content path (render-children children)]
+         [ec/component-group content path (render-children children path)]
 
          {:fieldClass "formField" :fieldType "textField"
           :params {:adjacent true}}
