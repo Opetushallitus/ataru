@@ -20,7 +20,7 @@
 
 (defn form-list-arrow [open]
   [:i.zmdi.application-handling__form-list-arrow
-   {:class (if @open "zmdi-chevron-down" "zmdi-chevron-up")}])
+   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
 
 (defn form-list-header []
   (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
