@@ -24,13 +24,14 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-(s/defschema Form {(s/optional-key :id)           s/Int
-                   :name                          s/Str
-                   (s/optional-key :key)          s/Str
-                   (s/optional-key :created-by)   s/Str
-                   (s/optional-key :created-time) #?(:clj  org.joda.time.DateTime
-                                                     :cljs s/Str)
-                   s/Any                          s/Any})
+(s/defschema Form {(s/optional-key :id)                            s/Int
+                   :name                                           s/Str
+                   (s/optional-key :key)                           s/Str
+                   (s/optional-key :created-by)                    s/Str
+                   (s/optional-key :created-time)                  #?(:clj  org.joda.time.DateTime
+                                                                      :cljs s/Str)
+                   (s/optional-key :unprocessed-application-count) s/Int
+                   s/Any                                           s/Any})
 
 (s/defschema LocalizedString {:fi                  s/Str
                               (s/optional-key :sv) s/Str

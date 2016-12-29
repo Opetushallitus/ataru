@@ -135,10 +135,12 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
-from applications a
-  join forms f on a.form_id = f.id
-where hakukohde is not null and hakukohde_name is not null;
+select distinct a1.hakukohde, a1.hakukohde_name, f.key as form_key, count(a2.id) as unprocessed_application_count
+from applications a1
+  join forms f on a1.form_id = f.id
+left join applications a2 on f.id = a2.form_id
+where a1.hakukohde is not null and a1.hakukohde_name is not null
+group by a1.hakukohde, a1.hakukohde_name, f.key;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
@@ -153,3 +155,24 @@ SELECT
   a.hakukohde_name
 FROM applications a
 WHERE a.hakukohde = :hakukohde_oid;
+
+-- name: yesql-get-unprocessed-application-count-by-form-key
+-- Get count of applications by form key, including all versions of the form
+SELECT COUNT(a.id) as unprocessed_application_count
+FROM forms f
+LEFT JOIN applications a ON f.id = a.form_id
+LEFT JOIN application_reviews ar ON a.key = ar.application_key
+WHERE f.key = :form_key
+AND (f.deleted is null or f.deleted = false)
+AND (a.hakukohde IS NULL OR a.hakukohde = '')
+AND ar.state = 'unprocessed';
+
+-- name: yesql-get-unprocessed-application-count-with-deleteds-by-form-key
+-- Get count of applications by form key, including all versions of the form
+SELECT COUNT(a.id) as unprocessed_application_count
+FROM forms f
+LEFT JOIN applications a ON f.id = a.form_id
+LEFT JOIN application_reviews ar ON a.key = ar.application_key
+WHERE f.key = :form_key
+AND (a.hakukohde IS NULL OR a.hakukohde = '')
+AND ar.state = 'unprocessed';

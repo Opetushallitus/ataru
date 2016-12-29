@@ -1,5 +1,4 @@
 (function() {
-
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -79,7 +78,7 @@
       function score() { return testFrame().find('.application-handling__score-input') }
 
       function form1OnList() {
-        return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake1)')
+        return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake1)')
       }
 
       function closedFormListExists() {
@@ -238,7 +237,7 @@
       before(
         function() { closedFormList()[0].click() },
         wait.until(function() {
-          return form2OnList().text() === 'Lomake – Selaintestilomake2'
+          return form2OnList().text() === 'Selaintestilomake2'
         }),
         function() { form2OnList()[0].click() },
         wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })
@@ -250,7 +249,7 @@
     })
 
     function form2OnList() {
-      return testFrame().find('.application-handling__form-list-row:contains(Selaintestilomake2)')
+      return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake2)')
     }
   })
 
@@ -259,6 +258,6 @@
   }
 
   function closedFormList() {
-    return testFrame().find('.application-handling__form-list-closed')
+    return testFrame().find('.application-handling__header .zmdi-chevron-down + .application-handling__form-list-header')
   }
 })();
