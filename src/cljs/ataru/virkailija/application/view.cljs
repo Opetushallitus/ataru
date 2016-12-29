@@ -167,8 +167,8 @@
     (fn [filtered-applications application-filter]
       [:div.application-handling__form-list-wrapper-outer
        [:div.application-handling__header
-        {:on-click #(toggle-form-list-open! open)}
-        [:div
+        [:div.application-handling__header-text-container
+         {:on-click #(toggle-form-list-open! open)}
          [form-list-arrow open]
          [form-list-header]]
         [excel-download-link filtered-applications application-filter]]
