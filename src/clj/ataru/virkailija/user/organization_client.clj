@@ -18,7 +18,13 @@
   [resp]
   (-> resp :body (json/parse-string true)))
 
-(defn- org-node->map [org-node] {:name (:nimi org-node) :oid (:oid org-node)})
+(defn- org-node->map [org-node] {:name (:nimi org-node)
+                                 :oid (:oid org-node)
+                                 :type :organization})
+
+(defn- group->map [group] {:name (:nimi group)
+                                 :oid (:oid group)
+                                 :type :group})
 
 (defn get-all-organizations-as-seq
   "Flattens hierarchy and includes all suborganizations"
@@ -58,7 +64,7 @@
   (if (= organization-oid oph-organization)
     ;; the remote organization service  (organisaatiopalvelu) doesn't support
     ;; fetching data about the root OPH organization, so we'll hard-code it here:
-    {:oid oph-organization :name {:fi "OPH"}}
+    {:oid oph-organization :name {:fi "OPH"} :type :organization}
     (get-organization-from-remote-service cas-client organization-oid)))
 
 (defn get-organizations
@@ -82,5 +88,5 @@
   (let [response (cas-client/cas-authenticated-get cas-client
                                                    (str (base-address) group-path))]
     (if (= 200 (:status response))
-      (->> response read-body (map org-node->map))
+      (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))

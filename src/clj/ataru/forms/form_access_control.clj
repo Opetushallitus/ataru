@@ -5,21 +5,22 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn- org-oids [session] (map :oid (-> session :identity :organizations)))
+(defn- organizations [session] (-> session :identity :organizations))
+(defn- org-oids [session] (map :oid (organizations session)))
 
-(defn- all-org-oids [organization-service organization-oids]
-  (let [all-organizations (.get-all-organizations organization-service organization-oids)]
+(defn- all-org-oids [organization-service organizations]
+  (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
   [session organization-service organization-oid-handle]
-  (let [organization-oids (org-oids session)]
+  (let [organizations (organizations session)]
     (cond
-      (some #{oph-organization} organization-oids)
+      (some #{oph-organization} (map :oid organizations))
       true
 
-      (empty? organization-oids)
+      (empty? organizations)
       false
 
       :else
@@ -27,7 +28,7 @@
                                (organization-oid-handle)
                                organization-oid-handle)]
         (-> #{organization-oid}
-            (some (all-org-oids organization-service organization-oids))
+            (some (all-org-oids organization-service organizations))
             boolean)))))
 
 (defn form-allowed-by-key? [form-key session organization-service]
@@ -45,17 +46,17 @@
    (fn [] (form-store/get-organization-oid-by-id form-id))))
 
 (defn- check-authenticated [form session organization-service do-fn]
-  (let [user-name         (-> session :identity :username)
-        organization-oids (org-oids session)
-        org-count         (count organization-oids)]
+  (let [user-name     (-> session :identity :username)
+        organizations (organizations session)
+        org-count     (count organizations)]
     (if (not= 1 org-count)
       (do
         (warn (str "User "
                    user-name
                    " has the wrong amount of organizations: "
-                   (count organization-oids)
+                   (count organizations)
                    " (required: exactly one).  can't attach form to an ambiguous organization: "
-                   (vec organization-oids)))
+                   (vec organizations)))
         (throw (user-feedback-exception
                  (if (= 0 org-count)
                    "Käyttäjätunnukseen ei ole liitetty organisaatota"
@@ -67,7 +68,7 @@
                (str "Ei oikeutta lomakkeeseen "
                     (:id form)
                     " organisaatioilla "
-                    (vec organization-oids)))))
+                    (vec organizations)))))
     (do-fn)))
 
 (defn post-form [form session organization-service]
@@ -88,7 +89,8 @@
             (first organization-oids)))))))
 
 (defn get-forms [include-deleted? session organization-service]
-  (let [organization-oids (org-oids session)]
+  (let [organizations     (organizations session)
+        organization-oids (map :oid organizations)]
     ;; OPH organization members can see everything when they're given the correct privilege
     (cond
       (some #{oph-organization} organization-oids)
@@ -99,5 +101,5 @@
       {:forms []}
 
       :else
-      (let [all-oids (all-org-oids organization-service organization-oids)]
+      (let [all-oids (all-org-oids organization-service organizations)]
         {:forms (form-store/get-forms include-deleted? all-oids)}))))
