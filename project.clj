@@ -45,7 +45,7 @@
                  [org.clojure/core.async "0.2.395"]
                  [org.clojure/java.jdbc "0.6.1"]
                  [org.postgresql/postgresql "9.4.1212"]
-                 [clj-time "0.12.2"]
+                 [clj-time "0.13.0"]
                  [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.6.3"]
                  [selmer "1.10.2"]
