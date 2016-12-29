@@ -127,9 +127,8 @@
         [form-column-header "Hakukohde" @hakukohde-list]
         [form-column-header "Lomake" @form-list]]
        [:div.application-handling__form-list-column-wrapper-inner
-        [form-list-column @hakukohde-list hakukohde-url open] ;[hakukohde-column open]
-        [form-list-column @form-list form-url open] ;[forms-column open]
-        ]])))
+        [form-list-column @hakukohde-list hakukohde-url open]
+        [form-list-column @form-list form-url open]]])))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
