@@ -105,9 +105,9 @@
 
 (defn hilighted-text [forms mutate search-term]
   (let [forms (mutate forms)]
-    (cond->> (map (fn [{:keys [name application-count] :as form}]
+    (cond->> (map (fn [{:keys [name unprocessed-application-count] :as form}]
                     (let [text (conj (match-text name search-term)
-                                     {:text (str " (" (or application-count 0) ")") :hilight false})]
+                                     {:text (str " (" (or unprocessed-application-count 0) ")") :hilight false})]
                       (assoc form :text text)))
                   forms)
       (not (clojure.string/blank? search-term))
