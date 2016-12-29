@@ -69,35 +69,21 @@
 
 (def text-with-hilighted-parts (comp (partial some :hilight) :text))
 
-(defn form-list-column [forms header-text url-fn open]
-  (let [search-term (subscribe [:state-query [:application :search-term]])]
-    (fn [forms header-text url-fn open]
-      (let [forms (cond->> (map (fn [{:keys [name application-count] :as form}]
-                                  (let [text (conj (match-text name @search-term)
-                                                   {:text (str " (" (or application-count 0) ")") :hilight false})]
-                                    (assoc form :text text)))
-                                forms)
-                    (not (clojure.string/blank? @search-term))
-                    (filter text-with-hilighted-parts))]
-        [:div.application-handling__form-list-column
-         [:span.application-handling__form-list-column-header
-          (when (and (not (clojure.string/blank? @search-term))
-                     (empty? forms))
-            {:class "application-handling__form-list-column-header--no-results"})
-          header-text]
-         (->> forms
-              (map-indexed (fn [idx {:keys [deleted text] :as form}]
-                             (let [key  (str "form-list-item-" idx)
-                                   text (map-indexed hilighted-text->span text)
-                                   href (url-fn form)]
-                               [:div.application-handling__form-list-link-container
-                                {:key key}
-                                [:a (cond-> {:href     href
-                                             :on-click #(toggle-form-list-open! open)}
-                                      (true? deleted)
-                                      (assoc :class "application-handling__form-list-link--deleted"))
-                                 text]])))
-              (doall))]))))
+(defn form-list-column [forms url-fn open]
+  [:div.application-handling__form-list-column
+   (->> forms
+        (map-indexed (fn [idx {:keys [deleted text] :as form}]
+                       (let [key  (str "form-list-item-" idx)
+                             text (map-indexed hilighted-text->span text)
+                             href (url-fn form)]
+                         [:div.application-handling__form-list-link-container
+                          {:key key}
+                          [:a (cond-> {:href     href
+                                       :on-click #(toggle-form-list-open! open)}
+                                (true? deleted)
+                                (assoc :class "application-handling__form-list-link--deleted"))
+                           text]])))
+        (doall))])
 
 (defn hakukohde->form-list-item [{:keys [hakukohde-name] :as hakukohde}]
   (assoc hakukohde :name hakukohde-name))
@@ -108,19 +94,42 @@
 (defn form-url [{:keys [key]}]
   (str "/lomake-editori/applications/" key))
 
-(defn hakukohde-column [open]
-  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
-                                   (map hakukohde->form-list-item)))]
-    (fn []
-      [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
+(defn form-column-header [header-text forms]
+  (let [search-term (subscribe [:state-query [:application :search-term]])]
+    (fn [header-text forms]
+      [:span.application-handling__form-list-column-header
+       (when (and (not (clojure.string/blank? @search-term))
+                  (empty? forms))
+         {:class "application-handling__form-list-column-header--no-results"})
+       header-text])))
 
-(defn forms-column [open]
-  (let [forms (reaction (->> @(subscribe [:state-query [:editor :forms]])
-                             (reduce-kv (fn [forms _ form]
-                                          (conj forms form))
-                                        [])))]
-    (fn []
-      [form-list-column @forms "Lomake" form-url open])))
+(defn hilighted-text [forms mutate search-term]
+  (let [forms (mutate forms)]
+    (cond->> (map (fn [{:keys [name application-count] :as form}]
+                    (let [text (conj (match-text name search-term)
+                                     {:text (str " (" (or application-count 0) ")") :hilight false})]
+                      (assoc form :text text)))
+                  forms)
+      (not (clojure.string/blank? search-term))
+      (filter text-with-hilighted-parts))))
+
+(defn form-columns [open]
+  (let [search-term    (subscribe [:state-query [:application :search-term]])
+        hakukohde-list (reaction (hilighted-text @(subscribe [:state-query [:editor :hakukohteet]])
+                                                 (partial map hakukohde->form-list-item)
+                                                 @search-term))
+        form-list      (reaction (hilighted-text @(subscribe [:state-query [:editor :forms]])
+                                                 (partial reduce-kv (fn [forms _ form] (conj forms form)) [])
+                                                 @search-term))]
+    (fn [open]
+      [:div.application-handling__form-list-column-wrapper-outer
+       [:div.application-handling__form-list-header-row
+        [form-column-header "Hakukohde" @hakukohde-list]
+        [form-column-header "Lomake" @form-list]]
+       [:div.application-handling__form-list-column-wrapper-inner
+        [form-list-column @hakukohde-list hakukohde-url open] ;[hakukohde-column open]
+        [form-list-column @form-list form-url open] ;[forms-column open]
+        ]])))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
@@ -168,9 +177,7 @@
        [:div.application-handling__form-list-wrapper-inner
         (when-not @open {:style {:display "none"}})
         [form-list-search open]
-        [:div.application-handling__form-list-column-wrapper
-         [hakukohde-column open]
-         [forms-column open]]]])))
+        [form-columns open]]])))
 
 (defn application-list-contents [applications]
   (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
