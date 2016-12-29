@@ -4,20 +4,20 @@
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.293"]
                  [reagent "0.6.0"]   ; react in clojure
-                 [re-frame "0.8.0"]  ; flux for re-agent
+                 [re-frame "0.9.1"]  ; flux for re-agent
                  [secretary "1.2.3"] ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
                  [oph/soresu "0.1.11-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.8"]
                  [binaryage/devtools "0.8.3"]
-                 [re-frisk "0.3.1"] ; will only be used in development side
+                 [re-frisk "0.3.2"] ; will only be used in development side
                  [venantius/accountant "0.1.7"]
                  [com.cemerick/url "0.1.1"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.3"]
-                 [com.taoensso/timbre "4.7.4"]
+                 [com.taoensso/timbre "4.8.0"]
                  [org.clojure/core.async "0.2.395"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.0"]
@@ -27,9 +27,8 @@
                  [compojure "1.5.1"]
                  [crypto-random "1.2.0"]
                  [com.github.fge/json-patch "1.9"]
-                 [com.stuartsierra/component "0.3.1"]
+                 [com.stuartsierra/component "0.3.2"]
                  [metosin/compojure-api "1.1.9"]
-                 [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1"]
                  [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
@@ -37,7 +36,7 @@
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
                  [ring-ratelimit "0.2.2"]
-                 [bk/ring-gzip "0.1.1"]
+                 [bk/ring-gzip "0.2.0"]
                  [buddy/buddy-auth "1.3.0"]
                  [yesql "0.5.3"]
                  [org.flywaydb/flyway-core "3.2.1"]
@@ -46,10 +45,10 @@
                  [org.clojure/core.async "0.2.395"]
                  [org.clojure/java.jdbc "0.6.1"]
                  [org.postgresql/postgresql "9.4.1212"]
-                 [clj-time "0.12.2"]
+                 [clj-time "0.13.0"]
                  [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.6.3"]
-                 [selmer "1.10.2"]
+                 [selmer "1.10.3"]
                  [metosin/ring-http-response "0.8.0"]
                  [oph/clj-util "0.1.0"]
                  [ring.middleware.logger "0.5.0"]
