@@ -135,21 +135,19 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, f.key AS form_key, COUNT(ar.id) AS unprocessed_application_count
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(ar.id) AS unprocessed_application_count
 FROM applications a1
 LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
-INNER JOIN forms f ON a1.form_id = f.id
 WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
-GROUP BY a1.hakukohde, a1.hakukohde_name, f.key;
+GROUP BY a1.hakukohde, a1.hakukohde_name;
 
 -- name: yesql-get-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, f.key AS form_key, COUNT(ar.id) AS unprocessed_application_count
+SELECT a1.haku, a1.haku_name, COUNT(ar.id) AS unprocessed_application_count
 FROM applications a1
 LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
-INNER JOIN forms f ON a1.form_id = f.id
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
-GROUP BY a1.haku, a1.haku_name, f.key;
+GROUP BY a1.haku, a1.haku_name;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde

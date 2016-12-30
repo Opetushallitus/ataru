@@ -35,7 +35,6 @@
 
 (s/defschema Haku {:haku                          s/Str
                    :haku-name                     s/Str
-                   :form-key                      s/Str
                    :unprocessed-application-count s/Int})
 
 (s/defschema LocalizedString {:fi                  s/Str
