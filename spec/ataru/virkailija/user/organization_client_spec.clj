@@ -2,7 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [cheshire.core :as json]
-   [speclj.core :refer [describe it should= tags]]
+   [speclj.core :refer [describe it should= tags around]]
    [ataru.virkailija.user.organization-client :as org-client]
    [ataru.cas.client :as cas-client]
    [oph.soresu.common.config :refer [config]]
@@ -41,24 +41,24 @@
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 
 (describe "organization client"
+          (around [spec]
+                  (with-redefs [config                            fake-config
+                                cas-client/cas-authenticated-get  fake-cas-auth-organization]
+                    (spec)))
           (tags :unit :organization)
           (it "transforms organization hierarchy into a flat sequence"
               (let [parsed-hierarchy (json/parse-string organization-hierarchy-data true)
                     organizations (org-client/get-all-organizations-as-seq parsed-hierarchy)]
                 (should= expected-flat-organizations organizations)))
           (it "Returns the hard-coded OPH organization for the known OID"
-              (with-redefs [config fake-config]
-                (should= {:oid oph-oid :name {:fi "OPH"} :type :organization}
-                         (org-client/get-organization nil oph-oid))))
+              (should= {:oid oph-oid :name {:fi "OPH"} :type :organization}
+                       (org-client/get-organization nil oph-oid)))
           (it "Returns nil if numHits is zero"
-              (with-redefs [config                            fake-config
-                            cas-client/cas-authenticated-get  fake-cas-auth-no-organization]
+              (with-redefs [cas-client/cas-authenticated-get  fake-cas-auth-no-organization]
                 (should= nil
                          (org-client/get-organization nil "1.2.246.562.10.2.445.3"))))
           (it "Returns the organization in normal case (numHits 1)"
-              (with-redefs [config                            fake-config
-                            cas-client/cas-authenticated-get  fake-cas-auth-organization]
-                (should= {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
-                          :oid "1.2.246.562.10.3242342"
-                          :type :organization}
-                         (org-client/get-organization nil "1.2.246.562.10.3242342")))))
+              (should= {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
+                        :oid "1.2.246.562.10.3242342"
+                        :type :organization}
+                       (org-client/get-organization nil "1.2.246.562.10.3242342"))))
