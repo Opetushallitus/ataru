@@ -11,6 +11,8 @@
 
 (def test-user-with-group {:employeeNumber "1.2.246.562.24.23424"
                  :description "[\"USER_jorma\", \"VIRKAILIJA\", \"LANG_fi\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.6.214933\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.28.1.2\"]"})
+(def telajarvi-org {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization})
+
 
 (defn fake-ldap-search-only-orgs [connection path props] [test-user1])
 (defn fake-ldap-search-orgs-and-groups [connection path props] [test-user-with-group])
@@ -55,9 +57,7 @@
           (it "Should get direct organizatons from organization client"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-organization]
                 (let [org-service-instance (create-org-service-instance)]
-                  (should= [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
-                             :oid  "1.2.246.562.10.3242342"
-                             :type :organization}]
+                  (should= [telajarvi-org]
                            (.get-direct-organizations org-service-instance "testi2editori")))))
 
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
@@ -67,8 +67,7 @@
                       expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}
                       expected-result      (.get-direct-organizations org-service-instance "user-name")]
                   (should=
-                   [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization}
-                    expected-group]
+                   [telajarvi-org expected-group]
                    expected-result)
                   (should= expected-group (get-in @(:group-cache org-service-instance) [:groups "1.2.246.562.28.1.2"]))))))
 
