@@ -124,7 +124,7 @@
 (defn hakukohde-column [open]
   (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
                                    (map hakukohde->form-list-item)))]
-    (fn []
+    (fn [open]
       [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
 
 (defn forms-column [open]
@@ -132,7 +132,7 @@
                              (reduce-kv (fn [forms _ form]
                                           (conj forms form))
                                         [])))]
-    (fn []
+    (fn [open]
       [form-list-column @forms "Lomake" form-url open])))
 
 (defn excel-download-link [applications application-filter]
