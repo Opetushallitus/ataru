@@ -69,5 +69,14 @@
                   (should=
                    [telajarvi-org expected-group]
                    expected-result)
-                  (should= expected-group (get-in @(:group-cache org-service-instance) [:groups "1.2.246.562.28.1.2"]))))))
+                  (should= expected-group (get-in @(:group-cache org-service-instance) [:groups "1.2.246.562.28.1.2"])))))
+
+          (it "Should get all organizations from organization client and return passed in groups as-is"
+              (with-redefs [cas-client/cas-authenticated-get (partial fake-cas-auth-organization-hierarchy (atom 0))]
+                (let [org-service-instance (create-org-service-instance)
+                      group                {:name {:fi "Ryhmä-x"} :oid "1.2.246.562.28.1.29" :type :group}]
+                  (should= (into [group] expected-flat-organizations)
+                           (.get-all-organizations org-service-instance
+                                                   [{:oid test-user1-organization-oid :name {:fi "org1"}}
+                                                    group]))))))
 
