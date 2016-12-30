@@ -33,6 +33,11 @@
                    (s/optional-key :unprocessed-application-count) s/Int
                    s/Any                                           s/Any})
 
+(s/defschema Haku {:haku                          s/Str
+                   :haku-name                     s/Str
+                   :form-key                      s/Str
+                   :unprocessed-application-count s/Int})
+
 (s/defschema LocalizedString {:fi                  s/Str
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})

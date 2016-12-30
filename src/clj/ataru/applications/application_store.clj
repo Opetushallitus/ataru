@@ -231,3 +231,8 @@
   (->> (exec-db :db yesql-get-unprocessed-application-count-with-deleteds-by-form-key {:form_key form-key})
        (map :unprocessed_application_count)
        (first)))
+
+(defn get-haut
+  []
+  (->> (exec-db :db yesql-get-haut-from-applications {})
+       (map ->kebab-case-kw)))

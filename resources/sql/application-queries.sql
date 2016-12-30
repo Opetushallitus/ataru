@@ -142,6 +142,15 @@ left join applications a2 on f.id = a2.form_id
 where a1.hakukohde is not null and a1.hakukohde_name is not null
 group by a1.hakukohde, a1.hakukohde_name, f.key;
 
+-- name: yesql-get-haut-from-applications
+-- Get haku info from applications
+select distinct a1.haku, a1.haku_name, f.key as form_key, count(a2.id) as unprocessed_application_count
+from applications a1
+join forms f on a1.form_id = f.id
+left join applications a2 on f.id = a2.form_id
+where a1.haku is not null and a1.haku_name is not null
+group by a1.haku, a1.haku_name, f.key;
+
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
 SELECT

@@ -202,6 +202,11 @@
                                     :unprocessed-application-count s/Int}]
                           (ok (ataru.applications.application-store/get-hakukohteet)))
 
+                 (api/GET "/haut" []
+                          :summary "List haku information found for applications stored in system"
+                          :return [ataru-schema/Haku]
+                          (ok (ataru.applications.application-store/get-haut)))
+
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
                               (api/GET "/" []
