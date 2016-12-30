@@ -63,9 +63,12 @@
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group
                             ldap/search                      fake-ldap-search-orgs-and-groups]
-                (let [org-service-instance (create-org-service-instance)]
+                (let [org-service-instance (create-org-service-instance)
+                      expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}
+                      expected-result      (.get-direct-organizations org-service-instance "user-name")]
                   (should=
                    [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization}
-                    {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}]
-                   (.get-direct-organizations org-service-instance "user-name"))))))
+                    expected-group]
+                   expected-result)
+                  (should= expected-group (get-in @(:group-cache org-service-instance) [:groups "1.2.246.562.28.1.2"]))))))
 
