@@ -103,11 +103,23 @@
 (defn hakukohde->form-list-item [{:keys [hakukohde-name] :as hakukohde}]
   (assoc hakukohde :name hakukohde-name))
 
+(defn haku->form-list-item [{:keys [haku-name] :as haku}]
+  (assoc haku :name haku-name))
+
 (defn hakukohde-url [{:keys [hakukohde]}]
   (str "/lomake-editori/applications/hakukohde/" hakukohde))
 
 (defn form-url [{:keys [key]}]
   (str "/lomake-editori/applications/" key))
+
+(defn haku-url [{:keys [haku]}]
+  (str "/lomake-editori/applications/haku/" haku))
+
+(defn haku-column [open]
+  (let [haut (reaction (->> @(subscribe [:state-query [:editor :haut]])
+                            (map haku->form-list-item)))]
+    (fn [open]
+      [form-list-column @haut "Haku" haku-url open])))
 
 (defn hakukohde-column [open]
   (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
@@ -151,6 +163,7 @@
       :on-change (fn [event]
                    (let [search-term (.. event -target -value)]
                      (dispatch [:application/search-form-list search-term])))}]]
+   [:div.application-handling__form-list-close-container]
    [:div.application-handling__form-list-close-container
     [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
      {:on-click #(toggle-form-list-open! open)}]]])
@@ -171,6 +184,7 @@
         (when-not @open {:style {:display "none"}})
         [form-list-search open]
         [:div.application-handling__form-list-column-wrapper
+         [haku-column open]
          [hakukohde-column open]
          [forms-column open]]]])))
 

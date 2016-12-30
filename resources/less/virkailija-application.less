@@ -4,6 +4,7 @@
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
+@form-column-width: 33%;
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -27,7 +28,7 @@
 
 .application-handling__form-list-close-container {
   display: flex;
-  flex: 0 1 50%;
+  flex: 0 1 @form-column-width;
   justify-content: flex-end;
 }
 
@@ -109,7 +110,7 @@
 
 .application-handling__form-list-column-and-header-container {
   display: flex;
-  flex: 0 0 50%;
+  flex: 0 0 @form-column-width;
   flex-flow: column nowrap;
   min-width: 250px;
 }
@@ -498,7 +499,7 @@ and (max-width: @desktop-content-width) {
   }
 
   .application-handling__form-list-column-and-header-container {
-    flex: 1 0 50%;
+    flex: 1 0 @form-column-width;
   }
 }
 
