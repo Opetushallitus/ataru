@@ -31,17 +31,21 @@
 (defn get-orgs-from-client [cas-client direct-oids]
   (flatten (map #(org-client/get-organizations cas-client %) direct-oids)))
 
+(defn get-groups-from-client [cas-client]
+  (let [groups-as-seq (org-client/get-groups cas-client)]
+    (into {} (map (fn [group] [(:oid group) group]) groups-as-seq))))
+
 (defn get-from-cache-or-real-source [cache-instance cache-key get-from-source-fn]
   ;; According to this:
   ;; https://github.com/clojure/core.cache/wiki/Using
   ;; has?/hit/miss pattern _must_ be used (although seems a bit redundant here)
   (if (cache/has? @cache-instance cache-key)
-      (let [item (cache/lookup @cache-instance cache-key)]
-        (swap! cache-instance cache/hit cache-key)
-        item)
-      (let [item (get-from-source-fn)]
-        (swap! cache-instance cache/miss cache-key item)
-        item)))
+    (let [item (cache/lookup @cache-instance cache-key)]
+      (swap! cache-instance cache/hit cache-key)
+      item)
+    (let [item (get-from-source-fn)]
+      (swap! cache-instance cache/miss cache-key item)
+      item)))
 
 (defn get-orgs-from-cache-or-client [all-orgs-cache cas-client direct-oids]
   (let [cache-key (join "-" direct-oids)]
@@ -54,7 +58,7 @@
   (get-from-cache-or-real-source
    group-cache
    :groups
-   #(org-client/get-groups cas-client)))
+   #(get-groups-from-client cas-client)))
 
 (defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
 
