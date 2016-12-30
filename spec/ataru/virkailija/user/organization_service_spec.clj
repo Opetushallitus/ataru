@@ -40,6 +40,7 @@
           (it "should use ldap module to fetch organization oids"
               (let [org-service-instance (create-org-service-instance)]
                 (should= [test-user1-organization-oid] (.get-direct-organization-oids org-service-instance "testi2editori"))))
+
           (it "Should get all organizations from organization client and cache the result"
               (let [cas-get-call-count (atom 0)]
                 (with-redefs [cas-client/cas-authenticated-get (partial fake-cas-auth-organization-hierarchy cas-get-call-count)]
@@ -50,7 +51,7 @@
                     (should= {test-user1-organization-oid expected-flat-organizations}
                              (into {} (for [[k v] @(:all-orgs-cache org-service-instance)] [k v])))
                     (should= 1 @cas-get-call-count)))))
-          
+
           (it "Should get direct organizatons from organization client"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-organization]
                 (let [org-service-instance (create-org-service-instance)]
@@ -58,6 +59,7 @@
                              :oid  "1.2.246.562.10.3242342"
                              :type :organization}]
                            (.get-direct-organizations org-service-instance "testi2editori")))))
+
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group
                             ldap/search                      fake-ldap-search-orgs-and-groups]
