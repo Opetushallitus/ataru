@@ -10,23 +10,30 @@
             [clojure.java.io :as io]))
 
 (def test-user-with-group {:employeeNumber "1.2.246.562.24.23424"
-                 :description "[\"USER_jorma\", \"VIRKAILIJA\", \"LANG_fi\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.6.214933\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.28.1.2\"]"})
+                           :description "[\"USER_jorma\", \"VIRKAILIJA\", \"LANG_fi\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.6.214933\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.28.1.2\"]"})
+
 (def telajarvi-org {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization})
 
-
 (defn fake-ldap-search-only-orgs [connection path props] [test-user1])
+
 (defn fake-ldap-search-orgs-and-groups [connection path props] [test-user-with-group])
+
 (defn fake-create-connection [] :fake-conn)
+
 (defn fake-cas-auth-organization-hierarchy [call-count cas-client url]
   (swap! call-count inc)
   {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))})
+
 (defn fake-cas-auth-organization [cas-client url]
   {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))})
+
 (defn fake-cas-auth-org-and-group [cas-client url]
   (if (.contains url "hae/nimi")
     {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}
     {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))}))
+
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
+
 (defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService)))
 
 (describe "OrganizationService"
