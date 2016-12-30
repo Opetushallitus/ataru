@@ -145,6 +145,13 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn get-application-list-by-haku
+  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
+  [haku-oid]
+  (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid haku-oid})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 

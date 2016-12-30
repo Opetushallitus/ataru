@@ -24,11 +24,13 @@
 
 (defn form-list-header []
   (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form      (subscribe [:editor/selected-form])]
+        selected-form      (subscribe [:editor/selected-form])
+        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
     (fn []
       [:div.application-handling__form-list-header
        (or (:name @selected-form)
-           (:hakukohde-name @selected-hakukohde))])))
+           (:hakukohde-name @selected-hakukohde)
+           (:haku-name @selected-haku))])))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)

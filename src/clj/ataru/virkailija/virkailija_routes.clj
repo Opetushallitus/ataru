@@ -139,12 +139,19 @@
 
                   (api/GET "/list" {session :session}
                            :query-params [{formKey :- s/Str nil}
-                                          {hakukohdeOid :- s/Str nil}]
+                                          {hakukohdeOid :- s/Str nil}
+                                          {hakuOid :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (if formKey
+                           (cond
+                             (some? formKey)
                              (ok (application-service/get-application-list-by-form formKey session organization-service))
-                             (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))))
+
+                             (some? hakukohdeOid)
+                             (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))
+
+                             (some? hakuOid)
+                             (ok (application-service/get-application-list-by-haku hakuOid session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]

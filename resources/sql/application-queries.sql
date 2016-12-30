@@ -33,6 +33,20 @@ from applications a
 where a.hakukohde = :hakukohde_oid
 order by a.created_time desc;
 
+-- name: yesql-get-application-list-by-haku
+select a.id,
+  a.key,
+  a.lang,
+  a.preferred_name || ' ' ||  a.last_name as applicant_name,
+  a.created_time,
+  ar.state as state,
+  ar.score as score,
+  a.form_id as form
+from applications a
+join application_reviews ar on a.key = ar.application_key
+where a.haku = :haku_oid
+order by a.created_time desc;
+
 -- name: yesql-get-application-events
 select event_type, time, new_review_state, application_key, id from application_events
 where application_key = :application_key order by time asc;
