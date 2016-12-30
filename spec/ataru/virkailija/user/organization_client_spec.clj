@@ -38,6 +38,8 @@
   {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))})
 (defn fake-cas-auth-organization [cas-client url]
   {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))})
+(defn fake-cas-auth-groups [cas-client url]
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))})
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 
 (describe "organization client"
@@ -61,4 +63,13 @@
               (should= {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
                         :oid "1.2.246.562.10.3242342"
                         :type :organization}
-                       (org-client/get-organization nil "1.2.246.562.10.3242342"))))
+                       (org-client/get-organization nil "1.2.246.562.10.3242342")))
+          (it "Returns groups"
+              (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-groups]
+              (should= [{:name {:fi "Yhteiskäyttöryhmä"}
+                         :oid "1.2.246.562.28.1.2"
+                         :type :group}
+                        {:name {:fi "Toinen ryhmä"}
+                         :oid "1.2.246.562.28.1.3"
+                         :type :group}]
+                       (org-client/get-groups nil)))))
