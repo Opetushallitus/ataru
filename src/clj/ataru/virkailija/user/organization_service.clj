@@ -115,7 +115,7 @@
   (get-direct-organization-oids [this user-name] ["1.2.246.562.10.0439845"])
   (get-direct-organizations [this user-name]
     [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}])
-  (get-all-organizations [this user-name]
+  (get-all-organizations [this root-orgs]
     [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}]))
 
 
