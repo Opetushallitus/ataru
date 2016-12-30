@@ -73,18 +73,18 @@
 
   (get-direct-organizations [this user-name]
     (let [direct-oids                  (distinct (get-direct-organization-oids this user-name)) ;; distinct because of duplicates seen in production
-          [group-oids normal-org-oids] (split-with group-oid? direct-oids)
+          [group-oids normal-org-oids] ((juxt filter remove) group-oid? direct-oids)
           normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client this) %) normal-org-oids))
           groups                       (map (partial
                                              get-group
                                              (:group-cache this)
-                                             (:clas-client this))
+                                             (:cas-client this))
                                             group-oids)]
-      ; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
+                                        ; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
       (concat normal-orgs groups)))
 
   (get-all-organizations [this direct-organizations-for-user]
-    (let [[groups orgs]       (split-with #(group-oid? (:oid %)) direct-organizations-for-user)
+    (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations-for-user)
           ;; Only fetch hierarchy for actual orgs, not groups:
           flattened-hierarchy (get-orgs-from-cache-or-client
                                (:all-orgs-cache this)
