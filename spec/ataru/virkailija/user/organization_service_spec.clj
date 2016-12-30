@@ -20,7 +20,7 @@
 (defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService)))
 
 (describe "OrganizationService"
-  (tags :unit)
+  (tags :unit :organization)
   (it "should use ldap module to fetch organization oids"
       (with-redefs [ldap/search                       fake-ldap-search
                     ataru-ldap/create-ldap-connection fake-create-connection]
@@ -35,7 +35,8 @@
                       config                            fake-config]
           (let [org-service-instance (create-org-service-instance)]
             (should= expected-flat-organizations
-                     (.get-all-organizations org-service-instance [test-user1-organization-oid]))
+                     (.get-all-organizations org-service-instance
+                                             [{:oid test-user1-organization-oid :name {:fi "org1"}}]))
             (should= {test-user1-organization-oid  expected-flat-organizations}
                      (into {} (for [[k v] @(:all-orgs-cache org-service-instance)] [k v])))
             (should= 1 @cas-get-call-count)))))
@@ -46,6 +47,8 @@
                     cas-client/cas-authenticated-get  fake-cas-auth-organization
                     config                            fake-config]
         (let [org-service-instance (create-org-service-instance)]
-          (should= [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342"}]
+          (should= [{:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
+                     :oid "1.2.246.562.10.3242342"
+                     :type :organization}]
                    (.get-direct-organizations org-service-instance "testi2editori"))))))
 
