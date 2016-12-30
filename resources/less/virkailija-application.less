@@ -64,8 +64,6 @@
 .application-handling__form-list-wrapper-inner {
   background-color: @application-form-list-background-color;
   box-shadow: 0px 2px 1px 0px rgba(102,102,102,1);
-  flex-flow: row nowrap;
-  padding-bottom: 10px;
   padding-left: 20px;
   padding-right: 20px;
   position: absolute;
@@ -92,20 +90,10 @@
   cursor: pointer;
 }
 
-.application-handling__form-list-column-wrapper-outer {
-  display: flex;
-  flex-flow: column nowrap;
-}
-
-.application-handling__form-list-header-row {
+.application-handling__form-list-column-wrapper {
   display: flex;
   flex-flow: row nowrap;
-}
-
-.application-handling__form-list-column-wrapper-inner {
-  display: flex;
-  flex-flow: row nowrap;
-  max-height: calc(~"100vh - 260px");
+  max-height: calc(~"100vh - 230px");
   overflow-y: auto;
 }
 
@@ -136,7 +124,6 @@
 
 .application-handling__form-list-column-header {
   border-bottom: 1px solid #E3ECEF;
-  flex: 0 0 50%;
   padding: 10px 20px;
 }
 
@@ -507,6 +494,14 @@ and (max-width: @desktop-content-width) {
    */
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
+  }
+
+  .application-handling__form-list-column-wrapper {
+    flex-flow: row wrap;
+  }
+
+  .application-handling__form-list-column {
+    flex: 1 0 50%;
   }
 }
 
