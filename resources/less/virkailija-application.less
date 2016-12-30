@@ -93,8 +93,6 @@
 .application-handling__form-list-column-wrapper {
   display: flex;
   flex-flow: row nowrap;
-  max-height: calc(~"100vh - 230px");
-  overflow-y: auto;
 }
 
 .application-handling__form-list-indicator {
@@ -115,11 +113,16 @@
   min-width: 250px;
 }
 
-.application-handling__form-list-column {
+.application-handling__form-list-column-and-header-container {
   display: flex;
   flex: 0 0 50%;
   flex-flow: column nowrap;
   min-width: 250px;
+}
+
+.application-handling__form-list-column-container {
+  max-height: calc(~"100vh - 260px");
+  overflow-y: auto;
 }
 
 .application-handling__form-list-column-header {
@@ -500,7 +503,7 @@ and (max-width: @desktop-content-width) {
     flex-flow: row wrap;
   }
 
-  .application-handling__form-list-column {
+  .application-handling__form-list-column-and-header-container {
     flex: 1 0 50%;
   }
 }

@@ -79,25 +79,26 @@
                                 forms)
                     (not (clojure.string/blank? @search-term))
                     (filter text-with-hilighted-parts))]
-        [:div.application-handling__form-list-column
+        [:div.application-handling__form-list-column-and-header-container
          [:span.application-handling__form-list-column-header
           (when (and (not (clojure.string/blank? @search-term))
                      (empty? forms))
             {:class "application-handling__form-list-column-header--no-results"})
           header-text]
-         (->> forms
-              (map-indexed (fn [idx {:keys [deleted text] :as form}]
-                             (let [key  (str "form-list-item-" idx)
-                                   text (map-indexed hilighted-text->span text)
-                                   href (url-fn form)]
-                               [:div.application-handling__form-list-link-container
-                                {:key key}
-                                [:a (cond-> {:href     href
-                                             :on-click #(toggle-form-list-open! open)}
-                                      (true? deleted)
-                                      (assoc :class "application-handling__form-list-link--deleted"))
-                                 text]])))
-              (doall))]))))
+         [:div.application-handling__form-list-column-container
+          (->> forms
+               (map-indexed (fn [idx {:keys [deleted text] :as form}]
+                              (let [key  (str "form-list-item-" idx)
+                                    text (map-indexed hilighted-text->span text)
+                                    href (url-fn form)]
+                                [:div.application-handling__form-list-link-container
+                                 {:key key}
+                                 [:a (cond-> {:href     href
+                                              :on-click #(toggle-form-list-open! open)}
+                                       (true? deleted)
+                                       (assoc :class "application-handling__form-list-link--deleted"))
+                                  text]])))
+               (doall))]]))))
 
 (defn hakukohde->form-list-item [{:keys [hakukohde-name] :as hakukohde}]
   (assoc hakukohde :name hakukohde-name))
@@ -143,7 +144,7 @@
 
 (defn form-list-search [open]
   [:div.application-handling__form-list-search-row
-   [:div.application-handling__form-list-column
+   [:div.application-handling__form-list-column-and-header-container
     [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
      {:type      "text"
       :value     @(subscribe [:state-query [:application :search-term]])
