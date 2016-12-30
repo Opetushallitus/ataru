@@ -135,21 +135,21 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-select distinct a1.hakukohde, a1.hakukohde_name, f.key as form_key, count(a2.id) as unprocessed_application_count
-from applications a1
-  join forms f on a1.form_id = f.id
-left join applications a2 on f.id = a2.form_id
-where a1.hakukohde is not null and a1.hakukohde_name is not null
-group by a1.hakukohde, a1.hakukohde_name, f.key;
+SELECT a1.hakukohde, a1.hakukohde_name, f.key AS form_key, COUNT(ar.id) AS unprocessed_application_count
+FROM applications a1
+LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
+INNER JOIN forms f ON a1.form_id = f.id
+WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
+GROUP BY a1.hakukohde, a1.hakukohde_name, f.key;
 
 -- name: yesql-get-haut-from-applications
 -- Get haku info from applications
-select distinct a1.haku, a1.haku_name, f.key as form_key, count(a2.id) as unprocessed_application_count
-from applications a1
-join forms f on a1.form_id = f.id
-left join applications a2 on f.id = a2.form_id
-where a1.haku is not null and a1.haku_name is not null
-group by a1.haku, a1.haku_name, f.key;
+SELECT a1.haku, a1.haku_name, f.key AS form_key, COUNT(ar.id) AS unprocessed_application_count
+FROM applications a1
+LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
+INNER JOIN forms f ON a1.form_id = f.id
+WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
+GROUP BY a1.haku, a1.haku_name, f.key;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
