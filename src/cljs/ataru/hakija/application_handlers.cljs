@@ -350,7 +350,8 @@
                                   (not-empty values)
                                   [{:valid (not required?)}]))
                     not-empty
-                    (every? true?))))))))))
+                    (every? true?)))
+                :label (:label field-descriptor))))))))
 
 (reg-event-db
   :application/add-adjacent-fields
