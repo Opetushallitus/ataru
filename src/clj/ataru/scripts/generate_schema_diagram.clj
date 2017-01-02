@@ -1,13 +1,14 @@
 (ns ataru.scripts.generate-schema-diagram
   (:require
     [ataru.db.migrations :as migrations]
-    [environ.core :refer [env]]
+    [ataru.schema.form-schema]
     [clojure.java.shell :refer [sh]]
-    [oph.soresu.common.config :refer [config]]))
+    [environ.core :refer [env]]
+    [oph.soresu.common.config :refer [config]]
+    [schema-viz.core :as svc]))
 
-(defn -main
+(defn generate-db-schema-diagram
   []
-  (migrations/migrate)
   (let [db-config    (:db config)
         return-value (sh "./bin/generate-db-schema-diagram.sh"
                          (:server-name db-config)
@@ -17,3 +18,13 @@
                          (:ataru-version env))]
     (println return-value)
     (:exit return-value)))
+
+(defn generate-form-schema-diagram
+  []
+  (svc/save-schemas (str "target/ataru-form-" (:ataru-version env) ".png") {:ns 'ataru.schema.form-schema}))
+
+(defn -main
+  []
+  (migrations/migrate)
+  (generate-db-schema-diagram)
+  (generate-form-schema-diagram))
