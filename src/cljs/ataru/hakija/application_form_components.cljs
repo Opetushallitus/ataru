@@ -252,8 +252,8 @@
                                          current-followups  (resolve-followups @value)]
                                      (dispatch [:state-update
                                                 (fn [db]
-                                                  (let [reduced (reduce (partial false) db previous-followups)]
-                                                    (reduce (partial true) reduced current-followups)))])))))
+                                                  (let [reduced (reduce (partial toggle-visibility false) db previous-followups)]
+                                                    (reduce (partial toggle-visibility true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
                                (when-let [followups (resolve-followups @value)]
                                  (into [:div.application__form-dropdown-followups]
