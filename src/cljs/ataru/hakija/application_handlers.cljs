@@ -343,15 +343,15 @@
         (update-in [:application :answers id]
           (fn [{:keys [values] :as answer}]
             (let [required? (some? ((set (:validators field-descriptor)) "required"))]
-              (assoc answer :valid
+              (assoc answer
+                :valid
                 (boolean
                   (some->>
-                    (map :valid (or
-                                  (not-empty values)
-                                  [{:valid (not required?)}]))
-                    not-empty
-                    (every? true?)))
-                :label (:label field-descriptor))))))))
+                      (map :valid (or
+                                    (not-empty values)
+                                    [{:valid (not required?)}]))
+                      not-empty
+                    (every? true?))))))))))
 
 (reg-event-db
   :application/add-adjacent-fields
