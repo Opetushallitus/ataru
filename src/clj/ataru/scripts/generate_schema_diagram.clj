@@ -21,7 +21,7 @@
 
 (defn generate-form-schema-diagram
   []
-  (svc/save-schemas (str "target/ataru-form-" (:ataru-version env) ".png") {:ns 'ataru.schema.form-schema}))
+  (svc/save-schemas (str "target/db-schema/ataru-form-" (:ataru-version env) ".png") {:ns 'ataru.schema.form-schema}))
 
 (defn -main
   []
