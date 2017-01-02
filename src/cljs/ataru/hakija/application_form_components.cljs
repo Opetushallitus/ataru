@@ -459,7 +459,7 @@
                                        (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
                        [:span.application__form-adjacent-row--mobile-only
                         "Poista rivi"]
-                       [:application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
+                       [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
        [:a {:on-click (fn [evt]
                         (.preventDefault evt)
                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
