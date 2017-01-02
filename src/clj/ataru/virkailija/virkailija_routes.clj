@@ -90,7 +90,7 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn- org-names [session] (map :name (-> session :identity :organizations)))
+(defn- organizations [session] (-> session :identity :organizations))
 
 (defn api-routes [{:keys [organization-service]}]
     (api/context "/api" []
@@ -98,7 +98,7 @@
 
                  (api/GET "/user-info" {session :session}
                           (ok {:username (-> session :identity :username)
-                               :organization-names (org-names session)}))
+                               :organizations (organizations session)}))
 
                  (api/GET "/forms" {session :session}
                    :query-params [{include-deleted :- s/Bool false}]

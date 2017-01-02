@@ -46,7 +46,7 @@
   (let [user-info         (subscribe [:state-query [:editor :user-info]])]
     (fn []
       (when @user-info
-        (let [org-names      (map :fi (:organization-names @user-info))
+        (let [org-names      (map #(get-in % [:name :fi]) (:organizations @user-info))
               joint-orgs-str (string/join ", " org-names)
               org-str        (if (empty? joint-orgs-str) "Ei organisaatiota" joint-orgs-str)]
           [:div.profile
