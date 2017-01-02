@@ -404,6 +404,22 @@
             children))
         (repeat count-of-answers children)))))
 
+(defn- adjacent-field-input [fid on-change {:keys [valid? child value]}]
+  (r/create-class
+    {:component-did-mount (fn [this] (on-change nil)) ; updates answers to include proper field labels and validation results
+     :reagent-render
+     (fn [fid on-change {:keys [valid? child value]}]
+       [:input.application__form-text-input
+        {:id        fid
+         :type      "text"
+         :class     (match [valid? ((set (:validators child)) "required")]
+                      [false (_ :guard some?)]
+                      " application__form-field-error"
+                      :else
+                      " application__form-text-input--normal")
+         :value     value
+         :on-change on-change}])}))
+
 (defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
   (let [language              (subscribe [:application/form-language])
         default-lang          (subscribe [:application/default-language])
@@ -436,23 +452,14 @@
                  (into
                    ^{:key (->> row second second (select-keys [:value-index :id]) (apply str "-" rowcount))}
                    [:div.application__form-adjacent-text-fields-wrapper
-                    (for [[counter {:keys [id value-index child value valid?]}] row
-                          :let  [fid (str value-index "-" (:id child))]]
+                    (for [[counter {:keys [id value-index child value valid?] :as current-row}] row
+                          :let [fid (str value-index "-" (:id child))]]
                       ^{:key fid}
                       [:div.application__form-adjacent-row
                        [:div {:class (when (-> counter (>= (count children)))
                                        "application__form-adjacent-row--mobile-only")}
-                        [label  child]]
-                       [:input.application__form-text-input
-                        {:id        fid
-                         :type      "text"
-                         :class     (match [valid? ((set (:validators child)) "required")]
-                                      [false (_ :guard some?)]
-                                      " application__form-field-error"
-                                      :else
-                                      " application__form-text-input--normal")
-                         :value     value
-                         :on-change (partial adjacent-field-change child id value-index)}]])
+                        [label child]]
+                       [adjacent-field-input fid (partial adjacent-field-change child id value-index) current-row]])
                     (when (pos? rowcount)
                       [:a {:on-click (fn [evt]
                                        (.preventDefault evt)
