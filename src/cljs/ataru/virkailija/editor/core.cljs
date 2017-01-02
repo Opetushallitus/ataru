@@ -24,7 +24,7 @@
   (let [render-children (fn [children & [new-path]]
                           (for [[index child] (map vector (range) children)]
                             ^{:key index}
-                            [soresu->reagent child (spy (conj (vec path) :children index))]))]
+                            [soresu->reagent child (conj (vec path) :children index)]))]
     (fn [content path]
       [:div
        (when-not ((set path) :followups)

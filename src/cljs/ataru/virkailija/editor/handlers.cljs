@@ -408,7 +408,7 @@
 
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
-    (if (spy (-> b (< a)))
+    (if (-> b (< a))
       [b :children xb]       ; topwards
       [(dec b) :children xb] ; bottomwards
       )
