@@ -135,7 +135,7 @@
                                           (conj forms form))
                                         [])))]
     (fn [open]
-      [form-list-column @forms "Lomake" form-url open])))
+      [form-list-column @forms "Lomake (ilman hakukohdetta)" form-url open])))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
@@ -143,13 +143,14 @@
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
     (fn [applications application-filter]
       (when (> (count applications) 0)
-        (let [url (if @form-key
-                    (str "/lomake-editori/api/applications/excel/"
+        (let [url (cond
+                    (some? @form-key)
+                    (str "/lomake-editori/api/applications/excel/form/"
                          @form-key
                          (query-string application-filter))
-                    (str "/lomake-editori/api/applications/excel/"
-                         (:form-key @hakukohde)
-                         "/"
+
+                    (some? @hakukohde)
+                    (str "/lomake-editori/api/applications/excel/hakukohde/"
                          (:hakukohde @hakukohde)
                          (query-string application-filter)))]
           [:a.application-handling__excel-download-link

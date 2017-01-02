@@ -80,12 +80,19 @@
 (defn get-excel-report-of-applications-by-form
   [form-key filtered-states session organization-service]
   (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-form-applications form-key filtered-states)))
+  (let [applications (application-store/get-applications-for-form form-key filtered-states)]
+    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn get-excel-report-of-applications-by-hakukohde
-  [form-key filtered-states hakukohde-oid session organization-service]
-  (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key filtered-states hakukohde-oid)))
+  [hakukohde-oid filtered-states session organization-service]
+  (let [applications (->> (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
+                          (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
+                                        :form-key)))]
+    (println (str "getting excel report of " (count applications) " applications"))
+    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
+
+  ;(aac/check-form-access form-key session organization-service)
+  ;(java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key filtered-states hakukohde-oid)))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]
