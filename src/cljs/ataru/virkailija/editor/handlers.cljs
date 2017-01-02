@@ -117,7 +117,7 @@
 (reg-event-db
   :editor/set-component-value
   (fn [db [_ value & path]]
-    (assoc-in db (current-form-content-path db [(spy path)]) value)))
+    (assoc-in db (current-form-content-path db [path]) value)))
 
 (defn generate-component
   [db [_ generate-fn path]]

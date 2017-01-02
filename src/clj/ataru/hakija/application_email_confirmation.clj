@@ -22,19 +22,19 @@
   (into {} (map (fn [[key value]] [value (key raw-translations)]) translation-mappings)))
 
 (defn create-email [application-id translation-mappings]
-  (let [application                   (application-store/get-application application-id)
-        raw-translations              (get-translations (keyword (:lang application)))
-        translations                  (merge
-                                       raw-translations
-                                       (get-differing-translations raw-translations translation-mappings))
-        subject                       (:subject translations)
-        recipient                     (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
-        service-url                   (get-in config [:public-config :applicant :service_url])
-        body                          (selmer/render-file
-                                       "templates/email_confirmation_template.html"
-                                       (merge {:service-url service-url
-                                               :secret      (:secret application)}
-                                              translations))]
+  (let [application      (application-store/get-application application-id)
+        raw-translations (get-translations (keyword (:lang application)))
+        translations     (merge
+                           raw-translations
+                           (get-differing-translations raw-translations translation-mappings))
+        subject          (:subject translations)
+        recipient        (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
+        service-url      (get-in config [:public-config :applicant :service_url])
+        body             (selmer/render-file
+                           "templates/email_confirmation_template.html"
+                           (merge {:service-url service-url
+                                   :secret      (:secret application)}
+                             translations))]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject
