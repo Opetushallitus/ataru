@@ -2,7 +2,7 @@
 
 set -e
 
-if [ $# -ne 5 ]
+if [ $# -ne 6 ]
 then
     printf "Usage: $0 <db host> <db port> <db name> <output dir> <version> <username>\n"
     exit 1
