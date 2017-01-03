@@ -5,7 +5,8 @@
     [clojure.java.shell :refer [sh]]
     [environ.core :refer [env]]
     [oph.soresu.common.config :refer [config]]
-    [schema-viz.core :as svc]))
+    ;[schema-viz.core :as svc]
+    ))
 
 (defn generate-db-schema-diagram
   []
@@ -27,4 +28,6 @@
   []
   (migrations/migrate)
   (generate-db-schema-diagram)
-  (generate-form-schema-diagram))
+  ; disabled since graphviz is not installed on CI server:
+  ; (generate-form-schema-diagram)
+  )
