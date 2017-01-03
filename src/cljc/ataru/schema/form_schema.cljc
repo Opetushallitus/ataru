@@ -101,7 +101,8 @@
 
 (s/defschema FormWithContent
   (merge Form
-         {:content [(s/if (comp some? :children) WrapperElement BasicElement)]}))
+         {:content            [(s/if (comp some? :children) WrapperElement BasicElement)]
+          :organization-oid s/Str}))
 
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str
