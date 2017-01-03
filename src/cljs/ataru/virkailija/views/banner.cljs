@@ -53,11 +53,12 @@
                                (= 0 org-count) "Ei organisaatiota"
                                (< 1 org-count) "Useita organisaatioita"
                                :else           (first org-names))
-              tooltip        (if (< 1 org-count) joint-orgs-str "")]
+              tooltip        (if (< 1 org-count) joint-orgs-str "")
+              tooltip-class  (if (< 1 org-count) "tooltip-indicator" "")]
           [:div.profile
            [:div
             [:p (:username @user-info)]
-            [:p {:title tooltip} org-str]]
+            [:p {:title tooltip :class tooltip-class} org-str]]
            [:div.divider]
            [:div
             [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]])))))
