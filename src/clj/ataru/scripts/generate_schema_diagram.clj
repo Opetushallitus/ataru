@@ -20,9 +20,9 @@
     (println return-value)
     (:exit return-value)))
 
-(defn generate-form-schema-diagram
-  []
-  (svc/save-schemas (str "target/db-schema/ataru-form-" (:ataru-version env) ".png") {:ns 'ataru.schema.form-schema}))
+;(defn generate-form-schema-diagram
+;  []
+;  (svc/save-schemas (str "target/db-schema/ataru-form-" (:ataru-version env) ".png") {:ns 'ataru.schema.form-schema}))
 
 (defn -main
   []
