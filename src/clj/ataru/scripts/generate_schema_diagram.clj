@@ -16,7 +16,8 @@
                          (str (:port-number db-config))
                          (:database-name db-config)
                          "./target/db-schema"
-                         (:ataru-version env))]
+                         (:ataru-version env)
+                         (:username db-config))]
     (println return-value)
     (:exit return-value)))
 
