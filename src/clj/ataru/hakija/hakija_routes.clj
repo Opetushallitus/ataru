@@ -1,6 +1,5 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.middleware.cache-control :as cache-control]
-            [ataru.buildversion :refer [buildversion-routes]]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
             [ataru.hakija.hakija-application-service :as application-service]
@@ -141,7 +140,6 @@
                               (when (is-dev-env?) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
-                                             buildversion-routes
                                              test-routes
                                              (api-routes)
                                              (route/resources "/")

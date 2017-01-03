@@ -3,7 +3,6 @@
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
-            [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -262,7 +261,6 @@
                               (when (:dev? env) rich-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
-                                buildversion-routes
                                 test-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
