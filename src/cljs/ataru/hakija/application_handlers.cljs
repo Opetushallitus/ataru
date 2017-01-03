@@ -326,7 +326,9 @@
     (assoc-in db [:application :ui]
       (->> (autil/flatten-form-fields (:content (:form db)))
         (filter :followup?)
-        (map (fn [field] {(keyword (:id field)) {:visible? false}}))
+        (map (fn [field] {(keyword (:id field))
+                          ; prevent hiding followups with children
+                          {:visible? (not (empty? (:children field)))}}))
         (reduce merge)))))
 
 (reg-event-db
