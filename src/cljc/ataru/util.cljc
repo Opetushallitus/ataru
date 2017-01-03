@@ -31,10 +31,11 @@
          :options options}
         (cons field
           (->> options
-              (mapcat :followups)
-            (mapcat (fn [{:keys [children] :as followup}]
-                      (cons (assoc followup :followup? true)
-                        (flatten-form-fields children))))))
+               (mapcat :followups)
+               (mapcat (fn [{:keys [children] :as followup}]
+                         (map #(assoc % :followup? true)
+                           (cons followup
+                             (flatten-form-fields children)))))))
 
         :else field))))
 
