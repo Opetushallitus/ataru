@@ -8,6 +8,8 @@ then
     exit 1
 fi
 
+echo "Generating autodoc from ${HOST}:${PORT}/${DB}"
+
 HOST=$1
 PORT=$2
 DB=$3
