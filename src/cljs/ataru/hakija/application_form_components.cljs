@@ -406,7 +406,7 @@
 
 (defn- adjacent-field-input [fid on-change {:keys [valid? child value]}]
   (r/create-class
-    {:component-did-mount (fn [this] (on-change nil)) ; updates answers to include proper field labels and validation results
+    {:component-did-mount (fn [this] (when-not value (on-change nil))) ; updates answers to include proper field labels and validation results
      :reagent-render
      (fn [fid on-change {:keys [valid? child value]}]
        [:input.application__form-text-input
