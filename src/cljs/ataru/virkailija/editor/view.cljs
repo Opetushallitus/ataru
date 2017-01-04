@@ -141,9 +141,9 @@
         visible? (r/atom false)]
     (fn [form]
       (let [languages @languages]
-        [:div.editor-form__language-toolbar-outer
-         [:div.editor-form__language-toolbar-inner
-          [:a
+        [:div.editor-form__toolbar
+         [:div
+          [:a.editor-form__language-selections
            {:on-click (fn [_]
                         (swap! visible? not)
                         nil)}
