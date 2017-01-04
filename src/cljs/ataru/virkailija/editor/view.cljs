@@ -150,6 +150,12 @@
            "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
+          [:div.editor-form__form-toolbar-checkbox-container
+           (when-not @visible?
+             {:style {:display "none"}})
+           (map (fn [lang-kwd]
+                  (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+                (keys lang-versions))]
           [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
              (lang-kwd->link form (first languages) "Esikatselu")
@@ -161,13 +167,7 @@
                                       (lang-kwd->link form lang-kwd)]
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
-                           languages)])]]
-         [:div.editor-form__form-toolbar-checkbox-container
-          (when-not @visible?
-            {:style {:display "none"}})
-          (map (fn [lang-kwd]
-                 (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-               (keys lang-versions))]]))))
+                           languages)])]]]))))
 
 (defn form-in-use-warning
   [form]
