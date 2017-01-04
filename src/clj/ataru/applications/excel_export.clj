@@ -173,15 +173,14 @@
 
 (defn- find-parent [element fields]
   (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
-        followup-dropdown (fn [field] (mapcat :followups (:options field)))
-        is-followup?      (fn [field] )]
+        followup-dropdown (fn [field] (mapcat :followups (:options field)))]
     (reduce
       (fn [parent field]
         (or parent
           (match field
             ((_ :guard contains-element?) :<< :children) field
 
-            (followups :<< followup-dropdown)
+            ((followups :guard not-empty) :<< followup-dropdown)
             (or
               (when (contains-element? followups)
                 field)
