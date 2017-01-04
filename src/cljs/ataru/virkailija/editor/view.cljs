@@ -136,7 +136,7 @@
       :target "_blank"}
      text]))
 
-(defn language-toolbar [form]
+(defn form-toolbar [form]
   (let [languages (subscribe [:editor/languages])
         visible? (r/atom false)]
     (fn [form]
@@ -150,7 +150,7 @@
            "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
-          [:span.editor-form__language-toolbar-header-text
+          [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
              (lang-kwd->link form (first languages) "Esikatselu")
              [:span
@@ -162,7 +162,7 @@
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
                            languages)])]]
-         [:div.editor-form__language-toolbar-checkbox-container
+         [:div.editor-form__form-toolbar-checkbox-container
           (when-not @visible?
             {:style {:display "none"}})
           (map (fn [lang-kwd]
@@ -201,8 +201,8 @@
          [close-form]
          [:div
           [editor-name]
-          ^{:key (str "language-toolbar-" (:key @form))}
-          [language-toolbar @form]
+          ^{:key (str "form-toolbar-" (:key @form))}
+          [form-toolbar @form]
           ^{:key (str "form-in-use-warning-" (:key @form))}
           [form-in-use-warning @form]]
          [c/editor]]))))
