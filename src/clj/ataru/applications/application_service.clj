@@ -88,7 +88,6 @@
   (let [applications (->> (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
                           (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
                                         :form-key)))]
-    (println (str "getting excel report of " (count applications) " applications"))
     (java.io.ByteArrayInputStream. (excel/export-applications applications))))
 
   ;(aac/check-form-access form-key session organization-service)

@@ -30,21 +30,25 @@
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
 (describe "excel export"
-  (tags :unit)
+  (tags :unit :excel)
 
   (around [spec]
     (with-redefs [application-store/exec-db (fn [& _] (filter #(nil? (:hakukohde %)) fixtures/applications))
                   form-store/fetch-by-key (fn [& _] fixtures/form)
+                  form-store/fetch-by-id (fn [& _] fixtures/form)
                   application-store/get-application-review (fn [application-key]
                                                              (when (= "9d24af7d-f672-4c0e-870f-3c6999f105e0" application-key)
                                                                fixtures/application-review))]
       (spec)))
 
   (it "has expected values"
-      (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
+      (let [file  (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")
+            applications (->> fixtures/applications
+                              (map application-store/unwrap-application)
+                              (filter (comp nil? :hakukohde)))]
         (try
           (with-open [output (FileOutputStream. (.getPath file))]
-            (->> (j2ee/export-all-form-applications "abcdefghjkl" ["unprocessed"])
+            (->> (j2ee/export-applications applications)
                  (.write output)))
           (let [workbook           (WorkbookFactory/create file)
                 metadata-sheet     (.getSheetAt workbook 0)
@@ -62,5 +66,7 @@
             (verify-row applications-sheet 3
               ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 15:30:55" "Käsittelemättä" "1" "2" "3" "4" "5" "6" nil nil])
             (verify-pane-information applications-sheet))
+          ;(finally
+          ;  (println (str "EXCEL FILE PATH" (.getPath file))))))))
           (finally
             (.delete file))))))

@@ -226,14 +226,15 @@
         get-latest-form-by-key  (memoize form-store/fetch-by-key)]
     (->> applications
          (reduce (fn [result {:keys [form] :as application}]
-                   (let [form     (get-form-by-id form)
-                         form-key (:key form)]
+                   (let [form-key (:key (get-form-by-id form))
+                         form     (get-latest-form-by-key form-key)]
                      (if (contains? result form-key)
                        (update-in result [form-key :applications] conj application)
-                       (assoc result form-key {:sheet-idx    (count result)
-                                               :sheet-name   (:name (get-latest-form-by-key form-key))
-                                               :form         form
-                                               :applications [application]}))))
+                       (let [value {:sheet-idx    (count result)
+                                    :sheet-name   (:name form)
+                                    :form         form
+                                    :applications [application]}]
+                         (assoc result form-key value)))))
                  {})
          (reduce-kv (fn [workbook _ {:keys [sheet-idx sheet-name form applications]}]
                       (let [applications-sheet      (.createSheet workbook sheet-name)
@@ -242,10 +243,12 @@
                             header-writer           (make-writer applications-sheet 0)]
                         (write-form-meta! meta-writer form applications form-meta-fields)
                         (write-headers! header-writer headers application-meta-fields)
-                        (dorun (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx))]
-                                                (write-application! row-writer application headers application-meta-fields form)))
-                                            applications))
+                        (dorun (->> applications
+                                    (sort-by :created-time)
+                                    (reverse)
+                                    (map-indexed (fn [row-idx application]
+                                                   (let [row-writer (make-writer applications-sheet (inc row-idx))]
+                                                     (write-application! row-writer application headers application-meta-fields form))))))
                         (.createFreezePane applications-sheet 0 1 0 1))
                       workbook)
                     workbook))
