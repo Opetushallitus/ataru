@@ -607,10 +607,10 @@
        :value "Ammatillinen peruskoulu",
        :followups
        [{:id         "fbe3522d-6f1d-4e05-85e3-4e716146c686",
-          :label      {:fi "Ois yks kysymys vielä", :sv ""},
-          :params     {},
-          :fieldType  "textField",
-          :fieldClass "formField"}]}
+         :label      {:fi "Ois yks kysymys vielä", :sv ""},
+         :params     {},
+         :fieldType  "textField",
+         :fieldClass "formField"}]}
       {:label    {:fi "Ammattitutkinto", :sv ""},
        :value    "Ammattitutkinto",
        :followups [{:id "62d37b52-3237-4f7f-9e78-df373b0b5c79", :label {:fi "", :sv ""}, :params {}, :fieldType "textArea", :fieldClass "formField"}]}

@@ -99,9 +99,10 @@
                                 (clojure.set/subset? answers allowed-values))
                               (passes-all? validators answers))}}
               (when-let [followups (not-empty (eduction (comp
-                                                          (mapcat :followups)
-                                                          (filter (fn [followup]
-                                                                    (= (seq answers) (wrap-coll (:value followup))))))
+                                                          (filter (fn [option]
+                                                                    (and (not-empty (:followups option))
+                                                                      (= (seq answers) (wrap-coll (:value option))))))
+                                                          (mapcat :followups))
                                                 options))]
                 (build-results
                   answers-by-key
