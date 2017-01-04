@@ -103,7 +103,7 @@
     (when @fw
       wrapped-form)))
 
-(defn migrate-followups-to-vectored-followups
+(defn followups-to-vectored-followups
   []
   (let [existing-forms (try
                          (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
@@ -141,7 +141,7 @@
 (migrations/defmigration
   migrate-followups-to-vectored-followups "1.38"
   "Wrap all existing followups with vector"
-  (migrate-followups-to-vectored-followups))
+  (followups-to-vectored-followups))
 
 (defn migrate
   []
