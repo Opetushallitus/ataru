@@ -115,7 +115,7 @@
 
 (defn- lang-checkbox [lang-kwd checked?]
   (let [id (str "lang-checkbox-" (name lang-kwd))]
-    [:div
+    [:div.editor-form__checkbox-with-label
      {:key id}
      [:input.editor-form__checkbox
       {:id      id
@@ -123,7 +123,7 @@
        :type    "checkbox"
        :on-change (fn [_]
                     (dispatch [:editor/toggle-language lang-kwd]))}]
-     [:label.editor-form__checkbox-label.editor-form__language-toolbar-checkbox
+     [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
       {:for id}
       (get lang-versions lang-kwd)]]))
 
@@ -142,7 +142,7 @@
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__toolbar
-         [:div
+         [:div.editor-form__language-controls
           [:a.editor-form__language-selections
            {:on-click (fn [_]
                         (swap! visible? not)
@@ -150,12 +150,13 @@
            "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
             {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
-          [:div.editor-form__form-toolbar-checkbox-container
-           (when-not @visible?
-             {:style {:display "none"}})
-           (map (fn [lang-kwd]
-                  (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-                (keys lang-versions))]
+          [:div.editor-form__form-toolbar-checkbox-container-anchor
+           [:div.editor-form__form-toolbar-checkbox-container
+            (when-not @visible?
+              {:style {:display "none"}})
+            (map (fn [lang-kwd]
+                   (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+                 (keys lang-versions))]]
           [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
              (lang-kwd->link form (first languages) "Esikatselu")
@@ -167,7 +168,8 @@
                                       (lang-kwd->link form lang-kwd)]
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
-                           languages)])]]]))))
+                           languages)])]]
+         [:div [:span "Lomakkeen omistaja"] "Tavastia"]]))))
 
 (defn form-in-use-warning
   [form]
