@@ -76,12 +76,13 @@
 
 .application-handling__form-list-wrapper-inner {
   background-color: @application-form-list-background-color;
-  box-shadow: 0px 2px 1px 0px rgba(102,102,102,1);
+  box-shadow: 1px 2px 5px #b3b3b3;
   padding-left: 20px;
   padding-right: 20px;
   position: absolute;
   top: 45px;
   width: 100%;
+  z-index: 15;
 }
 
 .application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
@@ -113,14 +114,25 @@
 }
 
 .application-handling__form-list-indicator {
+  top: 30px;
+  left: 9px;
+  width: 21px;
+  height: 15px;
   position: absolute;
-  top: 36px;
-  left: 11px;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 9px solid @application-form-list-background-color;
+  overflow: hidden;
+  z-index: 16;
+}
+
+.application-handling__form-list-indicator:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: @application-form-list-background-color;
+  transform: rotate(135deg);
+  top: 10px;
+  left: 7px;
+  box-shadow: 0px -1px 3px #b3b3b3;
 }
 
 .application-handling__form-list-column-and-header-container {
