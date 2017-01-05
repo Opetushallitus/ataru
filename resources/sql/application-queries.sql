@@ -165,17 +165,15 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, COUNT(ar.id) AS unprocessed_application_count
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
 FROM applications a1
-LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
 WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
 GROUP BY a1.hakukohde, a1.hakukohde_name;
 
 -- name: yesql-get-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, COUNT(ar.id) AS unprocessed_application_count
+SELECT a1.haku, a1.haku_name, COUNT(a1.id) AS application_count
 FROM applications a1
-LEFT JOIN application_reviews ar ON a1.key = ar.application_key AND ar.state = 'unprocessed'
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
 GROUP BY a1.haku, a1.haku_name;
 
@@ -193,23 +191,19 @@ SELECT
 FROM applications a
 WHERE a.hakukohde = :hakukohde_oid;
 
--- name: yesql-get-unprocessed-application-count-by-form-key
+-- name: yesql-get-application-count-by-form-key
 -- Get count of applications by form key, including all versions of the form
-SELECT COUNT(a.id) as unprocessed_application_count
+SELECT COUNT(a.id) as application_count
 FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
-LEFT JOIN application_reviews ar ON a.key = ar.application_key
 WHERE f.key = :form_key
 AND (f.deleted is null or f.deleted = false)
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND ar.state = 'unprocessed';
+AND (a.hakukohde IS NULL OR a.hakukohde = '');
 
--- name: yesql-get-unprocessed-application-count-with-deleteds-by-form-key
+-- name: yesql-get-application-count-with-deleteds-by-form-key
 -- Get count of applications by form key, including all versions of the form
-SELECT COUNT(a.id) as unprocessed_application_count
+SELECT COUNT(a.id) as application_count
 FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
-LEFT JOIN application_reviews ar ON a.key = ar.application_key
 WHERE f.key = :form_key
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND ar.state = 'unprocessed';
+AND (a.hakukohde IS NULL OR a.hakukohde = '');
