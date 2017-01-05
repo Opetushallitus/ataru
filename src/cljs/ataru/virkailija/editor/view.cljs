@@ -136,23 +136,26 @@
       :target "_blank"}
      text]))
 
+(defn get-organization-name [oid orgs] (get-in (first (filter #(= oid (:oid %)) orgs)) [:name :fi]))
+
 (defn form-toolbar [form]
-  (let [languages (subscribe [:editor/languages])
-        visible? (r/atom false)]
+  (let [languages                    (subscribe [:editor/languages])
+        language-selections-visible? (r/atom false)
+        organizations                (subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__toolbar
          [:div.editor-form__language-controls
           [:a.editor-form__language-selections
            {:on-click (fn [_]
-                        (swap! visible? not)
+                        (swap! language-selections-visible? not)
                         nil)}
            "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
-            {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
+            {:class (if @language-selections-visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
           [:div.editor-form__form-toolbar-checkbox-container-anchor
            [:div.editor-form__form-toolbar-checkbox-container
-            (when-not @visible?
+            (when-not @language-selections-visible?
               {:style {:display "none"}})
             (map (fn [lang-kwd]
                    (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
@@ -169,7 +172,7 @@
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
                            languages)])]]
-         [:div [:span "Lomakkeen omistaja"] "Tavastia"]]))))
+         [:div [:span "Lomakkeen omistaja"] (get-organization-name (:organization-oid form) @organizations)]]))))
 
 (defn form-in-use-warning
   [form]
