@@ -15,6 +15,7 @@
 
 (defn toggle-form-list-open! [open]
   (swap! open not)
+  (dispatch [:application/clear-search-term])
   nil) ;; Returns nil so that React doesn't whine about event handlers returning false
 
 
