@@ -151,7 +151,7 @@
                         [:img {:src "/lomake-editori/images/icon_check.png"}]
                         nil)])
                    organizations))
-        [:div
+        [:a
          {:on-click toggle-open}
          (get-organization-name (:organization-oid form) organizations)]))))
 
@@ -160,7 +160,7 @@
         org-count     (fn [orgs] (count orgs))]
     (fn [form]
       [:div.editor-form__owner-control
-       [:span "Lomakkeen omistaja: "]
+       [:span "Omistaja: "]
        (if (> (count @organizations) 1)
          [form-owner-selection form @organizations]
          (get-organization-name (:organization-oid form) @organizations))])))
