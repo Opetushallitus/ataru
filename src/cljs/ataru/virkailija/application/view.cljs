@@ -87,7 +87,7 @@
                      (empty? forms))
             {:class "application-handling__form-list-column-header--no-results"})
           header-text]
-         [:div.application-handling__form-list-column-container
+         [:div.application-handling__form-list-column-links-container
           (->> forms
                (map-indexed (fn [idx {:keys [deleted text] :as form}]
                               (let [key  (str "form-list-item-" idx)
@@ -167,8 +167,8 @@
   (let [search-term (subscribe [:state-query [:application :search-term]])]
     (fn [open]
       [:div.application-handling__form-list-search-row
-       [:div.application-handling__form-list-header-item-container
-        [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
+       [:div.application-handling__form-list-search-input-container
+        [:input.application-handling__form-list-search-input
          {:type      "text"
           :value     @search-term
           :on-change (fn [event]
@@ -179,9 +179,9 @@
                               (dispatch [:application/clear-search-term]))}
            (clojure.string/blank? @search-term)
            (assoc :class "application-handling__input-field-clear-button--disabled"))]]
-       [:div.application-handling__form-list-close-container]
-       [:div.application-handling__form-list-close-container
-        [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
+       [:div.application-handling__form-list-header-item-shrinking-container]
+       [:div.application-handling__form-list-header-item-shrinking-container
+        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
          {:on-click #(toggle-form-list-open! open)}]]])))
 
 (defn form-list [filtered-applications application-filter]

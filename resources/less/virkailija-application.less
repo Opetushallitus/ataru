@@ -22,11 +22,10 @@
 .application-handling__form-list-search-row {
   display: flex;
   flex-flow: row nowrap;
-  margin-left: 20px;
-  margin-right: 20px;
+  margin: 15px 20px 5px;
 }
 
-.application-handling__form-list-header-item-container {
+.application-handling__form-list-search-input-container {
   display: flex;
   flex: 0 0 @form-column-width;
   flex-flow: row nowrap;
@@ -36,14 +35,14 @@
   cursor: pointer;
   position: relative;
   right: 20px;
-  top: 29px;
+  top: 14px;
 }
 
 .application-handling__input-field-clear-button--disabled {
   visibility: hidden;
 }
 
-.application-handling__form-list-close-container {
+.application-handling__form-list-header-item-shrinking-container {
   display: flex;
   flex: 0 1 @form-column-width;
   justify-content: flex-end;
@@ -54,11 +53,6 @@
 
   color: @application-form-list-close-color;
   cursor: pointer;
-}
-
-.application-handling__form-list-search-row-item {
-  margin-top: 15px;
-  margin-bottom: 5px;
 }
 
 .application-handling__form-list-search-input {
@@ -136,7 +130,7 @@
   min-width: 250px;
 }
 
-.application-handling__form-list-column-container {
+.application-handling__form-list-column-links-container {
   margin-bottom: 20px;
   margin-top: 20px;
   max-height: calc(~"100vh - 300px");
