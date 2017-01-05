@@ -66,7 +66,5 @@
             (verify-row applications-sheet 3
               ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 15:30:55" "Käsittelemättä" "1" "2" "3" "4" "5" "6" nil nil])
             (verify-pane-information applications-sheet))
-          ;(finally
-          ;  (println (str "EXCEL FILE PATH" (.getPath file))))))))
           (finally
             (.delete file))))))
