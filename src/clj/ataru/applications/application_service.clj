@@ -7,7 +7,8 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
-    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
+    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client])
+  (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
@@ -81,21 +82,21 @@
   [form-key filtered-states session organization-service]
   (aac/check-form-access form-key session organization-service)
   (let [applications (application-store/get-applications-for-form form-key filtered-states)]
-    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
+    (ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn get-excel-report-of-applications-by-hakukohde
   [hakukohde-oid filtered-states session organization-service]
   (let [applications (->> (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
                           (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
                                         :form-key)))]
-    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
+    (ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn get-excel-report-of-applications-by-haku
   [haku-oid filtered-states session organization-service]
   (let [applications (->> (application-store/get-applications-for-haku haku-oid filtered-states)
                           (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
                                         :form-key)))]
-    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
+    (ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]
