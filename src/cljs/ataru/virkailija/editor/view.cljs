@@ -138,6 +138,23 @@
 
 (defn get-organization-name [oid orgs] (get-in (first (filter #(= oid (:oid %)) orgs)) [:name :fi]))
 
+(defn form-owner-organization [form]
+  (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
+        org-count     (fn [orgs] (count orgs))]
+    (fn [form]
+      [:div [:span "Lomakkeen omistaja: "]
+       (if (> (count @organizations) 1)
+         (into [:div]
+               (map (fn [org]
+                      [:div
+                       (get-in org [:name :fi])
+                       (if (= (:organization-oid form) (:oid org))
+                         [:img
+                          {:src "/lomake-editori/images/icon_check.png"}]
+                         nil)])
+                    @organizations))
+         (get-organization-name (:organization-oid form) @organizations))])))
+
 (defn form-toolbar [form]
   (let [languages                    (subscribe [:editor/languages])
         language-selections-visible? (r/atom false)
@@ -172,7 +189,7 @@
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
                            languages)])]]
-         [:div [:span "Lomakkeen omistaja"] (get-organization-name (:organization-oid form) @organizations)]]))))
+         [form-owner-organization form]]))))
 
 (defn form-in-use-warning
   [form]
