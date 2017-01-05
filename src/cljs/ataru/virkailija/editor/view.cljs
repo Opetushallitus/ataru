@@ -139,16 +139,21 @@
 (defn get-organization-name [oid orgs] (get-in (first (filter #(= oid (:oid %)) orgs)) [:name :fi]))
 
 (defn form-owner-selection [form organizations]
-  (let [opened? (r/atom false)]
+  (let [opened?     (r/atom false)
+        toggle-open (fn [evt] (swap! opened? not))]
     (fn [form organizations]
-      (into [:div]
-            (map (fn [org]
-                   [:div
-                    (get-in org [:name :fi])
-                    (if (= (:organization-oid form) (:oid org))
-                      [:img {:src "/lomake-editori/images/icon_check.png"}]
-                      nil)])
-                 organizations)))))
+      (if @opened?
+        (into [:div {:on-click toggle-open}]
+              (map (fn [org]
+                     [:div
+                      (get-in org [:name :fi])
+                      (if (= (:organization-oid form) (:oid org))
+                        [:img {:src "/lomake-editori/images/icon_check.png"}]
+                        nil)])
+                   organizations))
+        [:div
+         {:on-click toggle-open}
+         (get-organization-name (:organization-oid form) organizations)]))))
 
 (defn form-owner-organization [form]
   (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
