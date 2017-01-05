@@ -26,6 +26,23 @@
   margin-right: 20px;
 }
 
+.application-handling__form-list-header-item-container {
+  display: flex;
+  flex: 0 0 @form-column-width;
+  flex-flow: row nowrap;
+}
+
+.application-handling__input-field-clear-button {
+  cursor: pointer;
+  position: relative;
+  right: 20px;
+  top: 29px;
+}
+
+.application-handling__input-field-clear-button--disabled {
+  color: @gray-of-the-beast;
+}
+
 .application-handling__form-list-close-container {
   display: flex;
   flex: 0 1 @form-column-width;
@@ -51,6 +68,7 @@
   font-size: 16px;
   height: 43px;
   padding: 10px 28px 11px 14px;
+  width: 395px;
 }
 
 .application-handling__form-list-wrapper-outer {

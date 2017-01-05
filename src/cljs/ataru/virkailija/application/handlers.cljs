@@ -160,3 +160,8 @@
   :application/search-form-list
   (fn [db [_ search-term]]
     (assoc-in db [:application :search-term] search-term)))
+
+(reg-event-db
+  :application/clear-search-term
+  (fn [db]
+    (assoc-in db [:application :search-term] nil)))

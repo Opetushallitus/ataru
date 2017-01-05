@@ -164,18 +164,25 @@
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
 (defn form-list-search [open]
-  [:div.application-handling__form-list-search-row
-   [:div.application-handling__form-list-column-and-header-container
-    [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
-     {:type      "text"
-      :value     @(subscribe [:state-query [:application :search-term]])
-      :on-change (fn [event]
-                   (let [search-term (.. event -target -value)]
-                     (dispatch [:application/search-form-list search-term])))}]]
-   [:div.application-handling__form-list-close-container]
-   [:div.application-handling__form-list-close-container
-    [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
-     {:on-click #(toggle-form-list-open! open)}]]])
+  (let [search-term (subscribe [:state-query [:application :search-term]])]
+    (fn [open]
+      [:div.application-handling__form-list-search-row
+       [:div.application-handling__form-list-header-item-container
+        [:input.application-handling__form-list-search-row-item.application-handling__form-list-search-input
+         {:type      "text"
+          :value     @search-term
+          :on-change (fn [event]
+                       (let [search-term (.. event -target -value)]
+                         (dispatch [:application/search-form-list search-term])))}]
+        [:i.application-handling__input-field-clear-button.zmdi.zmdi-close
+         (cond-> {:on-click (fn [_]
+                              (dispatch [:application/clear-search-term]))}
+           (clojure.string/blank? @search-term)
+           (assoc :class "application-handling__input-field-clear-button--disabled"))]]
+       [:div.application-handling__form-list-close-container]
+       [:div.application-handling__form-list-close-container
+        [:i.application-handling__form-list-search-row-item.zmdi.zmdi-close.application-handling__form-list-close-button
+         {:on-click #(toggle-form-list-open! open)}]]])))
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
