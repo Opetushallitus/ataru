@@ -90,8 +90,6 @@
                                         :form-key)))]
     (java.io.ByteArrayInputStream. (excel/export-applications applications))))
 
-  ;(aac/check-form-access form-key session organization-service)
-  ;(java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key filtered-states hakukohde-oid)))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]
