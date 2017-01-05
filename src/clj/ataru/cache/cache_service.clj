@@ -10,7 +10,8 @@
                          :max-size 500})
 
 (def cached-map-config {:hakukohde {:config {:max-size 1000 :ttl 3600}}
-                        :haku      {:config {:max-size 1000 :ttl 3600}}})
+                        :haku      {:config {:max-size 1000 :ttl 3600}}
+                        :koulutus  {:config {:max-size 1000 :ttl 3600}}})
 
 (def local-cluster-cfg {:clustered? true
                         :hosts ["127.0.0.1"]})

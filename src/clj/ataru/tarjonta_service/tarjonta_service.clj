@@ -22,7 +22,8 @@
 
 (defprotocol TarjontaService
   (get-hakukohde [this hakukohde-oid])
-  (get-haku [this haku-oid]))
+  (get-haku [this haku-oid])
+  (get-koulutus [this haku-oid]))
 
 (defrecord CachedTarjontaService []
   component/Lifecycle
@@ -35,7 +36,10 @@
     (.cache-get-or-fetch (:cache-service this) :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
 
   (get-haku [this haku-oid]
-    (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid))))
+    (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))
+
+  (get-koulutus [this koulutus-oid]
+    (.cache-get-or-fetch (:cache-service this) :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
 
 (defprotocol VirkailijaTarjontaService
   (get-forms-in-use [this username]))
