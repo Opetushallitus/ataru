@@ -198,6 +198,19 @@
                                           hakukohde-oid
                                           state
                                           session
+                                          organization-service)})
+
+                     (api/GET "/haku/:haku-oid" {session :session}
+                              :path-params [haku-oid :- s/Str]
+                              :query-params [{state :- [s/Str] nil}]
+                              :summary "Return Excel export of the haku and applications for it."
+                              {:status  200
+                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid))}
+                               :body    (application-service/get-excel-report-of-applications-by-haku
+                                          haku-oid
+                                          state
+                                          session
                                           organization-service)})))
 
                  (api/GET "/hakukohteet" []

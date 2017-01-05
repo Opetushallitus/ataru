@@ -140,6 +140,7 @@
 (defn excel-download-link [applications application-filter]
   (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
         hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
+        haku         (reaction @(subscribe [:state-query [:editor :selected-haku]]))
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
     (fn [applications application-filter]
       (when (> (count applications) 0)
@@ -152,6 +153,11 @@
                     (some? @hakukohde)
                     (str "/lomake-editori/api/applications/excel/hakukohde/"
                          (:hakukohde @hakukohde)
+                         (query-string application-filter))
+
+                    (some? @haku)
+                    (str "/lomake-editori/api/applications/excel/haku/"
+                         (:haku @haku)
                          (query-string application-filter)))]
           [:a.application-handling__excel-download-link
            {:href url}

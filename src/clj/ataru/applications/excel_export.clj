@@ -279,3 +279,14 @@
     (let [sanitized-name (sanitize-name hakukohde-name)
           time           (time-formatter (t/now) filename-time-format)]
       (str sanitized-name "_" time ".xlsx"))))
+
+(defn filename-by-haku
+  [haku-oid]
+  {:post [(some? %)]}
+  (when-let [hakukohde-name (->> (application-store/get-haut)
+                                 (filter (comp (partial = haku-oid) :haku))
+                                 (map :haku-name)
+                                 (first))]
+    (let [sanitized-name (sanitize-name hakukohde-name)
+          time           (time-formatter (t/now) filename-time-format)]
+      (str sanitized-name "_" time ".xlsx"))))

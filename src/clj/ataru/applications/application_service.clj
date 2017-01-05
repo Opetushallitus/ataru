@@ -90,6 +90,12 @@
                                         :form-key)))]
     (java.io.ByteArrayInputStream. (excel/export-applications applications))))
 
+(defn get-excel-report-of-applications-by-haku
+  [haku-oid filtered-states session organization-service]
+  (let [applications (->> (application-store/get-applications-for-haku haku-oid filtered-states)
+                          (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
+                                        :form-key)))]
+    (java.io.ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]

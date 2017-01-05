@@ -81,6 +81,22 @@ join application_reviews ar on a.key = ar.application_key
 where state in (:filtered_states)
 and a.hakukohde = :hakukohde_oid;
 
+-- name: yesql-get-applications-for-haku
+-- Get applications for form-key/haku
+select
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.haku_name,
+  ar.state as state
+from applications a
+join application_reviews ar on a.key = ar.application_key
+where state in (:filtered_states) and a.haku = :haku_oid;
+
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;
 

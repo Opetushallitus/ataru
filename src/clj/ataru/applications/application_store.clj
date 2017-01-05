@@ -217,6 +217,15 @@
        (mapv (partial unwrap-application))
        (latest-versions-only)))
 
+(s/defn get-applications-for-haku :- [schema/Application]
+  [haku-oid :- s/Str
+   filtered-states :- [s/Str]]
+  (->> (exec-db :db yesql-get-applications-for-haku
+         {:filtered_states filtered-states
+          :haku_oid        haku-oid})
+       (mapv (partial unwrap-application))
+       (latest-versions-only)))
+
 (defn add-person-oid
   "Add person OID to an application"
   [application-id person-oid]
