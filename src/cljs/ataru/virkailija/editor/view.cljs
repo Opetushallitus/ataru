@@ -138,21 +138,26 @@
 
 (defn get-organization-name [oid orgs] (get-in (first (filter #(= oid (:oid %)) orgs)) [:name :fi]))
 
+(defn form-owner-selection [form organizations]
+  (let [opened? (r/atom false)]
+    (fn [form organizations]
+      (into [:div]
+            (map (fn [org]
+                   [:div
+                    (get-in org [:name :fi])
+                    (if (= (:organization-oid form) (:oid org))
+                      [:img {:src "/lomake-editori/images/icon_check.png"}]
+                      nil)])
+                 organizations)))))
+
 (defn form-owner-organization [form]
   (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
         org-count     (fn [orgs] (count orgs))]
     (fn [form]
-      [:div [:span "Lomakkeen omistaja: "]
+      [:div.editor-form__owner-control
+       [:span "Lomakkeen omistaja: "]
        (if (> (count @organizations) 1)
-         (into [:div]
-               (map (fn [org]
-                      [:div
-                       (get-in org [:name :fi])
-                       (if (= (:organization-oid form) (:oid org))
-                         [:img
-                          {:src "/lomake-editori/images/icon_check.png"}]
-                         nil)])
-                    @organizations))
+         [form-owner-selection form @organizations]
          (get-organization-name (:organization-oid form) @organizations))])))
 
 (defn form-toolbar [form]
