@@ -230,28 +230,28 @@
                          form     (get-latest-form-by-key form-key)]
                      (if (contains? result form-key)
                        (update-in result [form-key :applications] conj application)
-                       (let [value {:sheet-idx    (count result)
-                                    :sheet-name   (:name form)
+                       (let [value {:sheet-name   (:name form)
                                     :form         form
                                     :applications [application]}]
                          (assoc result form-key value)))))
                  {})
-         (reduce-kv (fn [workbook _ {:keys [sheet-idx sheet-name form applications]}]
-                      (let [applications-sheet      (.createSheet workbook sheet-name)
-                            headers                 (extract-headers applications form)
-                            meta-writer             (make-writer form-meta-sheet (inc sheet-idx))
-                            header-writer           (make-writer applications-sheet 0)]
-                        (write-form-meta! meta-writer form applications form-meta-fields)
-                        (write-headers! header-writer headers application-meta-fields)
-                        (dorun (->> applications
-                                    (sort-by :created-time)
-                                    (reverse)
-                                    (map-indexed (fn [row-idx application]
-                                                   (let [row-writer (make-writer applications-sheet (inc row-idx))]
-                                                     (write-application! row-writer application headers application-meta-fields form))))))
-                        (.createFreezePane applications-sheet 0 1 0 1))
-                      workbook)
-                    workbook))
+         (map second)
+         (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
+                        (let [applications-sheet (.createSheet workbook sheet-name)
+                              headers            (extract-headers applications form)
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer applications-sheet 0)]
+                          (write-form-meta! meta-writer form applications form-meta-fields)
+                          (write-headers! header-writer headers application-meta-fields)
+                          (->> applications
+                               (sort-by :created-time)
+                               (reverse)
+                               (map-indexed (fn [row-idx application]
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx))]
+                                                (write-application! row-writer application headers application-meta-fields form))))
+                               (dorun))
+                          (.createFreezePane applications-sheet 0 1 0 1))))
+         (dorun))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
