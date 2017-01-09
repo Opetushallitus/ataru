@@ -467,10 +467,11 @@
                        [:span.application__form-adjacent-row--mobile-only
                         "Poista rivi"]
                        [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
-       [:a {:on-click (fn [evt]
-                        (.preventDefault evt)
-                        (dispatch [:application/add-adjacent-fields field-descriptor]))}
-        [:i.zmdi.zmdi-plus-square] " Lisää rivi"]])))
+       (when repeatable?
+         [:a {:on-click (fn [evt]
+                          (.preventDefault evt)
+                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
+          [:i.zmdi.zmdi-plus-square] " Lisää rivi"])])))
 
 (defn render-field
   [field-descriptor & args]
