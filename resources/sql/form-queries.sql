@@ -69,7 +69,10 @@ with the_key as (
 ), latest_version as (
   select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
 )
-select id, key, name, content, created_by, created_time, languages, deleted from forms f join latest_version lv on f.created_time = lv.latest_time;
+select f.id, f.key, f.name, f.content, f.created_by, f.created_time, f.languages, f.deleted, count(a.id) as application_count from forms f
+join latest_version lv on f.created_time = lv.latest_time
+left join applications a on a.form_id in (select id from forms where key = f.key)
+group by f.id, f.key, f.name, f.content, f.created_by, f.created_time, f.languages, f.deleted;
 
 -- name: yesql-fetch-latest-version-by-key
 with latest_version as (
