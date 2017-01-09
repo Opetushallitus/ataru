@@ -233,8 +233,12 @@
     {:id application-id :person_oid person-oid}))
 
 (defn get-hakukohteet
+  [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {:authorized_organization_oids organization-oids})))
+
+(defn get-all-hakukohteet
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-all-hakukohteet-from-applications {})))
 
 (defn get-application-count-by-form-key
   [form-key]

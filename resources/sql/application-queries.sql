@@ -167,6 +167,15 @@ update applications set person_oid = :person_oid where id = :id;
 -- Get hakukohde info from applications
 SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
 FROM applications a1
+INNER JOIN forms f1 ON a1.form_id = f1.id
+WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
+AND (f1.organization_oid IN (:authorized_organization_oids) OR f1.organization_oid IS NULL)
+GROUP BY a1.hakukohde, a1.hakukohde_name;
+
+-- name: yesql-get-all-hakukohteet-from-applications
+-- Get hakukohde info from applications
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
+FROM applications a1
 WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
 GROUP BY a1.hakukohde, a1.hakukohde_name;
 

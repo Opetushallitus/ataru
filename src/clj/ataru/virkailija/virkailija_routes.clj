@@ -12,6 +12,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
             [ataru.forms.form-access-control :as access-controlled-form]
+            [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -213,12 +214,12 @@
                                           session
                                           organization-service)})))
 
-                 (api/GET "/hakukohteet" []
+                 (api/GET "/hakukohteet" {session :session}
                           :summary "List hakukohde information found for applications stored in system"
-                          :return [{:hakukohde                     s/Str
-                                    :hakukohde-name                s/Str
+                          :return [{:hakukohde         s/Str
+                                    :hakukohde-name    s/Str
                                     :application-count s/Int}]
-                          (ok (ataru.applications.application-store/get-hakukohteet)))
+                          (ok (access-controlled-hakukohde/get-hakukohteet session organization-service)))
 
                  (api/GET "/haut" []
                           :summary "List haku information found for applications stored in system"
