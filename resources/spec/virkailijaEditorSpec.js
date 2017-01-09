@@ -31,7 +31,7 @@
   function formComponents() {
     return testFrame().find('.editor-form__component-wrapper')
       // exclude followup question components
-      .not('.editor-form__followup-question-overlay  > div > .editor-form__component-wrapper')
+      .not('.editor-form__followup-question-overlay > div > div > .editor-form__component-wrapper')
   }
 
   function formSections() {

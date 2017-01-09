@@ -7,7 +7,8 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
-    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
+    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+    [taoensso.timbre :refer [spy debug]]))
 
 (defn get-application-list-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)

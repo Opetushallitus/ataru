@@ -156,12 +156,8 @@
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update-fx
                     (fn [{:keys [db]}]
-                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)
-                            followup? (= :followup (last path))]
-                        (if followup?
-                          {:db forms-meta-db
-                           :dispatch [:editor/followup-remove path]}
-                          {:db (remove-component forms-meta-db path)})))])))
+                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
+                        {:db (remove-component forms-meta-db path)}))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-db
@@ -412,7 +408,7 @@
 
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
-    (if (spy (-> b (< a)))
+    (if (-> b (< a))
       [b :children xb]       ; topwards
       [(dec b) :children xb] ; bottomwards
       )

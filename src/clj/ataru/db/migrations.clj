@@ -7,8 +7,8 @@
     [crypto.random :as c]
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
-    [taoensso.timbre :refer [spy debug info error]])
-  (:use [oph.soresu.common.config :only [config]]))
+    [taoensso.timbre :refer [spy debug info error]]
+    [oph.soresu.common.config :refer [config]]))
 
 (defn- update-person-info-module
   [new-person-info-module form]
@@ -87,6 +87,32 @@
         (info "Updated haku details for application" id))
       (error "Could not update haku for application" id "with hakukohde" hakukohde))))
 
+(defn- wrap-followups [form]
+  (let [fw           (atom nil)
+        wrapped-form (clojure.walk/prewalk
+                       (fn [expr]
+                         (match expr
+                           {:followup followup}
+                           (do
+                             (reset! fw followup)
+                             (-> (dissoc expr :followup)
+                                 (assoc :followups [followup])))
+
+                           :else expr))
+                       form)]
+    (when @fw
+      wrapped-form)))
+
+(defn followups-to-vectored-followups
+  []
+  (let [existing-forms (try
+                         (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
+                         (catch Exception _ []))]
+    (doseq [form existing-forms]
+      (some-> form
+              wrap-followups
+              (store/create-form-or-increment-version! (:organization-oid form))))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -111,6 +137,11 @@
   migrate-application-haku-ids "1.36"
   "Add haku oids to applications (from tarjonta-service) with hakukohde data"
   (add-haku-details-for-applications))
+
+(migrations/defmigration
+  migrate-followups-to-vectored-followups "1.38"
+  "Wrap all existing followups with vector"
+  (followups-to-vectored-followups))
 
 (defn migrate
   []
