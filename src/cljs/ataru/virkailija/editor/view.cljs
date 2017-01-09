@@ -151,10 +151,8 @@
                 {:on-click toggle-open}]
                (map (fn [org]
                       [:div
-                       (get-in org [:name :fi])
-                       (if (= (:organization-oid form) (:oid org))
-                         [:img {:src "/lomake-editori/images/icon_check.png"}]
-                         nil)])
+                       {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
+                       (get-in org [:name :fi])])
                     @organizations)))
        [:a
         {:on-click toggle-open}

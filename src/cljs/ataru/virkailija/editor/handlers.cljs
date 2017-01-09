@@ -374,6 +374,14 @@
                  assoc :name
                  new-form-name))))
 
+(reg-event-db
+  :editor/change-form-organization
+  (fn [db [_ new-form-organization-oid]]
+    (with-form-key [db selected-form-key]
+      (update-in db [:editor :forms selected-form-key]
+                 assoc :organization-oid
+                 new-form-organization-oid))))
+
 (defn- remove-component-from-list
   [db source-path]
   (with-path-and-index [db source-path component-list-path remove-idx]
