@@ -23,14 +23,14 @@
 
   (it "should version subsequent forms"
       (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id))
-            version-two (store/create-form-or-increment-version! version-one org-id)]
+            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id))]
         (should= key (:key version-two))
         (should-not= id (:id version-two))
         (should (t/after? (:created-time version-two) created-time))))
 
   (it "should retrieve latest version with old version"
-      (let [version-one (store/create-form-or-increment-version! id-less org-id)
-            version-two (store/create-form-or-increment-version! version-one org-id)]
+      (let [version-one (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id))
+            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id))]
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-one))))
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-two))))))
 
@@ -38,4 +38,4 @@
       (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id))
             version-two                                   (store/create-form-or-increment-version! (assoc  version-one :organization-oid org-id))]
         (should-throw ExceptionInfo "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
-          (keys (store/create-form-or-increment-version! version-one org-id))))))
+                      (keys (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id)))))))
