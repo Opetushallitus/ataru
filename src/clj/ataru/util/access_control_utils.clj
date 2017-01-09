@@ -1,4 +1,5 @@
 (ns ataru.util.access-control-utils
+  (:require [ataru.virkailija.user.organization-client :as organization-client])
   (:import [clojure.lang IFn]))
 
 (defn org-oids [session] (map :oid (-> session :identity :organizations)))
@@ -12,7 +13,7 @@
   [session organization-service organization-oid-handle]
   (let [organization-oids (org-oids session)]
     (cond
-      (some #{oph-organization} organization-oids)
+      (some #{organization-client/oph-organization} organization-oids)
       true
 
       (empty? organization-oids)

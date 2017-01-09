@@ -11,6 +11,7 @@
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
             [ataru.haku.haku-access-control :as access-controlled-haku]
@@ -150,10 +151,10 @@
                              (ok (application-service/get-application-list-by-form formKey session organization-service))
 
                              (some? hakukohdeOid)
-                             (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))
+                             (ok (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service))
 
                              (some? hakuOid)
-                             (ok (application-service/get-application-list-by-haku hakuOid session organization-service))))
+                             (ok (access-controlled-application/get-application-list-by-haku hakuOid session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]

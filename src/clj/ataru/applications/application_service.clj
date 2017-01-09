@@ -14,11 +14,6 @@
   (aac/check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list-by-form form-key)})
 
-(defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (let [applications (application-store/get-application-list-by-hakukohde hakukohde-oid)]
-    (aac/check-forms-accesses (map :form applications) session organization-service)
-    {:applications applications}))
-
 (defn get-application-list-by-haku [haku-oid session organization-service]
   (let [applications (application-store/get-application-list-by-haku haku-oid)]
     (aac/check-forms-accesses (map :form applications) session organization-service)
