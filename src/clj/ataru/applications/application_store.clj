@@ -253,6 +253,10 @@
        (first)))
 
 (defn get-haut
+  [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-from-applications {:authorized_organization_oids organization-oids})))
+
+(defn get-all-haut
   []
-  (->> (exec-db :db yesql-get-haut-from-applications {})
+  (->> (exec-db :db yesql-get-all-haut-from-applications {})
        (map ->kebab-case-kw)))

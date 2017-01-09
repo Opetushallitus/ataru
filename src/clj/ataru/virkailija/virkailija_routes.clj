@@ -13,6 +13,7 @@
             [ataru.util.client-error :as client-error]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
+            [ataru.haku.haku-access-control :as access-controlled-haku]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -221,10 +222,10 @@
                                     :application-count s/Int}]
                           (ok (access-controlled-hakukohde/get-hakukohteet session organization-service)))
 
-                 (api/GET "/haut" []
+                 (api/GET "/haut" {session :session}
                           :summary "List haku information found for applications stored in system"
                           :return [ataru-schema/Haku]
-                          (ok (ataru.applications.application-store/get-haut)))
+                          (ok (access-controlled-haku/get-haut session organization-service)))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
