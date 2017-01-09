@@ -317,8 +317,7 @@
     (post-new-form
      {:name             "Uusi lomake"
       :content          [(pm/person-info-module)]
-      :languages        [:fi]
-      :organization-oid (:oid (first (get-in db [:editor :user-info :organizations])))})
+      :languages        [:fi]})
     db))
 
 (defn- copy-form [db _]

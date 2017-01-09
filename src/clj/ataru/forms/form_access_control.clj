@@ -74,11 +74,18 @@
       (do-fn))))
 
 (defn post-form [form session organization-service]
-  (check-authorization form session organization-service
-    (fn []
-      (let [organization-oids (org-oids session)]
-        (form-store/create-form-or-increment-version!
-          (assoc form :created-by (-> session :identity :username)))))))
+  (let [organization-oids (org-oids session)
+        first-org-oid     (first organization-oids)
+        form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
+    (check-authorization
+     form-with-org
+     session
+     organization-service
+     (fn []
+       (form-store/create-form-or-increment-version!
+        (assoc
+         form-with-org
+         :created-by (-> session :identity :username)))))))
 
 (defn delete-form [form-id session organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
