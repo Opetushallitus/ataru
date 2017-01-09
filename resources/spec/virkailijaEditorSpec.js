@@ -323,7 +323,7 @@
             return formComponents().eq(12).find('.editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1)
           }, 'Tekstikenttä 2')
         )
-        it('🌸 is working so wonderfully 🌸', function() {})
+        it('🌸  is working so wonderfully 🌸', function() {})
       })
 
       describe('autosave', function () {
