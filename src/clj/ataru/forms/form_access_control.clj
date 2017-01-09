@@ -7,10 +7,6 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn- all-org-oids [organization-service organization-oids]
-  (let [all-organizations (.get-all-organizations organization-service organization-oids)]
-        (map :oid all-organizations)))
-
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
   [session organization-service organization-oid-handle]
@@ -27,7 +23,7 @@
                                (organization-oid-handle)
                                organization-oid-handle)]
         (-> #{organization-oid}
-            (some (all-org-oids organization-service organization-oids))
+            (some (access-control-utils/all-org-oids organization-service organization-oids))
             boolean)))))
 
 (defn form-allowed-by-key? [form-key session organization-service]
@@ -105,7 +101,7 @@
                                  []
 
                                  :else
-                                 (let [all-oids (all-org-oids organization-service organization-oids)]
+                                 (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
                                    (form-store/get-forms include-deleted? all-oids)))
                                (map #(application-count->form % include-deleted?)))]
     {:forms forms}))
