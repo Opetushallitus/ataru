@@ -7,27 +7,8 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn organization-allowed?
-  "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
-  [session organization-service organization-oid-handle]
-  (let [organization-oids (access-control-utils/org-oids session)]
-    (cond
-      (some #{oph-organization} organization-oids)
-      true
-
-      (empty? organization-oids)
-      false
-
-      :else
-      (let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
-                               (organization-oid-handle)
-                               organization-oid-handle)]
-        (-> #{organization-oid}
-            (some (access-control-utils/all-org-oids organization-service organization-oids))
-            boolean)))))
-
 (defn form-allowed-by-key? [form-key session organization-service]
-  (organization-allowed?
+  (access-control-utils/organization-allowed?
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-key form-key))))
@@ -35,7 +16,7 @@
 (defn form-allowed-by-id?
   "id identifies a version of the form"
   [form-id session organization-service]
-  (organization-allowed?
+  (access-control-utils/organization-allowed?
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))))

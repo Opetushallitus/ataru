@@ -1,7 +1,8 @@
 (ns ataru.applications.application-access-control
   (:require [ataru.forms.form-access-control :as form-access-control]
             [ataru.applications.application-store :as application-store]
-            [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
+            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+            [ataru.util.access-control-utils :as access-control-utils]))
 
 (defn check-form-access [form-key session organization-service]
   (when-not
@@ -19,7 +20,7 @@
 
 (defn check-application-access [application-key session organization-service]
   (when-not
-    (form-access-control/organization-allowed?
+    (access-control-utils/organization-allowed?
       session
       organization-service
       #(application-store/get-application-organization-oid application-key))
