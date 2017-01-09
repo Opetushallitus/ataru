@@ -26,7 +26,7 @@
                             (catch Exception _ []))]
     (doseq [form existing-forms]
       (let [changed-form (update-person-info-module new-person-module form)]
-        (store/create-form-or-increment-version! changed-form (:organization-oid form))))))
+        (store/create-form-or-increment-version! changed-form)))))
 
 (defn application-id->application-key
   "Make application_events to refer to applications using

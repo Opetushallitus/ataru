@@ -118,7 +118,7 @@
   (first
     (execute yesql-add-form<! (dissoc form :created-time :id))))
 
-(defn create-form-or-increment-version! [{:keys [id] :as form} organization-oid]
+(defn create-form-or-increment-version! [{:keys [id organization-oid] :as form}]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
@@ -133,13 +133,11 @@
                        " created-time "
                        (:created-time form)))
             (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen.")))
-          (let [organization-oid (:organization-oid latest-version)
-                new-form         (increment-version
-                                   (-> form
-                                       ; use :key set in db just to be sure it never is nil
-                                       (assoc :key (:key latest-version))
-                                       (assoc :organization-oid organization-oid)
-                                       (update :deleted identity))
+          (let [new-form         (increment-version
+                                  (-> form
+                                        ; use :key set in db just to be sure it never is nil
+                                      (assoc :key (:key latest-version))
+                                      (update :deleted identity))
                                    conn)
                 log-id           (:created-by new-form)]
             (audit-log/log {:new              new-form

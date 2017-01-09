@@ -22,7 +22,7 @@
         (should key)))
 
   (it "should version subsequent forms"
-      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! id-less org-id)
+      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id))
             version-two (store/create-form-or-increment-version! version-one org-id)]
         (should= key (:key version-two))
         (should-not= id (:id version-two))
@@ -35,7 +35,7 @@
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-two))))))
 
   (it "should throw when later version already exists"
-      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! id-less org-id )
-            version-two                                   (store/create-form-or-increment-version! version-one org-id)]
+      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id))
+            version-two                                   (store/create-form-or-increment-version! (assoc  version-one :organization-oid org-id))]
         (should-throw ExceptionInfo "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
           (keys (store/create-form-or-increment-version! version-one org-id))))))
