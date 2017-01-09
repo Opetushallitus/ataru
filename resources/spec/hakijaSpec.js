@@ -78,11 +78,11 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(23)
+        expect(formFields().length).to.equal(24)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('13 pakollista tietoa puuttuu')
-        expect(invalidSections().find('a').length).to.equal(2)
+        expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
       })
     })

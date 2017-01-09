@@ -17,7 +17,13 @@
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
-    ["Tekstikenttä" "Tekstialue" "Pudotusvalikko" "Lista, monta valittavissa" "Infokenttä" "Painikkeet, yksi valittavissa"]))
+    ["Tekstikenttä"
+     "Tekstialue"
+     "Pudotusvalikko"
+     "Painikkeet, yksi valittavissa"
+     "Lista, monta valittavissa"
+     "Infokenttä"
+     "Vierekkäiset tekstikentät"]))
 
 (def ^:private adjacent-fieldset-toolbar-elements
   {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))

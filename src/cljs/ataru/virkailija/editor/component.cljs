@@ -455,7 +455,7 @@
           [toolbar/adjacent-fieldset-toolbar
            (concat path [:children])
            (fn [component-fn]
-             (dispatch [:generate-component component-fn (spy (concat path [:children (count children)]))]))])]])))
+             (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]])))
 
 (defn adjacent-text-field [content path]
   (let [languages        (subscribe [:editor/languages])

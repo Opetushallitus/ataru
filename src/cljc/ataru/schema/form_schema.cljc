@@ -24,6 +24,9 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
+(declare BasicElement)
+(declare WrapperElement)
+
 (s/defschema Form {(s/optional-key :id)                s/Int
                    :name                               s/Str
                    (s/optional-key :key)               s/Str
@@ -65,7 +68,7 @@
                         (s/optional-key :options)              [{:value                          s/Str
                                                                  (s/optional-key :label)         LocalizedString
                                                                  (s/optional-key :default-value) (s/maybe s/Bool)
-                                                                 (s/optional-key :followup)      (s/recursive #'FormField)}]
+                                                                 (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         :fieldType                             (apply s/enum ["textField"
                                                                               "textArea"
                                                                               "dropdown"

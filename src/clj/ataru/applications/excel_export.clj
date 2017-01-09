@@ -171,18 +171,24 @@
          form-content)))
 
 (defn- find-parent [element fields]
-  (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))]
+  (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
+        followup-dropdown (fn [field] (mapcat :followups (:options field)))]
     (reduce
       (fn [parent field]
-        (or
-          (when (and (= "wrapperElement" (:fieldClass field))
-                  (not-empty (:children field))
-                  (contains-element? (:children field)))
-            field)
-          (when (not-empty (:children field))
-            (or parent
-              (find-parent element (:children field))))
-          parent))
+        (or parent
+          (match field
+            ((_ :guard contains-element?) :<< :children) field
+
+            ((followups :guard not-empty) :<< followup-dropdown)
+            (or
+              (when (contains-element? followups)
+                field)
+              (find-parent element followups))
+
+            ((children :guard not-empty) :<< :children)
+            (find-parent element children)
+
+            :else nil)))
       nil
       fields)))
 
