@@ -38,8 +38,11 @@
                            (clojure.string/lower-case val)
                            from-index))
 
+(defn- should-search? [search-term]
+  (> (count search-term) 1))
+
 (defn match-text [text search-term]
-  (if (clojure.string/blank? search-term)
+  (if-not (should-search? search-term)
     [{:text text :hilight false}]
     (loop [res           []
            current-index 0]
@@ -80,11 +83,11 @@
                                                    {:text (str " (" (or application-count 0) ")") :hilight false})]
                                     (assoc form :text text)))
                                 forms)
-                    (not (clojure.string/blank? @search-term))
+                    (should-search? @search-term)
                     (filter text-with-hilighted-parts))]
         [:div.application-handling__form-list-column-and-header-container
          [:span.application-handling__form-list-column-header
-          (when (and (not (clojure.string/blank? @search-term))
+          (when (and (should-search? @search-term)
                      (empty? forms))
             {:class "application-handling__form-list-column-header--no-results"})
           header-text]
