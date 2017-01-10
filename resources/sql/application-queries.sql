@@ -107,9 +107,11 @@ select
   a.content,
   a.hakukohde,
   a.hakukohde_name,
-  ar.state as state
+  ar.state as state,
+  f.key as form_key
 from applications a
 join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
 where state in (:filtered_states)
 and a.hakukohde = :hakukohde_oid;
 
@@ -124,9 +126,11 @@ select
   a.content,
   a.haku,
   a.haku_name,
-  ar.state as state
+  ar.state as state,
+  f.key as form_key
 from applications a
 join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
 where state in (:filtered_states) and a.haku = :haku_oid;
 
 -- name: yesql-get-application-by-id
