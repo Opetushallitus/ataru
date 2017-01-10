@@ -12,13 +12,13 @@
     [taoensso.timbre :refer [spy debug info error]]
     [oph.soresu.common.config :refer [config]]))
 
-(def *default-fetch-size* 50)
+(def default-fetch-size 50)
 
 (defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
   (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
     (doseq [[index value] (map vector (iterate inc 1) params)]
       (.setObject stmt index value))
-    (.setFetchSize stmt *default-fetch-size*)
+    (.setFetchSize stmt default-fetch-size)
     (with-open [rset (.executeQuery stmt)]
       (func (jdbc/result-set-seq rset)))))
 
