@@ -108,16 +108,16 @@
     (.close (:ldap-connection this))
     (assoc this :all-orgs-cache nil)))
 
+(def fake-orgs [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
+                {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}])
+
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
 
-  (get-direct-organization-oids [this user-name] ["1.2.246.562.10.0439845"])
-  (get-direct-organizations [this user-name]
-    [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}])
-  (get-all-organizations [this root-orgs]
-    [{:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845"}]))
-
+  (get-direct-organization-oids [this user-name] (:oid (first fake-orgs)))
+  (get-direct-organizations [this user-name] fake-orgs)
+  (get-all-organizations [this root-orgs] fake-orgs))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
