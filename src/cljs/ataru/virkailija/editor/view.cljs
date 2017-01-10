@@ -152,7 +152,7 @@
         toggle-open   (fn [evt] (swap! opened? not))]
     (fn [form]
       [:div.editor-form__owner-control
-       [:span.editor-form__owner-label "Omistaja: "]
+       [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
        [:a
         {:on-click toggle-open}
         (get-org-name-for-oid (:organization-oid form) @organizations)]
