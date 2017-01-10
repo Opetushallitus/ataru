@@ -184,9 +184,7 @@
            (clojure.string/blank? @search-term)
            (assoc :class "application-handling__input-field-clear-button--disabled"))]]
        [:div.application-handling__form-list-header-item-shrinking-container]
-       [:div.application-handling__form-list-header-item-shrinking-container
-        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
-         {:on-click #(toggle-form-list-open! open)}]]])))
+       [:div.application-handling__form-list-header-item-shrinking-container]])))
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
@@ -206,7 +204,9 @@
         [:div.application-handling__form-list-column-wrapper
          [haku-column open]
          [hakukohde-column open]
-         [forms-column open]]]])))
+         [forms-column open]]
+        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
+         {:on-click #(toggle-form-list-open! open)}]]])))
 
 (defn application-list-contents [applications]
   (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
