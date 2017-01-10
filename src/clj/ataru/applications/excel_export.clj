@@ -224,6 +224,12 @@
       (writer 0 column label))
     sheet))
 
+(def ^:private invalid-char-matcher #"[\\/\*\[\]:\?]")
+
+(defn- sanitize-sheet-name [name]
+  {:pre [(some? name)]}
+  (clojure.string/replace name invalid-char-matcher "_"))
+
 (defn export-applications [applications]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -237,7 +243,7 @@
                          form     (get-latest-form-by-key form-key)]
                      (if (contains? result form-key)
                        (update-in result [form-key :applications] conj application)
-                       (let [value {:sheet-name   (:name form)
+                       (let [value {:sheet-name   (sanitize-sheet-name (:name form))
                                     :form         form
                                     :applications [application]}]
                          (assoc result form-key value)))))
