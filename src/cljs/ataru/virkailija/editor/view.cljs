@@ -151,6 +151,7 @@
         (get-organization-name (:organization-oid form) @organizations)]
        (when @opened?
          [:div.editor-form__form-owner-selection-anchor
+          [:div.editor-form__owner-selection-arrow-up]
           (into [:div.editor-form__form-owner-selection--opened
                  {:on-click toggle-open}]
                 (map (fn [org]

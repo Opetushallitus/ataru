@@ -144,7 +144,7 @@
                           (get-review-state-count @review-state-counts review-state-id)
                           ")")]))
                 application-review-states)))
-       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-down])])))
+       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])])))
 
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
