@@ -4,11 +4,23 @@
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+    [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [crypto.random :as c]
+    [oph.soresu.common.db :refer [get-datasource]]
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [oph.soresu.common.config :refer [config]]))
+
+(def *default-fetch-size* 50)
+
+(defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
+  (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
+    (doseq [[index value] (map vector (iterate inc 1) params)]
+      (.setObject stmt index value))
+    (.setFetchSize stmt *default-fetch-size*)
+    (with-open [rset (.executeQuery stmt)]
+      (func (jdbc/result-set-seq rset)))))
 
 (defn- update-person-info-module
   [new-person-info-module form]
@@ -113,6 +125,20 @@
               wrap-followups
               (store/create-form-or-increment-version! (:organization-oid form))))))
 
+(defn followups-to-vectored-followups-like-all-of-them
+  []
+  (let [update (fn [form conn]
+                 (info "Updating followups of form-id:" (:id form))
+                 (jdbc/execute! conn ["update forms set content = ? where id = ?" {:content (:content form)} (:id form)]))]
+    (with-db-transaction [conn {:datasource (get-datasource :db)}]
+      (with-query-results-cursor conn ["select id, content from forms"]
+        (fn [forms]
+          (doseq [form forms]
+            (some->
+                form
+                wrap-followups
+              (update conn))))))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -142,6 +168,11 @@
   migrate-followups-to-vectored-followups "1.38"
   "Wrap all existing followups with vector"
   (followups-to-vectored-followups))
+
+(migrations/defmigration
+  migrate-followups-to-vectored-followups "1.39"
+  "Wrap all existing followups with vector, like really all of them ever."
+  (followups-to-vectored-followups-like-all-of-them))
 
 (defn migrate
   []
