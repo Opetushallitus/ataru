@@ -136,7 +136,14 @@
       :target "_blank"}
      text]))
 
-(defn get-organization-name [oid orgs] (get-in (first (filter #(= oid (:oid %)) orgs)) [:name :fi]))
+(defn- get-org-name [org]
+  (str
+   (get-in org [:name :fi])
+   (if (= "group" (:type org))
+     " (ryhmä)"
+     "")))
+
+(defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
 
 (defn form-owner-organization [form]
   (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
@@ -148,7 +155,7 @@
        [:span.editor-form__owner-label "Omistaja: "]
        [:a
         {:on-click toggle-open}
-        (get-organization-name (:organization-oid form) @organizations)]
+        (get-org-name-for-oid (:organization-oid form) @organizations)]
        (when @opened?
          [:div.editor-form__form-owner-selection-anchor
           [:div.editor-form__owner-selection-arrow-up]
@@ -157,7 +164,7 @@
                 (map (fn [org]
                        [:div.editor-form__owner-selection-row
                         {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
-                        (get-in org [:name :fi])])
+                        (get-org-name org)])
                      @organizations))])])))
 
 (defn form-toolbar [form]
