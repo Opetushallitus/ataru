@@ -145,18 +145,19 @@
         toggle-open   (fn [evt] (swap! opened? not))]
     (fn [form]
       [:div.editor-form__owner-control
-       [:span "Omistaja: "]
-       (when @opened?
-         (into [:div.editor-form__form-owner-selection--opened
-                {:on-click toggle-open}]
-               (map (fn [org]
-                      [:div
-                       {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
-                       (get-in org [:name :fi])])
-                    @organizations)))
+       [:span.editor-form__owner-label "Omistaja: "]
        [:a
         {:on-click toggle-open}
-        (get-organization-name (:organization-oid form) @organizations)]])))
+        (get-organization-name (:organization-oid form) @organizations)]
+       (when @opened?
+         [:div.editor-form__form-owner-selection-anchor
+          (into [:div.editor-form__form-owner-selection--opened
+                 {:on-click toggle-open}]
+                (map (fn [org]
+                       [:div.editor-form__owner-selection-row
+                        {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
+                        (get-in org [:name :fi])])
+                     @organizations))])])))
 
 (defn form-toolbar [form]
   (let [languages                    (subscribe [:editor/languages])
