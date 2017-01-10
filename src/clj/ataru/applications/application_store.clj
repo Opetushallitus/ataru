@@ -140,8 +140,31 @@
 
 (defn get-application-list-by-hakukohde
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
+  [hakukohde-oid organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid                hakukohde-oid
+                                                             :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-full-application-list-by-hakukohde
+  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [hakukohde-oid]
-  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid})
+  (->> (exec-db :db yesql-get-full-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-application-list-by-haku
+  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
+  [haku-oid organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid                     haku-oid
+                                                        :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-full-application-list-by-haku
+  "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
+  [haku-oid]
+  (->> (exec-db :db yesql-get-full-application-list-by-haku {:haku_oid haku-oid})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
@@ -210,6 +233,15 @@
        (mapv (partial unwrap-application))
        (latest-versions-only)))
 
+(s/defn get-applications-for-haku :- [schema/Application]
+  [haku-oid :- s/Str
+   filtered-states :- [s/Str]]
+  (->> (exec-db :db yesql-get-applications-for-haku
+         {:filtered_states filtered-states
+          :haku_oid        haku-oid})
+       (mapv (partial unwrap-application))
+       (latest-versions-only)))
+
 (defn add-person-oid
   "Add person OID to an application"
   [application-id person-oid]
@@ -217,17 +249,30 @@
     {:id application-id :person_oid person-oid}))
 
 (defn get-hakukohteet
+  [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {:authorized_organization_oids organization-oids})))
+
+(defn get-all-hakukohteet
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-all-hakukohteet-from-applications {})))
 
-(defn get-unprocessed-application-count-by-form-key
+(defn get-application-count-by-form-key
   [form-key]
-  (->> (exec-db :db yesql-get-unprocessed-application-count-by-form-key {:form_key form-key})
-       (map :unprocessed_application_count)
+  (->> (exec-db :db yesql-get-application-count-by-form-key {:form_key form-key})
+       (map :application_count)
        (first)))
 
-(defn get-unprocessed-application-count-with-deleteds-by-form-key
+(defn get-application-count-with-deleteds-by-form-key
   [form-key]
-  (->> (exec-db :db yesql-get-unprocessed-application-count-with-deleteds-by-form-key {:form_key form-key})
-       (map :unprocessed_application_count)
+  (->> (exec-db :db yesql-get-application-count-with-deleteds-by-form-key {:form_key form-key})
+       (map :application_count)
        (first)))
+
+(defn get-haut
+  [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-from-applications {:authorized_organization_oids organization-oids})))
+
+(defn get-all-haut
+  []
+  (->> (exec-db :db yesql-get-all-haut-from-applications {})
+       (map ->kebab-case-kw)))

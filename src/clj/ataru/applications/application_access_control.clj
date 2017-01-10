@@ -1,7 +1,9 @@
 (ns ataru.applications.application-access-control
   (:require [ataru.forms.form-access-control :as form-access-control]
             [ataru.applications.application-store :as application-store]
-            [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
+            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+            [ataru.util.access-control-utils :as access-control-utils]
+            [ataru.virkailija.user.organization-client :as organization-client]))
 
 (defn check-form-access [form-key session organization-service]
   (when-not
@@ -19,8 +21,32 @@
 
 (defn check-application-access [application-key session organization-service]
   (when-not
-    (form-access-control/organization-allowed?
+    (access-control-utils/organization-allowed?
       session
       organization-service
       #(application-store/get-application-organization-oid application-key))
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
+
+(defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
+  (let [organization-oids (access-control-utils/org-oids session)]
+    (cond (some #{organization-client/oph-organization} organization-oids)
+          {:applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid)}
+
+          (empty? organization-oids)
+          []
+
+          :else
+          (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
+            {:applications (application-store/get-application-list-by-hakukohde hakukohde-oid all-oids)}))))
+
+(defn get-application-list-by-haku [haku-oid session organization-service]
+  (let [organization-oids (access-control-utils/org-oids session)]
+    (cond (some #{organization-client/oph-organization} organization-oids)
+          {:applications (application-store/get-full-application-list-by-haku haku-oid)}
+
+          (empty? organization-oids)
+          []
+
+          :else
+          (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
+            {:applications (application-store/get-application-list-by-haku haku-oid all-oids)}))))

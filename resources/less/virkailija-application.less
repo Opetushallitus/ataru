@@ -4,6 +4,7 @@
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
+@form-column-width: 33%;
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -21,13 +22,29 @@
 .application-handling__form-list-search-row {
   display: flex;
   flex-flow: row nowrap;
-  margin-left: 20px;
-  margin-right: 20px;
+  margin: 15px 20px 5px;
 }
 
-.application-handling__form-list-close-container {
+.application-handling__form-list-search-input-container {
   display: flex;
-  flex: 0 1 50%;
+  flex: 0 0 @form-column-width;
+  flex-flow: row nowrap;
+}
+
+.application-handling__input-field-clear-button {
+  cursor: pointer;
+  position: relative;
+  right: 20px;
+  top: 14px;
+}
+
+.application-handling__input-field-clear-button--disabled {
+  visibility: hidden;
+}
+
+.application-handling__form-list-header-item-shrinking-container {
+  display: flex;
+  flex: 0 1 @form-column-width;
   justify-content: flex-end;
 }
 
@@ -38,11 +55,6 @@
   cursor: pointer;
 }
 
-.application-handling__form-list-search-row-item {
-  margin-top: 15px;
-  margin-bottom: 5px;
-}
-
 .application-handling__form-list-search-input {
   border: 1px solid @section-header-text;
   border-radius: 2px;
@@ -50,6 +62,7 @@
   font-size: 16px;
   height: 43px;
   padding: 10px 28px 11px 14px;
+  width: 395px;
 }
 
 .application-handling__form-list-wrapper-outer {
@@ -63,14 +76,13 @@
 
 .application-handling__form-list-wrapper-inner {
   background-color: @application-form-list-background-color;
-  box-shadow: 0px 2px 1px 0px rgba(102,102,102,1);
-  flex-flow: row nowrap;
-  padding-bottom: 10px;
+  box-shadow: 1px 2px 5px #b3b3b3;
   padding-left: 20px;
   padding-right: 20px;
   position: absolute;
   top: 45px;
   width: 100%;
+  z-index: 15;
 }
 
 .application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
@@ -86,57 +98,63 @@
   border-bottom: 1px solid @bottom-separator-color;
   margin-bottom: 10px;
   padding-left: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .application-handling__header-text-container {
   cursor: pointer;
 }
 
-.application-handling__form-list-column-wrapper-outer {
-  display: flex;
-  flex-flow: column nowrap;
-}
-
-.application-handling__form-list-header-row {
+.application-handling__form-list-column-wrapper {
   display: flex;
   flex-flow: row nowrap;
-}
-
-.application-handling__form-list-column-wrapper-inner {
-  display: flex;
-  flex-flow: row nowrap;
-  max-height: calc(~"100vh - 260px");
-  overflow-y: auto;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .application-handling__form-list-indicator {
+  top: 30px;
+  left: 9px;
+  width: 21px;
+  height: 15px;
   position: absolute;
-  top: 36px;
-  left: 11px;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 9px solid @application-form-list-background-color;
+  overflow: hidden;
+  z-index: 16;
 }
 
-.application-handling__form-list-search-input-container {
+.application-handling__form-list-indicator:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: @application-form-list-background-color;
+  transform: rotate(135deg);
+  top: 10px;
+  left: 7px;
+  box-shadow: 0px -1px 3px #b3b3b3;
+}
+
+.application-handling__form-list-column-and-header-container {
   display: flex;
-  flex: 0 0 50%;
+  flex: 0 0 @form-column-width;
   flex-flow: column nowrap;
   min-width: 250px;
 }
 
-.application-handling__form-list-column {
-  display: flex;
-  flex: 0 0 50%;
-  flex-flow: column nowrap;
-  min-width: 250px;
+.application-handling__form-list-column-links-container {
+  margin-bottom: 20px;
+  margin-top: 20px;
+  max-height: calc(~"100vh - 300px");
+  overflow-y: auto;
 }
 
 .application-handling__form-list-column-header {
   border-bottom: 1px solid #E3ECEF;
-  flex: 0 0 50%;
   padding: 10px 20px;
 }
 
@@ -150,8 +168,8 @@
   padding-top: 10px;
 }
 
-.application-handling__form-list-link-container:last-of-type {
-  padding-bottom: 10px;
+.application-handling__form-list-link-container:first-of-type {
+  padding-top: 0px;
 }
 
 .application-handling__form-list-link--hilight {
@@ -506,6 +524,14 @@ and (max-width: @desktop-content-width) {
    */
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
+  }
+
+  .application-handling__form-list-column-wrapper {
+    flex-flow: row wrap;
+  }
+
+  .application-handling__form-list-column-and-header-container {
+    flex: 1 0 @form-column-width;
   }
 }
 

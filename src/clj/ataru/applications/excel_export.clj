@@ -13,7 +13,8 @@
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy debug]]))
+            [taoensso.timbre :refer [spy debug]]
+            [ataru.util.access-control-utils :as access-control-utils]))
 
 (def tz (t/default-time-zone))
 
@@ -96,8 +97,7 @@
                        form)
           value      ((:field meta-field) value-from)
           formatter  (or (:format-fn meta-field) identity)]
-      (writer 0 col (:label meta-field))
-      (writer 1 col (formatter value)))))
+      (writer 0 col (formatter value)))))
 
 (defn- write-headers! [writer headers meta-fields]
   (doseq [meta-field meta-fields]
@@ -215,46 +215,93 @@
        :header           header
        :column           idx})))
 
-(defn- export-applications
-  [applications form-key indexed-form-meta-fields]
+(defn- create-form-meta-sheet [workbook meta-fields]
+  (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
+        writer (make-writer sheet 0)]
+    (doseq [meta-field meta-fields
+            :let [column (:column meta-field)
+                  label  (:label meta-field)]]
+      (writer 0 column label))
+    sheet))
+
+(def ^:private invalid-char-matcher #"[\\/\*\[\]:\?]")
+
+(defn- sanitize-sheet-name [name]
+  {:pre [(some? name)]}
+  (clojure.string/replace name invalid-char-matcher "_"))
+
+(defn export-applications [applications]
   (let [workbook                (XSSFWorkbook.)
-        form                    (form-store/fetch-by-key form-key)
-        form-meta-sheet         (.createSheet workbook "Lomakkeen tiedot")
-        applications-sheet      (.createSheet workbook "Hakemukset")
+        form-meta-fields        (indexed-meta-fields form-meta-fields)
+        form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
-        headers                 (extract-headers applications form)]
-    (when (not-empty form)
-      (write-form-meta! (make-writer form-meta-sheet 0) form applications indexed-form-meta-fields)
-      (write-headers! (make-writer applications-sheet 0) headers application-meta-fields)
-      (dorun (map-indexed
-               (fn [idx application]
-                 (let [writer (make-writer applications-sheet (inc idx))]
-                   (write-application! writer application headers application-meta-fields form)))
-               applications))
-      (.createFreezePane applications-sheet 0 1 0 1))
+        get-form-by-id          (memoize form-store/fetch-by-id)
+        get-latest-form-by-key  (memoize form-store/fetch-by-key)]
+    (->> applications
+         (reduce (fn [result {:keys [form] :as application}]
+                   (let [form-key (:key (get-form-by-id form))
+                         form     (get-latest-form-by-key form-key)]
+                     (if (contains? result form-key)
+                       (update-in result [form-key :applications] conj application)
+                       (let [value {:sheet-name   (sanitize-sheet-name (:name form))
+                                    :form         form
+                                    :applications [application]}]
+                         (assoc result form-key value)))))
+                 {})
+         (map second)
+         (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
+                        (let [applications-sheet (.createSheet workbook sheet-name)
+                              headers            (extract-headers applications form)
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer applications-sheet 0)]
+                          (write-form-meta! meta-writer form applications form-meta-fields)
+                          (write-headers! header-writer headers application-meta-fields)
+                          (->> applications
+                               (sort-by :created-time)
+                               (reverse)
+                               (map-indexed (fn [row-idx application]
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx))]
+                                                (write-application! row-writer application headers application-meta-fields form))))
+                               (dorun))
+                          (.createFreezePane applications-sheet 0 1 0 1))))
+         (dorun))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
 
-(defn export-all-form-applications
-  [form-key filtered-states]
-  (let [applications (application-store/get-applications-for-form form-key filtered-states)
-        meta-fields  (indexed-meta-fields form-meta-fields)]
-    (export-applications applications form-key meta-fields)))
+(defn- sanitize-name [name]
+  (-> name
+      (string/replace #"[\s]+" "-")
+      (string/replace #"[^\w-]+" "")))
 
-(defn export-all-hakukohde-applications
-  [form-key filtered-states hakukohde-oid]
-  (let [applications (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
-        meta-fields  (indexed-meta-fields hakukohde-form-meta-fields)]
-    (export-applications applications form-key meta-fields)))
+(defn filename-by-form
+  [form-key]
+  {:post [(some? %)]}
+  (let [form           (form-store/fetch-by-key form-key)
+        sanitized-name (sanitize-name (:name form))
+        time           (time-formatter (t/now) filename-time-format)]
+    (str sanitized-name "_" form-key "_" time ".xlsx")))
 
-(defn filename
-  ([form-key hakukohde-oid]
-   (let [form           (form-store/fetch-by-key form-key)
-         sanitized-name (-> (or (:name form))
-                            (string/replace #"[\s]+" "-")
-                            (string/replace #"[^\w-]+" ""))
-         time           (time-formatter (t/now) filename-time-format)]
-     (str sanitized-name "_" form-key "_" (if hakukohde-oid (str hakukohde-oid "_") "") time ".xlsx")))
-  ([form-key]
-    (filename form-key nil)))
+(defn filename-by-hakukohde
+  [hakukohde-oid session]
+  {:post [(some? %)]}
+  (let [organization-oids (access-control-utils/org-oids session)]
+    (when-let [hakukohde-name (->> (application-store/get-hakukohteet organization-oids)
+                                   (filter (comp (partial = hakukohde-oid) :hakukohde))
+                                   (map :hakukohde-name)
+                                   (first))]
+      (let [sanitized-name (sanitize-name hakukohde-name)
+            time           (time-formatter (t/now) filename-time-format)]
+        (str sanitized-name "_" time ".xlsx")))))
+
+(defn filename-by-haku
+  [haku-oid session]
+  {:post [(some? %)]}
+  (let [organization-oids (access-control-utils/org-oids session)]
+    (when-let [hakukohde-name (->> (application-store/get-haut organization-oids)
+                                   (filter (comp (partial = haku-oid) :haku))
+                                   (map :haku-name)
+                                   (first))]
+      (let [sanitized-name (sanitize-name hakukohde-name)
+            time           (time-formatter (t/now) filename-time-format)]
+        (str sanitized-name "_" time ".xlsx")))))

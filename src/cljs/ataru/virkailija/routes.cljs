@@ -48,6 +48,7 @@
   (defroute #"^/lomake-editori/applications/" []
     (dispatch [:editor/refresh-forms-with-deleteds])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
+    (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:editor :forms])))
@@ -62,6 +63,7 @@
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (dispatch [:editor/refresh-hakukohteet-from-applications])
     (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -73,9 +75,25 @@
         (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)])))
     (dispatch [:set-active-panel :application]))
 
+  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
+    (dispatch [:editor/refresh-hakukohteet-from-applications])
+    (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch-after-state
+      :predicate
+      (fn [db]
+        (some #(when (= haku-oid (:haku %)) %)
+              (get-in db [:editor :haut])))
+      :handler
+      (fn [haku]
+        (dispatch [:editor/select-haku haku])
+        (dispatch [:application/fetch-applications-by-haku (:haku haku)])))
+    (dispatch [:set-active-panel :application]))
+
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (dispatch [:editor/refresh-forms-with-deleteds])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
+    (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:editor :forms key])))

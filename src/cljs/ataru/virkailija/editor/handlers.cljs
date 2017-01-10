@@ -211,6 +211,19 @@
         (assoc-in db [:editor :hakukohteet] hakukohteet)))
     db))
 
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:editor :haut] haut)))
+
+(reg-event-fx
+  :editor/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
+
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
@@ -242,8 +255,15 @@
   :editor/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
-        (update-in [:editor] dissoc :selected-form-key)
+        (update-in [:editor] dissoc :selected-form-key :selected-haku)
         (assoc-in [:editor :selected-hakukohde] hakukohde))))
+
+(reg-event-db
+  :editor/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :editor dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:editor :selected-haku] haku))))
 
 (reg-event-db
   :editor/select-form
