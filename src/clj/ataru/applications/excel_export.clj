@@ -230,8 +230,11 @@
 
 (defn- sheet-name [{:keys [id name]}]
   {:pre [(some? name)]}
-  (str id "_" (clojure.string/replace name invalid-char-matcher "_")))
-no
+  (let [name (str id "_" (clojure.string/replace name invalid-char-matcher "_"))]
+    (cond-> name
+      (> (count name) 30)
+      (subs 0 30))))
+
 (defn export-applications [applications]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
