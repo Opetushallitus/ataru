@@ -22,14 +22,15 @@
 .application-handling__form-list-search-row {
   display: flex;
   flex-flow: row nowrap;
-  margin: 15px 20px 5px;
+  margin: 17px 20px 5px;
 }
 
 .application-handling__input-field-clear-button {
   cursor: pointer;
   position: relative;
-  right: 20px;
-  top: 14px;
+  right: 26px;
+  top: 11px;
+  font-size: 19px;
 }
 
 .application-handling__input-field-clear-button--disabled {
@@ -42,18 +43,21 @@
   color: @application-form-list-close-color;
   cursor: pointer;
   position: absolute;
-  right: 15px;
+  right: 19px;
   top: 15px;
+  font-size: 19px;
 }
 
 .application-handling__form-list-search-input {
-  border: 1px solid @section-header-text;
-  border-radius: 2px;
   color: @text-color;
   font-size: 16px;
   height: 43px;
-  padding: 10px 28px 11px 14px;
-  width: 395px;
+  padding: 11px 28px 13px 14px;
+  width: 300px;
+  border: 1px solid #AEAEAE;
+  box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.20);
+  border-radius: 2px;
+  font-weight: 600;
 }
 
 .application-handling__form-list-wrapper-outer {
@@ -67,13 +71,14 @@
 
 .application-handling__form-list-wrapper-inner {
   background-color: @application-form-list-background-color;
-  box-shadow: 1px 2px 5px #b3b3b3;
+  box-shadow: @modal-shadow;
   padding-left: 20px;
   padding-right: 20px;
   position: absolute;
-  top: 45px;
+  top: 40px;
   width: 100%;
   z-index: 15;
+  border-radius: 3px;
 }
 
 .application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
@@ -109,7 +114,7 @@
 }
 
 .application-handling__form-list-indicator {
-  top: 30px;
+  top: 25px;
   left: 9px;
   width: 21px;
   height: 15px;
@@ -158,6 +163,9 @@
   padding-right: 20px;
   padding-left: 20px;
   padding-top: 10px;
+  a {
+    color: #06526b;
+  }
 }
 
 .application-handling__form-list-link-container:first-of-type {
@@ -174,7 +182,7 @@
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 15px;
+  margin-left: 10px;
 }
 
 .application-handling__form-list-arrow {
