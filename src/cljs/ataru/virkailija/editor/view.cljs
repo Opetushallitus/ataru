@@ -151,21 +151,27 @@
         opened?       (r/atom false)
         toggle-open   (fn [evt] (swap! opened? not))]
     (fn [form]
-      [:div.editor-form__owner-control
-       [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
-       [:a
-        {:on-click toggle-open}
-        (get-org-name-for-oid (:organization-oid form) @organizations)]
-       (when @opened?
-         [:div.editor-form__form-owner-selection-anchor
-          [:div.editor-form__owner-selection-arrow-up]
-          (into [:div.editor-form__form-owner-selection--opened
-                 {:on-click toggle-open}]
-                (map (fn [org]
-                       [:div.editor-form__owner-selection-row
-                        {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
-                        (get-org-name org)])
-                     @organizations))])])))
+      (let [selected-org-name (get-org-name-for-oid (:organization-oid form) @organizations)]
+        ;; If name is not available, selected org is a suborganization. Currently it's unsure
+        ;; if we want to show the form's organization at all in that case. If we do, we'll have to pass
+        ;; organization name from server with the form and fetch it from organization service
+        ;; and probably start caching those
+        (when (not-empty selected-org-name)
+          [:div.editor-form__owner-control
+           [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
+           [:a
+            {:on-click toggle-open}
+            selected-org-name]
+           (when @opened?
+             [:div.editor-form__form-owner-selection-anchor
+              [:div.editor-form__owner-selection-arrow-up]
+              (into [:div.editor-form__form-owner-selection--opened
+                     {:on-click toggle-open}]
+                    (map (fn [org]
+                           [:div.editor-form__owner-selection-row
+                            {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
+                            (get-org-name org)])
+                         @organizations))])])))))
 
 (defn form-toolbar [form]
   (let [languages                    (subscribe [:editor/languages])
