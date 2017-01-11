@@ -38,8 +38,11 @@
                            (clojure.string/lower-case val)
                            from-index))
 
+(defn- should-search? [search-term]
+  (> (count search-term) 1))
+
 (defn match-text [text search-term]
-  (if (clojure.string/blank? search-term)
+  (if-not (should-search? search-term)
     [{:text text :hilight false}]
     (loop [res           []
            current-index 0]
@@ -80,11 +83,11 @@
                                                    {:text (str " (" (or application-count 0) ")") :hilight false})]
                                     (assoc form :text text)))
                                 forms)
-                    (not (clojure.string/blank? @search-term))
+                    (should-search? @search-term)
                     (filter text-with-hilighted-parts))]
         [:div.application-handling__form-list-column-and-header-container
          [:span.application-handling__form-list-column-header
-          (when (and (not (clojure.string/blank? @search-term))
+          (when (and (should-search? @search-term)
                      (empty? forms))
             {:class "application-handling__form-list-column-header--no-results"})
           header-text]
@@ -168,22 +171,17 @@
   (let [search-term (subscribe [:state-query [:application :search-term]])]
     (fn [open]
       [:div.application-handling__form-list-search-row
-       [:div.application-handling__form-list-search-input-container
-        [:input.application-handling__form-list-search-input
-         {:type      "text"
-          :value     @search-term
-          :on-change (fn [event]
-                       (let [search-term (.. event -target -value)]
-                         (dispatch [:application/search-form-list search-term])))}]
-        [:i.application-handling__input-field-clear-button.zmdi.zmdi-close
-         (cond-> {:on-click (fn [_]
-                              (dispatch [:application/clear-search-term]))}
-           (clojure.string/blank? @search-term)
-           (assoc :class "application-handling__input-field-clear-button--disabled"))]]
-       [:div.application-handling__form-list-header-item-shrinking-container]
-       [:div.application-handling__form-list-header-item-shrinking-container
-        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
-         {:on-click #(toggle-form-list-open! open)}]]])))
+       [:input.application-handling__form-list-search-input
+        {:type      "text"
+         :value     @search-term
+         :on-change (fn [event]
+                      (let [search-term (.. event -target -value)]
+                        (dispatch [:application/search-form-list search-term])))}]
+       [:i.application-handling__input-field-clear-button.zmdi.zmdi-close
+        (cond-> {:on-click (fn [_]
+                             (dispatch [:application/clear-search-term]))}
+          (clojure.string/blank? @search-term)
+          (assoc :class "application-handling__input-field-clear-button--disabled"))]])))
 
 (defn form-list [filtered-applications application-filter]
   (let [open (r/atom false)]
@@ -203,7 +201,9 @@
         [:div.application-handling__form-list-column-wrapper
          [haku-column open]
          [hakukohde-column open]
-         [forms-column open]]]])))
+         [forms-column open]]
+        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
+         {:on-click #(toggle-form-list-open! open)}]]])))
 
 (defn application-list-contents [applications]
   (let [selected-key       (subscribe [:state-query [:application :selected-key]])]

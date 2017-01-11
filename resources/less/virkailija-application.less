@@ -25,12 +25,6 @@
   margin: 15px 20px 5px;
 }
 
-.application-handling__form-list-search-input-container {
-  display: flex;
-  flex: 0 0 @form-column-width;
-  flex-flow: row nowrap;
-}
-
 .application-handling__input-field-clear-button {
   cursor: pointer;
   position: relative;
@@ -42,17 +36,14 @@
   visibility: hidden;
 }
 
-.application-handling__form-list-header-item-shrinking-container {
-  display: flex;
-  flex: 0 1 @form-column-width;
-  justify-content: flex-end;
-}
-
 .application-handling__form-list-close-button {
   .semibold;
 
   color: @application-form-list-close-color;
   cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 15px;
 }
 
 .application-handling__form-list-search-input {
