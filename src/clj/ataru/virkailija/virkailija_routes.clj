@@ -195,7 +195,7 @@
                               :summary "Return Excel export of the hakukohde and applications for it."
                               {:status  200
                                :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session))}
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session organization-service))}
                                :body    (application-service/get-excel-report-of-applications-by-hakukohde
                                           hakukohde-oid
                                           state
@@ -208,7 +208,7 @@
                               :summary "Return Excel export of the haku and applications for it."
                               {:status  200
                                :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session))}
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session organization-service))}
                                :body    (application-service/get-excel-report-of-applications-by-haku
                                           haku-oid
                                           state

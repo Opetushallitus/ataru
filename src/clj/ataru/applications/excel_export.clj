@@ -14,7 +14,9 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy debug]]
-            [ataru.util.access-control-utils :as access-control-utils]))
+            [ataru.util.access-control-utils :as access-control-utils]
+            [ataru.hakukohde.hakukohde-access-control :as hakukohde-access-control]
+            [ataru.haku.haku-access-control :as haku-access-control]))
 
 (def tz (t/default-time-zone))
 
@@ -283,25 +285,23 @@
     (str sanitized-name "_" form-key "_" time ".xlsx")))
 
 (defn filename-by-hakukohde
-  [hakukohde-oid session]
+  [hakukohde-oid session organization-service]
   {:post [(some? %)]}
-  (let [organization-oids (access-control-utils/org-oids session)]
-    (when-let [hakukohde-name (->> (application-store/get-hakukohteet organization-oids)
-                                   (filter (comp (partial = hakukohde-oid) :hakukohde))
-                                   (map :hakukohde-name)
-                                   (first))]
-      (let [sanitized-name (sanitize-name hakukohde-name)
-            time           (time-formatter (t/now) filename-time-format)]
-        (str sanitized-name "_" time ".xlsx")))))
+  (when-let [hakukohde-name (->> (hakukohde-access-control/get-hakukohteet session organization-service)
+                                 (filter (comp (partial = hakukohde-oid) :hakukohde))
+                                 (map :hakukohde-name)
+                                 (first))]
+    (let [sanitized-name (sanitize-name hakukohde-name)
+          time           (time-formatter (t/now) filename-time-format)]
+      (str sanitized-name "_" time ".xlsx"))))
 
 (defn filename-by-haku
-  [haku-oid session]
+  [haku-oid session organization-service]
   {:post [(some? %)]}
-  (let [organization-oids (access-control-utils/org-oids session)]
-    (when-let [hakukohde-name (->> (application-store/get-haut organization-oids)
-                                   (filter (comp (partial = haku-oid) :haku))
-                                   (map :haku-name)
-                                   (first))]
-      (let [sanitized-name (sanitize-name hakukohde-name)
-            time           (time-formatter (t/now) filename-time-format)]
-        (str sanitized-name "_" time ".xlsx")))))
+  (when-let [hakukohde-name (->> (haku-access-control/get-haut session organization-service)
+                                 (filter (comp (partial = haku-oid) :haku))
+                                 (map :haku-name)
+                                 (first))]
+    (let [sanitized-name (sanitize-name hakukohde-name)
+          time           (time-formatter (t/now) filename-time-format)]
+      (str sanitized-name "_" time ".xlsx"))))
