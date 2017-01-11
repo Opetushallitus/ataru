@@ -129,7 +129,7 @@
   []
   (let [update (fn [form conn]
                  (info "Updating followups of form-id:" (:id form))
-                 (jdbc/execute! conn ["update forms set content = ? where id = ?" {:content (:content form)} (:id form)]))]
+                 (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (with-query-results-cursor conn ["select id, content from forms"]
         (fn [forms]
