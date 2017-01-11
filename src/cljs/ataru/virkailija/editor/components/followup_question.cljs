@@ -23,43 +23,38 @@
   (fn [db [_ option-path]]
     (assoc-in db [:editor :followup-overlay option-path :visible?] false)))
 
-(reg-event-fx
-  :editor/followup-remove
-  (fn [cofx [_ final-path]]
-    {:db       (update-in (:db cofx) (util/flatten-path (:db cofx) (butlast final-path)) dissoc :followup)
-     :dispatch [:editor/followup-overlay-close final-path final-path]}))
-
 (reg-event-db
   :editor/generate-followup-component
   (fn [db [_ generate-fn option-path]]
     (let [component (generate-fn)]
-      (assoc-in db (util/flatten-path db option-path :followup) component))))
+      (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
 (defn followup-question-overlay [option-path]
-  (let [layer-visible?     (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component (subscribe [:editor/get-component-value (flatten [option-path :followup])])]
+  (let [layer-visible? (subscribe [:editor/followup-overlay option-path :visible?])
+        followups      (subscribe [:editor/get-component-value (flatten [option-path :followups])])]
     (fn [option-path]
-      (when (or @layer-visible? @followup-component)
+      (when (or @layer-visible? (not-empty @followups))
         [:div.editor-form__followup-question-overlay-parent
          [:div.editor-form__followup-question-overlay-outer
           [:div.editor-form__followup-indicator]
           [:div.editor-form__followup-indicator-inlay]
           [:div.editor-form__followup-question-overlay
-           (if-let [followup @followup-component]
-             [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followup])]
-             [toolbar/followup-toolbar option-path
-              (fn [generate-fn]
-                (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]]))))
+           (into [:div]
+             (for [[index followup] (map vector (range) @followups)]
+               [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followups index])]))
+           [toolbar/followup-toolbar option-path
+            (fn [generate-fn]
+              (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
 
 (defn followup-question [option-path]
   (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followup])])
+        followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followups])])
         ; disallow nesting followup questions
-        top-level-followup? (nil? ((set (flatten option-path)) :followup))]
+        top-level-followup? (nil? ((set (flatten option-path)) :followups))]
     (fn [option-path]
       [:div.editor-form__followup-question
        (when top-level-followup?
          (match [@followup-component @layer-visible?]
-           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymys"]
-           [(_ :guard some?) _] "Lisäkysymys"
-           :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymys"]))])))
+           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
+           [(_ :guard some?) _] "Lisäkysymykset"
+           :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymykset"]))])))

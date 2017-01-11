@@ -3,7 +3,6 @@
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
-            [ataru.buildversion :refer [buildversion-routes]]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -11,7 +10,10 @@
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.util.client-error :as client-error]
+            [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
+            [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
+            [ataru.haku.haku-access-control :as access-controlled-haku]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -139,12 +141,19 @@
 
                   (api/GET "/list" {session :session}
                            :query-params [{formKey :- s/Str nil}
-                                          {hakukohdeOid :- s/Str nil}]
+                                          {hakukohdeOid :- s/Str nil}
+                                          {hakuOid :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (if formKey
+                           (cond
+                             (some? formKey)
                              (ok (application-service/get-application-list-by-form formKey session organization-service))
-                             (ok (application-service/get-application-list-by-hakukohde hakukohdeOid session organization-service))))
+
+                             (some? hakukohdeOid)
+                             (ok (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service))
+
+                             (some? hakuOid)
+                             (ok (access-controlled-application/get-application-list-by-haku hakuOid session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
@@ -166,40 +175,57 @@
                                  session
                                  organization-service)))
 
-                   (api/GET "/excel/:form-key" {session :session}
-                            :path-params [form-key :- s/Str]
-                            :query-params [{state :- [s/Str] nil}]
-                            :summary  "Return Excel export of the form and applications for it."
-                            {:status  200
-                             :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                       "Content-Disposition" (str "attachment; filename=" (excel/filename form-key))}
-                             :body    (application-service/get-excel-report-of-applications-by-form
-                                       form-key
-                                       state
-                                       session
-                                       organization-service)})
+                   (api/context "/excel" []
+                     (api/GET "/form/:form-key" {session :session}
+                              :path-params [form-key :- s/Str]
+                              :query-params [{state :- [s/Str] nil}]
+                              :summary "Return Excel export of the form and applications for it."
+                              {:status  200
+                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-form form-key))}
+                               :body    (application-service/get-excel-report-of-applications-by-form
+                                          form-key
+                                          state
+                                          session
+                                          organization-service)})
 
-                   (api/GET "/excel/:form-key/:hakukohde-oid" {session :session}
-                            :path-params [form-key :- s/Str
-                                          hakukohde-oid :- s/Str]
-                            :query-params [{state :- [s/Str] nil}]
-                            :summary "Return Excel export of the form and hakukohde and applications for it."
-                            {:status  200
-                             :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                       "Content-Disposition" (str "attachment; filename=" (excel/filename form-key hakukohde-oid))}
-                             :body    (application-service/get-excel-report-of-applications-by-hakukohde
-                                       form-key
-                                       state
-                                       hakukohde-oid
-                                       session
-                                       organization-service)}))
+                     (api/GET "/hakukohde/:hakukohde-oid" {session :session}
+                              :path-params [hakukohde-oid :- s/Str]
+                              :query-params [{state :- [s/Str] nil}]
+                              :summary "Return Excel export of the hakukohde and applications for it."
+                              {:status  200
+                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session))}
+                               :body    (application-service/get-excel-report-of-applications-by-hakukohde
+                                          hakukohde-oid
+                                          state
+                                          session
+                                          organization-service)})
 
-                 (api/GET "/hakukohteet" []
+                     (api/GET "/haku/:haku-oid" {session :session}
+                              :path-params [haku-oid :- s/Str]
+                              :query-params [{state :- [s/Str] nil}]
+                              :summary "Return Excel export of the haku and applications for it."
+                              {:status  200
+                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session))}
+                               :body    (application-service/get-excel-report-of-applications-by-haku
+                                          haku-oid
+                                          state
+                                          session
+                                          organization-service)})))
+
+                 (api/GET "/hakukohteet" {session :session}
                           :summary "List hakukohde information found for applications stored in system"
-                          :return [{:hakukohde      s/Str
-                                    :hakukohde-name s/Str
-                                    :form-key       s/Str}]
-                          (ok (ataru.applications.application-store/get-hakukohteet)))
+                          :return [{:hakukohde         s/Str
+                                    :hakukohde-name    s/Str
+                                    :application-count s/Int}]
+                          (ok (access-controlled-hakukohde/get-hakukohteet session organization-service)))
+
+                 (api/GET "/haut" {session :session}
+                          :summary "List haku information found for applications stored in system"
+                          :return [ataru-schema/Haku]
+                          (ok (access-controlled-haku/get-haut session organization-service)))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
@@ -261,7 +287,6 @@
                               (when (:dev? env) rich-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
-                                buildversion-routes
                                 test-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session

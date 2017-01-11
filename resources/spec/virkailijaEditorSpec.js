@@ -31,7 +31,7 @@
   function formComponents() {
     return testFrame().find('.editor-form__component-wrapper')
       // exclude followup question components
-      .not('.editor-form__followup-question-overlay  > div > .editor-form__component-wrapper')
+      .not('.editor-form__followup-question-overlay > div > div > .editor-form__component-wrapper')
   }
 
   function formSections() {
@@ -40,6 +40,12 @@
 
   function clickComponentMenuItem(title) {
     function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
+    return clickElement(menuItem)
+  }
+
+  function clickSubComponentMenuItem(title, element) {
+    function menuItem() {
+      return element().find('.editor-form__add-component-toolbar a:contains("'+ title +'")') }
     return clickElement(menuItem)
   }
 
@@ -304,10 +310,27 @@
         })
       })
 
+      describe('adjacent fields', function() {
+        before(
+          clickComponentMenuItem('Vierekkäiset tekstikentät'),
+          setTextFieldValue(function() { return formComponents().eq(12).find('.editor-form__text-field') }, 'Vierekkäinen tekstikenttä'),
+          clickSubComponentMenuItem('Tekstikenttä', function() { return formComponents().eq(12)}),
+          setTextFieldValue(function() {
+            return formComponents().eq(12).find('.editor-form__adjacent-fieldset-container .editor-form__text-field')
+          }, 'Tekstikenttä 1'),
+          clickSubComponentMenuItem('Tekstikenttä', function() { return formComponents().eq(12)}),
+          setTextFieldValue(function() {
+            return formComponents().eq(12).find('.editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1)
+          }, 'Tekstikenttä 2')
+        )
+        it('🌸  is working so wonderfully 🌸', function() {})
+      })
+
       describe('autosave', function () {
         before(
           wait.until(function() {
-            return testFrame().find('.top-banner .flasher span').text() === 'Kaikki muutokset tallennettu'
+            var flasher = testFrame().find('.top-banner .flasher')
+            return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
           }, 5000)
         )
         it('notification shows success', function() {

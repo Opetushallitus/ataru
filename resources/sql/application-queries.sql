@@ -1,9 +1,9 @@
 -- name: yesql-add-application-query<!
 -- Add application
 insert into applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, hakukohde_name, secret)
+(form_id, key, content, lang, preferred_name, last_name, hakukohde, hakukohde_name, haku, haku_name, secret)
 values
-(:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :hakukohde_name, :secret);
+(:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :hakukohde_name, :haku, :haku_name, :secret);
 
 -- name: yesql-get-application-list-by-form
 select a.id,
@@ -29,8 +29,54 @@ select a.id,
   ar.score as score,
   a.form_id as form
 from applications a
+join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
+where a.hakukohde = :hakukohde_oid
+and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+order by a.created_time desc;
+
+-- name: yesql-get-full-application-list-by-hakukohde
+select a.id,
+  a.key,
+  a.lang,
+  a.preferred_name || ' ' ||  a.last_name as applicant_name,
+  a.created_time,
+  ar.state as state,
+  ar.score as score,
+  a.form_id as form
+from applications a
   join application_reviews ar on a.key = ar.application_key
 where a.hakukohde = :hakukohde_oid
+order by a.created_time desc;
+
+-- name: yesql-get-application-list-by-haku
+select a.id,
+  a.key,
+  a.lang,
+  a.preferred_name || ' ' ||  a.last_name as applicant_name,
+  a.created_time,
+  ar.state as state,
+  ar.score as score,
+  a.form_id as form
+from applications a
+join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
+where a.haku = :haku_oid
+and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+order by a.created_time desc;
+
+-- name: yesql-get-full-application-list-by-haku
+select a.id,
+  a.key,
+  a.lang,
+  a.preferred_name || ' ' ||  a.last_name as applicant_name,
+  a.created_time,
+  ar.state as state,
+  ar.score as score,
+  a.form_id as form
+from applications a
+join application_reviews ar on a.key = ar.application_key
+where a.haku = :haku_oid
 order by a.created_time desc;
 
 -- name: yesql-get-application-events
@@ -61,11 +107,31 @@ select
   a.content,
   a.hakukohde,
   a.hakukohde_name,
-  ar.state as state
+  ar.state as state,
+  f.key as form_key
 from applications a
 join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
 where state in (:filtered_states)
 and a.hakukohde = :hakukohde_oid;
+
+-- name: yesql-get-applications-for-haku
+-- Get applications for form-key/haku
+select
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.haku_name,
+  ar.state as state,
+  f.key as form_key
+from applications a
+join application_reviews ar on a.key = ar.application_key
+join forms f on a.form_id = f.id
+where state in (:filtered_states) and a.haku = :haku_oid;
 
 -- name: yesql-get-application-by-id
 select id, key, lang, form_id as form, created_time, content, secret from applications where id = :application_id;
@@ -135,10 +201,35 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-select distinct a.hakukohde, a.hakukohde_name, f.key as form_key
-from applications a
-  join forms f on a.form_id = f.id
-where hakukohde is not null and hakukohde_name is not null;
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
+FROM applications a1
+INNER JOIN forms f1 ON a1.form_id = f1.id
+WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
+AND (f1.organization_oid IN (:authorized_organization_oids) OR f1.organization_oid IS NULL)
+GROUP BY a1.hakukohde, a1.hakukohde_name;
+
+-- name: yesql-get-all-hakukohteet-from-applications
+-- Get hakukohde info from applications
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
+FROM applications a1
+WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
+GROUP BY a1.hakukohde, a1.hakukohde_name;
+
+-- name: yesql-get-haut-from-applications
+-- Get haku info from applications
+SELECT a1.haku, a1.haku_name, COUNT(a1.id) AS application_count
+FROM applications a1
+INNER JOIN forms f1 ON (a1.form_id = f1.id)
+WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
+AND (f1.organization_oid IN (:authorized_organization_oids) OR f1.organization_oid IS NULL)
+GROUP BY a1.haku, a1.haku_name;
+
+-- name: yesql-get-all-haut-from-applications
+-- Get haku info from applications
+SELECT a1.haku, a1.haku_name, COUNT(a1.id) AS application_count
+FROM applications a1
+WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
+GROUP BY a1.haku, a1.haku_name;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
@@ -153,3 +244,20 @@ SELECT
   a.hakukohde_name
 FROM applications a
 WHERE a.hakukohde = :hakukohde_oid;
+
+-- name: yesql-get-application-count-by-form-key
+-- Get count of applications by form key, including all versions of the form
+SELECT COUNT(a.id) as application_count
+FROM forms f
+LEFT JOIN applications a ON f.id = a.form_id
+WHERE f.key = :form_key
+AND (f.deleted is null or f.deleted = false)
+AND (a.hakukohde IS NULL OR a.hakukohde = '');
+
+-- name: yesql-get-application-count-with-deleteds-by-form-key
+-- Get count of applications by form key, including all versions of the form
+SELECT COUNT(a.id) as application_count
+FROM forms f
+LEFT JOIN applications a ON f.id = a.form_id
+WHERE f.key = :form_key
+AND (a.hakukohde IS NULL OR a.hakukohde = '');

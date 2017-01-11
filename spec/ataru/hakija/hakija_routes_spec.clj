@@ -40,7 +40,7 @@
 (defn- have-any-application-in-db
   []
   (let [app-count
-        (+ (count (soresu-db/exec :db yesql-get-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
+        (+ (count (soresu-db/exec :db yesql-get-full-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
            (count (soresu-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 

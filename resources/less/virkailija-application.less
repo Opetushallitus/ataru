@@ -4,6 +4,7 @@
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
+@form-column-width: 33%;
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -18,94 +19,171 @@
   }
 }
 
-.application-handling__header {
+.application-handling__form-list-search-row {
   display: flex;
-  align-items: flex-start;
-  padding-bottom: 20px;
-  border-bottom: 1px solid @bottom-separator-color;
-  margin-bottom: 10px;
+  flex-flow: row nowrap;
+  margin: 15px 20px 5px;
 }
 
-.application-handling__form-list-wrapper {
+.application-handling__input-field-clear-button {
+  cursor: pointer;
+  position: relative;
+  right: 20px;
+  top: 14px;
+}
+
+.application-handling__input-field-clear-button--disabled {
+  visibility: hidden;
+}
+
+.application-handling__form-list-close-button {
+  .semibold;
+
+  color: @application-form-list-close-color;
+  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+
+.application-handling__form-list-search-input {
+  border: 1px solid @section-header-text;
+  border-radius: 2px;
+  color: @text-color;
+  font-size: 16px;
+  height: 43px;
+  padding: 10px 28px 11px 14px;
+  width: 395px;
+}
+
+.application-handling__form-list-wrapper-outer {
   position: relative;
   display: inline-block;
   width: 100%;
   min-width: 300px;
   margin-right: 20px;
-}
-
-.application-handling__form-list-open {
-  position: absolute;
-  width: 100%;
-  background-color: #fafafa;
-  border-radius: 2px;
-  border: solid 1px #E5E4E4;
-  box-shadow: 0 0 2px 0 rgba(0,0,0,0.12), 0 2px 2px 0 rgba(0,0,0,0.24);
   z-index: 15;
-  margin: -5px 0 20px -13px;
 }
 
-.application-handling__form-list-open::-webkit-scrollbar {
-  width: 7px;
-  background-color: #f2f2f2;
+.application-handling__form-list-wrapper-inner {
+  background-color: @application-form-list-background-color;
+  box-shadow: 1px 2px 5px #b3b3b3;
+  padding-left: 20px;
+  padding-right: 20px;
+  position: absolute;
+  top: 45px;
+  width: 100%;
+  z-index: 15;
 }
 
-.application-handling__form-list-open::-webkit-scrollbar-thumb {
+.application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
   background-color: #9B9B9B;
   border-radius: 5px;
 }
 
-.application-handling__form-list-row-link {
-  text-decoration: none;
+.application-handling__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid @bottom-separator-color;
+  margin-bottom: 10px;
+  padding-left: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.application-handling__form-list-row {
+.application-handling__header-text-container {
   cursor: pointer;
-  font-size: 16px;
-  color: @text-color;
-  line-height: 125%;
-  padding: 8px 13px;
-  margin-left: 35px;
 }
 
-.application-handling__form-list-row:hover {
-  background: #f5f5f5;
-  border-radius: 3px;
+.application-handling__form-list-column-wrapper {
+  display: flex;
+  flex-flow: row nowrap;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.application-handling__form-list-closed .application-handling__form-list-row {
+.application-handling__form-list-indicator {
+  top: 30px;
+  left: 9px;
+  width: 21px;
+  height: 15px;
+  position: absolute;
+  overflow: hidden;
+  z-index: 16;
+}
+
+.application-handling__form-list-indicator:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: @application-form-list-background-color;
+  transform: rotate(135deg);
+  top: 10px;
+  left: 7px;
+  box-shadow: 0px -1px 3px #b3b3b3;
+}
+
+.application-handling__form-list-column-and-header-container {
+  display: flex;
+  flex: 0 0 @form-column-width;
+  flex-flow: column nowrap;
+  min-width: 250px;
+}
+
+.application-handling__form-list-column-links-container {
+  margin-bottom: 20px;
+  margin-top: 10px;
+  max-height: calc(~"100vh - 300px");
+  overflow-y: auto;
+  font-size: 15px;
+}
+
+.application-handling__form-list-column-header {
+  border-bottom: 1px solid #E3ECEF;
+  padding: 10px 20px;
+}
+
+.application-handling__form-list-column-header--no-results {
+  color: @disabled-list-item-color;
+}
+
+.application-handling__form-list-link-container {
+  padding-right: 20px;
+  padding-left: 20px;
+  padding-top: 10px;
+}
+
+.application-handling__form-list-link-container:first-of-type {
+  padding-top: 0px;
+}
+
+.application-handling__form-list-link--hilight {
+  background-color: @application-form-list-hilight-background-color;
+}
+
+.application-handling__form-list-header {
   font-size: 24px;
   .semibold;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 23px;
-}
-
-.application-handling__form-list-closed .application-handling__form-list-row:hover {
-  background: none;
+  margin-left: 15px;
 }
 
 .application-handling__form-list-arrow {
   color: #06526B;
-  cursor: pointer;
   font-size: 26px;
-  position: absolute;
-  left: 0;
 }
 
-.application-handling__form-list-open-wrapper .application-handling__form-list-arrow {
-  z-index: 4;
-}
-
-.application-handling__form-list-deleted-row {
+.application-handling__form-list-link--deleted {
   color: @disabled-list-item-color;
-}
-
-.application-handling__form-list-open-wrapper .application-handling__form-list-selected-row, .application-handling__form-list-open-wrapper .application-handling__form-list-selected-row:hover{
-	background: #00526c;
-	color: #fff;
-    border-radius: 3px;
 }
 
 .application-handling__excel-download-link {
@@ -129,19 +207,19 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection {
-  border-radius: 2px;
-  text-transform: uppercase;
+  border-radius: 3px;
   position: absolute;
   z-index: 10;
   top: 30px;
   left: -56px;
   text-align: start;
   background-color: white;
-  min-width: 263px;
-  padding: 11px;
+  min-width: 220px;
+  padding: 11px 0 12px 1px;
   box-shadow: 1px 2px 5px #b3b3b3;
   font-size: 13px;
   overflow: hidden;
+  line-height: 21px;
 }
 
 .application-handling__filter-state-selection-row {
@@ -152,8 +230,8 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
-  margin-left: 10px;
-  color: @pale-blue;
+  margin-left: 9px;
+  color: #06526B;
 }
 
 .application-handling__filter-state-selection-arrow-up {
@@ -188,6 +266,10 @@ and (max-width: 1000px) {
   padding: 0.5em;
   margin: 0;
   display: block;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -294,7 +376,6 @@ and (max-width: 1000px) {
 .application-handling__review-state-list-opened {
   position: absolute;
   background-color: @very-light-gray;
-  border: solid @gray 1px;
   border-radius: 2px;
   box-shadow: 1px 2px 5px #b3b3b3;
 }
@@ -311,12 +392,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-row:hover {
-  background-color: white;
+  background-color: #e8f3f6;
 }
 
 .application-handling__review-state-row.application-handling__review-state-selected-row {
   color: @text-color;
-  background-color: #ece9e9;
+  background-color: #d4eaf1;
   border-radius: 2px;
   margin-left: 0;
   padding-left: 9px;
@@ -434,6 +515,14 @@ and (max-width: @desktop-content-width) {
    */
   .application__row-field.application__form-field, .application__form-field {
     margin-left: 10px;
+  }
+
+  .application-handling__form-list-column-wrapper {
+    flex-flow: row wrap;
+  }
+
+  .application-handling__form-list-column-and-header-container {
+    flex: 1 0 @form-column-width;
   }
 }
 

@@ -35,6 +35,7 @@
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
 
 (defn mount-root []
+  (re-frame/clear-subscription-cache!)
   (reagent/render [form-view]
                   (.getElementById js/document "app")))
 

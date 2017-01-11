@@ -65,6 +65,11 @@ nuke-test-db() {
     ./bin/lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
 }
 
+create-db-schema() {
+    echo "Creating DB schema diagrams"
+    ./bin/lein db-schema
+}
+
 create-uberjar() {
     clean
     build-clojurescript-hakija
@@ -109,6 +114,9 @@ case "$command" in
         ;;
     "create-uberjar" )
         create-uberjar
+        ;;
+    "create-db-schema" )
+        create-db-schema
         ;;
     "test-clojure" )
         test-clojure

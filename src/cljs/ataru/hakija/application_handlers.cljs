@@ -326,7 +326,9 @@
     (assoc-in db [:application :ui]
       (->> (autil/flatten-form-fields (:content (:form db)))
         (filter :followup?)
-        (map (fn [field] {(keyword (:id field)) {:visible? false}}))
+        (map (fn [field] {(keyword (:id field))
+                          ; prevent hiding followups with children
+                          {:visible? (not (empty? (:children field)))}}))
         (reduce merge)))))
 
 (reg-event-db
@@ -343,13 +345,14 @@
         (update-in [:application :answers id]
           (fn [{:keys [values] :as answer}]
             (let [required? (some? ((set (:validators field-descriptor)) "required"))]
-              (assoc answer :valid
+              (assoc answer
+                :valid
                 (boolean
                   (some->>
-                    (map :valid (or
-                                  (not-empty values)
-                                  [{:valid (not required?)}]))
-                    not-empty
+                      (map :valid (or
+                                    (not-empty values)
+                                    [{:valid (not required?)}]))
+                      not-empty
                     (every? true?))))))))))
 
 (reg-event-db

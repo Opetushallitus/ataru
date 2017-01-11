@@ -8,6 +8,7 @@
 (ns ataru.application-common.application-readonly
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
+            [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -85,6 +86,15 @@
              (for [value values]
                [:td value]))))]]]))
 
+(defn- followups [followups content application lang]
+  [:div
+   (text content application lang)
+   (into [:div]
+     (for [followup followups
+           :when    (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?] true)]
+       [:div
+        [field followup application lang]]))])
+
 (defn field [content application lang]
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
@@ -92,6 +102,8 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
+         {:fieldClass "formField" :fieldType "dropdown" :options (options :guard util/followups?)}
+         [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))
 
 (defn- application-language [{:keys [lang]}]
@@ -100,25 +112,12 @@
         clojure.string/lower-case
         keyword)))
 
-(defn- followup [application lang ui followups]
-  (into [:div]
-    (for [{:keys [followup]} followups
-          :when              (get-in ui [(keyword (:id followup)) :visible?] true)]
-      [field followup application lang])))
-
 (defn readonly-fields [form application]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [form application]
-      (when form
-        (let [lang (or (:selected-language form)          ; languages is set to form in the applicant side
-                       (application-language application) ; language is set to application when in officer side
-                       :fi)]
-          (into [:div.application__readonly-container]
-            (for [content (:content form)
-                  :when (get-in @ui [(keyword (:id content)) :visible?] true)]
-              (if-let [followups (not-empty (filter :followup (:options content)))]
-                [:div
-                 [field content application lang]
-                 [followup application lang @ui followups]]
-
-                [field content application lang]))))))))
+  (when form
+    (let [lang (or (:selected-language form)        ; languages is set to form in the applicant side
+                 (application-language application) ; language is set to application when in officer side
+                 :fi)]
+      (into [:div.application__readonly-container]
+        (for [content (:content form)
+              :when   (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+          [field content application lang])))))

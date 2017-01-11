@@ -1,7 +1,7 @@
 (ns ataru.forms.form-store
   (:require [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
             [ataru.log.audit-log :as audit-log]
-            [ataru.db.extensions]                           ; don't remove, timestamp/jsonb coercion
+            [ataru.db.extensions] ; don't remove, timestamp/jsonb coercion
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]

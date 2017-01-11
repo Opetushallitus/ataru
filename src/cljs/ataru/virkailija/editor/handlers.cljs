@@ -156,12 +156,8 @@
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update-fx
                     (fn [{:keys [db]}]
-                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)
-                            followup? (= :followup (last path))]
-                        (if followup?
-                          {:db forms-meta-db
-                           :dispatch [:editor/followup-remove path]}
-                          {:db (remove-component forms-meta-db path)})))])))
+                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
+                        {:db (remove-component forms-meta-db path)}))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-db
@@ -215,6 +211,19 @@
         (assoc-in db [:editor :hakukohteet] hakukohteet)))
     db))
 
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:editor :haut] haut)))
+
+(reg-event-fx
+  :editor/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
+
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
@@ -246,8 +255,15 @@
   :editor/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
-        (update-in [:editor] dissoc :selected-form-key)
+        (update-in [:editor] dissoc :selected-form-key :selected-haku)
         (assoc-in [:editor :selected-hakukohde] hakukohde))))
+
+(reg-event-db
+  :editor/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :editor dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:editor :selected-haku] haku))))
 
 (reg-event-db
   :editor/select-form
@@ -415,7 +431,7 @@
 
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
-    (if (spy (-> b (< a)))
+    (if (-> b (< a))
       [b :children xb]       ; topwards
       [(dec b) :children xb] ; bottomwards
       )

@@ -89,6 +89,14 @@
             :path                (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
             :handler-or-dispatch :application/handle-fetch-applications-response}}))
 
+(reg-event-fx
+  :application/fetch-applications-by-haku
+  (fn [{:keys [db]} [_ haku-oid]]
+    {:db   db
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid)
+            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+
 (reg-event-db
  :application/review-updated
  (fn [db [_ response]]
@@ -147,3 +155,13 @@
           (update-application-details application-response)
           (start-application-review-autosave))))
     (assoc db [:application :review-autosave] nil)))
+
+(reg-event-db
+  :application/search-form-list
+  (fn [db [_ search-term]]
+    (assoc-in db [:application :search-term] search-term)))
+
+(reg-event-db
+  :application/clear-search-term
+  (fn [db]
+    (assoc-in db [:application :search-term] nil)))
