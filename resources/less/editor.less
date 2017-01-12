@@ -381,12 +381,11 @@ section.editor-form > div > .editor-form__component-wrapper {
 .editor-form__text-field {
   color: @text-color;
   font-size: 16px;
-  border-radius: 2px;
   padding: 10px 28px 11px 14px;
   height: 43px;
   width: 434px;
-  border: 1px solid #AEAEAE;
-  box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.20);
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
+  border: 1px solid #C1C1C1;
   border-radius: 2px;
 }
 
@@ -420,6 +419,7 @@ section.editor-form > div > .editor-form__component-wrapper {
 
 .editor-form__multi-options-remove--cross {
   margin-left: 10px;
+  color: #ccc;
 }
 
 .editor-form__multi-options-wrapper-inner {
@@ -508,10 +508,10 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__button--left-edge {
-  border-radius: 2px 0 0 2px;
+  border-radius: 3px 0 0 3px;
 }
 .editor-form__button--right-edge {
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 3px 3px 0;
 }
 
 .editor-form__button:checked + label {
@@ -686,6 +686,7 @@ form > div > .editor-form__component-wrapper {
   padding: 10px;
   margin: 10px 0;
   position: relative;
+  font-weight: 600;
 }
 
 .editor-form__koodisto-popover-close {
@@ -722,7 +723,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__followup-question {
-  margin-left: 30px;
+  margin-left: 28px;
   font-size: 14px;
 }
 

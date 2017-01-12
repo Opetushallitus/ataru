@@ -248,7 +248,7 @@
                       (dispatch [:editor/select-custom-multi-options path]))}]
        [:label
         {:for   custom-button-id
-         :class "editor-form-button--left-edge"}
+         :class "editor-form__button--left-edge"}
         custom-button-value]
        [:input
         {:type      "radio"
@@ -262,7 +262,7 @@
                       (reset! koodisto-popover-expanded? true))}]
        [:label
         {:for   koodisto-button-id
-         :class "editor-form-button--right-edge"}
+         :class "editor-form__button--right-edge"}
         @koodisto-button-value]
        (when @koodisto-popover-expanded?
          [:div.editor-form__koodisto-popover
