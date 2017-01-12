@@ -229,7 +229,8 @@
 (def ^:private invalid-char-matcher #"[\\/\*\[\]:\?]")
 
 (defn- sheet-name [{:keys [id name]}]
-  {:pre [(some? name)]}
+  {:pre [(some? id)
+         (some? name)]}
   (let [name (str id "_" (clojure.string/replace name invalid-char-matcher "_"))]
     (cond-> name
       (> (count name) 30)
