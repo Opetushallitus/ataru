@@ -7,9 +7,9 @@
            :created-by   "SEPPO PAPUNEN"
            :created-time (c/date-time 2016 6 14 12 34 56)
            :content      [{:id       "form_field_0"
-                           :label    "Lomakeosio"
+                           :label    {:fi "Lomakeosio"}
                            :children [{:id         "form_field_0_0"
-                                       :label      "Kysymys 1"
+                                       :label      {:fi "Kysymys 1"}
                                        :fieldType  "textField"
                                        :fieldClass "formField"}]}]})
 
@@ -17,10 +17,16 @@
                            :key          "application_9432_key"
                            :created-time (c/date-time 2016 6 15 12 34 56)
                            :state        "unprocessed"
-                           :form-id      123
+                           :form         123
+                           :name         "Standalone form"
+                           :lang         "fi"
                            :answers      [{:key       "form_field_0_0"
                                            :label     "Kysymys 1"
-                                           :value     "Vastaus 9432"
+                                           :value     "Vastaus 1"
+                                           :fieldType "textfield"}
+                                          {:key       "random_0"
+                                           :label     "Kysymys 2"
+                                           :value     "Vastaus 2"
                                            :fieldType "textfield"}]})
 
 (def application-review {:id              1
