@@ -38,7 +38,9 @@
                     (vec organizations))))
 
       (not (:organization-oid form))
-      (throw (user-feedback-exception "Lomaketta ei ole kytketty organisaatioon " (vec organizations)))
+      (throw (user-feedback-exception (str "Lomaketta ei ole kytketty organisaatioon"
+                                           (when-not (empty? organizations)
+                                             (str " " (vec organizations))))))
 
       ;The potentially new organization for form is not allowed for user
       (not (access-control-utils/organization-allowed? session organization-service (:organization-oid form)))
