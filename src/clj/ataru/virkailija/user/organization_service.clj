@@ -76,7 +76,7 @@
     (ldap-client/get-organization-oids (:ldap-connection this) user-name))
 
   (get-direct-organizations [this user-name]
-    (let [direct-oids                  (distinct (get-direct-organization-oids this user-name)) ;; distinct because of duplicates seen in production
+    (let [direct-oids                  (get-direct-organization-oids this user-name)
           [group-oids normal-org-oids] ((juxt filter remove) group-oid? direct-oids)
           normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client this) %) normal-org-oids))
           groups                       (map (partial
