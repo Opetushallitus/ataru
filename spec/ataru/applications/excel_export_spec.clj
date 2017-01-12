@@ -49,10 +49,12 @@
     (with-redefs [application-store/get-application-review (fn [& _] fixtures/application-review)
                   form-store/fetch-by-id (fn [id]
                                            (case id
-                                             123 fixtures/form))
+                                             123 fixtures/form
+                                             321 fixtures/form-for-hakukohde))
                   form-store/fetch-by-key (fn [key]
                                             (case key
-                                              "form_123_key" fixtures/form))]
+                                              "form_123_key" fixtures/form
+                                              "form_321_key" fixtures/form-for-hakukohde))]
       (spec)))
 
 
@@ -68,4 +70,16 @@
         (verify-row application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 1" "Kysymys 2" "Muistiinpanot" "Pisteet"])
         (verify-row application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Käsittelemättä" "Vastaus 1" "Vastaus 2" "Some notes about the applicant"])
         (verify-row application-sheet 2 nil)
-        (verify-pane-information application-sheet)))))
+        (verify-pane-information application-sheet))))
+
+  (it "should export applications for a hakukohde with haku"
+    (with-excel [file [fixtures/application-for-hakukohde]]
+      (let [workbook          (WorkbookFactory/create file)
+            metadata-sheet    (.getSheetAt workbook 0)
+            application-sheet (.getSheetAt workbook 1)]
+        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+        (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+        (verify-row metadata-sheet 2 nil)
+        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 3" "Kysymys 4" "Muistiinpanot" "Pisteet"])
+        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Vastaus 3" "Vastaus 4" "Some notes about the applicant"])
+        (verify-row application-sheet 2 nil)))))
