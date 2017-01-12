@@ -14,16 +14,16 @@
                                        :fieldClass "formField"}]}]})
 
 (def form-for-hakukohde {:id           321
-           :key          "form_321_key"
-           :name         "Form name"
-           :created-by   "IRMELI KUIKELOINEN"
-           :created-time (c/date-time 2016 6 14 12 34 56)
-           :content      [{:id       "form_field_1"
-                           :label    {:fi "Lomakeosio"}
-                           :children [{:id         "form_field_1_0"
-                                       :label      {:fi "Kysymys 3"}
-                                       :fieldType  "textField"
-                                       :fieldClass "formField"}]}]})
+                         :key          "form_321_key"
+                         :name         "Form name"
+                         :created-by   "IRMELI KUIKELOINEN"
+                         :created-time (c/date-time 2016 6 14 12 34 56)
+                         :content      [{:id       "form_field_1"
+                                         :label    {:fi "Lomakeosio"}
+                                         :children [{:id         "form_field_1_0"
+                                                     :label      {:fi "Kysymys 3"}
+                                                     :fieldType  "textField"
+                                                     :fieldClass "formField"}]}]})
 
 (def application-for-form {:id           9432
                            :key          "application_9432_key"
