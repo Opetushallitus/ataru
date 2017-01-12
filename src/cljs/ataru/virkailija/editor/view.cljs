@@ -147,7 +147,7 @@
 
 (defn form-owner-organization [form]
   (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
-        org-count     (fn [orgs] (count orgs))
+        many-orgs     (fn [orgs] (> (count orgs) 1))
         opened?       (r/atom false)
         toggle-open   (fn [evt] (swap! opened? not))]
     (fn [form]
@@ -160,9 +160,10 @@
           [:div.editor-form__owner-control
            [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
            [:a
-            {:on-click toggle-open}
+            {:on-click toggle-open
+             :class (if (many-orgs @organizations) "" "editor-form__form-owner-selection-disabled-link")}
             selected-org-name]
-           (when @opened?
+           (when (and @opened? (many-orgs @organizations))
              [:div.editor-form__form-owner-selection-anchor
               [:div.editor-form__owner-selection-arrow-up]
               (into [:div.editor-form__form-owner-selection--opened
