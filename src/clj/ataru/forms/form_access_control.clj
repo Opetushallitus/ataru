@@ -7,6 +7,8 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
+(defn- organizations [session] (-> session :identity :organizations))
+
 (defn form-allowed-by-key? [form-key session organization-service]
   (access-control-utils/organization-allowed?
    session
@@ -21,48 +23,57 @@
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))))
 
-(defn- check-authenticated [form session organization-service do-fn]
-  (let [user-name         (-> session :identity :username)
-        organization-oids (access-control-utils/org-oids session)
-        org-count         (count organization-oids)]
-    (if (not= 1 org-count)
-      (do
-        (warn (str "User "
-                   user-name
-                   " has the wrong amount of organizations: "
-                   (count organization-oids)
-                   " (required: exactly one).  can't attach form to an ambiguous organization: "
-                   (vec organization-oids)))
-        (throw (user-feedback-exception
-                 (if (= 0 org-count)
-                   "Käyttäjätunnukseen ei ole liitetty organisaatota"
-                   "Käyttäjätunnukselle löytyi monta organisaatiota")))))
-    (if (and
-          (:id form) ; Updating, since form already has id
-          (not (form-allowed-by-id? (:id form) session organization-service)))
+(defn- check-authorization [form session organization-service do-fn]
+  (let [user-name     (-> session :identity :username)
+        organizations (organizations session)
+        org-count     (count organizations)]
+    (cond
+      (and
+       (:id form) ; Updating, since form already has id
+       (not (form-allowed-by-id? (:id form) session organization-service)))
       (throw (user-feedback-exception
                (str "Ei oikeutta lomakkeeseen "
                     (:id form)
                     " organisaatioilla "
-                    (vec organization-oids)))))
-    (do-fn)))
+                    (vec organizations))))
+
+      (not (:organization-oid form))
+      (throw (user-feedback-exception (str "Lomaketta ei ole kytketty organisaatioon"
+                                           (when-not (empty? organizations)
+                                             (str " " (vec organizations))))))
+
+      ;The potentially new organization for form is not allowed for user
+      (not (access-control-utils/organization-allowed? session organization-service (:organization-oid form)))
+      (throw (user-feedback-exception
+              (str "Ei oikeutta organisaatioon "
+                   (:organization-oid form)
+                   " käyttäjän organisaatioilla "
+                   (vec organizations))))
+
+      :else
+      (do-fn))))
 
 (defn post-form [form session organization-service]
-  (check-authenticated form session organization-service
-    (fn []
-      (let [organization-oids (access-control-utils/org-oids session)]
-        (form-store/create-form-or-increment-version!
-          (assoc form :created-by (-> session :identity :username))
-          (first organization-oids))))))
+  (let [organization-oids (access-control-utils/org-oids session)
+        first-org-oid     (first organization-oids)
+        form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
+    (check-authorization
+     form-with-org
+     session
+     organization-service
+     (fn []
+       (form-store/create-form-or-increment-version!
+        (assoc
+         form-with-org
+         :created-by (-> session :identity :username)))))))
 
 (defn delete-form [form-id session organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
-    (check-authenticated form session organization-service
+    (check-authorization form session organization-service
       (fn []
         (let [organization-oids (access-control-utils/org-oids session)]
           (form-store/create-form-or-increment-version!
-            (assoc form :deleted true)
-            (first organization-oids)))))))
+            (assoc form :deleted true)))))))
 
 (defn- application-count->form [{:keys [key] :as form} include-deleted?]
   (let [count-fn          (if include-deleted?
@@ -72,17 +83,18 @@
     (assoc form :application-count application-count)))
 
 (defn get-forms [include-deleted? session organization-service]
-  (let [organization-oids (access-control-utils/org-oids session)
+  (let [organizations     (organizations session)
+        organization-oids (map :oid organizations)
         ;; OPH organization members can see everything when they're given the correct privilege
-        forms             (->> (cond
-                                 (some #{oph-organization} organization-oids)
-                                 (form-store/get-all-forms include-deleted?)
+        forms    (->> (cond
+                        (some #{oph-organization} organization-oids)
+                        (form-store/get-all-forms include-deleted?)
 
-                                 (empty? organization-oids)
-                                 []
+                        (empty? organization-oids)
+                        []
 
-                                 :else
-                                 (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
-                                   (form-store/get-forms include-deleted? all-oids)))
-                               (map #(application-count->form % include-deleted?)))]
+                        :else
+                        (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
+                          (form-store/get-forms include-deleted? all-oids)))
+                      (map #(application-count->form % include-deleted?)))]
     {:forms forms}))

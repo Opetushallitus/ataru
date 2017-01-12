@@ -2,27 +2,28 @@
   (:require [ataru.virkailija.user.organization-client :as organization-client])
   (:import [clojure.lang IFn]))
 
-(defn org-oids [session] (map :oid (-> session :identity :organizations)))
+(defn organizations [session] (-> session :identity :organizations))
+(defn org-oids [session] (map :oid (organizations session)))
 
-(defn all-org-oids [organization-service organization-oids]
-  (let [all-organizations (.get-all-organizations organization-service organization-oids)]
-    (map :oid all-organizations)))
+(defn all-org-oids [organization-service organizations]
+  (let [all-organizations (.get-all-organizations organization-service organizations)]
+        (map :oid all-organizations)))
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
   [session organization-service organization-oid-handle]
-  (let [organization-oids (org-oids session)]
+  (let [organizations (organizations session)]
     (cond
-      (some #{organization-client/oph-organization} organization-oids)
+      (some #{organization-client/oph-organization} (map :oid organizations))
       true
 
-      (empty? organization-oids)
+      (empty? organizations)
       false
 
       :else
-      (let [organization-oid (if (instance? IFn organization-oid-handle)
+      (let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
                                (organization-oid-handle)
                                organization-oid-handle)]
         (-> #{organization-oid}
-            (some (all-org-oids organization-service organization-oids))
+            (some (all-org-oids organization-service organizations))
             boolean)))))

@@ -28,25 +28,27 @@
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
 
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (let [organization-oids (access-control-utils/org-oids session)]
-    (cond (some #{organization-client/oph-organization} organization-oids)
+  (let [organizations     (access-control-utils/organizations session)
+        organization-oids (map :oid organizations)]
+    (cond (some #{organization-client/oph-organization} (map :oid organizations))
           {:applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid)}
 
           (empty? organization-oids)
           []
 
           :else
-          (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
+          (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
             {:applications (application-store/get-application-list-by-hakukohde hakukohde-oid all-oids)}))))
 
 (defn get-application-list-by-haku [haku-oid session organization-service]
-  (let [organization-oids (access-control-utils/org-oids session)]
-    (cond (some #{organization-client/oph-organization} organization-oids)
+  (let [organizations     (access-control-utils/organizations session)
+        organization-oids (map :oid organizations)]
+    (cond (some #{organization-client/oph-organization} (map :oid organizations))
           {:applications (application-store/get-full-application-list-by-haku haku-oid)}
 
           (empty? organization-oids)
           []
 
           :else
-          (let [all-oids (access-control-utils/all-org-oids organization-service organization-oids)]
+          (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
             {:applications (application-store/get-application-list-by-haku haku-oid all-oids)}))))

@@ -4,7 +4,8 @@
             [ataru.virkailija.user.organization-client :as organization-client]))
 
 (defn get-hakukohteet [session organization-service]
-  (let [organization-oids (access-control-utils/org-oids session)]
+  (let [organizations     (access-control-utils/organizations session)
+        organization-oids (map :oid organizations)]
     (cond (some #{organization-client/oph-organization} organization-oids)
           (application-store/get-all-hakukohteet)
 
@@ -12,4 +13,4 @@
           []
 
           :else
-          (application-store/get-hakukohteet (access-control-utils/all-org-oids organization-service organization-oids)))))
+          (application-store/get-hakukohteet (access-control-utils/all-org-oids organization-service organizations)))))

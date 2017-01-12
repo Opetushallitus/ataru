@@ -50,17 +50,17 @@
           (tags :unit)
 
           (around [spec]
-    (with-redefs [store/exec-db (fn [ds-key query-fn params]
-                                  (should= :db ds-key)
-                                  (should= "yesql-get-applications-for-form" (-> query-fn .meta :name))
-                                  (should= {:form_key "abcdefghjkl" :filtered_states ["unprocessed"]} params)
-                                  (filter #(nil? (:hakukohde %)) fixtures/applications))]
-      (spec)))
+                  (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                                (should= :db ds-key)
+                                                (should= "yesql-get-applications-for-form" (-> query-fn .meta :name))
+                                                (should= {:form_key "abcdefghjkl" :filtered_states ["unprocessed"]} params)
+                                                (filter #(nil? (:hakukohde %)) fixtures/applications))]
+                    (spec)))
 
           (it "should return all applications belonging to a form"
               (should=
-                (mapv #(select-keys % [:id :key]) expected-applications)
-                (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key ["unprocessed"])))))
+               (mapv #(select-keys % [:id :key]) expected-applications)
+               (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key ["unprocessed"])))))
 
 (describe "get-applications"
           (tags :unit)
@@ -71,14 +71,14 @@
                                                 (should= "yesql-get-applications-for-hakukohde" (-> query-fn .meta :name))
                                                 (should= {:filtered_states ["unprocessed"]
                                                           :hakukohde_oid   hakukohde-oid}
-                                                          params)
+                                                         params)
                                                 (filter #(and (= (:hakukohde %) hakukohde-oid) (= (:form_id %) 703)) fixtures/applications))]
                     (spec)))
 
           (it "should return all applications belonging to a hakukohde"
               (should=
-                expected-hakukohde-application-ids
-                (mapv :id (store/get-applications-for-hakukohde ["unprocessed"] hakukohde-oid)))))
+               expected-hakukohde-application-ids
+               (mapv :id (store/get-applications-for-hakukohde ["unprocessed"] hakukohde-oid)))))
 
 (describe "setting person oid to application"
           (tags :unit)
@@ -86,9 +86,9 @@
           (it "should set person oid to the application"
               (let [expected (assoc (first fixtures/applications) :person-oid person-oid)]
                 (with-redefs [store/exec-db (fn [ds-key query-fn params]
-                                    (should= :db ds-key)
-                                    (should= "yesql-add-person-oid!" (-> query-fn .meta :name))
-                                    (should= {:id 1 :person_oid person-oid} params)
-                                    expected)]
+                                              (should= :db ds-key)
+                                              (should= "yesql-add-person-oid!" (-> query-fn .meta :name))
+                                              (should= {:id 1 :person_oid person-oid} params)
+                                              expected)]
                   (should= expected
                            (store/add-person-oid (:id expected) person-oid))))))

@@ -168,30 +168,108 @@
   color: @white;
 }
 
-.editor-form__language-toolbar-outer {
+.editor-form__toolbar {
   display: flex;
-  flex-flow: column nowrap;
+  justify-content: space-between;
   margin-bottom: 15px;
   font-size: 15px;
 }
 
-.editor-form__language-toolbar-inner {
+.editor-form__language-controls {
   display: flex;
-  flex-flow: row nowrap;
-  justify-content: space-between;
 }
 
-.editor-form__language-toolbar-checkbox-container {
+.editor-form__checkbox-with-label {
+  display: flex;
+  align-items: center;
+}
+
+.editor-form__checkbox-label.editor-form__language-checkbox-label {
+  margin-bottom: 3px;
+}
+
+.editor-form__language-selections {
+  margin-right: 15px;
+  user-select: none;
+}
+
+.editor-form__form-toolbar-checkbox-container-anchor {
+  position: relative;
+}
+
+.editor-form__form-toolbar-checkbox-container {
+  position: absolute;
+  z-index: 1;
+  background-color: white;
+  top: 23px;
+  left: -108px;
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
+  width: 200px;
 }
 
-.editor-form__language-toolbar-header-text {
+.editor-form__owner-control {
+  display: flex;
+}
+
+.editor-form__owner-label {
+  margin-right: 7px;
+}
+
+.editor-form__form-owner-selection-anchor {
+  position: relative;
+}
+
+.editor-form__form-owner-selection--opened {
+  position: absolute;
+  top: 28px;
+  right: 0px;
+  min-width: 277px;
+  max-width: 330px;
+  line-height: 115%;
+  background-color: white;
+  border-radius: 2px;
+  box-shadow: 1px 2px 5px #b3b3b3;
+}
+
+.editor-form__owner-selection-row {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.editor-form__owner-selection-arrow-up {
+  top: 13px;
+  right: 247px;
+  width: 21px;
+  height: 15px;
+  position: absolute;
+  overflow: hidden;
+  z-index: 11;
+}
+
+.editor-form__owner-selection-arrow-up:after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  transform: rotate(135deg);
+  top: 10px;
+  left: 7px;
+  box-shadow: 0px -1px 3px #b3b3b3;
+}
+
+.editor-form__owner-selection-row:hover {
+  background-color: #d4eaf1;
+}
+
+.editor-form__form-toolbar-header-text {
   color: #666;
+  line-height: normal;
 }
 
-.editor-form__language-toolbar-checkbox {
+.editor-form__form-toolbar-checkbox {
   margin-right: 20px;
 }
 
@@ -444,10 +522,6 @@ form > div > .editor-form__component-wrapper {
   margin-bottom: 2px;
   margin-right: 6px;
   margin-left: -16px;
-}
-
-.editor-form__checkbox {
-  margin-right: 9px;
 }
 
 .editor-form__checkbox-wrapper {

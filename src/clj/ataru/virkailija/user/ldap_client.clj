@@ -31,7 +31,7 @@
 (defn get-organization-oids-from-description-seq [description-seq]
   (let [split-descriptions (map #(str/split % #"_") description-seq)
         last-items         (map #(last %) split-descriptions)]
-    (filter #(.contains % oid-prefix) last-items)))
+    (distinct (filter #(.contains % oid-prefix) last-items))))
 
 (defn get-user [connection user-name]
   (first (ldap/search connection people-path-base {:filter (str "(uid=" user-name ")")})))

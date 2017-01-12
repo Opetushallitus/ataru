@@ -317,35 +317,30 @@
 (reg-event-db :editor/save-form save-form)
 
 (defn- post-new-form
-  ([] (post-new-form {}))
-  ([{:keys [name
-            content
-            languages]
-     :or   {name      "Uusi lomake"
-            content   [(pm/person-info-module)]
-            languages [:fi]}}]
-   (post "/lomake-editori/api/forms"
-     {:name      name
-      :content   content
-      :languages languages}
-     (fn [db form]
-       (let [stop-fn (get-in db [:editor :autosave])
-             path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
-         (autosave/stop-autosave! stop-fn)
-         (set-history! path)
-         (assoc-in db [:editor :new-form-created?] true))))))
+  [form]
+  (post "/lomake-editori/api/forms"
+        form
+        (fn [db form]
+          (let [stop-fn (get-in db [:editor :autosave])
+                path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
+            (autosave/stop-autosave! stop-fn)
+            (set-history! path)
+            (assoc-in db [:editor :new-form-created?] true)))))
 
 (reg-event-db
   :editor/add-form
   (fn [db _]
-    (post-new-form)
+    (post-new-form
+     {:name             "Uusi lomake"
+      :content          [(pm/person-info-module)]
+      :languages        [:fi]})
     db))
 
 (defn- copy-form [db _]
   (let [form-id (get-in db [:editor :selected-form-key])
         form    (-> (get-in db [:editor :forms form-id])
                     (update :name str " - KOPIO"))]
-    (post-new-form form)
+    (post-new-form (select-keys form [:name :content :languages :organization-oid]))
     db))
 
 (reg-event-db :editor/copy-form copy-form)
@@ -389,6 +384,14 @@
       (update-in db [:editor :forms selected-form-key]
                  assoc :name
                  new-form-name))))
+
+(reg-event-db
+  :editor/change-form-organization
+  (fn [db [_ new-form-organization-oid]]
+    (with-form-key [db selected-form-key]
+      (update-in db [:editor :forms selected-form-key]
+                 assoc :organization-oid
+                 new-form-organization-oid))))
 
 (defn- remove-component-from-list
   [db source-path]

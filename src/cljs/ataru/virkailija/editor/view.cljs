@@ -115,7 +115,7 @@
 
 (defn- lang-checkbox [lang-kwd checked?]
   (let [id (str "lang-checkbox-" (name lang-kwd))]
-    [:div
+    [:div.editor-form__checkbox-with-label
      {:key id}
      [:input.editor-form__checkbox
       {:id      id
@@ -123,7 +123,7 @@
        :type    "checkbox"
        :on-change (fn [_]
                     (dispatch [:editor/toggle-language lang-kwd]))}]
-     [:label.editor-form__checkbox-label.editor-form__language-toolbar-checkbox
+     [:label.editor-form__checkbox-label.editor-form__language-checkbox-label
       {:for id}
       (get lang-versions lang-kwd)]]))
 
@@ -136,21 +136,66 @@
       :target "_blank"}
      text]))
 
-(defn language-toolbar [form]
-  (let [languages (subscribe [:editor/languages])
-        visible? (r/atom false)]
+(defn- get-org-name [org]
+  (str
+   (get-in org [:name :fi])
+   (if (= "group" (:type org))
+     " (ryhmä)"
+     "")))
+
+(defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
+
+(defn form-owner-organization [form]
+  (let [organizations (subscribe [:state-query [:editor :user-info :organizations]])
+        org-count     (fn [orgs] (count orgs))
+        opened?       (r/atom false)
+        toggle-open   (fn [evt] (swap! opened? not))]
+    (fn [form]
+      (let [selected-org-name (get-org-name-for-oid (:organization-oid form) @organizations)]
+        ;; If name is not available, selected org is a suborganization. Currently it's unsure
+        ;; if we want to show the form's organization at all in that case. If we do, we'll have to pass
+        ;; organization name from server with the form and fetch it from organization service
+        ;; and probably start caching those
+        (when (not-empty selected-org-name)
+          [:div.editor-form__owner-control
+           [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
+           [:a
+            {:on-click toggle-open}
+            selected-org-name]
+           (when @opened?
+             [:div.editor-form__form-owner-selection-anchor
+              [:div.editor-form__owner-selection-arrow-up]
+              (into [:div.editor-form__form-owner-selection--opened
+                     {:on-click toggle-open}]
+                    (map (fn [org]
+                           [:div.editor-form__owner-selection-row
+                            {:on-click (fn [evt] (dispatch [:editor/change-form-organization (:oid org)]))}
+                            (get-org-name org)])
+                         @organizations))])])))))
+
+(defn form-toolbar [form]
+  (let [languages                    (subscribe [:editor/languages])
+        language-selections-visible? (r/atom false)
+        organizations                (subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [form]
       (let [languages @languages]
-        [:div.editor-form__language-toolbar-outer
-         [:div.editor-form__language-toolbar-inner
-          [:a
+        [:div.editor-form__toolbar
+         [:div.editor-form__language-controls
+          [:a.editor-form__language-selections
            {:on-click (fn [_]
-                        (swap! visible? not)
+                        (swap! language-selections-visible? not)
                         nil)}
-           (str "Kieliversiot (" (->> languages (map (comp clojure.string/upper-case name)) (clojure.string/join ", ")) ") ")
+           "Kieliversiot "
            [:i.zmdi.zmdi-chevron-down
-            {:class (if @visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
-          [:span.editor-form__language-toolbar-header-text
+            {:class (if @language-selections-visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
+          [:div.editor-form__form-toolbar-checkbox-container-anchor
+           [:div.editor-form__form-toolbar-checkbox-container
+            (when-not @language-selections-visible?
+              {:style {:display "none"}})
+            (map (fn [lang-kwd]
+                   (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+                 (keys lang-versions))]]
+          [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
              (lang-kwd->link form (first languages) "Esikatselu")
              [:span
@@ -162,12 +207,7 @@
                                (> (dec (count languages)) idx)
                                (conj [:span " | "])))
                            languages)])]]
-         [:div.editor-form__language-toolbar-checkbox-container
-          (when-not @visible?
-            {:style {:display "none"}})
-          (map (fn [lang-kwd]
-                 (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-               (keys lang-versions))]]))))
+         [form-owner-organization form]]))))
 
 (defn form-in-use-warning
   [form]
@@ -201,8 +241,8 @@
          [close-form]
          [:div
           [editor-name]
-          ^{:key (str "language-toolbar-" (:key @form))}
-          [language-toolbar @form]
+          ^{:key (str "form-toolbar-" (:key @form))}
+          [form-toolbar @form]
           ^{:key (str "form-in-use-warning-" (:key @form))}
           [form-in-use-warning @form]]
          [c/editor]]))))
