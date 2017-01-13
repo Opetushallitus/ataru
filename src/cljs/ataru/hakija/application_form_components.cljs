@@ -417,9 +417,6 @@
 
 (defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
   (let [language              (subscribe [:application/form-language])
-        default-lang          (subscribe [:application/default-language])
-        header                (some-> (get-in field-descriptor [:label @language]))
-        info-text             (some-> (get-in field-descriptor [:params :info-text :label @language]))
         repeatable?           (-> field-descriptor :params :repeatable)
         answers               (subscribe [:state-query [:application :answers]])
         adjacent-field-change (fn [child id idx event]
