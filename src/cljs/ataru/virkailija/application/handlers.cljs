@@ -13,6 +13,7 @@
       (-> {:db db}
           (assoc-in [:db :application :selected-key] application-key)
           (assoc-in [:db :application :selected-application-and-form] nil)
+          (assoc-in [:db :application :ui :form-list-expanded?] false)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
 (defn review-state-counts [applications]

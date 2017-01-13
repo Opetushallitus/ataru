@@ -6,8 +6,9 @@
    [reagent.ratom :refer-macros [reaction]]
    [reagent.core :as r]
    [cljs-time.format :as f]
-   [ataru.virkailija.temporal :as t]
    [ataru.virkailija.application.handlers]
+   [ataru.virkailija.routes :as routes]
+   [ataru.virkailija.temporal :as t]
    [ataru.application.review-states :refer [application-review-states]]
    [ataru.application-common.application-readonly :as readonly-contents]
    [ataru.cljs-util :refer [wrap-scroll-to classnames]]
@@ -204,9 +205,12 @@
          {:on-click #(toggle-form-list-open! open)}]]])))
 
 (defn application-list-contents [applications]
-  (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
+  (let [selected-key (subscribe [:state-query [:application :selected-key]])
+        expanded?    (subscribe [:state-query [:application :ui :form-list-expanded?]])]
     (fn [applications]
-      (into [:div.application-handling__list]
+      (into [:div.application-handling__list
+             {:class (when (nil? @expanded?)
+                       "application-handling__list--expanded")}]
             (for [application applications
                   :let        [key       (:key application)
                                time      (t/time->str (:created-time application))
@@ -407,17 +411,27 @@
         ssn       (or (-> answers :ssn :value) (-> answers :birth-date :value))]
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
+(defn close-application []
+  [:a {:href     "#"
+       :on-click (fn [event]
+                   (dispatch [:set-state [:application :ui :expanded?] true])
+                   (routes/anchor-click-handler event))}
+   [:div.close-form-button
+    [:i.zmdi.zmdi-close.close-form-button-mark]]])
+
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         review-state                  (subscribe [:state-query [:application :review :state]])
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
-        included-in-filter            (fn [review-state filter] (some #{review-state} filter))]
+        included-in-filter            (fn [review-state filter] (some #{review-state} filter))
+        expanded?                     (subscribe [:state-query [:application :ui :form-list-expanded?]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
-                 (belongs-to-current-form @selected-key applications))
+              (belongs-to-current-form @selected-key applications))
         [:div.panel-content
+         [close-application]
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
