@@ -8,6 +8,7 @@
  :session {:timeout 28800}
  :email {:email_service_url "https://itest-virkailija.oph.ware.fi"}
  :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"
+                    :haku-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/"
                     :forms-in-use-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/ataru/all"}
  :public-config {:applicant {:service_url "http://localhost:8351"}
                  :virkailija {:service_url "http://localhost:8350/lomake-editori/"}}

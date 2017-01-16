@@ -20,57 +20,62 @@
           [:editor :forms (-> db :editor :selected-form-key) :content]
           path)))))
 
-(defn soresu->reagent [{:keys [children] :as content} path]
-  (fn [{:keys [children] :as content} path]
-    [:div
-     (when-not ((set path) :followup)
-       [ec/drag-n-drop-spacer path content])
+(defn soresu->reagent [content path]
+  (let [render-children (fn [children & [new-path]]
+                          (for [[index child] (map vector (range) children)]
+                            ^{:key index}
+                            [soresu->reagent child (conj (vec path) :children index)]))]
+    (fn [content path]
+      [:div
+       (when-not ((set path) :followups)
+         [ec/drag-n-drop-spacer path content])
 
-     (match content
-            {:module module}
-            [ec/module path]
+       (match content
+         {:module module}
+         [ec/module path]
 
-            {:fieldClass "wrapperElement"
-             :children   children}
-            (let [children (for [[index child] (zipmap (range) children)]
-                             ^{:key index}
-                             [soresu->reagent child (conj path :children index)])]
-              [ec/component-group content path children])
+         {:fieldClass "wrapperElement"
+          :fieldType  "adjacentfieldset"
+          :children   children}
+         [ec/adjacent-fieldset content path (render-children children)]
 
-            {:fieldClass "formField" :fieldType "textField"}
-            [ec/text-field content path]
+         {:fieldClass "wrapperElement"
+          :children   children}
+         [ec/component-group content path (render-children children path)]
 
-            {:fieldClass "formField" :fieldType "textArea"}
-            [ec/text-area content path]
+         {:fieldClass "formField" :fieldType "textField"
+          :params {:adjacent true}}
+         [ec/adjacent-text-field content path]
 
-            {:fieldClass "formField"
-             :fieldType "dropdown"
-             :options (options :guard util/followups?)}
-            [ec/dropdown content path soresu->reagent]
+         {:fieldClass "formField" :fieldType "textField"}
+         [ec/text-field content path]
 
-            {:fieldClass "formField" :fieldType "dropdown"}
-            [ec/dropdown content path]
+         {:fieldClass "formField" :fieldType "textArea"}
+         [ec/text-area content path]
 
-            {:fieldClass "formField" :fieldType "multipleChoice"}
-            [ec/dropdown content path]
+         {:fieldClass "formField" :fieldType "dropdown"}
+         [ec/dropdown content path]
 
-            {:fieldClass "infoElement"}
-            [ec/info-element content path]
+         {:fieldClass "formField" :fieldType "multipleChoice"}
+         [ec/dropdown content path]
 
-            {:fieldClass "formField"
-             :fieldType "singleChoice"}
-            [ec/dropdown content path]
+         {:fieldClass "infoElement"}
+         [ec/info-element content path]
 
-            :else (do
-                    (error content)
-                    (throw "error" content)))]))
+         {:fieldClass "formField"
+          :fieldType "singleChoice"}
+         [ec/dropdown content path]
+
+         :else (do
+                 (error content)
+                 (throw "error" content)))])))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
         content (reaction (:content @form))]
     (fn []
       (-> (into [:section.editor-form]
-            (for [[index json-blob] (zipmap (range) @content)
+            (for [[index json-blob] (map vector (range) @content)
                   :when             (not-empty @content)]
               [soresu->reagent json-blob [index]]))
         (conj [ec/drag-n-drop-spacer [(count @content)]])

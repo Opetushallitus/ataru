@@ -1,24 +1,27 @@
 (ns ataru.applications.excel-export-spec
-  (:require [ataru.applications.excel-export :as j2ee]
-            [ataru.applications.application-store :as application-store]
+  (:require [ataru.applications.application-store :as application-store]
+            [ataru.applications.excel-export :as j2ee]
+            [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
-            [ataru.fixtures.application :as fixtures]
-            [speclj.core :refer :all]
-            [taoensso.timbre :refer [spy debug]])
-  (:import (java.io FileOutputStream File)
-           (java.util UUID)
-           (org.apache.poi.ss.usermodel WorkbookFactory)))
+            [speclj.core :refer :all])
+  (:import [java.io FileOutputStream File]
+           [java.util UUID]
+           [org.apache.poi.ss.usermodel WorkbookFactory]))
 
 (defn- verify-row
   [sheet row-num expected-values]
   (let [row (.getRow sheet row-num)]
-    (should-not-be-nil row)
-    (doseq [col-idx (range (count expected-values))]
-      (let [cell     (.getCell row col-idx)
-            expected (nth expected-values col-idx)]
-        (if-not (nil? expected)
-          (should= (nth expected-values col-idx) (.getStringCellValue cell))
-          (should-be-nil cell))))))
+    (if (nil? expected-values)
+      (should-be-nil row)
+      (do (should-not-be-nil row)
+          (doseq [col-idx (range (count expected-values))]
+            (let [cell     (.getCell row col-idx)
+                  expected (nth expected-values col-idx)]
+              (if-not (nil? expected)
+                (do (should-not-be-nil cell)
+                    (should= (nth expected-values col-idx) (.getStringCellValue cell)))
+                (should-be-nil cell))))
+          (should-be-nil (.getCell row (count expected-values)))))))
 
 (defn- verify-pane-information
   [sheet]
@@ -29,38 +32,71 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
+(defmacro with-excel [bindings & body]
+  `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
+     (try
+       (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
+         (->> (j2ee/export-applications ~(second bindings))
+              (.write output#)))
+       ~@body
+       (finally
+         (.delete ~(first bindings))))))
+
 (describe "excel export"
-  (tags :unit)
+  (tags :unit :excel)
 
   (around [spec]
-    (with-redefs [application-store/exec-db (fn [& _] (filter #(nil? (:hakukohde %)) fixtures/applications))
-                  form-store/fetch-by-key (fn [& _] fixtures/form)
-                  application-store/get-application-review (fn [application-key]
-                                                             (when (= "9d24af7d-f672-4c0e-870f-3c6999f105e0" application-key)
-                                                               fixtures/application-review))]
+    (with-redefs [application-store/get-application-review (fn [& _] fixtures/application-review)
+                  form-store/fetch-by-id (fn [id]
+                                           (case id
+                                             123 fixtures/form
+                                             321 fixtures/form-for-hakukohde))
+                  form-store/fetch-by-key (fn [key]
+                                            (case key
+                                              "form_123_key" fixtures/form
+                                              "form_321_key" fixtures/form-for-hakukohde))]
       (spec)))
 
-  (it "has expected values"
-      (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
-        (try
-          (with-open [output (FileOutputStream. (.getPath file))]
-            (->> (j2ee/export-all-form-applications "abcdefghjkl" ["unprocessed"])
-                 (.write output)))
-          (let [workbook           (WorkbookFactory/create file)
-                metadata-sheet     (.getSheetAt workbook 0)
-                applications-sheet (.getSheetAt workbook 1)]
-            (verify-row metadata-sheet 0
-              ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-            (verify-row metadata-sheet 1
-              ["Test fixture what is this" "703" "abcdefghjkl" "2016-06-14 15:34:56" "DEVELOPER"])
-            (verify-row applications-sheet 0
-              ["Id" "Lähetysaika" "Tila" "Eka kysymys" "Toka kysymys" "Kolmas kysymys" "Neljas kysymys" "Viides kysymys" "Kuudes kysymys" "Seitsemas kysymys" "Muistiinpanot"])
-            (verify-row applications-sheet 1
-              ["9d24af7d-f672-4c0e-870f-3c6999f105e0" "2016-06-16 09:00:00" "Käsittelemättä" "a" "b" "d" "e" nil "g" "f" "Some notes about the applicant"])
-            (verify-row applications-sheet 2
-              ["956ae57b-8bd2-42c5-90ac-82bd0a4fd31f" "2016-06-15 17:30:55" "Käsittelemättä" "Vastaus" "lomakkeeseen" "asiallinen" "vastaus" nil "jee" nil])
-            (verify-row applications-sheet 3
-              ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81" "2016-06-15 15:30:55" "Käsittelemättä" "1" "2" "3" "4" "5" "6" nil nil])
-            (verify-pane-information applications-sheet))
-          (finally
-            (.delete file))))))
+
+
+  (it "should export applications for a form without hakukohde or haku"
+    (with-excel [file [fixtures/application-for-form]]
+      (let [workbook          (WorkbookFactory/create file)
+            metadata-sheet    (.getSheetAt workbook 0)
+            application-sheet (.getSheetAt workbook 1)]
+        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+        (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
+        (verify-row metadata-sheet 2 nil)
+        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 1" "Kysymys 2" "Kysymys 3" "Muistiinpanot" "Pisteet"])
+        (verify-row application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Käsittelemättä" "Vastaus 1" "Vastaus 2" "Vastaus 3" "Some notes about the applicant"])
+        (verify-row application-sheet 2 nil)
+        (verify-pane-information application-sheet))))
+
+  (it "should export applications for a hakukohde with haku"
+    (with-excel [file [fixtures/application-for-hakukohde]]
+      (let [workbook          (WorkbookFactory/create file)
+            metadata-sheet    (.getSheetAt workbook 0)
+            application-sheet (.getSheetAt workbook 1)]
+        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+        (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+        (verify-row metadata-sheet 2 nil)
+        (verify-row application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 4" "Kysymys 5" "Muistiinpanot" "Pisteet"])
+        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
+        (verify-row application-sheet 2 nil))))
+
+  (it "should export applications to separate sheets, grouped by form"
+    (with-excel [file [fixtures/application-for-form fixtures/application-for-hakukohde]]
+      (let [workbook                    (WorkbookFactory/create file)
+            metadata-sheet              (.getSheetAt workbook 0)
+            form-application-sheet      (.getSheetAt workbook 1)
+            hakukohde-application-sheet (.getSheetAt workbook 2)]
+        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+        (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
+        (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+        (verify-row metadata-sheet 3 nil)
+        (verify-row form-application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 1" "Kysymys 2" "Kysymys 3" "Muistiinpanot" "Pisteet"])
+        (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Käsittelemättä" "Vastaus 1" "Vastaus 2" "Vastaus 3" "Some notes about the applicant"])
+        (verify-row form-application-sheet 2 nil)
+        (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Tila" "Kysymys 4" "Kysymys 5" "Muistiinpanot" "Pisteet"])
+        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
+        (verify-row hakukohde-application-sheet 2 nil)))))

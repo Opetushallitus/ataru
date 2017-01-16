@@ -62,9 +62,9 @@
               nil)))
 
 (defn- text-header
-  [label path & {:keys [form-section?]}]
+  [label path & {:keys [form-section? draggable] :or {draggable true}}]
   [:div.editor-form__header-wrapper
-   {:draggable (nil? ((set path) :followup))
+   {:draggable (and draggable (nil? ((set path) :followup)))
     :on-drag-start (on-drag-start path)
     :on-drag-over prevent-default}
    [:header.editor-form__component-header label]
@@ -248,7 +248,7 @@
                       (dispatch [:editor/select-custom-multi-options path]))}]
        [:label
         {:for   custom-button-id
-         :class "editor-form-button--left-edge"}
+         :class "editor-form__button--left-edge"}
         custom-button-value]
        [:input
         {:type      "radio"
@@ -262,7 +262,7 @@
                       (reset! koodisto-popover-expanded? true))}]
        [:label
         {:for   koodisto-button-id
-         :class "editor-form-button--right-edge"}
+         :class "editor-form__button--right-edge"}
         @koodisto-button-value]
        (when @koodisto-popover-expanded?
          [:div.editor-form__koodisto-popover
@@ -427,3 +427,50 @@
               :tag :textarea}])
           @languages
           :header? true)]])))
+
+(defn adjacent-fieldset [content path children]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [content path children]
+      [:div.editor-form__component-wrapper
+       [:div.editor-form__component-row-wrapper
+        {:class @animation-effect}
+        [text-header "Vierekkäiset tekstikentät" path]
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Otsikko"]
+         (input-fields-with-lang
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
+        [:div.editor-form__checkbox-wrapper
+         [repeater-checkbox path content]]]
+
+       [info-addon path]
+
+       [:div.editor-form__adjacent-fieldset-container
+        children
+
+        (when (-> (count children) (< 3))
+          [toolbar/adjacent-fieldset-toolbar
+           (concat path [:children])
+           (fn [component-fn]
+             (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]])))
+
+(defn adjacent-text-field [content path]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [content path]
+      [:div.editor-form__component-wrapper
+       [:div.editor-form__component-row-wrapper
+        {:class @animation-effect}
+        [text-header "Tekstikenttä" path :draggable false]
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Kysymys"]
+         (input-fields-with-lang
+           (fn [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
+        [:div.editor-form__checkbox-wrapper
+         [required-checkbox path content]]]])))

@@ -31,9 +31,11 @@
          :options options}
         (cons field
           (->> options
-            (filter :followup)
-            (map :followup)
-            (map #(assoc % :followup? true))))
+               (mapcat :followups)
+               (mapcat (fn [{:keys [children] :as followup}]
+                         (map #(assoc % :followup? true)
+                           (cons followup
+                             (flatten-form-fields children)))))))
 
         :else field))))
 
@@ -58,13 +60,11 @@
                 acc)))})))
 
 (defn followups? [dropdown-options]
-  (some some? (map :followup dropdown-options)))
+  (some some? (mapcat :followups dropdown-options)))
 
-(defn resolve-followup [dropdown-options value]
+(defn resolve-followups [dropdown-options value]
   (and
     value
-    (some->> dropdown-options
-             (filter (comp (partial = value) :value))
-             (map :followup)
-             (not-empty)
-             (first))))
+    (->> dropdown-options
+        (filter (comp (partial = value) :value))
+      (mapcat :followups))))

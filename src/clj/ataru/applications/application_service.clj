@@ -7,14 +7,16 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
-    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
+    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+    [taoensso.timbre :refer [spy debug]])
+  (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list-by-form form-key)})
 
-(defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (let [applications (application-store/get-application-list-by-hakukohde hakukohde-oid)]
+(defn get-application-list-by-haku [haku-oid session organization-service]
+  (let [applications (application-store/get-application-list-by-haku haku-oid)]
     (aac/check-forms-accesses (map :form applications) session organization-service)
     {:applications applications}))
 
@@ -75,16 +77,26 @@
 (defn get-excel-report-of-applications-by-form
   [form-key filtered-states session organization-service]
   (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-form-applications form-key filtered-states)))
+  (let [applications (application-store/get-applications-for-form form-key filtered-states)]
+    (ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn get-excel-report-of-applications-by-hakukohde
-  [form-key filtered-states hakukohde-oid session organization-service]
-  (aac/check-form-access form-key session organization-service)
-  (java.io.ByteArrayInputStream. (excel/export-all-hakukohde-applications form-key filtered-states hakukohde-oid)))
+  [hakukohde-oid filtered-states session organization-service]
+  (let [applications (->> (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
+                          (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
+                                        :form-key)))]
+    (ByteArrayInputStream. (excel/export-applications applications))))
+
+(defn get-excel-report-of-applications-by-haku
+  [haku-oid filtered-states session organization-service]
+  (let [applications (->> (application-store/get-applications-for-haku haku-oid filtered-states)
+                          (filter (comp #(form-access-control/form-allowed-by-key? % session organization-service)
+                                        :form-key)))]
+    (ByteArrayInputStream. (excel/export-applications applications))))
 
 (defn save-application-review [review session organization-service]
   (let [application-key (:application-key review)]
     (aac/check-application-access application-key session organization-service)
-    (application-store/save-application-review review)
+    (application-store/save-application-review review session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)}))

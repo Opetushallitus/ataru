@@ -1,6 +1,7 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [ataru.util :as util]))
+  (:require [ataru.util :as util]
+            [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
@@ -33,16 +34,22 @@
          (util/flatten-form-fields (:content form)))))
 
 (defn- create-answers-to-submit [answers form]
-  (for [[ans-key {:keys [value] :as answer}] answers
+  (for [[ans-key {:keys [value values] :as answer}] answers
         :let [flat-form-map (form->flat-form-map form)
               field-map (get flat-form-map (name ans-key))
               field-type (:fieldType field-map)
               label (:label field-map)]
         :when (or
+                values
                 ; permit empty dropdown values, because server side validation expects to match form fields to answers
                 (and (empty? value) (= "dropdown" field-type))
                 (and (not-empty value) (not (:exclude-from-answers field-map))))]
-    {:key (name ans-key) :value value :fieldType field-type :label label}))
+    {:key (name ans-key)
+     :value (or
+              value
+              (map (fn [v] (or (:value v) "")) values))
+     :fieldType field-type
+     :label label}))
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]
@@ -50,6 +57,8 @@
              :lang           lang
              :hakukohde      (:hakukohde-oid form)
              :hakukohde-name (:hakukohde-name form)
+             :haku           (:haku-oid form)
+             :haku-name      (:haku-name form)
              :answers        (create-answers-to-submit (:answers application) form)}
       (some? secret)
       (assoc :secret secret))))

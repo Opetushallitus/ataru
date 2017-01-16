@@ -597,23 +597,23 @@
      :options
      [{:label {:fi "Lukio", :sv ""},
        :value "Lukio",
-       :followup
-       {:id         "5d8023b1-22c6-4388-8bd4-8e3634fc78ef",
-        :label      {:fi "NONIIN", :sv ""},
-        :params     {:info-text {:label nil}},
-        :fieldType  "textField",
-        :fieldClass "formField"}}
+       :followups
+       [{:id         "5d8023b1-22c6-4388-8bd4-8e3634fc78ef",
+          :label      {:fi "NONIIN", :sv ""},
+          :params     {:info-text {:label nil}},
+          :fieldType  "textField",
+          :fieldClass "formField"}]}
       {:label {:fi "Ammatillinen peruskoulu", :sv ""},
        :value "Ammatillinen peruskoulu",
-       :followup
-       {:id         "fbe3522d-6f1d-4e05-85e3-4e716146c686",
-        :label      {:fi "Ois yks kysymys vielä", :sv ""},
-        :params     {},
-        :fieldType  "textField",
-        :fieldClass "formField"}}
+       :followups
+       [{:id         "fbe3522d-6f1d-4e05-85e3-4e716146c686",
+         :label      {:fi "Ois yks kysymys vielä", :sv ""},
+         :params     {},
+         :fieldType  "textField",
+         :fieldClass "formField"}]}
       {:label    {:fi "Ammattitutkinto", :sv ""},
        :value    "Ammattitutkinto",
-       :followup {:id "62d37b52-3237-4f7f-9e78-df373b0b5c79", :label {:fi "", :sv ""}, :params {}, :fieldType "textArea", :fieldClass "formField"}}
+       :followups [{:id "62d37b52-3237-4f7f-9e78-df373b0b5c79", :label {:fi "", :sv ""}, :params {}, :fieldType "textArea", :fieldClass "formField"}]}
       {:label {:fi "Erikoisammattitutkinto", :sv ""}, :value "Erikoisammattitutkinto"}
       {:label {:fi "Opisto/ammattikorkeakoulu", :sv ""}, :value "Opisto/ammattikorkeakoulu"}
       {:label {:fi "Yliopisto", :sv ""}, :value "Yliopisto"}],

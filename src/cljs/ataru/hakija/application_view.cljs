@@ -17,22 +17,23 @@
 (def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
-  (let [selected-lang    (:selected-language form)
-        languages        (filter
-                           (partial not= selected-lang)
-                           (:languages form))
-        submit-status    (subscribe [:state-query [:application :submit-status]])
-        secret           (:modify (util/extract-query-params))
-        hakukohde-name   (:hakukohde-name form)
-        apply-start-date (-> form :hakuaika-dates :start)
-        apply-end-date   (-> form :hakuaika-dates :end)
-        apply-dates      (when hakukohde-name
-                           (if (and apply-start-date apply-end-date)
-                             (str "Hakuaika: "
-                                  (unparse date-format (from-long apply-start-date))
-                                  " - "
-                                  (unparse date-format (from-long apply-end-date)))
-                             "Jatkuva haku"))]
+  (let [selected-lang     (:selected-language form)
+        languages         (filter
+                            (partial not= selected-lang)
+                            (:languages form))
+        submit-status     (subscribe [:state-query [:application :submit-status]])
+        secret            (:modify (util/extract-query-params))
+        hakukohde-name    (:hakukohde-name form)
+        haku-tarjoja-name (:haku-tarjoaja-name form)
+        apply-start-date  (-> form :hakuaika-dates :start)
+        apply-end-date    (-> form :hakuaika-dates :end)
+        apply-dates       (when hakukohde-name
+                            (if (and apply-start-date apply-end-date)
+                              (str "Hakuaika: "
+                                   (unparse date-format (from-long apply-start-date))
+                                   " - "
+                                   (unparse date-format (from-long apply-end-date)))
+                              "Jatkuva haku"))]
     (fn [form]
       [:div
        [:div.application__header-container
@@ -48,9 +49,10 @@
                                   (> (dec (count languages)) idx)
                                   (conj [:span.application__header-language-link-separator " | "])))
                         languages)])]
-       [:div.application__sub-header-container
-        [:span.application__sub-header-organization (:haku-tarjoaja-name form)]
-        [:span.application__sub-header-dates apply-dates]]])))
+       (when (and haku-tarjoja-name apply-dates)
+         [:div.application__sub-header-container
+          [:span.application__sub-header-organization haku-tarjoja-name]
+          [:span.application__sub-header-dates apply-dates]])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]

@@ -12,7 +12,8 @@
 (def form1 {:id 1,
             :key "foobar1",
             :name "Selaintestilomake1",
-            :created-by "DEVELOPER",
+            :created-by "DEVELOPER"
+            :organization-oid "1.2.246.562.10.0439845"
             :content
             [{:fieldClass "wrapperElement",
               :id "G__31",
@@ -28,7 +29,8 @@
 (def form2 {:id 2,
             :key "foobar2",
             :name "Selaintestilomake2",
-            :created-by "DEVELOPER",
+            :created-by "DEVELOPER"
+            :organization-oid "1.2.246.562.10.0439845"
             :content
             [{:fieldClass "wrapperElement",
               :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
@@ -76,8 +78,8 @@
                            :value "141196-933S"}]})
 
 (defn init-db-fixture []
-  (form-store/create-form-or-increment-version! form1 "1.2.246.562.10.0439845")
-  (form-store/create-form-or-increment-version! form2 "1.2.246.562.10.0439845")
+  (form-store/create-form-or-increment-version! form1)
+  (form-store/create-form-or-increment-version! form2)
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)))

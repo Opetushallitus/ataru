@@ -5,9 +5,9 @@
             [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
-                                                           required-hint
-                                                           textual-field-value
-                                                           scroll-to-anchor]]
+                                                                       required-hint
+                                                                       textual-field-value
+                                                                       scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -118,7 +118,7 @@
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
-       [label field-descriptor size-class]
+       [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:input.application__form-text-input
@@ -145,7 +145,7 @@
                        (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
-              [label field-descriptor size-class]
+              [label field-descriptor]
               [:div.application__form-text-input-info-text
                [info-text field-descriptor]]]
         (cons
@@ -239,24 +239,27 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
-(defn dropdown-followup [lang value field-descriptor]
+(defn dropdown-followups [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followup (partial util/resolve-followup (:options field-descriptor))]
+        resolve-followups (partial util/resolve-followups (:options field-descriptor))
+        toggle-visibility (fn [visible? db followup]
+                            (update-in db [:application :ui (answer-key followup)] assoc :visible? visible?))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
                                  (when-not (= previous (reset! prev @value))
-                                   (let [previous-followup (resolve-followup previous)
-                                         current-followup  (resolve-followup @value)]
+                                   (let [previous-followups (resolve-followups previous)
+                                         current-followups  (resolve-followups @value)]
                                      (dispatch [:state-update
                                                 (fn [db]
-                                                  (->
-                                                    (update-in db [:application :ui (answer-key previous-followup)] assoc :visible? false)
-                                                    (update-in [:application :ui (answer-key current-followup)] assoc :visible? true)))])))))
+                                                  (let [reduced (reduce (partial toggle-visibility false) db previous-followups)]
+                                                    (reduce (partial toggle-visibility true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followup (resolve-followup @value)]
-                                 [:div.application__form-dropdown-followup
-                                  [render-field followup]]))})))
+                               (when-let [followups (resolve-followups @value)]
+                                 (into [:div.application__form-dropdown-followups]
+                                   (for [followup followups]
+                                     [:div.application__form-dropdown-followup
+                                      [render-field followup]]))))})))
 
 (defn dropdown
   [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -301,7 +304,7 @@
                                             [:option {:value option-value} label]))
                                         (:options field-descriptor)))]]]
 
-                                 [dropdown-followup lang value field-descriptor]]))})))
+                                 [dropdown-followups lang value field-descriptor]]))})))
 
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))
@@ -381,6 +384,95 @@
        [:label.application__form-field-label [:span header]])
      [link-detected-paragraph text]]))
 
+(defn spawn-children-based-on-answers [children answers]
+  (let [child-ids        (map (comp keyword :id) children)
+        adjacent         (select-keys answers child-ids)
+        count-of-answers (reduce max
+                           1 ; by default displays one row
+                           (map (comp count :values second) adjacent))]
+    (flatten
+      (map-indexed
+        (fn [index children]
+          (map
+            (fn [child]
+              (let [id (keyword (:id child))]
+                {:id          id
+                 :value-index index
+                 :child       child
+                 :value       (get-in adjacent [id :values index :value])
+                 :valid?      (boolean (get-in adjacent [id :values index :valid]))}))
+            children))
+        (repeat count-of-answers children)))))
+
+(defn- adjacent-field-input [fid on-change {:keys [valid? child value]}]
+  (r/create-class
+    {:component-did-mount (fn [this] (when-not value (on-change nil))) ; updates answers to include proper field labels and validation results
+     :reagent-render
+     (fn [fid on-change {:keys [valid? child value]}]
+       [:input.application__form-text-input
+        {:id        fid
+         :type      "text"
+         :class     (match [valid? ((set (:validators child)) "required")]
+                      [false (_ :guard some?)]
+                      " application__form-field-error"
+                      :else
+                      " application__form-text-input--normal")
+         :value     value
+         :on-change on-change}])}))
+
+(defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
+  (let [language              (subscribe [:application/form-language])
+        default-lang          (subscribe [:application/default-language])
+        header                (some-> (get-in field-descriptor [:label @language]))
+        info-text             (some-> (get-in field-descriptor [:params :info-text :label @language]))
+        repeatable?           (-> field-descriptor :params :repeatable)
+        answers               (subscribe [:state-query [:application :answers]])
+        adjacent-field-change (fn [child id idx event]
+                                (let [value  (some-> event .-target .-value)
+                                      valid? (field-value-valid? child value)]
+                                  (dispatch [:application/set-adjacent-field-answer
+                                             child
+                                             id
+                                             idx
+                                             {:value value :valid valid?}])))]
+    (fn [{:keys [children] :as field-descriptor}]
+      [:div.application__form-field
+       [label field-descriptor]
+       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+         [:div.application__form-info-text [link-detected-paragraph info]])
+       [:div
+        (doall (for [[rowcount row]
+                     (->> (spawn-children-based-on-answers children @answers)
+                          ; counter
+                          (map vector (range))
+                          ; children grouped into a row
+                          (partition (count children))
+                          ; rowcount
+                          (map vector (range)))]
+                 (into
+                   ^{:key (->> row second second (select-keys [:value-index :id]) (apply str "-" rowcount))}
+                   [:div.application__form-adjacent-text-fields-wrapper
+                    (for [[counter {:keys [id value-index child value valid?] :as current-row}] row
+                          :let [fid (str value-index "-" (:id child))]]
+                      ^{:key fid}
+                      [:div.application__form-adjacent-row
+                       [:div {:class (when (-> counter (>= (count children)))
+                                       "application__form-adjacent-row--mobile-only")}
+                        [label child]]
+                       [adjacent-field-input fid (partial adjacent-field-change child id value-index) current-row]])
+                    (when (pos? rowcount)
+                      [:a {:on-click (fn [evt]
+                                       (.preventDefault evt)
+                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
+                       [:span.application__form-adjacent-row--mobile-only
+                        "Poista rivi"]
+                       [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
+       (when repeatable?
+         [:a {:on-click (fn [evt]
+                          (.preventDefault evt)
+                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
+          [:i.zmdi.zmdi-plus-square] " Lisää rivi"])])))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -403,7 +495,8 @@
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                        {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                        {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                       {:fieldClass "infoElement"} [info-element field-descriptor])
+                       {:fieldClass "infoElement"} [info-element field-descriptor]
+                       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                 (and (empty? (:children field-descriptor))
                      (visible? (:id field-descriptor))) (into args))))))
 

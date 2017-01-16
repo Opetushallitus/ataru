@@ -157,6 +157,8 @@
                            :lang "fi",
                            :hakukohde nil,
                            :hakukohde-name nil,
+                           :haku nil,
+                           :haku-name nil,
                            :answers '({:key "G__14",
                                        :value "Jorma",
                                        :fieldType "textField",

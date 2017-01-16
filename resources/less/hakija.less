@@ -284,8 +284,8 @@
   font-size: 16px;
   color: @text-color;
   background-color: #fff;
-  border: 1px solid #AEAEAE;
-  box-shadow: inset 0px 1px 4px 0px rgba(0,0,0,0.20);
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
+  border: 1px solid #C1C1C1;
   border-radius: 2px;
 }
 
@@ -294,10 +294,10 @@
   left: 260px;
   top: 1px;
   position: absolute;
-  width: 44px;
+  width: 42px;
   height: 41px;
   pointer-events: none;
-  box-shadow: inset 0px 1px 4px 0px rgba(0,0,0,0.20);
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border-radius: 2px;
 }
 
@@ -329,10 +329,15 @@
   height: 43px;
   font-size: 16px;
   padding: 8px;
-  border: 1px solid #AEAEAE;
-  box-shadow: inset 0px 1px 4px 0px rgba(0,0,0,0.20);
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
+  border: 1px solid #C1C1C1;
   border-radius: 2px;
 }
+
+textarea.application__form-text-input {
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  4%);
+}
+
 .application__form-repeatable-text--addremove {
   margin-left: 10px;
 }
@@ -444,6 +449,21 @@
   margin-right: 6px;
 }
 
+.application__readonly-adjacent * {
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+th.application__readonly-adjacent--header {
+  padding-right: 3em;
+  padding-left: 0;
+}
+
+th.application__readonly-adjacent--header:last-of-type {
+  padding-right: 0;
+}
+
 .application__form-single-choice-button-outer-container {
   display: flex;
   flex-flow: row nowrap;
@@ -489,6 +509,30 @@
   margin-right: 6px;
   margin-left: -20px;
   padding-left: 7px;
+}
+
+.application__form-adjacent-text-fields-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  a {
+    align-self: flex-end;
+    margin-bottom: 23px;
+  }
+}
+
+.application__form-adjacent-row {
+  display: flex;
+  flex-flow: column wrap;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.application__form-adjacent-row--mobile-only {
+  display: none;
+}
+
+.application__form-adjacent-row--desktop-only {
+  display: block;
 }
 
 @media only screen
@@ -558,6 +602,21 @@ and (max-width: @desktop-content-width) {
     width: auto;
     max-width: 610px;
     margin-right: 10px;
+  }
+
+  .application__form-adjacent-text-fields-wrapper {
+    flex-flow: column wrap;
+    margin-bottom: 20px;
+    a {
+      align-self: center;
+    }
+  }
+
+  .application__form-adjacent-row--mobile-only {
+    display: block;
+  }
+  .application__form-adjacent-row--desktop-only {
+    display: none;
   }
 }
 

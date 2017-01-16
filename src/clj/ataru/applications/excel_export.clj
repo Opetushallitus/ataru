@@ -7,12 +7,16 @@
             [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.util :as util]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy]]))
+            [taoensso.timbre :refer [spy debug]]
+            [ataru.util.access-control-utils :as access-control-utils]
+            [ataru.hakukohde.hakukohde-access-control :as hakukohde-access-control]
+            [ataru.haku.haku-access-control :as haku-access-control]))
 
 (def tz (t/default-time-zone))
 
@@ -63,6 +67,8 @@
     :field :state
     :format-fn state-formatter}])
 
+(def ^:private review-headers ["Muistiinpanot" "Pisteet"])
+
 (defn- indexed-meta-fields
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
@@ -93,14 +99,13 @@
                        form)
           value      ((:field meta-field) value-from)
           formatter  (or (:format-fn meta-field) identity)]
-      (writer 0 col (:label meta-field))
-      (writer 1 col (formatter value)))))
+      (writer 0 col (formatter value)))))
 
 (defn- write-headers! [writer headers meta-fields]
   (doseq [meta-field meta-fields]
     (writer 0 (:column meta-field) (:label meta-field)))
   (doseq [header headers]
-    (writer 0 (+ (:column header) (count meta-fields)) (:header header))))
+    (writer 0 (+ (:column header) (count meta-fields)) (:decorated-header header))))
 
 (defn- get-field-descriptor [field-descriptors key]
   (loop [field-descriptors field-descriptors]
@@ -136,87 +141,171 @@
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
-    (let [column (:column (first (filter #(= (:label answer) (:header %)) headers)))
+    (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value-or-values (-> (:value answer))
-          value (or
-                  (when (or (seq? value-or-values) (vector? value-or-values))
-                    (->> value-or-values
-                         (map (partial koodi-uris->human-readable-value form application (:key answer)))
-                         (interpose "\n")
-                         (apply str)))
-                  (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
+          value           (or
+                           (when (or (seq? value-or-values) (vector? value-or-values))
+                             (->> value-or-values
+                                  (map (partial koodi-uris->human-readable-value form application (:key answer)))
+                                  (interpose "\n")
+                                  (apply str)))
+                           (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
-  (let [application-review (application-store/get-application-review (:key application))]
-    (when-let [notes (:notes application-review)]
-      (let [column (+ (apply max (map :column headers))
-                      (count application-meta-fields))]
-        (writer 0 column notes)))))
+  (let [application-review  (application-store/get-application-review (:key application))
+        beef-header-count   (- (apply max (map :column headers)) (count review-headers))
+        prev-header-count   (+ beef-header-count
+                               (count application-meta-fields))
+        notes-column        (inc prev-header-count)
+        score-column        (inc notes-column)
+        notes               (:notes application-review)
+        score               (:score application-review)]
+    (when notes (writer 0 notes-column notes))
+    (when score (writer 0 score-column score))))
 
 (defn pick-form-labels
   [form-content]
-  (->> (flatten
-        (reduce
-          (fn [acc form-element]
-            (if (< 0 (count (:children form-element)))
-              (into acc [(pick-form-labels (:children form-element))])
-              (into acc [(when (not= "infoElement" (:fieldClass form-element))
-                           (-> form-element :label :fi))])))
-          []
-          form-content))
-    (filter some?)))
+  (->> (reduce
+         (fn [acc form-element]
+           (if (< 0 (count (:children form-element)))
+             (into acc (pick-form-labels (:children form-element)))
+             (into acc (when-let [label (and (not= "infoElement" (:fieldClass form-element)))]
+                           [[(:id form-element) (-> form-element :label :fi)]]))))
+         []
+         form-content)))
+
+(defn- find-parent [element fields]
+  (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))
+        followup-dropdown (fn [field] (mapcat :followups (:options field)))]
+    (reduce
+      (fn [parent field]
+        (or parent
+          (match field
+            ((_ :guard contains-element?) :<< :children) field
+
+            ((followups :guard not-empty) :<< followup-dropdown)
+            (or
+              (when (contains-element? followups)
+                field)
+              (find-parent element followups))
+
+            ((children :guard not-empty) :<< :children)
+            (find-parent element children)
+
+            :else nil)))
+      nil
+      fields)))
+
+(defn- decorate [flat-fields fields id header]
+  (let [element (first (filter #(= (:id %) id) flat-fields))]
+    (match element
+      {:params {:adjacent true}}
+      (if-let [parent-element (find-parent element fields)]
+        (str (-> parent-element :label :fi) " - " header)
+        header)
+
+      :else header)))
 
 (defn- extract-headers
   [applications form]
   (let [labels-in-form         (pick-form-labels (:content form))
-        labels-in-applications (mapcat #(map :label (:answers %)) applications)
-        all-labels             (distinct (concat labels-in-form labels-in-applications ["Muistiinpanot"]))]
-    (map-indexed (fn [idx header]
-                   {:header header :column idx})
-                 all-labels)))
+        labels-in-applications (mapcat #(map (fn [answer] (vals (select-keys answer [:key :label]))) (:answers %)) applications)
+        all-labels             (distinct (concat labels-in-form labels-in-applications (map vector (repeat nil) review-headers)))
+        decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
+    (for [[idx [id header]] (map vector (range) all-labels)
+          :when             (string? header)]
+      {:decorated-header (decorator id header)
+       :header           header
+       :column           idx})))
 
-(defn- export-applications
-  [applications form-key indexed-form-meta-fields]
+(defn- create-form-meta-sheet [workbook meta-fields]
+  (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
+        writer (make-writer sheet 0)]
+    (doseq [meta-field meta-fields
+            :let [column (:column meta-field)
+                  label  (:label meta-field)]]
+      (writer 0 column label))
+    sheet))
+
+(def ^:private invalid-char-matcher #"[\\/\*\[\]:\?]")
+
+(defn- sheet-name [{:keys [id name]}]
+  {:pre [(some? id)
+         (some? name)]}
+  (let [name (str id "_" (clojure.string/replace name invalid-char-matcher "_"))]
+    (cond-> name
+      (> (count name) 30)
+      (subs 0 30))))
+
+(defn export-applications [applications]
   (let [workbook                (XSSFWorkbook.)
-        form                    (form-store/fetch-by-key form-key)
-        form-meta-sheet         (.createSheet workbook "Lomakkeen tiedot")
-        applications-sheet      (.createSheet workbook "Hakemukset")
+        form-meta-fields        (indexed-meta-fields form-meta-fields)
+        form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
-        headers                 (extract-headers applications form)]
-    (when (not-empty form)
-      (write-form-meta! (make-writer form-meta-sheet 0) form applications indexed-form-meta-fields)
-      (write-headers! (make-writer applications-sheet 0) headers application-meta-fields)
-      (dorun (map-indexed
-               (fn [idx application]
-                 (let [writer (make-writer applications-sheet (inc idx))]
-                   (write-application! writer application headers application-meta-fields form)))
-               applications))
-      (.createFreezePane applications-sheet 0 1 0 1))
+        get-form-by-id          (memoize form-store/fetch-by-id)
+        get-latest-form-by-key  (memoize form-store/fetch-by-key)]
+    (->> applications
+         (reduce (fn [result {:keys [form] :as application}]
+                   (let [form-key (:key (get-form-by-id form))
+                         form     (get-latest-form-by-key form-key)]
+                     (if (contains? result form-key)
+                       (update-in result [form-key :applications] conj application)
+                       (let [value {:sheet-name   (sheet-name form)
+                                    :form         form
+                                    :applications [application]}]
+                         (assoc result form-key value)))))
+                 {})
+         (map second)
+         (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
+                        (let [applications-sheet (.createSheet workbook sheet-name)
+                              headers            (extract-headers applications form)
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer applications-sheet 0)]
+                          (write-form-meta! meta-writer form applications form-meta-fields)
+                          (write-headers! header-writer headers application-meta-fields)
+                          (->> applications
+                               (sort-by :created-time)
+                               (reverse)
+                               (map-indexed (fn [row-idx application]
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx))]
+                                                (write-application! row-writer application headers application-meta-fields form))))
+                               (dorun))
+                          (.createFreezePane applications-sheet 0 1 0 1))))
+         (dorun))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
 
-(defn export-all-form-applications
-  [form-key filtered-states]
-  (let [applications (application-store/get-applications-for-form form-key filtered-states)
-        meta-fields  (indexed-meta-fields form-meta-fields)]
-    (export-applications applications form-key meta-fields)))
+(defn- sanitize-name [name]
+  (-> name
+      (string/replace #"[\s]+" "-")
+      (string/replace #"[^\w-]+" "")))
 
-(defn export-all-hakukohde-applications
-  [form-key filtered-states hakukohde-oid]
-  (let [applications (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
-        meta-fields  (indexed-meta-fields hakukohde-form-meta-fields)]
-    (export-applications applications form-key meta-fields)))
+(defn filename-by-form
+  [form-key]
+  {:post [(some? %)]}
+  (let [form           (form-store/fetch-by-key form-key)
+        sanitized-name (sanitize-name (:name form))
+        time           (time-formatter (t/now) filename-time-format)]
+    (str sanitized-name "_" form-key "_" time ".xlsx")))
 
-(defn filename
-  ([form-key hakukohde-oid]
-   (let [form           (form-store/fetch-by-key form-key)
-         sanitized-name (-> (or (:name form))
-                            (string/replace #"[\s]+" "-")
-                            (string/replace #"[^\w-]+" ""))
-         time           (time-formatter (t/now) filename-time-format)]
-     (str sanitized-name "_" form-key "_" (if hakukohde-oid (str hakukohde-oid "_") "") time ".xlsx")))
-  ([form-key]
-    (filename form-key nil)))
+(defn filename-by-hakukohde
+  [hakukohde-oid session organization-service]
+  {:post [(some? %)]}
+  (when-let [hakukohde-name (->> (hakukohde-access-control/get-hakukohteet session organization-service)
+                                 (filter (comp (partial = hakukohde-oid) :hakukohde))
+                                 (map :hakukohde-name)
+                                 (first))]
+    (let [sanitized-name (sanitize-name hakukohde-name)
+          time           (time-formatter (t/now) filename-time-format)]
+      (str sanitized-name "_" time ".xlsx"))))
 
-
-
+(defn filename-by-haku
+  [haku-oid session organization-service]
+  {:post [(some? %)]}
+  (when-let [hakukohde-name (->> (haku-access-control/get-haut session organization-service)
+                                 (filter (comp (partial = haku-oid) :haku))
+                                 (map :haku-name)
+                                 (first))]
+    (let [sanitized-name (sanitize-name hakukohde-name)
+          time           (time-formatter (t/now) filename-time-format)]
+      (str sanitized-name "_" time ".xlsx"))))

@@ -156,12 +156,8 @@
          (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update-fx
                     (fn [{:keys [db]}]
-                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)
-                            followup? (= :followup (last path))]
-                        (if followup?
-                          {:db forms-meta-db
-                           :dispatch [:editor/followup-remove path]}
-                          {:db (remove-component forms-meta-db path)})))])))
+                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
+                        {:db (remove-component forms-meta-db path)}))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-db
@@ -215,6 +211,19 @@
         (assoc-in db [:editor :hakukohteet] hakukohteet)))
     db))
 
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:editor :haut] haut)))
+
+(reg-event-fx
+  :editor/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
+
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
@@ -246,8 +255,15 @@
   :editor/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
-        (update-in [:editor] dissoc :selected-form-key)
+        (update-in [:editor] dissoc :selected-form-key :selected-haku)
         (assoc-in [:editor :selected-hakukohde] hakukohde))))
+
+(reg-event-db
+  :editor/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :editor dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:editor :selected-haku] haku))))
 
 (reg-event-db
   :editor/select-form
@@ -301,35 +317,30 @@
 (reg-event-db :editor/save-form save-form)
 
 (defn- post-new-form
-  ([] (post-new-form {}))
-  ([{:keys [name
-            content
-            languages]
-     :or   {name      "Uusi lomake"
-            content   [(pm/person-info-module)]
-            languages [:fi]}}]
-   (post "/lomake-editori/api/forms"
-     {:name      name
-      :content   content
-      :languages languages}
-     (fn [db form]
-       (let [stop-fn (get-in db [:editor :autosave])
-             path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
-         (autosave/stop-autosave! stop-fn)
-         (set-history! path)
-         (assoc-in db [:editor :new-form-created?] true))))))
+  [form]
+  (post "/lomake-editori/api/forms"
+        form
+        (fn [db form]
+          (let [stop-fn (get-in db [:editor :autosave])
+                path (str "/lomake-editori/editor/" (:key (languages->kwd form)))]
+            (autosave/stop-autosave! stop-fn)
+            (set-history! path)
+            (assoc-in db [:editor :new-form-created?] true)))))
 
 (reg-event-db
   :editor/add-form
   (fn [db _]
-    (post-new-form)
+    (post-new-form
+     {:name             "Uusi lomake"
+      :content          [(pm/person-info-module)]
+      :languages        [:fi]})
     db))
 
 (defn- copy-form [db _]
   (let [form-id (get-in db [:editor :selected-form-key])
         form    (-> (get-in db [:editor :forms form-id])
                     (update :name str " - KOPIO"))]
-    (post-new-form form)
+    (post-new-form (select-keys form [:name :content :languages :organization-oid]))
     db))
 
 (reg-event-db :editor/copy-form copy-form)
@@ -374,6 +385,14 @@
                  assoc :name
                  new-form-name))))
 
+(reg-event-db
+  :editor/change-form-organization
+  (fn [db [_ new-form-organization-oid]]
+    (with-form-key [db selected-form-key]
+      (update-in db [:editor :forms selected-form-key]
+                 assoc :organization-oid
+                 new-form-organization-oid))))
+
 (defn- remove-component-from-list
   [db source-path]
   (with-path-and-index [db source-path component-list-path remove-idx]
@@ -412,7 +431,7 @@
 
     ; moving component from root-level into a component-group
     [[a] [b :children xb]]
-    (if (spy (-> b (< a)))
+    (if (-> b (< a))
       [b :children xb]       ; topwards
       [(dec b) :children xb] ; bottomwards
       )
