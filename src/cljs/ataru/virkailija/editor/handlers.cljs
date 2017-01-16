@@ -182,24 +182,35 @@
   ([]
     (refresh-forms false)))
 
+(defn hide-remove-confirm-dialog
+  [db]
+  (-> db
+      (update :editor dissoc :show-remove-confirm-dialog?)))
+
 (reg-event-db
   :editor/refresh-forms-with-deleteds
   (fn [db _]
     (when-let [autosave (-> db :editor :autosave)]
       (autosave/stop-autosave! autosave))
     (refresh-forms true)
-    (-> db
-        (update :editor dissoc :forms)
-        (update :editor dissoc :show-remove-confirm-dialog?))))
+    (hide-remove-confirm-dialog db)))
 
 (reg-event-db
   :editor/refresh-forms
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms)
-    (-> db
-        (update :editor dissoc :forms)
-        (update :editor dissoc :show-remove-confirm-dialog?))))
+    (hide-remove-confirm-dialog db)))
+
+(reg-event-db
+  :editor/refresh-forms-if-empty
+  (fn [db [_ form-key]]
+    (if (-> db :editor :forms (get form-key))
+      db
+      (do
+        (autosave/stop-autosave! (-> db :editor :autosave))
+        (refresh-forms)
+        (hide-remove-confirm-dialog db)))))
 
 (reg-event-db
   :editor/refresh-hakukohteet-from-applications
@@ -236,15 +247,17 @@
       (dissoc prev :created-time :id)
       (dissoc current :created-time :id))))
 
-(defn- handle-fetch-form [db {:keys [key] :as response} _]
-  (-> db
-      (update :editor dissoc :ui)
-      (assoc-in [:editor :forms key] (languages->kwd response))
-      (assoc-in [:editor :autosave]
-        (autosave/interval-loop {:subscribe-path    [:editor :forms key]
-                                 :changed-predicate editor-autosave-predicate
-                                 :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                      (dispatch [:editor/save-form]))}))))
+(defn- handle-fetch-form [db {:keys [key deleted] :as response} _]
+  (if deleted
+    db
+    (-> db
+        (update :editor dissoc :ui)
+        (assoc-in [:editor :forms key] (languages->kwd response))
+        (assoc-in [:editor :autosave]
+                  (autosave/interval-loop {:subscribe-path    [:editor :forms key]
+                                           :changed-predicate editor-autosave-predicate
+                                           :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
+                                                                (dispatch [:editor/save-form]))})))))
 
 (defn fetch-form-content! [form-id]
   (http :get
@@ -270,13 +283,16 @@
   (fn [db [_ form-key]]
     (with-form-key [db previous-form-key]
       (do
-        (when (not= previous-form-key form-key)
+        (when (and
+                (not (nil? previous-form-key))
+                (not= previous-form-key form-key))
           (autosave/stop-autosave! (-> db :editor :autosave)))
         (when-let [id (get-in db [:editor :forms form-key :id])]
           (fetch-form-content! id))
-        (-> db
-            (update-in [:editor] dissoc :selected-hakukohde)
-            (assoc-in [:editor :selected-form-key] form-key))))))
+        (cond-> db
+                (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
+                true (update-in [:editor] dissoc :selected-hakukohde)
+                true (assoc-in [:editor :selected-form-key] form-key))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 

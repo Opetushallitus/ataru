@@ -23,6 +23,14 @@
     (when matches-path?
       (set-history! path))))
 
+(defn- select-editor-form-if-not-deleted
+  [form]
+  (if (:deleted form)
+    (do
+      (.replaceState js/history nil nil "/lomake-editori/editor")
+      (secretary/dispatch! "/lomake-editori/editor"))
+    (dispatch [:editor/select-form (:key form)])))
+
 (defn app-routes []
   (defroute "/lomake-editori/" []
     (secretary/dispatch! "/lomake-editori/editor"))
@@ -35,15 +43,13 @@
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-if-empty key])
     (dispatch [:editor/refresh-forms-in-use])
     (dispatch-after-state
      :predicate
      (fn [db]
        (not-empty (get-in db [:editor :forms key])))
-     :handler
-     (fn [form]
-       (dispatch [:editor/select-form (:key form)]))))
+     :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
     (dispatch [:editor/refresh-forms-with-deleteds])
