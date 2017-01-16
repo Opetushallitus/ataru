@@ -55,6 +55,6 @@
       [:div.editor-form__followup-question
        (when top-level-followup?
          (match [@followup-component @layer-visible?]
-           [nil true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
-           [(_ :guard some?) _] "Lisäkysymykset"
+           [(_ :guard not-empty) _] "Lisäkysymykset"
+           [_ true] [:a {:on-click #(dispatch [:editor/followup-overlay-close option-path])} "Lisäkysymykset"]
            :else [:a {:on-click #(dispatch [:editor/followup-overlay-open option-path])} "Lisäkysymykset"]))])))
