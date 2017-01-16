@@ -11,7 +11,11 @@
                            :children [{:id         "form_field_0_0"
                                        :label      {:fi "Kysymys 1"}
                                        :fieldType  "textField"
-                                       :fieldClass "formField"}]}]})
+                                       :fieldClass "formField"}
+                                      {:children [{:id         "form_field_0_1"
+                                                   :label      {:fi "Kysymys 2"}
+                                                   :fieldType  "textField"
+                                                   :fieldClass "formField"}]}]}]})
 
 (def form-for-hakukohde {:id           321
                          :key          "form_321_key"
@@ -21,7 +25,7 @@
                          :content      [{:id       "form_field_1"
                                          :label    {:fi "Lomakeosio"}
                                          :children [{:id         "form_field_1_0"
-                                                     :label      {:fi "Kysymys 3"}
+                                                     :label      {:fi "Kysymys 4"}
                                                      :fieldType  "textField"
                                                      :fieldClass "formField"}]}]})
 
@@ -36,9 +40,13 @@
                                            :label     "Kysymys 1"
                                            :value     "Vastaus 1"
                                            :fieldType "textfield"}
-                                          {:key       "random_0"
+                                          {:key       "form_field_0_1"
                                            :label     "Kysymys 2"
                                            :value     "Vastaus 2"
+                                           :fieldType "textfield"}
+                                          {:key       "random_0"
+                                           :label     "Kysymys 3"
+                                           :value     "Vastaus 3"
                                            :fieldType "textfield"}]})
 
 (def application-for-hakukohde {:id             3424
@@ -53,12 +61,12 @@
                                 :haku           "haku.oid"
                                 :haku_name      "Haku name"
                                 :answers        [{:key       "form_field_1_0"
-                                                  :label     "Kysymys 3"
-                                                  :value     "Vastaus 3"
-                                                  :fieldType "textfield"}
-                                                 {:key       "random_0"
                                                   :label     "Kysymys 4"
                                                   :value     "Vastaus 4"
+                                                  :fieldType "textfield"}
+                                                 {:key       "random_0"
+                                                  :label     "Kysymys 5"
+                                                  :value     "Vastaus 5"
                                                   :fieldType "textfield"}]})
 
 (def application-review {:id              1
