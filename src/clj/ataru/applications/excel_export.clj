@@ -168,7 +168,7 @@
          (fn [acc form-element]
            (if (< 0 (count (:children form-element)))
              (into acc (pick-form-labels (:children form-element)))
-             (concat acc (when-let [label (and (not= "infoElement" (:fieldClass form-element)))]
+             (into acc (when-let [label (and (not= "infoElement" (:fieldClass form-element)))]
                            [[(:id form-element) (-> form-element :label :fi)]]))))
          []
          form-content)))
