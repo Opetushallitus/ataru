@@ -94,6 +94,8 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css"
                                     "target"
+                                    "target-virkailija"
+                                    "target-hakija"
                                     "test/js"
                                     "resources/public/js/test"
                                     "out"]
@@ -193,11 +195,13 @@
 
              :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
                                                :server-port 3449}
+                                    :target-path "target-virkailija"
                                     :env      {:app "virkailija"}
                                     :jvm-opts ^:replace ["-Dapp=virkailija"
                                                          "-Duser.home=."]}]
              :hakija-dev     [:dev {:figwheel {:nrepl-port  3336
                                                :server-port 3450}
+                                    :target-path "target-hakija"
                                     :env      {:app "hakija"}
                                     :jvm-opts ^:replace ["-Dapp=hakija"
                                                          "-Duser.home=."]}]
