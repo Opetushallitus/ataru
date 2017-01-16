@@ -82,6 +82,9 @@
         application-count (count-fn key)]
     (assoc form :application-count application-count)))
 
+(defn- has-applications? [{:keys [application-count]}]
+  (> application-count 0))
+
 (defn get-forms [include-deleted? session organization-service]
   (let [organizations     (organizations session)
         organization-oids (map :oid organizations)
@@ -96,5 +99,6 @@
                         :else
                         (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
                           (form-store/get-forms include-deleted? all-oids)))
-                      (map #(application-count->form % include-deleted?)))]
+                      (map #(application-count->form % include-deleted?))
+                      (filter has-applications?))]
     {:forms forms}))
