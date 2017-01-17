@@ -33,20 +33,13 @@
    session
    organization-service
    vector
-   (fn [organization-oids]
-     {:applications (application-store/get-application-list-by-hakukohde hakukohde-oid organization-oids)})
-   (fn []
-     {:applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid)})))
+   #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
+   #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
 
 (defn get-application-list-by-haku [haku-oid session organization-service]
-  (let [organizations     (access-control-utils/organizations session)
-        organization-oids (map :oid organizations)]
-    (cond (some #{organization-client/oph-organization} (map :oid organizations))
-          {:applications (application-store/get-full-application-list-by-haku haku-oid)}
-
-          (empty? organization-oids)
-          []
-
-          :else
-          (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
-            {:applications (application-store/get-application-list-by-haku haku-oid all-oids)}))))
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   vector
+   #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
+   #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))
