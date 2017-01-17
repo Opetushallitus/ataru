@@ -92,11 +92,15 @@
     (some? form)
     (form->form-id)))
 
+(defn- merge-applications [new-application old-application]
+  (merge new-application
+         (select-keys old-application [:key :secret :haku :hakukohde :haku-name :hakukohde-name])))
+
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
           {:keys [id key] :as new-application} (add-new-application-version
-                                                 (merge new-application (select-keys old-application [:key :secret])) conn)]
+                                                 (merge-applications new-application old-application) conn)]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
