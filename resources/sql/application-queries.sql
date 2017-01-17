@@ -155,7 +155,8 @@ join forms f on a.form_id = f.id;
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.secret = :secret
 )
-select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time for update;
+select id, key, lang, form_id as form, created_time, content, haku, haku_name, hakukohde, hakukohde_name
+from applications a join latest_version lv on a.created_time = lv.latest_time for update;
 
 -- name: yesql-get-application-organization-by-key
 -- Get the related form's organization oid for access checks
