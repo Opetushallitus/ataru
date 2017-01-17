@@ -3,7 +3,6 @@
             [ataru.forms.form-access-control :as form-access-control]
             [ataru.applications.application-store :as application-store]
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-            [ataru.util.access-control-utils :as access-control-utils]
             [ataru.virkailija.user.organization-client :as organization-client]))
 
 (defn check-form-access [form-key session organization-service]
@@ -22,7 +21,7 @@
 
 (defn check-application-access [application-key session organization-service]
   (when-not
-    (access-control-utils/organization-allowed?
+    (session-orgs/organization-allowed?
       session
       organization-service
       #(application-store/get-application-organization-oid application-key))

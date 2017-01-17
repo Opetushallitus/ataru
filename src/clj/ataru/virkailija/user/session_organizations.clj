@@ -30,3 +30,18 @@
 
       :else
       (when-ordinary-user-fn (all-org-oids organization-service organizations)))))
+
+(defn organization-allowed?
+  "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
+  [session organization-service organization-oid-handle]
+  (run-org-authorized
+   session
+   organization-service
+   (fn [] false)
+   #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
+                               (organization-oid-handle)
+                               organization-oid-handle)]
+     (-> #{organization-oid}
+         (some %)
+         boolean))
+   (fn [] true)))
