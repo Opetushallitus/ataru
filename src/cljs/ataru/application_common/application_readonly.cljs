@@ -9,6 +9,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
+            [ataru.cljs-util :refer [console-log]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -88,7 +89,12 @@
 
 (defn- followup-has-answer?
   [followup application]
-  (some? (:value ((answer-key followup) (:answers application)))))
+  (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
+    (and
+      (boolean answer-value)
+      (if (sequential? answer-value)
+        (< 0 (count answer-value))
+        true))))
 
 (defn- followups [followups content application lang]
   [:div
