@@ -252,7 +252,8 @@ FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
 WHERE f.key = :form_key
 AND (f.deleted is null or f.deleted = false)
-AND (a.hakukohde IS NULL OR a.hakukohde = '');
+AND (a.hakukohde IS NULL OR a.hakukohde = '')
+AND (a.haku IS NULL OR a.haku = '');
 
 -- name: yesql-get-application-count-with-deleteds-by-form-key
 -- Get count of applications by form key, including all versions of the form
@@ -260,4 +261,5 @@ SELECT COUNT(a.id) as application_count
 FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
 WHERE f.key = :form_key
-AND (a.hakukohde IS NULL OR a.hakukohde = '');
+AND (a.hakukohde IS NULL OR a.hakukohde = '')
+AND (a.haku IS NULL OR a.haku = '');

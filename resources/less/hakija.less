@@ -153,14 +153,16 @@
   color: @pale-blue;
   min-width: 170px;
   padding: 11px;
-  box-shadow: 1px 2px 5px #b3b3b3;
   font-size: 13px;
   overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.30);
+  border-radius: 2px;
+  line-height: 150%;
 }
 .application__close-invalid-fields {
   position: absolute;
-  right: 7px;
-  top: -1px;
+  right: 9px;
+  top: 3px;
   display: inline-block;
   font-size: 15px;
   color: #d8d8d8;
@@ -169,12 +171,13 @@
 .application__invalid-fields-arrow-up {
   position: absolute;
   top: 17px;
-  left: 40px;
+  left: 66px;
   width: 0;
   height: 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-bottom: 9px solid white;
+  z-index: 2;
 }
 .application__send-application-button {
   background: #fff;
@@ -449,19 +452,15 @@ textarea.application__form-text-input {
   margin-right: 6px;
 }
 
-.application__readonly-adjacent * {
+.application__readonly-adjacent{
+  text-align: left;
+  width: 100%;
   font-size: 14px;
-  margin: 0;
-  padding: 0;
 }
 
 th.application__readonly-adjacent--header {
-  padding-right: 3em;
-  padding-left: 0;
-}
-
-th.application__readonly-adjacent--header:last-of-type {
-  padding-right: 0;
+  font-weight: 600;
+  min-width: 33%;
 }
 
 .application__form-single-choice-button-outer-container {

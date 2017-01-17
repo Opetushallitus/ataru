@@ -543,17 +543,13 @@ and (max-width: @desktop-content-width) {
   visibility: hidden;
 }
 
-.application__readonly-adjacent * {
+.application__readonly-adjacent{
+  text-align: left;
+  width: 100%;
   font-size: 14px;
-  margin: 0;
-  padding: 0;
 }
 
 th.application__readonly-adjacent--header {
-  padding-right: 3em;
-  padding-left: 0;
-}
-
-th.application__readonly-adjacent--header:last-of-type {
-  padding-right: 0;
+  font-weight: 600;
+  min-width: 33%;
 }

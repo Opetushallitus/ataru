@@ -1,5 +1,7 @@
 /*.log
 /target
+/target-hakija
+/target-virkailija
 /*-init.clj
 /resources/public/js/compiled
 /resources/public/js/test
