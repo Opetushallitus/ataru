@@ -86,14 +86,18 @@
              (for [value values]
                [:td value]))))]]]))
 
+(defn- followup-has-answer?
+  [followup application]
+  (some? (:value ((answer-key followup) (:answers application)))))
+
 (defn- followups [followups content application lang]
   [:div
    (text content application lang)
    (into [:div]
-     (for [followup followups
-           :when    (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?] true)]
-       [:div
-        [field followup application lang]]))])
+         (for [followup followups
+               :when (followup-has-answer? followup application)]
+           [:div
+            [field followup application lang]]))])
 
 (defn field [content application lang]
   (match content
