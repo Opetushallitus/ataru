@@ -1,9 +1,8 @@
 (ns ataru.virkailija.user.session-organizations
-  [ataru.virkailija.user.organization-client :as organization-client])
+  (:require
+   [ataru.virkailija.user.organization-client :as organization-client]))
 
 (defn organizations [session] (-> session :identity :organizations))
-
-;(defn org-oids [session] (map :oid (organizations session)))
 
 (defn all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
