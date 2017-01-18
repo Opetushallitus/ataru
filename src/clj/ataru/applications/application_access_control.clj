@@ -28,11 +28,13 @@
       #(application-store/get-application-organization-oid application-key))
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
 
+(defn- empty-applications-result-fn [] {:applications []})
+
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
   (session-orgs/run-org-authorized
    session
    organization-service
-   vector
+   empty-applications-result-fn
    #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
 
@@ -40,6 +42,6 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   vector
+   empty-applications-result-fn
    #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))
