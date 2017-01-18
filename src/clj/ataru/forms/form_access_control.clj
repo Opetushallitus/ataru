@@ -52,7 +52,7 @@
       (do-fn))))
 
 (defn post-form [form session organization-service]
-  (let [organization-oids (-> session :identity :organizations)
+  (let [organization-oids (map :oid (-> session :identity :organizations))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
     (check-authorization
