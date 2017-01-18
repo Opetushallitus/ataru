@@ -14,7 +14,6 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy debug]]
-            [ataru.util.access-control-utils :as access-control-utils]
             [ataru.hakukohde.hakukohde-access-control :as hakukohde-access-control]
             [ataru.haku.haku-access-control :as haku-access-control]))
 
