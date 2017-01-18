@@ -4,6 +4,8 @@
 
 (defn organizations [session] (-> session :identity :organizations))
 
+(defn org-oids [session] (map :oid (organizations session)))
+
 (defn all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))

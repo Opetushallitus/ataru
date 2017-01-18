@@ -1,16 +1,14 @@
 (ns ataru.forms.form-access-control
   (:require
-   [ataru.util.access-control-utils :as access-control-utils]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
+   [ataru.virkailija.user.session-organizations :as session-orgs]
    [ataru.virkailija.user.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn- organizations [session] (-> session :identity :organizations))
-
 (defn form-allowed-by-key? [form-key session organization-service]
-  (access-control-utils/organization-allowed?
+  (session-orgs/organization-allowed?
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-key form-key))))
@@ -18,14 +16,14 @@
 (defn form-allowed-by-id?
   "id identifies a version of the form"
   [form-id session organization-service]
-  (access-control-utils/organization-allowed?
+  (session-orgs/organization-allowed?
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))))
 
 (defn- check-authorization [form session organization-service do-fn]
   (let [user-name     (-> session :identity :username)
-        organizations (organizations session)
+        organizations (session-orgs/organizations session)
         org-count     (count organizations)]
     (cond
       (and
@@ -43,7 +41,7 @@
                                              (str " " (vec organizations))))))
 
       ;The potentially new organization for form is not allowed for user
-      (not (access-control-utils/organization-allowed? session organization-service (:organization-oid form)))
+      (not (session-orgs/organization-allowed? session organization-service (:organization-oid form)))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "
                    (:organization-oid form)
@@ -54,7 +52,7 @@
       (do-fn))))
 
 (defn post-form [form session organization-service]
-  (let [organization-oids (access-control-utils/org-oids session)
+  (let [organization-oids (session-orgs/org-oids session)
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
     (check-authorization
@@ -71,9 +69,8 @@
   (let [form (form-store/fetch-latest-version form-id)]
     (check-authorization form session organization-service
       (fn []
-        (let [organization-oids (access-control-utils/org-oids session)]
-          (form-store/create-form-or-increment-version!
-            (assoc form :deleted true)))))))
+        (form-store/create-form-or-increment-version!
+         (assoc form :deleted true))))))
 
 (defn- application-count->form [{:keys [key] :as form} include-deleted?]
   (let [count-fn          (if include-deleted?
@@ -87,19 +84,11 @@
       (> application-count 0)))
 
 (defn get-forms [include-deleted? session organization-service]
-  (let [organizations     (organizations session)
-        organization-oids (map :oid organizations)
-        ;; OPH organization members can see everything when they're given the correct privilege
-        forms    (->> (cond
-                        (some #{oph-organization} organization-oids)
-                        (form-store/get-all-forms include-deleted?)
-
-                        (empty? organization-oids)
-                        []
-
-                        :else
-                        (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
-                          (form-store/get-forms include-deleted? all-oids)))
-                      (map #(application-count->form % include-deleted?))
-                      (filter deleted-with-applications?))]
-    {:forms forms}))
+  {:forms (->> (session-orgs/run-org-authorized
+                session
+                organization-service
+                vector
+                #(form-store/get-forms include-deleted? %)
+                #(form-store/get-all-forms include-deleted?))
+               (map #(application-count->form % include-deleted?))
+               (filter deleted-with-applications?))})
