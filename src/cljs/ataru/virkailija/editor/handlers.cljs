@@ -284,7 +284,7 @@
     (with-form-key [db previous-form-key]
       (do
         (when (and
-                (not (nil? previous-form-key))
+                (some? previous-form-key)
                 (not= previous-form-key form-key))
           (autosave/stop-autosave! (-> db :editor :autosave)))
         (when-let [id (get-in db [:editor :forms form-key :id])]
