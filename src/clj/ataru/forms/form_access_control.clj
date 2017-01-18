@@ -23,7 +23,7 @@
 
 (defn- check-authorization [form session organization-service do-fn]
   (let [user-name     (-> session :identity :username)
-        organizations (session-orgs/organizations session)
+        organizations (-> session :identity :organizations)
         org-count     (count organizations)]
     (cond
       (and
