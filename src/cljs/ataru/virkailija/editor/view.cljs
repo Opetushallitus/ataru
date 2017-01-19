@@ -158,7 +158,7 @@
         ;; and probably start caching those
         (when (not-empty selected-org-name)
           [:div.editor-form__owner-control
-           [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
+           [:span.editor-form__owner-label "Omistaja: "]
            [:a
             {:on-click toggle-open
              :class (if (many-orgs @organizations) "" "editor-form__form-owner-selection-disabled-link")}
@@ -175,38 +175,27 @@
                          @organizations))])])))))
 
 (defn form-toolbar [form]
-  (let [languages                    (subscribe [:editor/languages])
-        language-selections-visible? (r/atom false)
-        organizations                (subscribe [:state-query [:editor :user-info :organizations]])]
+  (let [languages (subscribe [:editor/languages])
+        organizations (subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__toolbar
          [:div.editor-form__language-controls
-          [:a.editor-form__language-selections
-           {:on-click (fn [_]
-                        (swap! language-selections-visible? not)
-                        nil)}
-           "Kieliversiot "
-           [:i.zmdi.zmdi-chevron-down
-            {:class (if @language-selections-visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
-          [:div.editor-form__form-toolbar-checkbox-container-anchor
-           [:div.editor-form__form-toolbar-checkbox-container
-            (when-not @language-selections-visible?
-              {:style {:display "none"}})
-            (map (fn [lang-kwd]
-                   (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-                 (keys lang-versions))]]
+          [:div.editor-form__form-toolbar-checkbox-container
+           (map (fn [lang-kwd]
+                  (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+                (keys lang-versions))]
           [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
-             (lang-kwd->link form (first languages) "Esikatselu")
+             (lang-kwd->link form (first languages) "Lomake")
              [:span
-              "Esikatselu: "
+              "Lomake  "
               (map-indexed (fn [idx lang-kwd]
                              (cond-> [:span
                                       {:key idx}
                                       (lang-kwd->link form lang-kwd)]
-                               (> (dec (count languages)) idx)
-                               (conj [:span " | "])))
+                                     (> (dec (count languages)) idx)
+                                     (conj [:span "   "])))
                            languages)])]]
          [form-owner-organization form]]))))
 

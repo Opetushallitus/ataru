@@ -171,7 +171,6 @@
 .editor-form__toolbar {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
   font-size: 15px;
 }
 
@@ -193,16 +192,7 @@
   user-select: none;
 }
 
-.editor-form__form-toolbar-checkbox-container-anchor {
-  position: relative;
-}
-
 .editor-form__form-toolbar-checkbox-container {
-  position: absolute;
-  z-index: 1;
-  background-color: white;
-  top: 23px;
-  left: -108px;
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
@@ -215,6 +205,7 @@
 
 .editor-form__owner-label {
   margin-right: 7px;
+  color: @gray-of-the-beast;
 }
 
 .editor-form__form-owner-selection-disabled-link {
@@ -270,8 +261,23 @@
 }
 
 .editor-form__form-toolbar-header-text {
-  color: #666;
-  line-height: normal;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 14px;
+  position: absolute;
+  left: 400px;
+  color: @blue-text-color;
+}
+
+.editor-form__form-toolbar-header-text a:before {
+  content: '\f1a3';
+  display: inline-block;
+  font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  padding-right: 5px;
+  margin-left: 5px;
 }
 
 .editor-form__form-toolbar-checkbox {
