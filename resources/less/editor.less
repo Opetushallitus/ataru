@@ -172,6 +172,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 15px;
+  padding-top: 4px;
 }
 
 .editor-form__language-controls {
@@ -184,7 +185,7 @@
 }
 
 .editor-form__checkbox-label.editor-form__language-checkbox-label {
-  margin-bottom: 3px;
+  margin-right: 4px;
 }
 
 .editor-form__language-selections {
@@ -261,11 +262,19 @@
 }
 
 .editor-form__form-toolbar-header-text {
-  border-radius: 3px;
-  padding: 1px 6px;
+  padding: 2px 0 0 15px;
   font-size: 14px;
-  position: absolute;
-  left: 400px;
+  color: @blue-text-color;
+  margin-left: 20px;
+}
+
+.editor-form__form-toolbar-header-text a {
+  margin-left: 7px;
+  display: inline-block;
+  min-width: 36px;
+}
+
+.editor-form__form-toolbar-header-text a:hover{
   color: @blue-text-color;
 }
 
@@ -277,7 +286,6 @@
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   padding-right: 5px;
-  margin-left: 5px;
 }
 
 .editor-form__form-toolbar-checkbox {

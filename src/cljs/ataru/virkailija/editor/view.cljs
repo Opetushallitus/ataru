@@ -129,7 +129,7 @@
 
 (defn- lang-kwd->link [form lang-kwd & [text]]
   (let [text (if (nil? text)
-               (get lang-versions lang-kwd)
+               (-> lang-kwd name clojure.string/upper-case)
                text)]
     [:a
      {:href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
@@ -187,16 +187,10 @@
                 (keys lang-versions))]
           [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
-             (lang-kwd->link form (first languages) "Lomake")
+             (lang-kwd->link form (first languages) "Lomakkeen esikatselu")
              [:span
-              "Lomake  "
-              (map-indexed (fn [idx lang-kwd]
-                             (cond-> [:span
-                                      {:key idx}
-                                      (lang-kwd->link form lang-kwd)]
-                                     (> (dec (count languages)) idx)
-                                     (conj [:span "   "])))
-                           languages)])]]
+              "Lomakkeen esikatselu  "
+              (map (partial lang-kwd->link form) languages)])]]
          [form-owner-organization form]]))))
 
 (defn form-in-use-warning
