@@ -209,7 +209,7 @@
         expanded?    (subscribe [:state-query [:application :ui :form-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
-             {:class (when (nil? @expanded?)
+             {:class (when (or (= true @expanded?) (nil? @expanded?))
                        "application-handling__list--expanded")}]
             (for [application applications
                   :let        [key       (:key application)
@@ -414,8 +414,10 @@
 (defn close-application []
   [:a {:href     "#"
        :on-click (fn [event]
-                   (dispatch [:set-state [:application :ui :expanded?] true])
-                   (routes/anchor-click-handler event))}
+                   (println "AHAHAHAAA")
+                   (dispatch [:set-state [:application :ui :form-list-expanded?] true])
+                   ;(routes/anchor-click-handler event)
+                   )}
    [:div.close-form-button
     [:i.zmdi.zmdi-close.close-form-button-mark]]])
 
