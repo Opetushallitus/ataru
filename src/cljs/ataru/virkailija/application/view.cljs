@@ -414,7 +414,6 @@
 (defn close-application []
   [:a {:href     "#"
        :on-click (fn [event]
-                   (println "AHAHAHAAA")
                    (dispatch [:set-state [:application :ui :form-list-expanded?] true])
                    ;(routes/anchor-click-handler event)
                    )}
