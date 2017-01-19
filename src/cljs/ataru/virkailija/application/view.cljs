@@ -430,7 +430,7 @@
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
               (belongs-to-current-form @selected-key applications))
-        [:div.panel-content
+        [:div.panel-content.application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
