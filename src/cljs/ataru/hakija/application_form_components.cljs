@@ -409,14 +409,9 @@
     {:component-did-mount (fn [this] (when-not value (on-change nil))) ; updates answers to include proper field labels and validation results
      :reagent-render
      (fn [fid on-change {:keys [valid? child value]}]
-       [:input.application__form-text-input
+       [:input.application__form-text-input.application__form-text-input--normal
         {:id        fid
          :type      "text"
-         :class     (match [valid? ((set (:validators child)) "required")]
-                      [false (_ :guard some?)]
-                      " application__form-field-error"
-                      :else
-                      " application__form-text-input--normal")
          :value     value
          :on-change on-change}])}))
 

@@ -44,9 +44,6 @@ tmux split-window -v
 tmux select-pane -t 0
 tmux send-keys "CONFIG=$VIRKAILIJA_CONFIG ./bin/lein virkailija-dev" C-m
 
-# Might be cargo-culting, but attempt to reduce apparent issues of starting two clj compiles exactly at the same time
-sleep 1
-
 tmux select-pane -t 1
 tmux send-keys "CONFIG=$HAKIJA_CONFIG ./bin/lein hakija-dev" C-m
 

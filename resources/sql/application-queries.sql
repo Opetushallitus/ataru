@@ -202,7 +202,7 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(DISTINCT a1.id) AS application_count
 FROM applications a1
 INNER JOIN forms f1 ON a1.form_id = f1.id
 WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
@@ -211,14 +211,14 @@ GROUP BY a1.hakukohde, a1.hakukohde_name;
 
 -- name: yesql-get-all-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, COUNT(a1.id) AS application_count
+SELECT a1.hakukohde, a1.hakukohde_name, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
 WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
 GROUP BY a1.hakukohde, a1.hakukohde_name;
 
 -- name: yesql-get-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, COUNT(a1.id) AS application_count
+SELECT a1.haku, a1.haku_name, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
 INNER JOIN forms f1 ON (a1.form_id = f1.id)
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
@@ -227,7 +227,7 @@ GROUP BY a1.haku, a1.haku_name;
 
 -- name: yesql-get-all-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, COUNT(a1.id) AS application_count
+SELECT a1.haku, a1.haku_name, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
 GROUP BY a1.haku, a1.haku_name;
@@ -248,7 +248,7 @@ WHERE a.hakukohde = :hakukohde_oid;
 
 -- name: yesql-get-application-count-by-form-key
 -- Get count of applications by form key, including all versions of the form
-SELECT COUNT(a.id) as application_count
+SELECT COUNT(DISTINCT a.key) as application_count
 FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
 WHERE f.key = :form_key
@@ -258,7 +258,7 @@ AND (a.haku IS NULL OR a.haku = '');
 
 -- name: yesql-get-application-count-with-deleteds-by-form-key
 -- Get count of applications by form key, including all versions of the form
-SELECT COUNT(a.id) as application_count
+SELECT COUNT(DISTINCT a.key) as application_count
 FROM forms f
 LEFT JOIN applications a ON f.id = a.form_id
 WHERE f.key = :form_key
