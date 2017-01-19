@@ -22,7 +22,7 @@
      [:span.editor-form__list-form-used-in-haku-count used-in-haku-count])])
 
 (defn form-list []
-  (let [forms            (debounce-subscribe 333 [:state-query [:editor :forms]])
+  (let [forms             (debounce-subscribe 333 [:state-query [:editor :forms]])
         selected-form-key (subscribe [:state-query [:editor :selected-form-key]])
         forms-in-use      (subscribe [:state-query [:editor :forms-in-use]])]
     (fn []
@@ -30,7 +30,8 @@
               [:div.editor-form__list]
               [:div.editor-form__list.editor-form__list_expanded])
             (for [[key form] @forms
-                  :let [selected? (= key @selected-form-key)
+                  :when (not (:deleted form))
+                  :let [selected?          (= key @selected-form-key)
                         used-in-haku-count (count (keys (get @forms-in-use (keyword key))))]]
               ^{:key (str "form-list-item-" key)}
               (if selected?

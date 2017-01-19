@@ -27,7 +27,12 @@
                                          :children [{:id         "form_field_1_0"
                                                      :label      {:fi "Kysymys 4"}
                                                      :fieldType  "textField"
-                                                     :fieldClass "formField"}]}]})
+                                                     :fieldClass "formField"}
+                                                    {:id                   "should_not_be_shown"
+                                                     :label                {:fi "You should not see this"}
+                                                     :fieldType            "textField"
+                                                     :exclude-from-answers true
+                                                     :fieldClass           "formField"}]}]})
 
 (def application-for-form {:id           9432
                            :key          "application_9432_key"
@@ -67,7 +72,11 @@
                                                  {:key       "random_0"
                                                   :label     "Kysymys 5"
                                                   :value     "Vastaus 5"
-                                                  :fieldType "textfield"}]})
+                                                  :fieldType "textfield"}
+                                                 {:key       "should_not_be_shown"
+                                                  :label     "You should not see this"
+                                                  :value     "Really, no"
+                                                  :fieldType "textField"}]})
 
 (def application-review {:id              1
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"

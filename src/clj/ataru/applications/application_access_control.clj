@@ -1,9 +1,10 @@
 (ns ataru.applications.application-access-control
-  (:require [ataru.forms.form-access-control :as form-access-control]
-            [ataru.applications.application-store :as application-store]
-            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-            [ataru.util.access-control-utils :as access-control-utils]
-            [ataru.virkailija.user.organization-client :as organization-client]))
+  (:require
+   [ataru.virkailija.user.session-organizations :as session-orgs]
+   [ataru.forms.form-access-control :as form-access-control]
+   [ataru.applications.application-store :as application-store]
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.virkailija.user.organization-client :as organization-client]))
 
 (defn check-form-access [form-key session organization-service]
   (when-not
@@ -21,34 +22,26 @@
 
 (defn check-application-access [application-key session organization-service]
   (when-not
-    (access-control-utils/organization-allowed?
+    (session-orgs/organization-allowed?
       session
       organization-service
       #(application-store/get-application-organization-oid application-key))
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
 
+(defn- empty-applications-result-fn [] {:applications []})
+
 (defn get-application-list-by-hakukohde [hakukohde-oid session organization-service]
-  (let [organizations     (access-control-utils/organizations session)
-        organization-oids (map :oid organizations)]
-    (cond (some #{organization-client/oph-organization} (map :oid organizations))
-          {:applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid)}
-
-          (empty? organization-oids)
-          []
-
-          :else
-          (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
-            {:applications (application-store/get-application-list-by-hakukohde hakukohde-oid all-oids)}))))
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   empty-applications-result-fn
+   #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
+   #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
 
 (defn get-application-list-by-haku [haku-oid session organization-service]
-  (let [organizations     (access-control-utils/organizations session)
-        organization-oids (map :oid organizations)]
-    (cond (some #{organization-client/oph-organization} (map :oid organizations))
-          {:applications (application-store/get-full-application-list-by-haku haku-oid)}
-
-          (empty? organization-oids)
-          []
-
-          :else
-          (let [all-oids (access-control-utils/all-org-oids organization-service organizations)]
-            {:applications (application-store/get-application-list-by-haku haku-oid all-oids)}))))
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   empty-applications-result-fn
+   #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
+   #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))

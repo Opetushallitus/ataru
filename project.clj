@@ -191,7 +191,7 @@
                                                [lein-cljfmt "0.5.6"]]
                               :source-paths   ["dev/clj" "test/cljc/unit"]
                               :resource-paths ["dev-resources"]
-                              :env            {:dev? true}}
+                              :env            {:dev? "true"}}
 
              :virkailija-dev [:dev {:figwheel {:nrepl-port  3334
                                                :server-port 3449}

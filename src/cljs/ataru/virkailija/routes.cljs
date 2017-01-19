@@ -16,12 +16,21 @@
   (accountant/navigate! path))
 
 (defn anchor-click-handler
+  "Used for anchor tag functionality with history API support"
   [event]
-  (.preventDefault event)
+  (.stopImmediatePropagation (.nativeEvent event))
   (let [path (.getPath (.parse Uri (.-href (.-target event))))
         matches-path? (secretary/locate-route path)]
     (when matches-path?
       (set-history! path))))
+
+(defn- select-editor-form-if-not-deleted
+  [form]
+  (if (:deleted form)
+    (do
+      (.replaceState js/history nil nil "/lomake-editori/editor")
+      (secretary/dispatch! "/lomake-editori/editor"))
+    (dispatch [:editor/select-form (:key form)])))
 
 (defn app-routes []
   (defroute "/lomake-editori/" []
@@ -35,15 +44,13 @@
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
     (dispatch [:set-active-panel :editor])
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-if-empty key])
     (dispatch [:editor/refresh-forms-in-use])
     (dispatch-after-state
      :predicate
      (fn [db]
        (not-empty (get-in db [:editor :forms key])))
-     :handler
-     (fn [form]
-       (dispatch [:editor/select-form (:key form)]))))
+     :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
     (dispatch [:editor/refresh-forms-with-deleteds])

@@ -14,7 +14,6 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy debug]]
-            [ataru.util.access-control-utils :as access-control-utils]
             [ataru.hakukohde.hakukohde-access-control :as hakukohde-access-control]
             [ataru.haku.haku-access-control :as haku-access-control]))
 
@@ -140,7 +139,8 @@
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
-  (doseq [answer (:answers application)]
+  (doseq [answer (:answers application)
+          :when (some (comp (partial = (:label answer)) :header) headers)]
     (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value-or-values (-> (:value answer))
           value           (or
@@ -162,14 +162,21 @@
     (when notes (writer 0 notes-column notes))
     (when score (writer 0 score-column score))))
 
+(defn- form-label? [form-element]
+  (and (not= "infoElement" (:fieldClass form-element))
+       (not (:exclude-from-answers form-element))))
+
+(defn- hidden-answer? [form-element]
+  (:exclude-from-answers form-element))
+
 (defn pick-form-labels
-  [form-content]
+  [form-content pick-cond]
   (->> (reduce
          (fn [acc form-element]
            (if (< 0 (count (:children form-element)))
-             (into acc (pick-form-labels (:children form-element)))
-             (into acc (when-let [label (and (not= "infoElement" (:fieldClass form-element)))]
-                           [[(:id form-element) (-> form-element :label :fi)]]))))
+             (into acc (pick-form-labels (:children form-element) pick-cond))
+             (into acc (when (pick-cond form-element)
+                         [[(:id form-element) (-> form-element :label :fi)]]))))
          []
          form-content)))
 
@@ -205,10 +212,20 @@
 
       :else header)))
 
+(defn- extract-headers-from-applications [applications form]
+  (let [hidden-answers (map first (pick-form-labels (:content form) hidden-answer?))]
+    (mapcat (fn [application]
+              (->> (:answers application)
+                   (filter (fn [answer]
+                             (not (some (partial = (:key answer)) hidden-answers))))
+                   (mapv (fn [answer]
+                           (vals (select-keys answer [:key :label]))))))
+            applications)))
+
 (defn- extract-headers
   [applications form]
-  (let [labels-in-form         (pick-form-labels (:content form))
-        labels-in-applications (mapcat #(map (fn [answer] (vals (select-keys answer [:key :label]))) (:answers %)) applications)
+  (let [labels-in-form         (pick-form-labels (:content form) form-label?)
+        labels-in-applications (extract-headers-from-applications applications form)
         all-labels             (distinct (concat labels-in-form labels-in-applications (map vector (repeat nil) review-headers)))
         decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
     (for [[idx [id header]] (map vector (range) all-labels)
