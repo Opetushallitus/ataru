@@ -1,6 +1,8 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
   (:require [ataru.util :as util]
+            [ataru.cljs-util :refer [console-log]]
+            [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- initial-valid-status [flattened-form-fields]
@@ -33,23 +35,38 @@
          (fn [field] [(:id field) field])
          (util/flatten-form-fields (:content form)))))
 
-(defn- create-answers-to-submit [answers form]
-  (for [[ans-key {:keys [value values] :as answer}] answers
-        :let [flat-form-map (form->flat-form-map form)
-              field-map (get flat-form-map (name ans-key))
-              field-type (:fieldType field-map)
-              label (:label field-map)]
-        :when (or
-                values
-                ; permit empty dropdown values, because server side validation expects to match form fields to answers
-                (and (empty? value) (= "dropdown" field-type))
-                (and (not-empty value) (not (:exclude-from-answers field-map))))]
-    {:key (name ans-key)
-     :value (or
-              value
-              (map (fn [v] (or (:value v) "")) values))
-     :fieldType field-type
-     :label label}))
+(defn- remove-invisible-followup-values
+  [answers form ui]
+  (let [flat-form (form->flat-form-map form)
+        followup-field-ids  (->> flat-form
+                                 (filter-vals #(:followup? %))
+                                 (keys)
+                                 (map keyword)
+                                 (set))
+        hidden-field-ids    (->> ui
+                                 (filter-vals #(not (:visible? %)))
+                                 (keys)
+                                 (set))
+        hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
+    (remove-keys #(contains? hidden-followup-ids %) answers)))
+
+(defn- create-answers-to-submit [answers form ui]
+  (let [flat-form-map (form->flat-form-map form)]
+    (for [[ans-key {:keys [value values] :as answer}] (remove-invisible-followup-values answers form ui)
+          :let [field-map  (get flat-form-map (name ans-key))
+                field-type (:fieldType field-map)
+                label      (:label field-map)]
+          :when (or
+                  values
+                  ; permit empty dropdown values, because server side validation expects to match form fields to answers
+                  (and (empty? value) (= "dropdown" field-type))
+                  (and (not-empty value) (not (:exclude-from-answers field-map))))]
+      {:key       (name ans-key)
+       :value     (or
+                    value
+                    (map (fn [v] (or (:value v) "")) values))
+       :fieldType field-type
+       :label     label})))
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]
@@ -59,7 +76,7 @@
              :hakukohde-name (:hakukohde-name form)
              :haku           (:haku-oid form)
              :haku-name      (:haku-name form)
-             :answers        (create-answers-to-submit (:answers application) form)}
+             :answers        (create-answers-to-submit (:answers application) form (:ui application))}
       (some? secret)
       (assoc :secret secret))))
 
