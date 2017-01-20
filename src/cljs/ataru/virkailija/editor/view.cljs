@@ -199,15 +199,13 @@
   (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
     (fn [form]
       (when-let [form-used-in-hakus ((keyword (:key form)) @forms-in-use)]
-        [:div.editor-form__module-wrapper
-         [:div.editor-form__module-fields
-          [:span.editor-form__used-in-haku-count (str (count (keys form-used-in-hakus)))]
-          [:span.editor-form__used-in-haku-heading.animated.flash "Lomake on käytössä"]
+        [:div.editor-form__in_use_notification.animated.flash
+          [:span.editor-form__used-in-haku-heading "Lomake on käytössä"]
           [:ul.editor-form__used-in-haku-list
            (for [haku (vals form-used-in-hakus)]
              [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
               [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
-                   :target "_blank"} (:haku-name haku)]])]]]))))
+                   :target "_blank"} (:haku-name haku)]])]]))))
 
 (defn- close-form []
   (fn []

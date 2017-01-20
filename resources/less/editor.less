@@ -106,10 +106,50 @@
   vertical-align: top;
 }
 
+.editor-form__in_use_notification {
+  margin-top: 20px;
+  color: #2B2B2B;
+  text-align: center;
+  border-top: 1px dashed #e6e6e6;
+  border-bottom: 1px dashed #e6d6d6;
+  padding: 11px;
+}
+
+.editor-form__used-in-haku-count {
+  .solid-disc-number;
+}
+
+.editor-form__used-in-haku-heading {
+  .semibold;
+}
+
+.editor-form__used-in-haku-heading:before {
+  content: '\f1f9';
+  display: inline-block;
+  font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  padding-right: 7px;
+}
+
+.editor-form__used-in-haku-list {
+  list-style: none;
+  margin: 6px 0 0 -6px;
+}
+
 .editor-form__list-form-used-in-haku-count {
   .solid-disc-number;
   position: absolute;
-  right: 10px;
+  margin-top: 1px;
+}
+
+.editor-form__used-in-haku-heading {
+  font-size: 15px;
+}
+
+.editor-form__in_use_notification ul {
+  font-size: 14px;
 }
 
 .editor-form__panel-container {
@@ -198,6 +238,7 @@
   flex-flow: row nowrap;
   justify-content: flex-start;
   width: 200px;
+  padding-top: 1px;
 }
 
 .editor-form__owner-control {
@@ -272,10 +313,17 @@
   margin-left: 7px;
   display: inline-block;
   min-width: 36px;
+  background: #4194bf;
+  color: #fff;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 13px;
+  text-align: center;
+  min-width: 50px;
 }
 
 .editor-form__form-toolbar-header-text a:hover{
-  color: @blue-text-color;
+  background: #00b5ef;
 }
 
 .editor-form__form-toolbar-header-text a:before {
@@ -302,20 +350,6 @@
   border-radius: 2px;
   margin: 10px 0 5px 0;
   .semibold;
-}
-
-.editor-form__used-in-haku-count {
-  .solid-disc-number;
-}
-
-.editor-form__used-in-haku-heading {
-  padding-left: 10px;
-  .semibold;
-}
-
-.editor-form__used-in-haku-list {
-  list-style: none;
-  margin: 6px 0 10px -6px;
 }
 
 .editor-form__section_wrapper {
