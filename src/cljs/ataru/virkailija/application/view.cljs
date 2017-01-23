@@ -203,6 +203,23 @@
         [:i.zmdi.zmdi-close.application-handling__form-list-close-button
          {:on-click #(toggle-form-list-open! open)}]]])))
 
+(defn application-list-row [application selected?]
+  (let [time      (t/time->str (:created-time application))
+        applicant (:applicant-name application)]
+    [:div.application-handling__list-row
+     {:on-click #(dispatch [:application/select-application (:key application)])
+      :class    (when selected?
+                  "application-handling__list-row--selected")}
+     [:span.application-handling__list-row--applicant
+      (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+     [:span.application-handling__list-row--time time]
+     [:span.application-handling__list-row--score
+      (or (:score application) "")]
+     [:span.application-handling__list-row--state
+      (or
+       (get application-review-states (:state application))
+       "Tuntematon")]]))
+
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
         expanded?    (subscribe [:state-query [:application :ui :form-list-expanded?]])]
@@ -211,38 +228,10 @@
              {:class (when (or (= true @expanded?) (nil? @expanded?))
                        "application-handling__list--expanded")}]
             (for [application applications
-                  :let        [key       (:key application)
-                               time      (t/time->str (:created-time application))
-                               applicant (:applicant-name application)
-                               selected? (= @selected-key key)]]
+                  :let        [selected? (= @selected-key (:key application))]]
               (if selected?
-                [wrap-scroll-to
-                 [:div.application-handling__list-row
-                  {:on-click #(dispatch [:application/select-application (:key application)])
-                   :class    (when selected?
-                               "application-handling__list-row--selected")}
-                  [:span.application-handling__list-row--applicant
-                   (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-                  [:span.application-handling__list-row--time time]
-                  [:span.application-handling__list-row--score
-                   (or (:score application) "")]
-                  [:span.application-handling__list-row--state
-                   (or
-                    (get application-review-states (:state application))
-                    "Tuntematon")]]]
-                [:div.application-handling__list-row
-                 {:on-click #(dispatch [:application/select-application (:key application)])
-                  :class    (when selected?
-                              "application-handling__list-row--selected")}
-                 [:span.application-handling__list-row--applicant
-                  (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-                 [:span.application-handling__list-row--time time]
-                 [:span.application-handling__list-row--score
-                  (or (:score application) "")]
-                 [:span.application-handling__list-row--state
-                  (or
-                   (get application-review-states (:state application))
-                   "Tuntematon")]]))))))
+                [wrap-scroll-to [application-list-row application selected?]]
+                [application-list-row application selected?]))))))
 
 (defn icon-check []
   [:img.application-handling__review-state-selected-icon
