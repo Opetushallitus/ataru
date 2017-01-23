@@ -101,7 +101,10 @@
    (text content application lang)
    (into [:div]
          (for [followup followups
-               :when (followup-has-answer? followup application)]
+               :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+               :when (if (boolean? followup-is-visible?)
+                       followup-is-visible?
+                       (followup-has-answer? followup application))]
            [:div
             [field followup application lang]]))])
 

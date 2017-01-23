@@ -36,9 +36,8 @@
          (util/flatten-form-fields (:content form)))))
 
 (defn- remove-invisible-followup-values
-  [answers form ui]
-  (let [flat-form (form->flat-form-map form)
-        followup-field-ids  (->> flat-form
+  [answers flat-form ui]
+  (let [followup-field-ids  (->> flat-form
                                  (filter-vals #(:followup? %))
                                  (keys)
                                  (map keyword)
@@ -52,7 +51,7 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values] :as answer}] (remove-invisible-followup-values answers form ui)
+    (for [[ans-key {:keys [value values]}] (remove-invisible-followup-values answers flat-form-map ui)
           :let [field-map  (get flat-form-map (name ans-key))
                 field-type (:fieldType field-map)
                 label      (:label field-map)]
