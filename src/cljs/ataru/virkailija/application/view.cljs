@@ -193,8 +193,6 @@
          [form-list-arrow open]
          [form-list-header]]
         [excel-download-link filtered-applications application-filter]]
-       [:div.application-handling__form-list-indicator
-        (when-not @open {:style {:display "none"}})]
        [:div.application-handling__form-list-wrapper-inner
         (when-not @open {:style {:display "none"}})
         [form-list-search open]
