@@ -213,20 +213,36 @@
             (for [application applications
                   :let        [key       (:key application)
                                time      (t/time->str (:created-time application))
-                               applicant (:applicant-name application)]]
-              [:div.application-handling__list-row
-               {:on-click #(dispatch [:application/select-application (:key application)])
-                :class    (when (= @selected-key key)
-                            "application-handling__list-row--selected")}
-               [:span.application-handling__list-row--applicant
-                (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-               [:span.application-handling__list-row--time time]
-               [:span.application-handling__list-row--score
-                (or (:score application) "")]
-               [:span.application-handling__list-row--state
-                (or
-                 (get application-review-states (:state application))
-                 "Tuntematon")]])))))
+                               applicant (:applicant-name application)
+                               selected? (= @selected-key key)]]
+              (if selected?
+                [wrap-scroll-to
+                 [:div.application-handling__list-row
+                  {:on-click #(dispatch [:application/select-application (:key application)])
+                   :class    (when selected?
+                               "application-handling__list-row--selected")}
+                  [:span.application-handling__list-row--applicant
+                   (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+                  [:span.application-handling__list-row--time time]
+                  [:span.application-handling__list-row--score
+                   (or (:score application) "")]
+                  [:span.application-handling__list-row--state
+                   (or
+                    (get application-review-states (:state application))
+                    "Tuntematon")]]]
+                [:div.application-handling__list-row
+                 {:on-click #(dispatch [:application/select-application (:key application)])
+                  :class    (when selected?
+                              "application-handling__list-row--selected")}
+                 [:span.application-handling__list-row--applicant
+                  (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+                 [:span.application-handling__list-row--time time]
+                 [:span.application-handling__list-row--score
+                  (or (:score application) "")]
+                 [:span.application-handling__list-row--state
+                  (or
+                   (get application-review-states (:state application))
+                   "Tuntematon")]]))))))
 
 (defn icon-check []
   [:img.application-handling__review-state-selected-icon
