@@ -133,7 +133,8 @@
                (-> lang-kwd name clojure.string/upper-case)
                text)]
     [:a
-     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
+     {:key    (str "preview-" (name lang-kwd))
+      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
       :target "_blank"}
      text]))
 
