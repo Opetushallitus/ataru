@@ -11,28 +11,8 @@
    [ataru.virkailija.temporal :as t]
    [ataru.application.review-states :refer [application-review-states]]
    [ataru.application-common.application-readonly :as readonly-contents]
-   [ataru.cljs-util :refer [wrap-scroll-to classnames]]
+   [ataru.cljs-util :refer [wrap-scroll-to]]
    [taoensso.timbre :refer-macros [spy debug]]))
-
-(defn toggle-form-list-open! [open]
-  (swap! open not)
-  (dispatch [:application/clear-search-term])
-  nil) ;; Returns nil so that React doesn't whine about event handlers returning false
-
-
-(defn form-list-arrow [open]
-  [:i.zmdi.application-handling__form-list-arrow
-   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
-
-(defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form      (subscribe [:editor/selected-form])
-        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
-    (fn []
-      [:div.application-handling__form-list-header
-       (or (:name @selected-form)
-           (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku))])))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)
@@ -75,6 +55,25 @@
      text]))
 
 (def text-with-hilighted-parts (comp (partial some :hilight) :text))
+
+(defn toggle-form-list-open! [open]
+  (swap! open not)
+  (dispatch [:application/clear-search-term])
+  nil) ;; Returns nil so that React doesn't whine about event handlers returning false
+
+(defn form-list-arrow [open]
+  [:i.zmdi.application-handling__form-list-arrow
+   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
+
+(defn form-list-header []
+  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
+        selected-form      (subscribe [:editor/selected-form])
+        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
+    (fn []
+      [:div.application-handling__form-list-header
+       (or (:name @selected-form)
+           (:hakukohde-name @selected-hakukohde)
+           (:haku-name @selected-haku))])))
 
 (defn form-list-column [forms header-text url-fn open]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
