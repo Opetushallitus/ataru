@@ -18,7 +18,7 @@
 (defn anchor-click-handler
   "Used for anchor tag functionality with history API support"
   [event]
-  (.stopImmediatePropagation (.nativeEvent event))
+  (.stopImmediatePropagation (.-nativeEvent event))
   (let [path (.getPath (.parse Uri (.-href (.-target event))))
         matches-path? (secretary/locate-route path)]
     (when matches-path?
