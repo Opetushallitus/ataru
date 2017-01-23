@@ -9,7 +9,7 @@
                   :selected-form-key nil}
                                         ; Initial active panel on page load.
    :active-panel :editor
-   :application  {:review {}
-                  :filter (mapv first application-review-states)
-                  :sort   application-sorting/initial-sort
-                  :ui     {:form-list-expanded? true}}})
+   :application  {:review              {}
+                  :filter              (mapv first application-review-states)
+                  :sort                application-sorting/initial-sort
+                  :form-list-expanded? true}})

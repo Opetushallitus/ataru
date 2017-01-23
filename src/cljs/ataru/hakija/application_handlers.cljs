@@ -13,8 +13,7 @@
 
 (defn initialize-db [_ _]
   {:form        nil
-   :application {:answers {}
-                 :ui {:form-list-expanded? true}}})
+   :application {:answers {}}})
 
 (defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang hakukohde-name]}]]
   {:db       (-> db

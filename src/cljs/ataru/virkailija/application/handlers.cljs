@@ -13,7 +13,7 @@
       (-> {:db db}
           (assoc-in [:db :application :selected-key] application-key)
           (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc-in [:db :application :ui :form-list-expanded?] false)
+          (assoc-in [:db :application :form-list-expanded?] false)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
 (reg-event-fx
@@ -22,7 +22,7 @@
     (-> {:db db}
         (assoc-in [:db :application :selected-key] nil)
         (assoc-in [:db :application :selected-application-and-form] nil)
-        (assoc-in [:db :application :ui :form-list-expanded?] true))))
+        (assoc-in [:db :application :form-list-expanded?] true))))
 
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))

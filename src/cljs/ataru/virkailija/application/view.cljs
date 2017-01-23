@@ -222,7 +222,7 @@
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
-        expanded?    (subscribe [:state-query [:application :ui :form-list-expanded?]])]
+        expanded?    (subscribe [:state-query [:application :form-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
              {:class (when (= true @expanded?)
@@ -428,7 +428,7 @@
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         included-in-filter            (fn [review-state filter] (some #{review-state} filter))
-        expanded?                     (subscribe [:state-query [:application :ui :form-list-expanded?]])]
+        expanded?                     (subscribe [:state-query [:application :form-list-expanded?]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
