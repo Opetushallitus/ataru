@@ -413,10 +413,7 @@
 
 (defn close-application []
   [:a {:href     "#"
-       :on-click (fn [event]
-                   (dispatch [:set-state [:application :ui :form-list-expanded?] true])
-                   ;(routes/anchor-click-handler event)
-                   )}
+       :on-click (fn [event] (dispatch [:application/close-application]))}
    [:div.close-form-button
     [:i.zmdi.zmdi-close.close-form-button-mark]]])
 
