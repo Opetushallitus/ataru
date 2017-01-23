@@ -418,8 +418,8 @@
 (defn close-application []
   [:a {:href     "#"
        :on-click (fn [event] (dispatch [:application/close-application]))}
-   [:div.close-form-button
-    [:i.zmdi.zmdi-close.close-form-button-mark]]])
+   [:div.close-details-button
+    [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])

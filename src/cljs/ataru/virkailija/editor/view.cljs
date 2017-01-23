@@ -213,8 +213,8 @@
        :on-click (fn [event]
                    (dispatch [:set-state [:editor :selected-form-key] nil])
                    (routes/anchor-click-handler event))}
-   [:div.close-form-button
-    [:i.zmdi.zmdi-close.close-form-button-mark]]])
+   [:div.close-details-button
+    [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]
