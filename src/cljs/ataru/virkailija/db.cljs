@@ -4,11 +4,12 @@
    [ataru.virkailija.application-sorting :as application-sorting]))
 
 (def default-db
-  {:editor {:forms nil
-            :autosave nil ; autosave stop function, see autosave.cljs
-            :selected-form-key nil}
-   ; Initial active panel on page load.
+  {:editor       {:forms             nil
+                  :autosave          nil ; autosave stop function, see autosave.cljs
+                  :selected-form-key nil}
+                                        ; Initial active panel on page load.
    :active-panel :editor
-   :application {:review {}
-                 :filter (mapv first application-review-states)
-                 :sort application-sorting/initial-sort}})
+   :application  {:review {}
+                  :filter (mapv first application-review-states)
+                  :sort   application-sorting/initial-sort
+                  :ui     {:form-list-expanded? true}}})

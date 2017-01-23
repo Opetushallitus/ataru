@@ -225,7 +225,7 @@
         expanded?    (subscribe [:state-query [:application :ui :form-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
-             {:class (when (or (= true @expanded?) (nil? @expanded?))
+             {:class (when (= true @expanded?)
                        "application-handling__list--expanded")}]
             (for [application applications
                   :let        [selected? (= @selected-key (:key application))]]
