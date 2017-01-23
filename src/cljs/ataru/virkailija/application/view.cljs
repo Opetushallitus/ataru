@@ -430,7 +430,8 @@
         expanded?                     (subscribe [:state-query [:application :ui :form-list-expanded?]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
-              (belongs-to-current-form @selected-key applications))
+                 (belongs-to-current-form @selected-key applications)
+                 (not @expanded?))
         [:div.panel-content.application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
