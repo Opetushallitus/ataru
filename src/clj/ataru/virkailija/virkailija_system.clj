@@ -4,6 +4,7 @@
             [ataru.http.server :as server]
             [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
+            [ataru.cache.cache-service :as cache-service]
             [environ.core :refer [env]]))
 
 (defn new-system
@@ -25,4 +26,5 @@
 
     :server               (component/using
                            (server/new-server)
-                           [:server-setup :handler]))))
+                           [:server-setup :handler])
+    :cache                (cache-service/new-cache-service))))

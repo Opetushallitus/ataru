@@ -5,7 +5,8 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [ataru.cache.cache-service :as cache-service]))
 
 (defn new-system
   ([]
@@ -27,4 +28,6 @@
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)
-                             [:person-service]))))
+                             [:person-service])
+
+     :cache                (cache-service/new-cache-service))))
