@@ -458,7 +458,7 @@
                     (when (pos? rowcount)
                       [:a {:on-click (fn [evt]
                                        (.preventDefault evt)
-                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row))]))}
+                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row)) (map (comp :id second) row)]))}
                        [:span.application__form-adjacent-row--mobile-only
                         "Poista rivi"]
                        [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]

@@ -325,29 +325,31 @@
                           {:visible? (not (empty? (:children field)))}}))
         (reduce merge)))))
 
+(defn- set-adjacent-field-validity
+  [field-descriptor {:keys [values] :as answer}]
+  (let [required? (some? ((set (:validators field-descriptor)) "required"))]
+    (assoc answer
+      :valid
+      (boolean
+        (some->>
+          (map :valid (or
+                        (not-empty values)
+                        [{:valid (not required?)}]))
+          not-empty
+          (every? true?))))))
+
 (reg-event-db
   :application/set-adjacent-field-answer
   (fn [db [_ field-descriptor id idx value]]
     (-> (update-in db [:application :answers id :values]
-          (fn [answers]
-            (let [[init last] (split-at
-                                idx
-                                (or
-                                  (not-empty answers)
-                                  []))]
-              (vec (concat init [value] (rest last))))))
-        (update-in [:application :answers id]
-          (fn [{:keys [values] :as answer}]
-            (let [required? (some? ((set (:validators field-descriptor)) "required"))]
-              (assoc answer
-                :valid
-                (boolean
-                  (some->>
-                      (map :valid (or
-                                    (not-empty values)
-                                    [{:valid (not required?)}]))
-                      not-empty
-                    (every? true?))))))))))
+                   (fn [answers]
+                     (let [[init last] (split-at
+                                         idx
+                                         (or
+                                           (not-empty answers)
+                                           []))]
+                       (vec (concat init [value] (rest last))))))
+        (update-in [:application :answers id] (partial set-adjacent-field-validity field-descriptor)))))
 
 (reg-event-db
   :application/add-adjacent-fields
@@ -365,13 +367,20 @@
 
 (reg-event-db
   :application/remove-adjacent-field
-  (fn [db [_ field-descriptor index]]
-    (reduce (fn [db' id]
-              (update-in db'
-                [:application :answers id :values]
-                (fn [answers]
-                  (vec (concat
-                         (subvec answers 0 index)
-                         (subvec answers (inc index)))))))
-      db
-      (map (comp keyword :id) (:children field-descriptor)))))
+  (fn [db [_ field-descriptor index answer-ids]]
+    (as-> db db'
+          (reduce (fn [db'' id'']
+                    (update-in db''
+                               [:application :answers id'' :values]
+                               (fn [answers]
+                                 (vec (concat
+                                        (subvec answers 0 index)
+                                        (subvec answers (inc index)))))))
+                  db'
+                  (map (comp keyword :id) (:children field-descriptor)))
+          (reduce (fn [db'' id'']
+                    (update-in db''
+                               [:application :answers id'']
+                               (partial set-adjacent-field-validity field-descriptor)))
+                  db'
+                  answer-ids))))
