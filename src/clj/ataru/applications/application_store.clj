@@ -22,15 +22,23 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
+(defn lang-label [lang label-map]
+  (let [label-string (lang label-map)]
+    (if (or
+         (not label-string)
+         (empty? (clojure.string/trim label-string)))
+      nil
+      label-string)))
+
 (defn unwrap-application [application]
   (assoc (->kebab-case-kw (dissoc application :content))
     :answers
     (mapv (fn [answer]
             (update answer :label (fn [label]
                                     (or
-                                      (:fi label)
-                                      (:sv label)
-                                      (:en label)))))
+                                      (lang-label :fi label)
+                                      (lang-label :sv label)
+                                      (lang-label :en label)))))
           (-> application :content :answers))))
 
 (defn- add-new-application-version
