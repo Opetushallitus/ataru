@@ -21,7 +21,7 @@
                  [org.clojure/core.async "0.2.395"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.0"]
-                 [jayq "2.5.4"]
+                 [medley "0.8.4"]
 
                  ;clojure
                  [compojure "1.5.1"]
@@ -57,8 +57,7 @@
                  [org.apache.poi/poi-ooxml "3.15"]
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
                  [org.clojure/core.cache "0.6.5"]
-                 [org.clojure/tools.nrepl "0.2.12"]
-                 [metosin/schema-viz "0.1.1"]]
+                 [org.clojure/tools.nrepl "0.2.12"]]
 
   :min-lein-version "2.5.3"
 
