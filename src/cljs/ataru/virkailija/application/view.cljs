@@ -58,8 +58,7 @@
 
 (defn toggle-form-list-open! [open]
   (swap! open not)
-  (dispatch [:application/clear-search-term])
-  nil) ;; Returns nil so that React doesn't whine about event handlers returning false
+  (dispatch [:application/clear-search-term]))
 
 (defn form-list-arrow [open]
   [:i.zmdi.application-handling__form-list-arrow
