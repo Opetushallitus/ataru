@@ -209,13 +209,12 @@
                    :target "_blank"} (:haku-name haku)]])]]))))
 
 (defn- close-form []
-  (fn []
-    [:a {:href     "/lomake-editori/editor"
-         :on-click (fn [event]
-                     (dispatch [:set-state [:editor :selected-form-key] nil])
-                     (routes/anchor-click-handler event))}
-     [:div.editor-form__close-form-button
-      [:i.zmdi.zmdi-close.editor-form__close-form-button-mark]]]))
+  [:a {:href     "/lomake-editori/editor"
+       :on-click (fn [event]
+                   (dispatch [:set-state [:editor :selected-form-key] nil])
+                   (routes/anchor-click-handler event))}
+   [:div.close-details-button
+    [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]

@@ -6,32 +6,13 @@
    [reagent.ratom :refer-macros [reaction]]
    [reagent.core :as r]
    [cljs-time.format :as f]
-   [ataru.virkailija.temporal :as t]
    [ataru.virkailija.application.handlers]
+   [ataru.virkailija.routes :as routes]
+   [ataru.virkailija.temporal :as t]
    [ataru.application.review-states :refer [application-review-states]]
    [ataru.application-common.application-readonly :as readonly-contents]
-   [ataru.cljs-util :refer [wrap-scroll-to classnames]]
+   [ataru.cljs-util :refer [wrap-scroll-to]]
    [taoensso.timbre :refer-macros [spy debug]]))
-
-(defn toggle-form-list-open! [open]
-  (swap! open not)
-  (dispatch [:application/clear-search-term])
-  nil) ;; Returns nil so that React doesn't whine about event handlers returning false
-
-
-(defn form-list-arrow [open]
-  [:i.zmdi.application-handling__form-list-arrow
-   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
-
-(defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form      (subscribe [:editor/selected-form])
-        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
-    (fn []
-      [:div.application-handling__form-list-header
-       (or (:name @selected-form)
-           (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku))])))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)
@@ -74,6 +55,24 @@
      text]))
 
 (def text-with-hilighted-parts (comp (partial some :hilight) :text))
+
+(defn toggle-form-list-open! [open]
+  (swap! open not)
+  (dispatch [:application/clear-search-term]))
+
+(defn form-list-arrow [open]
+  [:i.zmdi.application-handling__form-list-arrow
+   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
+
+(defn form-list-header []
+  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
+        selected-form      (subscribe [:editor/selected-form])
+        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
+    (fn []
+      [:div.application-handling__form-list-header
+       (or (:name @selected-form)
+           (:hakukohde-name @selected-hakukohde)
+           (:haku-name @selected-haku))])))
 
 (defn form-list-column [forms header-text url-fn open]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
@@ -203,27 +202,35 @@
         [:i.zmdi.zmdi-close.application-handling__form-list-close-button
          {:on-click #(toggle-form-list-open! open)}]]])))
 
+(defn application-list-row [application selected?]
+  (let [time      (t/time->str (:created-time application))
+        applicant (:applicant-name application)]
+    [:div.application-handling__list-row
+     {:on-click #(dispatch [:application/select-application (:key application)])
+      :class    (when selected?
+                  "application-handling__list-row--selected")}
+     [:span.application-handling__list-row--applicant
+      (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+     [:span.application-handling__list-row--time time]
+     [:span.application-handling__list-row--score
+      (or (:score application) "")]
+     [:span.application-handling__list-row--state
+      (or
+       (get application-review-states (:state application))
+       "Tuntematon")]]))
+
 (defn application-list-contents [applications]
-  (let [selected-key       (subscribe [:state-query [:application :selected-key]])]
+  (let [selected-key (subscribe [:state-query [:application :selected-key]])
+        expanded?    (subscribe [:state-query [:application :form-list-expanded?]])]
     (fn [applications]
-      (into [:div.application-handling__list]
+      (into [:div.application-handling__list
+             {:class (when (= true @expanded?)
+                       "application-handling__list--expanded")}]
             (for [application applications
-                  :let        [key       (:key application)
-                               time      (t/time->str (:created-time application))
-                               applicant (:applicant-name application)]]
-              [:div.application-handling__list-row
-               {:on-click #(dispatch [:application/select-application (:key application)])
-                :class    (when (= @selected-key key)
-                            "application-handling__list-row--selected")}
-               [:span.application-handling__list-row--applicant
-                (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-               [:span.application-handling__list-row--time time]
-               [:span.application-handling__list-row--score
-                (or (:score application) "")]
-               [:span.application-handling__list-row--state
-                (or
-                 (get application-review-states (:state application))
-                 "Tuntematon")]])))))
+                  :let        [selected? (= @selected-key (:key application))]]
+              (if selected?
+                [wrap-scroll-to [application-list-row application selected?]]
+                [application-list-row application selected?]))))))
 
 (defn icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -407,17 +414,26 @@
         ssn       (or (-> answers :ssn :value) (-> answers :birth-date :value))]
     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
 
+(defn close-application []
+  [:a {:href     "#"
+       :on-click (fn [event] (dispatch [:application/close-application]))}
+   [:div.close-details-button
+    [:i.zmdi.zmdi-close.close-details-button-mark]]])
+
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         review-state                  (subscribe [:state-query [:application :review :state]])
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
-        included-in-filter            (fn [review-state filter] (some #{review-state} filter))]
+        included-in-filter            (fn [review-state filter] (some #{review-state} filter))
+        expanded?                     (subscribe [:state-query [:application :form-list-expanded?]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
-                 (belongs-to-current-form @selected-key applications))
-        [:div.panel-content
+                 (belongs-to-current-form @selected-key applications)
+                 (not @expanded?))
+        [:div.panel-content.application-handling__detail-container
+         [close-application]
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
