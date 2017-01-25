@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
   (:require [ataru.log.audit-log :as audit-log]
+            [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
@@ -22,23 +23,12 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn lang-label [lang label-map]
-  (let [label-string (lang label-map)]
-    (if (or
-         (not label-string)
-         (empty? (clojure.string/trim label-string)))
-      nil
-      label-string)))
-
 (defn unwrap-application [application]
   (assoc (->kebab-case-kw (dissoc application :content))
     :answers
     (mapv (fn [answer]
             (update answer :label (fn [label]
-                                    (or
-                                      (lang-label :fi label)
-                                      (lang-label :sv label)
-                                      (lang-label :en label)))))
+                                    (label/get-language-label-in-preferred-order label))))
           (-> application :content :answers))))
 
 (defn- add-new-application-version
