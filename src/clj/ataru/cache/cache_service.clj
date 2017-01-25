@@ -23,15 +23,15 @@
         (.addMapConfig configuration mc)))))
 
 (defprotocol CacheService
-  (get [this cache key]
+  (cache-get [this cache key]
     "Get cached item or return nil if not found.
-    e.g. (get-cached :hakukohde objectid-of-hakukohde")
-  (put [this cache key value]
+    e.g. (cache-get :hakukohde objectid-of-hakukohde")
+  (cache-put [this cache key value]
     "Store item in cache
-    e.g. (put :hakukohde objectid-of-hakukohde {...}")
-  (get-or-fetch [this cache key get-fn]
+    e.g. (cache-put :hakukohde objectid-of-hakukohde {...}")
+  (cache-get-or-fetch [this cache key get-fn]
     "Get cached item or invoke get-fn to store & return
-    e.g. (get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"))
+    e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"))
 
 (defn- get-cached-map [hazelcast-instance cache]
   "Only allow access to preconfigured maps"
@@ -51,18 +51,18 @@
     (.shutdown this)
     nil)
 
-  (get [this cache key]
+  (cache-get [this cache key]
     (.get (get-cached-map this cache) key))
 
-  (put [this cache key value]
+  (cache-put [this cache key value]
     (.put (get-cached-map this cache) key value))
 
-  (get-or-fetch [this cache key get-fn]
+  (cache-get-or-fetch [this cache key get-fn]
     (if-let [value (get this cache key)]
       value
       (when-let [new-value (get-fn)]
         (do
-          (put this cache key new-value)
+          (cache-put this cache key new-value)
           new-value)))))
 
 (defn new-cache-service
