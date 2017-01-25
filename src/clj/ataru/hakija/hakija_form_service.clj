@@ -1,10 +1,10 @@
 (ns ataru.hakija.hakija-form-service
   (:require [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
-            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [clj-time.core :as time]
             [clj-time.coerce :as time-coerce]
-            [taoensso.timbre :refer [warn]]))
+            [taoensso.timbre :refer [warn]]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
 
 (defn fetch-form-by-key
   [key]
@@ -41,10 +41,10 @@
        :end   (:loppuPvm this-haku-hakuaika)})))
 
 (defn fetch-form-by-hakukohde-oid
-  [hakukohde-oid]
-  (let [hakukohde (tarjonta-client/get-hakukohde hakukohde-oid)
+  [tarjonta-service hakukohde-oid]
+  (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         haku-oid  (:hakuOid hakukohde)
-        haku      (when haku-oid (tarjonta-client/get-haku haku-oid))
+        haku      (when haku-oid (.get-haku tarjonta-service haku-oid))
         form-key  (:ataruLomakeAvain hakukohde)
         form      (when form-key (fetch-form-by-key form-key))]
     (when (and hakukohde

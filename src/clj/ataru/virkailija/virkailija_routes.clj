@@ -16,7 +16,6 @@
             [ataru.haku.haku-access-control :as access-controlled-haku]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -94,7 +93,7 @@
 
 (defn- organizations [session] (-> session :identity :organizations))
 
-(defn api-routes [{:keys [organization-service]}]
+(defn api-routes [{:keys [organization-service virkailija-tarjonta-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -109,9 +108,9 @@
                    (ok (access-controlled-form/get-forms include-deleted session organization-service)))
 
                  (api/GET "/forms-in-use" {session :session}
-                          :summary "Return a map of form->haku currently in use in tarjonta-service"
+                          :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
                           :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
-                          (ok (tarjonta-service/get-forms-in-use organization-service (-> session :identity :username))))
+                          (ok (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
 
                  (api/GET "/forms/:id" []
                           :path-params [id :- Long]

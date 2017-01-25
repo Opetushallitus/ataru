@@ -63,14 +63,14 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
 
-(defn api-routes []
+(defn api-routes [tarjonta-service]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
       :path-params [hakukohde-oid :- s/Str]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid hakukohde-oid)]
+      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid tarjonta-service hakukohde-oid)]
         (response/ok form-with-hakukohde)
         (response/not-found)))
     (api/GET "/form/:key" []
@@ -141,7 +141,7 @@
                               (api/routes
                                 (api/context "/hakemus" []
                                              test-routes
-                                             (api-routes)
+                                             (api-routes (:tarjonta-service this))
                                              (route/resources "/")
                                              (api/undocumented
                                              (api/GET "/hakukohde/:oid" []

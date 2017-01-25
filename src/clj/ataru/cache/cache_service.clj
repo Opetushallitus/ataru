@@ -1,5 +1,5 @@
 (ns ataru.cache.cache-service
-  (:require [taoensso.timbre :refer [info]]
+  (:require [taoensso.timbre :refer [info warn]]
             [com.stuartsierra.component :as component])
   (:import (com.hazelcast.core Hazelcast HazelcastInstance)
            (com.hazelcast.config Config MapConfig ClasspathXmlConfig)))
@@ -8,7 +8,7 @@
                          :max-size 500})
 
 (def cached-map-config {:hakukohde {:config {:max-size 1000}}
-                        :hake      {:config {:max-size 1000}}})
+                        :haku      {:config {:max-size 1000}}})
 
 (defn- build-config
   []
@@ -62,13 +62,14 @@
   (cache-put [this cache key value]
     (.put (get-cached-map this cache) key value))
 
-  (cache-get-or-fetch [this cache key get-fn]
-    (if-let [value (get this cache key)]
+  (cache-get-or-fetch [this cache key fetch-fn]
+    (if-let [value (cache-get this cache key)]
       value
-      (when-let [new-value (get-fn)]
+      (if-let [new-value (fetch-fn)]
         (do
           (cache-put this cache key new-value)
-          new-value)))))
+          new-value)
+        (warn "Could not fetch value for cache" cache key)))))
 
 (defn new-cache-service
   []
