@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :refer [info]]
             [com.stuartsierra.component :as component])
   (:import (com.hazelcast.core Hazelcast HazelcastInstance)
-           (com.hazelcast.config Config MapConfig)))
+           (com.hazelcast.config Config MapConfig ClasspathXmlConfig)))
 
 (def default-map-config {:ttl      600
                          :max-size 500})
@@ -12,12 +12,17 @@
 
 (defn- build-config
   []
-  (let [configuration (Config.)]
+  (let [configuration (ClasspathXmlConfig. "hazelcast-default.xml")]
+    (-> configuration
+        (.getGroupConfig)
+        (.setName "ataru-hz-group"))
     (doseq [[name-kw {:keys [config]}] cached-map-config]
       (let [mc (MapConfig.)]
         (.setName mc (name name-kw))
-        (.setSize (.getMaxSizeConfig mc) (or (:max-size config)
-                                             (:max-size default-map-config)))
+        (-> mc
+            (.getMaxSizeConfig)
+            (.setSize (or (:max-size config)
+                          (:max-size default-map-config))))
         (.setTimeToLiveSeconds mc (or (:ttl config)
                                       (:ttl default-map-config)))
         (.addMapConfig configuration mc)))))
