@@ -36,7 +36,7 @@
                    (s/optional-key :created-time)      #?(:clj  org.joda.time.DateTime
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
-                   (s/optional-key :languages)         s/Any})
+                   (s/optional-key :languages)         [s/Str]})
 
 (s/defschema FormTarjontaMetadata {:tarjonta
                                    {:hakukohde-oid                       s/Str
