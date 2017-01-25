@@ -1,9 +1,9 @@
 (ns ataru.applications.excel-export
   (:import [org.apache.poi.ss.usermodel Row]
            [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook]
-           [org.joda.time.format DateTimeFormat])
+           [org.apache.poi.xssf.usermodel XSSFWorkbook])
   (:require [ataru.forms.form-store :as form-store]
+            [ataru.util.language-label :as label]
             [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
@@ -176,7 +176,8 @@
            (if (< 0 (count (:children form-element)))
              (into acc (pick-form-labels (:children form-element) pick-cond))
              (into acc (when (pick-cond form-element)
-                         [[(:id form-element) (-> form-element :label :fi)]]))))
+                         [[(:id form-element)
+                           (label/get-language-label-in-preferred-order (:label form-element))]]))))
          []
          form-content)))
 
