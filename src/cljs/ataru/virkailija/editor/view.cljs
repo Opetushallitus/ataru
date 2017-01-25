@@ -12,9 +12,8 @@
 
 (defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
-   {:href  (str "/lomake-editori/editor/" (:key form))
-    :class (when selected? "editor-form__selected-row")
-    :on-click routes/anchor-click-handler}
+   {:class (when selected? "editor-form__selected-row")
+    :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" (:key form)))}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
@@ -209,10 +208,9 @@
                    :target "_blank"} (:haku-name haku)]])]]))))
 
 (defn- close-form []
-  [:a {:href     "/lomake-editori/editor"
-       :on-click (fn [event]
+  [:a {:on-click (fn [event]
                    (dispatch [:set-state [:editor :selected-form-key] nil])
-                   (routes/anchor-click-handler event))}
+                   (routes/navigate-to-click-handler "/lomake-editori/editor"))}
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
