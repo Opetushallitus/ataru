@@ -7,18 +7,12 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
-    [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [taoensso.timbre :refer [spy debug]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
   (aac/check-form-access form-key session organization-service)
   {:applications (application-store/get-application-list-by-form form-key)})
-
-(defn get-application-list-by-haku [haku-oid session organization-service]
-  (let [applications (application-store/get-application-list-by-haku haku-oid)]
-    (aac/check-forms-accesses (map :form applications) session organization-service)
-    {:applications applications}))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
