@@ -31,8 +31,7 @@
          [:span.active-section
           active-section-arrow
           (-> panels panel-kw :text)]
-         [:a {:href (str ((-> panels panel-kw :href ) @selected-form-key))
-              :on-click routes/anchor-click-handler}
+         [:a {:on-click (partial routes/navigate-to-click-handler (str ((-> panels panel-kw :href ) @selected-form-key)))}
           (-> panels panel-kw :text)])])))
 
 (defn title []

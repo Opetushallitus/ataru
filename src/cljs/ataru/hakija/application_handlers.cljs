@@ -79,13 +79,7 @@
 (reg-event-fx
   :application/submit
   (fn [{:keys [db]} _]
-    (send-application db :submit)
-    {:db       (assoc-in db [:application :submit-status] :submitting)
-     :http     {:method        :post
-                :url           "/hakemus/api/application"
-                :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
-                :handler       :application/handle-submit-response
-                :error-handler :application/handle-submit-error}}))
+    (send-application db :post)))
 
 (reg-event-fx
   :application/edit

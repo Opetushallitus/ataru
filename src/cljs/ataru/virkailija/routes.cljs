@@ -15,13 +15,10 @@
   [path]
   (accountant/navigate! path))
 
-(defn anchor-click-handler
-  [event]
-  (.preventDefault event)
-  (let [path (.getPath (.parse Uri (.-href (.-target event))))
-        matches-path? (secretary/locate-route path)]
-    (when matches-path?
-      (set-history! path))))
+(defn navigate-to-click-handler
+  [path & _]
+  (when (secretary/locate-route path)
+    (set-history! path)))
 
 (defn- select-editor-form-if-not-deleted
   [form]

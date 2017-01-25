@@ -22,7 +22,7 @@
 .application-handling__form-list-search-row {
   display: flex;
   flex-flow: row nowrap;
-  margin: 17px 20px 5px;
+  margin: 20px 20px 5px;
 }
 
 .application-handling__input-field-clear-button {
@@ -39,8 +39,7 @@
 
 .application-handling__form-list-close-button {
   .semibold;
-
-  color: @application-form-list-close-color;
+  color: @blue-text-color;
   cursor: pointer;
   position: absolute;
   right: 19px;
@@ -55,7 +54,6 @@
   padding: 11px 28px 13px 14px;
   width: 300px;
   border: 1px solid #AEAEAE;
-  box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.20);
   border-radius: 2px;
   font-weight: 600;
 }
@@ -75,7 +73,7 @@
   padding-left: 20px;
   padding-right: 20px;
   position: absolute;
-  top: 40px;
+  top: 30px;
   width: 100%;
   z-index: 15;
   border-radius: 3px;
@@ -90,7 +88,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 1px solid @bottom-separator-color;
   margin-bottom: 10px;
   padding-left: 15px;
@@ -111,28 +109,6 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-
-.application-handling__form-list-indicator {
-  top: 25px;
-  left: 9px;
-  width: 21px;
-  height: 15px;
-  position: absolute;
-  overflow: hidden;
-  z-index: 16;
-}
-
-.application-handling__form-list-indicator:after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: @application-form-list-background-color;
-  transform: rotate(135deg);
-  top: 10px;
-  left: 7px;
-  box-shadow: 0px -1px 3px #b3b3b3;
 }
 
 .application-handling__form-list-column-and-header-container {
@@ -182,12 +158,13 @@
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 10px;
+  margin-left: 20px;
 }
 
 .application-handling__form-list-arrow {
   color: #06526B;
   font-size: 26px;
+  position: absolute;
 }
 
 .application-handling__form-list-link--deleted {
@@ -270,6 +247,10 @@ and (max-width: 1000px) {
   margin-bottom: 15px;
 }
 
+.application-handling__list--expanded {
+  max-height: none;
+}
+
 .application-handling__list-row {
   padding: 0.5em;
   margin: 0;
@@ -335,6 +316,10 @@ and (max-width: 1000px) {
 .application-handling__list-row--state {
   width: 20%;
   display: inline-block;
+}
+
+.application-handling__detail-container {
+  position: relative;
 }
 
 .application-handling__review-area {
@@ -440,7 +425,6 @@ and (max-width: 1000px) {
   padding: 4px 8px;
   color: #1A1919;
   border: 1px solid #AEAEAE;
-  box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.20);
   border-radius: 2px;
 }
 
@@ -452,8 +436,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   padding: 6px;
   border: 1px solid #AEAEAE;
-  box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.20);
-    border-radius: 2px;
+  border-radius: 2px;
 }
 
 /*

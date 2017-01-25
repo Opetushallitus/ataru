@@ -15,11 +15,11 @@
 
 (defn ^:private first-name-component
   []
-  (text-field {:fi "Etunimet" :sv "Förnamn" :en "First name"} :id :first-name))
+  (text-field {:fi "Etunimet" :sv "Förnamn" :en "Forenames"} :id :first-name))
 
 (defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Middle name"} :size "S" :id :preferred-name))
+  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"} :size "S" :id :preferred-name))
 
 (defn ^:private first-name-section
   []

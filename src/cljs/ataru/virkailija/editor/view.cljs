@@ -12,9 +12,8 @@
 
 (defn form-row [form selected? used-in-haku-count]
   [:a.editor-form__row
-   {:href  (str "/lomake-editori/editor/" (:key form))
-    :class (when selected? "editor-form__selected-row")
-    :on-click routes/anchor-click-handler}
+   {:class (when selected? "editor-form__selected-row")
+    :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" (:key form)))}
    [:span.editor-form__list-form-name (:name form)]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
@@ -130,10 +129,11 @@
 
 (defn- lang-kwd->link [form lang-kwd & [text]]
   (let [text (if (nil? text)
-               (get lang-versions lang-kwd)
+               (-> lang-kwd name clojure.string/upper-case)
                text)]
     [:a
-     {:href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
+     {:key    (str "preview-" (name lang-kwd))
+      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
       :target "_blank"}
      text]))
 
@@ -159,7 +159,7 @@
         ;; and probably start caching those
         (when (not-empty selected-org-name)
           [:div.editor-form__owner-control
-           [:span.editor-form__owner-label.editor-form__form-toolbar-header-text "Omistaja: "]
+           [:span.editor-form__owner-label "Omistaja: "]
            [:a
             {:on-click toggle-open
              :class (if (many-orgs @organizations) "" "editor-form__form-owner-selection-disabled-link")}
@@ -176,39 +176,22 @@
                          @organizations))])])))))
 
 (defn form-toolbar [form]
-  (let [languages                    (subscribe [:editor/languages])
-        language-selections-visible? (r/atom false)
-        organizations                (subscribe [:state-query [:editor :user-info :organizations]])]
+  (let [languages (subscribe [:editor/languages])
+        organizations (subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [form]
       (let [languages @languages]
         [:div.editor-form__toolbar
          [:div.editor-form__language-controls
-          [:a.editor-form__language-selections
-           {:on-click (fn [_]
-                        (swap! language-selections-visible? not)
-                        nil)}
-           "Kieliversiot "
-           [:i.zmdi.zmdi-chevron-down
-            {:class (if @language-selections-visible? "zmdi-chevron-up" "zmdi-chevron-down")}]]
-          [:div.editor-form__form-toolbar-checkbox-container-anchor
-           [:div.editor-form__form-toolbar-checkbox-container
-            (when-not @language-selections-visible?
-              {:style {:display "none"}})
-            (map (fn [lang-kwd]
-                   (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-                 (keys lang-versions))]]
+          [:div.editor-form__form-toolbar-checkbox-container
+           (map (fn [lang-kwd]
+                  (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+                (keys lang-versions))]
           [:span.editor-form__form-toolbar-header-text
            (if (= (count languages) 1)
-             (lang-kwd->link form (first languages) "Esikatselu")
+             (lang-kwd->link form (first languages) "Lomakkeen esikatselu")
              [:span
-              "Esikatselu: "
-              (map-indexed (fn [idx lang-kwd]
-                             (cond-> [:span
-                                      {:key idx}
-                                      (lang-kwd->link form lang-kwd)]
-                               (> (dec (count languages)) idx)
-                               (conj [:span " | "])))
-                           languages)])]]
+              "Lomakkeen esikatselu  "
+              (map (partial lang-kwd->link form) languages)])]]
          [form-owner-organization form]]))))
 
 (defn form-in-use-warning
@@ -216,24 +199,20 @@
   (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
     (fn [form]
       (when-let [form-used-in-hakus ((keyword (:key form)) @forms-in-use)]
-        [:div.editor-form__module-wrapper
-         [:div.editor-form__module-fields
-          [:span.editor-form__used-in-haku-count (str (count (keys form-used-in-hakus)))]
-          [:span.editor-form__used-in-haku-heading.animated.flash "Lomake on käytössä"]
+        [:div.editor-form__in_use_notification.animated.flash
+          [:span.editor-form__used-in-haku-heading "Lomake on käytössä"]
           [:ul.editor-form__used-in-haku-list
            (for [haku (vals form-used-in-hakus)]
              [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
               [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
-                   :target "_blank"} (:haku-name haku)]])]]]))))
+                   :target "_blank"} (:haku-name haku)]])]]))))
 
 (defn- close-form []
-  (fn []
-    [:a {:href     "/lomake-editori/editor"
-         :on-click (fn [event]
-                     (dispatch [:set-state [:editor :selected-form-key] nil])
-                     (routes/anchor-click-handler event))}
-     [:div.editor-form__close-form-button
-      [:i.zmdi.zmdi-close.editor-form__close-form-button-mark]]]))
+  [:a {:on-click (fn [event]
+                   (dispatch [:set-state [:editor :selected-form-key] nil])
+                   (routes/navigate-to-click-handler "/lomake-editori/editor"))}
+   [:div.close-details-button
+    [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
 (defn editor-panel []
   (let [form         (subscribe [:editor/selected-form])]

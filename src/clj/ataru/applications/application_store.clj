@@ -1,5 +1,6 @@
 (ns ataru.applications.application-store
   (:require [ataru.log.audit-log :as audit-log]
+            [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
@@ -27,10 +28,7 @@
     :answers
     (mapv (fn [answer]
             (update answer :label (fn [label]
-                                    (or
-                                      (:fi label)
-                                      (:sv label)
-                                      (:en label)))))
+                                    (label/get-language-label-in-preferred-order label))))
           (-> application :content :answers))))
 
 (defn- add-new-application-version
