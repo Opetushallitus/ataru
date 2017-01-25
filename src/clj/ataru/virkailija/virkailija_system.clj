@@ -24,7 +24,8 @@
 
     :organization-service (organization-service/new-organization-service)
 
+    :cache                (cache-service/new-cache-service)
+
     :server               (component/using
                            (server/new-server)
-                           [:server-setup :handler])
-    :cache                (cache-service/new-cache-service))))
+                           [:server-setup :handler]))))

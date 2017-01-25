@@ -15,6 +15,8 @@
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (component/system-map
+     :cache                (cache-service/new-cache-service)
+
      :handler              (handler/new-handler)
 
      :server-setup         {:port      http-port
@@ -28,6 +30,4 @@
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)
-                             [:person-service])
-
-     :cache                (cache-service/new-cache-service))))
+                             [:person-service]))))
