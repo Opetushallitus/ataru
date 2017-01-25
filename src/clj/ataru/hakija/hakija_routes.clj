@@ -69,7 +69,7 @@
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
       :path-params [hakukohde-oid :- s/Str]
-      :return ataru-schema/FormWithContent
+      :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid hakukohde-oid)]
         (response/ok form-with-hakukohde)
         (response/not-found)))

@@ -51,10 +51,12 @@
                (not haku))
       (throw (Exception. (str "No haku found for hakukohde" hakukohde-oid))))
     (if form
-      (merge form {:hakukohde-oid      hakukohde-oid
-                   :hakukohde-name     (-> hakukohde :hakukohteenNimet :kieli_fi)
-                   :haku-tarjoaja-name (-> hakukohde :tarjoajaNimet :fi)
-                   :haku-oid           haku-oid
-                   :haku-name          (-> haku :nimi :kieli_fi)
-                   :hakuaika-dates     (parse-hakuaika hakukohde haku)})
+      (merge form
+             {:tarjonta
+              {:hakukohde-oid      hakukohde-oid
+               :hakukohde-name     (-> hakukohde :hakukohteenNimet :kieli_fi)
+               :haku-tarjoaja-name (-> hakukohde :tarjoajaNimet :fi)
+               :haku-oid           haku-oid
+               :haku-name          (-> haku :nimi :kieli_fi)
+               :hakuaika-dates     (parse-hakuaika hakukohde haku)}})
       (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))

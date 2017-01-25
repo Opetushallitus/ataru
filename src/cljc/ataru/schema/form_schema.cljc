@@ -27,14 +27,32 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema Form {(s/optional-key :id)                s/Int
+(s/defschema Form {:id                                 s/Int
                    :name                               s/Str
-                   (s/optional-key :key)               s/Str
+                   :key                                s/Str
+                   :content                            (s/pred empty?) ; always empty
+                   (s/optional-key :deleted)           (s/enum s/Bool nil)
                    (s/optional-key :created-by)        s/Str
                    (s/optional-key :created-time)      #?(:clj  org.joda.time.DateTime
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
-                   s/Any                               s/Any})
+                   (s/optional-key :languages)         s/Any})
+
+(s/defschema FormTarjontaMetadata {:tarjonta
+                                   {:hakukohde-oid                       s/Str
+                                    :hakukohde-name                      s/Str
+                                    :haku-oid                            s/Str
+                                    :haku-name                           s/Str
+                                    (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
+                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}}})
+
+(s/defschema FormWithContent
+  (merge Form
+         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
+          (s/optional-key :organization-oid) (s/maybe s/Str)}))
+
+(s/defschema FormWithContentAndTarjontaMetadata
+  (merge FormWithContent FormTarjontaMetadata))
 
 (s/defschema Haku {:haku              s/Str
                    :haku-name         s/Str
@@ -106,11 +124,6 @@
                              (s/optional-key :label)           LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)          Module})
-
-(s/defschema FormWithContent
-  (merge Form
-         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
-          (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str
