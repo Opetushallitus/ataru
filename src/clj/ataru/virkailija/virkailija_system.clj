@@ -29,7 +29,7 @@
 
      :handler (component/using
                 (virkailija-routes/new-handler)
-                [:organization-service :virkailija-tarjonta-service])
+                [:organization-service :virkailija-tarjonta-service :tarjonta-service])
 
      :server-setup {:port      http-port
                     :repl-port repl-port}

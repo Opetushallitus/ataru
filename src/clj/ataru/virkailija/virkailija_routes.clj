@@ -93,7 +93,7 @@
 
 (defn- organizations [session] (-> session :identity :organizations))
 
-(defn api-routes [{:keys [organization-service virkailija-tarjonta-service]}]
+(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -219,12 +219,12 @@
                           :return [{:hakukohde         s/Str
                                     :hakukohde-name    s/Str
                                     :application-count s/Int}]
-                          (ok (access-controlled-hakukohde/get-hakukohteet session organization-service)))
+                          (ok (access-controlled-hakukohde/get-hakukohteet session organization-service tarjonta-service)))
 
                  (api/GET "/haut" {session :session}
                           :summary "List haku information found for applications stored in system"
                           :return [ataru-schema/Haku]
-                          (ok (access-controlled-haku/get-haut session organization-service)))
+                          (ok (access-controlled-haku/get-haut session organization-service tarjonta-service)))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
