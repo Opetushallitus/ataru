@@ -24,8 +24,17 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-(declare BasicElement)
-(declare WrapperElement)
+(declare BasicElement
+         WrapperElement
+         FormField
+         Button
+         InfoElement
+         Form
+         FormTarjontaMetadata
+         FormWithContent
+         FormWithContentAndTarjontaMetadata
+         LocalizedString
+         Module)
 
 (s/defschema Form {:name                               s/Str
                    (s/optional-key :content)           [s/Any]
@@ -47,8 +56,8 @@
 
 (s/defschema FormWithContent
   (st/merge Form
-         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
-          (s/optional-key :organization-oid) (s/maybe s/Str)}))
+            {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
+             (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema FormWithContentAndTarjontaMetadata
   (st/merge FormWithContent {:tarjonta FormTarjontaMetadata}))
@@ -114,10 +123,9 @@
 (s/defschema WrapperElement {:fieldClass                       (apply s/enum ["wrapperElement"])
                              :id                               s/Str
                              :fieldType                        (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                         [(s/conditional #(= "wrapperElement" (:fieldClass %))
-                                                                               (s/recursive #'WrapperElement)
-                                                                               :else
-                                                                               BasicElement)]
+                             :children                         [(s/conditional
+                                                                  #(= "wrapperElement" (:fieldClass %)) (s/recursive #'WrapperElement)
+                                                                  :else BasicElement)]
                              (s/optional-key :child-validator) (s/enum :one-of)
                              (s/optional-key :params)          s/Any
                              (s/optional-key :label)           LocalizedString
@@ -188,10 +196,3 @@
    :state                          application-states
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
-
-(def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
-
-(s/defschema postal-office-name {s/Keyword s/Str})
-
-(s/defschema PostalCodes
-  {postal-code-key postal-office-name})
