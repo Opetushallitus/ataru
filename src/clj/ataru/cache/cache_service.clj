@@ -7,8 +7,8 @@
 (def default-map-config {:ttl      600
                          :max-size 500})
 
-(def cached-map-config {:hakukohde {:config {:max-size 1000}}
-                        :haku      {:config {:max-size 1000}}})
+(def cached-map-config {:hakukohde {:config {:max-size 1000 :ttl 3600}}
+                        :haku      {:config {:max-size 1000 :ttl 3600}}})
 
 (defn- build-config
   []
