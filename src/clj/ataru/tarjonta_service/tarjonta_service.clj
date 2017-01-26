@@ -34,7 +34,7 @@
     (.cache-get-or-fetch (:cache-service this) :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
 
   (get-haku [this haku-oid]
-    (.cache-get-or-fetch (:cache-service this) :hake haku-oid #(client/get-haku haku-oid))))
+    (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid))))
 
 (defn new-tarjonta-service
   []

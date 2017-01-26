@@ -38,39 +38,40 @@
     "Get cached item or invoke get-fn to store & return
     e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"))
 
-(defn- get-cached-map [hazelcast-instance cache]
+(defn- get-cached-map [component cache]
   "Only allow access to preconfigured maps"
   (when (cache cached-map-config)
-    (.getMap hazelcast-instance (name cache))))
+    (.getMap (:hazelcast-instance component) (name cache))))
 
-(defrecord HazelcastCacheService []
+(defrecord HazelcastCacheService [hazelcast-instance]
   component/Lifecycle
   CacheService
 
-  (start [this]
+  (start [component]
     (info "Initializing Hazelcast caching")
-    (Hazelcast/newHazelcastInstance (build-config)))
+    (assoc component :hazelcast-instance (Hazelcast/newHazelcastInstance (build-config))))
 
-  (stop [this]
+  (stop [component]
     (info "Shutting down Hazelcast")
-    (.shutdown this)
-    nil)
+    (.shutdown hazelcast-instance)
+    (assoc component :hazelcast-instance nil))
 
-  (cache-get [this cache key]
-    (.get (get-cached-map this cache) key))
+  (cache-get [component cache key]
+    (.get (get-cached-map component cache) key))
 
-  (cache-put [this cache key value]
-    (.put (get-cached-map this cache) key value))
+  (cache-put [component cache key value]
+    "Returns old value"
+    (.put (get-cached-map component cache) key value))
 
-  (cache-get-or-fetch [this cache key fetch-fn]
-    (if-let [value (cache-get this cache key)]
+  (cache-get-or-fetch [component cache key fetch-fn]
+    (if-let [value (cache-get component cache key)]
       value
       (if-let [new-value (fetch-fn)]
         (do
-          (cache-put this cache key new-value)
+          (cache-put component cache key new-value)
           new-value)
         (warn "Could not fetch value for cache" cache key)))))
 
 (defn new-cache-service
   []
-  (->HazelcastCacheService))
+  (map->HazelcastCacheService {}))

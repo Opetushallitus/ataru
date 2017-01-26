@@ -3,8 +3,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [clj-time.core :as time]
             [clj-time.coerce :as time-coerce]
-            [taoensso.timbre :refer [warn]]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
+            [taoensso.timbre :refer [warn]]))
 
 (defn fetch-form-by-key
   [key]
