@@ -44,9 +44,7 @@
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
                               :hakukohde      (:hakukohde application)
-                              :hakukohde_name (:hakukohde-name application)
                               :haku           (:haku application)
-                              :haku_name      (:haku-name application)
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)]
