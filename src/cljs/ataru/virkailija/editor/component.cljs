@@ -410,7 +410,7 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Infokenttä" path]
+       [text-header "Infoteksti" path]
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header "Otsikko"]
         (input-fields-with-lang
@@ -418,8 +418,8 @@
             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
           @languages
           :header? true)]
-       [:div.editor-form__text-field-wrapper
-        [:header.editor-form__component-item-header "Ohjeteksti"]
+       [:div.editor-form__text-field-wrapper.infoelement
+        [:header.editor-form__component-item-header "Teksti"]
         (input-fields-with-lang
           (fn [lang]
             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])

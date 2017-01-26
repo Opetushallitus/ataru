@@ -12,7 +12,7 @@
    "Pudotusvalikko"                component/dropdown
    "Painikkeet, yksi valittavissa" component/single-choice-button
    "Lista, monta valittavissa"     component/multiple-choice
-   "Infokenttä"                    component/info-element
+   "Infoteksti"                    component/info-element
    "Vierekkäiset tekstikentät"     component/adjacent-fieldset})
 
 (def ^:private followup-toolbar-elements
@@ -22,7 +22,7 @@
      "Pudotusvalikko"
      "Painikkeet, yksi valittavissa"
      "Lista, monta valittavissa"
-     "Infokenttä"
+     "Infoteksti"
      "Vierekkäiset tekstikentät"]))
 
 (def ^:private adjacent-fieldset-toolbar-elements
