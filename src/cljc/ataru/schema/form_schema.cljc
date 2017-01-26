@@ -28,7 +28,7 @@
 (declare WrapperElement)
 
 (s/defschema Form {:name                               s/Str
-                   :content                            (s/pred empty?) ; always empty
+                   (s/optional-key :content)           [s/Any]
                    (s/optional-key :key)               s/Str
                    (s/optional-key :id)                s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)
@@ -38,13 +38,12 @@
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :languages)         [s/Str]})
 
-(s/defschema FormTarjontaMetadata {:tarjonta
-                                   {:hakukohde-oid                       s/Str
-                                    :hakukohde-name                      s/Str
-                                    :haku-oid                            s/Str
-                                    :haku-name                           s/Str
-                                    (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}}})
+(s/defschema FormTarjontaMetadata {:hakukohde-oid                       s/Str
+                                   :hakukohde-name                      s/Str
+                                   :haku-oid                            s/Str
+                                   :haku-name                           s/Str
+                                   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
+                                   (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}})
 
 (s/defschema FormWithContent
   (st/merge Form
@@ -52,7 +51,7 @@
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema FormWithContentAndTarjontaMetadata
-  (st/merge FormWithContent FormTarjontaMetadata))
+  (st/merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
 (s/defschema Haku {:haku              s/Str
                    :haku-name         s/Str
