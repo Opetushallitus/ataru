@@ -7,6 +7,9 @@
 (defn- base-address []
   (get-in config [:authentication-service :base-address]))
 
+(defn- oppijanumerorekisteri-base-address []
+  (get-in config [:oppijanumerorekisteri-service :base-address]))
+
 ; This schema is just "internal" part of the person-client ns
 ; and therefore it isn't placed into form-schema.cljc
 (s/defschema Person
@@ -35,3 +38,10 @@
                    (:status response)
                    " body: "
                    (:body response)))))))
+
+(defn upsert-person2 [cas-client person]
+  {:pre [(some? (oppijanumerorekisteri-base-address))]}
+  (println (cas/cas-authenticated-get
+             cas-client
+             (str (oppijanumerorekisteri-base-address)
+                  "/henkilo/hetu=" (:personId person)))))

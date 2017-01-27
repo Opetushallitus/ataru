@@ -50,7 +50,15 @@
                  [cheshire/cheshire "5.6.3"]
                  [selmer "1.10.3"]
                  [metosin/ring-http-response "0.8.0"]
-                 [oph/clj-util "0.1.0"]
+                 ;; These two explicit dependencies are required to force
+                 ;; newer, fixed versions of those which come with Scala Cas Client
+                 ;; Used by clj-util below. Without these, we would not be able to
+                 ;; authenticate to /oppijanumerorekisteri-service, we would just get:
+                 ;; BadResponse Response lacks status Reason  [trace missing]
+                 [org.http4s/blaze-http_2.11 "0.10.1"]
+                 [org.http4s/http4s-json4s-native_2.11 "0.10.1"]
+                 ;; And naturally this exclusion is important as well
+                 [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11/clojure]]
                  [ring.middleware.logger "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.3.1"]
