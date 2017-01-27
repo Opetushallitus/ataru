@@ -24,43 +24,19 @@
 ;         `  `                     "`_,-','/       ,-'"  /
 ;                                 ,'",__,-'       /,, ,-'
 ;                                 Vvv'            VVv'
-(declare BasicElement
-         WrapperElement
-         FormField
-         Button
-         InfoElement
-         Form
-         FormTarjontaMetadata
-         FormWithContent
-         FormWithContentAndTarjontaMetadata
-         LocalizedString
-         Module)
+(declare BasicElement)
+(declare WrapperElement)
 
-(s/defschema Form {:name                               s/Str
-                   (s/optional-key :content)           [s/Any]
+(s/defschema Form {(s/optional-key :id)                s/Int
+                   :name                               s/Str
+                   :content                            (s/pred empty?)
+                   (s/optional-key :languages)         [s/Str]
                    (s/optional-key :key)               s/Str
-                   (s/optional-key :id)                s/Int
-                   (s/optional-key :deleted)           (s/maybe s/Bool)
                    (s/optional-key :created-by)        s/Str
                    (s/optional-key :created-time)      #?(:clj  org.joda.time.DateTime
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
-                   (s/optional-key :languages)         [s/Str]})
-
-(s/defschema FormTarjontaMetadata {:hakukohde-oid                       s/Str
-                                   :hakukohde-name                      s/Str
-                                   :haku-oid                            s/Str
-                                   :haku-name                           s/Str
-                                   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-                                   (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}})
-
-(s/defschema FormWithContent
-  (st/merge Form
-            {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
-             (s/optional-key :organization-oid) (s/maybe s/Str)}))
-
-(s/defschema FormWithContentAndTarjontaMetadata
-  (st/merge FormWithContent {:tarjonta FormTarjontaMetadata}))
+                   (s/optional-key :deleted)           (s/maybe s/Bool)})
 
 (s/defschema Haku {:haku              s/Str
                    :haku-name         s/Str
@@ -123,14 +99,31 @@
 (s/defschema WrapperElement {:fieldClass                       (apply s/enum ["wrapperElement"])
                              :id                               s/Str
                              :fieldType                        (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                         [(s/conditional
-                                                                  #(= "wrapperElement" (:fieldClass %)) (s/recursive #'WrapperElement)
-                                                                  :else BasicElement)]
+                             :children                         [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                                                                               (s/recursive #'WrapperElement)
+                                                                               :else
+                                                                               BasicElement)]
                              (s/optional-key :child-validator) (s/enum :one-of)
                              (s/optional-key :params)          s/Any
                              (s/optional-key :label)           LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)          Module})
+
+(s/defschema FormWithContent
+  (merge Form
+         {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
+          (s/optional-key :organization-oid) (s/maybe s/Str)}))
+
+(s/defschema FormTarjontaMetadata {:tarjonta
+                                   {:hakukohde-oid                       s/Str
+                                    :hakukohde-name                      s/Str
+                                    :haku-oid                            s/Str
+                                    :haku-name                           s/Str
+                                    (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
+                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}}})
+
+(s/defschema FormWithContentAndTarjontaMetadata
+  (merge FormWithContent FormTarjontaMetadata))
 
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str
@@ -163,7 +156,9 @@
    :answers                         [Answer]
    (s/optional-key :id)             s/Int
    (s/optional-key :hakukohde)      (s/maybe s/Str)
+   (s/optional-key :hakukohde-name) (s/maybe s/Str)
    (s/optional-key :haku)           (s/maybe s/Str)
+   (s/optional-key :haku-name)      (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime
    (s/optional-key :secret)         s/Str
    (s/optional-key :form-key)       s/Str})
