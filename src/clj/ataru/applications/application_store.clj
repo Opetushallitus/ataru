@@ -90,7 +90,7 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :hakukohde :haku-name :hakukohde-name])))
+         (select-keys old-application [:key :secret :haku :hakukohde])))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
