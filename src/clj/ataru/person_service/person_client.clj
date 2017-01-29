@@ -1,29 +1,18 @@
 (ns ataru.person-service.person-client
-  (:require [ataru.cas.client :as cas]
-            [cheshire.core :as json]
-            [oph.soresu.common.config :refer [config]]
-            [schema.core :as s]))
+  (:require
+   [taoensso.timbre :as log]
+   [cheshire.core :as json]
+   [oph.soresu.common.config :refer [config]]
+   [schema.core :as s]
+   [clojure.core.match :refer [match]]
+   [ataru.cas.client :as cas]
+   [ataru.person-service.person-schema :refer [Person]]))
 
 (defn- base-address []
   (get-in config [:authentication-service :base-address]))
 
 (defn- oppijanumerorekisteri-base-address []
   (get-in config [:oppijanumerorekisteri-service :base-address]))
-
-; This schema is just "internal" part of the person-client ns
-; and therefore it isn't placed into form-schema.cljc
-(s/defschema Person
-  {(s/optional-key :personId)    (s/maybe s/Str)
-   (s/optional-key :birthDate)   (s/maybe s/Str)
-   :nativeLanguage               (s/maybe s/Str)
-   :email                        s/Str
-   :idpEntitys                   [{:idpEntityId s/Str
-                                   :identifier  s/Str}]
-   :firstName                    s/Str
-   :lastName                     s/Str
-   (s/optional-key :nationality) (s/maybe s/Str)
-   (s/optional-key :gender)      (s/maybe s/Str)
-   (s/optional-key :personOid)   (s/maybe s/Str)})
 
 (s/defn ^:always-validate upsert-person :- Person
   [cas-client :- s/Any
@@ -39,9 +28,48 @@
                    " body: "
                    (:body response)))))))
 
-(defn upsert-person2 [cas-client person]
+(defn throw-error [msg]
+  (throw (Exception. msg)))
+
+(defn create-person [cas-client person]
+  (println "### sending person")
+  (println (json/generate-string person))
+  (let [result (cas/cas-authenticated-post cas-client (str (oppijanumerorekisteri-base-address) "/henkilo") person)]
+    (match result
+      {:status 201 :body body} body
+      :else (throw-error (str
+                          "Could not create person, status: "
+                          (:status result)
+                          "response body: "
+                          (:body result))))))
+
+(defn person-with-hetu-not-found [cas-client person body]
+  (let [parsed-response (json/parse-string body true)]
+    ;; Let's check if the 404 is from the actual service telling us that the person doesn't exist
+    ;; instead of just network config issues
+    (if (= 404 (:status parsed-response))
+      (do
+        (log/info "Person with id" (:hetu person) "didn't exist in oppijanumerorekisteri yet, trying to create")
+        (create-person cas-client person))
+      (throw-error (str "Got 404 Not found but not from oppijanumerorekisteri. Body: " body)))))
+
+(defn handle-error [body]
+  (println "error: " body)
+  nil)
+
+(defn upsert-person-with-hetu [cas-client person]
+  (let [url    (str (oppijanumerorekisteri-base-address)
+                    "/henkilo/hetu=" (:hetu person))
+        result (cas/cas-authenticated-get cas-client url)]
+    (match result
+      {:status 200 :body body} (:oidHenkilo (json/parse-string body true))
+      {:status 404 :body body} (person-with-hetu-not-found cas-client person body)
+      :else (handle-error result))))
+
+(s/defn ^:always-validate upsert-person2 :- s/Str
+  [cas-client :- s/Any
+   person     :- Person]
   {:pre [(some? (oppijanumerorekisteri-base-address))]}
-  (println (cas/cas-authenticated-get
-             cas-client
-             (str (oppijanumerorekisteri-base-address)
-                  "/henkilo/hetu=" (:personId person)))))
+  (if (:hetu person)
+    (upsert-person-with-hetu cas-client person)
+    (println "No personid, implement!")))

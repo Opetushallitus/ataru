@@ -8,12 +8,13 @@
                      :etunimet           "Aku"
                      :kutsumanimi        "Aku"
                      :sukunimi           "Ankka"
-                     :aidinkieli         {:kielikoodi "FI"}
-                     :kansalaisuus       {:kansalaisuusKoodi "246"}
+                     :aidinkieli         {:kieliKoodi "FI"}
+                     :kansalaisuus       [{:kansalaisuusKoodi "246"}]
                      :eiSuomalaistaHetua false
                      :sukupuoli          "2"
                      :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
-                                           :yhteystietoArvo   "aku@ankkalinna.com"}]})
+                                           :yhteystietoArvo   "aku@ankkalinna.com"}]
+                     :henkiloTyyppi  "OPPIJA"})
 
 ;; Only relevant fields here
 (def foreign-application {:answers [{:key "email",:value "roger.moore@ankkalinna.com"}
@@ -28,13 +29,14 @@
 (def expected-foreign-person {:etunimet           "Roger"
                               :kutsumanimi        "Roger"
                               :sukunimi           "Moore"
-                              :aidinkieli         {:kielikoodi "SV"}
+                              :aidinkieli         {:kieliKoodi "SV"}
                               :syntymaaika        "1984-10-29"
                               :eiSuomalaistaHetua true
-                              :kansalaisuus       {:kansalaisuusKoodi "247"}
+                              :kansalaisuus       [{:kansalaisuusKoodi "247"}]
                               :sukupuoli          "1"
                               :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
-                                                    :yhteystietoArvo   "roger.moore@ankkalinna.com"}]})
+                                                    :yhteystietoArvo   "roger.moore@ankkalinna.com"}]
+                              :henkiloTyyppi      "OPPIJA"})
 
 (describe
  "person extract"

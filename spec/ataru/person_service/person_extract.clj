@@ -26,8 +26,9 @@
                       :kutsumanimi    (extract-field application "preferred-name")
                       :sukunimi       (extract-field application "last-name")
                       :sukupuoli      (extract-field application "gender")
-                      :aidinkieli     {:kielikoodi (extract-field application "language")}
-                      :kansalaisuus   {:kansalaisuusKoodi (extract-field application "nationality")}}
+                      :aidinkieli     {:kieliKoodi (extract-field application "language")}
+                      :kansalaisuus   [{:kansalaisuusKoodi (extract-field application "nationality")}]
+                      :henkiloTyyppi  "OPPIJA"}
         person-id    (extract-field application "ssn")]
     (if person-id
       (assoc
