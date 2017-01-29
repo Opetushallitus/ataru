@@ -12,8 +12,8 @@
                      :kansalaisuus       {:kansalaisuusKoodi "246"}
                      :eiSuomalaistaHetua false
                      :sukupuoli          "2"
-                     :yhteystieto        [{"yhteystietoTyyppi" "YHTEYSTIETO_SAHKOPOSTI"
-                                           "yhteystietoArvo"   "aku@ankkalinna.com"}]})
+                     :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
+                                           :yhteystietoArvo   "aku@ankkalinna.com"}]})
 
 ;; Only relevant fields here
 (def foreign-application {:answers [{:key "email",:value "roger.moore@ankkalinna.com"}
@@ -33,8 +33,8 @@
                               :eiSuomalaistaHetua true
                               :kansalaisuus       {:kansalaisuusKoodi "247"}
                               :sukupuoli          "1"
-                              :yhteystieto        [{"yhteystietoTyyppi" "YHTEYSTIETO_SAHKOPOSTI"
-                                                    "yhteystietoArvo"   "roger.moore@ankkalinna.com"}]})
+                              :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
+                                                    :yhteystietoArvo   "roger.moore@ankkalinna.com"}]})
 
 (describe
  "person extract"

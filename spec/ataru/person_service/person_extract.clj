@@ -20,8 +20,8 @@
 
 (defn extract-person-from-application [application]
   (let [email        (extract-field application "email")
-        basic-fields {:yhteystieto    [{"yhteystietoTyyppi" "YHTEYSTIETO_SAHKOPOSTI"
-                                        "yhteystietoArvo"   email}]
+        basic-fields {:yhteystieto    [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
+                                        :yhteystietoArvo   email}]
                       :etunimet       (extract-field application "first-name")
                       :kutsumanimi    (extract-field application "preferred-name")
                       :sukunimi       (extract-field application "last-name")
