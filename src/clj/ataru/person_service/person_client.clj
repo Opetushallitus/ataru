@@ -26,6 +26,7 @@
       {:status 400} ;;Request data was invalid, no reason to retry
       {:status :failed-permanently :message (:body result)}
 
+      ;; Assume a temporary error and throw exception, the job will continue to retry
       :else (throw-error (str
                           "Could not create person, status: "
                           (:status result)
