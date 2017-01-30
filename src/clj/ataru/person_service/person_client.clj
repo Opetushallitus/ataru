@@ -36,7 +36,12 @@
   (println (json/generate-string person))
   (let [result (cas/cas-authenticated-post cas-client (str (oppijanumerorekisteri-base-address) "/henkilo") person)]
     (match result
-      {:status 201 :body body} body
+      {:status 201 :body body}
+      {:status :created :oid body}
+
+      {:status 400} ;;Request data was invalid, no reason to retry
+      {:status :failed-permanently :message (get-in result [:body :message])}
+
       :else (throw-error (str
                           "Could not create person, status: "
                           (:status result)
@@ -51,22 +56,23 @@
       (do
         (log/info "Person with id" (:hetu person) "didn't exist in oppijanumerorekisteri yet, trying to create")
         (create-person cas-client person))
-      (throw-error (str "Got 404 Not found but not from oppijanumerorekisteri. Body: " body)))))
-
-(defn handle-error [body]
-  (println "error: " body)
-  nil)
+      (throw-error (str "Got 404 Not found but not from oppijanumerorekisteri-service. Body: " body)))))
 
 (defn upsert-person-with-hetu [cas-client person]
   (let [url    (str (oppijanumerorekisteri-base-address)
                     "/henkilo/hetu=" (:hetu person))
         result (cas/cas-authenticated-get cas-client url)]
     (match result
-      {:status 200 :body body} (:oidHenkilo (json/parse-string body true))
+      {:status 200 :body body} {:status :exists :oid (:oidHenkilo (json/parse-string body true))}
       {:status 404 :body body} (person-with-hetu-not-found cas-client person body)
-      :else (handle-error result))))
+      :else (throw-error (str "Got error while querying person" result)))))
 
-(s/defn ^:always-validate upsert-person2 :- s/Str
+(s/defschema Response
+  {:status                   s/Keyword
+   (s/optional-key :message) (s/maybe s/Str)
+   (s/optional-key :oid)     (s/maybe s/Str)})
+
+(s/defn ^:always-validate upsert-person2 :- Response
   [cas-client :- s/Any
    person     :- Person]
   {:pre [(some? (oppijanumerorekisteri-base-address))]}
