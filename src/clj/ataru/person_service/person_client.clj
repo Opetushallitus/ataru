@@ -32,8 +32,6 @@
   (throw (Exception. msg)))
 
 (defn create-person [cas-client person]
-  (println "### sending person")
-  (println (json/generate-string person))
   (let [result (cas/cas-authenticated-post cas-client (str (oppijanumerorekisteri-base-address) "/henkilo") person)]
     (match result
       {:status 201 :body body}
