@@ -8,7 +8,7 @@
                      :etunimet           "Aku"
                      :kutsumanimi        "Aku"
                      :sukunimi           "Ankka"
-                     :aidinkieli         {:kieliKoodi "FI"}
+                     :aidinkieli         {:kieliKoodi "fi"}
                      :kansalaisuus       [{:kansalaisuusKoodi "246"}]
                      :eiSuomalaistaHetua false
                      :sukupuoli          "2"
@@ -29,7 +29,7 @@
 (def expected-foreign-person {:etunimet           "Roger"
                               :kutsumanimi        "Roger"
                               :sukunimi           "Moore"
-                              :aidinkieli         {:kieliKoodi "SV"}
+                              :aidinkieli         {:kieliKoodi "sv"}
                               :syntymaaika        "1984-10-29"
                               :eiSuomalaistaHetua true
                               :kansalaisuus       [{:kansalaisuusKoodi "247"}]

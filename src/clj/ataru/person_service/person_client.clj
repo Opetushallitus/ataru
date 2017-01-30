@@ -24,7 +24,7 @@
       {:status :created :oid body}
 
       {:status 400} ;;Request data was invalid, no reason to retry
-      {:status :failed-permanently :message (get-in result [:body :message])}
+      {:status :failed-permanently :message (:body result)}
 
       :else (throw-error (str
                           "Could not create person, status: "

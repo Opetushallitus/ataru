@@ -11,7 +11,7 @@
     (log/info "Sending person" person-to-send)
     (let [result (.upsert-person person-service person-to-send)]
       (match result
-          {:status :created :oid oid}
+        {:status :created :oid oid}
         (do
           (log/info "Added person" oid "to person service (oppijanumerorekisteri)")
           (application-store/add-person-oid application-id oid)
