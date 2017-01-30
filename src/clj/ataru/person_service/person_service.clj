@@ -18,7 +18,7 @@
     (person-client/upsert-person cas-client person))
 
   (start [this]
-    (assoc this :cas-client (cas/new-client "/authentication-service")))
+    (assoc this :cas-client (cas/new-client "/oppijanumerorekisteri-service")))
 
   (stop [this]
     (assoc this :cas-client nil)))

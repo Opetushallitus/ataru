@@ -14,20 +14,6 @@
 (defn- oppijanumerorekisteri-base-address []
   (get-in config [:oppijanumerorekisteri-service :base-address]))
 
-(s/defn ^:always-validate upsert-person :- Person
-  [cas-client :- s/Any
-   person :- Person]
-  {:pre [(some? (base-address))]}
-  (let [url      (str (base-address) "/resources/s2s/hakuperusteet")
-        response (cas/cas-authenticated-post cas-client url person)]
-    (if (= 200 (:status response))
-      (json/parse-string (:body response) true)
-      (throw (Exception.
-              (str "Failed to upsert person, got status code "
-                   (:status response)
-                   " body: "
-                   (:body response)))))))
-
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
@@ -70,7 +56,7 @@
    (s/optional-key :message) (s/maybe s/Str)
    (s/optional-key :oid)     (s/maybe s/Str)})
 
-(s/defn ^:always-validate upsert-person2 :- Response
+(s/defn ^:always-validate upsert-person :- Response
   [cas-client :- s/Any
    person     :- Person]
   {:pre [(some? (oppijanumerorekisteri-base-address))]}
