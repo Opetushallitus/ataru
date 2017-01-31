@@ -186,7 +186,8 @@
                                           form-key
                                           state
                                           session
-                                          organization-service)})
+                                          organization-service
+                                          tarjonta-service)})
 
                      (api/GET "/hakukohde/:hakukohde-oid" {session :session}
                               :path-params [hakukohde-oid :- s/Str]
@@ -194,12 +195,13 @@
                               :summary "Return Excel export of the hakukohde and applications for it."
                               {:status  200
                                :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session organization-service))}
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session organization-service tarjonta-service))}
                                :body    (application-service/get-excel-report-of-applications-by-hakukohde
                                           hakukohde-oid
                                           state
                                           session
-                                          organization-service)})
+                                          organization-service
+                                          tarjonta-service)})
 
                      (api/GET "/haku/:haku-oid" {session :session}
                               :path-params [haku-oid :- s/Str]
@@ -207,12 +209,13 @@
                               :summary "Return Excel export of the haku and applications for it."
                               {:status  200
                                :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session organization-service))}
+                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session organization-service tarjonta-service))}
                                :body    (application-service/get-excel-report-of-applications-by-haku
                                           haku-oid
                                           state
                                           session
-                                          organization-service)})))
+                                          organization-service
+                                          tarjonta-service)})))
 
                  (api/GET "/hakukohteet" {session :session}
                           :summary "List hakukohde information found for applications stored in system"
