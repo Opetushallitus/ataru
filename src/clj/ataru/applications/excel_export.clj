@@ -50,18 +50,18 @@
 (def ^:private application-meta-fields
   [{:label "Id"
     :field :key}
-   {:label "Lähetysaika"
-    :field :created-time
+   {:label     "Lähetysaika"
+    :field     :created-time
     :format-fn time-formatter}
-   {:label "Tila"
-    :field :state
+   {:label     "Tila"
+    :field     :state
     :format-fn state-formatter}
-   {:label "Hakukohde"
-    :field :hakukohde-name
-    :from  :applications}
-   {:label "Hakukohteen OID"
-    :field :hakukohde
-    :from  :applications}])
+   {:label     "Hakukohde"
+    :field     :hakukohde-name
+    :format-fn str}
+   {:label     "Hakukohteen OID"
+    :field     :hakukohde
+    :format-fn str}])
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 

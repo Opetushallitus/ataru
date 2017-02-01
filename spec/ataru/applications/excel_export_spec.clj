@@ -18,7 +18,6 @@
           (doseq [col-idx (range (count expected-values))]
             (let [cell     (.getCell row col-idx)
                   expected (nth expected-values col-idx)]
-              (println "x" row col-idx)
               (if-not (nil? expected)
                 (do (should-not-be-nil cell)
                     (should= (nth expected-values col-idx) (.getStringCellValue cell)))
