@@ -12,51 +12,58 @@
 (def cached-map-config {:hakukohde {:config {:max-size 1000 :ttl 3600}}
                         :haku      {:config {:max-size 1000 :ttl 3600}}})
 
+(def local-cluster-cfg {:clustered? true
+                        :hosts ["127.0.0.1"]})
+
+(def cluster-config {:default {:clustered? false}
+                     :dev     local-cluster-cfg
+                     :luokka  local-cluster-cfg
+                     :qa      local-cluster-cfg
+                     :prod    {:clustered? true :hosts ["10.27.54.12" "10.27.54.23" "10.27.54.24" "10.27.54.25"]}})
+
 (defn- build-cluster-config
   []
-  (let [environment-name (:environment-name config)
+  (let [environment-name    (:environment-name config)
         cluster-name-suffix (case environment-name
-                     nil nil
-                     "test" nil
-                     "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
-                     ; else: "luokka", "qa", "prod"
-                     :else environment-name)]
-    {:use-multicast? (boolean (some #{environment-name} #{"luokka" "qa" "prod"}))
-     :cluster-name   (when cluster-name-suffix (str "ataru-hz-" cluster-name-suffix))}))
+                              nil nil
+                              "test" nil
+                              "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
+                              ; else: "luokka", "qa", "prod"
+                              :else environment-name)]
+    (merge ((keyword environment-name) cluster-config)
+           (when cluster-name-suffix
+             {:cluster-name (str "ataru-hz-" cluster-name-suffix)}))))
 
 (defn- build-config
-  [{:keys [use-multicast? cluster-name]}]
+  [{:keys [clustered? hosts cluster-name]}]
   (let [configuration (ClasspathXmlConfig. "hazelcast-default.xml")]
-    (when cluster-name
+    (.setEnabled (-> configuration .getNetworkConfig .getJoin .getMulticastConfig) false)
+    (when (and clustered? cluster-name)
       (-> configuration
           (.getGroupConfig)
-          (.setName cluster-name)))
+          (.setName cluster-name))
+      (let [network-cfg (.getNetworkConfig configuration)
+            join-cfg    (.getJoin network-cfg)
+            tcp-config  (.getTcpIpConfig join-cfg)
+            interfaces  (.getInterfaces network-cfg)]
+        (.setEnabled (.getMulticastConfig join-cfg) false)
+        (doseq [host hosts]
+          (.addMember tcp-config host)
+          (.addInterface interfaces host))
+        (.setEnabled tcp-config true)
+        (.setEnabled interfaces true)))
 
-    (when (not use-multicast?)
-      (info "Using TCP config")
-      (.setEnabled (-> configuration .getNetworkConfig .getJoin .getMulticastConfig) false)
-      (when cluster-name
-        (let [network-cfg (.getNetworkConfig configuration)
-              join-cfg    (.getJoin network-cfg)
-              tcp-config  (.getTcpIpConfig join-cfg)
-              interfaces  (.getInterfaces network-cfg)]
-          (.setEnabled (.getMulticastConfig join-cfg) false)
-          (.addMember tcp-config "127.0.0.1")
-          (.setRequiredMember tcp-config "127.0.0.1")
-          (.setEnabled tcp-config true)
-          (.addInterface interfaces "127.0.0.1")
-          (.setEnabled interfaces true)))
+    (doseq [[name-kw {:keys [config]}] cached-map-config]
+      (let [mc (MapConfig.)]
+        (.setName mc (name name-kw))
+        (-> mc
+            (.getMaxSizeConfig)
+            (.setSize (or (:max-size config)
+                          (:max-size default-map-config))))
+        (.setTimeToLiveSeconds mc (or (:ttl config)
+                                      (:ttl default-map-config)))
+        (.addMapConfig configuration mc)))
 
-      (doseq [[name-kw {:keys [config]}] cached-map-config]
-        (let [mc (MapConfig.)]
-          (.setName mc (name name-kw))
-          (-> mc
-              (.getMaxSizeConfig)
-              (.setSize (or (:max-size config)
-                            (:max-size default-map-config))))
-          (.setTimeToLiveSeconds mc (or (:ttl config)
-                                        (:ttl default-map-config)))
-          (.addMapConfig configuration mc))))
     configuration))
 
 (defprotocol CacheService
