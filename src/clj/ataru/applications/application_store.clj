@@ -44,9 +44,7 @@
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
                               :hakukohde      (:hakukohde application)
-                              :hakukohde_name (:hakukohde-name application)
                               :haku           (:haku application)
-                              :haku_name      (:haku-name application)
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)]
@@ -92,7 +90,7 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :hakukohde :haku-name :hakukohde-name])))
+         (select-keys old-application [:key :secret :haku :hakukohde])))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]

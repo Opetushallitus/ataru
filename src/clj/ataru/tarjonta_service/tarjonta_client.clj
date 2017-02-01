@@ -3,11 +3,12 @@
     [cheshire.core :as json]
     [oph.soresu.common.config :refer [config]]
     [org.httpkit.client :as http]
-    [taoensso.timbre :refer [warn]]
+    [taoensso.timbre :refer [warn info]]
     [clojure.string :as string]))
 
 (defn- do-request
   [url]
+  (info "Fetching" url)
   (let [response @(http/get url)
         status   (:status response)
         result   (when (= 200 status)

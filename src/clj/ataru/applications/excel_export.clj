@@ -47,24 +47,21 @@
    {:label "Viimeinen muokkaaja"
     :field :created-by}])
 
-(def ^:private hakukohde-form-meta-fields
-  (into form-meta-fields
-        [{:label "Hakukohde"
-          :field :hakukohde-name
-          :from  :applications}
-         {:label "Hakukohteen OID"
-          :field :hakukohde
-          :from  :applications}]))
-
 (def ^:private application-meta-fields
   [{:label "Id"
     :field :key}
-   {:label "Lähetysaika"
-    :field :created-time
+   {:label     "Lähetysaika"
+    :field     :created-time
     :format-fn time-formatter}
-   {:label "Tila"
-    :field :state
-    :format-fn state-formatter}])
+   {:label     "Tila"
+    :field     :state
+    :format-fn state-formatter}
+   {:label     "Hakukohde"
+    :field     :hakukohde-name
+    :format-fn str}
+   {:label     "Hakukohteen OID"
+    :field     :hakukohde
+    :format-fn str}])
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 
@@ -254,7 +251,13 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn export-applications [applications]
+(defn- inject-hakukohde-name
+  [tarjonta-service application]
+  (if-let [hakukohde-oid (:hakukohde application)]
+    (merge application {:hakukohde-name (-> (.get-hakukohde tarjonta-service hakukohde-oid) :hakukohteenNimet :kieli_fi)})
+    application))
+
+(defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -283,6 +286,7 @@
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
+                               (map (partial inject-hakukohde-name tarjonta-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx))]
                                                 (write-application! row-writer application headers application-meta-fields form))))
@@ -307,9 +311,9 @@
     (str sanitized-name "_" form-key "_" time ".xlsx")))
 
 (defn filename-by-hakukohde
-  [hakukohde-oid session organization-service]
+  [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (->> (hakukohde-access-control/get-hakukohteet session organization-service)
+  (when-let [hakukohde-name (->> (hakukohde-access-control/get-hakukohteet session organization-service tarjonta-service)
                                  (filter (comp (partial = hakukohde-oid) :hakukohde))
                                  (map :hakukohde-name)
                                  (first))]
@@ -318,9 +322,9 @@
       (str sanitized-name "_" time ".xlsx"))))
 
 (defn filename-by-haku
-  [haku-oid session organization-service]
+  [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (->> (haku-access-control/get-haut session organization-service)
+  (when-let [hakukohde-name (->> (haku-access-control/get-haut session organization-service tarjonta-service)
                                  (filter (comp (partial = haku-oid) :haku))
                                  (map :haku-name)
                                  (first))]

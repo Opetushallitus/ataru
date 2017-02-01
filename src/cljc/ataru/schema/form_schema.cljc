@@ -29,12 +29,14 @@
 
 (s/defschema Form {(s/optional-key :id)                s/Int
                    :name                               s/Str
+                   :content                            (s/pred empty?)
+                   (s/optional-key :languages)         [s/Str]
                    (s/optional-key :key)               s/Str
                    (s/optional-key :created-by)        s/Str
                    (s/optional-key :created-time)      #?(:clj  org.joda.time.DateTime
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
-                   s/Any                               s/Any})
+                   (s/optional-key :deleted)           (s/maybe s/Bool)})
 
 (s/defschema Haku {:haku              s/Str
                    :haku-name         s/Str
@@ -112,6 +114,17 @@
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
+(s/defschema FormTarjontaMetadata {:tarjonta
+                                   {:hakukohde-oid                       s/Str
+                                    :hakukohde-name                      s/Str
+                                    :haku-oid                            s/Str
+                                    :haku-name                           s/Str
+                                    (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
+                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}}})
+
+(s/defschema FormWithContentAndTarjontaMetadata
+  (merge FormWithContent FormTarjontaMetadata))
+
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str
                                                          s/Int
@@ -178,10 +191,3 @@
    :state                          application-states
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
-
-(def postal-code-key (s/pred #(re-matches #"^\d{5}" %)))
-
-(s/defschema postal-office-name {s/Keyword s/Str})
-
-(s/defschema PostalCodes
-  {postal-code-key postal-office-name})

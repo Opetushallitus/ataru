@@ -1,4 +1,5 @@
-{:server {:allow-db-clear? true}
+{:environment-name "test"
+ :server {:allow-db-clear? true}
  :db {:database-name "ataru-test"
       :pool-name "ataru-pool"
       :username "oph"

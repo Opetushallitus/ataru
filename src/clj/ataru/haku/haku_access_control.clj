@@ -3,10 +3,17 @@
    [ataru.virkailija.user.session-organizations :as session-orgs]
    [ataru.applications.application-store :as application-store]))
 
-(defn get-haut [session organization-service]
+(defn- add-haku-names
+  [tarjonta-service haku-results]
+  (map (fn [haku-result]
+         (let [haku (.get-haku tarjonta-service (:haku haku-result))]
+           (merge haku-result {:haku-name (-> haku :nimi :kieli_fi)})))
+       haku-results))
+
+(defn get-haut [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized
    session
    organization-service
    vector
-   #(application-store/get-haut %)
-   #(application-store/get-all-haut)))
+   #(add-haku-names tarjonta-service (application-store/get-haut %))
+   #(add-haku-names tarjonta-service (application-store/get-all-haut))))

@@ -71,10 +71,8 @@
   (let [secret (:secret application)]
     (cond-> {:form           (:id form)
              :lang           lang
-             :hakukohde      (:hakukohde-oid form)
-             :hakukohde-name (:hakukohde-name form)
-             :haku           (:haku-oid form)
-             :haku-name      (:haku-name form)
+             :hakukohde      (-> form :tarjonta :hakukohde-oid)
+             :haku           (-> form :tarjonta :haku-oid)
              :answers        (create-answers-to-submit (:answers application) form (:ui application))}
       (some? secret)
       (assoc :secret secret))))
