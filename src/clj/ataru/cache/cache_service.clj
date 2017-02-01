@@ -23,7 +23,7 @@
 
 (defn- build-cluster-config
   []
-  (let [environment-name    (:environment-name config)
+  (let [environment-name    (-> config :public-config :environment-name)
         cluster-name-suffix (case environment-name
                               nil nil
                               "test" nil
