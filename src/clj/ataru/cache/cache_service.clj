@@ -29,7 +29,7 @@
                               "test" nil
                               "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
                               ; else: "luokka", "qa", "prod"
-                              :else environment-name)]
+                              environment-name)]
     (merge ((keyword environment-name) cluster-config)
            (when cluster-name-suffix
              {:cluster-name (str "ataru-hz-" cluster-name-suffix)}))))
