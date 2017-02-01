@@ -28,5 +28,6 @@
  :tarjonta-service {:hakukohde-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/"
                     :haku-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/"
                     :forms-in-use-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/ataru/all"}
+ :environment-name "{{ataru_environment_name}}"
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
        :hakija-base-path "{{ataru_hakija_log_path}}"}}
