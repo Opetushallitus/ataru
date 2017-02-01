@@ -14,22 +14,23 @@
 
 (defn- build-cluster-config
   []
-  (let [environment-name (:environment-name config)]
+  (let [environment-name (:environment-name config)
+        cluster-name-suffix (case environment-name
+                     nil nil
+                     "test" nil
+                     "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
+                     ; else: "luokka", "qa", "prod"
+                     :else environment-name)]
     {:use-multicast? (boolean (some #{environment-name} #{"luokka" "qa" "prod"}))
-     :cluster-name   (str "ataru-hz-"
-                          (case environment-name
-                            nil nil
-                            "test" nil
-                            "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
-                            ; else: "luokka", "qa", "prod"
-                            :else environment-name))}))
+     :cluster-name   (when cluster-name-suffix (str "ataru-hz-" cluster-name-suffix))}))
 
 (defn- build-config
   [{:keys [use-multicast? cluster-name]}]
   (let [configuration (ClasspathXmlConfig. "hazelcast-default.xml")]
-    (-> configuration
-        (.getGroupConfig)
-        (.setName cluster-name))
+    (when cluster-name
+      (-> configuration
+          (.getGroupConfig)
+          (.setName cluster-name)))
 
     (when (not use-multicast?)
       (info "Using TCP config")
