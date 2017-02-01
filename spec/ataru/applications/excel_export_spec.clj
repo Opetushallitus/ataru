@@ -37,7 +37,7 @@
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
      (try
        (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
-         (->> (j2ee/export-applications ~(second bindings) (tarjonta-service/new-fake-tarjonta-service))
+         (->> (j2ee/export-applications ~(second bindings) (tarjonta-service/new-tarjonta-service))
               (.write output#)))
        ~@body
        (finally

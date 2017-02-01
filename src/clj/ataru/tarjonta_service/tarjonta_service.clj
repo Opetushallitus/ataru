@@ -2,7 +2,8 @@
   (:require
     [ataru.tarjonta-service.tarjonta-client :as client]
     [ataru.virkailija.user.organization-client :refer [oph-organization]]
-    [com.stuartsierra.component :as component]))
+    [com.stuartsierra.component :as component]
+    [oph.soresu.common.config :refer [config]]))
 
 (defn forms-in-use
   [organization-service username]
@@ -36,10 +37,6 @@
   (get-haku [this haku-oid]
     (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid))))
 
-(defn new-tarjonta-service
-  []
-  (->CachedTarjontaService))
-
 (defprotocol VirkailijaTarjontaService
   (get-forms-in-use [this username]))
 
@@ -52,10 +49,6 @@
 
   (get-forms-in-use [this username]
     (forms-in-use (:organization-service this) username)))
-
-(defn new-virkailija-tarjonta-service
-  []
-  (->VirkailijaTarjontaFormsService))
 
 (defrecord FakeTarjontaService []
   component/Lifecycle
@@ -151,6 +144,12 @@
        :hakuaikas                                            [{:hakuaikaId "10291885", :alkuPvm 1480330218240, :loppuPvm 1480503020479, :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
        :sijoittelu                                           false})))
 
-(defn new-fake-tarjonta-service
+(defn new-tarjonta-service
   []
-  (->FakeTarjontaService))
+  (if (-> config :dev :fake-dependencies)
+    (->FakeTarjontaService)
+    (->CachedTarjontaService)))
+
+(defn new-virkailija-tarjonta-service
+  []
+  (->VirkailijaTarjontaFormsService))
