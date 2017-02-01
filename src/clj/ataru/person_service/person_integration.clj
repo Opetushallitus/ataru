@@ -3,7 +3,7 @@
    [clojure.core.match :refer [match]]
    [taoensso.timbre :as log]
    [ataru.applications.application-store :as application-store]
-   [ataru.person-service.person-extract :refer [extract-person-from-application]]))
+   [ataru.person-service.oppijanumerorekisteri-person-extract :refer [extract-person-from-application]]))
 
 (defn upsert-and-log-person [person-service application-id]
   (let [person-to-send (-> (application-store/get-application application-id)

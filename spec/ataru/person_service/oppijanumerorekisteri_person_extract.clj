@@ -1,4 +1,4 @@
-(ns ataru.person-service.person-extract)
+(ns ataru.person-service.oppijanumerorekisteri-person-extract)
 
 (defn- extract-field [{:keys [answers]} field]
   (some (fn [{:keys [key value]}]

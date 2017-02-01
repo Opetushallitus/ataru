@@ -1,8 +1,8 @@
 (ns ataru.person-service.person-extract-spec
   (:require
-   [speclj.core :refer [describe it tags should should=]]
-   [ataru.fixtures.application :as application-fixtures]
-   [ataru.person-service.person-extract :refer [extract-person-from-application]]))
+    [speclj.core :refer [describe it tags should should=]]
+    [ataru.fixtures.application :as application-fixtures]
+    [ataru.person-service.oppijanumerorekisteri-person-extract :refer [extract-person-from-application]]))
 
 (def finnish-person {:hetu               "120496-924J"
                      :etunimet           "Aku"
