@@ -1,4 +1,4 @@
-(ns ataru.person-service.person-extract-spec
+(ns ataru.person-service.oppijanumerorekisteri-person-extract-spec
   (:require
     [speclj.core :refer [describe it tags should should=]]
     [ataru.fixtures.application :as application-fixtures]
