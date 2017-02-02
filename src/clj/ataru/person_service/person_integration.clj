@@ -2,14 +2,11 @@
   (:require
    [clojure.core.match :refer [match]]
    [taoensso.timbre :as log]
-   [ataru.applications.application-store :as application-store]
-   [ataru.person-service.oppijanumerorekisteri-person-extract :refer [extract-person-from-application]]))
+   [ataru.applications.application-store :as application-store]))
 
 (defn upsert-and-log-person [person-service application-id]
-  (let [person-to-send (-> (application-store/get-application application-id)
-                           (extract-person-from-application))]
-    (log/info "Sending person" person-to-send)
-    (let [result (.upsert-person person-service person-to-send)]
+  (let [application (application-store/get-application application-id)]
+    (let [result (.upsert-person person-service application)]
       (match result
         {:status :created :oid oid}
         (do

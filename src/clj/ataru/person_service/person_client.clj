@@ -6,7 +6,10 @@
    [schema.core :as s]
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]
-   [ataru.person-service.person-schema :refer [Person]])
+   [ataru.person-service.person-schema :refer [Person]]
+   [ataru.person-service.legacy-person-schema :refer [LegacyPerson]]
+   [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe]
+   [ataru.person-service.authentication-service-person-extract :as asp])
   (:import
    [java.net URLEncoder]))
 
@@ -83,6 +86,40 @@
   [cas-client :- s/Any
    person     :- Person]
   {:pre [(some? (oppijanumerorekisteri-base-address))]}
+  (log/info "Sending person to oppijanumerorekisteri" person)
   (if (:hetu person)
     (upsert-person-with-hetu cas-client person)
     (upsert-person-without-hetu cas-client person)))
+
+(s/defn ^:always-validate legacy-upsert-person :- Response
+  [cas-client :- s/Any
+   person :- LegacyPerson]
+  {:pre [(some? (base-address))]}
+  (log/info "Sending person to authentication-service" person)
+  (let [url      (str (base-address) "/resources/s2s/hakuperusteet")
+        response (cas/cas-authenticated-post cas-client url person)]
+    (if (= 200 (:status response))
+      ;; Let's just mark it always created, we don't know with this hakuperusteet call:
+      {:status :created :oid (:personOid (json/parse-string (:body response) true))}
+      (throw (Exception.
+              (str "Failed to upsert person, got status code "
+                   (:status response)
+                   " body: "
+                   (:body response)))))))
+
+
+(defn upsert-person-partially-old
+  "This is a temporary solution partially calling the old authentication-service
+   for persons without finnish hetu (id). The new API didn't support idp entities
+   which would make it possible to remove duplicates based on emails later."
+  [oppijanumerorekisteri-cas-client
+   authentication-service-cas-client
+   application]
+  (let [or-person (orpe/extract-person-from-application application)]
+    (if (:hetu or-person)
+      (upsert-person
+       oppijanumerorekisteri-cas-client
+       or-person)
+      (legacy-upsert-person
+       authentication-service-cas-client
+       (asp/extract-person-from-application application)))))
