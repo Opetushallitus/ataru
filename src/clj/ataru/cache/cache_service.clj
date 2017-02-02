@@ -88,7 +88,7 @@
 
   (start [component]
     (let [cluster-config (build-cluster-config)]
-      (info "Initializing Hazelcast caching, cluster" cluster-config)
+      (info "Initializing Hazelcast caching, cluster" (-> config :public-config :environment-name) cluster-config)
       (assoc component :hazelcast-instance (Hazelcast/newHazelcastInstance (build-config cluster-config)))))
 
   (stop [component]
