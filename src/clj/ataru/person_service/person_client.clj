@@ -89,6 +89,13 @@
   (log/info "Sending person to oppijanumerorekisteri" person)
   (if (:hetu person)
     (upsert-person-with-hetu cas-client person)
+    ;; In practice this doesn't happen yet, since
+    ;; upsert-person-partially-old directs persons without
+    ;; hetu to legacy authentication-service before we arrive here.
+    ;; This has been tested though and works, only problem is that
+    ;; without idp entitys we can't remove duplicates or detect
+    ;; that the persons we add already exist in the service (as we attempt
+    ;; to do in upsert-person-without-hetu with the idp query)
     (upsert-person-without-hetu cas-client person)))
 
 (s/defn ^:always-validate legacy-upsert-person :- Response
