@@ -26,6 +26,7 @@
        :password "{{ataru_cas_password}}"}
  :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
  :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}
+ :oppijanumerorekisteri-service {:base-address "https://{{host_virkailija}}/oppijanumerorekisteri-service"}
  :tarjonta-service {:hakukohde-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/"
                     :haku-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/"
                     :forms-in-use-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/ataru/all"}
