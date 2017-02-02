@@ -14,14 +14,25 @@
   component/Lifecycle
   PersonService
 
-  (upsert-person [{:keys [cas-client]} person]
-    (person-client/upsert-person cas-client person))
+  (upsert-person [{:keys [oppijanumerorekisteri-cas-client
+                          authentication-service-cas-client]}
+                  application]
+    (person-client/upsert-person-partially-old
+     oppijanumerorekisteri-cas-client
+     authentication-service-cas-client
+     application))
 
   (start [this]
-    (assoc this :cas-client (cas/new-client "/authentication-service")))
+    (assoc
+     this
+     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
+     :authentication-service-cas-client (cas/new-client "/authentication-service")))
 
   (stop [this]
-    (assoc this :cas-client nil)))
+    (assoc
+     this
+     :oppijanumerorekisteri-cas-client nil
+     :authentication-service-cas-client nil)))
 
 (defrecord FakePersonService []
   component/Lifecycle
