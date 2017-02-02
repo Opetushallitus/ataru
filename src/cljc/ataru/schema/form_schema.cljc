@@ -120,7 +120,7 @@
                                     :haku-oid                            s/Str
                                     :haku-name                           s/Str
                                     (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int}}})
+                                    (s/optional-key :hakuaika-dates)     {:start s/Int :end s/Int :on s/Bool}}})
 
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent FormTarjontaMetadata))

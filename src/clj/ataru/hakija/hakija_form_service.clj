@@ -14,11 +14,13 @@
           (koodisto/populate-form-koodisto-fields)))))
 
 (defn- time-within?
-  [instant {:keys [alkuPvm loppuPvm]}]
-  (time/within?
-    (time/interval (time-coerce/from-long alkuPvm)
-                   (time-coerce/from-long loppuPvm))
-    instant))
+  ([instant {:keys [alkuPvm loppuPvm]}]
+   (time-within? instant alkuPvm loppuPvm))
+  ([instant start end]
+   (time/within?
+    (time/interval (time-coerce/from-long start)
+                   (time-coerce/from-long end))
+    instant)))
 
 (defn- find-current-or-last-hakuaika
   [hakuaikas]
@@ -39,6 +41,12 @@
       {:start (:alkuPvm this-haku-hakuaika)
        :end   (:loppuPvm this-haku-hakuaika)})))
 
+(defn- get-hakuaika-info [hakukohde haku]
+  (let [{start :start end :end :as interval} (parse-hakuaika hakukohde haku)]
+    (if (and start end (time-within? (time/now) start end))
+      (assoc interval :on true)
+      (assoc interval :on false))))
+
 (defn fetch-form-by-hakukohde-oid
   [tarjonta-service hakukohde-oid]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
@@ -57,5 +65,5 @@
                :haku-tarjoaja-name (-> hakukohde :tarjoajaNimet :fi)
                :haku-oid           haku-oid
                :haku-name          (-> haku :nimi :kieli_fi)
-               :hakuaika-dates     (parse-hakuaika hakukohde haku)}})
+               :hakuaika-dates     (get-hakuaika-info hakukohde haku)}})
       (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
