@@ -5,10 +5,10 @@
 
 (defn- add-haku-names
   [tarjonta-service haku-results]
-  (map (fn [haku-result]
-         (let [haku (.get-haku tarjonta-service (:haku haku-result))]
-           (merge haku-result {:haku-name (-> haku :nimi :kieli_fi)})))
-       haku-results))
+  (remove nil? (map (fn [haku-result]
+                      (let [haku (.get-haku tarjonta-service (:haku haku-result))]
+                        (merge haku-result {:haku-name (-> haku :nimi :kieli_fi)})))
+                    haku-results)))
 
 (defn get-haut [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized
