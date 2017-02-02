@@ -23,10 +23,10 @@
                             (:languages form))
         submit-status     (subscribe [:state-query [:application :submit-status]])
         secret            (:modify (util/extract-query-params))
-        hakukohde-name    (:hakukohde-name form)
-        haku-tarjoja-name (:haku-tarjoaja-name form)
-        apply-start-date  (-> form :hakuaika-dates :start)
-        apply-end-date    (-> form :hakuaika-dates :end)
+        hakukohde-name    (-> form :tarjonta :hakukohde-name)
+        haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
+        apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
+        apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         apply-dates       (when hakukohde-name
                             (if (and apply-start-date apply-end-date)
                               (str "Hakuaika: "
