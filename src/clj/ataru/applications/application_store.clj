@@ -50,11 +50,11 @@
         application          (yesql-add-application-query<! application-to-store connection)]
     (unwrap-application application)))
 
-(def ^:private ssn-pred (comp (partial = "ssn") :key))
+(def ^:private email-pred (comp (partial = "email") :key))
 
-(defn- extract-ssn [application]
+(defn- extract-email [application]
   (->> (:answers application)
-       (filter ssn-pred)
+       (filter email-pred)
        (first)
        :value))
 
@@ -70,7 +70,7 @@
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
-                      :id        (extract-ssn new-application)})
+                      :id        (extract-email new-application)})
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil}
@@ -107,7 +107,7 @@
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
-                      :id        (extract-ssn new-application)})
+                      :id        (extract-email new-application)})
       id)))
 
 (defn- older?
