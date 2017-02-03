@@ -103,3 +103,8 @@
       (fn [wrapper-section]
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
       wrapper-sections)))
+
+(defn applying-possible? [form]
+  (if (-> form :tarjonta)
+   (-> form :tarjonta :hakuaika-dates :on)
+   true))

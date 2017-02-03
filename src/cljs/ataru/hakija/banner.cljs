@@ -76,13 +76,15 @@
                       :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
-  (let [valid-status (subscribe [:application/valid-status])
-        submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [valid-status  (subscribe [:application/valid-status])
+        submit-status (subscribe [:state-query [:application :submit-status]])
+        can-apply?    (subscribe [:application/can-apply?])]
     (fn []
-      [:div.application__status-controls
-       [send-button-or-placeholder @valid-status @submit-status]
-       [invalid-field-status @valid-status]
-       [sent-indicator @submit-status]])))
+      (when @can-apply?
+        [:div.application__status-controls
+         [send-button-or-placeholder @valid-status @submit-status]
+         [invalid-field-status @valid-status]
+         [sent-indicator @submit-status]]))))
 
 (defn wrapper-section-link [ws]
   (let [lang         (subscribe [:application/form-language])
@@ -103,12 +105,14 @@
      [wrapper-section-link ws]]))
 
 (defn wrapper-sections []
-  (let [wrapper-sections (subscribe [:application/wrapper-sections])]
+  (let [wrapper-sections (subscribe [:application/wrapper-sections])
+        can-apply?       (subscribe [:application/can-apply?])]
     (fn []
-      (when @wrapper-sections
+      (when (and @wrapper-sections @can-apply?)
         (into [:div.application__banner-wrapper-sections-content]
               (mapv wrapper-section @wrapper-sections))))))
 
 (defn banner [] [:div.application__banner-container
-                 [:div.application__top-banner-container [:div.application-top-banner logo [status-controls]]]
+                 [:div.application__top-banner-container
+                  [:div.application-top-banner logo [status-controls]]]
                  [:div.application__banner-wrapper-sections [wrapper-sections]]])
