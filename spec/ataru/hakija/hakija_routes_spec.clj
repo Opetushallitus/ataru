@@ -3,6 +3,8 @@
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.hakija.application-email-confirmation :as application-email]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.hakija-routes :as routes]
             [cheshire.core :as json]
             [oph.soresu.common.db :as soresu-db]
@@ -21,7 +23,10 @@
 (def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 10 :value] "0001"))
 (def form-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 12 :value] "kuikka"))
 
-(def handler (-> (routes/new-handler) .start :routes))
+(def handler (-> (routes/new-handler)
+                 (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 .start
+                 :routes))
 
 (defn- parse-body
   [resp]
@@ -62,11 +67,12 @@
     (= (:form application-fixtures/person-info-form-application-for-hakukohde) (:form actual))))
 
 (describe "POST /application"
-  (tags :unit)
+  (tags :unit :hakija-routes)
 
   (around [spec]
-    (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])]
-      (spec)))
+          (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                        hakuaika/get-hakuaika-info (fn [_ _] {:on true})]
+            (spec)))
 
   (before
     (reset! form (db/init-db-fixture)))
