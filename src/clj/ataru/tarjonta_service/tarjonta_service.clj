@@ -71,7 +71,7 @@
        :tutkintoonJohtava                       false,
        :soraKuvausKielet                        [],
        :tarjoajaOids                            ["1.2.246.562.10.10826252479"],
-       :koulutukset                             [{:oid " 1.2.246.562.17.74335799461"}],
+       :koulutukset                             [{:oid "1.2.246.562.17.74335799461"}],
        :hakukelpoisuusVaatimusKuvaukset         {},
        :josYoEiMuitaLiitepyyntoja               false,
        :kaytetaanJarjestelmanValintaPalvelua    true,
@@ -146,7 +146,15 @@
        :koulutuksenAlkamiskausiUri                           "kausi_s#1",
        :hakukausiVuosi                                       2016,
        :hakuaikas                                            [{:hakuaikaId "10291885", :alkuPvm 1480330218240, :loppuPvm 1480503020479, :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
-       :sijoittelu                                           false})))
+       :sijoittelu                                           false}))
+
+  (get-koulutus [this koulutus-id]
+    (when (= koulutus-id "1.2.246.562.17.74335799461")
+      {:oid             "1.2.246.562.17.74335799461"
+       :koulutuskoodi   {:nimi "Koulutuskoodi"}
+       :tutkintonimike  {:nimi "Tutkintonimike"}
+       :koulutusohjelma {:nimi "Koulutusohjelma"}
+       :tarkenne        "Tarkenne"})))
 
 (defn new-tarjonta-service
   []
