@@ -62,7 +62,7 @@
    {:label     "Hakukohteen OID"
     :field     :hakukohde
     :format-fn str}
-   {:label     "Koulutus"
+   {:label     "Koulutuskoodin nimi ja tunniste"
     :field     :koulutus-identifiers
     :format-fn (partial string/join "; ")}])
 
