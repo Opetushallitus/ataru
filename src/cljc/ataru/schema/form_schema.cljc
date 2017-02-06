@@ -120,9 +120,10 @@
                                     :haku-oid                            s/Str
                                     :haku-name                           s/Str
                                     (s/optional-key :koulutukset)        [{:oid                  s/Str
+                                                                           :koulutuskoodi-name   (s/maybe s/Str)
                                                                            :tutkintonimike-name  (s/maybe s/Str)
                                                                            :koulutusohjelma-name (s/maybe s/Str)
-                                                                           :koulutus-tunniste    (s/maybe s/Str)}]
+                                                                           :tarkenne             (s/maybe s/Str)}]
                                     (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
                                     (s/optional-key :hakuaika-dates)     {:start s/Int
                                                                           (s/optional-key :end) (s/maybe s/Int)

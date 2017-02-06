@@ -15,9 +15,10 @@
 (defn- parse-koulutus
   [response]
   {:oid                  (:oid response)
+   :koulutuskoodi-name   (-> response :koulutuskoodi :nimi)
    :tutkintonimike-name  (-> response :tutkintonimike :nimi)
    :koulutusohjelma-name (-> response :koulutusohjelma :nimi)
-   :koulutus-tunniste    (:tunniste response)})
+   :tarkenne             (:tarkenne response)})
 
 (defn fetch-form-by-hakukohde-oid
   [tarjonta-service hakukohde-oid]
