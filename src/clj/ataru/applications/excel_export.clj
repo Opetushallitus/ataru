@@ -61,7 +61,10 @@
     :format-fn str}
    {:label     "Hakukohteen OID"
     :field     :hakukohde
-    :format-fn str}])
+    :format-fn str}
+   {:label     "Koulutuskoodin nimi ja tunniste"
+    :field     :koulutus-identifiers
+    :format-fn (partial string/join "; ")}])
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 
@@ -257,6 +260,24 @@
     (merge application {:hakukohde-name (-> (.get-hakukohde tarjonta-service hakukohde-oid) :hakukohteenNimet :kieli_fi)})
     application))
 
+(defn- inject-koulutus-information
+  [tarjonta-service application]
+  (let [hakukohde-oid        (:hakukohde application)
+        hakukohde            (.get-hakukohde tarjonta-service hakukohde-oid)
+        koulutus-oids        (map :oid (:koulutukset hakukohde))
+        koulutus-identifiers (when koulutus-oids
+                               (->> koulutus-oids
+                                    (map #(.get-koulutus tarjonta-service %))
+                                    (map (fn [koulutus]
+                                           (string/join
+                                             ", "
+                                             (filter #(not (string/blank? %))
+                                                     [(-> koulutus :koulutuskoodi :nimi)
+                                                      (-> koulutus :tarkenne)]))))))]
+    (if koulutus-identifiers
+      (merge application {:koulutus-identifiers koulutus-identifiers})
+      application)))
+
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -287,6 +308,7 @@
                                (sort-by :created-time)
                                (reverse)
                                (map (partial inject-hakukohde-name tarjonta-service))
+                               (map (partial inject-koulutus-information tarjonta-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx))]
                                                 (write-application! row-writer application headers application-meta-fields form))))

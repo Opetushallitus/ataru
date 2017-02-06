@@ -8,7 +8,7 @@
 
 (defn- do-request
   [url]
-  (info "Fetching" url)
+  (info "Fetching from tarjonta:" url)
   (let [response @(http/get url)
         status   (:status response)
         result   (when (= 200 status)
@@ -28,6 +28,12 @@
   (do-request (str
                 (get-in config [:tarjonta-service :haku-base-url])
                 haku-oid)))
+
+(defn get-koulutus
+  [koulutus-oid]
+  (do-request (str
+                (get-in config [:tarjonta-service :koulutus-base-url])
+                koulutus-oid)))
 
 (defn get-forms-in-use
   [organization-oids]
