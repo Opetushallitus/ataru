@@ -384,86 +384,63 @@
        [:label.application__form-field-label [:span header]])
      [link-detected-paragraph text]]))
 
-(defn spawn-children-based-on-answers [children answers]
-  (let [child-ids        (map (comp keyword :id) children)
-        adjacent         (select-keys answers child-ids)
-        count-of-answers (reduce max
-                           1 ; by default displays one row
-                           (map (comp count :values second) adjacent))]
-    (flatten
-      (map-indexed
-        (fn [index children]
-          (map
-            (fn [child]
-              (let [id (keyword (:id child))]
-                {:id          id
-                 :value-index index
-                 :child       child
-                 :value       (get-in adjacent [id :values index :value])
-                 :valid?      (boolean (get-in adjacent [id :values index :valid]))}))
-            children))
-        (repeat count-of-answers children)))))
+(defn- adjacent-field-input-change [field-descriptor row-idx event]
+  (let [value  (some-> event .-target .-value)
+        valid? (field-value-valid? field-descriptor value)
+        id     (keyword (:id field-descriptor))]
+    (dispatch [:application/set-adjacent-field-answer field-descriptor id row-idx {:value value :valid valid?}])))
 
-(defn- adjacent-field-input [fid on-change {:keys [valid? child value]}]
-  (r/create-class
-    {:component-did-mount (fn [this] (when-not value (on-change nil))) ; updates answers to include proper field labels and validation results
-     :reagent-render
-     (fn [fid on-change {:keys [valid? child value]}]
-       [:input.application__form-text-input.application__form-text-input--normal
-        {:id        fid
-         :type      "text"
-         :value     value
-         :on-change on-change}])}))
+(defn- adjacent-field-input [{:keys [id] :as child} row-idx]
+  (let [on-change (partial adjacent-field-input-change child row-idx)
+        value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
+    (r/create-class
+      {:component-did-mount
+       (fn [this]
+         (when-not value (on-change nil)))
+       :reagent-render
+       (fn [{:keys [id]} row-idx]
+         [:input.application__form-text-input.application__form-text-input--normal
+          {:id        (str id "-" row-idx)
+           :type      "text"
+           :value     @value
+           :on-change on-change}])})))
 
-(defn adjacent-text-fields [{:keys [children] :as field-descriptor}]
-  (let [language              (subscribe [:application/form-language])
-        repeatable?           (-> field-descriptor :params :repeatable)
-        answers               (subscribe [:state-query [:application :answers]])
-        adjacent-field-change (fn [child id idx event]
-                                (let [value  (some-> event .-target .-value)
-                                      valid? (field-value-valid? child value)]
-                                  (dispatch [:application/set-adjacent-field-answer
-                                             child
-                                             id
-                                             idx
-                                             {:value value :valid valid?}])))]
-    (fn [{:keys [children] :as field-descriptor}]
-      [:div.application__form-field
-       [label field-descriptor]
-       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-         [:div.application__form-info-text [link-detected-paragraph info]])
-       [:div
-        (doall (for [[rowcount row]
-                     (->> (spawn-children-based-on-answers children @answers)
-                          ; counter
-                          (map vector (range))
-                          ; children grouped into a row
-                          (partition (count children))
-                          ; rowcount
-                          (map vector (range)))]
-                 (into
-                   ^{:key (->> row second second (select-keys [:value-index :id]) (apply str "-" rowcount))}
-                   [:div.application__form-adjacent-text-fields-wrapper
-                    (for [[counter {:keys [id value-index child value valid?] :as current-row}] row
-                          :let [fid (str value-index "-" (:id child))]]
-                      ^{:key fid}
-                      [:div.application__form-adjacent-row
-                       [:div {:class (when (-> counter (>= (count children)))
-                                       "application__form-adjacent-row--mobile-only")}
-                        [label child]]
-                       [adjacent-field-input fid (partial adjacent-field-change child id value-index) current-row]])
-                    (when (pos? rowcount)
-                      [:a {:on-click (fn [evt]
-                                       (.preventDefault evt)
-                                       (dispatch [:application/remove-adjacent-field field-descriptor (first (map (comp :value-index second) row)) (map (comp :id second) row)]))}
-                       [:span.application__form-adjacent-row--mobile-only
-                        "Poista rivi"]
-                       [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
-       (when repeatable?
-         [:a {:on-click (fn [evt]
-                          (.preventDefault evt)
-                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
-          [:i.zmdi.zmdi-plus-square] " Lisää rivi"])])))
+(defn adjacent-text-fields [field-descriptor]
+  (let [language   (subscribe [:application/form-language])
+        row-amount (subscribe [:application/adjacent-field-row-amount field-descriptor])]
+    (fn [field-descriptor]
+      (let [row-amount @row-amount
+            child-ids  (map (comp keyword :id) (:children field-descriptor))]
+        [:div.application__form-field
+         [label field-descriptor]
+         (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+           [:div.application__form-info-text [link-detected-paragraph info]])
+         [:div
+          (->> (range row-amount)
+               (map (fn adjacent-text-fields-row [row-idx]
+                      ^{:key (str "adjacent-fields-" row-idx)}
+                      [:div.application__form-adjacent-text-fields-wrapper
+                       (map-indexed (fn adjacent-text-fields-column [col-idx child]
+                                      (let [key (str "adjacent-field-" row-idx "-" col-idx)]
+                                        ^{:key key}
+                                        [:div.application__form-adjacent-row
+                                         [:div (when-not (= row-idx 0)
+                                                 {:class "application__form-adjacent-row--mobile-only"})
+                                          [label child]]
+                                         [adjacent-field-input child row-idx]]))
+                                    (:children field-descriptor))
+                       (when (pos? row-idx)
+                         [:a {:on-click (fn remove-adjacent-text-field [event]
+                                          (.preventDefault event)
+                                          (dispatch [:application/remove-adjacent-field field-descriptor row-idx child-ids]))}
+                          [:span.application__form-adjacent-row--mobile-only "Poista rivi"]
+                          [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
+         (when (get-in field-descriptor [:params :repeatable])
+           [:a
+            {:on-click (fn add-adjacent-text-field [event]
+                         (.preventDefault event)
+                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
+            [:i.zmdi.zmdi-plus-square] " Lisää rivi"])]))))
 
 (defn render-field
   [field-descriptor & args]
