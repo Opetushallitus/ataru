@@ -70,7 +70,9 @@
       :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
       :path-params [hakukohde-oid :- s/Str]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid tarjonta-service hakukohde-oid)]
+      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid
+                                    tarjonta-service
+                                    hakukohde-oid)]
         (response/ok form-with-hakukohde)
         (response/not-found)))
     (api/GET "/form/:key" []
@@ -82,7 +84,9 @@
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
-      (match (application-service/handle-application-submit application)
+      (match (application-service/handle-application-submit
+              tarjonta-service
+              application)
         {:passed? false :failures failures}
         (response/bad-request {:failures failures})
 

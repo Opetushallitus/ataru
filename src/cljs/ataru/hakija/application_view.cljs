@@ -27,12 +27,14 @@
         haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
+        hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
         apply-dates       (when hakukohde-name
                             (if (and apply-start-date apply-end-date)
                               (str "Hakuaika: "
                                    (unparse date-format (from-long apply-start-date))
                                    " - "
-                                   (unparse date-format (from-long apply-end-date)))
+                                   (unparse date-format (from-long apply-end-date))
+                                   (when-not hakuaika-on " (haku ei ole käynnissä)"))
                               "Jatkuva haku"))]
     (fn [form]
       [:div
@@ -69,12 +71,14 @@
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form (subscribe [:state-query [:form]])]
+  (let [form       (subscribe [:state-query [:form]])
+        can-apply? (subscribe [:application/can-apply?])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
-       [render-fields @form]])))
+       (when @can-apply?
+         [render-fields @form])])))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])
