@@ -31,8 +31,18 @@
       {:start (:alkuPvm this-haku-hakuaika)
        :end   (:loppuPvm this-haku-hakuaika)})))
 
+(defn- hakuaika-on [start end]
+  (cond
+    (and start end (time-within? (time/now) start end))
+    true
+
+    ;; "Jatkuva haku"
+    (and start (not end) (time/after? (time/now) (time-coerce/from-long start)))
+    true
+
+    :else
+    false))
+
 (defn get-hakuaika-info [hakukohde haku]
   (let [{start :start end :end :as interval} (parse-hakuaika hakukohde haku)]
-    (if (and start end (time-within? (time/now) start end))
-      (assoc interval :on true)
-      (assoc interval :on false))))
+    (assoc interval :on (hakuaika-on start end))))
