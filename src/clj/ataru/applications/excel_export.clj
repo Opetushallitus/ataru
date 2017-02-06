@@ -61,7 +61,10 @@
     :format-fn str}
    {:label     "Hakukohteen OID"
     :field     :hakukohde
-    :format-fn str}])
+    :format-fn str}
+   {:label     "Tutkintonimikkeet"
+    :field     :tutkintonimike-names
+    :format-fn (partial string/join ", ")}])
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 
@@ -257,6 +260,19 @@
     (merge application {:hakukohde-name (-> (.get-hakukohde tarjonta-service hakukohde-oid) :hakukohteenNimet :kieli_fi)})
     application))
 
+(defn- inject-tutkintonimike-names
+  [tarjonta-service application]
+  (let [hakukohde-oid        (:hakukohde application)
+        hakukohde            (.get-hakukohde tarjonta-service hakukohde-oid)
+        koulutus-oids        (map :oid (:koulutukset hakukohde))
+        tutkintonimike-names (when koulutus-oids
+                               (->> koulutus-oids
+                                    (map #(.get-koulutus tarjonta-service %))
+                                    (map #(-> % :tutkintonimike :nimi))))]
+    (if tutkintonimike-names
+      (merge application {:tutkintonimike-names tutkintonimike-names})
+      application)))
+
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -287,6 +303,7 @@
                                (sort-by :created-time)
                                (reverse)
                                (map (partial inject-hakukohde-name tarjonta-service))
+                               (map (partial inject-tutkintonimike-names tarjonta-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx))]
                                                 (write-application! row-writer application headers application-meta-fields form))))

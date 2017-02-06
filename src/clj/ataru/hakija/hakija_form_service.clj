@@ -25,7 +25,7 @@
         haku-oid      (:hakuOid hakukohde)
         haku          (when haku-oid (.get-haku tarjonta-service haku-oid))
         koulutus-oids (map :oid (:koulutukset hakukohde))
-        koulutuses    (when koulutus-oids
+        koulutukset   (when koulutus-oids
                         (->> koulutus-oids
                              (map #(.get-koulutus tarjonta-service %))
                              (map parse-koulutus)))
@@ -43,6 +43,5 @@
                :haku-oid           haku-oid
                :haku-name          (-> haku :nimi :kieli_fi)
                :hakuaika-dates     (hakuaika/get-hakuaika-info hakukohde haku)
-               :koulutuses         koulutuses}})
+               :koulutukset        koulutukset}})
       (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
-
