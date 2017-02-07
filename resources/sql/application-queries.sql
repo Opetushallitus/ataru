@@ -138,13 +138,13 @@ select id, key, lang, form_id as form, created_time, content, secret from applic
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.key = :application_key
 )
-select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+select id, key, lang, form_id as form, created_time, content, hakukohde from applications a join latest_version lv on a.created_time = lv.latest_time;
 
 -- name: yesql-get-latest-application-by-secret
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.secret = :secret
 )
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, f.key as form_key
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, a.hakukohde, f.key as form_key
 from applications a
 join latest_version lv on a.created_time = lv.latest_time
 join forms f on a.form_id = f.id;

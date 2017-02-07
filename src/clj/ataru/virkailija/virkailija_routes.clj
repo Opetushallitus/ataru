@@ -161,7 +161,7 @@
                              :events      [ataru-schema/Event]
                              :review      ataru-schema/Review
                              :form        ataru-schema/FormWithContent}
-                    (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service)))
+                    (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
