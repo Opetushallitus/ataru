@@ -2,6 +2,7 @@
   (:require
     [ataru.virkailija.user.session-organizations :as session-orgs]
     [ataru.applications.application-store :as application-store]
+    [taoensso.timbre :refer [warn]]
     [clojure.string :as string]))
 
 (defn- add-haku-names
