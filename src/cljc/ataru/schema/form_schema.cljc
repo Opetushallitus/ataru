@@ -161,7 +161,8 @@
    :form                          s/Int
    :lang                          s/Str
    :answers                       [Answer]
-   (s/optional-key :hakukohde)    s/Str
+   (s/optional-key :hakukohde)    (s/maybe s/Str)
+   (s/optional-key :haku)         (s/maybe s/Str)
    (s/optional-key :id)           s/Int
    (s/optional-key :created-time) org.joda.time.DateTime
    (s/optional-key :secret)       s/Str

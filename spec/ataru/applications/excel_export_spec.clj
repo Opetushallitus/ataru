@@ -82,7 +82,7 @@
         (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
         (verify-row metadata-sheet 2 nil)
         (verify-row application-sheet 0 ["Id" "Lähetysaika" "Tila" "Hakukohde" "Hakukohteen OID" "Koulutuskoodin nimi ja tunniste" "Kysymys 4" "Kysymys 5" "Muistiinpanot" "Pisteet"])
-        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Ajoneuvonosturinkuljettajan ammattitutkinto" "hakukohde.oid" "Koulutuskoodi, Tarkenne" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
+        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Ajoneuvonosturinkuljettajan ammattitutkinto" "hakukohde.oid" "Koulutuskoodi, Tutkintonimike, Tarkenne" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
         (verify-row application-sheet 2 nil))))
 
   (it "should export applications to separate sheets, grouped by form"
@@ -99,5 +99,5 @@
         (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Käsittelemättä" nil nil nil "Vastaus 1" "Vastaus 2" "Vastaus 3" "Some notes about the applicant"])
         (verify-row form-application-sheet 2 nil)
         (verify-row hakukohde-application-sheet 0 ["Id" "Lähetysaika" "Tila" "Hakukohde" "Hakukohteen OID" "Koulutuskoodin nimi ja tunniste" "Kysymys 4" "Kysymys 5" "Muistiinpanot" "Pisteet"])
-        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Ajoneuvonosturinkuljettajan ammattitutkinto" "hakukohde.oid" "Koulutuskoodi, Tarkenne" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
+        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Hylätty" "Ajoneuvonosturinkuljettajan ammattitutkinto" "hakukohde.oid" "Koulutuskoodi, Tutkintonimike, Tarkenne" "Vastaus 4" "Vastaus 5" "Some notes about the applicant"])
         (verify-row hakukohde-application-sheet 2 nil)))))
