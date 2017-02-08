@@ -4,11 +4,14 @@
 (defn koulutukset->str
   [koulutukset]
   (join "; "
-        (remove blank?
-                (map (fn [koulutus]
-                       (join ", "
-                             (remove blank?
-                                     [(:koulutuskoodi-name koulutus)
-                                      (:tarkenne koulutus)])))
-                     koulutukset))))
+        (distinct
+          (remove blank?
+                  (map (fn [koulutus]
+                         (join ", "
+                               (distinct
+                                 (remove blank?
+                                         [(:koulutuskoodi-name koulutus)
+                                          (:tutkintonimike-name koulutus)
+                                          (:tarkenne koulutus)]))))
+                       koulutukset)))))
 
