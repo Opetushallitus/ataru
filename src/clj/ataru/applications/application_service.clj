@@ -7,7 +7,8 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
-    [taoensso.timbre :refer [spy debug]])
+    [taoensso.timbre :refer [spy debug]]
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -58,12 +59,13 @@
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-key session organization-service]
-  (let [application (application-store/get-latest-application-by-key application-key)
-        form        (form-store/fetch-by-id (:form application))
-        application (populate-koodisto-fields application form)]
+  [application-key session organization-service tarjonta-service]
+  (let [bare-application (application-store/get-latest-application-by-key application-key)
+        form             (form-store/fetch-by-id (:form bare-application))
+        tarjonta-info    (tarjonta-parser/parse-tarjonta-info tarjonta-service (:hakukohde bare-application))
+        application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service)
-    {:application application
+    {:application (merge application tarjonta-info)
      :form        form
      :events      (application-store/get-application-events application-key)
      :review      (application-store/get-application-review application-key)}))

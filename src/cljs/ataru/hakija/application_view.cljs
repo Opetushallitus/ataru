@@ -4,10 +4,12 @@
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.application-common.application-readonly :as readonly-view]
             [ataru.cljs-util :as util]
+            [ataru.application-common.koulutus :as koulutus]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
-            [cljs-time.coerce :refer [from-long]]))
+            [cljs-time.coerce :refer [from-long]]
+            [clojure.string :as string]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -25,6 +27,7 @@
         secret            (:modify (util/extract-query-params))
         hakukohde-name    (-> form :tarjonta :hakukohde-name)
         haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
+        koulutukset-str   (koulutus/koulutukset->str (-> form :tarjonta :koulutukset))
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
@@ -53,6 +56,7 @@
                         languages)])]
        (when (and haku-tarjoja-name apply-dates)
          [:div.application__sub-header-container
+          (when-not (string/blank? koulutukset-str) [:div.application__sub-header-koulutus koulutukset-str])
           [:span.application__sub-header-organization haku-tarjoja-name]
           [:span.application__sub-header-dates apply-dates]])])))
 

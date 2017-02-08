@@ -94,7 +94,6 @@
     :form_id 703
     :id 4
     :hakukohde "1.2.246.562.29.11111111110"
-    :hakukohde-name "Test hakukohde"
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "1", :fieldType "textField"}
@@ -110,7 +109,6 @@
     :form_id 703
     :id 5
     :hakukohde "1.2.246.562.29.11111111110"
-    :hakukohde-name "Test hakukohde"
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "q", :fieldType "textField"}
@@ -126,7 +124,6 @@
     :form_id 703
     :id 6
     :hakukohde "1.2.246.562.29.11111111119"
-    :hakukohde-name "Test hakukohde 2"
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "z", :fieldType "textField"}
@@ -176,7 +173,6 @@
    :lang           "fi"
    :id             2
    :hakukohde      "1.2.246.562.29.11111111110"
-   :hakukohde-name "Test hakukohde"
    :answers        [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
                      :value     "Vastaus tekstikysymykseen",
                      :fieldType "textField",

@@ -271,8 +271,9 @@
                                     (map (fn [koulutus]
                                            (string/join
                                              ", "
-                                             (filter #(not (string/blank? %))
+                                             (remove string/blank?
                                                      [(-> koulutus :koulutuskoodi :nimi)
+                                                      (-> koulutus :tutkintonimike :nimi)
                                                       (-> koulutus :tarkenne)]))))))]
     (if koulutus-identifiers
       (merge application {:koulutus-identifiers koulutus-identifiers})

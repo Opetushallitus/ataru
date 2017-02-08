@@ -114,23 +114,23 @@
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
-(s/defschema FormTarjontaMetadata {:tarjonta
-                                   {:hakukohde-oid                       s/Str
-                                    :hakukohde-name                      s/Str
-                                    :haku-oid                            s/Str
-                                    :haku-name                           s/Str
-                                    (s/optional-key :koulutukset)        [{:oid                  s/Str
-                                                                           :koulutuskoodi-name   (s/maybe s/Str)
-                                                                           :tutkintonimike-name  (s/maybe s/Str)
-                                                                           :koulutusohjelma-name (s/maybe s/Str)
-                                                                           :tarkenne             (s/maybe s/Str)}]
-                                    (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-                                    (s/optional-key :hakuaika-dates)     {:start s/Int
-                                                                          (s/optional-key :end) (s/maybe s/Int)
-                                                                          :on s/Bool}}})
+(s/defschema FormTarjontaMetadata
+  {:hakukohde-oid                       s/Str
+   :hakukohde-name                      s/Str
+   :haku-oid                            s/Str
+   :haku-name                           s/Str
+   (s/optional-key :koulutukset)        [{:oid                  s/Str
+                                          :koulutuskoodi-name   (s/maybe s/Str)
+                                          :tutkintonimike-name  (s/maybe s/Str)
+                                          :koulutusohjelma-name (s/maybe s/Str)
+                                          :tarkenne             (s/maybe s/Str)}]
+   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
+   (s/optional-key :hakuaika-dates)     {:start                s/Int
+                                         (s/optional-key :end) (s/maybe s/Int)
+                                         :on                   s/Bool}})
 
 (s/defschema FormWithContentAndTarjontaMetadata
-  (merge FormWithContent FormTarjontaMetadata))
+  (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
 (s/defschema Answer {:key                    s/Str,
                      :value                  (s/cond-pre s/Str
@@ -157,18 +157,17 @@
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (s/defschema Application
-  {(s/optional-key :key)            s/Str
-   :form                            s/Int
-   :lang                            s/Str
-   :answers                         [Answer]
-   (s/optional-key :id)             s/Int
-   (s/optional-key :hakukohde)      (s/maybe s/Str)
-   (s/optional-key :hakukohde-name) (s/maybe s/Str)
-   (s/optional-key :haku)           (s/maybe s/Str)
-   (s/optional-key :haku-name)      (s/maybe s/Str)
-   (s/optional-key :created-time)   org.joda.time.DateTime
-   (s/optional-key :secret)         s/Str
-   (s/optional-key :form-key)       s/Str})
+  {(s/optional-key :key)          s/Str
+   :form                          s/Int
+   :lang                          s/Str
+   :answers                       [Answer]
+   (s/optional-key :hakukohde)    (s/maybe s/Str)
+   (s/optional-key :haku)         (s/maybe s/Str)
+   (s/optional-key :id)           s/Int
+   (s/optional-key :created-time) org.joda.time.DateTime
+   (s/optional-key :secret)       s/Str
+   (s/optional-key :form-key)     s/Str
+   (s/optional-key :tarjonta)     FormTarjontaMetadata})
 
 (def application-states (s/enum "unprocessed"
                                 "processing"
