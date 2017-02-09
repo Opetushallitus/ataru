@@ -457,7 +457,7 @@
       (let [filtered-applications (include-filtered @application-filter @applications)]
         [:div
          [:div.application-handling__overview
-          [:div.panel-content
+          [:div.panel-content.select_application_list
            [form-list filtered-applications @application-filter]
            [application-list filtered-applications]]]
          [application-review-area filtered-applications]]))))

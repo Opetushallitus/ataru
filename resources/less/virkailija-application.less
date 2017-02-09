@@ -566,3 +566,10 @@ th.application__readonly-adjacent--header {
   font-weight: 600;
   min-width: 33%;
 }
+
+@media print {
+  .top-banner, .application-handling__excel-download-link, .application-handling__review, .close-details-button, .select_application_list {display: none;}
+  .main-container {padding-top: 0;}
+  .application-handling__header, .application-handling__overview {border-bottom: none;}
+  .panel-content {padding: 0;}
+}
