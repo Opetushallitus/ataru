@@ -325,18 +325,20 @@
                           {:visible? (not (empty? (:children field)))}}))
         (reduce merge)))))
 
+(defn- required? [field-descriptor]
+  (some? ((set (:validators field-descriptor)) "required")))
+
 (defn- set-adjacent-field-validity
   [field-descriptor {:keys [values] :as answer}]
-  (let [required? (some? ((set (:validators field-descriptor)) "required"))]
     (assoc answer
       :valid
       (boolean
         (some->>
           (map :valid (or
                         (not-empty values)
-                        [{:valid (not required?)}]))
+                        [{:valid (not (required? field-descriptor))}]))
           not-empty
-          (every? true?))))))
+          (every? true?)))))
 
 (reg-event-db
   :application/set-adjacent-field-answer
@@ -354,33 +356,31 @@
 (reg-event-db
   :application/add-adjacent-fields
   (fn [db [_ field-descriptor]]
-    (reduce (fn [db' id]
-              (update-in db'
-                [:application :answers id :values]
-                (fn [answers]
-                  (conj
-                    (or answers
-                      [{:value nil :valid false}])
-                    {:value nil :valid false}))))
-      db
-      (map (comp keyword :id) (:children field-descriptor)))))
+    (let [children (map #(update % :id keyword) (:children field-descriptor))]
+      (reduce (fn [db {:keys [id] :as child-descriptor}]
+                (let [required? (required? child-descriptor)]
+                  (-> db
+                      (update-in [:application :answers id :values]
+                        (fn [values]
+                          (conj (or values [{:value nil :valid (not required?)}])
+                                {:value nil :valid (not required?)})))
+                      (update-in [:application :answers id]
+                        (partial set-adjacent-field-validity child-descriptor)))))
+              db
+              children))))
 
 (reg-event-db
   :application/remove-adjacent-field
-  (fn [db [_ field-descriptor index answer-ids]]
-    (as-> db db'
-          (reduce (fn [db'' id'']
-                    (update-in db''
-                               [:application :answers id'' :values]
-                               (fn [answers]
-                                 (vec (concat
-                                        (subvec answers 0 index)
-                                        (subvec answers (inc index)))))))
-                  db'
-                  (map (comp keyword :id) (:children field-descriptor)))
-          (reduce (fn [db'' id'']
-                    (update-in db''
-                               [:application :answers id'']
-                               (partial set-adjacent-field-validity field-descriptor)))
-                  db'
-                  answer-ids))))
+  (fn [db [_ field-descriptor index]]
+    (let [children (map #(update % :id keyword) (:children field-descriptor))]
+      (reduce (fn [db {:keys [id] :as child-descriptor}]
+                (-> db
+                    (update-in [:application :answers id :values]
+                      (fn [answers]
+                        (vec (concat
+                               (subvec answers 0 index)
+                               (subvec answers (inc index))))))
+                    (update-in [:application :answers id]
+                      (partial set-adjacent-field-validity child-descriptor))))
+              db
+              children))))
