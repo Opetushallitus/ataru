@@ -432,7 +432,7 @@
                        (when (pos? row-idx)
                          [:a {:on-click (fn remove-adjacent-text-field [event]
                                           (.preventDefault event)
-                                          (dispatch [:application/remove-adjacent-field field-descriptor row-idx child-ids]))}
+                                          (dispatch [:application/remove-adjacent-field field-descriptor row-idx]))}
                           [:span.application__form-adjacent-row--mobile-only "Poista rivi"]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])

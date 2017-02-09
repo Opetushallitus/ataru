@@ -362,7 +362,8 @@
                   (-> db
                       (update-in [:application :answers id :values]
                         (fn [values]
-                          (conj (or values []) {:value nil :valid (not required?)})))
+                          (conj (or values [{:value nil :valid (not required?)}])
+                                {:value nil :valid (not required?)})))
                       (update-in [:application :answers id]
                         (partial set-adjacent-field-validity child-descriptor)))))
               db
@@ -370,20 +371,16 @@
 
 (reg-event-db
   :application/remove-adjacent-field
-  (fn [db [_ field-descriptor index answer-ids]]
-    (as-> db db'
-          (reduce (fn [db'' id'']
-                    (update-in db''
-                               [:application :answers id'' :values]
-                               (fn [answers]
-                                 (vec (concat
-                                        (subvec answers 0 index)
-                                        (subvec answers (inc index)))))))
-                  db'
-                  (map (comp keyword :id) (:children field-descriptor)))
-          (reduce (fn [db'' id'']
-                    (update-in db''
-                               [:application :answers id'']
-                               (partial set-adjacent-field-validity field-descriptor)))
-                  db'
-                  answer-ids))))
+  (fn [db [_ field-descriptor index]]
+    (let [children (map #(update % :id keyword) (:children field-descriptor))]
+      (reduce (fn [db {:keys [id] :as child-descriptor}]
+                (-> db
+                    (update-in [:application :answers id :values]
+                      (fn [answers]
+                        (vec (concat
+                               (subvec answers 0 index)
+                               (subvec answers (inc index))))))
+                    (update-in [:application :answers id]
+                      (partial set-adjacent-field-validity child-descriptor))))
+              db
+              children))))
