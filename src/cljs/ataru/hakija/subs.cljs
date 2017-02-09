@@ -53,3 +53,15 @@
 (re-frame/reg-sub-raw
   :application/default-language
   default-language)
+
+(defn- adjacent-field-row-amount [db [_ field-descriptor]]
+  (let [child-id   (-> (:children field-descriptor) first :id keyword)
+        row-amount (-> (get-in db [:application :answers child-id :values] [])
+                       count)]
+    (if (= row-amount 0)
+      1
+      row-amount)))
+
+(re-frame/reg-sub
+  :application/adjacent-field-row-amount
+  adjacent-field-row-amount)
