@@ -27,8 +27,33 @@
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
 
+(defn- find-person-info-module-field-ids
+  [{:keys [children id]}]
+  (if children
+    (map find-person-info-module-field-ids children)
+    id))
+
+(defn- remove-answers-from-application
+  [{:keys [answers] :as application} forbidden-field-ids]
+  (assoc application
+    :answers
+    (map (fn [answer]
+           (if (contains? (set forbidden-field-ids) (:key answer))
+             (merge answer {:cannot-edit true :value nil})
+             answer))
+         answers)))
+
+(defn- remove-person-info-module-from-application-answers
+  [application]
+  (let [form                    (ataru.forms.form-store/fetch-by-id (:form application))
+        person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
+        person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
+    (remove-answers-from-application application person-module-field-ids)))
+
 (defn- get-application [secret]
-  (let [application (application-store/get-latest-application-by-secret secret)]
+  (let [application (-> secret
+                        (application-store/get-latest-application-by-secret)
+                        (remove-person-info-module-from-application-answers))]
     (if application
       (do
         (info (str "Getting application " (:id application) " with answers"))
