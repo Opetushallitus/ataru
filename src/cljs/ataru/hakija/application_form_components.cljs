@@ -436,7 +436,7 @@
                           [:span.application__form-adjacent-row--mobile-only "Poista rivi"]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])
-           [:a
+           [:a.application__form-add-new-row
             {:on-click (fn add-adjacent-text-field [event]
                          (.preventDefault event)
                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
