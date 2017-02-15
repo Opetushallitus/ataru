@@ -525,8 +525,14 @@ and (max-width: 1000px) {
     display: inline-block;
   }
 }
+
 .application__wrapper-element--border {
   border-top: solid #D7D7D7 1px;
+}
+
+.application__readonly-container .application__wrapper-element--border:first-child .application__form-field {
+  flex-direction: row;
+  margin-bottom: 6px;
 }
 
 @media only screen
