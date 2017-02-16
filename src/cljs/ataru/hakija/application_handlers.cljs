@@ -15,12 +15,19 @@
   {:form        nil
    :application {:answers {}}})
 
-(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang hakukohde-name]}]]
+(defn- handle-get-application [{:keys [db]}
+                               [_ secret {:keys [answers
+                                                 form-key
+                                                 lang
+                                                 hakukohde
+                                                 hakukohde-name]}]]
   {:db       (-> db
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch [:application/get-latest-form-by-key form-key answers]})
+   :dispatch (if hakukohde
+               [:application/get-latest-form-by-hakukohde hakukohde]
+               [:application/get-latest-form-by-key form-key answers])})
 
 (reg-event-fx
   :application/handle-get-application
