@@ -26,7 +26,7 @@
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if hakukohde
-               [:application/get-latest-form-by-hakukohde hakukohde]
+               [:application/get-latest-form-by-hakukohde hakukohde answers]
                [:application/get-latest-form-by-key form-key answers])})
 
 (reg-event-fx
@@ -52,11 +52,11 @@
             :url     (str "/hakemus/api/form/" form-key)
             :handler [:application/handle-form answers]}}))
 
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
-          :handler [:application/handle-form nil]}})
+          :handler [:application/handle-form answers]}})
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde

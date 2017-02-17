@@ -95,7 +95,9 @@
     (api/PUT "/application" []
       :summary "Edit application"
       :body [application ataru-schema/Application]
-      (match (application-service/handle-application-edit application)
+      (match (application-service/handle-application-edit
+              tarjonta-service
+              application)
         {:passed? false :failures failures}
         (response/bad-request {:failures failures})
 
