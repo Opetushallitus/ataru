@@ -16,21 +16,6 @@
     {:passed?        true
      :application-id application-id}))
 
-(defn- validate-and-store [application store-fn]
-  (let [form              (form-store/fetch-by-id (:form application))
-        validation-result (validator/valid-application? application form)]
-    (if (:passed? validation-result)
-      (store-and-log application store-fn)
-      validation-result)))
-
-(defn- start-submit-jobs [application-id]
-  (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                             (:type person-integration/job-definition)
-                                             {:application-id application-id})]
-    (application-email/start-email-submit-confirmation-job application-id)
-    (log/info "Started person creation job (to person service) with job id" person-service-job-id)
-    {:passed? true :id application-id}))
-
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
@@ -42,24 +27,48 @@
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
       hakuaika-on)))
 
+(def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
+
+(defn- validate-and-store [tarjonta-service application store-fn]
+  (let [form              (form-store/fetch-by-id (:form application))
+        allowed           (allowed-to-apply? tarjonta-service application)
+        validation-result (validator/valid-application? application form)]
+    (cond
+      (not (:passed? validation-result))
+      validation-result
+
+      (not allowed)
+      {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]}
+
+      :else
+      (store-and-log application store-fn))))
+
+(defn- start-submit-jobs [application-id]
+  (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
+                                             (:type person-integration/job-definition)
+                                             {:application-id application-id})]
+    (application-email/start-email-submit-confirmation-job application-id)
+    (log/info "Started person creation job (to person service) with job id" person-service-job-id)
+    {:passed? true :id application-id}))
+
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
   (if (allowed-to-apply? tarjonta-service application)
     (let [{passed? :passed?
            application-id :application-id
            :as result}
-          (validate-and-store application application-store/add-application)]
+          (validate-and-store tarjonta-service application application-store/add-application)]
       (if passed?
         (start-submit-jobs application-id)
         result))
-    {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]}))
+    not-allowed-reply))
 
-(defn handle-application-edit [application]
+(defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store application application-store/update-application)]
+        (validate-and-store tarjonta-service application application-store/update-application)]
     (if passed?
       (do
         (application-email/start-email-edit-confirmation-job application-id)
