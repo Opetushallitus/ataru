@@ -32,4 +32,5 @@
                     :koulutus-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/"
                     :forms-in-use-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/ataru/all"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
-       :hakija-base-path "{{ataru_hakija_log_path}}"}}
+       :hakija-base-path "{{ataru_hakija_log_path}}"}
+ :liiteri {:url "{{liiteri_url}}"}}
