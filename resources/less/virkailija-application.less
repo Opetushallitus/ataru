@@ -191,6 +191,23 @@ and (max-width: 1000px) {
   position: relative;
 }
 
+.application-handling__filter-state a {
+  background: #4194bf;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.application-handling__filter-state a:before {
+  content: '\f108';
+  display: inline-block;
+  font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
+  font-size: inherit;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  padding-right: 5px;
+}
+
 .application-handling__filter-state-selection {
   border-radius: 3px;
   position: absolute;
@@ -273,7 +290,6 @@ and (max-width: 1000px) {
 .application-handling__list-header {
   color: #5E5E5E;
   font-size: 14px;
-  margin-right: 8px;
 }
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
@@ -336,9 +352,23 @@ and (max-width: 1000px) {
   padding: 21px;
 }
 
+.application__handling-heading {
+  margin-bottom: 15px;
+}
+
 .application-handling__review-area-main-heading {
   color: @text-color;
   .semibold;
+  margin-top: -5px;
+  margin-bottom: 7px;
+}
+
+.application-handling__review-area-hakukohde-heading {
+  font-size: 21px;
+}
+
+.application-handling__review-area-koulutus-heading {
+  font-size: 17px;
 }
 
 .application-handling__review-header {
@@ -495,8 +525,18 @@ and (max-width: 1000px) {
     display: inline-block;
   }
 }
+
 .application__wrapper-element--border {
   border-top: solid #D7D7D7 1px;
+}
+
+.application__readonly-container .application__wrapper-element--border:first-child {
+  padding-bottom: 14px;
+}
+
+.application__readonly-container .application__wrapper-element--border:first-child .application__form-field {
+  flex-direction: row;
+  margin-bottom: 6px;
 }
 
 @media only screen
@@ -535,4 +575,11 @@ and (max-width: @desktop-content-width) {
 th.application__readonly-adjacent--header {
   font-weight: 600;
   min-width: 33%;
+}
+
+@media print {
+  .top-banner, .application-handling__excel-download-link, .application-handling__review, .close-details-button, .select_application_list {display: none;}
+  .main-container {padding-top: 0;}
+  .application-handling__header, .application-handling__overview {border-bottom: none;}
+  .panel-content {padding: 0;}
 }

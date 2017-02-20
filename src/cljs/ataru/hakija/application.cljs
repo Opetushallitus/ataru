@@ -71,10 +71,8 @@
   (let [secret (:secret application)]
     (cond-> {:form           (:id form)
              :lang           lang
-             :hakukohde      (:hakukohde-oid form)
-             :hakukohde-name (:hakukohde-name form)
-             :haku           (:haku-oid form)
-             :haku-name      (:haku-name form)
+             :hakukohde      (-> form :tarjonta :hakukohde-oid)
+             :haku           (-> form :tarjonta :haku-oid)
              :answers        (create-answers-to-submit (:answers application) form (:ui application))}
       (some? secret)
       (assoc :secret secret))))
@@ -105,3 +103,8 @@
       (fn [wrapper-section]
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
       wrapper-sections)))
+
+(defn applying-possible? [form]
+  (if (-> form :tarjonta)
+   (-> form :tarjonta :hakuaika-dates :on)
+   true))

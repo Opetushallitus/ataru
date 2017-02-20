@@ -200,7 +200,7 @@
     (fn [form]
       (when-let [form-used-in-hakus ((keyword (:key form)) @forms-in-use)]
         [:div.editor-form__in_use_notification.animated.flash
-          [:span.editor-form__used-in-haku-heading "Lomake on käytössä"]
+          [:span.editor-form__used-in-haku-heading "Tämä lomake on haun käytössä"]
           [:ul.editor-form__used-in-haku-list
            (for [haku (vals form-used-in-hakus)]
              [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}

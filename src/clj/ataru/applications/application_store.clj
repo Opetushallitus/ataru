@@ -44,19 +44,17 @@
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
                               :hakukohde      (:hakukohde application)
-                              :hakukohde_name (:hakukohde-name application)
                               :haku           (:haku application)
-                              :haku_name      (:haku-name application)
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))}
         application          (yesql-add-application-query<! application-to-store connection)]
     (unwrap-application application)))
 
-(def ^:private ssn-pred (comp (partial = "ssn") :key))
+(def ^:private email-pred (comp (partial = "email") :key))
 
-(defn- extract-ssn [application]
+(defn- extract-email [application]
   (->> (:answers application)
-       (filter ssn-pred)
+       (filter email-pred)
        (first)
        :value))
 
@@ -72,7 +70,7 @@
           connection                {:connection conn}]
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
-                      :id        (extract-ssn new-application)})
+                      :id        (extract-email new-application)})
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil}
@@ -92,7 +90,7 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :hakukohde :haku-name :hakukohde-name])))
+         (select-keys old-application [:key :secret :haku :hakukohde])))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -109,7 +107,7 @@
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
-                      :id        (extract-ssn new-application)})
+                      :id        (extract-email new-application)})
       id)))
 
 (defn- older?

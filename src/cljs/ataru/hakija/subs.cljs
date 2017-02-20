@@ -2,7 +2,8 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.hakija.application :refer [answers->valid-status
-                                              wrapper-sections-with-validity]]))
+                                              wrapper-sections-with-validity
+                                              applying-possible?]]))
 
 (re-frame/reg-sub-raw
   :state-query
@@ -26,6 +27,13 @@
   :application/wrapper-sections
   wrapper-sections)
 
+(defn can-apply? [db _]
+  (reaction (applying-possible? (:form @db))))
+
+(re-frame/reg-sub-raw
+ :application/can-apply?
+ can-apply?)
+
 (defn- form-language [db _]
   (reaction
     (or
@@ -45,3 +53,15 @@
 (re-frame/reg-sub-raw
   :application/default-language
   default-language)
+
+(defn- adjacent-field-row-amount [db [_ field-descriptor]]
+  (let [child-id   (-> (:children field-descriptor) first :id keyword)
+        row-amount (-> (get-in db [:application :answers child-id :values] [])
+                       count)]
+    (if (= row-amount 0)
+      1
+      row-amount)))
+
+(re-frame/reg-sub
+  :application/adjacent-field-row-amount
+  adjacent-field-row-amount)

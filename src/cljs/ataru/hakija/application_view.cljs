@@ -4,10 +4,12 @@
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.application-common.application-readonly :as readonly-view]
             [ataru.cljs-util :as util]
+            [ataru.application-common.koulutus :as koulutus]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
-            [cljs-time.coerce :refer [from-long]]))
+            [cljs-time.coerce :refer [from-long]]
+            [clojure.string :as string]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -23,16 +25,19 @@
                             (:languages form))
         submit-status     (subscribe [:state-query [:application :submit-status]])
         secret            (:modify (util/extract-query-params))
-        hakukohde-name    (:hakukohde-name form)
-        haku-tarjoja-name (:haku-tarjoaja-name form)
-        apply-start-date  (-> form :hakuaika-dates :start)
-        apply-end-date    (-> form :hakuaika-dates :end)
+        hakukohde-name    (-> form :tarjonta :hakukohde-name)
+        haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
+        koulutukset-str   (koulutus/koulutukset->str (-> form :tarjonta :koulutukset))
+        apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
+        apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
+        hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
         apply-dates       (when hakukohde-name
                             (if (and apply-start-date apply-end-date)
                               (str "Hakuaika: "
                                    (unparse date-format (from-long apply-start-date))
                                    " - "
-                                   (unparse date-format (from-long apply-end-date)))
+                                   (unparse date-format (from-long apply-end-date))
+                                   (when-not hakuaika-on " (haku ei ole käynnissä)"))
                               "Jatkuva haku"))]
     (fn [form]
       [:div
@@ -51,6 +56,7 @@
                         languages)])]
        (when (and haku-tarjoja-name apply-dates)
          [:div.application__sub-header-container
+          (when-not (string/blank? koulutukset-str) [:div.application__sub-header-koulutus koulutukset-str])
           [:span.application__sub-header-organization haku-tarjoja-name]
           [:span.application__sub-header-dates apply-dates]])])))
 
@@ -69,12 +75,14 @@
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form (subscribe [:state-query [:form]])]
+  (let [form       (subscribe [:state-query [:form]])
+        can-apply? (subscribe [:application/can-apply?])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
-       [render-fields @form]])))
+       (when @can-apply?
+         [render-fields @form])])))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])

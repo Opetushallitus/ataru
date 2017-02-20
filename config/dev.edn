@@ -13,7 +13,9 @@
                   :cas-client-url "https://itest-virkailija.oph.ware.fi"}
  :tarjonta-service {:hakukohde-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/hakukohde/"
                     :haku-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/"
+                    :koulutus-base-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/koulutus/"
                     :forms-in-use-url "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/ataru/all"}
  :public-config {:applicant {:service_url "http://localhost:8351"}
-                 :virkailija {:service_url "http://localhost:8350/lomake-editori/"}}
+                 :virkailija {:service_url "http://localhost:8350/lomake-editori/"}
+                 :environment-name "test"}
  :dev {:fake-dependencies true}}

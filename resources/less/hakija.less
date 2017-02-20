@@ -224,12 +224,20 @@
 .application__sub-header-container {
   margin: -15px 0 15px;
 }
-.application__sub-header-organization {
-  .semibold;
-  color: @text-color;
+
+.application__sub-header-koulutus {
+  font-size: 17px;
+  margin-top: -20px;
+  margin-bottom: 10px;
 }
+
+.application__sub-header-organization {
+  font-size: 14px;
+  color: @gray-of-the-beast;
+  display: block;
+}
+
 .application__sub-header-dates {
-  margin-left: 20px;
   font-size: 14px;
   color: @gray-of-the-beast;
 }
@@ -412,11 +420,18 @@ textarea.application__form-text-area__size-large {
   border: 1px solid #ccc;
   color: #9b9b9b;
 }
+
 .application__error-display {
-  margin-top: 118px;
-  margin-left: 20px;
-  color: red;
-  font-weight: bold;
+    position: fixed;
+    margin-top: 0;
+    margin-left: 20px;
+    color: red;
+    font-weight: bold;
+    background-color: white;
+    z-index: 10;
+    border: solid 1px black;
+    border-radius: 3px;
+    padding: 10px;
 }
 
 .application__form-outer-checkbox-container {
@@ -528,6 +543,10 @@ th.application__readonly-adjacent--header {
   margin-bottom: 10px;
 }
 
+.application__form-adjacent-row label span {
+  font-weight: 300;
+}
+
 .application__form-adjacent-row--mobile-only {
   display: none;
 }
@@ -634,4 +653,8 @@ and (max-width: @desktop-content-width) {
 .application__form-info-element {
   font-size: 14px;
   max-width: 610px;
+}
+
+.application__form-add-new-row {
+  font-size: 14px;
 }

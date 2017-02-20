@@ -30,10 +30,10 @@
         subject          (:subject translations)
         recipient        (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
         service-url      (get-in config [:public-config :applicant :service_url])
+        application-url  (str service-url "/hakemus?modify=" (:secret application))
         body             (selmer/render-file
                            "templates/email_confirmation_template.html"
-                           (merge {:service-url service-url
-                                   :secret      (:secret application)}
+                           (merge {:application-url application-url}
                              translations))]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]

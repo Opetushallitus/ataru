@@ -1,18 +1,19 @@
 (ns ataru.virkailija.application.view
   (:require
-   [cljs.core.match :refer-macros [match]]
-   [clojure.string :as string]
-   [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-   [reagent.ratom :refer-macros [reaction]]
-   [reagent.core :as r]
-   [cljs-time.format :as f]
-   [ataru.virkailija.application.handlers]
-   [ataru.virkailija.routes :as routes]
-   [ataru.virkailija.temporal :as t]
-   [ataru.application.review-states :refer [application-review-states]]
-   [ataru.application-common.application-readonly :as readonly-contents]
-   [ataru.cljs-util :refer [wrap-scroll-to]]
-   [taoensso.timbre :refer-macros [spy debug]]))
+    [cljs.core.match :refer-macros [match]]
+    [clojure.string :as string]
+    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+    [reagent.ratom :refer-macros [reaction]]
+    [reagent.core :as r]
+    [cljs-time.format :as f]
+    [ataru.virkailija.application.handlers]
+    [ataru.virkailija.routes :as routes]
+    [ataru.virkailija.temporal :as t]
+    [ataru.application.review-states :refer [application-review-states]]
+    [ataru.application-common.application-readonly :as readonly-contents]
+    [ataru.cljs-util :refer [wrap-scroll-to]]
+    [taoensso.timbre :refer-macros [spy debug]]
+    [ataru.application-common.koulutus :as koulutus]))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)
@@ -408,11 +409,20 @@
    [application-review-events]])
 
 (defn application-heading [application]
-  (let [answers (:answers application)
-        pref-name (-> answers :preferred-name :value)
-        last-name (-> answers :last-name :value)
-        ssn       (or (-> answers :ssn :value) (-> answers :birth-date :value))]
-    [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]))
+  (let [answers        (:answers application)
+        pref-name      (-> answers :preferred-name :value)
+        last-name      (-> answers :last-name :value)
+        ssn            (or (-> answers :ssn :value) (-> answers :birth-date :value))
+        hakukohde-name (-> application :tarjonta :hakukohde-name)
+        koulutus-info  (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
+    [:div.application__handling-heading
+     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]
+     (when-not (string/blank? hakukohde-name)
+       [:div.application-handling__review-area-hakukohde-heading hakukohde-name])
+     (when-not (or
+                 (= hakukohde-name koulutus-info)
+                 (string/blank? koulutus-info))
+       [:div.application-handling__review-area-koulutus-heading koulutus-info])]))
 
 (defn close-application []
   [:a {:href     "#"
@@ -447,7 +457,7 @@
       (let [filtered-applications (include-filtered @application-filter @applications)]
         [:div
          [:div.application-handling__overview
-          [:div.panel-content
+          [:div.panel-content.select_application_list
            [form-list filtered-applications @application-filter]
            [application-list filtered-applications]]]
          [application-review-area filtered-applications]]))))

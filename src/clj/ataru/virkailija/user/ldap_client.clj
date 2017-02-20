@@ -7,8 +7,13 @@
   (:import (java.net InetAddress)))
 
 (def people-path-base "ou=People,dc=opintopolku,dc=fi")
-(def user-right-name "APP_HAKULOMAKKEENHALLINTA_CRUD")
 (def oid-prefix "1.2.246.562")
+
+(def user-right-name (let [name-from-config (-> config :ldap :editor-user-right-name)]
+                       (if (and name-from-config
+                                (< 0 (count name-from-config)))
+                         name-from-config
+                         "APP_HAKULOMAKKEENHALLINTA_CRUD")))
 
 (defn create-ldap-connection []
   {:pre [(some? (:ldap config))]}

@@ -111,9 +111,10 @@
   margin-top: 20px;
   color: #2B2B2B;
   text-align: center;
-  border-top: 1px dashed #e6e6e6;
-  border-bottom: 1px dashed #e6d6d6;
+  border-top: 1px solid #e6e6e6;
+  border-bottom: 1px solid #e6e6e6;
   padding: 11px;
+  padding-bottom: 14px;
 }
 
 .editor-form__used-in-haku-count {
@@ -125,7 +126,7 @@
 }
 
 .editor-form__used-in-haku-heading:before {
-  content: '\f1f9';
+  content: '\f1f0';
   display: inline-block;
   font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
   font-size: inherit;
@@ -219,6 +220,7 @@
 
 .editor-form__owner-control {
   display: flex;
+  line-height: 1.3em;
 }
 
 .editor-form__owner-label {
@@ -244,12 +246,13 @@
   line-height: 115%;
   background-color: white;
   border-radius: 2px;
-  box-shadow: 1px 2px 5px #b3b3b3;
+  box-shadow: @modal-shadow;
 }
 
 .editor-form__owner-selection-row {
   padding: 10px;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .editor-form__owner-selection-arrow-up {
@@ -275,7 +278,7 @@
 }
 
 .editor-form__owner-selection-row:hover {
-  background-color: #d4eaf1;
+  background-color: #e8f3f6;
 }
 
 .editor-form__form-toolbar-header-text {
@@ -672,6 +675,13 @@ form > div > .editor-form__component-wrapper {
     font-size: 125%;
     align-items: center;
   }
+}
+
+.infoelement textarea {
+    height: 110px;
+    width: 700px;
+    background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  4%);
+    margin-bottom: 6px;
 }
 
 .editor-form__followup-question-overlay .plus-component {

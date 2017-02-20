@@ -1,9 +1,9 @@
 -- name: yesql-add-application-query<!
 -- Add application
 insert into applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, hakukohde_name, haku, haku_name, secret)
+(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret)
 values
-(:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :hakukohde_name, :haku, :haku_name, :secret);
+(:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret);
 
 -- name: yesql-get-application-list-by-form
 select a.id,
@@ -106,7 +106,6 @@ select
   a.created_time,
   a.content,
   a.hakukohde,
-  a.hakukohde_name,
   ar.state as state,
   f.key as form_key
 from applications a
@@ -125,7 +124,6 @@ select
   a.created_time,
   a.content,
   a.haku,
-  a.haku_name,
   ar.state as state,
   f.key as form_key
 from applications a
@@ -140,13 +138,13 @@ select id, key, lang, form_id as form, created_time, content, secret from applic
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.key = :application_key
 )
-select id, key, lang, form_id as form, created_time, content from applications a join latest_version lv on a.created_time = lv.latest_time;
+select id, key, lang, form_id as form, created_time, content, hakukohde from applications a join latest_version lv on a.created_time = lv.latest_time;
 
 -- name: yesql-get-latest-application-by-secret
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.secret = :secret
 )
-select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, f.key as form_key, a.hakukohde_name
+select a.id, a.key, a.lang, a.form_id as form, a.created_time, a.content, a.hakukohde, f.key as form_key
 from applications a
 join latest_version lv on a.created_time = lv.latest_time
 join forms f on a.form_id = f.id;
@@ -155,7 +153,7 @@ join forms f on a.form_id = f.id;
 with latest_version as (
     select max(created_time) as latest_time from applications a where a.secret = :secret
 )
-select id, key, lang, form_id as form, created_time, content, haku, haku_name, hakukohde, hakukohde_name
+select id, key, lang, form_id as form, created_time, content, haku, hakukohde
 from applications a join latest_version lv on a.created_time = lv.latest_time for update;
 
 -- name: yesql-get-application-organization-by-key
@@ -202,35 +200,35 @@ update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, COUNT(DISTINCT a1.id) AS application_count
+SELECT a1.hakukohde, COUNT(DISTINCT a1.id) AS application_count
 FROM applications a1
 INNER JOIN forms f1 ON a1.form_id = f1.id
-WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
+WHERE a1.hakukohde IS NOT NULL
 AND (f1.organization_oid IN (:authorized_organization_oids) OR f1.organization_oid IS NULL)
-GROUP BY a1.hakukohde, a1.hakukohde_name;
+GROUP BY a1.hakukohde;
 
 -- name: yesql-get-all-hakukohteet-from-applications
 -- Get hakukohde info from applications
-SELECT a1.hakukohde, a1.hakukohde_name, COUNT(DISTINCT a1.key) AS application_count
+SELECT a1.hakukohde, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
-WHERE a1.hakukohde IS NOT NULL AND a1.hakukohde_name IS NOT NULL
-GROUP BY a1.hakukohde, a1.hakukohde_name;
+WHERE a1.hakukohde IS NOT NULL
+GROUP BY a1.hakukohde;
 
 -- name: yesql-get-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, COUNT(DISTINCT a1.key) AS application_count
+SELECT a1.haku, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
 INNER JOIN forms f1 ON (a1.form_id = f1.id)
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
 AND (f1.organization_oid IN (:authorized_organization_oids) OR f1.organization_oid IS NULL)
-GROUP BY a1.haku, a1.haku_name;
+GROUP BY a1.haku;
 
 -- name: yesql-get-all-haut-from-applications
 -- Get haku info from applications
-SELECT a1.haku, a1.haku_name, COUNT(DISTINCT a1.key) AS application_count
+SELECT a1.haku, COUNT(DISTINCT a1.key) AS application_count
 FROM applications a1
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
-GROUP BY a1.haku, a1.haku_name;
+GROUP BY a1.haku;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
@@ -241,8 +239,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
-  a.hakukohde,
-  a.hakukohde_name
+  a.hakukohde
 FROM applications a
 WHERE a.hakukohde = :hakukohde_oid;
 
