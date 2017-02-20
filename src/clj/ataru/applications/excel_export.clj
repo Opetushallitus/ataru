@@ -262,22 +262,23 @@
 
 (defn- inject-koulutus-information
   [tarjonta-service application]
-  (let [hakukohde-oid        (:hakukohde application)
-        hakukohde            (.get-hakukohde tarjonta-service hakukohde-oid)
-        koulutus-oids        (map :oid (:koulutukset hakukohde))
-        koulutus-identifiers (when koulutus-oids
-                               (->> koulutus-oids
-                                    (map #(.get-koulutus tarjonta-service %))
-                                    (map (fn [koulutus]
-                                           (string/join
-                                             ", "
-                                             (remove string/blank?
-                                                     [(-> koulutus :koulutuskoodi :nimi)
-                                                      (-> koulutus :tutkintonimike :nimi)
-                                                      (-> koulutus :tarkenne)]))))))]
-    (if koulutus-identifiers
-      (merge application {:koulutus-identifiers koulutus-identifiers})
-      application)))
+  (if-let [hakukohde-oid (:hakukohde application)]
+    (let [hakukohde            (.get-hakukohde tarjonta-service hakukohde-oid)
+          koulutus-oids        (map :oid (:koulutukset hakukohde))
+          koulutus-identifiers (when koulutus-oids
+                                 (->> koulutus-oids
+                                      (map #(.get-koulutus tarjonta-service %))
+                                      (map (fn [koulutus]
+                                             (string/join
+                                              ", "
+                                              (remove string/blank?
+                                                      [(-> koulutus :koulutuskoodi :nimi)
+                                                       (-> koulutus :tutkintonimike :nimi)
+                                                       (-> koulutus :tarkenne)]))))))]
+      (if koulutus-identifiers
+        (merge application {:koulutus-identifiers koulutus-identifiers})
+        application))
+    application))
 
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
