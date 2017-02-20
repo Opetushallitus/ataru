@@ -355,6 +355,8 @@
             selected-value @selected-value]
         [div-kwd
          [label field-descriptor]
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
           (map (fn [option]
                  (let [label        (non-blank-val (get-in option [:label lang])
