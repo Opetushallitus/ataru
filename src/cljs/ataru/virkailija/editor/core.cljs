@@ -66,6 +66,10 @@
           :fieldType "singleChoice"}
          [ec/dropdown content path]
 
+         {:fieldClass "formField"
+          :fieldType  "attachment"}
+         [ec/attachment content path]
+
          :else (do
                  (error content)
                  (throw "error" content)))])))

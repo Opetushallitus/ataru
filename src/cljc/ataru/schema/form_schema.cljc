@@ -76,7 +76,8 @@
                                                                               "dropdown"
                                                                               "singleChoice"
                                                                               "multipleChoice"
-                                                                              "koodistoField"])})
+                                                                              "koodistoField"
+                                                                              "attachment"])})
 
 (s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
                           :id                      s/Str

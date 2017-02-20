@@ -13,7 +13,8 @@
    "Painikkeet, yksi valittavissa" component/single-choice-button
    "Lista, monta valittavissa"     component/multiple-choice
    "Infoteksti"                    component/info-element
-   "Vierekkäiset tekstikentät"     component/adjacent-fieldset})
+   "Vierekkäiset tekstikentät"     component/adjacent-fieldset
+   "Liitepyyntö"                   component/attachment})
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
@@ -23,7 +24,8 @@
      "Painikkeet, yksi valittavissa"
      "Lista, monta valittavissa"
      "Infoteksti"
-     "Vierekkäiset tekstikentät"]))
+     "Vierekkäiset tekstikentät"
+     "Liitepyyntö"]))
 
 (def ^:private adjacent-fieldset-toolbar-elements
   {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))

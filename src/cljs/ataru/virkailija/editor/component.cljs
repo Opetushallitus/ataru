@@ -474,3 +474,18 @@
            :header? true)]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path content]]]])))
+
+(defn attachment [content path]
+  (let [languages        (subscribe [:editor/languages])
+        animation-effect (fade-out-effect path)]
+    (fn [content path]
+      [:div.editor-form__component-wrapper
+       {:class @animation-effect}
+       [text-header "Liitepyyntö" path]
+       [:div.editor-form__text-field-wrapper
+        [:header.editor-form__component-item-header "Liitteen nimi"]
+        (input-fields-with-lang
+          (fn attachment-file-name-input [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label :lang])])
+          @languages
+          :header? true)]])))
