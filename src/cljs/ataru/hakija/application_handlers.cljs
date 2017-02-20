@@ -15,12 +15,19 @@
   {:form        nil
    :application {:answers {}}})
 
-(defn- handle-get-application [{:keys [db]} [_ secret {:keys [answers form-key lang hakukohde-name]}]]
+(defn- handle-get-application [{:keys [db]}
+                               [_ secret {:keys [answers
+                                                 form-key
+                                                 lang
+                                                 hakukohde
+                                                 hakukohde-name]}]]
   {:db       (-> db
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch [:application/get-latest-form-by-key form-key answers]})
+   :dispatch (if hakukohde
+               [:application/get-latest-form-by-hakukohde hakukohde answers]
+               [:application/get-latest-form-by-key form-key answers])})
 
 (reg-event-fx
   :application/handle-get-application
@@ -45,11 +52,11 @@
             :url     (str "/hakemus/api/form/" form-key)
             :handler [:application/handle-form answers]}}))
 
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid]]
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
-          :handler [:application/handle-form nil]}})
+          :handler [:application/handle-form answers]}})
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde

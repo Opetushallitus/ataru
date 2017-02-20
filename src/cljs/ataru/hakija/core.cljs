@@ -26,7 +26,7 @@
         secret          (:modify (cljs-util/extract-query-params))]
     (cond
       (some? hakukohde-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid])
+      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
 
       (some? secret)
       (re-frame/dispatch [:application/get-application-by-secret secret])
