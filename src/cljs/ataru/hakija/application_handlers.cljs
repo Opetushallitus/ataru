@@ -22,6 +22,7 @@
                                                  hakukohde
                                                  hakukohde-name]}]]
   {:db       (-> db
+                 (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
