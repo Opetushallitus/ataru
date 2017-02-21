@@ -56,7 +56,7 @@
           [:span.application__header-text
            (map-indexed (fn [idx lang]
                           (cond-> [:span {:key (name lang)}
-                                   [:a {:href (str "/hakemus/" (:key form) "?lang=" (name lang))}
+                                   [:a {:href (str "?lang=" (name lang))}
                                     (get language-names lang)]]
                                   (> (dec (count languages)) idx)
                                   (conj [:span.application__header-language-link-separator " | "])))
