@@ -377,6 +377,30 @@
                      label]]))
                (:options field-descriptor))]]))))
 
+(defn attachment-upload [component-id attachment-count]
+  (let [id (str component-id "-" attachment-count)]
+    [:div.application__form-upload-button-container
+     [:input.application__form-upload-input
+      {:id       id
+       :type     "file"
+       :multiple "multiple"}]
+     [:label.application__form-upload-label
+      {:for id}
+      [:i.zmdi.zmdi-cloud-upload]
+      [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
+
+(defn attachment [{:keys [id] :as field-descriptor}]
+  (let [language         (subscribe [:application/form-language])
+        text             (reaction (get-in field-descriptor [:params :info-text :value @language]))
+        component-id     (keyword id)
+        attachment-count (reaction (count @(subscribe [:state-query [:application :answers component-id :values]])))]
+    (fn [field-descriptor]
+      [:div.application__form-field
+       [label field-descriptor]
+       (when-not (clojure.string/blank? @text)
+         [link-detected-paragraph @text])
+       [attachment-upload component-id @attachment-count]])))
+
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
         header   (some-> (get-in field-descriptor [:label @language]))
@@ -466,6 +490,7 @@
                        {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
                        {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                        {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                       {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
                        {:fieldClass "infoElement"} [info-element field-descriptor]
                        {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                 (and (empty? (:children field-descriptor))
