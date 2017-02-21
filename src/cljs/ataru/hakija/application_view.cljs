@@ -4,6 +4,8 @@
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.application-common.application-readonly :as readonly-view]
             [ataru.cljs-util :as util]
+            [ataru.translations.translation-util :refer [get-translations]]
+            [ataru.translations.application-view :as translations]
             [ataru.application-common.koulutus :as koulutus]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -31,14 +33,19 @@
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
+        translations      (get-translations
+                           (keyword selected-lang)
+                           translations/application-view-translations)
         apply-dates       (when hakukohde-name
                             (if (and apply-start-date apply-end-date)
-                              (str "Hakuaika: "
+                              (str (:application-period translations)
+                                   ": "
                                    (unparse date-format (from-long apply-start-date))
                                    " - "
                                    (unparse date-format (from-long apply-end-date))
-                                   (when-not hakuaika-on " (haku ei ole käynnissä)"))
-                              "Jatkuva haku"))]
+                                   (when-not hakuaika-on
+                                     (str " (" (:not-within-application-period translations) ")")))
+                              (:continuous-period translations)))]
     (fn [form]
       [:div
        [:div.application__header-container
