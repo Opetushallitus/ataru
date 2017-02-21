@@ -476,7 +476,7 @@
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
       (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-        (if (and editing? (= (:module field-descriptor) "person-info"))
+        (if (and @editing? (= (:module field-descriptor) "person-info"))
           [editing-forbidden-field field-descriptor]
           (cond-> (match field-descriptor
                          {:fieldClass "wrapperElement"
