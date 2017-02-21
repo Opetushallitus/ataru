@@ -2,11 +2,11 @@
 
 (def application-view-translations
   {:application-period            {:fi "Hakuaika"
-                                   :sv "Åtkomsttid"
+                                   :sv "Ansökningstid"
                                    :en "Application period"}
    :not-within-application-period {:fi "haku ei ole käynnissä"
-                                   :sv "sök körs inte"
+                                   :sv "inte inom ansökningstiden"
                                    :en "not within application period"}
    :continuous-period             {:fi "Jatkuva haku"
-                                   :sv "kontinuerlig sökning"
-                                   :en "Continuous period"}})
+                                   :sv "kontinuerlig ansökningstid"
+                                   :en "Continuous application period"}})
