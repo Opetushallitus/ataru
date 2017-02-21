@@ -4,7 +4,7 @@
   {:application-period            {:fi "Hakuaika"
                                    :sv "Ansökningstid"
                                    :en "Application period"}
-   :not-within-application-period {:fi "haku ei ole käynnissä"
+   :not-within-application-period {:fi "hakuaika ei ole käynnissä"
                                    :sv "inte inom ansökningstiden"
                                    :en "not within application period"}
    :continuous-period             {:fi "Jatkuva haku"
