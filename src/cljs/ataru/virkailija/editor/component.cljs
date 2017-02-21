@@ -475,17 +475,48 @@
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path content]]]])))
 
+(defn attachment-textarea [path]
+  (let [id        (util/new-uuid)
+        checked?  (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        languages (subscribe [:editor/languages])]
+    (fn [path]
+      [:div.editor-form__text-field-wrapper.infoelement
+       [:div.editor-form__attachment-info-checkbox-wrapper
+        [:input {:id        id
+                 :type      "checkbox"
+                 :checked   @checked?
+                 :on-change (fn toggle-attachment-textarea [event]
+                              (.preventDefault event)
+                              (let [checked? (.. event -target -checked)]
+                                (dispatch [:editor/set-component-value checked? path :params :info-text :enabled?])))}]
+        [:label
+         {:for id}
+         "Liitepyyntö sisältää ohjetekstin"]]
+       (when @checked?
+         (input-fields-with-lang
+           (fn attachment-textarea-input [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
+              {:value-fn #(get-in % [:params :info-text :value lang])
+               :tag      :textarea}])
+           @languages
+           :header? true))])))
+
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Liitepyyntö" path]
-       [:div.editor-form__text-field-wrapper
-        [:header.editor-form__component-item-header "Liitteen nimi"]
-        (input-fields-with-lang
-          (fn attachment-file-name-input [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label :lang])])
-          @languages
-          :header? true)]])))
+       [:div.editor-form__component-row-wrapper
+        [:div.editor-form__header-wrapper
+         [text-header "Liitepyyntö" path]]
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Liitteen nimi"]
+         (input-fields-with-lang
+           (fn attachment-file-name-input [lang]
+             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+           @languages
+           :header? true)]
+        [:div.editor-form__single-checkbox-wrapper
+         [required-checkbox path content]]]
+       [attachment-textarea path]])))
