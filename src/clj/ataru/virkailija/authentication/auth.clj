@@ -6,7 +6,8 @@
             [ring.util.response :as resp]
             [taoensso.timbre :refer [info spy error]]
             [oph.soresu.common.config :refer [config]]
-            [ataru.log.audit-log :as audit-log])
+            [ataru.log.audit-log :as audit-log]
+            [clj-time.core :as t])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (def cas-client-url (-> config :authentication :cas-client-url))
@@ -47,6 +48,7 @@
   (info "username" (-> session :identity :username) "logged out")
   (cas-store/logout (-> session :identity :ticket))
   (-> (resp/redirect (str opintopolku-logout-url ataru-login-success-url))
+      (resp/set-cookie "ring-session" "" {:expires (t/date-time 1970 1 1 0 0 0 0) :path "/lomake-editori"})
       (assoc :session {:identity nil})))
 
 (defn cas-initiated-logout [logout-request]
