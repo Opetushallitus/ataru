@@ -96,6 +96,7 @@
 
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")
+(def ^:private finnish-date-pattern (re-pattern "^\\d{2}\\.\\d{2}\\.\\d{4}"))
 
 (defn ^:private phone?
   [value]
@@ -106,22 +107,22 @@
 
 #?(:clj
    (def parse-date
-     (let [formatter (f/formatter (c/time-zone-for-id "Europe/Helsinki")
-                                  "dd.MM.YYYY"
-                                  "ddMMYYYY")]
+     (let [formatter (f/formatter "dd.MM.YYYY" (c/time-zone-for-id "Europe/Helsinki"))]
        (fn [d]
          (try
            (f/parse formatter d)
            (catch Exception _ nil)))))
    :cljs
    (def parse-date
-     (let [formatters (mapv f/formatter ["d.M.YYYY" "ddMMYYYY"])]
+     (let [formatter (f/formatter "d.M.YYYY")]
        (fn [d]
-         (first
-           (filter some? (map
-                           #(try (f/parse % d)
-                                 (catch :default _ nil))
-                           formatters)))))))
+         ;; Unfortunately cljs-time.format allows
+         ;; garbage data (e.g. XXXXX11Y11Z1997BLAH),
+         ;; so we have to protect against that with a regexp
+         (if (re-matches finnish-date-pattern d)
+           (try (f/parse formatter d)
+                (catch :default _ nil))
+           nil)))))
 
 (defn ^:private date?
   [value]
