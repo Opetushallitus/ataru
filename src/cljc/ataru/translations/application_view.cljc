@@ -9,4 +9,13 @@
                                    :en "not within application period"}
    :continuous-period             {:fi "Jatkuva haku"
                                    :sv "kontinuerlig ansökningstid"
-                                   :en "Continuous application period"}})
+                                   :en "Continuous application period"}
+   :add-row                       {:fi "Lisää rivi"
+                                   :sv "Lägg till rad"
+                                   :en "Add row"}
+   :remove-row                    {:fi "Poista rivi"
+                                   :sv "Ta bort rad"
+                                   :en "Remove row"}
+   :add-more                      {:fi "Lisää..."
+                                   :sv "Lägg till..."
+                                   :en "Add more..."}})
