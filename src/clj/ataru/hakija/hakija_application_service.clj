@@ -27,12 +27,23 @@
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
       hakuaika-on)))
 
-(def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
+(defn- merge-application-answers
+  [old-application new-application]
+  (let [answer-key-set      (fn [application] (set (map :key (:answers application))))
+        old-keys            (answer-key-set old-application)
+        new-keys            (answer-key-set new-application)
+        not-in-new-keys     (clojure.set/difference old-keys new-keys)
+        answers-only-in-old (filter #(contains? not-in-new-keys (:key %)) (:answers old-application))
+        merged-answers      (into (:answers new-application) answers-only-in-old)]
+    (assoc new-application :answers merged-answers)))
 
-(defn- validate-and-store [tarjonta-service application store-fn]
+(defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [form              (form-store/fetch-by-id (:form application))
         allowed           (allowed-to-apply? tarjonta-service application)
-        validation-result (validator/valid-application? application form)]
+        final-application (if is-modify?
+                            (merge-application-answers (application-store/get-latest-application-by-secret (:secret application)) application)
+                            application)
+        validation-result (validator/valid-application? final-application form)]
     (cond
       (not (:passed? validation-result))
       validation-result
@@ -41,7 +52,7 @@
       {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]}
 
       :else
-      (store-and-log application store-fn))))
+      (store-and-log final-application store-fn))))
 
 (defn- start-submit-jobs [application-id]
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
@@ -57,7 +68,7 @@
     (let [{passed? :passed?
            application-id :application-id
            :as result}
-          (validate-and-store tarjonta-service application application-store/add-application)]
+          (validate-and-store tarjonta-service application application-store/add-application false)]
       (if passed?
         (start-submit-jobs application-id)
         result))
@@ -68,7 +79,7 @@
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application)]
+        (validate-and-store tarjonta-service application application-store/update-application true)]
     (if passed?
       (do
         (application-email/start-email-edit-confirmation-job application-id)

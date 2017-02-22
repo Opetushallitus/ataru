@@ -33,13 +33,13 @@
     (map find-person-info-module-field-ids children)
     id))
 
-(defn- remove-answers-from-application
+(defn- flag-uneditable-answers
   [{:keys [answers] :as application} forbidden-field-ids]
   (assoc application
     :answers
     (map (fn [answer]
            (if (contains? (set forbidden-field-ids) (:key answer))
-             (merge answer {:cannot-edit true :value nil})
+             (merge answer {:cannot-edit true})
              answer))
          answers)))
 
@@ -48,7 +48,7 @@
   (let [form                    (ataru.forms.form-store/fetch-by-id (:form application))
         person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
         person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
-    (remove-answers-from-application application person-module-field-ids)))
+    (flag-uneditable-answers application person-module-field-ids)))
 
 (defn- get-application [secret]
   (let [application (-> secret
