@@ -391,3 +391,31 @@
                       (partial set-adjacent-field-validity child-descriptor))))
               db
               children))))
+
+(reg-event-db
+  :application/handle-single-attachment-upload
+  (fn [db [_ component-id response]]
+    (println (str "RESPONSE TO " component-id " FILE UPLOAD"))
+    (cljs.pprint/pprint response)
+    db))
+
+(reg-event-fx
+  :application/add-single-attachment
+  (fn [{:keys [db]} [_ component-id file]]
+    (let [name      (.-name file)
+          form-data (doto (js/FormData.)
+                      (.append "file" file name))]
+      {:db   db
+       :http {:method    :post
+              :url       "/hakemus/api/files"
+              :handler   [:application/handle-single-attachment-upload component-id]
+              :body      form-data}})))
+
+(reg-event-fx
+  :application/add-attachments
+  (fn [{:keys [db]} [_ component-id files]]
+    (let [dispatch-list (map (fn file->dispatch-vec [file]
+                               [:application/add-single-attachment component-id file])
+                             files)]
+      {:db         db
+       :dispatch-n dispatch-list})))

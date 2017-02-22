@@ -377,13 +377,21 @@
                      label]]))
                (:options field-descriptor))]]))))
 
-(defn attachment-upload [component-id attachment-count]
-  (let [id (str component-id "-" attachment-count)]
+(defn attachment-upload [component-id]
+  (let [id (str component-id "-upload-button")]
     [:div.application__form-upload-button-container
      [:input.application__form-upload-input
-      {:id       id
-       :type     "file"
-       :multiple "multiple"}]
+      {:id        id
+       :type      "file"
+       :multiple  "multiple"
+       :on-change (fn [event]
+                    (.preventDefault event)
+                    (let [file-list (->> (or (some-> event .-dataTransfer .-files)
+                                             (.. event -target -files)))
+                          files     (->> (.-length file-list)
+                                         (range)
+                                         (map #(.item file-list %)))]
+                      (dispatch [:application/add-attachments component-id files])))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload]
@@ -392,14 +400,13 @@
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])
         text             (reaction (get-in field-descriptor [:params :info-text :value @language]))
-        component-id     (keyword id)
-        attachment-count (reaction (count @(subscribe [:state-query [:application :answers component-id :values]])))]
+        attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values]])))]
     (fn [field-descriptor]
       [:div.application__form-field
        [label field-descriptor]
        (when-not (clojure.string/blank? @text)
          [link-detected-paragraph @text])
-       [attachment-upload component-id @attachment-count]])))
+       [attachment-upload id]])))
 
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])

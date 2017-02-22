@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [dispatch reg-fx]]
             [ataru.cljs-util :as util]
             [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST PUT]])
+            [ajax.core :refer [GET POST PUT raw-response-format]])
   (:refer-clojure :exclude [get]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
@@ -21,32 +21,32 @@
       (dispatch dispatch-vec))))
 
 (defn- params [handler-kw error-handler-kw]
-  (merge
-    {:handler       (handler-fn handler-kw :default :application/default-http-ok-handler)
-     :error-handler (handler-fn error-handler-kw :default :application/default-handle-error)}
-    json-params))
+  {:handler       (handler-fn handler-kw :default :application/default-http-ok-handler)
+   :error-handler (handler-fn error-handler-kw :default :application/default-handle-error)})
 
 (defn get [path & [handler-kw error-handler-kw]]
-  (GET path (params handler-kw error-handler-kw)))
+  (GET path (merge (params handler-kw error-handler-kw) json-params)))
 
-(defn post [path post-data & [handler-kw error-handler-kw]]
-  (let [params (cond-> (merge {:params post-data} (params handler-kw error-handler-kw))
-                 (util/include-csrf-header? :post)
-                 (assoc-in [:headers "CSRF"] (util/csrf-token)))]
+(defn post [path post-data & [handler-kw error-handler-kw body]]
+  (let [params (cond-> (params handler-kw error-handler-kw)
+                 (some? body) (merge {:body body :response-format :json :keywords? true})
+                 (some? post-data) (merge {:params post-data} json-params)
+                 (util/include-csrf-header? :post) (assoc-in [:headers "CSRF"] (util/csrf-token)))]
     (POST path params)))
 
-(defn put [path post-data & [handler-kw error-handler-kw]]
-  (let [params (cond-> (merge {:params post-data} (params handler-kw error-handler-kw))
-                 (util/include-csrf-header? :put)
-                 (assoc-in [:headers "CSRF"] (util/csrf-token)))]
+(defn put [path post-data & [handler-kw error-handler-kw body]]
+  (let [params (cond-> (params handler-kw error-handler-kw)
+                 (some? body) (merge {:body body :response-format :json :keywords? true})
+                 (some? post-data) (merge {:params post-data} json-params)
+                 (util/include-csrf-header? :put) (assoc-in [:headers "CSRF"] (util/csrf-token)))]
     (PUT path params)))
 
 (reg-fx
   :http
-  (fn [{:keys [method post-data url handler error-handler]}]
+  (fn [{:keys [method post-data url handler error-handler body]}]
     (let [f (case method
               :post (partial post url post-data)
               :put  (partial put url post-data)
               :get  (partial get url))]
-      (f handler error-handler))))
+      (f handler error-handler body))))
 
