@@ -33,7 +33,8 @@
 
 (defn- field-value-valid?
   [field-data value]
-  (if (not-empty (:validators field-data))
+  (if (and (not (:cannot-edit field-data))
+           (not-empty (:validators field-data)))
     (every? true? (map #(validator/validate % value)
                     (:validators field-data)))
     true))

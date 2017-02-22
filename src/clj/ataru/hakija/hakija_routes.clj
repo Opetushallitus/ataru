@@ -39,7 +39,7 @@
     :answers
     (map (fn [answer]
            (if (contains? (set forbidden-field-ids) (:key answer))
-             (merge answer {:cannot-edit true})
+             (merge answer {:cannot-edit true :value nil})
              answer))
          answers)))
 
