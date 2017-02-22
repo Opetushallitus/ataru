@@ -84,7 +84,7 @@
         (keys phone/phone-list)))
 
 (describe "birthdate validation"
-  (tags :unit)
+  (tags :unit :birthdate-validation)
   (doall
     (for [[input expected] date/date-list]
       (it (str "should validate past-date " input " to " expected)
