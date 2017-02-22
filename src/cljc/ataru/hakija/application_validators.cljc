@@ -96,7 +96,7 @@
 
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")
-(def ^:private finnish-date-pattern (re-pattern "^\\d{2}\\.\\d{2}\\.\\d{4}"))
+(def ^:private finnish-date-pattern #"^\d{1,2}\.\d{1,2}\.\d{4}$")
 
 (defn ^:private phone?
   [value]
