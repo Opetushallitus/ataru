@@ -22,11 +22,14 @@
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
    [:div
-    (or
-      (let [values (:value ((answer-key field-descriptor) (:answers application)))]
-        (when (or (seq? values) (vector? values))
-          (into [:ul.application__form-field-list] (for [value values] [:li value]))))
-      (textual-field-value field-descriptor application :lang lang))]])
+    (let [answer       ((answer-key field-descriptor) (:answers application))
+          values       (:value answer)
+          multi-value? (or (seq? values) (vector? values))
+          cannot-edit? (:cannot-edit answer)]
+      (cond
+        cannot-edit? "(ei muokattu)"
+        multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
+        :else (textual-field-value field-descriptor application :lang lang)))]])
 
 (declare field)
 
