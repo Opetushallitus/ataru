@@ -12,8 +12,9 @@
 
 (def logo
   [:div.logo
+   [:a {:href "https://virkailija.opintopolku.fi/"}
     [:img {:src "/lomake-editori/images/opintopolku_large-fi.png"
-           :height "40px"}]])
+           :height "40px"}]]])
 
 (def panels
   {:editor      {:text "Lomakkeet" :href #(str "/lomake-editori/editor/" %)}
