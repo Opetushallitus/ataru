@@ -8,7 +8,9 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-            [camel-snake-kebab.extras :refer [transform-keys]])
+            [camel-snake-kebab.extras :refer [transform-keys]]
+            [goog.string :as gstring]
+            [goog.string.format])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -151,3 +153,12 @@
 
 (defn flatten-path [db & parts]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
+
+(def ^:private b-limit 1024)
+(def ^:private kb-limit 102400)
+
+(defn size-bytes->str [bytes]
+  (condp > bytes
+    b-limit (str bytes "B")
+    kb-limit (gstring/format "%.01fkB" (/ bytes 1024))
+    (gstring/format "%.01fMB" (/ bytes 1024000))))

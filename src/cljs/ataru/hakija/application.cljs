@@ -49,9 +49,15 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
+(defn- value->str [field-map value]
+  (cond (= (:fieldType field-map) "attachment")
+        (get-in value [:value :key])
+
+        :else (or (:value value) "")))
+
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values]}] (remove-invisible-followup-values answers flat-form-map ui)
+    (for [[ans-key {:keys [value values] :as a}] (remove-invisible-followup-values answers flat-form-map ui)
           :let [field-map  (get flat-form-map (name ans-key))
                 field-type (:fieldType field-map)
                 label      (:label field-map)]
@@ -63,7 +69,7 @@
       {:key       (name ans-key)
        :value     (or
                     value
-                    (map (fn [v] (or (:value v) "")) values))
+                    (map (partial value->str field-map) values))
        :fieldType field-type
        :label     label})))
 
