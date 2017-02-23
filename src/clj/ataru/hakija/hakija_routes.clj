@@ -60,7 +60,7 @@
         (response/ok application))
       (do
         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
-        (response/not-found)))))
+        (response/not-found {})))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
