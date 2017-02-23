@@ -452,15 +452,11 @@
 (defn- editing-forbidden-field
   [field-descriptor]
   (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
-        content-langs {:fi "Henkilötietoja ei pydee edaa!"
-                       :en "onay ersonalpay infoyay editingyay!"
-                       :sv "Samma på svenska!"}]
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor]
-      (let [label (non-blank-val (get-in field-descriptor [:label @lang])
-                                 (get-in field-descriptor [:label @default-lang]))
-            content (non-blank-val ((keyword @lang) content-langs)
-                                   ((keyword @default-lang) content-langs))]
+      (let [label   (non-blank-val (get-in field-descriptor [:label @lang])
+                                   (get-in field-descriptor [:label @default-lang]))
+            content (:cannot-edit-personal-info (get-translations @lang application-view-translations))]
         [:div.application__wrapper-element.application__wrapper-element--border
          [:div.application__wrapper-heading
           [:h2 label]
