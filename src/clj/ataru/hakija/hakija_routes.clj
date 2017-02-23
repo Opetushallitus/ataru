@@ -120,9 +120,21 @@
         :middleware [upload/wrap-multipart-params]
         :return ataru-schema/File
         (try
-          (if-let [resp (upload-store/upload file)]
+          (if-let [resp (upload-store/upload-file file)]
             (response/ok resp)
             (response/bad-request {:failures "Failed to upload file"}))
+          (finally
+            (io/delete-file (:tempfile file) true))))
+      (api/PUT "/:id" []
+        :summary "Update a file"
+        :path-params [id :- s/Str]
+        :multipart-params [file :- upload/TempFileUpload]
+        :middleware [upload/wrap-multipart-params]
+        :return ataru-schema/File
+        (try
+          (if-let [resp (upload-store/update-file file id)]
+            (response/ok resp)
+            (response/bad-request {:failures (str "Failed to update file with ID " id)}))
           (finally
             (io/delete-file (:tempfile file) true)))))
     (api/POST "/client-error" []

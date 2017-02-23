@@ -3,10 +3,18 @@
             [org.httpkit.client :as http]
             [cheshire.core :as json]))
 
-(defn upload [{:keys [tempfile filename]}]
+(defn upload-file [{:keys [tempfile filename]}]
   (let [url  (str (get-in config [:liiteri :url]) "/api/files")
         resp @(http/post url {:multipart [{:name     "file"
                                            :content  tempfile
                                            :filename filename}]})]
+    (when (= (:status resp) 200)
+      (json/parse-string (:body resp) true))))
+
+(defn update-file [{:keys [tempfile filename]} id]
+  (let [url  (str (get-in config [:liiteri :url]) "/api/files/" id)
+        resp @(http/put url {:multipart [{:name     "file"
+                                          :content  tempfile
+                                          :filename filename}]})]
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))

@@ -393,11 +393,11 @@
               children))))
 
 (reg-event-db
-  :application/handle-single-attachment-upload
+  :application/handle-attachment-upload
   (fn [db [_ component-id response]]
-    (println (str "RESPONSE TO " component-id " FILE UPLOAD"))
-    (cljs.pprint/pprint response)
-    db))
+    (update-in db [:application :answers (keyword component-id) :values]
+      (fn [attachments]
+        (conj (or attachments []) {:value response :valid true})))))
 
 (reg-event-fx
   :application/add-single-attachment
@@ -408,7 +408,7 @@
       {:db   db
        :http {:method    :post
               :url       "/hakemus/api/files"
-              :handler   [:application/handle-single-attachment-upload component-id]
+              :handler   [:application/handle-attachment-upload component-id]
               :body      form-data}})))
 
 (reg-event-fx
@@ -419,3 +419,20 @@
                              files)]
       {:db         db
        :dispatch-n dispatch-list})))
+
+(reg-event-db
+  :application/handle-attachment-update
+  (fn [db [_ component-id attachment-idx response]]
+    (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :value] response)))
+
+(reg-event-fx
+  :application/update-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx file]]
+    (let [attachment (get-in db [:application :answers (keyword component-id) :values attachment-idx :value])
+          form-data  (doto (js/FormData.)
+                       (.append "file" file (:filename attachment)))]
+      {:db   db
+       :http {:method  :put
+              :url     (str "/hakemus/api/files/" (:id attachment))
+              :handler [:application/handle-attachment-update component-id attachment-idx]
+              :body    form-data}})))

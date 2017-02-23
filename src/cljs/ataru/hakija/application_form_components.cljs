@@ -386,8 +386,8 @@
        :multiple  "multiple"
        :on-change (fn [event]
                     (.preventDefault event)
-                    (let [file-list (->> (or (some-> event .-dataTransfer .-files)
-                                             (.. event -target -files)))
+                    (let [file-list (or (some-> event .-dataTransfer .-files)
+                                        (.. event -target -files))
                           files     (->> (.-length file-list)
                                          (range)
                                          (map #(.item file-list %)))]
@@ -396,6 +396,23 @@
       {:for id}
       [:i.zmdi.zmdi-cloud-upload]
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
+
+(defn attachment-update [component-id attachment-idx]
+  (let [id         (str "attachment-" component-id "-" attachment-idx)
+        attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])]
+    [:div.application__form-upload-button-container
+     [:input.application__form-upload-input
+      {:id        id
+       :type      "file"
+       :on-change (fn [event]
+                    (.preventDefault event)
+                    (let [file-list (or (some-> event .-dataTransfer .-files)
+                                        (.. event -target -files))
+                          file      (.item file-list 0)]
+                      (dispatch [:application/update-attachment component-id attachment-idx file])))}]
+     [:label.application__form-upload-label.application__form-upload-label--update
+      {:for id}
+      [:span.application__form-upload-button-add-text (:filename attachment)]]]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])
@@ -406,6 +423,10 @@
        [label field-descriptor]
        (when-not (clojure.string/blank? @text)
          [link-detected-paragraph @text])
+       (->> (range @attachment-count)
+            (map (fn [attachment-idx]
+                   ^{:key (str "attachment-" id "-" attachment-idx)}
+                   [attachment-update id attachment-idx])))
        [attachment-upload id]])))
 
 (defn info-element [field-descriptor]
