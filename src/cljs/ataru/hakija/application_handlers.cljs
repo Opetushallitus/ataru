@@ -430,9 +430,9 @@
   (fn [{:keys [db]} [_ component-id attachment-idx file]]
     (let [attachment (get-in db [:application :answers (keyword component-id) :values attachment-idx :value])
           form-data  (doto (js/FormData.)
-                       (.append "file" file (:filename attachment)))]
+                       (.append "file" file (.-name file)))]
       {:db   db
        :http {:method  :put
-              :url     (str "/hakemus/api/files/" (:id attachment))
+              :url     (str "/hakemus/api/files/" (:key attachment))
               :handler [:application/handle-attachment-update component-id attachment-idx]
               :body    form-data}})))

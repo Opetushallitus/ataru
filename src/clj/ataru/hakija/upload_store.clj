@@ -9,7 +9,9 @@
                                            :content  tempfile
                                            :filename filename}]})]
     (when (= (:status resp) 200)
-      (json/parse-string (:body resp) true))))
+      (-> (:body resp)
+          (json/parse-string true)
+          (dissoc :version :deleted)))))
 
 (defn update-file [{:keys [tempfile filename]} id]
   (let [url  (str (get-in config [:liiteri :url]) "/api/files/" id)
@@ -17,4 +19,6 @@
                                           :content  tempfile
                                           :filename filename}]})]
     (when (= (:status resp) 200)
-      (json/parse-string (:body resp) true))))
+      (-> (:body resp)
+          (json/parse-string true)
+          (dissoc :version :deleted)))))

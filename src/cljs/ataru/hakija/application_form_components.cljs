@@ -412,7 +412,7 @@
                       (dispatch [:application/update-attachment component-id attachment-idx file])))}]
      [:label.application__form-upload-label.application__form-upload-label--update
       {:for id}
-      [:span.application__form-upload-button-add-text (:filename attachment)]]]))
+      [:span.application__form-upload-button-add-text (str (:filename attachment) " (" (:size attachment) "B)")]]]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])

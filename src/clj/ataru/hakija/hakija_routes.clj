@@ -125,16 +125,16 @@
             (response/bad-request {:failures "Failed to upload file"}))
           (finally
             (io/delete-file (:tempfile file) true))))
-      (api/PUT "/:id" []
+      (api/PUT "/:key" []
         :summary "Update a file"
-        :path-params [id :- s/Str]
+        :path-params [key :- s/Str]
         :multipart-params [file :- upload/TempFileUpload]
         :middleware [upload/wrap-multipart-params]
         :return ataru-schema/File
         (try
-          (if-let [resp (upload-store/update-file file id)]
+          (if-let [resp (upload-store/update-file file key)]
             (response/ok resp)
-            (response/bad-request {:failures (str "Failed to update file with ID " id)}))
+            (response/bad-request {:failures (str "Failed to update file with key " key)}))
           (finally
             (io/delete-file (:tempfile file) true)))))
     (api/POST "/client-error" []
