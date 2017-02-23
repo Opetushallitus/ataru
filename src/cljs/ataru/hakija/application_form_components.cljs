@@ -11,7 +11,9 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (declare render-field)
 
@@ -397,6 +399,15 @@
       [:i.zmdi.zmdi-cloud-upload]
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
 
+(def ^:private b-limit 1024)
+(def ^:private kb-limit 102400)
+
+(defn- size-bytes->str [bytes]
+  (condp > bytes
+    1024   (str bytes "B")
+    102400 (gstring/format "%.01fkB" (/ bytes 1024))
+    (gstring/format "%.01fMB" (/ bytes 1024000))))
+
 (defn attachment-update [component-id attachment-idx]
   (let [id         (str "attachment-" component-id "-" attachment-idx)
         attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])]
@@ -412,7 +423,7 @@
                       (dispatch [:application/update-attachment component-id attachment-idx file])))}]
      [:label.application__form-upload-label.application__form-upload-label--update
       {:for id}
-      [:span.application__form-upload-button-add-text (str (:filename attachment) " (" (:size attachment) "B)")]]]))
+      [:span.application__form-upload-button-add-text (str (:filename attachment) " (" (size-bytes->str (:size attachment)) ")")]]]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])
