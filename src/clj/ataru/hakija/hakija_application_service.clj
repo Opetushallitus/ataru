@@ -27,6 +27,8 @@
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
       hakuaika-on)))
 
+(def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
+
 (defn- merge-application-answers
   [old-application new-application]
   (let [answer-key-set      (fn [application] (set (map :key (:answers application))))
@@ -49,7 +51,7 @@
       validation-result
 
       (not allowed)
-      {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]}
+      not-allowed-reply
 
       :else
       (store-and-log final-application store-fn))))
