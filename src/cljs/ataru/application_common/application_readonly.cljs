@@ -10,7 +10,10 @@
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [ataru.cljs-util :refer [console-log]]
+            [ataru.translations.application-view :refer [application-view-translations]]
+            [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
+
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
@@ -27,7 +30,7 @@
           multi-value? (or (seq? values) (vector? values))
           cannot-edit? (:cannot-edit answer)]
       (cond
-        cannot-edit? "(ei muokattu)"
+        cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
         multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
         :else (textual-field-value field-descriptor application :lang lang)))]])
 
