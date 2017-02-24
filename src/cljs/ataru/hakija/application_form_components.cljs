@@ -86,8 +86,9 @@
   (let [words   (for [word (clojure.string/split text #"\s")
                       :let [as-url (url/url word)]]
                   (if (not-empty (:host as-url))
-                    [:a {:key  (str as-url)
-                         :href (str as-url)}
+                    [:a {:key    (str as-url)
+                         :href   (str as-url)
+                         :target "_blank"}
                      (:host as-url)]
                     (if (empty? word)
                       [:br]
