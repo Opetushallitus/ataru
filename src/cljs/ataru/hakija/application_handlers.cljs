@@ -408,19 +408,24 @@
   :application/add-attachments
   (fn [{:keys [db]} [_ component-id attachment-count files]]
     (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
-                               [:application/add-single-attachment component-id (+ attachment-count idx) file])
-                             files)
-          db            (->> files
-                             (map-indexed (fn attachment-idx->file [idx file]
-                                            {:idx (+ attachment-count idx) :file file}))
-                             (reduce (fn attachment-spec->db [db {:keys [idx file]}]
-                                       (assoc-in db [:application :answers (keyword component-id) :values idx]
-                                         {:value  {:filename     (.-name file)
-                                                   :content-type (.-type file)
-                                                   :size         (.-size file)}
-                                          :valid  false
-                                          :status :uploading}))
-                                     db))]
+                                       [:application/add-single-attachment component-id (+ attachment-count idx) file])
+                                     files)
+          db            (as-> db db'
+                              (update-in db' [:application :answers (keyword component-id) :values]
+                                (fn [values]
+                                  (or values [])))
+                              (->> files
+                                   (map-indexed (fn attachment-idx->file [idx file]
+                                                  {:idx (+ attachment-count idx) :file file}))
+                                   (reduce (fn attachment-spec->db [db {:keys [idx file]}]
+                                             (assoc-in db [:application :answers (keyword component-id) :values idx]
+                                               {:value  {:filename     (.-name file)
+                                                         :content-type (.-type file)
+                                                         :size         (.-size file)}
+                                                :valid  false
+                                                :status :uploading}))
+                                           db'))
+                              (assoc-in db' [:application :answers (keyword component-id) :valid] false))]
       {:db         db
        :dispatch-n dispatch-list})))
 
@@ -428,15 +433,16 @@
   :application/handle-attachment-upload
   (fn [db [_ component-id attachment-idx response]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values]
-          (fn [values]
-            (or values [])))
         (update-in [:application :answers (keyword component-id) :values attachment-idx]
           (fn [attachment]
             (-> attachment
                 (assoc :value response)
                 (assoc :valid true)
-                (dissoc :status)))))))
+                (dissoc :status))))
+        (update-in [:application :answers (keyword component-id)]
+          (fn [{:keys [values] :as component}]
+            (assoc component :valid
+              (every? (comp true? :valid) values)))))))
 
 (reg-event-fx
   :application/update-attachment
@@ -444,7 +450,10 @@
     (let [key       (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
           form-data (doto (js/FormData.)
                       (.append "file" file (.-name file)))
-          db        (assoc-in db [:application :answers (keyword component-id) :values attachment-idx :status] :uploading)]
+          db        (-> db
+
+                        (assoc-in [:application :answers (keyword component-id) :valid] false)
+                        (assoc-in [:application :answers (keyword component-id) :values attachment-idx :status] :uploading))]
       {:db   db
        :http {:method  :put
               :url     (str "/hakemus/api/files/" key)
