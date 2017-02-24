@@ -49,29 +49,27 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
-(defn- remove-uneditable-answers
-  [answers]
-  (remove-vals :cannot-edit answers))
-
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
     (for [[ans-key {:keys [value values]}] (-> answers
-                                               (remove-uneditable-answers)
                                                (remove-invisible-followup-values flat-form-map ui))
-          :let [field-map  (get flat-form-map (name ans-key))
-                field-type (:fieldType field-map)
-                label      (:label field-map)]
+          :let [field-map    (get flat-form-map (name ans-key))
+                field-type   (:fieldType field-map)
+                cannot-edit? (boolean (:cannot-edit field-map))
+                label        (:label field-map)]
           :when (or
                   values
+                  cannot-edit?
                   ; permit empty dropdown values, because server side validation expects to match form fields to answers
                   (and (empty? value) (= "dropdown" field-type))
                   (and (not-empty value) (not (:exclude-from-answers field-map))))]
-      {:key       (name ans-key)
-       :value     (or
-                    value
-                    (map (fn [v] (or (:value v) "")) values))
-       :fieldType field-type
-       :label     label})))
+      {:key         (name ans-key)
+       :cannot-edit cannot-edit?
+                    :value (or
+                             value
+                             (map (fn [v] (or (:value v) "")) values))
+                    :fieldType field-type
+                    :label label})))
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]

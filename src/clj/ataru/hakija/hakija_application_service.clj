@@ -29,21 +29,23 @@
 
 (def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
 
-(defn- merge-application-answers
+(defn- merge-uneditable-answers-from-previous
   [old-application new-application]
-  (let [answer-key-set      (fn [application] (set (map :key (:answers application))))
-        old-keys            (answer-key-set old-application)
-        new-keys            (answer-key-set new-application)
-        not-in-new-keys     (clojure.set/difference old-keys new-keys)
-        answers-only-in-old (filter #(contains? not-in-new-keys (:key %)) (:answers old-application))
-        merged-answers      (into (:answers new-application) answers-only-in-old)]
+  (let [new-answers                 (:answers new-application)
+        noneditable-answer-keys     (->> new-answers
+                                         (filter :cannot-edit)
+                                         (map :key)
+                                         (set))
+        editable-answers            (remove :cannot-edit new-answers)
+        uneditable-answers-from-old (filter #(contains? noneditable-answer-keys (:key %)) (:answers old-application))
+        merged-answers              (into editable-answers uneditable-answers-from-old)]
     (assoc new-application :answers merged-answers)))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [form              (form-store/fetch-by-id (:form application))
         allowed           (allowed-to-apply? tarjonta-service application)
         final-application (if is-modify?
-                            (merge-application-answers (application-store/get-latest-application-by-secret (:secret application)) application)
+                            (merge-uneditable-answers-from-previous (application-store/get-latest-application-by-secret (:secret application)) application)
                             application)
         validation-result (validator/valid-application? final-application form)]
     (cond
