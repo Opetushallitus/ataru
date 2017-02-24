@@ -404,14 +404,15 @@
         uploading?      (= (:status attachment-spec) :uploading)]
     [:div.application__form-upload-button-container
      [:input.application__form-upload-input
-      {:id        id
-       :type      "file"
-       :on-change (fn [event]
-                    (.preventDefault event)
-                    (let [file-list (or (some-> event .-dataTransfer .-files)
-                                        (.. event -target -files))
-                          file      (.item file-list 0)]
-                      (dispatch [:application/update-attachment component-id attachment-idx file])))}]
+      (cond-> {:id        id
+               :type      "file"
+               :on-change (fn [event]
+                            (.preventDefault event)
+                            (let [file-list (or (some-> event .-dataTransfer .-files)
+                                                (.. event -target -files))
+                                  file      (.item file-list 0)]
+                              (dispatch [:application/update-attachment component-id attachment-idx file])))}
+        uploading? (assoc :disabled true))]
      [:label.application__form-upload-label
       (cond-> {:for id}
         (not uploading?) (assoc :class "application__form-upload-label--update"))
