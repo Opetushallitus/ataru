@@ -451,9 +451,13 @@
           form-data (doto (js/FormData.)
                       (.append "file" file (.-name file)))
           db        (-> db
-
                         (assoc-in [:application :answers (keyword component-id) :valid] false)
-                        (assoc-in [:application :answers (keyword component-id) :values attachment-idx :status] :uploading))]
+                        (assoc-in [:application :answers (keyword component-id) :values attachment-idx]
+                          {:status :uploading
+                           :valid  false
+                           :value  {:filename     (.-name file)
+                                    :content-type (.-type file)
+                                    :size         (.-size file)}}))]
       {:db   db
        :http {:method  :put
               :url     (str "/hakemus/api/files/" key)
