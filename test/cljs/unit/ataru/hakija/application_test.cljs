@@ -160,14 +160,17 @@
                            :answers '({:key "G__14",
                                        :value "Jorma",
                                        :fieldType "textField",
+                                       :cannot-edit false,
                                        :label {:fi "kenttä2", :sv ""}}
                                       {:key "G__2",
                                        :value "16",
                                        :fieldType "textField",
+                                       :cannot-edit false,
                                        :label {:fi "kenttä1", :sv ""}}
                                       {:key "G__25",
                                        :value "Joroinen",
                                        :fieldType "textField",
+                                       :cannot-edit false,
                                        :label {:fi "ulkokenttä", :sv ""}})})
 
 (deftest application-to-submit-is-correct
