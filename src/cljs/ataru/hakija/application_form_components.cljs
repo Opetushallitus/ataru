@@ -514,27 +514,27 @@
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
       (if (feature-enabled? field-descriptor)
-      (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-        (cond-> (match field-descriptor
-                       {:fieldClass "wrapperElement"
-                        :fieldType  "fieldset"
-                        :children   children} [wrapper-field field-descriptor children]
-                       {:fieldClass "wrapperElement"
-                        :fieldType  "rowcontainer"
-                        :children   children} [row-wrapper children]
-                       {:fieldClass "formField"
-                        :id         (_ :guard (complement visible?))} [:div]
-                       {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                       {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
-                       {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                       {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                       {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                       {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                       {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
-                       {:fieldClass "infoElement"} [info-element field-descriptor]
-                       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-                (and (empty? (:children field-descriptor))
-                     (visible? (:id field-descriptor))) (into args)))
+        (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
+          (cond-> (match field-descriptor
+                         {:fieldClass "wrapperElement"
+                          :fieldType  "fieldset"
+                          :children   children} [wrapper-field field-descriptor children]
+                         {:fieldClass "wrapperElement"
+                          :fieldType  "rowcontainer"
+                          :children   children} [row-wrapper children]
+                         {:fieldClass "formField"
+                          :id         (_ :guard (complement visible?))} [:div]
+                         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
+                         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
+                         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                         {:fieldClass "infoElement"} [info-element field-descriptor]
+                         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
+            (and (empty? (:children field-descriptor))
+                 (visible? (:id field-descriptor))) (into args)))
       [:div]))))
 
 (defn editable-fields [form-data]
