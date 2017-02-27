@@ -66,6 +66,29 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
+(defn- find-person-info-module-field-ids
+  [{:keys [children id]}]
+  (if children
+    (map find-person-info-module-field-ids children)
+    id))
+
+(defn- flag-uneditable-answers
+  [{:keys [answers] :as application} forbidden-field-ids]
+  (assoc application
+    :answers
+    (map (fn [answer]
+           (if (contains? (set forbidden-field-ids) (:key answer))
+             (merge answer {:cannot-edit true :value nil})
+             answer))
+         answers)))
+
+(defn remove-person-info-module-from-application-answers
+  [application]
+  (let [form                    (form-store/fetch-by-id (:form application))
+        person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
+        person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
+    (flag-uneditable-answers application person-module-field-ids)))
+
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
   (if (allowed-to-apply? tarjonta-service application)
