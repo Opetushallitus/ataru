@@ -84,10 +84,11 @@
 
 (defn remove-person-info-module-from-application-answers
   [application]
-  (let [form                    (form-store/fetch-by-id (:form application))
-        person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
-        person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
-    (flag-uneditable-answers application person-module-field-ids)))
+  (when application
+    (let [form                    (form-store/fetch-by-id (:form application))
+          person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
+          person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
+      (flag-uneditable-answers application person-module-field-ids))))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
