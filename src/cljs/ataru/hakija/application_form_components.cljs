@@ -402,7 +402,7 @@
 (defn attachment-update [component-id attachment-idx]
   (let [id              (str "attachment-" component-id "-" attachment-idx)
         attachment-spec @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
-        uploading?      (= (:status attachment-spec) :uploading)]
+        status           (:status attachment-spec)]
     [:div.application__form-upload-button-container
      [:input.application__form-upload-input
       (cond-> {:id        id
@@ -413,11 +413,10 @@
                                                 (.. event -target -files))
                                   file      (.item file-list 0)]
                               (dispatch [:application/update-attachment component-id attachment-idx file])))}
-        uploading? (assoc :disabled true))]
+        (not= status :ready) (assoc :disabled true))]
      [:label.application__form-upload-label
-      (cond-> {:for id}
-        (not uploading?) (assoc :class "application__form-upload-label--update"))
-      (when uploading?
+      {:for id}
+      (when (= status :uploading)
         [:i.zmdi.zmdi-spinner.application__form-upload-label--uploading])
       [:span.application__form-upload-button-add-text (str (get-in attachment-spec [:value :filename]) " (" (cljs-util/size-bytes->str (get-in attachment-spec [:value :size])) ")")]]]))
 
