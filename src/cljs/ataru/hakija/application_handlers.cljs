@@ -433,12 +433,8 @@
   :application/handle-attachment-upload
   (fn [db [_ component-id attachment-idx response]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values attachment-idx]
-          (fn [attachment]
-            (-> attachment
-                (assoc :value response)
-                (assoc :valid true)
-                (dissoc :status))))
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+          {:value response :valid true :status :ready})
         (update-in [:application :answers (keyword component-id)]
           (fn [{:keys [values] :as component}]
             (assoc component :valid
