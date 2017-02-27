@@ -12,7 +12,8 @@
             [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.cljs-util :as cljs-util]))
+            [ataru.cljs-util :as cljs-util]
+            [ataru.feature-config :as fc]))
 
 (declare render-field)
 
@@ -502,12 +503,17 @@
                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
             [:i.zmdi.zmdi-plus-square] " Lisää rivi"])]))))
 
+(defn- feature-enabled? [{:keys [fieldType]}]
+  (or (not= fieldType "attachment")
+      (fc/feature-enabled? :attachment)))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
+      (if (feature-enabled? field-descriptor)
       (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
         (cond-> (match field-descriptor
                        {:fieldClass "wrapperElement"
@@ -528,7 +534,8 @@
                        {:fieldClass "infoElement"} [info-element field-descriptor]
                        {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                 (and (empty? (:children field-descriptor))
-                     (visible? (:id field-descriptor))) (into args))))))
+                     (visible? (:id field-descriptor))) (into args)))
+      [:div]))))
 
 (defn editable-fields [form-data]
   (when form-data
