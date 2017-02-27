@@ -449,7 +449,7 @@
                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
 
-(defn- editing-forbidden-field
+(defn- editing-forbidden-module
   [field-descriptor]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])]
@@ -474,7 +474,7 @@
     (fn [field-descriptor & args]
       (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
         (if (and @editing? (= (:module field-descriptor) "person-info"))
-          [editing-forbidden-field field-descriptor]
+          [editing-forbidden-module field-descriptor]
           (cond-> (match field-descriptor
                          {:fieldClass "wrapperElement"
                           :fieldType  "fieldset"
