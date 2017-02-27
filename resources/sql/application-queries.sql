@@ -123,6 +123,7 @@ select
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.hakukohde,
   a.haku,
   ar.state as state,
   f.key as form_key
