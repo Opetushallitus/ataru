@@ -422,6 +422,9 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-upload-button-container {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
   margin-top: 10px;
 }
 
@@ -431,7 +434,6 @@ textarea.application__form-text-area__size-large {
 
 .application__form-upload-label {
   align-items: center;
-  background-color: @section-header-text;
   border-radius: 2px;
   color: @white;
   cursor: pointer;
@@ -442,7 +444,19 @@ textarea.application__form-text-area__size-large {
   width: 305px;
 }
 
-.application__form-upload-label--uploading {
+.application__form-upload-label--enabled {
+  background-color: @section-header-text;
+}
+
+.application__form-upload-label--disabled {
+  background-color: #AAAAAA;
+}
+
+.application__form-upload-status-indicator {
+  margin-left: 15px;
+}
+
+.application__form-upload-uploading-spinner {
   -webkit-animation-name: spin;
   -webkit-animation-duration: 1300ms;
   -webkit-animation-iteration-count: infinite;

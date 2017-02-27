@@ -22,3 +22,10 @@
       (-> (:body resp)
           (json/parse-string true)
           (dissoc :version :deleted)))))
+
+(defn delete-file [key]
+  (let [url  (str (get-in config [:liiteri :url]) "/api/files/" key)
+        resp @(http/delete url)]
+    (clojure.pprint/pprint resp)
+    (when (= (:status resp) 200)
+      (json/parse-string (:body resp) true))))

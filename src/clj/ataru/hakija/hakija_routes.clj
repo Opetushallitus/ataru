@@ -136,7 +136,14 @@
             (response/ok resp)
             (response/bad-request {:failures (str "Failed to update file with key " key)}))
           (finally
-            (io/delete-file (:tempfile file) true)))))
+            (io/delete-file (:tempfile file) true))))
+      (api/DELETE "/:key" []
+        :summary "Delete a file"
+        :path-params [key :- s/Str]
+        :return {:key s/Str}
+        (if-let [resp (upload-store/delete-file key)]
+          (response/ok resp)
+          (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]

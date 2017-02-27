@@ -459,3 +459,24 @@
               :url     (str "/hakemus/api/files/" key)
               :handler [:application/handle-attachment-upload component-id attachment-idx]
               :body    form-data}})))
+
+(reg-event-db
+  :application/handle-attachment-delete
+  (fn [db [_ component-id attachment-key _]]
+    (update-in db [:application :answers (keyword component-id) :values]
+      (comp vec
+            (partial remove (comp (partial = attachment-key) :key :value))))))
+
+(reg-event-fx
+  :application/remove-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx]]
+    (let [key (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
+          db  (-> db
+                  (assoc-in [:application :answers (keyword component-id) :valid] false)
+                  (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                    {:status :deleting
+                     :valid  false}))]
+      {:db   db
+       :http {:method  :delete
+              :url     (str "/hakemus/api/files/" key)
+              :handler [:application/handle-attachment-delete component-id key]}})))
