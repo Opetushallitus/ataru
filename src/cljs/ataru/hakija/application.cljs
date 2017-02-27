@@ -63,13 +63,13 @@
                   ; permit empty dropdown values, because server side validation expects to match form fields to answers
                   (and (empty? value) (= "dropdown" field-type))
                   (and (not-empty value) (not (:exclude-from-answers field-map))))]
-      {:key         (name ans-key)
-       :cannot-edit cannot-edit?
-                    :value (or
-                             value
-                             (map (fn [v] (or (:value v) "")) values))
-                    :fieldType field-type
-                    :label label})))
+      (cond-> {:key       (name ans-key)
+               :value     (or
+                            value
+                            (map (fn [v] (or (:value v) "")) values))
+               :fieldType field-type
+               :label     label}
+              cannot-edit? (assoc :cannot-edit true)))))
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]
