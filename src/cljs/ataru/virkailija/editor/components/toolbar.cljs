@@ -1,31 +1,32 @@
 (ns ataru.virkailija.editor.components.toolbar
   (:require
    [ataru.virkailija.component-data.component :as component]
+   [ataru.feature-config :as fc]
    [re-frame.core :as c :refer [dispatch]]
    [reagent.core :as r]
    [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
-  {"Lomakeosio"                    component/form-section
-   "Tekstikenttä"                  component/text-field
-   "Tekstialue"                    component/text-area
-   "Pudotusvalikko"                component/dropdown
-   "Painikkeet, yksi valittavissa" component/single-choice-button
-   "Lista, monta valittavissa"     component/multiple-choice
-   "Infoteksti"                    component/info-element
-   "Vierekkäiset tekstikentät"     component/adjacent-fieldset
-   "Liitepyyntö"                   component/attachment})
+  (cond-> {"Lomakeosio"                    component/form-section
+           "Tekstikenttä"                  component/text-field
+           "Tekstialue"                    component/text-area
+           "Pudotusvalikko"                component/dropdown
+           "Painikkeet, yksi valittavissa" component/single-choice-button
+           "Lista, monta valittavissa"     component/multiple-choice
+           "Infoteksti"                    component/info-element
+           "Vierekkäiset tekstikentät"     component/adjacent-fieldset}
+    (fc/feature-enabled? :attachment) (assoc "Liitepyyntö" component/attachment)))
 
 (def ^:private followup-toolbar-elements
   (select-keys toolbar-elements
-    ["Tekstikenttä"
-     "Tekstialue"
-     "Pudotusvalikko"
-     "Painikkeet, yksi valittavissa"
-     "Lista, monta valittavissa"
-     "Infoteksti"
-     "Vierekkäiset tekstikentät"
-     "Liitepyyntö"]))
+               (cond-> ["Tekstikenttä"
+                        "Tekstialue"
+                        "Pudotusvalikko"
+                        "Painikkeet, yksi valittavissa"
+                        "Lista, monta valittavissa"
+                        "Infoteksti"
+                        "Vierekkäiset tekstikentät"]
+                 (fc/feature-enabled? :attachment) (conj "Liitepyyntö"))))
 
 (def ^:private adjacent-fieldset-toolbar-elements
   {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
