@@ -93,7 +93,7 @@
 
 (defn- organizations [session] (-> session :identity :organizations))
 
-(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service]}]
+(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -216,6 +216,21 @@
                                           session
                                           organization-service
                                           tarjonta-service)})))
+
+                 (api/context "/cache" []
+                   (api/POST "/clear/:cache" {session :session}
+                     :path-params [cache :- s/Str]
+                     :summary "Clear an entire cache map of its entries"
+                     {:status 200
+                      :body   (do (.cache-clear cache-service (keyword cache))
+                                  {})})
+                   (api/POST "/remove/:cache/:key" {session :session}
+                     :path-params [cache :- s/Str
+                                   key :- s/Str]
+                     :summary "Remove an entry from cache map"
+                     {:status 200
+                      :body   (do (.cache-remove cache-service (keyword cache) key)
+                                  {})}))
 
                  (api/GET "/hakukohteet" {session :session}
                           :summary "List hakukohde information found for applications stored in system"

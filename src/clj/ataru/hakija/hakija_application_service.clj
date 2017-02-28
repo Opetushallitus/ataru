@@ -29,19 +29,34 @@
 
 (def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
 
-(defn- validate-and-store [tarjonta-service application store-fn]
+(defn- merge-uneditable-answers-from-previous
+  [old-application new-application]
+  (let [new-answers                 (:answers new-application)
+        noneditable-answer-keys     (->> new-answers
+                                         (filter :cannot-edit)
+                                         (map :key)
+                                         (set))
+        editable-answers            (remove :cannot-edit new-answers)
+        uneditable-answers-from-old (filter #(contains? noneditable-answer-keys (:key %)) (:answers old-application))
+        merged-answers              (into editable-answers uneditable-answers-from-old)]
+    (assoc new-application :answers merged-answers)))
+
+(defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [form              (form-store/fetch-by-id (:form application))
         allowed           (allowed-to-apply? tarjonta-service application)
-        validation-result (validator/valid-application? application form)]
+        final-application (if is-modify?
+                            (merge-uneditable-answers-from-previous (application-store/get-latest-application-by-secret (:secret application)) application)
+                            application)
+        validation-result (validator/valid-application? final-application form)]
     (cond
       (not (:passed? validation-result))
       validation-result
 
       (not allowed)
-      {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]}
+      not-allowed-reply
 
       :else
-      (store-and-log application store-fn))))
+      (store-and-log final-application store-fn))))
 
 (defn- start-submit-jobs [application-id]
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
@@ -51,13 +66,37 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
+(defn- find-person-info-module-field-ids
+  [{:keys [children id]}]
+  (if children
+    (map find-person-info-module-field-ids children)
+    id))
+
+(defn- flag-uneditable-answers
+  [{:keys [answers] :as application} forbidden-field-ids]
+  (assoc application
+    :answers
+    (map (fn [answer]
+           (if (contains? (set forbidden-field-ids) (:key answer))
+             (merge answer {:cannot-edit true :value nil})
+             answer))
+         answers)))
+
+(defn remove-person-info-module-from-application-answers
+  [application]
+  (when application
+    (let [form                    (form-store/fetch-by-id (:form application))
+          person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
+          person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
+      (flag-uneditable-answers application person-module-field-ids))))
+
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
   (if (allowed-to-apply? tarjonta-service application)
     (let [{passed? :passed?
            application-id :application-id
            :as result}
-          (validate-and-store tarjonta-service application application-store/add-application)]
+          (validate-and-store tarjonta-service application application-store/add-application false)]
       (if passed?
         (start-submit-jobs application-id)
         result))
@@ -68,7 +107,7 @@
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application)]
+        (validate-and-store tarjonta-service application application-store/update-application true)]
     (if passed?
       (do
         (application-email/start-email-edit-confirmation-job application-id)

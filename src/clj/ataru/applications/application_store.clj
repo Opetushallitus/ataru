@@ -23,13 +23,15 @@
 (defn- find-value-from-answers [key answers]
   (:value (first (filter #(= key (:key %)) answers))))
 
-(defn unwrap-application [application]
-  (assoc (->kebab-case-kw (dissoc application :content))
-    :answers
-    (mapv (fn [answer]
-            (update answer :label (fn [label]
-                                    (label/get-language-label-in-preferred-order label))))
-          (-> application :content :answers))))
+(defn unwrap-application
+  [application]
+  (when application
+    (assoc (->kebab-case-kw (dissoc application :content))
+      :answers
+      (mapv (fn [answer]
+              (update answer :label (fn [label]
+                                      (label/get-language-label-in-preferred-order label))))
+            (-> application :content :answers)))))
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"

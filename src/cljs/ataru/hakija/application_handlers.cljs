@@ -22,6 +22,7 @@
                                                  hakukohde
                                                  hakukohde-name]}]]
   {:db       (-> db
+                 (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
@@ -149,28 +150,30 @@
   (-> db
       (update-in [:application :answers]
         (fn [answers]
-          (reduce (fn [answers {:keys [key value] :as answer}]
+          (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
                                        (vector? value)
                                        (first))]
                       (if (contains? answers answer-key)
-                        (match answer
-                          {:fieldType "multipleChoice"}
-                          (update answers answer-key (partial merge-multiple-choice-option-values value))
+                        (update
+                          (match answer
+                                 {:fieldType "multipleChoice"}
+                                 (update answers answer-key (partial merge-multiple-choice-option-values value))
 
-                          {:fieldType "dropdown"}
-                          (update answers answer-key merge {:valid true :value value})
+                                 {:fieldType "dropdown"}
+                                 (update answers answer-key merge {:valid true :value value})
 
-                          {:fieldType "textField" :value (_ :guard vector?)}
-                          (update answers answer-key merge
-                            {:valid true
-                             :values (mapv (fn [value]
-                                             {:valid true :value value})
-                                       (:value answer))})
+                                 {:fieldType "textField" :value (_ :guard vector?)}
+                                 (update answers answer-key merge
+                                         {:valid  true
+                                          :values (mapv (fn [value]
+                                                          {:valid true :value value})
+                                                        (:value answer))})
 
-                          :else
-                          (update answers answer-key merge {:valid true :value value}))
+                                 :else
+                                 (update answers answer-key merge {:valid true :value value}))
+                          answer-key merge {:cannot-edit cannot-edit})
                         answers)))
                   answers
                   submitted-answers)))
