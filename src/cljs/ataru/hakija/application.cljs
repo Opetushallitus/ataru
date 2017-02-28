@@ -57,7 +57,7 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values] :as a}] (remove-invisible-followup-values answers flat-form-map ui)
+    (for [[ans-key {:keys [value values]}] (remove-invisible-followup-values answers flat-form-map ui)
           :let [field-map  (get flat-form-map (name ans-key))
                 field-type (:fieldType field-map)
                 label      (:label field-map)]
