@@ -117,8 +117,7 @@
   (let [answer (update-in answer [:options option-value] not)
         value  (->> (:options answer)
                     (filter (comp true? second))
-                    (map first)
-                    (clojure.string/join ", "))
+                    (map first))
         valid  (if (not-empty validators)
                  (every? true? (map #(validator/validate % value) validators))
                  true)]
