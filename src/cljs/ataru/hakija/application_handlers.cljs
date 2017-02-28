@@ -433,12 +433,8 @@
   :application/handle-attachment-upload
   (fn [db [_ component-id attachment-idx response]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values attachment-idx]
-          (fn [attachment]
-            (-> attachment
-                (assoc :value response)
-                (assoc :valid true)
-                (dissoc :status))))
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+          {:value response :valid true :status :ready})
         (update-in [:application :answers (keyword component-id)]
           (fn [{:keys [values] :as component}]
             (assoc component :valid
@@ -463,3 +459,24 @@
               :url     (str "/hakemus/api/files/" key)
               :handler [:application/handle-attachment-upload component-id attachment-idx]
               :body    form-data}})))
+
+(reg-event-db
+  :application/handle-attachment-delete
+  (fn [db [_ component-id attachment-key _]]
+    (update-in db [:application :answers (keyword component-id) :values]
+      (comp vec
+            (partial remove (comp (partial = attachment-key) :key :value))))))
+
+(reg-event-fx
+  :application/remove-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx]]
+    (let [key (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
+          db  (-> db
+                  (assoc-in [:application :answers (keyword component-id) :valid] false)
+                  (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                    {:status :deleting
+                     :valid  false}))]
+      {:db   db
+       :http {:method  :delete
+              :url     (str "/hakemus/api/files/" key)
+              :handler [:application/handle-attachment-delete component-id key]}})))

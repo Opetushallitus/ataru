@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [dispatch reg-fx]]
             [ataru.cljs-util :as util]
             [cljs.core.match :refer-macros [match]]
-            [ajax.core :refer [GET POST PUT raw-response-format]])
+            [ajax.core :refer [GET POST PUT DELETE raw-response-format]])
   (:refer-clojure :exclude [get]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
@@ -41,12 +41,17 @@
                  (util/include-csrf-header? :put) (assoc-in [:headers "CSRF"] (util/csrf-token)))]
     (PUT path params)))
 
+(defn delete [path & [handler-kw error-handler-kw]]
+  (DELETE path (merge (params handler-kw error-handler-kw) json-params)))
+
 (reg-fx
   :http
   (fn [{:keys [method post-data url handler error-handler body]}]
     (let [f (case method
               :post (partial post url post-data)
               :put  (partial put url post-data)
-              :get  (partial get url))]
+              :get  (partial get url)
+              :delete (partial delete url))]
       (f handler error-handler body))))
+
 
