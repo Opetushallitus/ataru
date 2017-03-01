@@ -26,13 +26,20 @@
         split-values       (if (string? value-or-koodi-uri)
                              (clojure.string/split value-or-koodi-uri #"\s*,\s*")
                              value-or-koodi-uri)]
-    (if (contains? field-descriptor :koodisto-source)
+    (cond
+      (contains? field-descriptor :koodisto-source)
       (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
+        (println "values" values)
         (if (= (count values) 1)
           (first values)
           [:ul.application__form-field-list
            (map wrap-value values)]))
-      value-or-koodi-uri)))
+
+      (and (sequential? split-values) (< 1 (count split-values)))
+      [:ul.application__form-field-list
+       (map wrap-value split-values)]
+
+      :else value-or-koodi-uri)))
 
 (defn scroll-to-anchor
   [field-descriptor]
