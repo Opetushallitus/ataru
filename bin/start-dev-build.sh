@@ -62,6 +62,10 @@ tmux split-window -v
 tmux select-pane -t 4
 tmux send-keys "./bin/lein figwheel-hakija" C-m
 
-echo "Attaching session"
+if [ -n $ITERM_FLAG ]
+then
+    echo "Attaching session."
+    echo "To kill detached session: tmux kill-session -t $SESSION"
+fi
 
 tmux $ITERM_FLAG -u -2 attach-session -t $SESSION
