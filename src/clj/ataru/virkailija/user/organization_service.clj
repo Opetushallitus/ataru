@@ -65,7 +65,8 @@
     (get groups group-oid (unknown-group group-oid))))
 
 (defn get-direct-organization-oids [organization-service user-name]
-  (ldap-client/get-organization-oids (:ldap-connection organization-service) user-name))
+  ;; TODO THIS NOW RETURNS WRONG KIND OF STUFF
+  (ldap-client/get-right-organization-oids (:ldap-connection organization-service) user-name))
 
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []

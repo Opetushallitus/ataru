@@ -10,17 +10,10 @@
 
 (def right-names (keys rights))
 
-
-(defn- ldap-right-name-from-config [right]
-  (let [name-from-config (-> config :ldap :user-right-names right)]
-    (if (< 0 (count (clojure.string/trim name-from-config)))
-      name-from-config
-      (right rights))))
-
 (s/defschema Right (apply s/enum right-names))
 
 (s/defn ^:always-validate ldap-right [right :- Right]
   (let [name-from-config (-> config :ldap :user-right-names right)]
-    (if (< 0 (count (clojure.string/trim name-from-config)))
+    (if (< 0 (count (clojure.string/trim (or name-from-config ""))))
       name-from-config
       (right rights))))
