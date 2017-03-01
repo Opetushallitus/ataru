@@ -48,7 +48,7 @@
 
           (it "should use ldap module to fetch organization oids"
               (let [org-service-instance (create-org-service-instance)]
-                (should= [test-user1-organization-oid] (.get-direct-organization-oids org-service-instance "testi2editori"))))
+                (should= [test-user1-organization-oid] (org-service/get-direct-organization-oids org-service-instance "testi2editori"))))
 
           (it "Should get all organizations from organization client and cache the result"
               (let [cas-get-call-count (atom 0)]
@@ -65,14 +65,14 @@
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-organization]
                 (let [org-service-instance (create-org-service-instance)]
                   (should= [telajarvi-org]
-                           (.get-direct-organizations org-service-instance "testi2editori")))))
+                           (org-service/get-direct-organizations org-service-instance "testi2editori")))))
 
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group
                             ldap/search                      fake-ldap-search-orgs-and-groups]
                 (let [org-service-instance (create-org-service-instance)
                       expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}
-                      expected-result      (.get-direct-organizations org-service-instance "user-name")]
+                      expected-result      (org-service/get-direct-organizations org-service-instance "user-name")]
                   (should=
                    [telajarvi-org expected-group]
                    expected-result)

@@ -19,9 +19,6 @@
   for passing stateful services to the stateless ldap and
   organization clients. Can also be switched to a test-double
   when needed."
-  (get-direct-organization-oids [this user-name]
-    "Gets this user's direct organization ids (oids) which are connected to the
-     required user-right (see ldap-client/user-right-name)")
   (get-direct-organizations [this user-name]
     "Gets this user's direct organizations (as in get-direct-organization-oids
      but gets organization name as well)")
@@ -67,13 +64,13 @@
   (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
     (get groups group-oid (unknown-group group-oid))))
 
+(defn get-direct-organization-oids [organization-service user-name]
+  (ldap-client/get-organization-oids (:ldap-connection organization-service) user-name))
+
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
   OrganizationService
-
-  (get-direct-organization-oids [this user-name]
-    (ldap-client/get-organization-oids (:ldap-connection this) user-name))
 
   (get-direct-organizations [this user-name]
     (let [direct-oids                  (get-direct-organization-oids this user-name)
@@ -114,8 +111,6 @@
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
-
-  (get-direct-organization-oids [this user-name] (:oid (first fake-orgs)))
   (get-direct-organizations [this user-name] fake-orgs)
   (get-all-organizations [this root-orgs] fake-orgs))
 
