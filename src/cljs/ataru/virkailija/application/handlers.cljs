@@ -10,11 +10,12 @@
   :application/select-application
   (fn [{:keys [db]} [_ application-key]]
     (if (not= application-key (get-in db [:application :selected-key]))
-      (-> {:db db}
-          (assoc-in [:db :application :selected-key] application-key)
-          (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc-in [:db :application :form-list-expanded?] false)
-          (assoc :dispatch [:application/fetch-application application-key])))))
+      (let [db (-> db
+                   (assoc-in [:application :selected-key] application-key)
+                   (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :form-list-expanded?] false))]
+        {:db       db
+         :dispatch [:application/fetch-application application-key]}))))
 
 (reg-event-fx
   :application/close-application
