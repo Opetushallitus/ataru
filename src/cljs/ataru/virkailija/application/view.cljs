@@ -10,7 +10,7 @@
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
-    [ataru.application-common.application-readonly :as readonly-contents]
+    [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
     [taoensso.timbre :refer-macros [spy debug]]
     [ataru.application-common.koulutus :as koulutus]))
