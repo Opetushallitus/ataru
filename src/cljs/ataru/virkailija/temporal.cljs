@@ -18,7 +18,7 @@
   (days-finnish dow))
 
 (defn with-dow [google-date]
-  (days-finnish (.getDay google-date)))
+  (days-finnish (.getDay (c/to-default-time-zone google-date))))
 
 (defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 

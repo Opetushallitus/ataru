@@ -18,4 +18,10 @@
                                    :en "Remove row"}
    :add-more                      {:fi "Lisää..."
                                    :sv "Lägg till..."
-                                   :en "Add more..."}})
+                                   :en "Add more..."}
+   :cannot-edit-personal-info     {:fi "Jos haluat muuttaa henkilötietojasi, ota yhteyttä hakemaasi oppilaitokseen."
+                                   :en "To update your personal information, please contact the institution you're applying to."
+                                   :sv "Om du vill ändra dina kontaktuppgifter, ta då kontakt med den läroanstalt som du har sökt till."}
+   :not-edited                    {:fi "(ei muokattu)"
+                                   :en "(unchanged)"
+                                   :sv "(inte redigerat)"}})

@@ -132,18 +132,19 @@
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
-(s/defschema Answer {:key                    s/Str,
-                     :value                  (s/cond-pre s/Str
-                                                         s/Int
-                                                         [s/Str])
-                     :fieldType              (apply s/enum ["textField"
-                                                            "textArea"
-                                                            "dropdown"
-                                                            "multipleChoice"
-                                                            "singleChoice"])
-                     (s/optional-key :label) (s/maybe (s/cond-pre
-                                                        LocalizedString
-                                                        s/Str))})
+(s/defschema Answer {:key                          s/Str,
+                     :value                        (s/cond-pre s/Str
+                                                               s/Int
+                                                               [s/Str])
+                     :fieldType                    (apply s/enum ["textField"
+                                                                  "textArea"
+                                                                  "dropdown"
+                                                                  "multipleChoice"
+                                                                  "singleChoice"])
+                     (s/optional-key :cannot-edit) s/Bool
+                     (s/optional-key :label)       (s/maybe (s/cond-pre
+                                                              LocalizedString
+                                                              s/Str))})
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo

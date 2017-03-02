@@ -13,9 +13,9 @@
    :application-edited-text       {:fi "Hakemuksesi on päivitetty."
                                    :en "Your application has been updated."
                                    :sv "Din ansökan har uppdaterats."}
-   :modify-link-text              {:fi "Allaolevan linkin kautta voit katsella ja muokata hakemustasi."
-                                   :en "You can view and modify your application using the link below."
-                                   :sv "Du kan se och redigera din ansökan via länken nedan."}
+   :modify-link-text              {:fi "Ylläolevan linkin kautta voit katsella ja muokata hakemustasi."
+                                   :en "You can view and modify your application using the link above."
+                                   :sv "Du kan se och redigera din ansökan via länken ovan."}
    :best-regards                  {:fi "terveisin"
                                    :sv "Med vänliga hälsningar"
                                    :en "Best Regards"}
