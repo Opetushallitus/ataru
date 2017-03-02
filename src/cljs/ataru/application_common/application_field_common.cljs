@@ -29,7 +29,6 @@
     (cond
       (contains? field-descriptor :koodisto-source)
       (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
-        (println "values" values)
         (if (= (count values) 1)
           (first values)
           [:ul.application__form-field-list
