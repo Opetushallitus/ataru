@@ -4,10 +4,14 @@
             [reagent.ratom :refer-macros [reaction]]
             [cemerick.url :as url]
             [cljs.core.match :refer-macros [match]]
-            [ataru.application-common.application-field-common :refer [answer-key
-                                                                       required-hint
-                                                                       textual-field-value
-                                                                       scroll-to-anchor]]
+            [ataru.translations.translation-util :refer [get-translations]]
+            [ataru.translations.application-view :refer [application-view-translations]]
+            [ataru.application-common.application-field-common
+             :refer
+             [answer-key
+              required-hint
+              textual-field-value
+              scroll-to-anchor]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -31,7 +35,8 @@
 
 (defn- field-value-valid?
   [field-data value]
-  (if (not-empty (:validators field-data))
+  (if (and (not (:cannot-edit field-data))
+           (not-empty (:validators field-data)))
     (every? true? (map #(validator/validate % value)
                     (:validators field-data)))
     true))
@@ -84,8 +89,9 @@
   (let [words   (for [word (clojure.string/split text #"\s")
                       :let [as-url (url/url word)]]
                   (if (not-empty (:host as-url))
-                    [:a {:key  (str as-url)
-                         :href (str as-url)}
+                    [:a {:key    (str as-url)
+                         :href   (str as-url)
+                         :target "_blank"}
                      (:host as-url)]
                     (if (empty? word)
                       [:br]
@@ -151,7 +157,7 @@
               [:div.application__form-text-input-info-text
                [info-text field-descriptor]]]
         (cons
-          (let [{:keys [value valid]} (first @values)]
+         (let [{:keys [value valid]} (first @values)]
             [:div
              [:input.application__form-text-input
               {:type      "text"
@@ -163,37 +169,34 @@
                              (dispatch [:application/remove-repeatable-application-field-value id 0]))
                :on-change (partial on-change 0)}]])
           (map-indexed
-            (let [first-is-empty? (empty? (first (map :value @values)))]
-              (fn [idx {:keys [value last?]}]
-                (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
+           (let [first-is-empty? (empty? (first (map :value @values)))
+                 translations    (get-translations (keyword @lang) application-view-translations)]
+             (fn [idx {:keys [value last?]}]
+               (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
                   [:div.application__form-repeatable-text-wrap
                    [:input.application__form-text-input
                     (merge
-                      {:type      "text"
-                       ; prevent adding second answer when first is empty
-                       :disabled  (and last? first-is-empty?)
-                       :class     (str
-                                    size-class " application__form-text-input--normal"
-                                    (when-not value " application__form-text-input--disabled"))
-                       :value     value
-                       :on-blur   #(when (and
-                                           (not last?)
-                                           (empty? (-> % .-target .-value)))
-                                     (clicky))
-                       :on-change (partial on-change (inc idx))}
+                     {:type      "text"
+                                        ; prevent adding second answer when first is empty
+                      :disabled  (and last? first-is-empty?)
+                      :class     (str
+                                  size-class " application__form-text-input--normal"
+                                  (when-not value " application__form-text-input--disabled"))
+                      :value     value
+                      :on-blur   #(when (and
+                                         (not last?)
+                                         (empty? (-> % .-target .-value)))
+                                    (clicky))
+                      :on-change (partial on-change (inc idx))}
                       (when last?
                         {:placeholder
-                         (case @lang
-                           :en "Add more..."
-                           :sv "Lägg till..."
-                           ;fi
-                           "Lisää...")}))]
+                         (:add-more translations)}))]
                    (when value
                      [:a.application__form-repeatable-text--addremove
                       {:on-click clicky}
                       [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))
             (concat (rest @values)
-              [{:value nil :valid true :last? true}])))))))
+                    [{:value nil :valid true :last? true}])))))))
 
 (defn- text-area-size->class [size]
   (match size
@@ -225,6 +228,7 @@
     (fn [field-descriptor children]
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
+
         [:div.application__wrapper-element.application__wrapper-element--border
          [:div.application__wrapper-heading
           [:h2 label]
@@ -481,8 +485,9 @@
   (let [language   (subscribe [:application/form-language])
         row-amount (subscribe [:application/adjacent-field-row-amount field-descriptor])]
     (fn [field-descriptor]
-      (let [row-amount @row-amount
-            child-ids  (map (comp keyword :id) (:children field-descriptor))]
+      (let [row-amount   @row-amount
+            child-ids    (map (comp keyword :id) (:children field-descriptor))
+            translations (get-translations (keyword @language) application-view-translations)]
         [:div.application__form-field
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
@@ -505,14 +510,30 @@
                          [:a {:on-click (fn remove-adjacent-text-field [event]
                                           (.preventDefault event)
                                           (dispatch [:application/remove-adjacent-field field-descriptor row-idx]))}
-                          [:span.application__form-adjacent-row--mobile-only "Poista rivi"]
+                          [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])
            [:a.application__form-add-new-row
             {:on-click (fn add-adjacent-text-field [event]
                          (.preventDefault event)
                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
-            [:i.zmdi.zmdi-plus-square] " Lisää rivi"])]))))
+            [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
+
+(defn- editing-forbidden-module
+  [field-descriptor]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
+    (fn [field-descriptor]
+      (let [label   (non-blank-val (get-in field-descriptor [:label @lang])
+                                   (get-in field-descriptor [:label @default-lang]))
+            content (:cannot-edit-personal-info (get-translations @lang application-view-translations))]
+        [:div.application__wrapper-element.application__wrapper-element--border
+         [:div.application__wrapper-heading
+          [:h2 label]
+          [scroll-to-anchor field-descriptor]]
+          [:div.application__wrapper-contents
+           [:div.application__form-info-element.application__form-field
+            [:span content]]]]))))
 
 (defn- feature-enabled? [{:keys [fieldType]}]
   (or (not= fieldType "attachment")
@@ -521,32 +542,35 @@
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
+        editing? (subscribe [:state-query [:application :editing?]])
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
       (if (feature-enabled? field-descriptor)
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-          (cond-> (match field-descriptor
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "fieldset"
-                          :children   children} [wrapper-field field-descriptor children]
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "rowcontainer"
-                          :children   children} [row-wrapper children]
-                         {:fieldClass "formField"
-                          :id         (_ :guard (complement visible?))} [:div]
-                         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
-                         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
-                         {:fieldClass "infoElement"} [info-element field-descriptor]
-                         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-            (and (empty? (:children field-descriptor))
-                 (visible? (:id field-descriptor))) (into args)))
-      [:div]))))
+          (if (and @editing? (= (:module field-descriptor) "person-info"))
+            [editing-forbidden-module field-descriptor]
+            (cond-> (match field-descriptor
+                           {:fieldClass "wrapperElement"
+                            :fieldType  "fieldset"
+                            :children   children} [wrapper-field field-descriptor children]
+                           {:fieldClass "wrapperElement"
+                            :fieldType  "rowcontainer"
+                            :children   children} [row-wrapper children]
+                           {:fieldClass "formField"
+                            :id         (_ :guard (complement visible?))} [:div]
+                           {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
+                           {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
+                           {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                           {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                           {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                           {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                           {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                           {:fieldClass "infoElement"} [info-element field-descriptor]
+                           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
+              (and (empty? (:children field-descriptor))
+                   (visible? (:id field-descriptor))) (into args))))
+        [:div]))))
 
 (defn editable-fields [form-data]
   (when form-data

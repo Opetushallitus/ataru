@@ -76,7 +76,11 @@
     e.g. (cache-put :hakukohde objectid-of-hakukohde {...}")
   (cache-get-or-fetch [this cache key get-fn]
     "Get cached item or invoke get-fn to store & return
-    e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"))
+    e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)")
+  (cache-remove [this cache key]
+    "Clears given entry in given cache")
+  (cache-clear [this cache]
+    "Clears all entries of given cache"))
 
 (defn- get-cached-map [component cache]
   "Only allow access to preconfigured maps"
@@ -111,7 +115,13 @@
         (do
           (cache-put component cache key new-value)
           new-value)
-        (warn "Could not fetch value for cache" cache key)))))
+        (warn "Could not fetch value for cache" cache key))))
+
+  (cache-remove [component cache key]
+    (.remove (get-cached-map component cache) key))
+
+  (cache-clear [component cache]
+    (.clear (get-cached-map component cache))))
 
 (defn new-cache-service
   []

@@ -7,23 +7,18 @@
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.background-jobs.email-job :as email-job]
+    [ataru.translations.translation-util :refer [get-translations]]
     [ataru.translations.email-confirmation :as translations]
     [oph.soresu.common.config :refer [config]]))
-
-(defn- get-translations [lang]
-  (clojure.walk/prewalk (fn [x]
-                          (cond-> x
-                            (and (map? x)
-                                 (contains? x lang))
-                            (get lang)))
-                        translations/email-confirmation-translations))
 
 (defn- get-differing-translations [raw-translations translation-mappings]
   (into {} (map (fn [[key value]] [value (key raw-translations)]) translation-mappings)))
 
 (defn create-email [application-id translation-mappings]
   (let [application      (application-store/get-application application-id)
-        raw-translations (get-translations (keyword (:lang application)))
+        raw-translations (get-translations
+                          (keyword (:lang application))
+                          translations/email-confirmation-translations)
         translations     (merge
                            raw-translations
                            (get-differing-translations raw-translations translation-mappings))

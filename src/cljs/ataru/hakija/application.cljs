@@ -57,21 +57,23 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values]}] (remove-invisible-followup-values answers flat-form-map ui)
-          :let [field-map  (get flat-form-map (name ans-key))
-                field-type (:fieldType field-map)
-                label      (:label field-map)]
+    (for [[ans-key {:keys [value values cannot-edit]}] (remove-invisible-followup-values answers flat-form-map ui)
+          :let [field-map    (get flat-form-map (name ans-key))
+                field-type   (:fieldType field-map)
+                label        (:label field-map)]
           :when (or
                   values
+                  cannot-edit
                   ; permit empty dropdown values, because server side validation expects to match form fields to answers
                   (and (empty? value) (= "dropdown" field-type))
                   (and (not-empty value) (not (:exclude-from-answers field-map))))]
-      {:key       (name ans-key)
-       :value     (or
-                    value
-                    (map (partial value->str field-map) values))
-       :fieldType field-type
-       :label     label})))
+      (cond-> {:key       (name ans-key)
+               :value     (or
+                            value
+                            (map (partial value->str field-map) values))
+               :fieldType field-type
+               :label     label}
+        cannot-edit (assoc :cannot-edit true)))))
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]

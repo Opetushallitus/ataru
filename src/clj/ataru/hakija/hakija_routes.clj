@@ -33,14 +33,16 @@
   (true? deleted))
 
 (defn- get-application [secret]
-  (let [application (application-store/get-latest-application-by-secret secret)]
+  (let [application (-> secret
+                        (application-store/get-latest-application-by-secret)
+                        (application-service/remove-person-info-module-from-application-answers))]
     (if application
       (do
         (info (str "Getting application " (:id application) " with answers"))
         (response/ok application))
       (do
         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
-        (response/not-found)))))
+        (response/not-found {})))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)

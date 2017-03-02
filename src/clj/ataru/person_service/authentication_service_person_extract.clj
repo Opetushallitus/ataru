@@ -1,17 +1,11 @@
-(ns ataru.person-service.authentication-service-person-extract)
+(ns ataru.person-service.authentication-service-person-extract
+  (:require [ataru.person-service.birth-date-converter :refer [convert-birth-date]]))
 
 (defn- extract-field [{:keys [answers]} field]
   (some (fn [{:keys [key value]}]
           (when (= key field)
             value))
         answers))
-
-(def finnish-date-regex #"(\d{2})\.(\d{2})\.(\d{4})")
-
-(defn- convert-birth-date [finnish-format-date]
-  {:post [(not= % "--")]} ;; When no match for finnish date, this would result in "--"
-  (let [[_ day month year] (re-find finnish-date-regex finnish-format-date)]
-    (str year "-" month "-" day)))
 
 (defn- extract-birth-date [application]
   (let [finnish-format-date (extract-field application "birth-date")]
