@@ -164,7 +164,7 @@
         (-> db
           (update-application-details application-response)
           (start-application-review-autosave))))
-    (assoc db [:application :review-autosave] nil)))
+    (assoc-in db [:application :review-autosave] nil)))
 
 (reg-event-db
   :application/search-form-list
