@@ -14,8 +14,9 @@
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
                    (assoc-in [:application :form-list-expanded?] false))]
-        {:db       db
-         :dispatch [:application/fetch-application application-key]}))))
+        {:db         db
+         :dispatch-n [[:application/stop-autosave]
+                      [:application/fetch-application application-key]]}))))
 
 (reg-event-fx
   :application/close-application
@@ -152,12 +153,12 @@
                                                                                         :score
                                                                                         :state])}))})))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-fetch-application
-  (fn [db [_ response]]
-    (-> db
-        (update-application-details response)
-        (start-application-review-autosave))))
+  (fn [{:keys [db]} [_ response]]
+    (let [db (update-application-details db response)]
+      {:db       db
+       :dispatch [:application/start-autosave]})))
 
 (reg-event-fx
   :application/fetch-application
@@ -169,6 +170,18 @@
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
               :handler-or-dispatch :application/handle-fetch-application}})))
+
+(reg-event-db
+  :application/start-autosave
+  (fn [db _]
+    (start-application-review-autosave db)))
+
+(reg-event-fx
+  :application/stop-autosave
+  (fn [{:keys [db]} _]
+    (let [autosave (get-in db [:application :review-autosave])]
+      (cond-> {:db db}
+        (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
   :application/search-form-list
