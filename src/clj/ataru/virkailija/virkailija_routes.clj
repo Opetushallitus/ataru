@@ -16,6 +16,7 @@
             [ataru.haku.haku-access-control :as access-controlled-haku]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
+            [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -91,15 +92,13 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn- organizations [session] (-> session :identity :organizations))
-
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
                  (api/GET "/user-info" {session :session}
                           (ok {:username (-> session :identity :username)
-                               :organizations (organizations session)}))
+                               :organizations (organization-list session)}))
 
                  (api/GET "/forms" {session :session}
                    :query-params [{include-deleted :- s/Bool false}]

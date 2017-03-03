@@ -45,3 +45,19 @@
          (some %)
          boolean))
    (fn [] true)))
+
+(defn organization-list
+  "Returns a flattened list of organizations with the user rights attached to the orgs"
+  [session]
+  (vals
+   (reduce
+    (fn [acc [k vs]]
+      (reduce
+       (fn [acc' v]
+         (let [oid    (:oid v)
+               oid-kw (keyword oid)]
+           (if (oid-kw acc)
+             (update-in acc' [oid-kw :rights] conj k)
+             (assoc acc' oid-kw (merge v {:rights [k]})))))
+       acc vs))
+    {} (right-organizations session))))
