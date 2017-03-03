@@ -40,12 +40,12 @@
       [right oids])))
 
 (defn user->right-organization-oids
-  [user & rights]
+  [user rights]
   {:pre [(< 0 (count rights))]}
   (let [description-seq (get-description-seq user)]
     (into {} (map #(get-organization-oids-for-right % description-seq) rights))))
 
-(defn get-right-organization-oids [connection user-name & rights]
+(defn get-right-organization-oids [connection user-name rights]
   (user->right-organization-oids (get-user connection user-name) rights))
 
 

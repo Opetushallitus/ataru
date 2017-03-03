@@ -6,6 +6,7 @@
    [ataru.virkailija.user.ldap-client :as ldap-client]
    [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]
+   [medley.core :refer [map-kv]]
    [ataru.virkailija.user.organization-client :as org-client]))
 
 (def all-orgs-cache-time-to-live (* 2 60 1000))
@@ -19,7 +20,7 @@
   for passing stateful services to the stateless ldap and
   organization clients. Can also be switched to a test-double
   when needed."
-  (get-direct-organizations [this user-name]
+  (get-direct-organizations-for-rights [this user-name rights]
     "Gets this user's direct organizations (as in get-direct-organization-oids
      but gets organization name as well)")
   (get-all-organizations [this direct-organizations-for-user]
@@ -64,29 +65,29 @@
   (let [groups (get-groups-from-cache-or-client group-cache cas-client)]
     (get groups group-oid (unknown-group group-oid))))
 
-(defn get-direct-organization-oids [organization-service user-name]
-  ;; TODO THIS NOW RETURNS WRONG KIND OF STUFF
-  (ldap-client/get-right-organization-oids (:ldap-connection organization-service) user-name))
+(defn get-organizations-for-oids [organization-service organization-oids]
+  (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
+        ;; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
+        normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client organization-service) %)
+                                                       normal-org-oids))
+        groups                       (map (partial
+                                           get-group
+                                           (:group-cache organization-service)
+                                           (:cas-client organization-service))
+                                          group-oids)]
+      (concat normal-orgs groups)))
 
 ;; The real implementation for Organization service
 (defrecord IntegratedOrganizationService []
   component/Lifecycle
   OrganizationService
 
-  (get-direct-organizations [this user-name]
-    (let [direct-oids                  (get-direct-organization-oids this user-name)
-          [group-oids normal-org-oids] ((juxt filter remove) group-oid? direct-oids)
-          normal-orgs                  (remove nil? (map #(org-client/get-organization (:cas-client this) %) normal-org-oids))
-          groups                       (map (partial
-                                             get-group
-                                             (:group-cache this)
-                                             (:cas-client this))
-                                            group-oids)]
-                                        ; OPH org doesn't exist in organization service, hence we'll have to filter out nil values
-      (concat normal-orgs groups)))
+  (get-direct-organizations-for-rights [this user-name rights]
+    (let [direct-right-oids (ldap-client/get-right-organization-oids (:ldap-connection this) user-name rights)]
+      (map-kv (fn [right org-oids] [right (get-organizations-for-oids this org-oids)]) direct-right-oids)))
 
-  (get-all-organizations [this direct-organizations-for-user]
-    (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations-for-user)
+  (get-all-organizations [this direct-organizations]
+    (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations)
           ;; Only fetch hierarchy for actual orgs, not groups:
           flattened-hierarchy (get-orgs-from-cache-or-client
                                (:all-orgs-cache this)
@@ -112,7 +113,7 @@
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
-  (get-direct-organizations [this user-name] fake-orgs)
+  (get-direct-organizations-for-rights [this user-name rights] fake-orgs)
   (get-all-organizations [this root-orgs] fake-orgs))
 
 (defn new-organization-service []

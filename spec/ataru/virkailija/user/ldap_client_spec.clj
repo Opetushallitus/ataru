@@ -20,12 +20,12 @@
           (it "gets correct organization OID for the user right we require"
               (let [right-org-oids (ldap/user->right-organization-oids
                                     test-user1
-                                    :form-edit
-                                    :view-applications
-                                    :edit-applications)]
+                                    [:form-edit
+                                     :view-applications
+                                     :edit-applications])]
                 (should= {:form-edit [test-user1-organization-oid]
                           :view-applications ["1.2.246.562.9.9999"]}
                          right-org-oids)))
           (it "gets empty organization seq when no match is found"
-              (let [org-oids (ldap/user->right-organization-oids test-user2 :form-edit)]
+              (let [org-oids (ldap/user->right-organization-oids test-user2 [:form-edit])]
                 (should= {} org-oids))))

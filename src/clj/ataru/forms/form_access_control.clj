@@ -7,21 +7,23 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn form-allowed-by-key? [form-key session organization-service]
+(defn form-allowed-by-key? [form-key session organization-service right]
   (session-orgs/organization-allowed?
    session
    organization-service
-   (fn [] (form-store/get-organization-oid-by-key form-key))))
+   (fn [] (form-store/get-organization-oid-by-key form-key))
+   right))
 
 (defn form-allowed-by-id?
   "id identifies a version of the form"
-  [form-id session organization-service]
+  [form-id session organization-service right]
   (session-orgs/organization-allowed?
    session
    organization-service
-   (fn [] (form-store/get-organization-oid-by-id form-id))))
+   (fn [] (form-store/get-organization-oid-by-id form-id))
+   right))
 
-(defn- check-authorization [form session organization-service do-fn]
+(defn- check-edit-authorization [form session organization-service do-fn]
   (let [user-name     (-> session :identity :username)
         organizations (-> session :identity :organizations)
         org-count     (count organizations)]
@@ -41,7 +43,11 @@
                                              (str " " (vec organizations))))))
 
       ;The potentially new organization for form is not allowed for user
-      (not (session-orgs/organization-allowed? session organization-service (:organization-oid form)))
+      (not (session-orgs/organization-allowed?
+            session
+            organization-service
+            (:organization-oid form)
+            :form-edit))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "
                    (:organization-oid form)
@@ -55,7 +61,7 @@
   (let [organization-oids (map :oid (-> session :identity :organizations))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
-    (check-authorization
+    (check-edit-authorization
      form-with-org
      session
      organization-service
@@ -67,7 +73,7 @@
 
 (defn delete-form [form-id session organization-service]
   (let [form (form-store/fetch-latest-version form-id)]
-    (check-authorization form session organization-service
+    (check-edit-authorization form session organization-service
       (fn []
         (form-store/create-form-or-increment-version!
          (assoc form :deleted true))))))
@@ -87,6 +93,7 @@
   {:forms (->> (session-orgs/run-org-authorized
                 session
                 organization-service
+                :form-edit
                 vector
                 #(form-store/get-forms include-deleted? %)
                 #(form-store/get-all-forms include-deleted?))

@@ -1,25 +1,23 @@
 (ns ataru.virkailija.user.session-organizations
   (:require
-   [ataru.virkailija.user.organization-client :as organization-client]))
+   [schema.core :as s]
+   [ataru.virkailija.user.organization-client :as organization-client]
+   [ataru.virkailija.user.user-rights :refer [Right]]))
 
-(defn- organizations [session] (-> session :identity :organizations))
+(defn- right-organizations [session] (-> session :identity :user-right-organizations))
 
 (defn- all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))
 
-(defn get-all-organization-oids
-  "Gives all the organization oids allowed for user's session
-   (including subhierarchy)"
-  [session organization-service]
-  (all-org-oids organization-service (organizations session)))
-
 (defn run-org-authorized [session
                           organization-service
+                          right
                           when-no-orgs-fn
                           when-ordinary-user-fn
                           when-superuser-fn]
-  (let [organizations     (organizations session)
+  {:pre [(s/validate Right right)]}
+  (let [organizations     (right (right-organizations session))
         organization-oids (map :oid organizations)]
     (cond
       (empty? organizations)
@@ -33,10 +31,12 @@
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
-  [session organization-service organization-oid-handle]
+  [session organization-service organization-oid-handle right]
+  {:pre [(s/validate Right right)]}
   (run-org-authorized
    session
    organization-service
+   right
    (fn [] false)
    #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
                                (organization-oid-handle)
