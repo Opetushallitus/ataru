@@ -1,4 +1,4 @@
-(ns ataru.hakija.upload-store
+(ns ataru.files.file-store
   (:require [oph.soresu.common.config :refer [config]]
             [org.httpkit.client :as http]
             [cheshire.core :as json]))
