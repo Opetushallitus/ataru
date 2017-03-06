@@ -59,7 +59,7 @@
         (println (:organizations@user-info))
         (let [org-count      (count (:organizations @user-info))
               org-labels     (create-org-labels (:organizations @user-info))
-              joint-orgs-str (string/join "; " org-labels)
+              joint-orgs-str (string/join " \n" org-labels)
               org-str        (cond
                                (= 0 org-count) "Ei organisaatiota"
                                (< 1 org-count) "Useita organisaatioita"
