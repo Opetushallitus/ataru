@@ -10,6 +10,14 @@
   (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))
 
+(defn select-organizations-for-rights [session rights]
+  (let [right-orgs (right-organizations session)]
+    (->> rights
+         (map #(get right-orgs %))
+         (remove nil?)
+         flatten
+         distinct)))
+
 (defn run-org-authorized [session
                           organization-service
                           right
