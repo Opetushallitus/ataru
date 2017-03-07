@@ -15,7 +15,7 @@
     (session-orgs/organization-allowed?
       session
       organization-service
-      right
+      [right]
       #(application-store/get-application-organization-oid application-key))
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
 
@@ -25,7 +25,7 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   :view-applications
+   [:view-applications]
    empty-applications-result-fn
    #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
@@ -34,7 +34,7 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   :view-applications
+   [:view-applications]
    empty-applications-result-fn
    #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))

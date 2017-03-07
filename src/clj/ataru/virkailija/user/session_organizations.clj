@@ -10,8 +10,10 @@
   (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))
 
+(defn right-seq? [val] (s/validate [Right] val))
+
 (defn select-organizations-for-rights [session rights]
-  {:pre [(s/validate [Right] rights)]}
+  {:pre [(right-seq? rights)]}
   (let [right-orgs (right-organizations session)]
     (->> rights
          (map #(get right-orgs %))
@@ -21,12 +23,12 @@
 
 (defn run-org-authorized [session
                           organization-service
-                          right
+                          rights
                           when-no-orgs-fn
                           when-ordinary-user-fn
                           when-superuser-fn]
-  {:pre [(s/validate Right right)]}
-  (let [organizations     (right (right-organizations session))
+  {:pre [(right-seq? rights)]}
+  (let [organizations     (select-organizations-for-rights session rights)
         organization-oids (map :oid organizations)]
     (cond
       (empty? organizations)
@@ -40,12 +42,12 @@
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
-  [session organization-service organization-oid-handle right]
-  {:pre [(s/validate Right right)]}
+  [session organization-service organization-oid-handle rights]
+  {:pre [(right-seq? rights)]}
   (run-org-authorized
    session
    organization-service
-   right
+   rights
    (fn [] false)
    #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
                                (organization-oid-handle)

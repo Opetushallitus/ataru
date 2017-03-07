@@ -12,7 +12,7 @@
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-key form-key))
-   right))
+   [right]))
 
 (defn form-allowed-by-id?
   "id identifies a version of the form"
@@ -21,16 +21,21 @@
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-id form-id))
-   right))
+   [right]))
+
+(defn get-organizations-with-edit-rights [session]
+  (-> session
+      :identity
+      :user-right-organizations
+      :form-edit))
 
 (defn- check-edit-authorization [form session organization-service do-fn]
   (let [user-name     (-> session :identity :username)
-        organizations (-> session :identity :organizations)
-        org-count     (count organizations)]
+        organizations (get-organizations-with-edit-rights session)]
     (cond
       (and
        (:id form) ; Updating, since form already has id
-       (not (form-allowed-by-id? (:id form) session organization-service)))
+       (not (form-allowed-by-id? (:id form) session organization-service :form-edit)))
       (throw (user-feedback-exception
                (str "Ei oikeutta lomakkeeseen "
                     (:id form)
@@ -47,7 +52,7 @@
             session
             organization-service
             (:organization-oid form)
-            :form-edit))
+            [:form-edit]))
       (throw (user-feedback-exception
               (str "Ei oikeutta organisaatioon "
                    (:organization-oid form)
@@ -58,7 +63,7 @@
       (do-fn))))
 
 (defn post-form [form session organization-service]
-  (let [organization-oids (map :oid (-> session :identity :organizations))
+  (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
     (check-edit-authorization
@@ -93,7 +98,7 @@
   {:forms (->> (session-orgs/run-org-authorized
                 session
                 organization-service
-                :form-edit
+                [:form-edit :view-applications]
                 vector
                 #(form-store/get-forms include-deleted? %)
                 #(form-store/get-all-forms include-deleted?))
