@@ -11,6 +11,7 @@
         (map :oid all-organizations)))
 
 (defn select-organizations-for-rights [session rights]
+  {:pre [(s/validate [Right] rights)]}
   (let [right-orgs (right-organizations session)]
     (->> rights
          (map #(get right-orgs %))
