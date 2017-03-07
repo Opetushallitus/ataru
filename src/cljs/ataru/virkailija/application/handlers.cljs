@@ -154,11 +154,38 @@
                                                                                         :state])}))})))
 
 (reg-event-fx
+  :application/handle-fetch-application-attachment-metadata
+  (fn [{:keys [db]} [_ response]]
+    (let [db (reduce (fn [db {:keys [key] :as metadata}]
+                       (assoc-in db [:application :attachments (keyword key)] metadata))
+                     db
+                     response)]
+      {:db       db
+       :dispatch [:application/start-autosave]})))
+
+(reg-event-fx
+  :application/fetch-application-attachment-metadata
+  (fn [{:keys [db]} _]
+    (let [query-part (->> (get-in db [:application :selected-application-and-form :application :answers])
+                          (filter (comp (partial = "attachment") :fieldType second))
+                          (map (comp :value second))
+                          (flatten)
+                          (map-indexed (fn [idx key]
+                                         (let [separator (if (= idx 0) "?" "&")]
+                                           (str separator "key=" key))))
+                          (clojure.string/join))
+          path       (str "/lomake-editori/api/files" query-part)]
+      {:db       db
+       :http     {:method              :get
+                  :path                path
+                  :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
+
+(reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [db (update-application-details db response)]
       {:db       db
-       :dispatch [:application/start-autosave]})))
+       :dispatch [:application/fetch-application-attachment-metadata]})))
 
 (reg-event-fx
   :application/fetch-application

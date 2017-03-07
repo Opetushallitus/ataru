@@ -28,14 +28,16 @@
 
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))
-        values     (get-in application [:answers answer-key :values])]
+        values     (get-in application [:answers answer-key :value])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      [:div
-      (map (fn [{:keys [value]}]
-             ^{:key (:key value)}
-             [:ul.application__form-field-list (str (:filename value) " (" (size-bytes->str (:size value)) ")")])
+      (map (fn attachment->link [key]
+             ^{:key key}
+             [:ul.application__form-field-list
+              [:a {:href (str "/lomake-editori/files/" key)}
+               key]])
            values)]]))
 
 (declare field)
