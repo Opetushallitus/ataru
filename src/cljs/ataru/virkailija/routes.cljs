@@ -59,7 +59,7 @@
      (fn [forms]
        (let [form (-> forms first val)]
          (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
-         (dispatch [:editor/select-form (:key form)])
+         (dispatch [:application/select-form (:key form)])
          (dispatch [:application/fetch-applications (:key form)])))
      (dispatch [:set-active-panel :application])))
 

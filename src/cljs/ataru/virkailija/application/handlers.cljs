@@ -98,6 +98,11 @@
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
 (reg-event-db
+ :application/select-form
+ (fn [db [_ form-key]]
+   (assoc-in db [:application :selected-form-key] form-key)))
+
+(reg-event-db
   :application/handle-fetch-applications-response
   (fn [db [_ {:keys [applications]}]]
     (-> db

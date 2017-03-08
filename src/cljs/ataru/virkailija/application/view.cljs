@@ -67,7 +67,7 @@
 
 (defn form-list-header []
   (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form-key  (subscribe [:state-query [:editor :selected-form-key]])
+        selected-form-key  (subscribe [:state-query [:application :selected-form-key]])
         forms              (subscribe [:state-query [:application :forms]])
         selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
     (fn []
@@ -143,7 +143,7 @@
       [form-list-column @forms "Lomake (ilman hakukohdetta)" form-url open])))
 
 (defn excel-download-link [applications application-filter]
-  (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
+  (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
         hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
         haku         (reaction @(subscribe [:state-query [:editor :selected-haku]]))
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
