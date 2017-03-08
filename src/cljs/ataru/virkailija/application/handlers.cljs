@@ -202,3 +202,17 @@
   :application/clear-search-term
   (fn [db]
     (assoc-in db [:application :search-term] nil)))
+
+(reg-event-db
+  :application/select-hakukohde
+  (fn [db [_ hakukohde]]
+    (-> db
+        (update-in [:editor] dissoc :selected-form-key :selected-haku)
+        (assoc-in [:editor :selected-hakukohde] hakukohde))))
+
+(reg-event-db
+  :application/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :editor dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:editor :selected-haku] haku))))

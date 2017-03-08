@@ -74,7 +74,7 @@
               (get-in db [:editor :hakukohteet])))
       :handler
       (fn [hakukohde]
-        (dispatch [:editor/select-hakukohde hakukohde])
+        (dispatch [:application/select-hakukohde hakukohde])
         (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)])))
     (dispatch [:set-active-panel :application]))
 
@@ -89,7 +89,7 @@
               (get-in db [:editor :haut])))
       :handler
       (fn [haku]
-        (dispatch [:editor/select-haku haku])
+        (dispatch [:application/select-haku haku])
         (dispatch [:application/fetch-applications-by-haku (:haku haku)])))
     (dispatch [:set-active-panel :application]))
 
