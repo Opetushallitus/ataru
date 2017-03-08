@@ -67,11 +67,12 @@
 
 (defn form-list-header []
   (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form      (subscribe [:editor/selected-form])
+        selected-form-key  (subscribe [:state-query [:editor :selected-form-key]])
+        forms              (subscribe [:state-query [:application :forms]])
         selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
     (fn []
       [:div.application-handling__form-list-header
-       (or (:name @selected-form)
+       (or (:name (get @forms @selected-form-key))
            (:hakukohde-name @selected-hakukohde)
            (:haku-name @selected-haku))])))
 
