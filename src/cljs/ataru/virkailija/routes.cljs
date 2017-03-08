@@ -54,7 +54,7 @@
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
-     (fn [db] (not-empty (get-in db [:editor :forms])))
+     (fn [db] (not-empty (get-in db [:application :forms])))
      :handler
      (fn [forms]
        (let [form (-> forms first val)]
@@ -99,7 +99,7 @@
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
-     (fn [db] (not-empty (get-in db [:editor :forms key])))
+     (fn [db] (not-empty (get-in db [:application :forms key])))
      :handler
      (fn [form]
        (dispatch [:editor/select-form (:key form)])

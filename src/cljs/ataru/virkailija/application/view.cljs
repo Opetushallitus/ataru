@@ -134,7 +134,7 @@
       [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
 
 (defn forms-column [open]
-  (let [forms (reaction (->> @(subscribe [:state-query [:editor :forms]])
+  (let [forms (reaction (->> @(subscribe [:state-query [:application :forms]])
                              (reduce-kv (fn [forms _ form]
                                           (conj forms form))
                                         [])))]

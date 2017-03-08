@@ -5,6 +5,7 @@
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as pm]
@@ -27,24 +28,6 @@
   db)
 
 (reg-event-db :editor/get-user-info get-user-info)
-
-(defn- sorted-by-time-and-deletedness [m]
-  (into (sorted-map-by
-          (fn [k1 k2]
-            (let [v1 (get m k1)
-                  v2 (get m k2)
-                  v1-deleted? (:deleted v1)
-                  v2-deleted? (:deleted v2)
-                  v1-created (:created-time v1)
-                  v2-created (:created-time v2)]
-              (cond
-                (and v1-deleted? (not v2-deleted?)) 1
-                (and v2-deleted? (not v1-deleted?)) -1
-                (and (nil? v1-created) (nil? v2-created)) 0
-                (nil? v2-created) 1
-                (nil? v1-created) -1
-                :else (c/after? v1-created v2-created)))))
-        m))
 
 (defn- remove-nth
   "remove nth elem in vector"
@@ -169,34 +152,20 @@
   (update form :languages
     (partial mapv keyword)))
 
-(defn refresh-forms [path]
+(defn refresh-forms-for-editor []
   (http
    :get
-   path
+   (str "/lomake-editori/api/forms-for-editor")
    (fn [db {:keys [forms]}]
      (assoc-in db [:editor :forms] (->> forms
                                         (mapv languages->kwd)
                                         (util/group-by-first :key)
-                                        (sorted-by-time-and-deletedness))))))
-
-(defn refresh-forms-for-editor []
-  (refresh-forms (str "/lomake-editori/api/forms-for-editor")))
-
-(defn refresh-forms-for-application-listing []
-  (refresh-forms (str "/lomake-editori/api/forms-for-application-listing")))
+                                        (sort-by-time-and-deletedness))))))
 
 (defn hide-remove-confirm-dialog
   [db]
   (-> db
       (update :editor dissoc :show-remove-confirm-dialog?)))
-
-(reg-event-db
-  :editor/refresh-forms-for-application-listing
-  (fn [db _]
-    (when-let [autosave (-> db :editor :autosave)]
-      (autosave/stop-autosave! autosave))
-    (refresh-forms-for-application-listing)
-    (hide-remove-confirm-dialog db)))
 
 (reg-event-db
   :editor/refresh-forms-for-editor
