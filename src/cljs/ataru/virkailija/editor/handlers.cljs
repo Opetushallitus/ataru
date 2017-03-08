@@ -169,18 +169,21 @@
   (update form :languages
     (partial mapv keyword)))
 
-(defn refresh-forms
-  ([include-deleted?]
-   (http
-     :get
-     (str "/lomake-editori/api/forms" (if include-deleted? "?include-deleted=true" ""))
-     (fn [db {:keys [forms]}]
-       (assoc-in db [:editor :forms] (->> forms
-                                          (mapv languages->kwd)
-                                          (util/group-by-first :key)
-                                          (sorted-by-time-and-deletedness))))))
-  ([]
-    (refresh-forms false)))
+(defn refresh-forms [path]
+  (http
+   :get
+   path
+   (fn [db {:keys [forms]}]
+     (assoc-in db [:editor :forms] (->> forms
+                                        (mapv languages->kwd)
+                                        (util/group-by-first :key)
+                                        (sorted-by-time-and-deletedness))))))
+
+(defn refresh-forms-for-editor []
+  (refresh-forms (str "/lomake-editori/api/forms-for-editor")))
+
+(defn refresh-forms-for-application-listing []
+  (refresh-forms (str "/lomake-editori/api/forms-for-application-listing")))
 
 (defn hide-remove-confirm-dialog
   [db]
@@ -188,18 +191,18 @@
       (update :editor dissoc :show-remove-confirm-dialog?)))
 
 (reg-event-db
-  :editor/refresh-forms-with-deleteds
+  :editor/refresh-forms-for-application-listing
   (fn [db _]
     (when-let [autosave (-> db :editor :autosave)]
       (autosave/stop-autosave! autosave))
-    (refresh-forms true)
+    (refresh-forms-for-application-listing)
     (hide-remove-confirm-dialog db)))
 
 (reg-event-db
-  :editor/refresh-forms
+  :editor/refresh-forms-for-editor
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
-    (refresh-forms)
+    (refresh-forms-for-editor)
     (hide-remove-confirm-dialog db)))
 
 (reg-event-db
@@ -209,7 +212,7 @@
       db
       (do
         (autosave/stop-autosave! (-> db :editor :autosave))
-        (refresh-forms)
+        (refresh-forms-for-editor)
         (hide-remove-confirm-dialog db)))))
 
 (reg-event-db
@@ -377,7 +380,7 @@
                  (reset-application-review-state))
          :http {:method              :delete
                 :path                (str "/lomake-editori/api/forms/" form-id)
-                :handler-or-dispatch :editor/refresh-forms}})))
+                :handler-or-dispatch :editor/refresh-forms-for-editor}})))
 
 (reg-event-fx :editor/remove-form remove-form)
 

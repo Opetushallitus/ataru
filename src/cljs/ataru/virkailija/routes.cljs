@@ -35,7 +35,7 @@
   (defroute "/lomake-editori/editor" []
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/select-form nil])
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-for-editor])
     (dispatch [:editor/refresh-forms-in-use]))
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
@@ -49,7 +49,7 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-forms-for-application-listing])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
@@ -65,7 +65,7 @@
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-forms-for-application-listing])
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
@@ -80,7 +80,7 @@
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
     (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-forms-for-application-listing])
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
@@ -94,7 +94,7 @@
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (dispatch [:editor/refresh-forms-with-deleteds])
+    (dispatch [:editor/refresh-forms-for-application-listing])
     (dispatch [:editor/refresh-hakukohteet-from-applications])
     (dispatch [:editor/refresh-haut-from-applications])
     (dispatch-after-state

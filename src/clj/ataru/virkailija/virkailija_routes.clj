@@ -100,11 +100,15 @@
                           (ok {:username (-> session :identity :username)
                                :organizations (organization-list session)}))
 
-                 (api/GET "/forms" {session :session}
-                   :query-params [{include-deleted :- s/Bool false}]
-                   :summary "Return all forms."
+                 (api/GET "/forms-for-editor" {session :session}
+                   :summary "Return forms for editor view"
                    :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms include-deleted session organization-service)))
+                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
+
+                 (api/GET "/forms-for-application-listing" {session :session}
+                   :summary "Return for application viewing purposes"
+                   :return {:forms [ataru-schema/Form]}
+                   (ok (access-controlled-form/get-forms-for-application-listing session organization-service)))
 
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"

@@ -83,24 +83,29 @@
         (form-store/create-form-or-increment-version!
          (assoc form :deleted true))))))
 
-(defn- application-count->form [{:keys [key] :as form} include-deleted?]
-  (let [count-fn          (if include-deleted?
-                            application-store/get-application-count-by-form-key
-                            application-store/get-application-count-with-deleteds-by-form-key)
-        application-count (count-fn key)]
-    (assoc form :application-count application-count)))
+(defn- application-count->form [{:keys [key] :as form}]
+  (assoc form :application-count (application-store/get-application-count-with-deleteds-by-form-key key)))
 
 (defn- deleted-with-applications? [{:keys [application-count deleted]}]
   (or (not deleted)
       (> application-count 0)))
 
-(defn get-forms [include-deleted? session organization-service]
+(defn get-forms-for-editor [session organization-service]
   {:forms (->> (session-orgs/run-org-authorized
                 session
                 organization-service
-                [:form-edit :view-applications]
+                [:form-edit]
                 vector
-                #(form-store/get-forms include-deleted? %)
-                #(form-store/get-all-forms include-deleted?))
-               (map #(application-count->form % include-deleted?))
+                #(form-store/get-forms false %)
+                #(form-store/get-all-forms false)))})
+
+(defn get-forms-for-application-listing [session organization-service]
+  {:forms (->> (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications]
+                vector
+                #(form-store/get-forms true %)
+                #(form-store/get-all-forms true))
+               (map #(application-count->form %))
                (filter deleted-with-applications?))})
