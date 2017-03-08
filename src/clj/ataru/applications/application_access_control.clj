@@ -15,8 +15,8 @@
     (session-orgs/organization-allowed?
       session
       organization-service
-      [right]
-      #(application-store/get-application-organization-oid application-key))
+      #(application-store/get-application-organization-oid application-key)
+      [right])
     (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
 
 (defn- empty-applications-result-fn [] {:applications []})
