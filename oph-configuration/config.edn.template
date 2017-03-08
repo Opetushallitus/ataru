@@ -21,7 +21,8 @@
  :email {:email-service-url "https://{{host_virkailija}}/ryhmasahkoposti-service/email/firewall"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
-                 :environment-name "{{ataru_environment_name}}"}
+                 :environment-name "{{ataru_environment_name}}"
+                 :features {:attachment {{ataru_attachment_support_enabled}}}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
@@ -32,4 +33,5 @@
                     :koulutus-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/"
                     :forms-in-use-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/ataru/all"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
-       :hakija-base-path "{{ataru_hakija_log_path}}"}}
+       :hakija-base-path "{{ataru_hakija_log_path}}"}
+ :liiteri {:url "{{liiteri_url}}"}}

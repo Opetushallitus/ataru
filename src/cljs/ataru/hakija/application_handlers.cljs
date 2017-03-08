@@ -394,3 +394,92 @@
                       (partial set-adjacent-field-validity child-descriptor))))
               db
               children))))
+
+(reg-event-fx
+  :application/add-single-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx file]]
+    (let [name      (.-name file)
+          form-data (doto (js/FormData.)
+                      (.append "file" file name))]
+      {:db   db
+       :http {:method    :post
+              :url       "/hakemus/api/files"
+              :handler   [:application/handle-attachment-upload component-id attachment-idx]
+              :body      form-data}})))
+
+(reg-event-fx
+  :application/add-attachments
+  (fn [{:keys [db]} [_ component-id attachment-count files]]
+    (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
+                                       [:application/add-single-attachment component-id (+ attachment-count idx) file])
+                                     files)
+          db            (as-> db db'
+                              (update-in db' [:application :answers (keyword component-id) :values]
+                                (fn [values]
+                                  (or values [])))
+                              (->> files
+                                   (map-indexed (fn attachment-idx->file [idx file]
+                                                  {:idx (+ attachment-count idx) :file file}))
+                                   (reduce (fn attachment-spec->db [db {:keys [idx file]}]
+                                             (assoc-in db [:application :answers (keyword component-id) :values idx]
+                                               {:value  {:filename     (.-name file)
+                                                         :content-type (.-type file)
+                                                         :size         (.-size file)}
+                                                :valid  false
+                                                :status :uploading}))
+                                           db'))
+                              (assoc-in db' [:application :answers (keyword component-id) :valid] false))]
+      {:db         db
+       :dispatch-n dispatch-list})))
+
+(reg-event-db
+  :application/handle-attachment-upload
+  (fn [db [_ component-id attachment-idx response]]
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+          {:value response :valid true :status :ready})
+        (update-in [:application :answers (keyword component-id)]
+          (fn [{:keys [values] :as component}]
+            (assoc component :valid
+              (every? (comp true? :valid) values)))))))
+
+(reg-event-fx
+  :application/update-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx file]]
+    (let [key       (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
+          form-data (doto (js/FormData.)
+                      (.append "file" file (.-name file)))
+          db        (-> db
+                        (assoc-in [:application :answers (keyword component-id) :valid] false)
+                        (assoc-in [:application :answers (keyword component-id) :values attachment-idx]
+                          {:status :uploading
+                           :valid  false
+                           :value  {:filename     (.-name file)
+                                    :content-type (.-type file)
+                                    :size         (.-size file)}}))]
+      {:db   db
+       :http {:method  :put
+              :url     (str "/hakemus/api/files/" key)
+              :handler [:application/handle-attachment-upload component-id attachment-idx]
+              :body    form-data}})))
+
+(reg-event-db
+  :application/handle-attachment-delete
+  (fn [db [_ component-id attachment-key _]]
+    (update-in db [:application :answers (keyword component-id) :values]
+      (comp vec
+            (partial remove (comp (partial = attachment-key) :key :value))))))
+
+(reg-event-fx
+  :application/remove-attachment
+  (fn [{:keys [db]} [_ component-id attachment-idx]]
+    (let [key (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
+          db  (-> db
+                  (assoc-in [:application :answers (keyword component-id) :valid] false)
+                  (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                    {:status :deleting
+                     :valid  false}))]
+      {:db   db
+       :http {:method  :delete
+              :url     (str "/hakemus/api/files/" key)
+              :handler [:application/handle-attachment-delete component-id key]}})))

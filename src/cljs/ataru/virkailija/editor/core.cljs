@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.core
-  (:require [ataru.virkailija.dev.lomake :as l]
+  (:require [ataru.feature-config :as fc]
+            [ataru.virkailija.dev.lomake :as l]
             [ataru.virkailija.editor.component :as ec]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :as followup]
@@ -19,6 +20,8 @@
         (concat
           [:editor :forms (-> db :editor :selected-form-key) :content]
           path)))))
+
+(defonce attachments-enabled? (fc/feature-enabled? :attachment))
 
 (defn soresu->reagent [content path]
   (let [render-children (fn [children & [new-path]]
@@ -65,6 +68,12 @@
          {:fieldClass "formField"
           :fieldType "singleChoice"}
          [ec/dropdown content path]
+
+         {:fieldClass "formField"
+          :fieldType  "attachment"}
+         (if attachments-enabled?
+           [ec/attachment content path]
+           [:div])
 
          :else (do
                  (error content)

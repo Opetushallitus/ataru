@@ -9,11 +9,10 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log]]
+            [ataru.cljs-util :refer [console-log size-bytes->str]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
-
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
@@ -33,6 +32,18 @@
         cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
         multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
         :else (textual-field-value field-descriptor application :lang lang)))]])
+
+(defn attachment [field-descriptor application lang]
+  (let [answer-key (keyword (answer-key field-descriptor))
+        values     (get-in application [:answers answer-key :values])]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [:div
+      (map (fn [{:keys [value]}]
+             ^{:key (:key value)}
+             [:ul.application__form-field-list (str (:filename value) " (" (size-bytes->str (:size value)) ")")])
+           values)]]))
 
 (declare field)
 
@@ -123,7 +134,8 @@
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType "dropdown" :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

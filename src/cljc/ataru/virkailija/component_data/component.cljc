@@ -84,3 +84,11 @@
    :label      {:fi "" :sv ""}
    :params     {}
    :options    []})
+
+(defn attachment []
+  {:fieldClass "formField"
+   :fieldType  "attachment"
+   :id         (util/component-id)
+   :label      {:fi "" :sv ""}
+   :params     {}
+   :options    []})

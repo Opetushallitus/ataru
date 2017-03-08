@@ -15,7 +15,9 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.cljs-util :as cljs-util]
+            [ataru.feature-config :as fc]))
 
 (declare render-field)
 
@@ -381,6 +383,74 @@
                      label]]))
                (:options field-descriptor))]]))))
 
+(defn attachment-upload [component-id attachment-count]
+  (let [id (str component-id "-upload-button")]
+    [:div.application__form-upload-button-container
+     [:input.application__form-upload-input
+      {:id        id
+       :type      "file"
+       :multiple  "multiple"
+       :on-change (fn [event]
+                    (.preventDefault event)
+                    (let [file-list (or (some-> event .-dataTransfer .-files)
+                                        (.. event -target -files))
+                          files     (->> (.-length file-list)
+                                         (range)
+                                         (map #(.item file-list %)))]
+                      (dispatch [:application/add-attachments component-id attachment-count files])))}]
+     [:label.application__form-upload-label.application__form-upload-label--enabled
+      {:for id}
+      [:i.zmdi.zmdi-cloud-upload]
+      [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
+
+(defn attachment-update [component-id attachment-idx]
+  (let [id-prefix       (str "attachment-" component-id "-" attachment-idx)
+        attachment-spec @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
+        status          (:status attachment-spec)]
+    [:div.application__form-upload-button-container
+     [:input.application__form-upload-input
+      (cond-> {:id        (str id-prefix "-update")
+               :type      "file"
+               :on-change (fn [event]
+                            (.preventDefault event)
+                            (let [file-list (or (some-> event .-dataTransfer .-files)
+                                                (.. event -target -files))
+                                  file      (.item file-list 0)]
+                              (dispatch [:application/update-attachment component-id attachment-idx file])))}
+        (not= status :ready) (assoc :disabled true))]
+     [:label.application__form-upload-label
+      {:for (str id-prefix "-update")
+       :class (if (= status :ready) "application__form-upload-label--enabled" "application__form-upload-label--disabled")}
+      [:span.application__form-upload-button-add-text (str (get-in attachment-spec [:value :filename]) " (" (cljs-util/size-bytes->str (get-in attachment-spec [:value :size])) ")")]]
+     (case status
+       :uploading [:i.zmdi.zmdi-spinner.application__form-upload-status-indicator.application__form-upload-uploading-spinner]
+       :ready [:div
+               [:input.application__form-upload-input
+                {:id       (str id-prefix "-remove")
+                 :type     "button"
+                 :on-click (fn [event]
+                             (.preventDefault event)
+                             (dispatch [:application/remove-attachment component-id attachment-idx]))}]
+               [:label
+                {:for (str id-prefix "-remove")}
+                [:i.zmdi.zmdi-close.application__form-upload-status-indicator]]]
+       nil)]))
+
+(defn attachment [{:keys [id] :as field-descriptor}]
+  (let [language         (subscribe [:application/form-language])
+        text             (reaction (get-in field-descriptor [:params :info-text :value @language]))
+        attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values]])))]
+    (fn [field-descriptor]
+      [:div.application__form-field
+       [label field-descriptor]
+       (when-not (clojure.string/blank? @text)
+         [link-detected-paragraph @text])
+       (->> (range @attachment-count)
+            (map (fn [attachment-idx]
+                   ^{:key (str "attachment-" id "-" attachment-idx)}
+                   [attachment-update id attachment-idx])))
+       [attachment-upload id @attachment-count]])))
+
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
         header   (some-> (get-in field-descriptor [:label @language]))
@@ -465,6 +535,10 @@
            [:div.application__form-info-element.application__form-field
             [:span content]]]]))))
 
+(defn- feature-enabled? [{:keys [fieldType]}]
+  (or (not= fieldType "attachment")
+      (fc/feature-enabled? :attachment)))
+
 (defn render-field
   [field-descriptor & args]
   (let [ui       (subscribe [:state-query [:application :ui]])
@@ -472,28 +546,31 @@
         visible? (fn [id]
                    (get-in @ui [(keyword id) :visible?] true))]
     (fn [field-descriptor & args]
-      (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-        (if (and @editing? (= (:module field-descriptor) "person-info"))
-          [editing-forbidden-module field-descriptor]
-          (cond-> (match field-descriptor
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "fieldset"
-                          :children   children} [wrapper-field field-descriptor children]
-                         {:fieldClass "wrapperElement"
-                          :fieldType  "rowcontainer"
-                          :children   children} [row-wrapper children]
-                         {:fieldClass "formField"
-                          :id         (_ :guard (complement visible?))} [:div]
-                         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
-                         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                         {:fieldClass "infoElement"} [info-element field-descriptor]
-                         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-                  (and (empty? (:children field-descriptor))
-                       (visible? (:id field-descriptor))) (into args)))))))
+      (if (feature-enabled? field-descriptor)
+        (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
+          (if (and @editing? (= (:module field-descriptor) "person-info"))
+            [editing-forbidden-module field-descriptor]
+            (cond-> (match field-descriptor
+                           {:fieldClass "wrapperElement"
+                            :fieldType  "fieldset"
+                            :children   children} [wrapper-field field-descriptor children]
+                           {:fieldClass "wrapperElement"
+                            :fieldType  "rowcontainer"
+                            :children   children} [row-wrapper children]
+                           {:fieldClass "formField"
+                            :id         (_ :guard (complement visible?))} [:div]
+                           {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
+                           {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
+                           {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                           {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
+                           {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                           {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                           {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                           {:fieldClass "infoElement"} [info-element field-descriptor]
+                           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
+              (and (empty? (:children field-descriptor))
+                   (visible? (:id field-descriptor))) (into args))))
+        [:div]))))
 
 (defn editable-fields [form-data]
   (when form-data
