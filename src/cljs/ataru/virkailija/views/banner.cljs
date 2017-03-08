@@ -56,7 +56,6 @@
   (let [user-info (subscribe [:state-query [:editor :user-info]])]
     (fn []
       (when @user-info
-        (println (:organizations@user-info))
         (let [org-count      (count (:organizations @user-info))
               org-labels     (create-org-labels (:organizations @user-info))
               joint-orgs-str (string/join " \n" org-labels)
