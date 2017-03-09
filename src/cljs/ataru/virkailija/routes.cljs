@@ -71,7 +71,7 @@
       :predicate
       (fn [db]
         (some #(when (= hakukohde-oid (:hakukohde %)) %)
-              (get-in db [:editor :hakukohteet])))
+              (get-in db [:application :hakukohteet])))
       :handler
       (fn [hakukohde]
         (dispatch [:application/select-hakukohde hakukohde])
@@ -86,7 +86,7 @@
       :predicate
       (fn [db]
         (some #(when (= haku-oid (:haku %)) %)
-              (get-in db [:editor :haut])))
+              (get-in db [:application :haut])))
       :handler
       (fn [haku]
         (dispatch [:application/select-haku haku])

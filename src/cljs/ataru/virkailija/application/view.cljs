@@ -123,13 +123,13 @@
   (str "/lomake-editori/applications/haku/" haku))
 
 (defn haku-column [open]
-  (let [haut (reaction (->> @(subscribe [:state-query [:editor :haut]])
+  (let [haut (reaction (->> @(subscribe [:state-query [:application :haut]])
                             (map haku->form-list-item)))]
     (fn [open]
       [form-list-column @haut "Haku" haku-url open])))
 
 (defn hakukohde-column [open]
-  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
+  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:application :hakukohteet]])
                                    (map hakukohde->form-list-item)))]
     (fn [open]
       [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
@@ -144,8 +144,8 @@
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
-        hakukohde    (reaction @(subscribe [:state-query [:application :selected-hakukohde]]))
-        haku         (reaction @(subscribe [:state-query [:application :selected-haku]]))
+        hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
+        haku         (subscribe [:state-query [:application :selected-haku]])
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
     (fn [applications application-filter]
       (when (> (count applications) 0)
