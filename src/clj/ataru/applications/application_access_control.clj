@@ -10,6 +10,9 @@
     (form-access-control/form-allowed-by-key? form-key session organization-service right)
     (throw (user-feedback-exception (str "Lomake " form-key " ei ole sallittu")))))
 
+(def action-defs-for-application-right
+  {:edit-applications "muokkaaminen" :view-applications "lukeminen"})
+
 (defn check-application-access [application-key session organization-service right]
   (when-not
     (session-orgs/organization-allowed?
@@ -17,7 +20,11 @@
       organization-service
       #(application-store/get-application-organization-oid application-key)
       [right])
-    (throw (user-feedback-exception (str "Hakemus " application-key " ei ole sallittu")))))
+    (throw (user-feedback-exception (str "Hakemuksen "
+                                         application-key
+                                         " "
+                                         (get action-defs-for-application-right right)
+                                         " ei ole sallittu")))))
 
 (defn- empty-applications-result-fn [] {:applications []})
 
