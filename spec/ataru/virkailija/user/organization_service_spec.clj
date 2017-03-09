@@ -12,6 +12,9 @@
 (def test-user-with-group {:employeeNumber "1.2.246.562.24.23424"
                            :description "[\"USER_jorma\", \"VIRKAILIJA\", \"LANG_fi\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.6.214933\", \"APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.28.1.2\"]"})
 
+(def test-user1-organization
+  {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization})
+
 (def telajarvi-org {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}, :oid "1.2.246.562.10.3242342", :type :organization})
 
 (defn fake-ldap-search-only-orgs [connection path props] [test-user1])
@@ -47,8 +50,13 @@
                     (spec)))
 
           (it "should use ldap module to fetch organization oids"
-              (let [org-service-instance (create-org-service-instance)]
-                (should= [test-user1-organization-oid] (org-service/get-direct-organization-oids org-service-instance "testi2editori"))))
+              (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group]
+                (let [org-service-instance (create-org-service-instance)]
+                  (should= {:form-edit [test-user1-organization]}
+                           (org-service/get-direct-organizations-for-rights
+                            org-service-instance
+                            "testi2editori"
+                            [:form-edit])))))
 
           (it "Should get all organizations from organization client and cache the result"
               (let [cas-get-call-count (atom 0)]
@@ -64,15 +72,18 @@
           (it "Should get direct organizatons from organization client"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-organization]
                 (let [org-service-instance (create-org-service-instance)]
-                  (should= [telajarvi-org]
-                           (org-service/get-direct-organizations org-service-instance "testi2editori")))))
+                  (should= {:form-edit [telajarvi-org]}
+                           (org-service/get-direct-organizations-for-rights
+                            org-service-instance
+                            "testi2editori"
+                            [:form-edit])))))
 
           (it "Should get organizations from org client, groups from org client and group dump should be cached"
               (with-redefs [cas-client/cas-authenticated-get fake-cas-auth-org-and-group
                             ldap/search                      fake-ldap-search-orgs-and-groups]
                 (let [org-service-instance (create-org-service-instance)
                       expected-group       {:name {:fi "Yhteiskäyttöryhmä"}, :oid "1.2.246.562.28.1.2", :type :group}
-                      expected-result      (org-service/get-direct-organizations org-service-instance "user-name")]
+                      expected-result      (org-service/get-direct-organizations-for-rights org-service-instance "user-name" [:form-edit])]
                   (should=
                    [telajarvi-org expected-group]
                    expected-result)
