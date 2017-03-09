@@ -110,6 +110,12 @@
                    :return {:forms [ataru-schema/Form]}
                    (ok (access-controlled-form/get-forms-for-application-listing session organization-service)))
 
+                 (api/GET "/forms" {session :session}
+                   :summary "Used by external services. In practice this is Tarjonta system only for now.
+                             Return forms authorized with editor right (:form-edit)"
+                   :return {:forms [ataru-schema/Form]}
+                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
+
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
                           :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
