@@ -22,7 +22,7 @@
 
 (def right-labels {:form-edit "Lomakkeen muokkaus"
                    :view-applications "Hakemusten katselu"
-                   :edit-applications "Hakemusten muokkaus"})
+                   :edit-applications "Hakemusten arviointi"})
 
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
 
