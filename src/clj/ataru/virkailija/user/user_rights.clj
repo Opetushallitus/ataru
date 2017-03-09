@@ -14,6 +14,6 @@
 
 (s/defn ^:always-validate ldap-right [right :- Right]
   (let [name-from-config (-> config :ldap :user-right-names right)]
-    (if (< 0 (count (clojure.string/trim (or name-from-config ""))))
+    (if (not (clojure.string/blank? name-from-config))
       name-from-config
       (right rights))))
