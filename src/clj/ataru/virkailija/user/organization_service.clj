@@ -113,7 +113,10 @@
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
   OrganizationService
-  (get-direct-organizations-for-rights [this user-name rights] fake-orgs)
+  (get-direct-organizations-for-rights [this user-name rights]
+    {:form-edit         fake-orgs
+     :view-applications fake-orgs
+     :edit-applications fake-orgs})
   (get-all-organizations [this root-orgs] fake-orgs))
 
 (defn new-organization-service []
