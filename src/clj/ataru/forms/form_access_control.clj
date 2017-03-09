@@ -7,12 +7,12 @@
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [taoensso.timbre :refer [warn]]))
 
-(defn form-allowed-by-key? [form-key session organization-service right]
+(defn form-allowed-by-key? [form-key session organization-service rights]
   (session-orgs/organization-allowed?
    session
    organization-service
    (fn [] (form-store/get-organization-oid-by-key form-key))
-   [right]))
+   rights))
 
 (defn form-allowed-by-id?
   "id identifies a version of the form"
@@ -103,7 +103,7 @@
   {:forms (->> (session-orgs/run-org-authorized
                 session
                 organization-service
-                [:view-applications]
+                [:view-applications :edit-applications]
                 vector
                 #(form-store/get-forms true %)
                 #(form-store/get-all-forms true))

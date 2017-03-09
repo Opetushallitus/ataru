@@ -14,7 +14,7 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   [:view-applications]
+   [:view-applications :edit-applications]
    vector
    #(add-hakukohde-names tarjonta-service (application-store/get-hakukohteet %))
    #(add-hakukohde-names tarjonta-service (application-store/get-all-hakukohteet))))
