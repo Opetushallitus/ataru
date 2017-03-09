@@ -19,7 +19,7 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   [:form-edit :view-applications]
+   [:view-applications]
    vector
    #(add-haku-names tarjonta-service (application-store/get-haut %))
    #(add-haku-names tarjonta-service (application-store/get-all-haut))))
