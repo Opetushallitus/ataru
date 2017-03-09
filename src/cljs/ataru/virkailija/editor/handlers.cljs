@@ -184,29 +184,6 @@
         (refresh-forms-for-editor)
         (hide-remove-confirm-dialog db)))))
 
-(reg-event-db
-  :editor/refresh-hakukohteet-from-applications
-  (fn [db _]
-    (http
-      :get
-      "/lomake-editori/api/hakukohteet"
-      (fn [db hakukohteet]
-        (assoc-in db [:editor :hakukohteet] hakukohteet)))
-    db))
-
-(reg-event-db
-  :editor/handle-refresh-haut-from-applications
-  (fn [db [_ haut]]
-    (assoc-in db [:editor :haut] haut)))
-
-(reg-event-fx
-  :editor/refresh-haut-from-applications
-  (fn [{:keys [db]}]
-    {:db   db
-     :http {:method              :get
-            :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
-
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
@@ -249,7 +226,6 @@
           (fetch-form-content! id))
         (cond-> db
                 (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
-                true (update-in [:editor] dissoc :selected-hakukohde)
                 true (assoc-in [:editor :selected-form-key] form-key))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))

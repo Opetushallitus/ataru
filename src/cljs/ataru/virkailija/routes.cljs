@@ -49,9 +49,9 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (dispatch [:editor/refresh-forms-for-application-listing])
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms])))
@@ -64,9 +64,9 @@
      (dispatch [:set-active-panel :application])))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-for-application-listing])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -79,9 +79,9 @@
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-for-application-listing])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -94,15 +94,15 @@
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (dispatch [:editor/refresh-forms-for-application-listing])
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms key])))
      :handler
      (fn [form]
-       (dispatch [:editor/select-form (:key form)])
+       (dispatch [:application/select-form (:key form)])
        (dispatch [:application/fetch-applications (:key form)])))
     (dispatch [:set-active-panel :application]))
 

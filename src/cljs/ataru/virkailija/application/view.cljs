@@ -66,10 +66,10 @@
    {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
 
 (defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
+  (let [selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])
         selected-form-key  (subscribe [:state-query [:application :selected-form-key]])
         forms              (subscribe [:state-query [:application :forms]])
-        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
+        selected-haku      (subscribe [:state-query [:application :selected-haku]])]
     (fn []
       [:div.application-handling__form-list-header
        (or (:name (get @forms @selected-form-key))
@@ -144,8 +144,8 @@
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
-        hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
-        haku         (reaction @(subscribe [:state-query [:editor :selected-haku]]))
+        hakukohde    (reaction @(subscribe [:state-query [:application :selected-hakukohde]]))
+        haku         (reaction @(subscribe [:state-query [:application :selected-haku]]))
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
     (fn [applications application-filter]
       (when (> (count applications) 0)

@@ -42,7 +42,7 @@
                                         (sort-by-time-and-deletedness))))))
 
 (reg-event-db
-  :editor/refresh-forms-for-application-listing
+  :application/refresh-forms-for-application-listing
   (fn [db _]
     (refresh-forms-for-application-listing)
     db))
@@ -207,12 +207,35 @@
   :application/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
-        (update-in [:editor] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:editor :selected-hakukohde] hakukohde))))
+        (update-in [:application] dissoc :selected-form-key :selected-haku)
+        (assoc-in [:application :selected-hakukohde] hakukohde))))
 
 (reg-event-db
   :application/select-haku
   (fn [db [_ haku]]
     (-> db
-        (update :editor dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:editor :selected-haku] haku))))
+        (update :application dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:application :selected-haku] haku))))
+
+(reg-event-db
+  :application/refresh-hakukohteet-from-applications
+  (fn [db _]
+    (http
+      :get
+      "/lomake-editori/api/hakukohteet"
+      (fn [db hakukohteet]
+        (assoc-in db [:application :hakukohteet] hakukohteet)))
+    db))
+
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:application :haut] haut)))
+
+(reg-event-fx
+  :application/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
