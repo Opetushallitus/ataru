@@ -74,7 +74,8 @@
       [:div.application-handling__form-list-header
        (or (:name (get @forms @selected-form-key))
            (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku))])))
+           (:haku-name @selected-haku)
+           "Valitse haku/hakukohde")])))
 
 (defn form-list-column [forms header-text url-fn open]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
