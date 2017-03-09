@@ -35,7 +35,7 @@
   (defroute "/lomake-editori/editor" []
     (dispatch [:set-active-panel :editor])
     (dispatch [:editor/select-form nil])
-    (dispatch [:editor/refresh-forms])
+    (dispatch [:editor/refresh-forms-for-editor])
     (dispatch [:editor/refresh-forms-in-use]))
 
   (defroute #"^/lomake-editori/editor/(.*)" [key]
@@ -49,60 +49,60 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (dispatch [:editor/refresh-forms-with-deleteds])
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
-     (fn [db] (not-empty (get-in db [:editor :forms])))
+     (fn [db] (not-empty (get-in db [:application :forms])))
      :handler
      (fn [forms]
        (let [form (-> forms first val)]
          (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
-         (dispatch [:editor/select-form (:key form)])
+         (dispatch [:application/select-form (:key form)])
          (dispatch [:application/fetch-applications (:key form)])))
      (dispatch [:set-active-panel :application])))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-with-deleteds])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
       (fn [db]
         (some #(when (= hakukohde-oid (:hakukohde %)) %)
-              (get-in db [:editor :hakukohteet])))
+              (get-in db [:application :hakukohteet])))
       :handler
       (fn [hakukohde]
-        (dispatch [:editor/select-hakukohde hakukohde])
+        (dispatch [:application/select-hakukohde hakukohde])
         (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)])))
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-forms-with-deleteds])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
       :predicate
       (fn [db]
         (some #(when (= haku-oid (:haku %)) %)
-              (get-in db [:editor :haut])))
+              (get-in db [:application :haut])))
       :handler
       (fn [haku]
-        (dispatch [:editor/select-haku haku])
+        (dispatch [:application/select-haku haku])
         (dispatch [:application/fetch-applications-by-haku (:haku haku)])))
     (dispatch [:set-active-panel :application]))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (dispatch [:editor/refresh-forms-with-deleteds])
-    (dispatch [:editor/refresh-hakukohteet-from-applications])
-    (dispatch [:editor/refresh-haut-from-applications])
+    (dispatch [:application/refresh-forms-for-application-listing])
+    (dispatch [:application/refresh-hakukohteet-from-applications])
+    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
-     (fn [db] (not-empty (get-in db [:editor :forms key])))
+     (fn [db] (not-empty (get-in db [:application :forms key])))
      :handler
      (fn [form]
-       (dispatch [:editor/select-form (:key form)])
+       (dispatch [:application/select-form (:key form)])
        (dispatch [:application/fetch-applications (:key form)])))
     (dispatch [:set-active-panel :application]))
 

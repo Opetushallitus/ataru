@@ -20,6 +20,10 @@
   {:editor      {:text "Lomakkeet" :href #(str "/lomake-editori/editor/" %)}
    :application {:text "Hakemukset" :href #(str "/lomake-editori/applications/" %)}})
 
+(def right-labels {:form-edit "Lomakkeen muokkaus"
+                   :view-applications "Hakemusten katselu"
+                   :edit-applications "Hakemusten muokkaus"})
+
 (def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
 
 (defn section-link [panel-kw]
@@ -42,23 +46,27 @@
      [:div.divider]
      [section-link :application]]))
 
+(defn create-org-labels [organizations]
+  (map
+   (fn [org]
+     (str (get-in org [:name :fi]) " (" (string/join ", " (map #(get right-labels (keyword %)) (:rights org))) ")"))
+   organizations))
+
 (defn profile []
   (let [user-info (subscribe [:state-query [:editor :user-info]])]
     (fn []
       (when @user-info
         (let [org-count      (count (:organizations @user-info))
-              org-names      (map #(get-in % [:name :fi]) (:organizations @user-info))
-              joint-orgs-str (string/join "; " org-names)
+              org-labels     (create-org-labels (:organizations @user-info))
+              joint-orgs-str (string/join " \n" org-labels)
               org-str        (cond
                                (= 0 org-count) "Ei organisaatiota"
                                (< 1 org-count) "Useita organisaatioita"
-                               :else           (first org-names))
-              tooltip        (if (< 1 org-count) joint-orgs-str "")
-              tooltip-class  (if (< 1 org-count) "tooltip-indicator" "")]
+                               :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
           [:div.profile
            [:div
             [:p (:username @user-info)]
-            [:p {:title tooltip :class tooltip-class} org-str]]
+            [:p.tooltip-indicator {:title joint-orgs-str} org-str]]
            [:div.divider]
            [:div
             [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]])))))

@@ -1,8 +1,11 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
+            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
+            [ataru.virkailija.virkailija-ajax :refer [http]]
+            [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]))
 
@@ -23,6 +26,26 @@
         (assoc-in [:db :application :selected-key] nil)
         (assoc-in [:db :application :selected-application-and-form] nil)
         (assoc-in [:db :application :form-list-expanded?] true))))
+
+(defn- languages->kwd [form]
+  (update form :languages
+    (partial mapv keyword)))
+
+(defn refresh-forms-for-application-listing []
+  (http
+   :get
+   (str "/lomake-editori/api/forms-for-application-listing")
+   (fn [db {:keys [forms]}]
+     (assoc-in db [:application :forms] (->> forms
+                                        (mapv languages->kwd)
+                                        (util/group-by-first :key)
+                                        (sort-by-time-and-deletedness))))))
+
+(reg-event-db
+  :application/refresh-forms-for-application-listing
+  (fn [db _]
+    (refresh-forms-for-application-listing)
+    db))
 
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
@@ -73,6 +96,11 @@
            (assoc-in
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
+
+(reg-event-db
+ :application/select-form
+ (fn [db [_ form-key]]
+   (assoc-in db [:application :selected-form-key] form-key)))
 
 (reg-event-db
   :application/handle-fetch-applications-response
@@ -174,3 +202,40 @@
   :application/clear-search-term
   (fn [db]
     (assoc-in db [:application :search-term] nil)))
+
+(reg-event-db
+  :application/select-hakukohde
+  (fn [db [_ hakukohde]]
+    (-> db
+        (update-in [:application] dissoc :selected-form-key :selected-haku)
+        (assoc-in [:application :selected-hakukohde] hakukohde))))
+
+(reg-event-db
+  :application/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :application dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:application :selected-haku] haku))))
+
+(reg-event-db
+  :application/refresh-hakukohteet-from-applications
+  (fn [db _]
+    (http
+      :get
+      "/lomake-editori/api/hakukohteet"
+      (fn [db hakukohteet]
+        (assoc-in db [:application :hakukohteet] hakukohteet)))
+    db))
+
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:application :haut] haut)))
+
+(reg-event-fx
+  :application/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))

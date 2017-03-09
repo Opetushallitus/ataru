@@ -1,25 +1,34 @@
 (ns ataru.virkailija.user.session-organizations
   (:require
-   [ataru.virkailija.user.organization-client :as organization-client]))
+   [schema.core :as s]
+   [ataru.virkailija.user.organization-client :as organization-client]
+   [ataru.virkailija.user.user-rights :refer [Right]]))
 
-(defn- organizations [session] (-> session :identity :organizations))
+(defn- right-organizations [session] (-> session :identity :user-right-organizations))
 
 (defn- all-org-oids [organization-service organizations]
   (let [all-organizations (.get-all-organizations organization-service organizations)]
         (map :oid all-organizations)))
 
-(defn get-all-organization-oids
-  "Gives all the organization oids allowed for user's session
-   (including subhierarchy)"
-  [session organization-service]
-  (all-org-oids organization-service (organizations session)))
+(defn right-seq? [val] (s/validate [Right] val))
+
+(defn select-organizations-for-rights [session rights]
+  {:pre [(right-seq? rights)]}
+  (let [right-orgs (right-organizations session)]
+    (->> rights
+         (map #(get right-orgs %))
+         (remove nil?)
+         flatten
+         distinct)))
 
 (defn run-org-authorized [session
                           organization-service
+                          rights
                           when-no-orgs-fn
                           when-ordinary-user-fn
                           when-superuser-fn]
-  (let [organizations     (organizations session)
+  {:pre [(right-seq? rights)]}
+  (let [organizations     (select-organizations-for-rights session rights)
         organization-oids (map :oid organizations)]
     (cond
       (empty? organizations)
@@ -33,10 +42,12 @@
 
 (defn organization-allowed?
   "Parameter organization-oid-handle can be either the oid value or a function which returns the oid"
-  [session organization-service organization-oid-handle]
+  [session organization-service organization-oid-handle rights]
+  {:pre [(right-seq? rights)]}
   (run-org-authorized
    session
    organization-service
+   rights
    (fn [] false)
    #(let [organization-oid (if (instance? clojure.lang.IFn organization-oid-handle)
                                (organization-oid-handle)
@@ -45,3 +56,19 @@
          (some %)
          boolean))
    (fn [] true)))
+
+(defn organization-list
+  "Returns a flattened list of organizations with the user rights attached to the orgs"
+  [session]
+  (vals
+   (reduce
+    (fn [acc [k vs]]
+      (reduce
+       (fn [acc' v]
+         (let [oid    (:oid v)
+               oid-kw (keyword oid)]
+           (if (oid-kw acc)
+             (update-in acc' [oid-kw :rights] conj k)
+             (assoc acc' oid-kw (merge v {:rights [k]})))))
+       acc vs))
+    {} (right-organizations session))))
