@@ -18,8 +18,8 @@
         :userdn "{{ldap_manager_userdn}}"
         :password "{{ldap_manager_password}}"
         :user-right-names {:form-edit         "{{ataru_ldap_editor_user_right_name}}"
-                           :view-applications "{{ataru_ldap_view-applications_user_right_name}}"
-                           :edit-applications "{{ataru_ldap_edit-applications_user_right_name}}"}}
+                           :view-applications "{{ataru_ldap_view_applications_user_right_name}}"
+                           :edit-applications "{{ataru_ldap_edit_applications_user_right_name}}"}}
  :email {:email-service-url "https://{{host_virkailija}}/ryhmasahkoposti-service/email/firewall"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
