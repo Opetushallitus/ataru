@@ -19,13 +19,16 @@
           (assoc-in [:db :application :form-list-expanded?] false)
           (assoc :dispatch [:application/fetch-application application-key])))))
 
-(reg-event-fx
-  :application/close-application
-  (fn [{:keys [db]} [_ application-key]]
-    (-> {:db db}
-        (assoc-in [:db :application :selected-key] nil)
-        (assoc-in [:db :application :selected-application-and-form] nil)
-        (assoc-in [:db :application :form-list-expanded?] true))))
+(defn close-application [db]
+  (-> db
+      (assoc-in [:application :selected-key] nil)
+      (assoc-in [:application :selected-application-and-form] nil)
+      (assoc-in [:application :form-list-expanded?] true)))
+
+(reg-event-db
+ :application/close-application
+ (fn [db [_ application-key]]
+   (close-application db)))
 
 (defn- languages->kwd [form]
   (update form :languages
@@ -96,11 +99,6 @@
            (assoc-in
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
-
-(reg-event-db
- :application/select-form
- (fn [db [_ form-key]]
-   (assoc-in db [:application :selected-form-key] form-key)))
 
 (reg-event-db
   :application/handle-fetch-applications-response
@@ -204,18 +202,27 @@
     (assoc-in db [:application :search-term] nil)))
 
 (reg-event-db
+ :application/select-form
+ (fn [db [_ form-key]]
+   (-> db
+       (assoc-in [:application :selected-form-key] form-key)
+       (close-application db))))
+
+(reg-event-db
   :application/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
         (update-in [:application] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:application :selected-hakukohde] hakukohde))))
+        (assoc-in [:application :selected-hakukohde] hakukohde)
+        (close-application db))))
 
 (reg-event-db
   :application/select-haku
   (fn [db [_ haku]]
     (-> db
         (update :application dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:application :selected-haku] haku))))
+        (assoc-in [:application :selected-haku] haku)
+        (close-application db))))
 
 (reg-event-db
   :application/refresh-hakukohteet-from-applications
