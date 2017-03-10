@@ -33,12 +33,13 @@
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      [:div
-      (map (fn attachment->link [key]
-             ^{:key key}
-             [:ul.application__form-field-list
-              [:a {:href (str "/lomake-editori/files/" key)}
-               key]])
-           values)]]))
+      (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
+                     (let [component-key (str "attachment-" idx)
+                           text          (str filename " (" (size-bytes->str size) ")")]
+                       [:div>a {:key  component-key
+                                :href (str "/lomake-editori/files/" file-key)}
+                        text]))
+                   values)]]))
 
 (declare field)
 

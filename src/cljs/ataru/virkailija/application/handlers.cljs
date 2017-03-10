@@ -156,12 +156,20 @@
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
   (fn [{:keys [db]} [_ response]]
-    (let [db (reduce (fn [db {:keys [key] :as metadata}]
-                       (assoc-in db [:application :attachments (keyword key)] metadata))
-                     db
-                     response)]
-      {:db       db
-       :dispatch [:application/start-autosave]})))
+    (let [response-map (reduce (fn [db {:keys [key] :as metadata}]
+                                 (assoc db key metadata))
+                               {}
+                               response)
+          db (->> (get-in db [:application :selected-application-and-form :application :answers])
+                  (map (fn [[answer-key {:keys [fieldType] :as answer}]]
+                         (cond-> answer
+                           (= fieldType "attachment")
+                           (update :value (partial map (fn [file-key]
+                                                         (get response-map file-key)))))))
+                  (reduce (fn [db {:keys [key]:as answer}]
+                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
+                          db))]
+      {:db db})))
 
 (reg-event-fx
   :application/fetch-application-attachment-metadata
