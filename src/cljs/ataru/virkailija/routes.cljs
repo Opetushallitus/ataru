@@ -28,6 +28,12 @@
       (secretary/dispatch! "/lomake-editori/editor"))
     (dispatch [:editor/select-form (:key form)])))
 
+(defn common-actions-for-applications-route []
+  (dispatch [:application/refresh-forms-for-application-listing])
+  (dispatch [:application/refresh-hakukohteet-from-applications])
+  (dispatch [:application/refresh-haut-from-applications])
+  (dispatch [:set-active-panel :application]))
+
 (defn app-routes []
   (defroute "/lomake-editori/" []
     (secretary/dispatch! "/lomake-editori/editor"))
@@ -49,9 +55,7 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (dispatch [:application/refresh-forms-for-application-listing])
-    (dispatch [:application/refresh-hakukohteet-from-applications])
-    (dispatch [:application/refresh-haut-from-applications])
+    (common-actions-for-applications-route)
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms])))
@@ -60,13 +64,10 @@
        (let [form (-> forms first val)]
          (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
          (dispatch [:application/select-form (:key form)])
-         (dispatch [:application/fetch-applications (:key form)])))
-     (dispatch [:set-active-panel :application])))
+         (dispatch [:application/fetch-applications (:key form)])))))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
-    (dispatch [:application/refresh-hakukohteet-from-applications])
-    (dispatch [:application/refresh-forms-for-application-listing])
-    (dispatch [:application/refresh-haut-from-applications])
+    (common-actions-for-applications-route)
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -75,13 +76,10 @@
       :handler
       (fn [hakukohde]
         (dispatch [:application/select-hakukohde hakukohde])
-        (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)])))
-    (dispatch [:set-active-panel :application]))
+        (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)]))))
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
-    (dispatch [:application/refresh-hakukohteet-from-applications])
-    (dispatch [:application/refresh-forms-for-application-listing])
-    (dispatch [:application/refresh-haut-from-applications])
+    (common-actions-for-applications-route)
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -90,20 +88,15 @@
       :handler
       (fn [haku]
         (dispatch [:application/select-haku haku])
-        (dispatch [:application/fetch-applications-by-haku (:haku haku)])))
-    (dispatch [:set-active-panel :application]))
+        (dispatch [:application/fetch-applications-by-haku (:haku haku)]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (dispatch [:application/refresh-forms-for-application-listing])
-    (dispatch [:application/refresh-hakukohteet-from-applications])
-    (dispatch [:application/refresh-haut-from-applications])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms key])))
      :handler
      (fn [form]
        (dispatch [:application/select-form (:key form)])
-       (dispatch [:application/fetch-applications (:key form)])))
-    (dispatch [:set-active-panel :application]))
+       (dispatch [:application/fetch-applications (:key form)]))))
 
   (accountant/dispatch-current!))
