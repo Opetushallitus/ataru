@@ -23,9 +23,8 @@
 (defn textual-field-value [field-descriptor application & {:keys [lang]}]
   (let [key                (answer-key field-descriptor)
         value-or-koodi-uri (:value (get (:answers application) key))
-        split-values       (if (string? value-or-koodi-uri)
-                             (clojure.string/split value-or-koodi-uri #"\s*,\s*")
-                             value-or-koodi-uri)]
+        split-values       (cond-> value-or-koodi-uri
+                                   (string? value-or-koodi-uri) (clojure.string/split value-or-koodi-uri #"\s*,\s*"))]
     (cond
       (contains? field-descriptor :koodisto-source)
       (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
