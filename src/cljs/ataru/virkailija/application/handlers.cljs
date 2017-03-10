@@ -4,7 +4,8 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.feature-config :as fc]))
 
 (reg-event-fx
   :application/select-application
@@ -169,7 +170,8 @@
                   (reduce (fn [db {:keys [key]:as answer}]
                             (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
                           db))]
-      {:db db})))
+      {:db       db
+       :dispatch [:application/start-autosave]})))
 
 (reg-event-fx
   :application/fetch-application-attachment-metadata
@@ -192,8 +194,10 @@
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [db (update-application-details db response)]
-      {:db       db
-       :dispatch [:application/fetch-application-attachment-metadata]})))
+      {:db db
+       :dispatch (if (fc/feature-enabled? :attachment)
+                   [:application/fetch-application-attachment-metadata]
+                   [:application/start-autosave])})))
 
 (reg-event-fx
   :application/fetch-application

@@ -10,7 +10,8 @@
                                                                        required-hint
                                                                        textual-field-value
                                                                        scroll-to-anchor]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.feature-config :as fc]))
 
 (defn text [field-descriptor application lang]
   [:div.application__form-field
@@ -27,19 +28,20 @@
         :else (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
-  (let [answer-key (keyword (answer-key field-descriptor))
-        values     (get-in application [:answers answer-key :value])]
-    [:div.application__form-field
-     [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     [:div
-      (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
-                     (let [text          (str filename " (" (size-bytes->str size) ")")
-                           component-key (str "attachment-div-" idx)]
-                       [:div {:key component-key}
-                        [:a {:href (str "/lomake-editori/files/" file-key)}
-                         text]]))
-                   values)]]))
+  (when (fc/feature-enabled? :attachment)
+    (let [answer-key (keyword (answer-key field-descriptor))
+          values     (get-in application [:answers answer-key :value])]
+      [:div.application__form-field
+       [:label.application__form-field-label
+        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+       [:div
+        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
+                       (let [text          (str filename " (" (size-bytes->str size) ")")
+                             component-key (str "attachment-div-" idx)]
+                         [:div {:key component-key}
+                          [:a {:href (str "/lomake-editori/files/" file-key)}
+                           text]]))
+                     values)]])))
 
 (declare field)
 
