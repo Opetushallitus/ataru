@@ -162,7 +162,7 @@
                                {}
                                response)
           db (->> (get-in db [:application :selected-application-and-form :application :answers])
-                  (map (fn [[answer-key {:keys [fieldType] :as answer}]]
+                  (map (fn [[_ {:keys [fieldType] :as answer}]]
                          (cond-> answer
                            (= fieldType "attachment")
                            (update :value (partial map (fn [file-key]
