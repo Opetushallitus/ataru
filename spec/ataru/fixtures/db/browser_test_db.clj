@@ -58,7 +58,10 @@
                            :value "Kuikeloinen"}
                           {:fieldType "textField",
                            :key "ssn",
-                           :value "020202A0202"}]})
+                           :value "020202A0202"}
+                          {:fieldType "textField",
+                           :key "email",
+                           :value "seija.kuikeloinen@gmail.com"}]})
 
 (def application2 {:form 1,
                    :lang "fi",
@@ -75,7 +78,10 @@
                            :value "Vatanen"}
                           {:fieldType "textField",
                            :key "ssn",
-                           :value "141196-933S"}]})
+                           :value "141196-933S"}
+                          {:fieldType "textField",
+                           :key "email",
+                           :value "ari.vatanen@iki.fi"}]})
 
 (defn init-db-fixture []
   (form-store/create-form-or-increment-version! form1)
