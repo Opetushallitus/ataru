@@ -34,11 +34,11 @@
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      [:div
       (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
-                     (let [component-key (str "attachment-" idx)
-                           text          (str filename " (" (size-bytes->str size) ")")]
-                       [:div>a {:key  component-key
-                                :href (str "/lomake-editori/files/" file-key)}
-                        text]))
+                     (let [text          (str filename " (" (size-bytes->str size) ")")
+                           component-key (str "attachment-div-" idx)]
+                       [:div {:key component-key}
+                        [:a {:href (str "/lomake-editori/files/" file-key)}
+                         text]]))
                    values)]]))
 
 (declare field)
