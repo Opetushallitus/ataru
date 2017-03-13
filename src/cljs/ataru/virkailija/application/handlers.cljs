@@ -167,7 +167,7 @@
                            (= fieldType "attachment")
                            (update :value (partial map (fn [file-key]
                                                          (get response-map file-key)))))))
-                  (reduce (fn [db {:keys [key]:as answer}]
+                  (reduce (fn [db {:keys [key] :as answer}]
                             (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
                           db))]
       {:db       db
