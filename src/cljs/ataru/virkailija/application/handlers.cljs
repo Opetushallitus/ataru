@@ -157,16 +157,13 @@
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
   (fn [{:keys [db]} [_ response]]
-    (let [response-map (reduce (fn [db {:keys [key] :as metadata}]
-                                 (assoc db key metadata))
-                               {}
-                               response)
+    (let [response-map (group-by :key response)
           db (->> (get-in db [:application :selected-application-and-form :application :answers])
                   (map (fn [[_ {:keys [fieldType] :as answer}]]
                          (cond-> answer
                            (= fieldType "attachment")
                            (update :value (partial map (fn [file-key]
-                                                         (get response-map file-key)))))))
+                                                         (first (get response-map file-key))))))))
                   (reduce (fn [db {:keys [key] :as answer}]
                             (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
                           db))]
