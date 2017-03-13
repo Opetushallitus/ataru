@@ -429,7 +429,7 @@
       [:div.application__form-field
        [label field-descriptor]
        (when-not (clojure.string/blank? @text)
-         [link-detected-paragraph @text])
+         [markdown-paragraph @text])
        (->> (range @attachment-count)
             (map (fn [attachment-idx]
                    ^{:key (str "attachment-" id "-" attachment-idx)}
