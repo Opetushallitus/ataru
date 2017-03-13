@@ -9,6 +9,7 @@
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
+            [ataru.files.file-store :as file-store]
             [ataru.util.client-error :as client-error]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
@@ -263,7 +264,17 @@
                                        :path-params [koodisto-uri :- s/Str version :- Long]
                                        :return s/Any
                                        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
-                                         (ok koodi-options))))))
+                                         (ok koodi-options))))
+
+                 (api/context "/files" []
+                   :tags ["files-api"]
+                   (api/GET "/" []
+                     :query-params [key :- (api/describe [s/Str] "File key")]
+                     :summary "Get metadata for one or more files"
+                     :return [ataru-schema/File]
+                     (if-let [resp (file-store/get-metadata key)]
+                       (ok resp)
+                       (not-found))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -300,7 +311,8 @@
                                                        :description "Specifies the clerk API for Ataru"}
                                                 :tags [{:name "form-api" :description "Form handling"}
                                                        {:name "applications-api" :description "Application handling"}
-                                                       {:name "postal-code-api" :description "Postal code service"}]}}
+                                                       {:name "koodisto-api" :description "Koodisto service"}
+                                                       {:name "files-api" :description "File service"}]}}
                                :exceptions {:handlers {::ex/request-parsing
                                                        (ex/with-logging ex/request-parsing-handler :warn)
                                                        ::ex/request-validation

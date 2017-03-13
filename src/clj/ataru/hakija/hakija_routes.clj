@@ -3,7 +3,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
             [ataru.hakija.hakija-application-service :as application-service]
-            [ataru.hakija.upload-store :as upload-store]
+            [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
@@ -122,7 +122,7 @@
         :middleware [upload/wrap-multipart-params]
         :return ataru-schema/File
         (try
-          (if-let [resp (upload-store/upload-file file)]
+          (if-let [resp (file-store/upload-file file)]
             (response/ok resp)
             (response/bad-request {:failures "Failed to upload file"}))
           (finally
@@ -134,7 +134,7 @@
         :middleware [upload/wrap-multipart-params]
         :return ataru-schema/File
         (try
-          (if-let [resp (upload-store/update-file file key)]
+          (if-let [resp (file-store/update-file file key)]
             (response/ok resp)
             (response/bad-request {:failures (str "Failed to update file with key " key)}))
           (finally
@@ -143,7 +143,7 @@
         :summary "Delete a file"
         :path-params [key :- s/Str]
         :return {:key s/Str}
-        (if-let [resp (upload-store/delete-file key)]
+        (if-let [resp (file-store/delete-file key)]
           (response/ok resp)
           (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
     (api/POST "/client-error" []

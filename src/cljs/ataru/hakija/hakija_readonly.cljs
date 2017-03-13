@@ -5,7 +5,7 @@
 ; This is on purpose, the UI layouts will differ
 ; in the future and already do to some extent.
 
-(ns ataru.application-common.application-readonly
+(ns ataru.hakija.hakija-readonly
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
@@ -57,12 +57,12 @@
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-        [:div.application__wrapper-element.application__wrapper-element--border
-         [:div.application__wrapper-heading
-          [:h2 (-> content :label lang)]
-          [scroll-to-anchor content]]
-         (into [:div.application__wrapper-contents]
-               (child-fields children application lang @ui))])))
+      [:div.application__wrapper-element.application__wrapper-element--border
+       [:div.application__wrapper-heading
+        [:h2 (-> content :label lang)]
+        [scroll-to-anchor content]]
+       (into [:div.application__wrapper-contents]
+         (child-fields children application lang @ui))])))
 
 (defn row-container [application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -71,7 +71,7 @@
 
 (defn- extract-values [children answers]
   (let [child-answers  (->> (map answer-key children)
-                         (select-keys answers))
+                            (select-keys answers))
         ; applicant side stores values as hashmaps
         applicant-side (map (comp
                               (fn [values]
@@ -119,13 +119,13 @@
   [:div
    (text content application lang)
    (into [:div]
-         (for [followup followups
-               :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-               :when (if (boolean? followup-is-visible?)
-                       followup-is-visible?
-                       (followup-has-answer? followup application))]
-           [:div
-            [field followup application lang]]))])
+     (for [followup followups
+           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+           :when (if (boolean? followup-is-visible?)
+                   followup-is-visible?
+                   (followup-has-answer? followup application))]
+       [:div
+        [field followup application lang]]))])
 
 (defn field [content application lang]
   (match content
@@ -147,10 +147,10 @@
 
 (defn readonly-fields [form application]
   (when form
-    (let [lang (or (:selected-language form)        ; languages is set to form in the applicant side
-                 (application-language application) ; language is set to application when in officer side
-                 :fi)]
+    (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
+                   (application-language application)       ; language is set to application when in officer side
+                   :fi)]
       (into [:div.application__readonly-container]
         (for [content (:content form)
-              :when   (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+              :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
           [field content application lang])))))

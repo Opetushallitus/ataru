@@ -7,17 +7,21 @@
             [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.util :as util]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.feature-config :as fc]
+            [ataru.url :as url]))
 
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key]]
     (if (not= application-key (get-in db [:application :selected-key]))
-      (-> {:db db}
-          (assoc-in [:db :application :selected-key] application-key)
-          (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc-in [:db :application :form-list-expanded?] false)
-          (assoc :dispatch [:application/fetch-application application-key])))))
+      (let [db (-> db
+                   (assoc-in [:application :selected-key] application-key)
+                   (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :form-list-expanded?] false))]
+        {:db         db
+         :dispatch-n [[:application/stop-autosave]
+                      [:application/fetch-application application-key]]}))))
 
 (defn close-application [db]
   (-> db
@@ -177,19 +181,68 @@
                                                                                         :score
                                                                                         :state])}))})))
 
-(reg-event-db
+(reg-event-fx
+  :application/handle-fetch-application-attachment-metadata
+  (fn [{:keys [db]} [_ response]]
+    (let [response-map (group-by :key response)
+          db (->> (get-in db [:application :selected-application-and-form :application :answers])
+                  (map (fn [[_ {:keys [fieldType] :as answer}]]
+                         (cond-> answer
+                           (= fieldType "attachment")
+                           (update :value (partial map (fn [file-key]
+                                                         (first (get response-map file-key))))))))
+                  (reduce (fn [db {:keys [key] :as answer}]
+                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
+                          db))]
+      {:db       db
+       :dispatch [:application/start-autosave]})))
+
+(reg-event-fx
+  :application/fetch-application-attachment-metadata
+  (fn [{:keys [db]} _]
+    (let [query-part (->> (get-in db [:application :selected-application-and-form :application :answers])
+                          (filter (comp (partial = "attachment") :fieldType second))
+                          (map (comp :value second))
+                          (flatten)
+                          (url/items->query-part "key")
+                          (clojure.string/join))
+          path       (str "/lomake-editori/api/files" query-part)]
+      {:db       db
+       :http     {:method              :get
+                  :path                path
+                  :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
+
+(reg-event-fx
+  :application/handle-fetch-application
+  (fn [{:keys [db]} [_ response]]
+    (let [db (update-application-details db response)]
+      {:db db
+       :dispatch (if (fc/feature-enabled? :attachment)
+                   [:application/fetch-application-attachment-metadata]
+                   [:application/start-autosave])})))
+
+(reg-event-fx
   :application/fetch-application
-  (fn [db [_ application-id]]
+  (fn [{:keys [db]} [_ application-id]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/" application-id)
-      (fn [db application-response]
-        (-> db
-          (update-application-details application-response)
-          (start-application-review-autosave))))
-    (assoc db [:application :review-autosave] nil)))
+    (let [db (assoc-in db [:application :review-autosave] nil)]
+      {:db   db
+       :http {:method              :get
+              :path                (str "/lomake-editori/api/applications/" application-id)
+              :handler-or-dispatch :application/handle-fetch-application}})))
+
+(reg-event-db
+  :application/start-autosave
+  (fn [db _]
+    (start-application-review-autosave db)))
+
+(reg-event-fx
+  :application/stop-autosave
+  (fn [{:keys [db]} _]
+    (let [autosave (get-in db [:application :review-autosave])]
+      (cond-> {:db db}
+        (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
   :application/search-form-list

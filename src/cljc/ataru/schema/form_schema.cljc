@@ -202,9 +202,11 @@
    :notes                          (s/maybe s/Str)})
 
 (s/defschema File
-  {:key          s/Str
-   :content-type s/Str
-   :filename     s/Str
-   :size         s/Int
-   :uploaded     #?(:clj  org.joda.time.DateTime
-                    :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")})
+  {:key                      s/Str
+   :content-type             s/Str
+   :filename                 s/Str
+   :size                     s/Int
+   :uploaded                 #?(:clj  org.joda.time.DateTime
+                                :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
+   (s/optional-key :deleted) (s/maybe #?(:clj  org.joda.time.DateTime
+                                         :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})
