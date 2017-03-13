@@ -65,11 +65,11 @@
                             application)
         validation-result (validator/valid-application? final-application form)]
     (cond
-      (not (:passed? validation-result))
-      validation-result
-
       (not allowed)
       not-allowed-reply
+
+      (not (:passed? validation-result))
+      validation-result
 
       :else
       (store-and-log final-application store-fn))))
