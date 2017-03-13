@@ -85,9 +85,7 @@
                                  (allowed-values options))
               answers          (set
                                  (->> (if (= "multipleChoice" (:fieldType field))
-                                        (mapcat
-                                          #(clojure.string/split % #", ")
-                                          (filter not-empty answers))
+                                        (filter not-empty answers)
                                         answers)
                                       (filter (comp not clojure.string/blank?))))]
           (build-results
