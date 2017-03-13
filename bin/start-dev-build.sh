@@ -2,8 +2,8 @@
 
 set -e
 
-VIRKAILIJA_CONFIG="config/dev.edn"
-HAKIJA_CONFIG="config/dev.edn"
+VIRKAILIJA_CONFIG="../ataru-secrets/virkailija-dev.edn"
+HAKIJA_CONFIG="../ataru-secrets/hakija-dev.edn"
 
 while getopts ":v::h:i" opt; do
   case $opt in
