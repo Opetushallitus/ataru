@@ -29,16 +29,32 @@
 
 (def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
 
+(defn- uneditable-answers-with-labels-from-new
+  [uneditable-answers new-answers old-answers]
+  ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
+  (map (fn [answer]
+         (let [answer-key (:key answer)
+               answer-with-key #(= (:key %) answer-key)
+               old-answer (->> old-answers
+                               (filter answer-with-key)
+                               (first))
+               new-label  (->> new-answers
+                               (filter answer-with-key)
+                               (first)
+                               :label)]
+           (merge old-answer {:label new-label})))
+       uneditable-answers))
+
 (defn- merge-uneditable-answers-from-previous
   [old-application new-application]
   (let [new-answers                 (:answers new-application)
-        noneditable-answer-keys     (->> new-answers
-                                         (filter :cannot-edit)
-                                         (map :key)
-                                         (set))
+        uneditable-answers          (filter :cannot-edit new-answers)
         editable-answers            (remove :cannot-edit new-answers)
-        uneditable-answers-from-old (filter #(contains? noneditable-answer-keys (:key %)) (:answers old-application))
-        merged-answers              (into editable-answers uneditable-answers-from-old)]
+        merged-answers              (into editable-answers
+                                          (uneditable-answers-with-labels-from-new
+                                            uneditable-answers
+                                            new-answers
+                                            (:answers old-application)))]
     (assoc new-application :answers merged-answers)))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
