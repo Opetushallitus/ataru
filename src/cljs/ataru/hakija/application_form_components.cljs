@@ -2,10 +2,11 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
-            [cemerick.url :as url]
+            [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :refer [application-view-translations]]
+            [ataru.cljs-util :as cljs-util :refer [console-log]]
             [ataru.application-common.application-field-common
              :refer
              [answer-key
@@ -16,8 +17,11 @@
             [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.cljs-util :as cljs-util]
-            [ataru.feature-config :as fc]))
+            [ataru.feature-config :as fc])
+  (:import (goog.html.sanitizer HtmlSanitizer)))
+
+(defonce builder (new HtmlSanitizer.Builder))
+(defonce html-sanitizer (.build builder))
 
 (declare render-field)
 
@@ -85,37 +89,19 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
-(defn- link-detected-paragraph [text]
-  (let [words   (for [word (clojure.string/split text #"\s")
-                      :let [as-url (url/url word)]]
-                  (if (not-empty (:host as-url))
-                    [:a {:key    (str as-url)
-                         :href   (str as-url)
-                         :target "_blank"}
-                     (:host as-url)]
-                    (if (empty? word)
-                      [:br]
-                      word)))
-        reducer (fn [acc word-or-url]
-                  (if (string? word-or-url)
-                    (update acc :words str
-                      (str word-or-url " "))
-                    (->
-                      (update acc :result concat [(:words acc) word-or-url " "])
-                      (dissoc :words))))]
-    (vec
-      (cons :p.no-margin
-        (->
-          (reduce reducer {} words)
-          (as-> reduction
-              [(:result reduction) (:words reduction)]))))))
-
+(defn- markdown-paragraph
+  [md-text]
+  (let [sanitized-html (->> md-text
+                            (md->html)
+                            (.sanitize html-sanitizer)
+                            (.getTypedStringValue))]
+    [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn info-text [field-descriptor]
   (let [language (subscribe [:application/form-language])]
     (fn [field-descriptor]
       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-        [:div.application__form-info-text [link-detected-paragraph info]]))))
+        [markdown-paragraph info]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (keyword (:id field-descriptor))
@@ -444,7 +430,7 @@
       [:div.application__form-field
        [label field-descriptor]
        (when-not (clojure.string/blank? @text)
-         [link-detected-paragraph @text])
+         [markdown-paragraph @text])
        (->> (range @attachment-count)
             (map (fn [attachment-idx]
                    ^{:key (str "attachment-" id "-" attachment-idx)}
@@ -458,7 +444,7 @@
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])
-     [link-detected-paragraph text]]))
+     [markdown-paragraph text]]))
 
 (defn- adjacent-field-input-change [field-descriptor row-idx event]
   (let [value  (some-> event .-target .-value)
@@ -491,7 +477,7 @@
         [:div.application__form-field
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
-           [:div.application__form-info-text [link-detected-paragraph info]])
+           [:div.application__form-info-text [markdown-paragraph info]])
          [:div
           (->> (range row-amount)
                (map (fn adjacent-text-fields-row [row-idx]
