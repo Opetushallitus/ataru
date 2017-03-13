@@ -29,8 +29,8 @@
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
 
-(defn get-metadata [application-keys]
-  (let [query-part (->> application-keys
+(defn get-metadata [file-keys]
+  (let [query-part (->> file-keys
                         (map-indexed (fn [idx key]
                                        (let [separator (if (= idx 0) "?" "&")]
                                          (str separator "key=" key))))
