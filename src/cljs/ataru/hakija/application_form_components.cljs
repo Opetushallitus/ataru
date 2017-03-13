@@ -20,7 +20,8 @@
             [ataru.feature-config :as fc])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
-(defonce html-sanitizer (HtmlSanitizer.))
+(defonce builder (new HtmlSanitizer.Builder))
+(defonce html-sanitizer (.build builder))
 
 (declare render-field)
 
