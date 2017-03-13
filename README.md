@@ -61,7 +61,7 @@ unit/browser-testing database which will be wiped out when you run tests)
 
 ### Hakija app
 ```
-lein hakija-dev
+CONFIG=../ataru-secrets/hakija-dev.edn lein hakija-dev
 (in another terminal)
 lein figwheel hakija-dev
 ```

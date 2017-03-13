@@ -117,8 +117,7 @@
   (let [answer (update-in answer [:options option-value] not)
         value  (->> (:options answer)
                     (filter (comp true? second))
-                    (map first)
-                    (clojure.string/join ", "))
+                    (map first))
         valid  (if (not-empty validators)
                  (every? true? (map #(validator/validate % value) validators))
                  true)]
@@ -136,12 +135,17 @@
                    (merge answer {:value new-value
                                   :valid valid?}))))))
 
+(defn- toggle-values
+  [answer options]
+  (reduce (fn [answer option-value]
+            (toggle-multiple-choice-option answer option-value nil))
+          answer
+          options))
+
 (defn- merge-multiple-choice-option-values [value answer]
-  (let [options (clojure.string/split value #"\s*,\s*")]
-    (reduce (fn [answer option-value]
-              (toggle-multiple-choice-option answer option-value nil))
-            answer
-            options)))
+  (if (string? value)
+    (toggle-values answer (clojure.string/split value #"\s*,\s*"))
+    (toggle-values answer value)))
 
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
@@ -153,8 +157,8 @@
           (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
-                                       (vector? value)
-                                       (first))]
+                                             (and (vector? value) (not= (:fieldType answer) "multipleChoice"))
+                                             (first))]
                       (if (contains? answers answer-key)
                         (update
                           (match answer

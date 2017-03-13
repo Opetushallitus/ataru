@@ -94,6 +94,18 @@ run-tests() {
     test-browser
 }
 
+run-browser-tests() {
+    echo "Starting browser test run"
+    ./bin/lein clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript-virkailija
+    build-clojurescript-hakija
+    test-browser
+}
+
 command="$1"
 
 case "$command" in
@@ -120,6 +132,9 @@ case "$command" in
         ;;
     "test-clojure" )
         test-clojure
+        ;;
+    "test-browser" )
+        run-browser-tests
         ;;
     "test-clojurescript" )
         test-clojurescript

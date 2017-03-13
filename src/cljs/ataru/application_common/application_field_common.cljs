@@ -22,15 +22,22 @@
 
 (defn textual-field-value [field-descriptor application & {:keys [lang]}]
   (let [key                (answer-key field-descriptor)
-        value-or-koodi-uri (:value (get (:answers application) key))]
-    (if (contains? field-descriptor :koodisto-source)
-      (let [values (->> (clojure.string/split value-or-koodi-uri #"\s*,\s*")
-                        (map (partial value-or-koodi-uri->label field-descriptor lang)))]
+        value-or-koodi-uri (:value (get (:answers application) key))
+        split-values       (cond-> value-or-koodi-uri
+                                   (string? value-or-koodi-uri) (clojure.string/split #"\s*,\s*"))]
+    (cond
+      (contains? field-descriptor :koodisto-source)
+      (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
         (if (= (count values) 1)
           (first values)
           [:ul.application__form-field-list
            (map wrap-value values)]))
-      value-or-koodi-uri)))
+
+      (and (sequential? split-values) (< 1 (count split-values)))
+      [:ul.application__form-field-list
+       (map wrap-value split-values)]
+
+      :else value-or-koodi-uri)))
 
 (defn scroll-to-anchor
   [field-descriptor]

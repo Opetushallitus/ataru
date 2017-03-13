@@ -26,7 +26,9 @@
    [:div
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))
+          multi-value? (and
+                         (not= "multipleChoice" (:fieldType field-descriptor))
+                         (or (seq? values) (vector? values)))
           cannot-edit? (:cannot-edit answer)]
       (cond
         cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]

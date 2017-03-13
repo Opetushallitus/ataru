@@ -7,8 +7,8 @@
 
 (defn forms-in-use
   [organization-service username]
-  (let [direct-organizations     (.get-direct-organizations organization-service username)
-        all-organization-oids    (map :oid (.get-all-organizations organization-service direct-organizations))
+  (let [direct-organizations     (.get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids    (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
         in-oph-organization?     (some #{oph-organization} all-organization-oids)]
     (reduce (fn [acc1 {:keys [avain haut]}]
               (assoc acc1 avain

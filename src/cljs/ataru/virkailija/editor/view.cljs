@@ -198,7 +198,7 @@
   [form]
   (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
     (fn [form]
-      (when-let [form-used-in-hakus ((keyword (:key form)) @forms-in-use)]
+      (when-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__in_use_notification.animated.flash
           [:span.editor-form__used-in-haku-heading "Tämä lomake on haun käytössä"]
           [:ul.editor-form__used-in-haku-list
