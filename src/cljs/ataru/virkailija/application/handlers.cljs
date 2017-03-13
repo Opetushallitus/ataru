@@ -5,7 +5,8 @@
             [ataru.virkailija.application-sorting :as application-sorting]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.feature-config :as fc]))
+            [ataru.feature-config :as fc]
+            [ataru.url :as url]))
 
 (reg-event-fx
   :application/select-application
@@ -177,9 +178,7 @@
                           (filter (comp (partial = "attachment") :fieldType second))
                           (map (comp :value second))
                           (flatten)
-                          (map-indexed (fn [idx key]
-                                         (let [separator (if (= idx 0) "?" "&")]
-                                           (str separator "key=" key))))
+                          (url/items->query-part "key")
                           (clojure.string/join))
           path       (str "/lomake-editori/api/files" query-part)]
       {:db       db

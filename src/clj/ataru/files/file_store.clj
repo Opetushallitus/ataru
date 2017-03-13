@@ -1,5 +1,6 @@
 (ns ataru.files.file-store
-  (:require [oph.soresu.common.config :refer [config]]
+  (:require [ataru.url :as url]
+            [oph.soresu.common.config :refer [config]]
             [org.httpkit.client :as http]
             [cheshire.core :as json]))
 
@@ -30,11 +31,7 @@
       (json/parse-string (:body resp) true))))
 
 (defn get-metadata [file-keys]
-  (let [query-part (->> file-keys
-                        (map-indexed (fn [idx key]
-                                       (let [separator (if (= idx 0) "?" "&")]
-                                         (str separator "key=" key))))
-                        (clojure.string/join))
+  (let [query-part (clojure.string/join (url/items->query-part "key" file-keys))
         url        (str (get-in config [:liiteri :url]) "/api/files" query-part)
         resp       @(http/get url)]
     (when (= (:status resp) 200)
