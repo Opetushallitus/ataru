@@ -24,7 +24,7 @@
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
-                 :features {:attachment "{{ataru_attachment_support_enabled}}"}}
+                 :features {:attachment {{ataru_attachment_support_enabled}}}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
