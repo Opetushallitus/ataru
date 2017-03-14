@@ -386,7 +386,7 @@
                       (dispatch [:application/add-attachments component-id attachment-count files])))}]
      [:label.application__form-upload-label.application__form-upload-label--enabled
       {:for id}
-      [:i.zmdi.zmdi-cloud-upload]
+      [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
 
 (defn attachment-update [component-id attachment-idx]
