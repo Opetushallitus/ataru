@@ -419,7 +419,7 @@
                              (dispatch [:application/remove-attachment component-id attachment-idx]))}]
                [:label
                 {:for (str id-prefix "-remove")}
-                [:i.zmdi.zmdi-close.application__form-upload-status-indicator]]]
+                [:i.zmdi.zmdi-close.application__form-upload-status-indicator.application__form-upload-remove-button]]]
        nil)]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
