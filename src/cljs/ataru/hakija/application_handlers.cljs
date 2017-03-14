@@ -436,16 +436,20 @@
       {:db         db
        :dispatch-n dispatch-list})))
 
+(defn- update-attachment-answer-validity [db component-id]
+  (update-in db [:application :answers (keyword component-id)]
+             (fn [{:keys [values] :as component}]
+               (assoc component
+                 :valid
+                 (every? (comp true? :valid) values)))))
+
 (reg-event-db
   :application/handle-attachment-upload
   (fn [db [_ component-id attachment-idx response]]
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
           {:value response :valid true :status :ready})
-        (update-in [:application :answers (keyword component-id)]
-          (fn [{:keys [values] :as component}]
-            (assoc component :valid
-              (every? (comp true? :valid) values)))))))
+        (update-attachment-answer-validity component-id))))
 
 (reg-event-fx
   :application/update-attachment
@@ -470,9 +474,11 @@
 (reg-event-db
   :application/handle-attachment-delete
   (fn [db [_ component-id attachment-key _]]
-    (update-in db [:application :answers (keyword component-id) :values]
-      (comp vec
-            (partial remove (comp (partial = attachment-key) :key :value))))))
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values]
+                   (comp vec
+                         (partial remove (comp (partial = attachment-key) :key :value))))
+        (update-attachment-answer-validity component-id))))
 
 (reg-event-fx
   :application/remove-attachment
