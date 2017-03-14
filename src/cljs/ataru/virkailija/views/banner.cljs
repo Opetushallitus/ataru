@@ -12,7 +12,7 @@
 
 (def logo
   [:div.logo
-   [:a {:href "https://virkailija.opintopolku.fi/"}
+   [:a {:href "/"}
     [:img {:src "/lomake-editori/images/opintopolku_large-fi.png"
            :height "40px"}]]])
 
