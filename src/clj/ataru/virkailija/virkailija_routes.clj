@@ -268,7 +268,7 @@
 
                  (api/context "/files" []
                    :tags ["files-api"]
-                   (api/GET "/" []
+                   (api/GET "/metadata" []
                      :query-params [key :- (api/describe [s/Str] "File key")]
                      :summary "Get metadata for one or more files"
                      :return [ataru-schema/File]
