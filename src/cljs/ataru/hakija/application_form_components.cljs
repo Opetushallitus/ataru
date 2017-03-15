@@ -406,7 +406,8 @@
                       (dispatch [:application/update-attachment component-id attachment-idx file])))}]
      [:label.application__update-attachment-label
       {:for id}
-      [:span (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]]
+      [:span (str (inc attachment-idx) ". "
+                  (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]]
      [:a {:href     "#"
           :on-click (fn remove-attachment [event]
                       (.preventDefault event)
@@ -416,12 +417,14 @@
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-upload-button-container
    [:span.application__form-deleting-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]])
+    (str (inc attachment-idx) ". "
+         (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]])
 
 (defn attachment-uploading-file [component-id attachment-idx]
   [:div.application__form-upload-button-container
    [:span.application__form-uploading-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]
+    (str (inc attachment-idx) ". "
+         (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
 (defn attachment-update [component-id attachment-idx]
