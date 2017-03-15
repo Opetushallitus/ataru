@@ -430,11 +430,10 @@ textarea.application__form-text-area__size-large {
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-top: 10px;
   padding-top: 2px;
   padding-bottom: 2px;
-  width: 350px;
 }
 
 .application__update-attachment-button {
@@ -442,9 +441,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__update-attachment-label {
-  .truncate;
   cursor: pointer;
-  width: 314px;
 }
 
 .application__update-attachment-label:hover {
@@ -465,18 +462,13 @@ textarea.application__form-text-area__size-large {
 
 .application__form-upload-button-container:hover .application__form-upload-remove-attachment-button {
   display: inline;
-}
-
-.application__form-deleting-attachment-text {
-  .truncate;
+  margin-left: 20px;
 }
 
 .application__form-uploading-attachment-text {
-  .truncate;
   align-items: center;
   display: flex;
   flex-flow: row nowrap;
-  width: 314px;
   height: 22px;
 }
 
@@ -504,6 +496,7 @@ textarea.application__form-text-area__size-large {
 
 .application__form-upload-uploading-spinner {
   .spin;
+  margin-left: 20px;
 }
 
 .application__form-upload-button-add-text {
