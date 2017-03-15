@@ -431,9 +431,12 @@ textarea.application__form-text-area__size-large {
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  margin-top: 5px;
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+.application__attachment-filename-container {
+  margin-bottom: 5px;
 }
 
 .application__update-attachment-button {
@@ -490,8 +493,11 @@ textarea.application__form-text-area__size-large {
   flex-flow: row nowrap;
   height: 43px;
   justify-content: center;
-  margin-top: 20px;
   width: 184px;
+}
+
+.application__attachment-filename-container + .application__form-upload-button-container > .application__form-upload-label {
+  margin-top: 20px;
 }
 
 .application__form-upload-uploading-spinner {

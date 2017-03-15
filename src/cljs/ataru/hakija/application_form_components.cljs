@@ -429,10 +429,11 @@
 
 (defn attachment-update [component-id attachment-idx]
   (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
-    (case status
-      :ready [attachment-update-file component-id attachment-idx]
-      :uploading [attachment-uploading-file component-id attachment-idx]
-      :deleting [attachment-deleting-file component-id attachment-idx])))
+    [:div.application__attachment-filename-container
+     (case status
+       :ready [attachment-update-file component-id attachment-idx]
+       :uploading [attachment-uploading-file component-id attachment-idx]
+       :deleting [attachment-deleting-file component-id attachment-idx])]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])
