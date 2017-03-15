@@ -9,7 +9,9 @@
 
 (defn ^:private required?
   [value]
-  (not (clojure.string/blank? value)))
+  (if (or (seq? value) (vector? value))
+    (not (empty? value))
+    (not (clojure.string/blank? value))))
 
 (def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|\+|A])(\d{3})([0-9a-zA-Z])$")
 

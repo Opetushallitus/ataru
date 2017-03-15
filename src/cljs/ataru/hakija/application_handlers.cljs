@@ -401,21 +401,21 @@
 
 (reg-event-fx
   :application/add-single-attachment
-  (fn [{:keys [db]} [_ component-id attachment-idx file]]
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx file]]
     (let [name      (.-name file)
           form-data (doto (js/FormData.)
                       (.append "file" file name))]
       {:db   db
        :http {:method    :post
               :url       "/hakemus/api/files"
-              :handler   [:application/handle-attachment-upload component-id attachment-idx]
+              :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx]
               :body      form-data}})))
 
 (reg-event-fx
   :application/add-attachments
-  (fn [{:keys [db]} [_ component-id attachment-count files]]
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files]]
     (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
-                                       [:application/add-single-attachment component-id (+ attachment-count idx) file])
+                                       [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file])
                                      files)
           db            (as-> db db'
                               (update-in db' [:application :answers (keyword component-id) :values]
@@ -436,24 +436,27 @@
       {:db         db
        :dispatch-n dispatch-list})))
 
-(defn- update-attachment-answer-validity [db component-id]
+(defn- update-attachment-answer-validity [db field-descriptor component-id]
   (update-in db [:application :answers (keyword component-id)]
              (fn [{:keys [values] :as component}]
-               (assoc component
-                 :valid
-                 (every? (comp true? :valid) values)))))
+               (let [validators (:validators field-descriptor)
+                     validated? (every? true? (map #(validator/validate % values) validators))]
+                 (assoc component
+                   :valid
+                   (and validated?
+                        (every? (comp true? :valid) values)))))))
 
 (reg-event-db
   :application/handle-attachment-upload
-  (fn [db [_ component-id attachment-idx response]]
+  (fn [db [_ field-descriptor component-id attachment-idx response]]
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
-          {:value response :valid true :status :ready})
-        (update-attachment-answer-validity component-id))))
+                   {:value response :valid true :status :ready})
+        (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-fx
   :application/update-attachment
-  (fn [{:keys [db]} [_ component-id attachment-idx file]]
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx file]]
     (let [key       (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
           form-data (doto (js/FormData.)
                       (.append "file" file (.-name file)))
@@ -468,21 +471,21 @@
       {:db   db
        :http {:method  :put
               :url     (str "/hakemus/api/files/" key)
-              :handler [:application/handle-attachment-upload component-id attachment-idx]
+              :handler [:application/handle-attachment-upload field-descriptor component-id attachment-idx]
               :body    form-data}})))
 
 (reg-event-db
   :application/handle-attachment-delete
-  (fn [db [_ component-id attachment-key _]]
+  (fn [db [_ field-descriptor component-id attachment-key _]]
     (-> db
         (update-in [:application :answers (keyword component-id) :values]
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
-        (update-attachment-answer-validity component-id))))
+        (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-fx
   :application/remove-attachment
-  (fn [{:keys [db]} [_ component-id attachment-idx]]
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx]]
     (let [key (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
           db  (-> db
                   (assoc-in [:application :answers (keyword component-id) :valid] false)
@@ -492,4 +495,4 @@
       {:db   db
        :http {:method  :delete
               :url     (str "/hakemus/api/files/" key)
-              :handler [:application/handle-attachment-delete component-id key]}})))
+              :handler [:application/handle-attachment-delete field-descriptor component-id key]}})))
