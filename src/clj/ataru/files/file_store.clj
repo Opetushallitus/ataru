@@ -36,3 +36,9 @@
         resp       @(http/get url)]
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
+
+(defn get-file [key]
+  (let [url  (str (get-in config [:liiteri :url]) "/api/files/" key)
+        resp @(http/get url)]
+    (when (= (:status resp) 200)
+      (:body resp))))

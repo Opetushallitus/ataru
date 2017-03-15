@@ -278,8 +278,9 @@
                    (api/GET "/content/:key" []
                      :path-params [key :- (api/describe s/Str "File key")]
                      :summary "Download a file"
-                     :return s/Any
-                     (ok {:it-ok 42})))))
+                     (if-let [file-stream (file-store/get-file key)]
+                       (ok file-stream)
+                       (not-found))))))
 
 (api/defroutes resource-routes
   (api/undocumented
