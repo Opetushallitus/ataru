@@ -268,13 +268,18 @@
 
                  (api/context "/files" []
                    :tags ["files-api"]
-                   (api/GET "/" []
+                   (api/GET "/metadata" []
                      :query-params [key :- (api/describe [s/Str] "File key")]
                      :summary "Get metadata for one or more files"
                      :return [ataru-schema/File]
                      (if-let [resp (file-store/get-metadata key)]
                        (ok resp)
-                       (not-found))))))
+                       (not-found)))
+                   (api/GET "/content/:key" []
+                     :path-params [key :- (api/describe s/Str "File key")]
+                     :summary "Download a file"
+                     :return s/Any
+                     (ok {:it-ok 42})))))
 
 (api/defroutes resource-routes
   (api/undocumented

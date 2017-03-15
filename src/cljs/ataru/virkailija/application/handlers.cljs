@@ -206,7 +206,7 @@
                           (flatten)
                           (url/items->query-part "key")
                           (clojure.string/join))
-          path       (str "/lomake-editori/api/files" query-part)]
+          path       (str "/lomake-editori/api/files/metadata" query-part)]
       {:db       db
        :http     {:method              :get
                   :path                path
