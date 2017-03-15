@@ -384,7 +384,7 @@
                                          (range)
                                          (map #(.item file-list %)))]
                       (dispatch [:application/add-attachments component-id attachment-count files])))}]
-     [:label.application__form-upload-label.application__form-upload-label--enabled
+     [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
