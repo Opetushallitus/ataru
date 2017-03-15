@@ -91,6 +91,7 @@
         (dispatch [:application/fetch-applications-by-haku (:haku haku)]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
+    (common-actions-for-applications-route)
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms key])))

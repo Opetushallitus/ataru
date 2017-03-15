@@ -369,7 +369,7 @@
                      label]]))
                (:options field-descriptor))]]))))
 
-(defn attachment-upload [component-id attachment-count]
+(defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id (str component-id "-upload-button")]
     [:div.application__form-upload-button-container
      [:input.application__form-upload-input
@@ -383,7 +383,7 @@
                           files     (->> (.-length file-list)
                                          (range)
                                          (map #(.item file-list %)))]
-                      (dispatch [:application/add-attachments component-id attachment-count files])))}]
+                      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files])))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
@@ -392,7 +392,7 @@
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
 
-(defn attachment-update-file [component-id attachment-idx]
+(defn attachment-update-file [field-descriptor component-id attachment-idx]
   (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
     [:div.application__form-upload-button-container
      [:input.application__update-attachment-button
@@ -403,7 +403,7 @@
                     (let [file-list (or (some-> event .-dataTransfer .-files)
                                         (.. event -target -files))
                           file      (.item file-list 0)]
-                      (dispatch [:application/update-attachment component-id attachment-idx file])))}]
+                      (dispatch [:application/update-attachment field-descriptor component-id attachment-idx file])))}]
      [:label.application__update-attachment-label
       {:for id}
       [:span (str (inc attachment-idx) ". "
@@ -411,7 +411,7 @@
      [:a {:href     "#"
           :on-click (fn remove-attachment [event]
                       (.preventDefault event)
-                      (dispatch [:application/remove-attachment component-id attachment-idx]))}
+                      (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
       [:i.zmdi.zmdi-close.application__form-upload-remove-attachment-button]]]))
 
 (defn attachment-deleting-file [component-id attachment-idx]
@@ -427,11 +427,11 @@
          (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
-(defn attachment-update [component-id attachment-idx]
+(defn attachment-update [field-descriptor component-id attachment-idx]
   (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
     [:div.application__attachment-filename-container
      (case status
-       :ready [attachment-update-file component-id attachment-idx]
+       :ready [attachment-update-file field-descriptor component-id attachment-idx]
        :uploading [attachment-uploading-file component-id attachment-idx]
        :deleting [attachment-deleting-file component-id attachment-idx])]))
 
@@ -447,8 +447,8 @@
        (->> (range @attachment-count)
             (map (fn [attachment-idx]
                    ^{:key (str "attachment-" id "-" attachment-idx)}
-                   [attachment-update id attachment-idx])))
-       [attachment-upload id @attachment-count]])))
+                   [attachment-update field-descriptor id attachment-idx])))
+       [attachment-upload field-descriptor id @attachment-count]])))
 
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])

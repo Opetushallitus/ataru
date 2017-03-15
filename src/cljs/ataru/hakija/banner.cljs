@@ -26,29 +26,26 @@
         default-lang        (subscribe [:application/default-language])
         form-fields         (reaction (util/flatten-form-fields @(subscribe [:state-query [:form :content]])))]
     (fn [valid-status]
-      (let [valid-status (update valid-status :invalid-fields
-                           (partial filter (fn ignore-attachments [answer-status]
-                                             (not= (form-field-type @form-fields (:key answer-status)) "attachment"))))]
-        (when (seq (:invalid-fields valid-status))
-          [:div.application__invalid-field-status
-           [:span.application__invalid-field-status-title
-            {:on-click toggle-show-details}
-            (str (count (:invalid-fields valid-status)) (case @lang
-                                                          :fi " pakollista tietoa puuttuu"
-                                                          :sv " obligatoriska uppgifter saknas"
-                                                          :en " mandatory fields are missing"))]
-           (when @show-details
-             [:div
-              [:div.application__invalid-fields-arrow-up]
-              (into [:div.application__invalid-fields
-                     [:span.application__close-invalid-fields
-                      {:on-click toggle-show-details}
-                      "x"]]
-                (mapv (fn [field]
-                        (let [label (or (get-in field [:label @lang])
-                                        (get-in field [:label @default-lang]))]
-                          [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
-                      (:invalid-fields valid-status)))])])))))
+      (when (seq (:invalid-fields valid-status))
+        [:div.application__invalid-field-status
+         [:span.application__invalid-field-status-title
+          {:on-click toggle-show-details}
+          (str (count (:invalid-fields valid-status)) (case @lang
+                                                        :fi " pakollista tietoa puuttuu"
+                                                        :sv " obligatoriska uppgifter saknas"
+                                                        :en " mandatory fields are missing"))]
+         (when @show-details
+           [:div
+            [:div.application__invalid-fields-arrow-up]
+            (into [:div.application__invalid-fields
+                   [:span.application__close-invalid-fields
+                    {:on-click toggle-show-details}
+                    "x"]]
+                  (mapv (fn [field]
+                          (let [label (or (get-in field [:label @lang])
+                                          (get-in field [:label @default-lang]))]
+                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                        (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
   (let [lang (subscribe [:application/form-language])]
