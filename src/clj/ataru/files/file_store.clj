@@ -32,7 +32,7 @@
 
 (defn get-metadata [file-keys]
   (let [query-part (clojure.string/join (url/items->query-part "key" file-keys))
-        url        (str (get-in config [:liiteri :url]) "/api/files" query-part)
+        url        (str (get-in config [:liiteri :url]) "/api/files/metadata" query-part)
         resp       @(http/get url)]
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
