@@ -384,43 +384,56 @@
                                          (range)
                                          (map #(.item file-list %)))]
                       (dispatch [:application/add-attachments field-descriptor component-id attachment-count files])))}]
-     [:label.application__form-upload-label.application__form-upload-label--enabled
+     [:label.application__form-upload-label
       {:for id}
-      [:i.zmdi.zmdi-cloud-upload]
+      [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
 
-(defn attachment-update [field-descriptor component-id attachment-idx]
-  (let [id-prefix       (str "attachment-" component-id "-" attachment-idx)
-        attachment-spec @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
-        status          (:status attachment-spec)]
+(defn- filename->label [{:keys [filename size]}]
+  (str filename " (" (cljs-util/size-bytes->str size) ")"))
+
+(defn attachment-update-file [field-descriptor component-id attachment-idx]
+  (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
     [:div.application__form-upload-button-container
-     [:input.application__form-upload-input
-      (cond-> {:id        (str id-prefix "-update")
-               :type      "file"
-               :on-change (fn [event]
-                            (.preventDefault event)
-                            (let [file-list (or (some-> event .-dataTransfer .-files)
-                                                (.. event -target -files))
-                                  file      (.item file-list 0)]
-                              (dispatch [:application/update-attachment field-descriptor component-id attachment-idx file])))}
-        (not= status :ready) (assoc :disabled true))]
-     [:label.application__form-upload-label
-      {:for (str id-prefix "-update")
-       :class (if (= status :ready) "application__form-upload-label--enabled" "application__form-upload-label--disabled")}
-      [:span.application__form-upload-button-add-text (str (get-in attachment-spec [:value :filename]) " (" (cljs-util/size-bytes->str (get-in attachment-spec [:value :size])) ")")]]
+     [:input.application__update-attachment-button
+      {:id        id
+       :type      "file"
+       :on-change (fn update-attachment [event]
+                    (.preventDefault event)
+                    (let [file-list (or (some-> event .-dataTransfer .-files)
+                                        (.. event -target -files))
+                          file      (.item file-list 0)]
+                      (dispatch [:application/update-attachment field-descriptor component-id attachment-idx file])))}]
+     [:label.application__update-attachment-label
+      {:for id}
+      [:span (str (inc attachment-idx) ". "
+                  (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]]
+     [:a {:href     "#"
+          :on-click (fn remove-attachment [event]
+                      (.preventDefault event)
+                      (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
+      [:i.zmdi.zmdi-close.application__form-upload-remove-attachment-button]]]))
+
+(defn attachment-deleting-file [component-id attachment-idx]
+  [:div.application__form-upload-button-container
+   [:span.application__form-deleting-attachment-text
+    (str (inc attachment-idx) ". "
+         (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]])
+
+(defn attachment-uploading-file [component-id attachment-idx]
+  [:div.application__form-upload-button-container
+   [:span.application__form-uploading-attachment-text
+    (str (inc attachment-idx) ". "
+         (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]
+   [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
+
+(defn attachment-update [field-descriptor component-id attachment-idx]
+  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
+    [:div.application__attachment-filename-container
      (case status
-       :uploading [:i.zmdi.zmdi-spinner.application__form-upload-status-indicator.application__form-upload-uploading-spinner]
-       :ready [:div
-               [:input.application__form-upload-input
-                {:id       (str id-prefix "-remove")
-                 :type     "button"
-                 :on-click (fn [event]
-                             (.preventDefault event)
-                             (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}]
-               [:label
-                {:for (str id-prefix "-remove")}
-                [:i.zmdi.zmdi-close.application__form-upload-status-indicator]]]
-       nil)]))
+       :ready [attachment-update-file field-descriptor component-id attachment-idx]
+       :uploading [attachment-uploading-file component-id attachment-idx]
+       :deleting [attachment-deleting-file component-id attachment-idx])]))
 
 (defn attachment [{:keys [id] :as field-descriptor}]
   (let [language         (subscribe [:application/form-language])
