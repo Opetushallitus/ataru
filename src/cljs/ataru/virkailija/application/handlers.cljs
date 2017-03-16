@@ -31,7 +31,7 @@
 
 (reg-event-db
  :application/close-application
- (fn [db [_ application-key]]
+ (fn [db [_ _]]
    (close-application db)))
 
 (defn- languages->kwd [form]
