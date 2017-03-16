@@ -426,6 +426,85 @@ textarea.application__form-text-area__size-large {
   color: #9b9b9b;
 }
 
+.application__form-upload-button-container {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.application__attachment-filename-container {
+  margin-bottom: 5px;
+}
+
+.application__update-attachment-button {
+  display: none;
+}
+
+.application__update-attachment-label {
+  cursor: pointer;
+}
+
+.application__form-deleting-attachment-text {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 22px;
+}
+
+.application__form-upload-remove-attachment-button {
+  cursor: pointer;
+  display: none;
+}
+
+.application__form-upload-button-container:hover .application__form-upload-remove-attachment-button {
+  display: inline;
+  margin-left: 20px;
+}
+
+.application__form-uploading-attachment-text {
+  align-items: center;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 22px;
+}
+
+.application__form-upload-icon {
+  font-size: 22px;
+}
+
+.application__form-upload-input {
+  display: none;
+}
+
+.application__form-upload-label {
+  align-items: center;
+  background-color: @section-header-text;
+  border-radius: 3px;
+  color: @white;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  height: 43px;
+  justify-content: center;
+  width: 184px;
+}
+
+.application__attachment-filename-container + .application__form-upload-button-container > .application__form-upload-label {
+  margin-top: 20px;
+}
+
+.application__form-upload-uploading-spinner {
+  .spin;
+  margin-left: 20px;
+}
+
+.application__form-upload-button-add-text {
+  margin-left: 10px;
+}
+
 .application__error-display {
     position: fixed;
     margin-top: 0;

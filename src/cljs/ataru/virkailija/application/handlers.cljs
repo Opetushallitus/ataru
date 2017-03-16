@@ -1,28 +1,58 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
+            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
+            [ataru.virkailija.virkailija-ajax :refer [http]]
+            [ataru.util :as util]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.feature-config :as fc]
+            [ataru.url :as url]))
 
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key]]
     (if (not= application-key (get-in db [:application :selected-key]))
-      (-> {:db db}
-          (assoc-in [:db :application :selected-key] application-key)
-          (assoc-in [:db :application :selected-application-and-form] nil)
-          (assoc-in [:db :application :form-list-expanded?] false)
-          (assoc :dispatch [:application/fetch-application application-key])))))
+      (let [db (-> db
+                   (assoc-in [:application :selected-key] application-key)
+                   (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :form-list-expanded?] false))]
+        {:db         db
+         :dispatch-n [[:application/stop-autosave]
+                      [:application/fetch-application application-key]]}))))
 
-(reg-event-fx
-  :application/close-application
-  (fn [{:keys [db]} [_ application-key]]
-    (-> {:db db}
-        (assoc-in [:db :application :selected-key] nil)
-        (assoc-in [:db :application :selected-application-and-form] nil)
-        (assoc-in [:db :application :form-list-expanded?] true))))
+(defn close-application [db]
+  (-> db
+      (assoc-in [:application :selected-key] nil)
+      (assoc-in [:application :selected-application-and-form] nil)
+      (assoc-in [:application :form-list-expanded?] true)))
+
+(reg-event-db
+ :application/close-application
+ (fn [db [_ _]]
+   (close-application db)))
+
+(defn- languages->kwd [form]
+  (update form :languages
+    (partial mapv keyword)))
+
+(defn refresh-forms-for-application-listing []
+  (http
+   :get
+   (str "/lomake-editori/api/forms-for-application-listing")
+   (fn [db {:keys [forms]}]
+     (assoc-in db [:application :forms] (->> forms
+                                        (mapv languages->kwd)
+                                        (util/group-by-first :key)
+                                        (sort-by-time-and-deletedness))))))
+
+(reg-event-db
+  :application/refresh-forms-for-application-listing
+  (fn [db _]
+    (refresh-forms-for-application-listing)
+    db))
 
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
@@ -151,19 +181,68 @@
                                                                                         :score
                                                                                         :state])}))})))
 
-(reg-event-db
+(reg-event-fx
+  :application/handle-fetch-application-attachment-metadata
+  (fn [{:keys [db]} [_ response]]
+    (let [response-map (group-by :key response)
+          db (->> (get-in db [:application :selected-application-and-form :application :answers])
+                  (map (fn [[_ {:keys [fieldType] :as answer}]]
+                         (cond-> answer
+                           (= fieldType "attachment")
+                           (update :value (partial map (fn [file-key]
+                                                         (first (get response-map file-key))))))))
+                  (reduce (fn [db {:keys [key] :as answer}]
+                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
+                          db))]
+      {:db       db
+       :dispatch [:application/start-autosave]})))
+
+(reg-event-fx
+  :application/fetch-application-attachment-metadata
+  (fn [{:keys [db]} _]
+    (let [query-part (->> (get-in db [:application :selected-application-and-form :application :answers])
+                          (filter (comp (partial = "attachment") :fieldType second))
+                          (map (comp :value second))
+                          (flatten)
+                          (url/items->query-part "key")
+                          (clojure.string/join))
+          path       (str "/lomake-editori/api/files/metadata" query-part)]
+      {:db       db
+       :http     {:method              :get
+                  :path                path
+                  :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
+
+(reg-event-fx
+  :application/handle-fetch-application
+  (fn [{:keys [db]} [_ response]]
+    (let [db (update-application-details db response)]
+      {:db db
+       :dispatch (if (fc/feature-enabled? :attachment)
+                   [:application/fetch-application-attachment-metadata]
+                   [:application/start-autosave])})))
+
+(reg-event-fx
   :application/fetch-application
-  (fn [db [_ application-id]]
+  (fn [{:keys [db]} [_ application-id]]
     (when-let [autosave (get-in db [:application :review-autosave])]
       (autosave/stop-autosave! autosave))
-    (ajax/http
-      :get
-      (str "/lomake-editori/api/applications/" application-id)
-      (fn [db application-response]
-        (-> db
-          (update-application-details application-response)
-          (start-application-review-autosave))))
-    (assoc db [:application :review-autosave] nil)))
+    (let [db (assoc-in db [:application :review-autosave] nil)]
+      {:db   db
+       :http {:method              :get
+              :path                (str "/lomake-editori/api/applications/" application-id)
+              :handler-or-dispatch :application/handle-fetch-application}})))
+
+(reg-event-db
+  :application/start-autosave
+  (fn [db _]
+    (start-application-review-autosave db)))
+
+(reg-event-fx
+  :application/stop-autosave
+  (fn [{:keys [db]} _]
+    (let [autosave (get-in db [:application :review-autosave])]
+      (cond-> {:db db}
+        (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
   :application/search-form-list
@@ -174,3 +253,49 @@
   :application/clear-search-term
   (fn [db]
     (assoc-in db [:application :search-term] nil)))
+
+(reg-event-db
+ :application/select-form
+ (fn [db [_ form-key]]
+   (-> db
+       (assoc-in [:application :selected-form-key] form-key)
+       (close-application))))
+
+(reg-event-db
+  :application/select-hakukohde
+  (fn [db [_ hakukohde]]
+    (-> db
+        (update-in [:application] dissoc :selected-form-key :selected-haku)
+        (assoc-in [:application :selected-hakukohde] hakukohde)
+        (close-application))))
+
+(reg-event-db
+  :application/select-haku
+  (fn [db [_ haku]]
+    (-> db
+        (update :application dissoc :selected-form-key :selected-hakukohde)
+        (assoc-in [:application :selected-haku] haku)
+        (close-application))))
+
+(reg-event-db
+  :application/refresh-hakukohteet-from-applications
+  (fn [db _]
+    (http
+      :get
+      "/lomake-editori/api/hakukohteet"
+      (fn [db hakukohteet]
+        (assoc-in db [:application :hakukohteet] hakukohteet)))
+    db))
+
+(reg-event-db
+  :editor/handle-refresh-haut-from-applications
+  (fn [db [_ haut]]
+    (assoc-in db [:application :haut] haut)))
+
+(reg-event-fx
+  :application/refresh-haut-from-applications
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))

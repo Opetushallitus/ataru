@@ -2,18 +2,22 @@
 
 set -e
 
-VIRKAILIJA_CONFIG="config/dev.edn"
-HAKIJA_CONFIG="config/dev.edn"
+VIRKAILIJA_CONFIG="../ataru-secrets/virkailija-dev.edn"
+HAKIJA_CONFIG="../ataru-secrets/hakija-dev.edn"
 
-while getopts ":v::h:" opt; do
+while getopts ":v::h:i" opt; do
   case $opt in
+    i)
+      echo "Using iTerm2 integration"
+      ITERM_FLAG="-CC"
+      ;;
     v)
-        echo "Using virkailija-config: $OPTARG" >&2
-        VIRKAILIJA_CONFIG="$OPTARG"
+      echo "Using virkailija-config: $OPTARG" >&2
+      VIRKAILIJA_CONFIG="$OPTARG"
       ;;
     h)
-        echo "Using hakija-config: $OPTARG" >&2
-        HAKIJA_CONFIG="$OPTARG"
+      echo "Using hakija-config: $OPTARG" >&2
+      HAKIJA_CONFIG="$OPTARG"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -30,7 +34,7 @@ SESSION=$USER
 
 ./bin/lein clean
 
-tmux -2 new-session -d -s $SESSION
+tmux -2 -u new-session -d -s $SESSION
 
 tmux new-window -t $SESSION:1 -n 'Ataru'
 tmux split-window -h
@@ -58,4 +62,10 @@ tmux split-window -v
 tmux select-pane -t 4
 tmux send-keys "./bin/lein figwheel-hakija" C-m
 
-tmux -2 attach-session -t $SESSION
+if [ -n $ITERM_FLAG ]
+then
+    echo "Attaching session."
+    echo "To kill detached session: tmux kill-session -t $SESSION"
+fi
+
+tmux $ITERM_FLAG -u -2 attach-session -t $SESSION

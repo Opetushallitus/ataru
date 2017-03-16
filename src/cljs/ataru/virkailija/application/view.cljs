@@ -10,7 +10,7 @@
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
-    [ataru.application-common.application-readonly :as readonly-contents]
+    [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
     [taoensso.timbre :refer-macros [spy debug]]
     [ataru.application-common.koulutus :as koulutus]))
@@ -66,14 +66,16 @@
    {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
 
 (defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:editor :selected-hakukohde]])
-        selected-form      (subscribe [:editor/selected-form])
-        selected-haku      (subscribe [:state-query [:editor :selected-haku]])]
+  (let [selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])
+        selected-form-key  (subscribe [:state-query [:application :selected-form-key]])
+        forms              (subscribe [:state-query [:application :forms]])
+        selected-haku      (subscribe [:state-query [:application :selected-haku]])]
     (fn []
       [:div.application-handling__form-list-header
-       (or (:name @selected-form)
+       (or (:name (get @forms @selected-form-key))
            (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku))])))
+           (:haku-name @selected-haku)
+           "Valitse haku/hakukohde")])))
 
 (defn form-list-column [forms header-text url-fn open]
   (let [search-term (subscribe [:state-query [:application :search-term]])]
@@ -122,19 +124,19 @@
   (str "/lomake-editori/applications/haku/" haku))
 
 (defn haku-column [open]
-  (let [haut (reaction (->> @(subscribe [:state-query [:editor :haut]])
+  (let [haut (reaction (->> @(subscribe [:state-query [:application :haut]])
                             (map haku->form-list-item)))]
     (fn [open]
       [form-list-column @haut "Haku" haku-url open])))
 
 (defn hakukohde-column [open]
-  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:editor :hakukohteet]])
+  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:application :hakukohteet]])
                                    (map hakukohde->form-list-item)))]
     (fn [open]
       [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
 
 (defn forms-column [open]
-  (let [forms (reaction (->> @(subscribe [:state-query [:editor :forms]])
+  (let [forms (reaction (->> @(subscribe [:state-query [:application :forms]])
                              (reduce-kv (fn [forms _ form]
                                           (conj forms form))
                                         [])))]
@@ -142,9 +144,9 @@
       [form-list-column @forms "Lomake (ilman hakukohdetta)" form-url open])))
 
 (defn excel-download-link [applications application-filter]
-  (let [form-key     (reaction (:key @(subscribe [:editor/selected-form])))
-        hakukohde    (reaction @(subscribe [:state-query [:editor :selected-hakukohde]]))
-        haku         (reaction @(subscribe [:state-query [:editor :selected-haku]]))
+  (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
+        hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
+        haku         (subscribe [:state-query [:application :selected-haku]])
         query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
     (fn [applications application-filter]
       (when (> (count applications) 0)

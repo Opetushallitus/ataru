@@ -22,6 +22,7 @@
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.0"]
                  [medley "0.8.4"]
+                 [markdown-clj "0.9.97"]
 
                  ;clojure
                  [compojure "1.5.1"]
@@ -196,7 +197,8 @@
                                                [speclj-junit "0.0.11-20151116.130002-1"]]
                               :plugins        [[refactor-nrepl "2.2.0"]
                                                [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
-                                               [lein-cljfmt "0.5.6"]]
+                                               [lein-cljfmt "0.5.6"]
+                                               [lein-kibit "0.1.3"]]
                               :source-paths   ["dev/clj" "test/cljc/unit"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}

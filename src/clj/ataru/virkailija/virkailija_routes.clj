@@ -9,6 +9,7 @@
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
+            [ataru.files.file-store :as file-store]
             [ataru.util.client-error :as client-error]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
@@ -16,6 +17,7 @@
             [ataru.haku.haku-access-control :as access-controlled-haku]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
+            [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -91,21 +93,29 @@
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 
-(defn- organizations [session] (-> session :identity :organizations))
-
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
                  (api/GET "/user-info" {session :session}
                           (ok {:username (-> session :identity :username)
-                               :organizations (organizations session)}))
+                               :organizations (organization-list session)}))
+
+                 (api/GET "/forms-for-editor" {session :session}
+                   :summary "Return forms for editor view"
+                   :return {:forms [ataru-schema/Form]}
+                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
+
+                 (api/GET "/forms-for-application-listing" {session :session}
+                   :summary "Return for application viewing purposes"
+                   :return {:forms [ataru-schema/Form]}
+                   (ok (access-controlled-form/get-forms-for-application-listing session organization-service)))
 
                  (api/GET "/forms" {session :session}
-                   :query-params [{include-deleted :- s/Bool false}]
-                   :summary "Return all forms."
+                   :summary "Used by external services. In practice this is Tarjonta system only for now.
+                             Return forms authorized with editor right (:form-edit)"
                    :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms include-deleted session organization-service)))
+                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
 
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
@@ -254,7 +264,17 @@
                                        :path-params [koodisto-uri :- s/Str version :- Long]
                                        :return s/Any
                                        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
-                                         (ok koodi-options))))))
+                                         (ok koodi-options))))
+
+                 (api/context "/files" []
+                   :tags ["files-api"]
+                   (api/GET "/metadata" []
+                     :query-params [key :- (api/describe [s/Str] "File key")]
+                     :summary "Get metadata for one or more files"
+                     :return [ataru-schema/File]
+                     (if-let [resp (file-store/get-metadata key)]
+                       (ok resp)
+                       (not-found))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -291,7 +311,8 @@
                                                        :description "Specifies the clerk API for Ataru"}
                                                 :tags [{:name "form-api" :description "Form handling"}
                                                        {:name "applications-api" :description "Application handling"}
-                                                       {:name "postal-code-api" :description "Postal code service"}]}}
+                                                       {:name "koodisto-api" :description "Koodisto service"}
+                                                       {:name "files-api" :description "File service"}]}}
                                :exceptions {:handlers {::ex/request-parsing
                                                        (ex/with-logging ex/request-parsing-handler :warn)
                                                        ::ex/request-validation

@@ -3,6 +3,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
             [ataru.hakija.hakija-application-service :as application-service]
+            [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.util.client-error :as client-error]
@@ -11,6 +12,8 @@
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
+            [compojure.api.upload :as upload]
+            [ring.swagger.upload]
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -20,7 +23,9 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
-            [oph.soresu.common.config :refer [config]]))
+            [oph.soresu.common.config :refer [config]])
+  (:import [ring.swagger.upload Upload]
+           [java.io InputStream]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -110,6 +115,37 @@
       :query-params [secret :- s/Str]
       :return ataru-schema/Application
       (get-application secret))
+    (api/context "/files" []
+      (api/POST "/" []
+        :summary "Upload a file"
+        :multipart-params [file :- upload/TempFileUpload]
+        :middleware [upload/wrap-multipart-params]
+        :return ataru-schema/File
+        (try
+          (if-let [resp (file-store/upload-file file)]
+            (response/ok resp)
+            (response/bad-request {:failures "Failed to upload file"}))
+          (finally
+            (io/delete-file (:tempfile file) true))))
+      (api/PUT "/:key" []
+        :summary "Update a file"
+        :path-params [key :- s/Str]
+        :multipart-params [file :- upload/TempFileUpload]
+        :middleware [upload/wrap-multipart-params]
+        :return ataru-schema/File
+        (try
+          (if-let [resp (file-store/update-file file key)]
+            (response/ok resp)
+            (response/bad-request {:failures (str "Failed to update file with key " key)}))
+          (finally
+            (io/delete-file (:tempfile file) true))))
+      (api/DELETE "/:key" []
+        :summary "Delete a file"
+        :path-params [key :- s/Str]
+        :return {:key s/Str}
+        (if-let [resp (file-store/delete-file key)]
+          (response/ok resp)
+          (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]

@@ -2,7 +2,7 @@
   (:require [clojure.string :refer [trim]]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
-            [ataru.application-common.application-readonly :as readonly-view]
+            [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]

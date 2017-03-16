@@ -69,7 +69,7 @@
             {:transition {:id  :to-next
                           :step  :throwing}})
             (throwing-step [state context]
-                           (throw (Exception. "Something dreadful happened")))]
+                           (throw (Exception. "This exception is normal on test-run! This should happen, so don't be alarmed by it when you see it on test-runs.")))]
 
     {:steps {:initial initial
              :throwing throwing-step}

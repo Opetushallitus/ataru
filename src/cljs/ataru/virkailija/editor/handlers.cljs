@@ -5,6 +5,7 @@
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
+            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as pm]
@@ -27,24 +28,6 @@
   db)
 
 (reg-event-db :editor/get-user-info get-user-info)
-
-(defn- sorted-by-time-and-deletedness [m]
-  (into (sorted-map-by
-          (fn [k1 k2]
-            (let [v1 (get m k1)
-                  v2 (get m k2)
-                  v1-deleted? (:deleted v1)
-                  v2-deleted? (:deleted v2)
-                  v1-created (:created-time v1)
-                  v2-created (:created-time v2)]
-              (cond
-                (and v1-deleted? (not v2-deleted?)) 1
-                (and v2-deleted? (not v1-deleted?)) -1
-                (and (nil? v1-created) (nil? v2-created)) 0
-                (nil? v2-created) 1
-                (nil? v1-created) -1
-                :else (c/after? v1-created v2-created)))))
-        m))
 
 (defn- remove-nth
   "remove nth elem in vector"
@@ -169,18 +152,15 @@
   (update form :languages
     (partial mapv keyword)))
 
-(defn refresh-forms
-  ([include-deleted?]
-   (http
-     :get
-     (str "/lomake-editori/api/forms" (if include-deleted? "?include-deleted=true" ""))
-     (fn [db {:keys [forms]}]
-       (assoc-in db [:editor :forms] (->> forms
-                                          (mapv languages->kwd)
-                                          (util/group-by-first :key)
-                                          (sorted-by-time-and-deletedness))))))
-  ([]
-    (refresh-forms false)))
+(defn refresh-forms-for-editor []
+  (http
+   :get
+   (str "/lomake-editori/api/forms-for-editor")
+   (fn [db {:keys [forms]}]
+     (assoc-in db [:editor :forms] (->> forms
+                                        (mapv languages->kwd)
+                                        (util/group-by-first :key)
+                                        (sort-by-time-and-deletedness))))))
 
 (defn hide-remove-confirm-dialog
   [db]
@@ -188,18 +168,10 @@
       (update :editor dissoc :show-remove-confirm-dialog?)))
 
 (reg-event-db
-  :editor/refresh-forms-with-deleteds
-  (fn [db _]
-    (when-let [autosave (-> db :editor :autosave)]
-      (autosave/stop-autosave! autosave))
-    (refresh-forms true)
-    (hide-remove-confirm-dialog db)))
-
-(reg-event-db
-  :editor/refresh-forms
+  :editor/refresh-forms-for-editor
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
-    (refresh-forms)
+    (refresh-forms-for-editor)
     (hide-remove-confirm-dialog db)))
 
 (reg-event-db
@@ -209,31 +181,8 @@
       db
       (do
         (autosave/stop-autosave! (-> db :editor :autosave))
-        (refresh-forms)
+        (refresh-forms-for-editor)
         (hide-remove-confirm-dialog db)))))
-
-(reg-event-db
-  :editor/refresh-hakukohteet-from-applications
-  (fn [db _]
-    (http
-      :get
-      "/lomake-editori/api/hakukohteet"
-      (fn [db hakukohteet]
-        (assoc-in db [:editor :hakukohteet] hakukohteet)))
-    db))
-
-(reg-event-db
-  :editor/handle-refresh-haut-from-applications
-  (fn [db [_ haut]]
-    (assoc-in db [:editor :haut] haut)))
-
-(reg-event-fx
-  :editor/refresh-haut-from-applications
-  (fn [{:keys [db]}]
-    {:db   db
-     :http {:method              :get
-            :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
 
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
@@ -265,20 +214,6 @@
         handle-fetch-form))
 
 (reg-event-db
-  :editor/select-hakukohde
-  (fn [db [_ hakukohde]]
-    (-> db
-        (update-in [:editor] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:editor :selected-hakukohde] hakukohde))))
-
-(reg-event-db
-  :editor/select-haku
-  (fn [db [_ haku]]
-    (-> db
-        (update :editor dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:editor :selected-haku] haku))))
-
-(reg-event-db
   :editor/select-form
   (fn [db [_ form-key]]
     (with-form-key [db previous-form-key]
@@ -291,7 +226,6 @@
           (fetch-form-content! id))
         (cond-> db
                 (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
-                true (update-in [:editor] dissoc :selected-hakukohde)
                 true (assoc-in [:editor :selected-form-key] form-key))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
@@ -377,7 +311,7 @@
                  (reset-application-review-state))
          :http {:method              :delete
                 :path                (str "/lomake-editori/api/forms/" form-id)
-                :handler-or-dispatch :editor/refresh-forms}})))
+                :handler-or-dispatch :editor/refresh-forms-for-editor}})))
 
 (reg-event-fx :editor/remove-form remove-form)
 

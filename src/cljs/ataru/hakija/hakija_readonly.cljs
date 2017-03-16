@@ -5,15 +5,14 @@
 ; This is on purpose, the UI layouts will differ
 ; in the future and already do to some extent.
 
-(ns ataru.application-common.application-readonly
+(ns ataru.hakija.hakija-readonly
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log]]
+            [ataru.cljs-util :refer [console-log size-bytes->str]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
-
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
@@ -27,12 +26,26 @@
    [:div
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))
+          multi-value? (and
+                         (not= "multipleChoice" (:fieldType field-descriptor))
+                         (or (seq? values) (vector? values)))
           cannot-edit? (:cannot-edit answer)]
       (cond
         cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
         multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
         :else (textual-field-value field-descriptor application :lang lang)))]])
+
+(defn attachment [field-descriptor application lang]
+  (let [answer-key (keyword (answer-key field-descriptor))
+        values     (get-in application [:answers answer-key :values])]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     [:div
+      (map (fn [{:keys [value]}]
+             ^{:key (:key value)}
+             [:ul.application__form-field-list (str (:filename value) " (" (size-bytes->str (:size value)) ")")])
+           values)]]))
 
 (declare field)
 
@@ -44,12 +57,12 @@
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-        [:div.application__wrapper-element.application__wrapper-element--border
-         [:div.application__wrapper-heading
-          [:h2 (-> content :label lang)]
-          [scroll-to-anchor content]]
-         (into [:div.application__wrapper-contents]
-               (child-fields children application lang @ui))])))
+      [:div.application__wrapper-element.application__wrapper-element--border
+       [:div.application__wrapper-heading
+        [:h2 (-> content :label lang)]
+        [scroll-to-anchor content]]
+       (into [:div.application__wrapper-contents]
+         (child-fields children application lang @ui))])))
 
 (defn row-container [application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -58,7 +71,7 @@
 
 (defn- extract-values [children answers]
   (let [child-answers  (->> (map answer-key children)
-                         (select-keys answers))
+                            (select-keys answers))
         ; applicant side stores values as hashmaps
         applicant-side (map (comp
                               (fn [values]
@@ -106,13 +119,13 @@
   [:div
    (text content application lang)
    (into [:div]
-         (for [followup followups
-               :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
-               :when (if (boolean? followup-is-visible?)
-                       followup-is-visible?
-                       (followup-has-answer? followup application))]
-           [:div
-            [field followup application lang]]))])
+     (for [followup followups
+           :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
+           :when (if (boolean? followup-is-visible?)
+                   followup-is-visible?
+                   (followup-has-answer? followup application))]
+       [:div
+        [field followup application lang]]))])
 
 (defn field [content application lang]
   (match content
@@ -123,7 +136,8 @@
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType "dropdown" :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)))
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
@@ -133,10 +147,10 @@
 
 (defn readonly-fields [form application]
   (when form
-    (let [lang (or (:selected-language form)        ; languages is set to form in the applicant side
-                 (application-language application) ; language is set to application when in officer side
-                 :fi)]
+    (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
+                   (application-language application)       ; language is set to application when in officer side
+                   :fi)]
       (into [:div.application__readonly-container]
         (for [content (:content form)
-              :when   (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+              :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
           [field content application lang])))))
