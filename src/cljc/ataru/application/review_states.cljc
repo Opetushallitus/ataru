@@ -6,6 +6,7 @@
              "invited-to-interview"   "Kutsuttu haastatteluun"
              "invited-to-exam"        "Kutsuttu valintakokeeseen"
              "not-selected"           "Ei valittu"
+             "selection-proposal"     "Valintaesitys"
              "selected"               "Valittu"
              "applicant-has-accepted" "Vastaanottanut"
              "rejected"               "Hylätty"
