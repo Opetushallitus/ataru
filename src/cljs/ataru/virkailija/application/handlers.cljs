@@ -259,7 +259,7 @@
  (fn [db [_ form-key]]
    (-> db
        (assoc-in [:application :selected-form-key] form-key)
-       (close-application db))))
+       (close-application))))
 
 (reg-event-db
   :application/select-hakukohde
@@ -267,7 +267,7 @@
     (-> db
         (update-in [:application] dissoc :selected-form-key :selected-haku)
         (assoc-in [:application :selected-hakukohde] hakukohde)
-        (close-application db))))
+        (close-application))))
 
 (reg-event-db
   :application/select-haku
@@ -275,7 +275,7 @@
     (-> db
         (update :application dissoc :selected-form-key :selected-hakukohde)
         (assoc-in [:application :selected-haku] haku)
-        (close-application db))))
+        (close-application))))
 
 (reg-event-db
   :application/refresh-hakukohteet-from-applications
