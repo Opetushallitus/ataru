@@ -395,8 +395,8 @@
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
   (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
     [:div.application__form-upload-button-container
-     [:span (str (inc attachment-idx) ". "
-                 (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]
+     (str (inc attachment-idx) ". "
+          (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))
      [:a {:href     "#"
           :on-click (fn remove-attachment [event]
                       (.preventDefault event)
