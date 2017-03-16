@@ -46,7 +46,8 @@
                        (let [text          (str filename " (" (size-bytes->str size) ")")
                              component-key (str "attachment-div-" idx)]
                          [:div {:key component-key}
-                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)
+                               :download ""}
                            text]]))
                      values)]])))
 
