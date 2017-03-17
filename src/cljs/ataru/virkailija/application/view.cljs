@@ -271,7 +271,7 @@
        (when @filter-opened
          (into [:div.application-handling__filter-state-selection
                 [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
-                 {:class (if @all-filters-selected "application-handling__filter-state-selected-row" "")}
+                 {:class (when @all-filters-selected "application-handling__filter-state-selected-row")}
                  [:label
                   [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                            :type      "checkbox"
