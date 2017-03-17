@@ -274,6 +274,12 @@
                      :return [ataru-schema/File]
                      (if-let [resp (file-store/get-metadata key)]
                        (ok resp)
+                       (not-found)))
+                   (api/GET "/content/:key" []
+                     :path-params [key :- (api/describe s/Str "File key")]
+                     :summary "Download a file"
+                     (if-let [file-stream (file-store/get-file key)]
+                       (ok file-stream)
                        (not-found))))))
 
 (api/defroutes resource-routes
