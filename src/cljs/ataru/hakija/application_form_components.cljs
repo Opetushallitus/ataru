@@ -387,7 +387,7 @@
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
+      [:span.application__form-upload-button-add-text "Lisää liite..."]]]))
 
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
