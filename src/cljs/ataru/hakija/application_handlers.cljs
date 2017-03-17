@@ -157,7 +157,8 @@
           (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
-                                             (and (vector? value) (not= (:fieldType answer) "multipleChoice"))
+                                             (and (vector? value)
+                                                  (not (contains? #{"multipleChoice" "attachment"} (:fieldType answer))))
                                              (first))]
                       (if (contains? answers answer-key)
                         (update
@@ -168,12 +169,14 @@
                                  {:fieldType "dropdown"}
                                  (update answers answer-key merge {:valid true :value value})
 
-                                 {:fieldType "textField" :value (_ :guard vector?)}
+                                 {:fieldType (field-type :guard #(contains? #{"multipleChoice" "attachment"} %)) :value (_ :guard vector?)}
                                  (update answers answer-key merge
-                                         {:valid  true
-                                          :values (mapv (fn [value]
-                                                          {:valid true :value value})
-                                                        (:value answer))})
+                                   {:valid  true
+                                    :values (mapv (fn [value]
+                                                    (cond-> {:valid true :value value}
+                                                      (= field-type "attachment")
+                                                      (assoc :status :ready)))
+                                                  (:value answer))})
 
                                  :else
                                  (update answers answer-key merge {:valid true :value value}))
