@@ -1,8 +1,7 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]
-            [schema-tools.core :as st]
-            [clojure.string :as str]))
+  (:require [ataru.application.review-states :as review-states]
+            [ataru.hakija.application-validators :as validator]
+            [schema.core :as s]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -174,7 +173,7 @@
 
 
 (def application-states
-  (apply s/enum (keys ataru.application.review-states/application-review-states)))
+  (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
                          "received-from-applicant"
