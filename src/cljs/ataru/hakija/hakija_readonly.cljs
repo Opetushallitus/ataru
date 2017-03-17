@@ -53,7 +53,7 @@
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
     [field child application lang]))
 
-(defn- person-info-wrapper [content lang]
+(defn- person-info-uneditable-wrapper [content lang]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
     [:h2 (-> content :label lang)]
@@ -134,9 +134,12 @@
        [:div
         [field followup application lang]]))])
 
-(defn field [content application lang]
+(defn field
+  [content application lang]
   (match content
-         {:fieldClass "wrapperElement" :module "person-info"} [person-info-wrapper content lang]
+         {:fieldClass "wrapperElement" :module "person-info" :children children} (if (:editing? application)
+                                                                                   [person-info-uneditable-wrapper content lang]
+                                                                                   [wrapper content application lang children])
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
