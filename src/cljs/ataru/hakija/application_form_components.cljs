@@ -393,15 +393,14 @@
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
-  (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
-    [:div.application__form-upload-button-container
-     (str (inc attachment-idx) ". "
-          (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))
-     [:a {:href     "#"
-          :on-click (fn remove-attachment [event]
-                      (.preventDefault event)
-                      (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
-      [:i.zmdi.zmdi-close.application__form-upload-remove-attachment-button]]]))
+  [:div.application__form-upload-button-container
+   (str (inc attachment-idx) ". "
+        (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))
+   [:a {:href     "#"
+        :on-click (fn remove-attachment [event]
+                    (.preventDefault event)
+                    (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
+    [:i.zmdi.zmdi-close.application__form-upload-remove-attachment-button]]])
 
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-upload-button-container
