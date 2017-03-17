@@ -45,7 +45,8 @@
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
                        (let [text          (str filename " (" (size-bytes->str size) ")")
                              component-key (str "attachment-div-" idx)]
-                         [:div {:key component-key}
+                         [:div.application__virkailija-readonly-attachment-text
+                          {:key component-key}
                           [:a {:href (str "/lomake-editori/api/files/content/" file-key)
                                :download ""}
                            text]]))
