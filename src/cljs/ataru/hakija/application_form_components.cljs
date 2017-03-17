@@ -396,11 +396,12 @@
   [:div.application__form-upload-button-container
    (str (inc attachment-idx) ". "
         (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))
-   [:a {:href     "#"
-        :on-click (fn remove-attachment [event]
-                    (.preventDefault event)
-                    (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
-    [:i.zmdi.zmdi-close.application__form-upload-remove-attachment-button]]])
+   [:a.application__form-upload-remove-attachment-link
+    {:href     "#"
+     :on-click (fn remove-attachment [event]
+                 (.preventDefault event)
+                 (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
+    [:i.zmdi.zmdi-close]]])
 
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-upload-button-container
