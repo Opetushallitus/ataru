@@ -390,7 +390,7 @@
     (fn []
       [:div.application-handling__review-inputs
        [:div.application-handling__review-header "Hakijan arviointi"]
-       [:div.application-handling__review-row
+       [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-sub-header "Muistiinpanot"]
         [:textarea.application-handling__review-notes
          {:value (review-field->str review :notes)
