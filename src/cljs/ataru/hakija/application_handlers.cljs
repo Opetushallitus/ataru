@@ -150,6 +150,11 @@
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
 
+(defonce multi-value-field-types #{"multipleChoice" "attachment"})
+
+(defn- supports-multiple-values [field-type]
+  (contains? multi-value-field-types field-type))
+
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (-> db
       (update-in [:application :answers]
@@ -158,7 +163,7 @@
                     (let [answer-key (keyword key)
                           value      (cond-> value
                                              (and (vector? value)
-                                                  (not (contains? #{"multipleChoice" "attachment"} (:fieldType answer))))
+                                                  (not (supports-multiple-values (:fieldType answer))))
                                              (first))]
                       (if (contains? answers answer-key)
                         (update
@@ -169,7 +174,7 @@
                                  {:fieldType "dropdown"}
                                  (update answers answer-key merge {:valid true :value value})
 
-                                 {:fieldType (field-type :guard #(contains? #{"multipleChoice" "attachment"} %)) :value (_ :guard vector?)}
+                                 {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
                                  (update answers answer-key merge
                                    {:valid  true
                                     :values (mapv (fn [value]
