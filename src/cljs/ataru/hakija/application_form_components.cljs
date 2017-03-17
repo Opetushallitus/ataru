@@ -392,22 +392,11 @@
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
 
-(defn attachment-update-file [field-descriptor component-id attachment-idx]
+(defn attachment-view-file [field-descriptor component-id attachment-idx]
   (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
     [:div.application__form-upload-button-container
-     [:input.application__update-attachment-button
-      {:id        id
-       :type      "file"
-       :on-change (fn update-attachment [event]
-                    (.preventDefault event)
-                    (let [file-list (or (some-> event .-dataTransfer .-files)
-                                        (.. event -target -files))
-                          file      (.item file-list 0)]
-                      (dispatch [:application/update-attachment field-descriptor component-id attachment-idx file])))}]
-     [:label.application__update-attachment-label
-      {:for id}
-      [:span (str (inc attachment-idx) ". "
-                  (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]]
+     (str (inc attachment-idx) ". "
+          (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))
      [:a {:href     "#"
           :on-click (fn remove-attachment [event]
                       (.preventDefault event)
@@ -427,11 +416,11 @@
          (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]])))]
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
-(defn attachment-update [field-descriptor component-id attachment-idx]
+(defn attachment-row [field-descriptor component-id attachment-idx]
   (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
     [:div.application__attachment-filename-container
      (case status
-       :ready [attachment-update-file field-descriptor component-id attachment-idx]
+       :ready [attachment-view-file field-descriptor component-id attachment-idx]
        :uploading [attachment-uploading-file component-id attachment-idx]
        :deleting [attachment-deleting-file component-id attachment-idx])]))
 
@@ -447,7 +436,7 @@
        (->> (range @attachment-count)
             (map (fn [attachment-idx]
                    ^{:key (str "attachment-" id "-" attachment-idx)}
-                   [attachment-update field-descriptor id attachment-idx])))
+                   [attachment-row field-descriptor id attachment-idx])))
        [attachment-upload field-descriptor id @attachment-count]])))
 
 (defn info-element [field-descriptor]

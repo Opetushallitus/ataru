@@ -14,16 +14,6 @@
           (json/parse-string true)
           (dissoc :version :deleted)))))
 
-(defn update-file [{:keys [tempfile filename]} file-key]
-  (let [url  (str (get-in config [:liiteri :url]) "/api/files/" file-key)
-        resp @(http/put url {:multipart [{:name     "file"
-                                          :content  tempfile
-                                          :filename filename}]})]
-    (when (= (:status resp) 200)
-      (-> (:body resp)
-          (json/parse-string true)
-          (dissoc :version :deleted)))))
-
 (defn delete-file [file-key]
   (let [url  (str (get-in config [:liiteri :url]) "/api/files/" file-key)
         resp @(http/delete url)]
