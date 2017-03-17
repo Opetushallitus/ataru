@@ -17,7 +17,8 @@
             [ataru.util :as util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.feature-config :as fc])
+            [ataru.feature-config :as fc]
+            [clojure.string :as string])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -89,12 +90,16 @@
     (some #(= % "required") (:validators field-descriptor))
     (validator/validate "required" value)))
 
+(defn- add-link-target-prop
+  [text state]
+  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
+
 (defn- markdown-paragraph
   [md-text]
-  (let [sanitized-html (->> md-text
-                            (md->html)
-                            (.sanitize html-sanitizer)
-                            (.getTypedStringValue))]
+  (let [sanitized-html (as-> md-text v
+                            (md->html v :custom-transformers [add-link-target-prop])
+                            (.sanitize html-sanitizer v)
+                            (.getTypedStringValue v))]
     [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn info-text [field-descriptor]
