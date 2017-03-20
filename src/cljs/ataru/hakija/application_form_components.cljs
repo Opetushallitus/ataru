@@ -370,7 +370,8 @@
                (:options field-descriptor))]]))))
 
 (defn attachment-upload [field-descriptor component-id attachment-count]
-  (let [id (str component-id "-upload-button")]
+  (let [id       (str component-id "-upload-button")
+        language @(subscribe [:application/form-language])]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id        id
@@ -387,7 +388,10 @@
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text "Lisää liite..."]]]))
+      [:span.application__form-upload-button-add-text (case language
+                                                        :fi "Lisää liite..."
+                                                        :en "Upload attachment..."
+                                                        :sv "Ladda upp bilagan...")]]]))
 
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
