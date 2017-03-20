@@ -371,7 +371,7 @@
 
 (defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id (str component-id "-upload-button")]
-    [:div.application__form-upload-button-container
+    [:div
      [:input.application__form-upload-input
       {:id        id
        :type      "file"
@@ -394,29 +394,30 @@
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
   [:div.application__form-filename-container
-   [:span
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]
-   [:a.application__form-upload-remove-attachment-link
-    {:href     "#"
-     :on-click (fn remove-attachment [event]
-                 (.preventDefault event)
-                 (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
-    [:i.zmdi.zmdi-close]]])
+   [:span.application__form-attachment-text
+    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
+    [:a.application__form-upload-remove-attachment-link
+     {:href     "#"
+      :on-click (fn remove-attachment [event]
+                  (.preventDefault event)
+                  (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
+     [:i.zmdi.zmdi-close]]]])
 
 (defn attachment-deleting-file [component-id attachment-idx]
-  [:div.application__form-upload-button-container
-   [:span.application__form-deleting-attachment-text
+  [:div.application__form-filename-container
+   [:span.application__form-attachment-text
     (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]])
 
 (defn attachment-uploading-file [component-id attachment-idx]
-  [:div.application__form-upload-button-container
-   [:span.application__form-uploading-attachment-text
+  [:div.application__form-filename-container
+   [:span.application__form-attachment-text
     (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
 (defn attachment-row [field-descriptor component-id attachment-idx]
-  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
-    [:li.application__attachment-filename-container
+  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])
+        status :ready]
+    [:li.application__attachment-filename-list-item
      (case status
        :ready [attachment-view-file field-descriptor component-id attachment-idx]
        :uploading [attachment-uploading-file component-id attachment-idx]

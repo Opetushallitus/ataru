@@ -425,47 +425,35 @@ textarea.application__form-text-area__size-large {
   color: #9b9b9b;
 }
 
-.application__form-upload-button-container {
+.application__form-filename-container {
   align-items: center;
+  background-color: #def2ff;
+  border-radius: 3px;
   display: inline-flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  line-height: 22px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding: 4px 8px;
+  line-height: 19px;
 }
 
 .application__attachment-filename-list {
+  font-size: 14px;
   padding-left: 17px;
 }
 
-.application__attachment-filename-container {
-  margin-bottom: 5px;
+.application__attachment-filename-list-item:not(:last-child) {
+  margin-bottom: 8px;
 }
 
-.application__form-deleting-attachment-text {
-  align-items: center;
-  display: flex;
-  flex-flow: row nowrap;
-  height: 22px;
+.application__form-attachment-text {
+  height: 19px;
 }
 
 .application__form-upload-remove-attachment-link {
-  color: @section-header-text;
+  color: @gray-of-the-beast;
   cursor: pointer;
-  display: none;
-}
-
-.application__form-upload-button-container:hover .application__form-upload-remove-attachment-link {
-  display: inline;
-  margin-left: 20px;
-}
-
-.application__form-uploading-attachment-text {
-  align-items: center;
-  display: flex;
-  flex-flow: row nowrap;
-  height: 22px;
+  margin-left: 10px;
+  margin-right: 6px;
 }
 
 .application__form-upload-icon {
