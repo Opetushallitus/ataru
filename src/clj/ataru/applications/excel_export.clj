@@ -210,7 +210,8 @@
       (if-let [parent-element (find-parent element fields)]
         (str (-> parent-element :label :fi) " - " header)
         header)
-
+      {:fieldType "attachment"}
+      (str "Liitepyyntö: " (-> element :label :fi))
       :else header)))
 
 (defn- extract-headers-from-applications [applications form]
