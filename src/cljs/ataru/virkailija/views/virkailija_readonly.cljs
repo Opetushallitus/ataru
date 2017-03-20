@@ -27,12 +27,10 @@
    [:div
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))
-          cannot-edit? (:cannot-edit answer)]
-      (cond
-        cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
-        multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-        :else (textual-field-value field-descriptor application :lang lang)))]])
+          multi-value? (or (seq? values) (vector? values))]
+      (if multi-value?
+        (into [:ul.application__form-field-list] (for [value values] [:li value]))
+        (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
   (when (fc/feature-enabled? :attachment)

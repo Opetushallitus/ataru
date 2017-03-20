@@ -71,10 +71,11 @@
   [db _]
   (if (-> db :application :answers :postal-code :valid)
     (let [postal-code (-> db :application :answers :postal-code :value)]
-      (ajax/get
-        (str "/hakemus/api/postal-codes/" postal-code)
-        :application/handle-postal-code-input
-        :application/handle-postal-code-error)
+      (when-not (clojure.string/blank? postal-code)
+        (ajax/get
+          (str "/hakemus/api/postal-codes/" postal-code)
+          :application/handle-postal-code-input
+          :application/handle-postal-code-error))
       db)
     (-> db
         (update-in [:application :answers :postal-office] merge no-required-answer)

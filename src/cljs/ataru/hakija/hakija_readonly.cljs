@@ -20,20 +20,19 @@
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn text [field-descriptor application lang]
-  [:div.application__form-field
-   [:label.application__form-field-label
-    (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div
-    (let [answer       ((answer-key field-descriptor) (:answers application))
-          values       (:value answer)
-          multi-value? (and
-                         (not= "multipleChoice" (:fieldType field-descriptor))
-                         (or (seq? values) (vector? values)))
-          cannot-edit? (:cannot-edit answer)]
-      (cond
-        cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
-        multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-        :else (textual-field-value field-descriptor application :lang lang)))]])
+  (let [answer ((answer-key field-descriptor) (:answers application))]
+    (when-not (:cannot-edit answer)
+      [:div.application__form-field
+       [:label.application__form-field-label
+        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+       [:div
+        (let [values       (:value answer)
+              multi-value? (and
+                             (not= "multipleChoice" (:fieldType field-descriptor))
+                             (or (seq? values) (vector? values)))]
+          (cond
+            multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
+            :else (textual-field-value field-descriptor application :lang lang)))]])))
 
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))
@@ -53,6 +52,14 @@
   (for [child children
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
     [field child application lang]))
+
+(defn- person-info-uneditable-wrapper [content lang]
+  [:div.application__wrapper-element.application__wrapper-element--border
+   [:div.application__wrapper-heading
+    [:h2 (-> content :label lang)]
+    [scroll-to-anchor content]]
+   [:div.application__form-field
+    [:div.application__form-field--person-info-note (:cannot-edit-personal-info (get-translations lang application-view-translations))]]])
 
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -127,8 +134,12 @@
        [:div
         [field followup application lang]]))])
 
-(defn field [content application lang]
+(defn field
+  [content application lang]
   (match content
+         {:fieldClass "wrapperElement" :module "person-info" :children children} (if (:editing? application)
+                                                                                   [person-info-uneditable-wrapper content lang]
+                                                                                   [wrapper content application lang children])
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]

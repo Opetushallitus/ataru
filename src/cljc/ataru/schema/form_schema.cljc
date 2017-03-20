@@ -1,8 +1,7 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]
-            [schema-tools.core :as st]
-            [clojure.string :as str]))
+  (:require [ataru.application.review-states :as review-states]
+            [ataru.hakija.application-validators :as validator]
+            [schema.core :as s]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -172,15 +171,9 @@
    (s/optional-key :form-key)     s/Str
    (s/optional-key :tarjonta)     FormTarjontaMetadata})
 
-(def application-states (s/enum "unprocessed"
-                                "processing"
-                                "invited-to-interview"
-                                "invited-to-exam"
-                                "not-selected"
-                                "selected"
-                                "applicant-has-accepted"
-                                "rejected"
-                                "canceled"))
+
+(def application-states
+  (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
                          "received-from-applicant"
