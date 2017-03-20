@@ -150,6 +150,11 @@
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
 
+(defonce multi-value-field-types #{"multipleChoice" "attachment"})
+
+(defn- supports-multiple-values [field-type]
+  (contains? multi-value-field-types field-type))
+
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (-> db
       (update-in [:application :answers]
@@ -157,7 +162,8 @@
           (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
-                                             (and (vector? value) (not= (:fieldType answer) "multipleChoice"))
+                                             (and (vector? value)
+                                                  (not (supports-multiple-values (:fieldType answer))))
                                              (first))]
                       (if (contains? answers answer-key)
                         (update
@@ -168,12 +174,14 @@
                                  {:fieldType "dropdown"}
                                  (update answers answer-key merge {:valid true :value value})
 
-                                 {:fieldType "textField" :value (_ :guard vector?)}
+                                 {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
                                  (update answers answer-key merge
-                                         {:valid  true
-                                          :values (mapv (fn [value]
-                                                          {:valid true :value value})
-                                                        (:value answer))})
+                                   {:valid  true
+                                    :values (mapv (fn [value]
+                                                    (cond-> {:valid true :value value}
+                                                      (= field-type "attachment")
+                                                      (assoc :status :ready)))
+                                                  (:value answer))})
 
                                  :else
                                  (update answers answer-key merge {:valid true :value value}))

@@ -32,10 +32,19 @@
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
 
+(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
+  (cond-> answer
+    (= fieldType "attachment")
+    (update :value (partial file-store/get-metadata))))
+
+(defn- attachments-metadata->answers [application]
+  (update application :answers (partial map attachment-metadata->answer)))
+
 (defn- get-application [secret]
   (let [application (-> secret
                         (application-store/get-latest-application-by-secret)
-                        (application-service/remove-person-info-module-from-application-answers))]
+                        (application-service/remove-person-info-module-from-application-answers)
+                        (attachments-metadata->answers))]
     (if application
       (do
         (info (str "Getting application " (:id application) " with answers"))
