@@ -9,7 +9,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log size-bytes->str]]
+            [ataru.cljs-util :refer [console-log]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
@@ -41,7 +41,7 @@
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
-                       (let [text          (str filename " (" (size-bytes->str size) ")")
+                       (let [text          (str filename " (" (util/size-bytes->str size) ")")
                              component-key (str "attachment-div-" idx)]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}

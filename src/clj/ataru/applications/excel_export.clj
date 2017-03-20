@@ -7,6 +7,7 @@
             [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.files.file-store :as file-store]
             [ataru.util :as util]
             [clj-time.core :as t]
             [clj-time.format :as f]
@@ -123,7 +124,7 @@
                    first)]
     (get-in koodi [:label lang])))
 
-(defn- koodi-uris->human-readable-value [{:keys [content]} {:keys [lang]} key value]
+(defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
   (let [field-descriptor (get-field-descriptor content key)
         lang             (-> lang clojure.string/lower-case keyword)]
     (if-some [koodisto-source (:koodisto-source field-descriptor)]
@@ -133,7 +134,10 @@
              (mapv koodi-uri->label)
              (interpose "\n")
              (apply str)))
-      value)))
+      (if (= (:fieldType field-descriptor) "attachment")
+        (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
+          (str filename " (" (util/size-bytes->str size) ")"))
+        value))))
 
 (defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
@@ -143,13 +147,12 @@
           :when (some (comp (partial = (:label answer)) :header) headers)]
     (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value-or-values (-> (:value answer))
-          value           (or
-                           (when (or (seq? value-or-values) (vector? value-or-values))
-                             (->> value-or-values
-                                  (map (partial koodi-uris->human-readable-value form application (:key answer)))
-                                  (interpose "\n")
-                                  (apply str)))
-                           (koodi-uris->human-readable-value form application (:key answer) value-or-values))]
+          value           (if (or (seq? value-or-values) (vector? value-or-values))
+                            (->> value-or-values
+                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (interpose "\n")
+                                 (apply str))
+                            (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (let [application-review  (application-store/get-application-review (:key application))
         beef-header-count   (- (apply max (map :column headers)) (count review-headers))
@@ -210,7 +213,8 @@
       (if-let [parent-element (find-parent element fields)]
         (str (-> parent-element :label :fi) " - " header)
         header)
-
+      {:fieldType "attachment"}
+      (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
 (defn- extract-headers-from-applications [applications form]

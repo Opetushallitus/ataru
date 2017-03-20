@@ -399,7 +399,7 @@
                                                         :sv "Ladda upp bilagan...")]]]))
 
 (defn- filename->label [{:keys [filename size]}]
-  (str filename " (" (cljs-util/size-bytes->str size) ")"))
+  (str filename " (" (util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
   [:div.application__form-filename-container

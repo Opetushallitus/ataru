@@ -9,7 +9,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log size-bytes->str]]
+            [ataru.cljs-util :refer [console-log]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
@@ -43,7 +43,7 @@
      [:div
       (map (fn [{:keys [value]}]
              ^{:key (:key value)}
-             [:ul.application__form-field-list (str (:filename value) " (" (size-bytes->str (:size value)) ")")])
+             [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
            values)]]))
 
 (declare field)
