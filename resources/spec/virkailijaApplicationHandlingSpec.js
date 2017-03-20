@@ -186,7 +186,7 @@
     describe('application filtering', function() {
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
-        expect(includedFilters()).to.equal(10)
+        expect(includedFilters()).to.equal(11)
         expect(applicationStates().length).to.equal(2)
 
         var stateOfFirstApplication = applicationStates().eq(0).text()
