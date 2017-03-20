@@ -147,12 +147,11 @@
           :when (some (comp (partial = (:label answer)) :header) headers)]
     (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
           value-or-values (-> (:value answer))
-          value           (or
-                            (when (or (seq? value-or-values) (vector? value-or-values))
-                             (->> value-or-values
-                                  (map (partial raw-values->human-readable-value form application (:key answer)))
-                                  (interpose "\n")
-                                  (apply str)))
+          value           (if (or (seq? value-or-values) (vector? value-or-values))
+                            (->> value-or-values
+                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (interpose "\n")
+                                 (apply str))
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (writer 0 (+ column (count application-meta-fields)) value)))
   (let [application-review  (application-store/get-application-review (:key application))
