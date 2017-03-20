@@ -393,8 +393,9 @@
   (str filename " (" (cljs-util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
-  [:div.application__form-upload-button-container
-   (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
+  [:div.application__form-filename-container
+   [:span
+    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))]
    [:a.application__form-upload-remove-attachment-link
     {:href     "#"
      :on-click (fn remove-attachment [event]
