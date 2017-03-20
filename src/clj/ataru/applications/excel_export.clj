@@ -214,7 +214,7 @@
         (str (-> parent-element :label :fi) " - " header)
         header)
       {:fieldType "attachment"}
-      (str "Liitepyyntö: " (-> element :label :fi))
+      (str "Liitepyyntö: " (label/get-language-label-in-preferred-order (:label element)))
       :else header)))
 
 (defn- extract-headers-from-applications [applications form]
