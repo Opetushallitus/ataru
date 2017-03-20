@@ -395,7 +395,7 @@
       [:span.application__form-upload-button-add-text "Lisää tiedosto..."]]]))
 
 (defn- filename->label [{:keys [filename size]}]
-  (str filename " (" (cljs-util/size-bytes->str size) ")"))
+  (str filename " (" (util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
   (let [id (str "attachment-" component-id "-" attachment-idx "-update")]
