@@ -109,7 +109,6 @@
 
 .application__form-info-text {
   font-size: 14px;
-  margin-bottom: 10px;
 }
 
 .application__form-field-list {
@@ -430,42 +429,37 @@ textarea.application__form-text-area__size-large {
   color: #9b9b9b;
 }
 
-.application__form-upload-button-container {
+.application__form-filename-container {
   align-items: center;
-  display: flex;
+  background-color: #def2ff;
+  border-radius: 3px;
+  display: inline-flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  line-height: 22px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding: 4px 4px 4px 8px;
+  line-height: 19px;
+  margin-left: 2px;
 }
 
-.application__attachment-filename-container {
-  margin-bottom: 5px;
+.application__attachment-filename-list {
+  font-size: 14px;
+  padding-left: 17px;
+  margin-top: 6px;
 }
 
-.application__form-deleting-attachment-text {
-  align-items: center;
-  display: flex;
-  flex-flow: row nowrap;
-  height: 22px;
+.application__attachment-filename-list-item:not(:last-child) {
+  margin-bottom: 8px;
 }
 
-.application__form-upload-remove-attachment-button {
+.application__form-attachment-text {
+  height: 19px;
+}
+
+.application__form-upload-remove-attachment-link {
+  color: @gray-of-the-beast;
   cursor: pointer;
-  display: none;
-}
-
-.application__form-upload-button-container:hover .application__form-upload-remove-attachment-button {
-  display: inline;
-  margin-left: 20px;
-}
-
-.application__form-uploading-attachment-text {
-  align-items: center;
-  display: flex;
-  flex-flow: row nowrap;
-  height: 22px;
+  margin-left: 10px;
+  margin-right: 6px;
 }
 
 .application__form-upload-icon {
@@ -489,17 +483,18 @@ textarea.application__form-text-area__size-large {
   width: 184px;
 }
 
-.application__attachment-filename-container + .application__form-upload-button-container > .application__form-upload-label {
-  margin-top: 20px;
-}
-
 .application__form-upload-uploading-spinner {
   .spin;
-  margin-left: 20px;
+  margin-left: 10px;
+  margin-right: 6px;
 }
 
 .application__form-upload-button-add-text {
   margin-left: 10px;
+}
+
+.application__form-upload-attachment-container {
+  margin-top: 6px;
 }
 
 .application__error-display {
