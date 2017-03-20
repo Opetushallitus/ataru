@@ -432,13 +432,15 @@ textarea.application__form-text-area__size-large {
   display: inline-flex;
   flex-flow: row nowrap;
   justify-content: flex-start;
-  padding: 4px 8px;
+  padding: 4px 4px 4px 8px;
   line-height: 19px;
+  margin-left: 2px;
 }
 
 .application__attachment-filename-list {
   font-size: 14px;
   padding-left: 17px;
+  margin-top: 6px;
 }
 
 .application__attachment-filename-list-item:not(:last-child) {
@@ -477,10 +479,6 @@ textarea.application__form-text-area__size-large {
   width: 184px;
 }
 
-.application__attachment-filename-container + .application__form-upload-button-container > .application__form-upload-label {
-  margin-top: 10px;
-}
-
 .application__form-upload-uploading-spinner {
   .spin;
   margin-left: 20px;
@@ -488,6 +486,10 @@ textarea.application__form-text-area__size-large {
 
 .application__form-upload-button-add-text {
   margin-left: 10px;
+}
+
+.application__form-upload-attachment-container {
+  margin-top: 6px;
 }
 
 .application__error-display {

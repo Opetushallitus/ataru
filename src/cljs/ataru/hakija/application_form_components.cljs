@@ -371,7 +371,7 @@
 
 (defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id (str component-id "-upload-button")]
-    [:div
+    [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
       {:id        id
        :type      "file"
@@ -415,8 +415,7 @@
    [:i.zmdi.zmdi-spinner.application__form-upload-uploading-spinner]])
 
 (defn attachment-row [field-descriptor component-id attachment-idx]
-  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])
-        status :ready]
+  (let [status @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :status]])]
     [:li.application__attachment-filename-list-item
      (case status
        :ready [attachment-view-file field-descriptor component-id attachment-idx]
@@ -432,11 +431,12 @@
        [label field-descriptor]
        (when-not (clojure.string/blank? @text)
          [markdown-paragraph @text])
-       [:ol.application__attachment-filename-list
-        (->> (range @attachment-count)
-             (map (fn [attachment-idx]
-                    ^{:key (str "attachment-" id "-" attachment-idx)}
-                    [attachment-row field-descriptor id attachment-idx])))]
+       (when (> @attachment-count 0)
+         [:ol.application__attachment-filename-list
+          (->> (range @attachment-count)
+               (map (fn [attachment-idx]
+                      ^{:key (str "attachment-" id "-" attachment-idx)}
+                      [attachment-row field-descriptor id attachment-idx])))])
        [attachment-upload field-descriptor id @attachment-count]])))
 
 (defn info-element [field-descriptor]
