@@ -12,7 +12,7 @@
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (defn- redirect-to-logged-out-page []
-  (resp/redirect (resolve-url :opintopolku-login)))
+  (resp/redirect (resolve-url :opintopolku.login)))
 
 (defn- cas-login [ticket virkailija-login-url]
   (let [cas-client (cas/cas-client (resolve-url :cas-client))

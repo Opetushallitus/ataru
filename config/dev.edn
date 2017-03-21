@@ -1,14 +1,14 @@
-{:server {:allow-db-clear? true}
- :db {:database-name "ataru-test"
-      :pool-name "ataru-pool"
-      :username "oph"
-      :password "oph"
-      :server-name "localhost"
-      :port-number 5433
-      :schema "public"}
- :cas {}
- :public-config {:applicant {:service_url "http://localhost:8351"}
-                 :virkailija {:service_url "http://localhost:8350/lomake-editori/"}
+{:server        {:allow-db-clear? true}
+ :db            {:database-name "ataru-test"
+                 :pool-name     "ataru-pool"
+                 :username      "oph"
+                 :password      "oph"
+                 :server-name   "localhost"
+                 :port-number   5433
+                 :schema        "public"}
+ :cas           {}
+ :public-config {:applicant        {:service_url "http://localhost:8351"}
+                 :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}
                  :environment-name "test"}
- :dev {:fake-dependencies true}}
+ :dev           {:fake-dependencies true}}
 
