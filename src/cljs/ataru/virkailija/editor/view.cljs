@@ -1,5 +1,4 @@
 (ns ataru.virkailija.editor.view
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
             [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
@@ -45,34 +44,34 @@
    "Uusi lomake"])
 
 (defn- copy-form []
-  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
-        disabled? (reaction (nil? @form-key))]
+  (let [form-key  @(subscribe [:state-query [:editor :selected-form-key]])
+        disabled? (nil? form-key)]
     (fn []
       [:a.editor-form__control-button
        {:on-click (fn [event]
                     (.preventDefault event)
                     (dispatch [:editor/copy-form]))
-        :class    (if @disabled?
+        :class    (if disabled?
                     "editor-form__control-button--disabled"
                     "editor-form__control-button--enabled")}
        "Kopioi lomake"])))
 
 (defn- remove-form []
-  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
-        confirm?  (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
-        disabled? (reaction (nil? @form-key))]
+  (let [form-key  @(subscribe [:state-query [:editor :selected-form-key]])
+        confirm?  @(subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
+        disabled? (nil? form-key)]
     (fn []
       [:a.editor-form__control-button
        {:on-click (fn [event]
                     (.preventDefault event)
-                    (if @confirm?
+                    (if confirm?
                       (dispatch [:editor/remove-form])
                       (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))
         :class    (cond
-                    @confirm? "editor-form__control-button--confirm"
-                    @disabled? "editor-form__control-button--disabled"
+                    confirm? "editor-form__control-button--confirm"
+                    disabled? "editor-form__control-button--disabled"
                     :else "editor-form__control-button--enabled")}
-       (if @confirm?
+       (if confirm?
          "Vahvista poisto"
          "Poista lomake")])))
 
@@ -88,13 +87,13 @@
    [form-controls]])
 
 (defn editor-name []
-  (let [form              (subscribe [:editor/selected-form])
-        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-name         (reaction (:name @form))]
+  (let [form              @(subscribe [:editor/selected-form])
+        new-form-created? @(subscribe [:state-query [:editor :new-form-created?]])
+        form-name         (:name form)]
     (r/create-class
       {:display-name        "editor-name"
        :component-did-mount (fn [element]
-                              (when @new-form-created?
+                              (when new-form-created?
                                 (do
                                   (doto (r/dom-node element)
                                     (.focus)
@@ -102,9 +101,9 @@
                                   (dispatch [:set-state [:editor :new-form-created?] false]))))
        :reagent-render      (fn []
                               [:input.editor-form__form-name-input
-                               {:key           (str "editor-name-" (:key @form)) ; needed to trigger component-did-update
+                               {:key           (str "editor-name-" (:key form)) ; needed to trigger component-did-update
                                 :type          "text"
-                                :default-value @form-name
+                                :default-value form-name
                                 :placeholder   "Lomakkeen nimi"
                                 :on-change     #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
 
