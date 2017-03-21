@@ -2,13 +2,13 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]))
 
-(re-frame/reg-sub-raw
+(re-frame/reg-sub
  :active-panel
- (fn [db _]
-   (reaction (:active-panel @db))))
+ (fn [db]
+   (:active-panel db)))
 
-(re-frame/reg-sub-raw
+(re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
-    (reaction (get-in @db path))))
+    (get-in db path)))
 
