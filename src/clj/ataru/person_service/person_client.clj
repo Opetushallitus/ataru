@@ -6,6 +6,7 @@
    [schema.core :as s]
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]
+   [ataru.config.url-helper :refer [resolve-url]]
    [ataru.person-service.person-schema :refer [Person]]
    [ataru.person-service.legacy-person-schema :refer [LegacyPerson]]
    [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe]
@@ -13,17 +14,13 @@
   (:import
    [java.net URLEncoder]))
 
-(defn- base-address []
-  (get-in config [:authentication-service :base-address]))
-
-(defn- oppijanumerorekisteri-base-address []
-  (get-in config [:oppijanumerorekisteri-service :base-address]))
-
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
 (defn create-person [cas-client person]
-  (let [result (cas/cas-authenticated-post cas-client (str (oppijanumerorekisteri-base-address) "/henkilo") person)]
+  (let [result (cas/cas-authenticated-post
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
       {:status 201 :body body}
       {:status :created :oid body}
@@ -58,8 +55,7 @@
   {:status :exists :oid (:oidHenkilo (json/parse-string body true))})
 
 (defn upsert-person-with-hetu [cas-client person]
-  (let [url    (str (oppijanumerorekisteri-base-address)
-                    "/henkilo/hetu=" (:hetu person))
+  (let [url    (resolve-url :oppijanumerorekisteri-service.upsert-with-hetu (:hetu person))
         result (cas/cas-authenticated-get cas-client url)]
     (match result
       {:status 200 :body body} (exists-response body)
@@ -68,9 +64,7 @@
 
 (defn upsert-person-without-hetu [cas-client person]
   (let [email  (-> person :yhteystieto first :yhteystietoArvo)
-        url    (str (oppijanumerorekisteri-base-address)
-                    "/henkilo/identification?idp=email&id="
-                    (URLEncoder/encode email))
+        url    (resolve-url :oppijanumerorekisteri-service.upsert-without-hetu (URLEncoder/encode email))
         result (cas/cas-authenticated-get cas-client url)]
     (match result
       {:status 200 :body body} (exists-response body)
@@ -85,7 +79,6 @@
 (s/defn ^:always-validate upsert-person :- Response
   [cas-client :- s/Any
    person     :- Person]
-  {:pre [(some? (oppijanumerorekisteri-base-address))]}
   (log/info "Sending person to oppijanumerorekisteri" person)
   (if (:hetu person)
     (upsert-person-with-hetu cas-client person)
@@ -101,9 +94,8 @@
 (s/defn ^:always-validate legacy-upsert-person :- Response
   [cas-client :- s/Any
    person :- LegacyPerson]
-  {:pre [(some? (base-address))]}
   (log/info "Sending person to authentication-service" person)
-  (let [url      (str (base-address) "/resources/s2s/hakuperusteet")
+  (let [url      (resolve-url :authentication-service.legacy-upsert)
         response (cas/cas-authenticated-post cas-client url person)]
     (if (= 200 (:status response))
       ;; Let's just mark it always created, we don't know with this hakuperusteet call:

@@ -1,7 +1,7 @@
 (ns ataru.tarjonta-service.tarjonta-client
   (:require
+    [ataru.config.url-helper :refer [resolve-url]]
     [cheshire.core :as json]
-    [oph.soresu.common.config :refer [config]]
     [org.httpkit.client :as http]
     [taoensso.timbre :refer [warn info]]
     [clojure.string :as string]))
@@ -19,25 +19,19 @@
 
 (defn get-hakukohde
   [hakukohde-oid]
-  (do-request (str
-                (get-in config [:tarjonta-service :hakukohde-base-url])
-                hakukohde-oid)))
+  (do-request (resolve-url :tarjonta-service.hakukohde hakukohde-oid)))
 
 (defn get-haku
   [haku-oid]
-  (do-request (str
-                (get-in config [:tarjonta-service :haku-base-url])
-                haku-oid)))
+  (do-request (resolve-url :tarjonta-service.haku haku-oid)))
 
 (defn get-koulutus
   [koulutus-oid]
-  (do-request (str
-                (get-in config [:tarjonta-service :koulutus-base-url])
-                koulutus-oid)))
+  (do-request (resolve-url :tarjonta-service.koulutus koulutus-oid)))
 
 (defn get-forms-in-use
   [organization-oids]
-  (let [url      (get-in config [:tarjonta-service :forms-in-use-url])
+  (let [url      (resolve-url :tarjonta-service.forms-in-use)
         query    (when (< 0 (count organization-oids))
                    (str "?" (string/join "&" (map #(str "oid=" %) organization-oids))))
         response @(http/get (str url query))]

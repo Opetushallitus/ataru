@@ -3,6 +3,7 @@
   (:require
     [taoensso.timbre :as log]
     [selmer.parser :as selmer]
+    [ataru.config.url-helper :refer [resolve-url]]
     [ataru.applications.application-store :as application-store]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
@@ -24,8 +25,7 @@
                            (get-differing-translations raw-translations translation-mappings))
         subject          (:subject translations)
         recipient        (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
-        service-url      (get-in config [:public-config :applicant :service_url])
-        application-url  (str service-url "/hakemus?modify=" (:secret application))
+        application-url  (resolve-url :ataru.hakemus-edit (:secret application))
         body             (selmer/render-file
                            "templates/email_confirmation_template.html"
                            (merge {:application-url application-url}

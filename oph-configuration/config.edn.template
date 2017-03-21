@@ -8,10 +8,6 @@
        :schema "public"
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
- :authentication {:opintopolku-login-url "{{ataru_authentication_opintopolku_login_url}}"
-                  :opintopolku-logout-url  "{{ataru_authentication_opintopolku_logout_url}}"
-                  :ataru-login-success-url "{{ataru_authentication_ataru_login_success_url}}"
-                  :cas-client-url "{{ataru_authentication_cas_client_url}}"}
  :ldap {:server "{{host_ldap}}"
         :port 389
         :ssl false
@@ -20,20 +16,14 @@
         :user-right-names {:form-edit         "{{ataru_ldap_editor_user_right_name}}"
                            :view-applications "{{ataru_ldap_view_applications_user_right_name}}"
                            :edit-applications "{{ataru_ldap_edit_applications_user_right_name}}"}}
- :email {:email-service-url "https://{{host_virkailija}}/ryhmasahkoposti-service/email/firewall"}
  :public-config {:applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :environment-name "{{ataru_environment_name}}"
                  :features {:attachment {{ataru_attachment_support_enabled}}}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
- :organization-service {:base-address "https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v2"}
- :authentication-service {:base-address "https://{{host_virkailija}}/authentication-service"}
- :oppijanumerorekisteri-service {:base-address "https://{{host_virkailija}}/oppijanumerorekisteri-service"}
- :tarjonta-service {:hakukohde-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/"
-                    :haku-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/"
-                    :koulutus-base-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/"
-                    :forms-in-use-url "https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/ataru/all"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
        :hakija-base-path "{{ataru_hakija_log_path}}"}
- :liiteri {:url "{{liiteri_url}}"}}
+ :urls {:virkailija-host "{{ataru_virkailija_host}}"
+        :hakija-host "{{ataru_hakija_host}}"
+        :liiteri-url "{{ataru_liiteri_url}}"}

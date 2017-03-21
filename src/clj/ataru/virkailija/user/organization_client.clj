@@ -1,18 +1,11 @@
 (ns ataru.virkailija.user.organization-client
   (:require
-   [oph.soresu.common.config :refer [config]]
-   [cheshire.core :as json]
-   [ataru.cas.client :as cas-client]))
+    [ataru.config.url-helper :refer [resolve-url]]
+    [oph.soresu.common.config :refer [config]]
+    [cheshire.core :as json]
+    [ataru.cas.client :as cas-client]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
-
-(def
-  plain-org-hierarchy-path
-  "/hierarkia/hae/nimi?aktiiviset=true&suunnitellut=true&lakkautetut=false&skipParents=true&oid=")
-
-(def org-name-path "/hae/nimi?aktiiviset=true&suunnitellut=true&lakkautetut=false&oid=")
-
-(def group-path "/ryhmat")
 
 (defn read-body
   [resp]
@@ -36,14 +29,10 @@
               (org-node->map org-node)))]
     (flatten (map #(recur-orgs %) (:organisaatiot hierarchy)))))
 
-(defn base-address [] (get-in config [:organization-service :base-address]))
-
 (defn get-organization-from-remote-service [cas-client organization-oid]
-  {:pre [(some? (base-address))]}
-  (let [response (cas-client/cas-authenticated-get cas-client
-                                                   (str (base-address)
-                                                        org-name-path
-                                                        organization-oid))]
+  (let [response (cas-client/cas-authenticated-get
+                   cas-client
+                   (resolve-url :organization-service.name organization-oid))]
     (if (= 200 (:status response))
       (let [parsed-response (read-body response)
             org-count (:numHits parsed-response)]
@@ -60,7 +49,6 @@
       (throw (Exception. (str "Got status code " (:status response) " While reading single organization"))))))
 
 (defn get-organization [cas-client organization-oid]
-  {:pre [(some? (base-address))]}
   (if (= organization-oid oph-organization)
     ;; the remote organization service  (organisaatiopalvelu) doesn't support
     ;; fetching data about the root OPH organization, so we'll hard-code it here:
@@ -71,11 +59,9 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [cas-client root-organization-oid]
-  {:pre [(some? (base-address))]}
-  (let [response (cas-client/cas-authenticated-get cas-client
-                                                   (str (base-address)
-                                                        plain-org-hierarchy-path
-                                                        root-organization-oid) )]
+  (let [response (cas-client/cas-authenticated-get
+                   cas-client
+                   (resolve-url :organization-service.plain-hierarchy root-organization-oid))]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
@@ -84,9 +70,7 @@
   "returns a sequence of {:name <group-name> :oid <group-oid>} maps containing all the
    groups within organization service"
   [cas-client]
-  {:pre [(some? (base-address))]}
-  (let [response (cas-client/cas-authenticated-get cas-client
-                                                   (str (base-address) group-path))]
+  (let [response (cas-client/cas-authenticated-get cas-client (resolve-url :organization-service.groups))]
     (if (= 200 (:status response))
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
