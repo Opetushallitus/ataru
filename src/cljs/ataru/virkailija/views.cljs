@@ -11,7 +11,7 @@
   {:editor editor :application application})
 
 (defn no-privileges []
-  [:div "Ei oikeuksia"])
+  [:div.privilege-info-outer [:div.privilege-info-inner "Ei oikeuksia"]])
 
 (defn some-right-exists-for-user? [rights orgs]
   (boolean (some rights (->> orgs (map :rights) flatten (map keyword)))))
