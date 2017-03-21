@@ -382,6 +382,7 @@
       {:id        id
        :type      "file"
        :multiple  "multiple"
+       :key       (str "upload-button-" component-id "-" attachment-count)
        :on-change (fn [event]
                     (.preventDefault event)
                     (let [file-list (or (some-> event .-dataTransfer .-files)
