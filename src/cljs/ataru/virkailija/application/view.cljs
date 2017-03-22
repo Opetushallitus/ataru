@@ -6,14 +6,15 @@
     [reagent.ratom :refer-macros [reaction]]
     [reagent.core :as r]
     [cljs-time.format :as f]
+    [taoensso.timbre :refer-macros [spy debug]]
     [ataru.virkailija.application.handlers]
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
-    [taoensso.timbre :refer-macros [spy debug]]
-    [ataru.application-common.koulutus :as koulutus]))
+    [ataru.application-common.koulutus :as koulutus]
+    [ataru.virkailija.application.application-search-control :refer [application-search-control]]))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)
@@ -465,10 +466,10 @@
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
                  (not @expanded?))
-        [:div.panel-content.application-handling__detail-container
+        [:div..application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
-         [:div.application-handling__review-area
+         [:div.application-handling__content-wrapper.application-handling__review-area
           [application-contents @selected-application-and-form]
           [application-review]]]))))
 
@@ -480,7 +481,8 @@
       (let [filtered-applications (include-filtered @application-filter @applications)]
         [:div
          [:div.application-handling__overview
-          [:div.panel-content.select_application_list
+          [application-search-control]
+          [:div.application-handling__content-wrapper.select_application_list
            [form-list filtered-applications @application-filter]
            [application-list filtered-applications]]]
          [application-review-area filtered-applications]]))))

@@ -5,6 +5,10 @@
 @blue-border-color: #06526B;
 @form-column-width: 33%;
 
+.application-handling__content-wrapper {
+  padding: 20px 85px 15px 85px;
+}
+
 .application-handling__overview {
   background-color: @very-light-gray;
   border-bottom: 1px solid @separator-color;
@@ -617,5 +621,26 @@ th.application__readonly-adjacent--header {
   .top-banner, .application-handling__excel-download-link, .application-handling__review, .close-details-button, .select_application_list {display: none;}
   .main-container {padding-top: 0;}
   .application-handling__header, .application-handling__overview {border-bottom: none;}
-  .panel-content {padding: 0;}
+  .application-handling__content-wrapper { padding: 0; }
+}
+
+.application__search-control-tab-row {
+  display: flex;
+  align-items: stretch;
+  align-content: space-between;
+}
+
+.application__search-control-tab-selector {
+  width: 100%;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  margin-right: 10px;
+  text-align: center;
+  color: #4194bf;
+}
+
+
+.application__search-control-tab-selector:last-of-type {
+  margin-right: 0;
 }
