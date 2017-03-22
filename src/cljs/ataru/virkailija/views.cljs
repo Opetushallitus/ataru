@@ -7,10 +7,28 @@
               [ataru.virkailija.editor.view :refer [editor]]
               [taoensso.timbre :refer-macros [spy]]))
 
+(def panel-components
+  {:editor editor :application application})
+
+(defn no-privileges []
+  [:div.privilege-info-outer [:div.privilege-info-inner "Ei oikeuksia"]])
+
+(defn some-right-exists-for-user? [rights orgs]
+  (boolean (some rights (->> orgs (map :rights) flatten (map keyword)))))
+
+(defn privileged-panel [panel rights]
+  (let [organizations (re-frame/subscribe [:state-query [:editor :user-info :organizations]])]
+    (fn [panel rights]
+      (if (some-right-exists-for-user? rights @organizations)
+        [(get panel-components panel)]
+        [no-privileges]))))
+
 (defmulti panels identity)
-(defmethod panels :application [] [application])
-(defmethod panels :editor [] [editor])
-(defmethod panels :default [] [:div])
+(defmethod panels :application []
+  [privileged-panel :application #{:view-applications :edit-applications}])
+(defmethod panels :editor []
+  [privileged-panel :editor #{:form-edit}])
+(defmethod panels :default [])
 
 (defn main-panel []
   (let [active-panel (re-frame/subscribe [:active-panel])]
