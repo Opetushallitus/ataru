@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [ataru.middleware.cache-control :as cache-control]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]

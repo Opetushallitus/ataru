@@ -2,6 +2,7 @@
   (:require
     [org.httpkit.client :as http]
     [clj-util.cas :as cas]
+    [ataru.config.url-helper :refer [resolve-url]]
     [oph.soresu.common.config :refer [config]]
     [cheshire.core :as json]))
 
@@ -9,7 +10,7 @@
   {:pre [(some? (:cas config))]}
   (let [username           (get-in config [:cas :username])
         password           (get-in config [:cas :password])
-        cas-url            (get-in config [:authentication :cas-client-url])
+        cas-url            (resolve-url :cas-client)
         cas-params         (cas/cas-params cas-uri username password)
         cas-client         (cas/cas-client cas-url)]
     {:client cas-client
