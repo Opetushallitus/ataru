@@ -1,7 +1,7 @@
 (ns ataru.background-job.job
   "Public API of the Background Job system"
   (:require
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [taoensso.timbre :as log]
    [com.stuartsierra.component :as component]
    [ataru.background-job.job-execution :as execution]

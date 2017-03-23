@@ -10,7 +10,7 @@
     [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (def default-fetch-size 50)
 

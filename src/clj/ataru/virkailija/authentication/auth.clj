@@ -5,7 +5,7 @@
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
             [taoensso.timbre :refer [info spy error]]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [ataru.log.audit-log :as audit-log]
             [ataru.virkailija.user.user-rights :as rights]
             [ataru.config.url-helper :refer [resolve-url]])

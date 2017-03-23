@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.3rd-party.rotor :as rotor]
             [environ.core :refer [env]]
-            [oph.soresu.common.config :refer [config]])
+            [ataru.config.core :refer [config]])
   (:import [java.util TimeZone]))
 
 (defn configure-logging! [app-id]

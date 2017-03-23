@@ -2,7 +2,7 @@
   (:require
    [clojure.string :as str]
    [clj-ldap.client :as ldap]
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [cheshire.core :as json]
    [ataru.virkailija.user.user-rights :as user-rights])
   (:import (java.net InetAddress)))

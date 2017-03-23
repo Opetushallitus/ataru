@@ -1,7 +1,7 @@
 (ns ataru.files.file-store
   (:require [ataru.url :as url]
             [ataru.config.url-helper :refer [resolve-url]]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [org.httpkit.client :as http]
             [cheshire.core :as json]))
 

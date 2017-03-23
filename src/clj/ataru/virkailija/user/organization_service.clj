@@ -2,7 +2,7 @@
   (:require
    [clojure.string :refer [join]]
    [com.stuartsierra.component :as component]
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [ataru.virkailija.user.ldap-client :as ldap-client]
    [ataru.cas.client :as cas-client]
    [clojure.core.cache :as cache]

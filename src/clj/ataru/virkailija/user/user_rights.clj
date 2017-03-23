@@ -1,6 +1,6 @@
 (ns ataru.virkailija.user.user-rights
   (:require [schema.core :as s]
-            [oph.soresu.common.config :refer [config]]))
+            [ataru.config.core :refer [config]]))
 
 (def ^:private
   rights

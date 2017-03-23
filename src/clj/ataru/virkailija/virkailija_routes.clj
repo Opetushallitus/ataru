@@ -28,7 +28,7 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.session :as ring-session]

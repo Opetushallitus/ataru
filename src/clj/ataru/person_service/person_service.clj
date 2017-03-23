@@ -2,7 +2,7 @@
   (:require [ataru.cas.client :as cas]
             [ataru.person-service.person-client :as person-client]
             [com.stuartsierra.component :as component]
-            [oph.soresu.common.config :refer [config]]))
+            [ataru.config.core :refer [config]]))
 
 (defprotocol PersonService
   (upsert-person [this person]

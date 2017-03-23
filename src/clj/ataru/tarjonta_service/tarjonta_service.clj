@@ -3,7 +3,7 @@
     [ataru.tarjonta-service.tarjonta-client :as client]
     [ataru.virkailija.user.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (defn forms-in-use
   [organization-service username]

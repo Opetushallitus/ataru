@@ -1,7 +1,7 @@
 (ns ataru.cache.cache-service
   (:require [taoensso.timbre :refer [info warn]]
             [com.stuartsierra.component :as component]
-            [oph.soresu.common.config :refer [config]])
+            [ataru.config.core :refer [config]])
   (:import (com.hazelcast.core Hazelcast HazelcastInstance)
            (com.hazelcast.config Config MapConfig ClasspathXmlConfig)
            (java.net InetAddress)))

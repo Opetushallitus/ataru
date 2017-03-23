@@ -1,7 +1,7 @@
 (ns ataru.virkailija.user.organization-client
   (:require
     [ataru.config.url-helper :refer [resolve-url]]
-    [oph.soresu.common.config :refer [config]]
+    [ataru.config.core :refer [config]]
     [cheshire.core :as json]
     [ataru.cas.client :as cas-client]))
 
