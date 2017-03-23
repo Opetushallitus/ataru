@@ -1,5 +1,6 @@
 (ns ataru.db.migrations
   (:require
+    [ataru.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
@@ -7,7 +8,6 @@
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [crypto.random :as c]
     [oph.soresu.common.db :refer [get-datasource]]
-    [oph.soresu.common.db.migrations :as migrations]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]))
