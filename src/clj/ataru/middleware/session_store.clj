@@ -1,7 +1,7 @@
 (ns ataru.middleware.session-store
   (:require [ring.middleware.session.store :refer [SessionStore]]
             [yesql.core :refer [defqueries]]
-            [oph.soresu.common.db :refer [exec]])
+            [ataru.db.db :refer [exec]])
   (:import (java.util UUID)))
 
 (defqueries "sql/session-queries.sql")

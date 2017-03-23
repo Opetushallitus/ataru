@@ -68,7 +68,9 @@
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [com.hazelcast/hazelcast "3.7.5"]]
+                 [com.hazelcast/hazelcast "3.7.5"]
+                 [pandect "0.6.1"]
+                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]]
 
   :min-lein-version "2.5.3"
 

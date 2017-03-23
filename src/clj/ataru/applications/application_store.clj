@@ -6,7 +6,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
             [schema.core :as s]
-            [oph.soresu.common.db :as db]
+            [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [crypto.random :as crypto]

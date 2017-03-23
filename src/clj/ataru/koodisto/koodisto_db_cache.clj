@@ -3,8 +3,8 @@
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [pandect.algo.sha256 :refer :all]
-            [oph.soresu.common.db :as db]
-            [oph.soresu.common.db.queries :as queries]))
+            [ataru.db.db :as db]
+            [ataru.db.db.queries :as queries]))
 
 ; TODO url.config
 (def koodisto-base-url "https://virkailija.opintopolku.fi:443/koodisto-service/rest/")

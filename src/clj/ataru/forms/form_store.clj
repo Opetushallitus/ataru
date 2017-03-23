@@ -6,7 +6,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [clj-time.core :as t]
-            [oph.soresu.common.db :refer [exec get-datasource]]
+            [ataru.db.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :refer [warn]])
   (:import [java.util UUID]))

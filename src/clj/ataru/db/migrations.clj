@@ -7,7 +7,7 @@
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [crypto.random :as c]
-    [oph.soresu.common.db :refer [get-datasource]]
+    [ataru.db.db :refer [get-datasource]]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]))

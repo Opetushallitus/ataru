@@ -1,5 +1,5 @@
 (ns ataru.virkailija.authentication.cas-ticketstore
-  (:require [oph.soresu.common.db :refer [exec]]
+  (:require [ataru.db.db :refer [exec]]
             [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/cas-ticketstore-queries.sql")
