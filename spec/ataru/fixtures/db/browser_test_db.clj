@@ -5,7 +5,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [ataru.fixtures.application :as app-fixture]
-            [oph.soresu.common.db :as db]))
+            [ataru.db.db :as db]))
 
 (defqueries "sql/form-queries.sql")
 

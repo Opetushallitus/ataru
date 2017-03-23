@@ -1,5 +1,5 @@
 (ns ataru.anonymizer.anonymizer-application-store
-  (:require [oph.soresu.common.db :as db]
+  (:require [ataru.db.db :as db]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/anonymizer-application-queries.sql")

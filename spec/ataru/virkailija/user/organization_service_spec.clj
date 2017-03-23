@@ -5,7 +5,7 @@
             [speclj.core :refer [describe it should= tags around]]
             [clj-ldap.client :as ldap]
             [ataru.virkailija.user.ldap-client :as ataru-ldap]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [ataru.cas.client :as cas-client]
             [clojure.java.io :as io]))
 

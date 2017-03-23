@@ -2,13 +2,13 @@
   "This tests how everything works together with database. More detailed tests are in job_execution_spec.clj."
   (:require
    [yesql.core :refer [defqueries]]
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [clj-time.core :as time]
    [speclj.core :refer [tags describe it should= before-all after-all]]
    [ataru.background-job.job :as job]
    [camel-snake-kebab.extras :refer [transform-keys]]
    [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-   [oph.soresu.common.db :as db]))
+   [ataru.db.db :as db]))
 
 (defqueries "sql/dev-job-queries.sql")
 
