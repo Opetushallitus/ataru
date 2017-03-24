@@ -2,6 +2,7 @@
   (:require [org.httpkit.client :as http]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [pandect.algo.sha256 :refer :all]
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]))
@@ -20,11 +21,13 @@
 (defn- do-get [url]
   (let [{:keys [status headers body error] :as resp} @(http/get url)]
     (if (= 200 status)
-      (json->map body)
-      (throw (ex-info "Error when fetching doing HTTP GET" {:status status
-                                                            :url url
-                                                            :body body
-                                                            :error error
+      (let [body (json->map body)]
+        (log/info (str "Fetched koodisto from URL: " url))
+        body)
+      (throw (ex-info "Error when fetching doing HTTP GET" {:status  status
+                                                            :url     url
+                                                            :body    body
+                                                            :error   error
                                                             :headers headers})))))
 
 (defn- fetch-all-koodisto-groups []
@@ -56,8 +59,8 @@
        (extract-name-with-language "FI")))
 
 (defn- koodisto-version->uri-and-name [koodisto-version]
-  {:uri (:koodistoUri koodisto-version)
-   :name (extract-name koodisto-version)
+  {:uri     (:koodistoUri koodisto-version)
+   :name    (extract-name koodisto-version)
    :version (-> koodisto-version :latestKoodistoVersio :versio)})
 
 (defn- compare-case-insensitively [s1 s2]
@@ -66,7 +69,9 @@
 (defn- koodi-value->soresu-option [koodi-value]
   {:value (:koodiArvo koodi-value)
    :label {:fi (->> koodi-value :metadata (extract-name-with-language "FI"))
-           :sv (->> koodi-value :metadata (extract-name-with-language "SV"))}})
+           :sv (->> koodi-value :metadata (extract-name-with-language "SV"))
+           :en (->> koodi-value :metadata (extract-name-with-language "EN"))}})
+
 
 (defn list-koodistos []
                      (->> (fetch-all-koodisto-groups)
@@ -82,8 +87,8 @@
 
 (defn- get-cached-koodisto [db-key koodisto-uri version checksum]
   (->> {:koodisto_uri koodisto-uri
-        :version version
-        :checksum checksum}
+        :version      version
+        :checksum     checksum}
        (db/exec db-key yesql-get-koodisto)
        first))
 
@@ -94,7 +99,7 @@
                                        checksum (->> (cheshire/generate-string koodisto)
                                                      (sha256))]
                                    (db/exec db-key yesql-create-koodisto<! {:koodisto_uri koodisto-uri
-                                                                              :version version
-                                                                              :checksum checksum
-                                                                              :content [koodisto]})
+                                                                            :version      version
+                                                                            :checksum     checksum
+                                                                            :content      [koodisto]})
                                    (get-cached-koodisto db-key koodisto-uri version checksum))))
