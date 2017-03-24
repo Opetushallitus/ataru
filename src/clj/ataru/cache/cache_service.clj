@@ -97,9 +97,10 @@
       (assoc component :hazelcast-instance (Hazelcast/newHazelcastInstance (build-config cluster-config)))))
 
   (stop [component]
-    (info "Shutting down Hazelcast")
-    (.shutdown hazelcast-instance)
-    (assoc component :hazelcast-instance nil))
+    (when (some? hazelcast-instance)
+      (info "Shutting down Hazelcast")
+      (.shutdown hazelcast-instance)
+      (assoc component :hazelcast-instance nil)))
 
   (cache-get [component cache key]
     (.get (get-cached-map component cache) key))

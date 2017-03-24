@@ -1,5 +1,5 @@
 (ns ataru.db.db
-  (:require [ataru.config.core :refer [config]]
+  (:require [ataru.config.core :refer [config config-name]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -58,12 +58,12 @@
 (defn clear-db-and-grant! [ds-key schema-name grant-user]
                           (let [ds-key (keyword ds-key)]
                             (if (:allow-db-clear? (:server config))
-                              (try (apply (partial jdbc/db-do-commands {:datasource (get-datasource ds-key)} true)
-                                          (concat [(str "drop schema if exists " schema-name " cascade")
-                                                   (str "create schema " schema-name)]
-                                                  (if grant-user
-                                                    [(str "grant usage on schema " schema-name " to " grant-user)
-                                                     (str "alter default privileges in schema " schema-name " grant select on tables to " grant-user)])))
+                              (try (partial jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
+                                            (concat [(str "drop schema if exists " schema-name " cascade")
+                                                     (str "create schema " schema-name)]
+                                                    (if grant-user
+                                                      [(str "grant usage on schema " schema-name " to " grant-user)
+                                                       (str "alter default privileges in schema " schema-name " grant select on tables to " grant-user)])))
                                    (catch Exception e (log/error (get-next-exception-or-original e) (.toString e))))
                               (throw (RuntimeException. (str "Clearing database is not allowed! "
                                                              "check that you run with correct mode. "

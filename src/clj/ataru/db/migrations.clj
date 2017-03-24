@@ -1,6 +1,6 @@
 (ns ataru.db.migrations
   (:require
-    [ataru.flyway-migration :as migrations]
+    [ataru.db.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]

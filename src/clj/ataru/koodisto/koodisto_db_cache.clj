@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [pandect.algo.sha256 :refer :all]
             [ataru.db.db :as db]
-            [ataru.db.db.queries :as queries]))
+            [yesql.core :refer [defqueries]]))
 
 ; TODO url.config
 (def koodisto-base-url "https://virkailija.opintopolku.fi:443/koodisto-service/rest/")
@@ -12,6 +12,8 @@
 (def all-koodistos-group-uri "http://kaikkikoodistot")
 
 (def koodisto-version-path "codeelement/codes/")
+
+(defqueries "sql/koodisto.sql")
 
 (defn json->map [body] (cheshire/parse-string body true))
 
@@ -82,7 +84,7 @@
   (->> {:koodisto_uri koodisto-uri
         :version version
         :checksum checksum}
-       (db/exec db-key queries/get-koodisto)
+       (db/exec db-key yesql-get-koodisto)
        first))
 
 (defn get-cached-koodi-options [db-key koodisto-uri version]
@@ -91,7 +93,7 @@
                                  (let [koodisto (get-koodi-options koodisto-uri version)
                                        checksum (->> (cheshire/generate-string koodisto)
                                                      (sha256))]
-                                   (db/exec db-key queries/create-koodisto<! {:koodisto_uri koodisto-uri
+                                   (db/exec db-key yesql-create-koodisto<! {:koodisto_uri koodisto-uri
                                                                               :version version
                                                                               :checksum checksum
                                                                               :content [koodisto]})
