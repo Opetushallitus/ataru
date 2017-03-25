@@ -23,3 +23,12 @@
    vector
    #(add-haku-names tarjonta-service (application-store/get-haut %))
    #(add-haku-names tarjonta-service (application-store/get-all-haut))))
+
+(defn get-haut2 [session organization-service tarjonta-service]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   vector
+   #(add-haku-names tarjonta-service (application-store/get-haut2 %))
+   #(add-haku-names tarjonta-service (application-store/get-all-haut2))))

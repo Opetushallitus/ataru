@@ -2,6 +2,7 @@
   (:require [ataru.log.audit-log :as audit-log]
             [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
+            [ataru.application.review-states :refer [unhandled-states]]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -277,4 +278,17 @@
 (defn get-all-haut
   []
   (->> (exec-db :db yesql-get-all-haut-from-applications {})
+       (map ->kebab-case-kw)))
+
+
+(defn get-haut2
+  [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
+                                 {:unhandled_states unhandled-states
+                                  :query_type "ALL"
+                                  :authorized_organization_oids [""]})))
+
+(defn get-all-haut2
+  []
+  (->> (exec-db :db yesql-get-all-haut-and-hakukohteet-from-applications {})
        (map ->kebab-case-kw)))

@@ -231,6 +231,23 @@ FROM applications a1
 WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
 GROUP BY a1.haku;
 
+-- name: yesql-get-haut-and-hakukohteet-from-applications
+with latest_version as (
+    select key, max(created_time) as latest_time from applications GROUP BY key
+)
+SELECT
+  a1.haku,
+  a1.hakukohde,
+  COUNT(DISTINCT a1.key) AS application_count,
+  sum(CASE WHEN ar.state in (:unhandled_states) THEN 1 ELSE 0 END) as unhandled
+FROM applications a1
+INNER JOIN latest_version lv ON a1.created_time = lv.latest_time
+INNER JOIN application_reviews ar on a1.key = ar.application_key
+INNER JOIN forms f1 ON (a1.form_id = f1.id)
+WHERE a1.haku IS NOT NULL AND a1.hakukohde IS NOT NULL
+AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
+GROUP BY a1.haku, a1.hakukohde, ar.state;
+
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
 SELECT

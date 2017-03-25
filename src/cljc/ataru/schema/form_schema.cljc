@@ -41,6 +41,10 @@
                    :haku-name         s/Str
                    :application-count s/Int})
 
+(s/defschema Haku2 {:haku              s/Str
+                   :haku-name         s/Str
+                   :application-count s/Int})
+
 (s/defschema LocalizedString {:fi                  s/Str
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
