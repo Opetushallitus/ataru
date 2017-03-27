@@ -280,7 +280,6 @@
   (->> (exec-db :db yesql-get-all-haut-from-applications {})
        (map ->kebab-case-kw)))
 
-
 (defn get-haut2
   [organization-oids]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
