@@ -285,10 +285,12 @@
   [organization-oids]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
                                  {:unhandled_states unhandled-states
-                                  :query_type "ALL"
-                                  :authorized_organization_oids [""]})))
+                                  :query_type "ORGS"
+                                  :authorized_organization_oids organization-oids})))
 
 (defn get-all-haut2
   []
-  (->> (exec-db :db yesql-get-all-haut-and-hakukohteet-from-applications {})
-       (map ->kebab-case-kw)))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
+                                 {:unhandled_states unhandled-states
+                                  :query_type "ALL"
+                                  :authorized_organization_oids [""]})))

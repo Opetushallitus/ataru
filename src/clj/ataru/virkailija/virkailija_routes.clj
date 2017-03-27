@@ -257,7 +257,7 @@
 
                  (api/GET "/haut2" {session :session}
                           :summary "List haku and hakukohde information found for applications stored in system"
-                          :return [ataru-schema/Haku2]
+                          :return [s/Any]
                           (ok (access-controlled-haku/get-haut2 session organization-service tarjonta-service)))
 
                  (api/context "/koodisto" []
