@@ -24,11 +24,28 @@
    #(add-haku-names tarjonta-service (application-store/get-haut %))
    #(add-haku-names tarjonta-service (application-store/get-all-haut))))
 
+(defn raw-haku-row->hakukohde [tarjonta-service raw-haku-row]
+  (merge (select-keys raw-haku-row [:application-count :unhandled])
+         {:oid (:hakukohde raw-haku-row)
+          :name (or
+                 (-> tarjonta-service
+                     (.get-hakukohde (:hakukohde raw-haku-row))
+                     :hakukohteenNimet
+                     :kieli_fi)
+                 (:hakukohde raw-haku-row))}))
+
 (defn handle-haut [tarjonta-service raw-haku-rows]
   (for [[haku-oid rows] (group-by :haku raw-haku-rows)] ;; (def hautg (group-by :haku hauts))
-    {:oid haku-oid
-     :name "TODO call fn to fetch from tarjonta"
-     :hakukohteet (map (fn [row] {:oid (:hakukohde row) :applications (:application-count row)}) rows)}))
+    {:oid               haku-oid
+     :name              (or
+                         (-> tarjonta-service
+                             (.get-haku haku-oid)
+                             :nimi
+                             :kieli_fi)
+                         haku-oid)
+     :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
+     :application-count (apply + (map :application-count rows))
+     :unhandled         (apply + (map :unhandled rows))}))
 
 (defn get-haut2 [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized
