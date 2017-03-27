@@ -32,7 +32,7 @@
 (defn get-organization-from-remote-service [cas-client organization-oid]
   (let [response (cas-client/cas-authenticated-get
                    cas-client
-                   (resolve-url :organization-service.name organization-oid))]
+                   (resolve-url :organisaatio-service.name organization-oid))]
     (if (= 200 (:status response))
       (let [parsed-response (read-body response)
             org-count (:numHits parsed-response)]
@@ -61,7 +61,7 @@
   [cas-client root-organization-oid]
   (let [response (cas-client/cas-authenticated-get
                    cas-client
-                   (resolve-url :organization-service.plain-hierarchy root-organization-oid))]
+                   (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))]
     (if (= 200 (:status response))
       (-> response read-body get-all-organizations-as-seq)
       (throw (Exception. (str "Got status code " (:status response) " While reading organizations"))))))
@@ -70,7 +70,7 @@
   "returns a sequence of {:name <group-name> :oid <group-oid>} maps containing all the
    groups within organization service"
   [cas-client]
-  (let [response (cas-client/cas-authenticated-get cas-client (resolve-url :organization-service.groups))]
+  (let [response (cas-client/cas-authenticated-get cas-client (resolve-url :organisaatio-service.groups))]
     (if (= 200 (:status response))
       (->> response read-body (map group->map))
       (throw (Exception. (str "Got status code " (:status response) " While reading groups"))))))
