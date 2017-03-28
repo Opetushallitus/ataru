@@ -1,11 +1,7 @@
 (ns ataru.person-service.authentication-service-person-extract-spec
   (:require [ataru.person-service.authentication-service-person-extract :as asp]
-            [ataru.cas.client :as cas-client]
             [ataru.fixtures.application :as application-fixtures]
-            [ataru.person-service.person-integration :as person-integration]
-            [ataru.person-service.person-service :as person-service]
-            [cheshire.core :as json]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [speclj.core :refer [describe it tags should should=]]))
 
 

@@ -1,10 +1,10 @@
 (ns ataru.koodisto.koodisto
-  (:require [oph.soresu.common.koodisto :as koodisto]))
+  (:require [ataru.koodisto.koodisto-db-cache :as koodisto-cache]))
 
 (defn get-koodisto-options
   [uri version]
   (:content
-    (koodisto/get-cached-koodi-options :db uri version)))
+    (koodisto-cache/get-cached-koodi-options :db uri version)))
 
 (defn populate-form-koodisto-fields
   [form]
@@ -44,4 +44,4 @@
 
 (defn list-all-koodistos
   []
-  (koodisto/list-koodistos))
+  (koodisto-cache/list-koodistos))

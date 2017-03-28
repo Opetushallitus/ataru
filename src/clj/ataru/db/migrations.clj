@@ -1,16 +1,16 @@
 (ns ataru.db.migrations
   (:require
+    [ataru.db.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [crypto.random :as c]
-    [oph.soresu.common.db :refer [get-datasource]]
-    [oph.soresu.common.db.migrations :as migrations]
+    [ataru.db.db :refer [get-datasource]]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (def default-fetch-size 50)
 

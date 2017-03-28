@@ -2,11 +2,8 @@
   (:require [speclj.core :refer :all]
             [clj-time.core :as t]
             [ataru.fixtures.person-info-form :refer [form]]
-            [ataru.fixtures.db.unit-test-db :as db]
             [ataru.forms.form-store :as store]
-            [taoensso.timbre :refer [spy debug]]
-            [oph.soresu.common.db :as soresu-db]
-            [yesql.core :as sql])
+            [taoensso.timbre :refer [spy debug]])
   (:import
    (clojure.lang ExceptionInfo)))
 

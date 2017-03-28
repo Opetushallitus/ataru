@@ -3,7 +3,7 @@
     [org.httpkit.client :as http]
     [clj-util.cas :as cas]
     [ataru.config.url-helper :refer [resolve-url]]
-    [oph.soresu.common.config :refer [config]]
+    [ataru.config.core :refer [config]]
     [cheshire.core :as json]))
 
 (defn new-client [cas-uri]

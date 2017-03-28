@@ -5,10 +5,10 @@
     [taoensso.timbre :as log]
     [org.httpkit.client :as http]
     [cheshire.core :as json]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (defn- viestintapalvelu-address []
-  (resolve-url :email-service))
+  (resolve-url :ryhmasahkoposti-service))
 
 (defn- send-email [from recipients subject body]
   (let [url                 (viestintapalvelu-address)

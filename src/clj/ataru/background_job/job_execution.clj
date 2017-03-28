@@ -5,7 +5,7 @@
    [clj-time.core :as time]
    [clojure.core.match :refer [match]]
    [ataru.background-job.job-store :as job-store]
-   [oph.soresu.common.config :refer [config]])
+   [ataru.config.core :refer [config]])
   (:import
    (java.util.concurrent Executors TimeUnit)))
 

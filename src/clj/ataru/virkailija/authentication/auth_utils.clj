@@ -4,4 +4,4 @@
 
 (defn cas-auth-url
   []
-  (resolve-url :opintopolku.login))
+  (resolve-url :cas.login))

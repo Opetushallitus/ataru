@@ -1,5 +1,5 @@
 (ns ataru.config.url-helper
-  (:require [oph.soresu.common.config :refer [config]])
+  (:require [ataru.config.core :refer [config]])
   (:import (fi.vm.sade.properties OphProperties)))
 
 ; TODO component if not too much work?
