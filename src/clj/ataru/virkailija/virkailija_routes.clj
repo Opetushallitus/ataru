@@ -257,8 +257,9 @@
 
                  (api/GET "/haut2" {session :session}
                           :summary "List haku and hakukohde information found for applications stored in system"
-                          :return [s/Any]
-                          (ok (access-controlled-haku/get-haut2 session organization-service tarjonta-service)))
+                          :return s/Any
+                          (ok {:tarjonta-haut (access-controlled-haku/get-haut2 session organization-service tarjonta-service)
+                               :direct-form-haut []}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
