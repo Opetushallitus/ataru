@@ -1,13 +1,14 @@
 (ns ataru.hakija.background-jobs.email-job
   "You can send any email with this, it's not tied to any particular email-type"
   (:require
-   [taoensso.timbre :as log]
-   [org.httpkit.client :as http]
-   [cheshire.core :as json]
-   [oph.soresu.common.config :refer [config]]))
+    [ataru.config.url-helper :refer [resolve-url]]
+    [taoensso.timbre :as log]
+    [org.httpkit.client :as http]
+    [cheshire.core :as json]
+    [oph.soresu.common.config :refer [config]]))
 
 (defn- viestintapalvelu-address []
-  (get-in config [:email :email-service-url]))
+  (resolve-url :email-service))
 
 (defn- send-email [from recipients subject body]
   (let [url                 (viestintapalvelu-address)

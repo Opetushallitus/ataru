@@ -1,5 +1,6 @@
 (ns ataru.virkailija.authentication.auth-routes
   (:require [ataru.virkailija.authentication.auth :refer [login logout cas-initiated-logout]]
+            [ataru.config.url-helper :refer [resolve-url]]
             [oph.soresu.common.config :refer [config]]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]

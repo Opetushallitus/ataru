@@ -3,7 +3,8 @@
             #?(:clj  [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])
             #?(:clj  [taoensso.timbre :refer [spy debug]]
-               :cljs [taoensso.timbre :refer-macros [spy debug]]))
+               :cljs [taoensso.timbre :refer-macros [spy debug]])
+            #?(:cljs [goog.string :as gstring]))
   (:import #?(:clj [java.util UUID])))
 
 (defn map-kv [m f]
@@ -68,3 +69,16 @@
     (->> dropdown-options
         (filter (comp (partial = value) :value))
       (mapcat :followups))))
+
+(def ^:private b-limit 1024)
+(def ^:private kb-limit 102400)
+
+(defn size-bytes->str [bytes]
+  #?(:cljs (condp > bytes
+             b-limit (str bytes "B")
+             kb-limit (gstring/format "%.01fkB" (/ bytes 1024))
+             (gstring/format "%.01fMB" (/ bytes 1024000)))
+     :clj (condp > bytes
+            b-limit (str bytes " B")
+            kb-limit (format "%.2f kB" (float (/ bytes 1024)))
+            (format "%.2f MB" (float (/ bytes 1024000))))))

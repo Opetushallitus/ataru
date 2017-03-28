@@ -186,7 +186,7 @@
     describe('application filtering', function() {
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
-        expect(includedFilters()).to.equal(9)
+        expect(includedFilters()).to.equal(11)
         expect(applicationStates().length).to.equal(2)
 
         var stateOfFirstApplication = applicationStates().eq(0).text()
@@ -209,11 +209,11 @@
       })
 
       function filterOutBasedOnFirstApplicationState(stateOfFirstApplication) {
-        testFrame().find('.application-handling__filter-state-selected-row:contains(' + stateOfFirstApplication + ')').click()
+        testFrame().find('.application-handling__filter-state-selected-row span:contains(' + stateOfFirstApplication + ')').click()
       }
 
       function filterInBasedOnFirstApplicationState(stateOfFirstApplication) {
-        testFrame().find('.application-handling__filter-state-selection-row:contains(' + stateOfFirstApplication + ')').click()
+        testFrame().find('.application-handling__filter-state-selection-row span:contains(' + stateOfFirstApplication + ')').click()
       }
 
       function includedFilters() {

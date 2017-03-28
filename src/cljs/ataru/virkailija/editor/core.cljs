@@ -5,7 +5,7 @@
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.util :as util]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub-raw reg-sub]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]

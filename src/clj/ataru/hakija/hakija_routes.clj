@@ -32,10 +32,19 @@
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
 
+(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
+  (cond-> answer
+    (= fieldType "attachment")
+    (update :value (partial file-store/get-metadata))))
+
+(defn- attachments-metadata->answers [application]
+  (update application :answers (partial map attachment-metadata->answer)))
+
 (defn- get-application [secret]
   (let [application (-> secret
                         (application-store/get-latest-application-by-secret)
-                        (application-service/remove-person-info-module-from-application-answers))]
+                        (application-service/remove-person-info-module-from-application-answers)
+                        (attachments-metadata->answers))]
     (if application
       (do
         (info (str "Getting application " (:id application) " with answers"))
@@ -125,18 +134,6 @@
           (if-let [resp (file-store/upload-file file)]
             (response/ok resp)
             (response/bad-request {:failures "Failed to upload file"}))
-          (finally
-            (io/delete-file (:tempfile file) true))))
-      (api/PUT "/:key" []
-        :summary "Update a file"
-        :path-params [key :- s/Str]
-        :multipart-params [file :- upload/TempFileUpload]
-        :middleware [upload/wrap-multipart-params]
-        :return ataru-schema/File
-        (try
-          (if-let [resp (file-store/update-file file key)]
-            (response/ok resp)
-            (response/bad-request {:failures (str "Failed to update file with key " key)}))
           (finally
             (io/delete-file (:tempfile file) true))))
       (api/DELETE "/:key" []

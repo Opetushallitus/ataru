@@ -1,6 +1,5 @@
 @import "vars";
 @import "mixins";
-@bottom-separator-color: #E6E6E6;
 @review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
@@ -8,7 +7,7 @@
 
 .application-handling__overview {
   background-color: @very-light-gray;
-  border-bottom: 1px solid @bottom-separator-color;
+  border-bottom: 1px solid @separator-color;
   ::-webkit-scrollbar {
     width: 7px;
     background-color: @light-gray;
@@ -89,7 +88,7 @@
   align-items: flex-end;
   justify-content: space-between;
   padding-bottom: 15px;
-  border-bottom: 1px solid @bottom-separator-color;
+  border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
   padding-left: 15px;
   -webkit-user-select: none;
@@ -216,7 +215,7 @@ and (max-width: 1000px) {
   left: -56px;
   text-align: start;
   background-color: white;
-  min-width: 220px;
+  min-width: 240px;
   padding: 11px 0 12px 1px;
   box-shadow: @modal-shadow;
   font-size: 13px;
@@ -226,9 +225,23 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state-selection-row {
   color: @gray;
-  margin-bottom: 5px;
-  margin-left: 26px;
+  margin-left: 9px;
+  margin-right: 9px;
+  padding-bottom: 4px;
+}
+
+.application-handling__filter-state-selection-row * {
   cursor: pointer;
+}
+
+.application-handling__filter-state-selection-row-checkbox {
+  margin-bottom: 5px;
+  margin-right: 7px;
+}
+
+.application-handling__filter-state-selection-row--all {
+  margin-bottom: 6px;
+  border-bottom: 1px solid @separator-color;
 }
 
 .application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
@@ -382,6 +395,10 @@ and (max-width: 1000px) {
   display: flex;
 }
 
+.application-handling__review-row--nocolumn {
+  display: block;
+}
+
 .application-handling__review-sub-header {
   width: 120px;
   color: black;
@@ -448,9 +465,9 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-notes {
-  width: 240px;
-  height: 100px;
-  margin-bottom: 30px;
+  width: 100%;
+  height: 180px;
+  margin: 7px 0;
   font-size: 14px;
   padding: 4px 8px;
   color: #1A1919;
@@ -473,6 +490,11 @@ and (max-width: 1000px) {
   Readonly application view selectors, different implementations than in hakija.less
   because the layout is different
 */
+
+.application__virkailija-readonly-attachment-text {
+  font-size: 14px;
+  line-height: 150%;
+}
 
 .application__readonly-container {
   width: 100%;

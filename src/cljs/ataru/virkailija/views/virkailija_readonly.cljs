@@ -9,7 +9,7 @@
   (:require [clojure.string :refer [trim]]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
-            [ataru.cljs-util :refer [console-log size-bytes->str]]
+            [ataru.cljs-util :refer [console-log]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
@@ -27,12 +27,10 @@
    [:div
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))
-          cannot-edit? (:cannot-edit answer)]
-      (cond
-        cannot-edit? [:p.application__form-field-not-edited (:not-edited (get-translations lang application-view-translations))]
-        multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-        :else (textual-field-value field-descriptor application :lang lang)))]])
+          multi-value? (or (seq? values) (vector? values))]
+      (if multi-value?
+        (into [:ul.application__form-field-list] (for [value values] [:li value]))
+        (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
   (when (fc/feature-enabled? :attachment)
@@ -43,10 +41,12 @@
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
-                       (let [text          (str filename " (" (size-bytes->str size) ")")
+                       (let [text          (str filename " (" (util/size-bytes->str size) ")")
                              component-key (str "attachment-div-" idx)]
-                         [:div {:key component-key}
-                          [:a {:href (str "/lomake-editori/files/" file-key)}
+                         [:div.application__virkailija-readonly-attachment-text
+                          {:key component-key}
+                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)
+                               :download ""}
                            text]]))
                      values)]])))
 

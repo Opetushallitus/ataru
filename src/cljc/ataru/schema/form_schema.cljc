@@ -1,8 +1,7 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]
-            [schema-tools.core :as st]
-            [clojure.string :as str]))
+  (:require [ataru.application.review-states :as review-states]
+            [ataru.hakija.application-validators :as validator]
+            [schema.core :as s]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -130,13 +129,23 @@
                                          (s/optional-key :end) (s/maybe s/Int)
                                          :on                   s/Bool}})
 
+(s/defschema File
+  {:key                      s/Str
+   :content-type             s/Str
+   :filename                 s/Str
+   :size                     s/Int
+   :uploaded                 #?(:clj  org.joda.time.DateTime
+                                :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
+   (s/optional-key :deleted) (s/maybe #?(:clj  org.joda.time.DateTime
+                                         :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})
+
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
 (s/defschema Answer {:key                          s/Str,
                      :value                        (s/cond-pre s/Str
                                                                s/Int
-                                                               [s/Str])
+                                                               [(s/cond-pre s/Str File)])
                      :fieldType                    (apply s/enum ["textField"
                                                                   "textArea"
                                                                   "dropdown"
@@ -172,15 +181,9 @@
    (s/optional-key :form-key)     s/Str
    (s/optional-key :tarjonta)     FormTarjontaMetadata})
 
-(def application-states (s/enum "unprocessed"
-                                "processing"
-                                "invited-to-interview"
-                                "invited-to-exam"
-                                "not-selected"
-                                "selected"
-                                "applicant-has-accepted"
-                                "rejected"
-                                "canceled"))
+
+(def application-states
+  (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
                          "received-from-applicant"
@@ -200,13 +203,3 @@
    :state                          application-states
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
-
-(s/defschema File
-  {:key                      s/Str
-   :content-type             s/Str
-   :filename                 s/Str
-   :size                     s/Int
-   :uploaded                 #?(:clj  org.joda.time.DateTime
-                                :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
-   (s/optional-key :deleted) (s/maybe #?(:clj  org.joda.time.DateTime
-                                         :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})

@@ -506,10 +506,9 @@
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
-        [:div.editor-form__header-wrapper
-         [text-header "Liitepyyntö" path]]
+        {:class @animation-effect}
+        [text-header "Liitepyyntö" path]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"]
          (input-fields-with-lang
