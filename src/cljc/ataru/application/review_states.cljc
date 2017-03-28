@@ -15,7 +15,7 @@
 
 ;; States that are - at least for the time being - considered terminal. They have been handled
 ;; and might be left at this state forever
-(def complete-states ["canceled" "selected" "rejected"])
+(def complete-states ["canceled" "selected" "rejected" "applicant-has-accepted" "not-selected"])
 
 ;; States which are not considered terminal, see above for terminal states
 (def incomplete-states
