@@ -46,7 +46,7 @@
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
                           [:a {:href (str "/lomake-editori/api/files/content/" file-key)
-                               :download ""}
+                               :download filename}
                            text]]))
                      values)]])))
 
