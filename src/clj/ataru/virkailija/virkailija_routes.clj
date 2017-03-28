@@ -16,6 +16,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
             [ataru.haku.haku-access-control :as access-controlled-haku]
+            [ataru.haku.haku-service :as haku-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
@@ -110,7 +111,7 @@
                  (api/GET "/forms-for-application-listing" {session :session}
                    :summary "Return for application viewing purposes"
                    :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms-for-application-listing session organization-service)))
+                   (ok (haku-service/get-forms-for-application-listing session organization-service)))
 
                  (api/GET "/forms" {session :session}
                    :summary "Used by external services. In practice this is Tarjonta system only for now.
@@ -258,7 +259,7 @@
                  (api/GET "/haut2" {session :session}
                           :summary "List haku and hakukohde information found for applications stored in system"
                           :return s/Any
-                          (ok {:tarjonta-haut (access-controlled-haku/get-haut2 session organization-service tarjonta-service)
+                          (ok {:tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)
                                :direct-form-haut []}))
 
                  (api/context "/koodisto" []
