@@ -25,7 +25,7 @@
    #(add-haku-names tarjonta-service (application-store/get-all-haut))))
 
 (defn raw-haku-row->hakukohde [tarjonta-service raw-haku-row]
-  (merge (select-keys raw-haku-row [:application-count :unhandled])
+  (merge (select-keys raw-haku-row [:application-count :unprocessed])
          {:oid (:hakukohde raw-haku-row)
           :name (or
                  (-> tarjonta-service
@@ -45,7 +45,7 @@
                          haku-oid)
      :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
      :application-count (apply + (map :application-count rows))
-     :unhandled         (apply + (map :unhandled rows))}))
+     :unprocessed         (apply + (map :unprocessed rows))}))
 
 (defn get-haut2 [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized

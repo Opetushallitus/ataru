@@ -232,14 +232,15 @@ WHERE a1.haku IS NOT NULL AND a1.haku IS NOT NULL
 GROUP BY a1.haku;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
-with latest_version as (
+WITH latest_version AS (
     select key, max(created_time) as latest_time from applications GROUP BY key
 )
 SELECT
   a1.haku,
   a1.hakukohde,
-  COUNT(DISTINCT a1.key) AS application_count,
-  sum(CASE WHEN ar.state in (:unhandled_states) THEN 1 ELSE 0 END) as unhandled
+  COUNT (a1.key) AS application_count,
+  SUM (CASE WHEN ar.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
+  SUM (CASE WHEN ar.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
 FROM applications a1
 INNER JOIN latest_version lv ON a1.created_time = lv.latest_time
 INNER JOIN application_reviews ar on a1.key = ar.application_key
