@@ -150,7 +150,7 @@
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "attachment"})
+(defonce multi-value-field-types #{"textField" "attachment"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
