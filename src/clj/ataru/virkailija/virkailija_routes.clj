@@ -260,7 +260,7 @@
                           :summary "List haku and hakukohde information found for applications stored in system"
                           :return s/Any
                           (ok {:tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)
-                               :direct-form-haut []}))
+                               :direct-form-haut (haku-service/get-direct-form-haut session organization-service)}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]

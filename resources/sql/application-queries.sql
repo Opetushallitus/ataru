@@ -249,6 +249,24 @@ WHERE a1.haku IS NOT NULL AND a1.hakukohde IS NOT NULL
 AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
 GROUP BY a1.haku, a1.hakukohde, ar.state;
 
+-- name: yesql-get-direct-form-haut
+WITH latest_version AS (
+    select key, max(created_time) as latest_time from applications GROUP BY key
+)
+SELECT
+  f1.name,
+  f1.key,
+  COUNT (a1.key) AS application_count,
+  SUM (CASE WHEN ar.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
+  SUM (CASE WHEN ar.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
+FROM applications a1
+INNER JOIN latest_version lv ON a1.created_time = lv.latest_time
+INNER JOIN application_reviews ar on a1.key = ar.application_key
+INNER JOIN forms f1 ON (a1.form_id = f1.id)
+WHERE a1.haku IS NULL AND a1.hakukohde IS NULL
+AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
+GROUP BY f1.name, f1.key;
+
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
 SELECT

@@ -36,13 +36,16 @@
    #(handle-haut tarjonta-service (application-store/get-haut2 %))
    #(handle-haut tarjonta-service (application-store/get-all-haut2))))
 
+;;TODO remove later
 (defn- application-count->form [{:keys [key] :as form}]
   (assoc form :application-count (application-store/get-application-count-with-deleteds-by-form-key key)))
 
+;;TODO remove later
 (defn- deleted-with-applications? [{:keys [application-count deleted]}]
   (or (not deleted)
       (> application-count 0)))
 
+;;TODO remove later
 (defn get-forms-for-application-listing [session organization-service]
   {:forms (->> (session-orgs/run-org-authorized
                 session
@@ -53,3 +56,12 @@
                 #(form-store/get-all-forms true))
                (map #(application-count->form %))
                (filter deleted-with-applications?))})
+
+(defn get-direct-form-haut [session organization-service]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   vector
+   #(application-store/get-direct-form-haut %)
+   #(application-store/get-all-direct-form-haut)))
