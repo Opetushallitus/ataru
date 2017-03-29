@@ -69,7 +69,7 @@
                  [org.clojure/tools.nrepl "0.2.12"]
                  [com.hazelcast/hazelcast "3.7.5"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]]
+                 [hikari-cp "1.3.0" :exclusions [prismatic/schema]]]
 
   :min-lein-version "2.5.3"
 
