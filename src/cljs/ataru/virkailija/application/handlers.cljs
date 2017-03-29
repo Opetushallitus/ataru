@@ -299,3 +299,17 @@
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
+
+(reg-event-db
+  :editor/handle-refresh-haut2
+  (fn [db [_ haut]]
+    (assoc-in db [:application :haut2] haut)))
+
+(reg-event-fx
+  :application/refresh-haut2
+  (fn [{:keys [db]}]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/haut2"
+            :handler-or-dispatch :editor/handle-refresh-haut2}}))
+

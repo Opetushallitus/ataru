@@ -32,6 +32,7 @@
   (dispatch [:application/refresh-forms-for-application-listing])
   (dispatch [:application/refresh-hakukohteet-from-applications])
   (dispatch [:application/refresh-haut-from-applications])
+  (dispatch [:application/refresh-haut2])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
