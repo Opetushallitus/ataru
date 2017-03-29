@@ -96,7 +96,7 @@
       (apply map vector concatenated-answers))))
 
 (defn fieldset [field-descriptor application lang children]
-  (when-let [fieldset-answers (extract-values children (:answers application))]
+  (let [fieldset-answers (extract-values children (:answers application))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
