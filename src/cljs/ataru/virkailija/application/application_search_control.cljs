@@ -12,9 +12,10 @@
 
 (defn tarjonta-haku [haku]
   [:div
-   (:name haku)
-   (str " (" (:application-count haku) ")")
-   (str " " (:unprocessed haku) " Käsittelemättä")])
+   [:a {:href (str "/lomake-editori/applications/haku/" (:oid haku))}
+    (:name haku)
+    (str " (" (:application-count haku) ")")
+    (str " " (:unprocessed haku) " Käsittelemättä")]])
 
 (defn incomplete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])
