@@ -473,16 +473,21 @@
           [application-contents @selected-application-and-form]
           [application-review]]]))))
 
+(defn content-area []
+  (let [applications          (subscribe [:state-query [:application :applications]])
+        application-filter    (subscribe [:state-query [:application :filter]])
+        show-search-control   (subscribe [:state-query [:application :search-control :show]])
+        include-filtered      (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
+        filtered-applications (include-filtered @application-filter @applications)]
+    (when (not @show-search-control)
+      [:div
+       [:div.application-handling__content-wrapper.select_application_list
+        [form-list filtered-applications @application-filter]
+        [application-list filtered-applications]]
+       [application-review-area filtered-applications]])))
+
 (defn application []
-  (let [applications       (subscribe [:state-query [:application :applications]])
-        application-filter (subscribe [:state-query [:application :filter]])
-        include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
-    (fn []
-      (let [filtered-applications (include-filtered @application-filter @applications)]
-        [:div
-         [:div.application-handling__overview
-          [application-search-control]
-          [:div.application-handling__content-wrapper.select_application_list
-           [form-list filtered-applications @application-filter]
-           [application-list filtered-applications]]]
-         [application-review-area filtered-applications]]))))
+  [:div
+   [:div.application-handling__overview
+    [application-search-control]
+    [content-area]]])

@@ -32,7 +32,8 @@
   (dispatch [:application/refresh-forms-for-application-listing])
   (dispatch [:application/refresh-hakukohteet-from-applications])
   (dispatch [:application/refresh-haut-from-applications])
-  (dispatch [:application/refresh-haut2])
+  (dispatch [:application/refresh-haut2]) ;; TODO this happens too often!
+  (dispatch [:application/close-search-control])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
