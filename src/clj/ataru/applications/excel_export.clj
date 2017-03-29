@@ -145,7 +145,7 @@
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)
           :when (some (comp (partial = (:label answer)) :header) headers)]
-    (let [column          (:column (first (filter #(= (:label answer) (:header %)) headers)))
+    (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (-> (:value answer))
           value           (if (or (seq? value-or-values) (vector? value-or-values))
                             (->> value-or-values
@@ -235,7 +235,8 @@
         decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
     (for [[idx [id header]] (map vector (range) all-labels)
           :when             (string? header)]
-      {:decorated-header (decorator id header)
+      {:id               id
+       :decorated-header (decorator id header)
        :header           header
        :column           idx})))
 
