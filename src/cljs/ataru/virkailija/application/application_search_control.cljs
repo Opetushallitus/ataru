@@ -11,10 +11,12 @@
    [:div.application__search-control-tab-selector "Käsitellyt haut"]])
 
 (defn incomplete-haut []
-  (let [show (subscribe [:state-query [:application :search-control :show]])]
-    (println "show value" @show)
+  (let [show (subscribe [:state-query [:application :search-control :show]])
+        haut (subscribe [:state-query [:application :haut2]])]
+    (println "haut value" @haut)
     (when (= :incomplete @show)
-      [:div "PLACEHOLDER"])))
+      [:div
+       (map (fn [haku] [:div (:name haku)]) (:tarjonta-haut @haut))])))
 
 (defn application-search-control []
   [:div.application-handling__content-wrapper
