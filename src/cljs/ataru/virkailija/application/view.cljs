@@ -8,6 +8,7 @@
     [cljs-time.format :as f]
     [taoensso.timbre :refer-macros [spy debug]]
     [ataru.virkailija.application.handlers]
+    [ataru.virkailija.application.application-subs]
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
@@ -67,16 +68,9 @@
    {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
 
 (defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])
-        selected-form-key  (subscribe [:state-query [:application :selected-form-key]])
-        forms              (subscribe [:state-query [:application :forms]])
-        selected-haku      (subscribe [:state-query [:application :selected-haku]])]
-    (fn []
-      [:div.application-handling__form-list-header
-       (or (:name (get @forms @selected-form-key))
-           (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku)
-           "Valitse haku/hakukohde")])))
+  (let [header (subscribe [:application/list-heading])]
+    [:div.application-handling__form-list-header
+     @header]))
 
 (defn form-list-column [forms header-text url-fn open]
   (let [search-term (subscribe [:state-query [:application :search-term]])]

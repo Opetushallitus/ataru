@@ -70,6 +70,18 @@
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)
+
+    (dispatch-after-state
+     :predicate
+     (fn [db]
+       (some #(when (= hakukohde-oid (:hakukohde %)) %)
+             (get-in db [:application :hakukohteet])))
+     :handler
+     (fn [hakukohde]
+       (dispatch [:application/select-hakukohde hakukohde])
+       (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid])))
+
+    ;; LEGACY
     (dispatch-after-state
       :predicate
       (fn [db]
@@ -89,19 +101,9 @@
        (some #(when (= haku-oid (:oid %)) %)
              (get-in db [:application :haut2 :tarjonta-haut])))
      :handler
-     (fn [_]
-       (dispatch [:application/fetch-applications-by-haku haku-oid])))
-
-    ;; TODO legacy, remove:
-    (dispatch-after-state
-      :predicate
-      (fn [db]
-        (some #(when (= haku-oid (:haku %)) %)
-              (get-in db [:application :haut])))
-      :handler
-      (fn [haku]
-        (dispatch [:application/select-haku haku])
-        (dispatch [:application/fetch-applications-by-haku (:haku haku)]))))
+     (fn [haku]
+       (dispatch [:application/select-haku haku])
+       (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
