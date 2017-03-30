@@ -41,7 +41,7 @@
           (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
 
 (defn direct-form-haku [haku]
-  [:div
+  [:div.application__search-control-haku
    [:a {:href (str "/lomake-editori/applications/" (:key haku))}
     " "
     (:name haku)
