@@ -29,9 +29,6 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-forms-for-application-listing])
-  (dispatch [:application/refresh-hakukohteet-from-applications])
-  (dispatch [:application/refresh-haut-from-applications])
   (dispatch [:application/refresh-haut2]) ;; TODO this happens too often!
   (dispatch [:application/close-search-control])
   (dispatch [:set-active-panel :application]))
@@ -95,13 +92,6 @@
        (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (common-actions-for-applications-route)
-    (dispatch-after-state
-     :predicate
-     (fn [db] (not-empty (get-in db [:application :forms key])))
-     :handler
-     (fn [form]
-       (dispatch [:application/select-form (:key form)])
-       (dispatch [:application/fetch-applications (:key form)]))))
+    (common-actions-for-applications-route))
 
   (accountant/dispatch-current!))

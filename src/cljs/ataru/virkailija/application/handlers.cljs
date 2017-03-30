@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
-            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
@@ -37,22 +36,6 @@
 (defn- languages->kwd [form]
   (update form :languages
     (partial mapv keyword)))
-
-(defn refresh-forms-for-application-listing []
-  (http
-   :get
-   (str "/lomake-editori/api/forms-for-application-listing")
-   (fn [db {:keys [forms]}]
-     (assoc-in db [:application :forms] (->> forms
-                                        (mapv languages->kwd)
-                                        (util/group-by-first :key)
-                                        (sort-by-time-and-deletedness))))))
-
-(reg-event-db
-  :application/refresh-forms-for-application-listing
-  (fn [db _]
-    (refresh-forms-for-application-listing)
-    db))
 
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
