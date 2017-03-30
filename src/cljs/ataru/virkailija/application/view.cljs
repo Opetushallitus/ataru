@@ -43,14 +43,14 @@
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
-(defn form-list-header []
+(defn haku-header []
   (let [header (subscribe [:application/list-heading])]
     [:div.application-handling__header-haku-name
      @header]))
 
-(defn form-list [filtered-applications application-filter]
+(defn haku-heading [filtered-applications application-filter]
   [:div.application-handling__header
-   [form-list-header]
+   [haku-header]
    [excel-download-link filtered-applications application-filter]])
 
 (defn application-list-row [application selected?]
@@ -329,7 +329,7 @@
     (when (not @show-search-control)
       [:div
        [:div.application-handling__content-wrapper.select_application_list
-        [form-list filtered-applications @application-filter]
+        [haku-heading filtered-applications @application-filter]
         [application-list filtered-applications]]
        [application-review-area filtered-applications]])))
 
