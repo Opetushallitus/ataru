@@ -300,10 +300,15 @@
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
 
+(defn get-hakukohteet-from-haut [haut]
+  (flatten (map :hakukohteet (:tarjonta-haut haut))))
+
 (reg-event-db
   :editor/handle-refresh-haut2
   (fn [db [_ haut]]
-    (assoc-in db [:application :haut2] haut)))
+    (-> db
+        (assoc-in [:application :haut2] haut)
+        (assoc-in [:application :hakukohteet2] (get-hakukohteet-from-haut haut)))))
 
 (reg-event-fx
   :application/refresh-haut2

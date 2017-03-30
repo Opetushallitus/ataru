@@ -8,8 +8,7 @@
          selected-hakukohde  (get-in db [:application :selected-hakukohde])
          selected-form-key   (get-in db [:application :selected-form-key])
          forms               (get-in db [:application :forms])]
-     (println selected-haku)
     (or (:name (get forms selected-form-key))
-        (:hakukohde-name selected-hakukohde)
+        (:name selected-hakukohde)
         (:name selected-haku)
         "Valitse haku/hakukohde"))))
