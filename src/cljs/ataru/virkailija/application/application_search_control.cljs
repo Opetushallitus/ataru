@@ -14,10 +14,13 @@
 (defn hakukohde-list [hakukohteet]
   [:div (map
          (fn [hakukohde]
-           ^{:key (:oid hakukohde)} [:div
-            (:name hakukohde)
+           ^{:key (:oid hakukohde)}
+           [:div
+            [:a
+             {:href (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))}
+             (:name hakukohde)
             (str " (" (:application-count hakukohde) ")")
-            (str " " (:unprocessed hakukohde) " Käsittelemättä")])
+            (str " " (:unprocessed hakukohde) " Käsittelemättä")]])
          hakukohteet)])
 
 (defn tarjonta-haku [haku]
