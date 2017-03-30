@@ -54,16 +54,7 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (common-actions-for-applications-route)
-    (dispatch-after-state
-     :predicate
-     (fn [db] (not-empty (get-in db [:application :forms])))
-     :handler
-     (fn [forms]
-       (let [form (-> forms first val)]
-         (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
-         (dispatch [:application/select-form (:key form)])
-         (dispatch [:application/fetch-applications (:key form)])))))
+    (common-actions-for-applications-route))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)
@@ -92,6 +83,13 @@
        (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
-    (common-actions-for-applications-route))
+    (common-actions-for-applications-route)
+    (dispatch-after-state
+     :predicate
+     (fn [db] (not-empty (get-in db [:application :forms key])))
+     :handler
+     (fn [form]
+       (dispatch [:application/select-form (:key form)])
+       (dispatch [:application/fetch-applications (:key form)]))))
 
   (accountant/dispatch-current!))

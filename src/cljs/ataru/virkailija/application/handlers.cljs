@@ -286,12 +286,18 @@
 (defn get-hakukohteet-from-haut [haut]
   (flatten (map :hakukohteet (:tarjonta-haut haut))))
 
+(defn get-forms-from-haut [haut]
+  (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
+
 (reg-event-db
   :editor/handle-refresh-haut2
   (fn [db [_ haut]]
+    ;(println "#forms:")
+    ;(println (get-forms-from-haut haut))
     (-> db
         (assoc-in [:application :haut2] haut)
-        (assoc-in [:application :hakukohteet2] (get-hakukohteet-from-haut haut)))))
+        (assoc-in [:application :hakukohteet2] (get-hakukohteet-from-haut haut))
+        (assoc-in [:application :forms] (get-forms-from-haut haut)))))
 
 (reg-event-fx
   :application/refresh-haut2
