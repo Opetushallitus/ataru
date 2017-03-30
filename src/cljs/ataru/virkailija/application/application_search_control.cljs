@@ -38,15 +38,27 @@
           (:name haku)
           (str " (" (:application-count haku) ")")
           (str " " (:unprocessed haku) " Käsittelemättä")]
-          (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])
-          ]))))
+          (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
+
+(defn direct-form-haku [haku]
+  [:div
+   [:a {:href (str "/lomake-editori/applications/" (:key haku))}
+    " "
+    (:name haku)
+    (str " (" (:application-count haku) ")")
+    (str " " (:unprocessed haku) " Käsittelemättä")]])
 
 (defn incomplete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])
         haut (subscribe [:state-query [:application :haut2]])]
     (when (= :incomplete @show)
       [:div
-       (map (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku]) (:tarjonta-haut @haut))])))
+       (map
+        (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku])
+        (:tarjonta-haut @haut))
+       (map
+        (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
+        (:direct-form-haut @haut))])))
 
 (defn application-search-control []
   [:div.application-handling__content-wrapper

@@ -250,22 +250,35 @@ AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oid
 GROUP BY a1.haku, a1.hakukohde;
 
 -- name: yesql-get-direct-form-haut
-WITH latest_version AS (
-    select key, max(created_time) as latest_time from applications GROUP BY key
+WITH latest_applications AS (
+    SELECT
+    a1.key,
+    f1.key as form_key,
+    ar.state,
+    max(a1.created_time) AS latest_time
+    FROM applications a1
+      INNER JOIN forms f1 ON (a1.form_id = f1.id)
+      INNER JOIN application_reviews ar on a1.key = ar.application_key
+    WHERE a1.haku IS NULL AND a1.hakukohde IS NULL
+    AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
+    GROUP BY a1.key, form_key, ar.state
+),
+latest_forms AS (
+  SELECT key, MAX(id) AS max_id
+  FROM forms
+  WHERE (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
+  GROUP BY key
 )
 SELECT
-  f1.name,
-  f1.key,
-  COUNT (a1.key) AS application_count,
-  SUM (CASE WHEN ar.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
-  SUM (CASE WHEN ar.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
-FROM applications a1
-INNER JOIN latest_version lv ON a1.created_time = lv.latest_time
-INNER JOIN application_reviews ar on a1.key = ar.application_key
-INNER JOIN forms f1 ON (a1.form_id = f1.id)
-WHERE a1.haku IS NULL AND a1.hakukohde IS NULL
-AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
-GROUP BY f1.name, f1.key;
+  f.name,
+  f.key,
+  COUNT (la.key) AS application_count,
+  SUM (CASE WHEN la.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
+  SUM (CASE WHEN la.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
+FROM latest_applications la
+JOIN latest_forms lf ON lf.key = la.form_key
+JOIN forms f ON f.id = lf.max_id
+GROUP BY f.name, f.key;
 
 -- name: yesql-application-query-for-hakukohde
 -- Get all applications for hakukohde
