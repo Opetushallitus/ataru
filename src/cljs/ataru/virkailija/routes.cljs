@@ -82,6 +82,17 @@
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
     (common-actions-for-applications-route)
+
+    (dispatch-after-state
+     :predicate
+     (fn [db]
+       (some #(when (= haku-oid (:oid %)) %)
+             (get-in db [:application :haut2 :tarjonta-haut])))
+     :handler
+     (fn [_]
+       (dispatch [:application/fetch-applications-by-haku haku-oid])))
+
+    ;; TODO legacy, remove:
     (dispatch-after-state
       :predicate
       (fn [db]
