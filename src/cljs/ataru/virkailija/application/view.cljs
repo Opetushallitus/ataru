@@ -45,15 +45,13 @@
 
 (defn form-list-header []
   (let [header (subscribe [:application/list-heading])]
-    [:div.application-handling__form-list-header
+    [:div.application-handling__header-haku-name
      @header]))
 
 (defn form-list [filtered-applications application-filter]
-  [:div.application-handling__form-list-wrapper-outer
-   [:div.application-handling__header
-    [:div.application-handling__header-text-container
-     [form-list-header]]
-    [excel-download-link filtered-applications application-filter]]])
+  [:div.application-handling__header
+   [form-list-header]
+   [excel-download-link filtered-applications application-filter]])
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
