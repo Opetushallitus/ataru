@@ -247,7 +247,7 @@ INNER JOIN application_reviews ar on a1.key = ar.application_key
 INNER JOIN forms f1 ON (a1.form_id = f1.id)
 WHERE a1.haku IS NOT NULL AND a1.hakukohde IS NOT NULL
 AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
-GROUP BY a1.haku, a1.hakukohde, ar.state;
+GROUP BY a1.haku, a1.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 WITH latest_version AS (
