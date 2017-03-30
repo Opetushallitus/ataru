@@ -33,10 +33,6 @@
  (fn [db [_ _]]
    (close-application db)))
 
-(defn- languages->kwd [form]
-  (update form :languages
-    (partial mapv keyword)))
-
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
 
@@ -228,16 +224,6 @@
         (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
-  :application/search-form-list
-  (fn [db [_ search-term]]
-    (assoc-in db [:application :search-term] search-term)))
-
-(reg-event-db
-  :application/clear-search-term
-  (fn [db]
-    (assoc-in db [:application :search-term] nil)))
-
-(reg-event-db
  :application/select-form
  (fn [db [_ form-key]]
    (-> db
@@ -259,29 +245,6 @@
         (update :application dissoc :selected-form-key :selected-hakukohde)
         (assoc-in [:application :selected-haku] haku)
         (close-application))))
-
-(reg-event-db
-  :application/refresh-hakukohteet-from-applications
-  (fn [db _]
-    (http
-      :get
-      "/lomake-editori/api/hakukohteet"
-      (fn [db hakukohteet]
-        (assoc-in db [:application :hakukohteet] hakukohteet)))
-    db))
-
-(reg-event-db
-  :editor/handle-refresh-haut-from-applications
-  (fn [db [_ haut]]
-    (assoc-in db [:application :haut] haut)))
-
-(reg-event-fx
-  :application/refresh-haut-from-applications
-  (fn [{:keys [db]}]
-    {:db   db
-     :http {:method              :get
-            :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
 
 (defn get-hakukohteet-from-haut [haut]
   (flatten (map :hakukohteet (:tarjonta-haut haut))))
