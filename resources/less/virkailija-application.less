@@ -22,45 +22,6 @@
   }
 }
 
-.application-handling__form-list-search-row {
-  display: flex;
-  flex-flow: row nowrap;
-  margin: 20px 20px 5px;
-}
-
-.application-handling__input-field-clear-button {
-  cursor: pointer;
-  position: relative;
-  right: 26px;
-  top: 11px;
-  font-size: 19px;
-}
-
-.application-handling__input-field-clear-button--disabled {
-  visibility: hidden;
-}
-
-.application-handling__form-list-close-button {
-  .semibold;
-  color: @blue-text-color;
-  cursor: pointer;
-  position: absolute;
-  right: 19px;
-  top: 15px;
-  font-size: 19px;
-}
-
-.application-handling__form-list-search-input {
-  color: @text-color;
-  font-size: 16px;
-  height: 43px;
-  padding: 11px 28px 13px 14px;
-  width: 300px;
-  border: 1px solid #AEAEAE;
-  border-radius: 2px;
-  font-weight: 600;
-}
-
 .application-handling__form-list-wrapper-outer {
   position: relative;
   display: inline-block;
@@ -68,23 +29,6 @@
   min-width: 300px;
   margin-right: 20px;
   z-index: 15;
-}
-
-.application-handling__form-list-wrapper-inner {
-  background-color: @application-form-list-background-color;
-  box-shadow: @modal-shadow;
-  padding-left: 20px;
-  padding-right: 20px;
-  position: absolute;
-  top: 30px;
-  width: 100%;
-  z-index: 15;
-  border-radius: 3px;
-}
-
-.application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
-  background-color: #9B9B9B;
-  border-radius: 5px;
 }
 
 .application-handling__header {
@@ -105,56 +49,6 @@
   cursor: pointer;
 }
 
-.application-handling__form-list-column-wrapper {
-  display: flex;
-  flex-flow: row nowrap;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.application-handling__form-list-column-and-header-container {
-  display: flex;
-  flex: 0 0 @form-column-width;
-  flex-flow: column nowrap;
-  min-width: 250px;
-}
-
-.application-handling__form-list-column-links-container {
-  margin-bottom: 20px;
-  margin-top: 10px;
-  max-height: calc(~"100vh - 300px");
-  overflow-y: auto;
-  font-size: 15px;
-}
-
-.application-handling__form-list-column-header {
-  border-bottom: 1px solid #E3ECEF;
-  padding: 10px 20px;
-}
-
-.application-handling__form-list-column-header--no-results {
-  color: @disabled-list-item-color;
-}
-
-.application-handling__form-list-link-container {
-  padding-right: 20px;
-  padding-left: 20px;
-  padding-top: 10px;
-  a {
-    color: #06526b;
-  }
-}
-
-.application-handling__form-list-link-container:first-of-type {
-  padding-top: 0px;
-}
-
-.application-handling__form-list-link--hilight {
-  background-color: @application-form-list-hilight-background-color;
-}
-
 .application-handling__form-list-header {
   font-size: 24px;
   .semibold;
@@ -162,16 +56,6 @@
   display: inline-block;
   line-height: 100%;
   margin-left: 20px;
-}
-
-.application-handling__form-list-arrow {
-  color: #06526B;
-  font-size: 26px;
-  position: absolute;
-}
-
-.application-handling__form-list-link--deleted {
-  color: @disabled-list-item-color;
 }
 
 .application-handling__excel-download-link {
