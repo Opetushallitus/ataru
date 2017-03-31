@@ -45,8 +45,7 @@
                              component-key (str "attachment-div-" idx)]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
-                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)
-                               :download filename}
+                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
                            text]]))
                      values)]])))
 

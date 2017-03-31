@@ -34,7 +34,7 @@
             [ring.middleware.session :as ring-session]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
-            [ring.util.response :refer [redirect]]
+            [ring.util.response :refer [redirect header]]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
@@ -280,7 +280,7 @@
                      :path-params [key :- (api/describe s/Str "File key")]
                      :summary "Download a file"
                      (if-let [file-stream (file-store/get-file key)]
-                       (ok file-stream)
+                       (header (ok file-stream) "Content-Disposition" (str "attachment; filename=\"" "foo" "\""))
                        (not-found))))))
 
 (api/defroutes resource-routes
