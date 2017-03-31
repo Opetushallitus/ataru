@@ -20,10 +20,20 @@
       (assoc :direct-form-haut (filter-haku-seq (:direct-form-haut haut) incomplete-eq))
       (assoc :tarjonta-haut (filter-haku-seq (:tarjonta-haut haut) incomplete-eq))))
 
+(defn sort-haku-seq-by-unprocessed [haku-seq]
+  (sort-by :unprocessed #(compare %2 %1) haku-seq))
+
+(defn sort-haut-by-unprocessed [haut]
+  (-> haut
+      (assoc :direct-form-haut (sort-haku-seq-by-unprocessed (:direct-form-haut haut)))
+      (assoc :tarjonta-haut (sort-haku-seq-by-unprocessed (:tarjonta-haut haut)))))
+
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
-   (filter-haut (get-in db [:application :haut2]) >)))
+   (-> (get-in db [:application :haut2])
+       (filter-haut >)
+       (sort-haut-by-unprocessed))))
 
 (re-frame/reg-sub
  :application/complete-haut
