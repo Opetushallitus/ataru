@@ -23,23 +23,23 @@
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (sort-by :unprocessed #(compare %2 %1) haku-seq))
 
-(defn sort-hakukohteet-by-unprocessed [tarjonta-haut]
-  (map #(update % :hakukohteet sort-haku-seq-by-unprocessed) tarjonta-haut))
+(defn sort-hakukohteet [tarjonta-haut sort-haku-seq-fn]
+  (map #(update % :hakukohteet sort-haku-seq-fn) tarjonta-haut))
 
-(defn sort-haut-by-unprocessed [haut]
+(defn sort-haut [haut sort-haku-seq-fn]
   (-> haut
-      (assoc :direct-form-haut (sort-haku-seq-by-unprocessed (:direct-form-haut haut)))
+      (assoc :direct-form-haut (sort-haku-seq-fn (:direct-form-haut haut)))
       (assoc :tarjonta-haut (->
                              (:tarjonta-haut haut)
-                             sort-haku-seq-by-unprocessed
-                             sort-hakukohteet-by-unprocessed))))
+                             sort-haku-seq-fn
+                             (sort-hakukohteet sort-haku-seq-fn)))))
 
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
    (-> (get-in db [:application :haut2])
        (filter-haut >)
-       (sort-haut-by-unprocessed))))
+       (sort-haut sort-haku-seq-by-unprocessed))))
 
 (re-frame/reg-sub
  :application/complete-haut
