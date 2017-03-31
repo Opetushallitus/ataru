@@ -50,7 +50,7 @@
 
 (defn incomplete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])
-        haut (subscribe [:state-query [:application :haut2]])]
+        haut (subscribe [:application/incomplete-haut])]
     (when (= :incomplete @show)
       [:div
        (map

@@ -12,3 +12,20 @@
         (:name selected-hakukohde)
         (:name selected-haku)
         "Valitse haku/hakukohde"))))
+
+(defn filter-haku-seq [haku-seq incomplete-eq] (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
+
+(defn filter-haut [haut incomplete-eq]
+  (-> haut
+      (assoc :direct-form-haut (filter-haku-seq (:direct-form-haut haut) incomplete-eq))
+      (assoc :tarjonta-haut (filter-haku-seq (:tarjonta-haut haut) incomplete-eq))))
+
+(re-frame/reg-sub
+ :application/incomplete-haut
+ (fn [db]
+   (filter-haut (get-in db [:application :haut2]) >)))
+
+(re-frame/reg-sub
+ :application/complete-haut
+ (fn [db]
+   (filter-haut (get-in db [:application :haut2]) =)))

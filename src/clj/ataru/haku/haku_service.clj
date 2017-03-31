@@ -5,7 +5,7 @@
    [ataru.forms.form-store :as form-store]))
 
 (defn- raw-haku-row->hakukohde [tarjonta-service raw-haku-row]
-  (merge (select-keys raw-haku-row [:application-count :unprocessed])
+  (merge (select-keys raw-haku-row [:application-count :unprocessed :incomplete])
          {:oid (:hakukohde raw-haku-row)
           :name (or
                  (-> tarjonta-service
@@ -25,7 +25,8 @@
                          haku-oid)
      :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
      :application-count (apply + (map :application-count rows))
-     :unprocessed       (apply + (map :unprocessed rows))}))
+     :unprocessed       (apply + (map :unprocessed rows))
+     :incomplete        (apply + (map :incomplete rows))}))
 
 (defn get-haut [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized
