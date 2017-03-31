@@ -76,7 +76,12 @@
     describe('user-defined fields', function() {
       before(
         setNthFieldInputValue(12, 'Tekstikentän vastaus'),
-        // TODO: repeating field 13
+        setNthFieldInputValue(13, 'Toistuva vastaus 1'),
+        setNthFieldSubInputValue(13, 1, 'Toistuva vastaus 2'),
+        setNthFieldSubInputValue(13, 2, 'Toistuva vastaus 3'),
+        clickElement(function() {
+          return formFields().eq(13).find('a.application__form-repeatable-text--addremove').eq(0)
+        }),
         setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
         setNthFieldOption(15, 'Kolmas vaihtoehto'),
         setNthFieldInputValue(16, 'Jatkokysymyksen vastaus'),
@@ -84,12 +89,17 @@
         clickNthFieldRadio(18, 'Kolmas vaihtoehto', true),
         clickNthFieldRadio(19, 'Arkkitehti', true),
         setNthFieldValue(20, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
-        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
+        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto'),
+        setNthFieldSubInputValue(24, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(24, 1, 'Oikea vierekkäinen')
+
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
         expect(submitButton().prop('disabled')).to.equal(false)
       })
+
+
     })
 
     describe('submitting', function() {
@@ -115,7 +125,7 @@
                               "Jyväskylä",
                               "suomi",
                               "Tekstikentän vastaus",
-                              "",
+                              "Toistuva vastaus 1Toistuva vastaus 3",
                               "Pakollisen tekstialueen vastaus",
                               "Kolmas vaihtoehto",
                               "Jatkokysymyksen vastaus",
@@ -126,7 +136,13 @@
                               "",
                               "",
                               "Ensimmäinen vaihtoehto"]
+
+        var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
+        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen"]
+
         expect(displayedValues).to.eql(expectedValues)
+        expect(tabularValues).to.eql(expectedTabularValues)
+
       })
     })
   })
