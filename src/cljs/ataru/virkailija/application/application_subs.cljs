@@ -13,7 +13,8 @@
         (:name selected-haku)
         "Valitse haku/hakukohde"))))
 
-(defn filter-haku-seq [haku-seq incomplete-eq] (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
+(defn filter-haku-seq [haku-seq incomplete-eq]
+  (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
 
 (defn filter-haut [haut incomplete-eq]
   (-> haut
@@ -22,6 +23,11 @@
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (sort-by :unprocessed #(compare %2 %1) haku-seq))
+
+(defn sort-haku-seq-by-name [haku-seq]
+  (sort-by :name
+           #(compare (clojure.string/lower-case %1) (clojure.string/lower-case %2))
+           haku-seq))
 
 (defn sort-hakukohteet [tarjonta-haut sort-haku-seq-fn]
   (map #(update % :hakukohteet sort-haku-seq-fn) tarjonta-haut))
@@ -44,4 +50,7 @@
 (re-frame/reg-sub
  :application/complete-haut
  (fn [db]
-   (filter-haut (get-in db [:application :haut2]) =)))
+   (->
+    (get-in db [:application :haut2])
+    (filter-haut =)
+    (sort-haut sort-haku-seq-by-name))))
