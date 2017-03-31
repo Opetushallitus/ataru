@@ -316,25 +316,23 @@
         [:div..application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
-         [:div.application-handling__content-wrapper.application-handling__review-area
+         [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
           [application-review]]]))))
 
-(defn content-area []
+(defn application []
   (let [applications          (subscribe [:state-query [:application :applications]])
         application-filter    (subscribe [:state-query [:application :filter]])
         show-search-control   (subscribe [:state-query [:application :search-control :show]])
         include-filtered      (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
         filtered-applications (include-filtered @application-filter @applications)]
-    (when (not @show-search-control)
-      [:div
-       [:div.application-handling__content-wrapper.select_application_list
-        [haku-heading filtered-applications @application-filter]
-        [application-list filtered-applications]]
-       [application-review-area filtered-applications]])))
-
-(defn application []
-  [:div
-   [:div.application-handling__overview
-    [application-search-control]
-    [content-area]]])
+    [:div
+     [:div.application-handling__overview
+      [application-search-control]
+      (when (not @show-search-control)
+        [:div.application-handling__content-wrapper.select_application_list
+         [haku-heading filtered-applications @application-filter]
+         [application-list filtered-applications]])]
+     (when (not @show-search-control)
+       [:div
+        [application-review-area filtered-applications]])]))
