@@ -30,7 +30,6 @@
 
 (defn common-actions-for-applications-route []
   (dispatch [:application/refresh-haut2]) ;; TODO this happens too often!
-  (dispatch [:application/close-search-control])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
@@ -54,11 +53,12 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (common-actions-for-applications-route))
+    (common-actions-for-applications-route)
+    (dispatch [:application/show-incomplete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)
-
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
      :predicate
      (fn [db]
@@ -71,7 +71,7 @@
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
     (common-actions-for-applications-route)
-
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
      :predicate
      (fn [db]
@@ -84,6 +84,7 @@
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms key])))

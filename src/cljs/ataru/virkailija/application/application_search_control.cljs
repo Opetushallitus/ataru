@@ -68,7 +68,6 @@
 (defn complete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])]
     (when (= :complete @show)
-      (println "complete haut--")
       [all-haut-list :application/complete-haut])))
 
 (defn application-search-control []
