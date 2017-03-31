@@ -15,6 +15,11 @@
    (toggle-show db :incomplete)))
 
 (reg-event-db
+ :application/show-complete-haut-list
+ (fn [db [_ _]]
+   (toggle-show db :complete)))
+
+(reg-event-db
  :application/close-search-control
  (fn [db [_ _]]
    (assoc-in db show-path nil)))

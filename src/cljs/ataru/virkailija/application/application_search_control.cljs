@@ -9,7 +9,9 @@
    [:div.application__search-control-tab-selector
     {:on-click #(dispatch [:application/show-incomplete-haut-list])}
     "Käsittelemättä olevat haut"]
-   [:div.application__search-control-tab-selector "Käsitellyt haut"]])
+   [:div.application__search-control-tab-selector
+    {:on-click #(dispatch [:application/show-complete-haut-list])}
+    "Käsitellyt haut"]])
 
 (defn hakukohde-list [hakukohteet]
   [:div (map
@@ -48,19 +50,29 @@
     (str " (" (:application-count haku) ")")
     (str " " (:unprocessed haku) " Käsittelemättä")]])
 
+(defn all-haut-list [haut-subscribe-type]
+  (let [haut (subscribe [haut-subscribe-type])]
+    [:div
+     (map
+      (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku])
+      (:tarjonta-haut @haut))
+     (map
+      (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
+      (:direct-form-haut @haut))]))
+
 (defn incomplete-haut []
-  (let [show (subscribe [:state-query [:application :search-control :show]])
-        haut (subscribe [:application/incomplete-haut])]
+  (let [show (subscribe [:state-query [:application :search-control :show]])]
     (when (= :incomplete @show)
-      [:div
-       (map
-        (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku])
-        (:tarjonta-haut @haut))
-       (map
-        (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
-        (:direct-form-haut @haut))])))
+      [all-haut-list :application/incomplete-haut])))
+
+(defn complete-haut []
+  (let [show (subscribe [:state-query [:application :search-control :show]])]
+    (when (= :complete @show)
+      (println "complete haut--")
+      [all-haut-list :application/complete-haut])))
 
 (defn application-search-control []
   [:div.application-handling__content-wrapper
    [tab-row]
-   [incomplete-haut]])
+   [incomplete-haut]
+   [complete-haut]])
