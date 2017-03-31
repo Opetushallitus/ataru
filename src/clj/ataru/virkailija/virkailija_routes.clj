@@ -279,8 +279,10 @@
                    (api/GET "/content/:key" []
                      :path-params [key :- (api/describe s/Str "File key")]
                      :summary "Download a file"
-                     (if-let [file-stream (file-store/get-file key)]
-                       (header (ok file-stream) "Content-Disposition" (str "attachment; filename=\"" "foo" "\""))
+                     (if-let [file-response (file-store/get-file key)]
+                       (header (ok (:body file-response))
+                               "Content-Disposition"
+                               (:content-disposition file-response))
                        (not-found))))))
 
 (api/defroutes resource-routes

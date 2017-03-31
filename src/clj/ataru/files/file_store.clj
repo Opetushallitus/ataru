@@ -33,4 +33,6 @@
   (let [url  (resolve-url :liiteri.file key)
         resp @(http/get url)]
     (when (= (:status resp) 200)
-      (:body resp))))
+      (clojure.pprint/pprint (:headers resp))
+      {:body (:body resp)
+       :content-disposition (-> resp :headers :content-disposition)})))
