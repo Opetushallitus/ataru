@@ -5,10 +5,13 @@
    [ataru.virkailija.application.application-search-control-handlers]))
 
 (defn tab [tab-id selected-tab click-dispatch-kw label-text]
-  [:div.application__search-control-tab-selector
-   {:on-click #(dispatch [click-dispatch-kw])
-    :class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
-   label-text])
+  [:div.application__search-control-tab-selector-wrapper
+   [:div.application__search-control-tab-selector
+    {:on-click #(dispatch [click-dispatch-kw])
+     :class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
+    label-text]
+   (when (= tab-id selected-tab)
+     [:div.application-handling_search-control-tab-arrow-down])])
 
 (defn tab-row []
   (let [selected-tab (subscribe [:state-query [:application :search-control :show]])]

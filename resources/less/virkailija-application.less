@@ -500,12 +500,20 @@ th.application__readonly-adjacent--header {
   align-content: space-between;
 }
 
-.application__search-control-tab-selector {
+.application__search-control-tab-selector-wrapper {
   width: 100%;
+  margin-right: 10px;
+  position: relative;
+}
+
+.application__search-control-tab-selector-wrapper:last-of-type {
+  margin-right: 0;
+}
+
+.application__search-control-tab-selector {
   padding: 20px;
   background-color: white;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  margin-right: 10px;
   text-align: center;
   color: #4194bf;
 }
@@ -519,8 +527,15 @@ th.application__readonly-adjacent--header {
   box-shadow: none;
 }
 
-.application__search-control-tab-selector:last-of-type {
-  margin-right: 0;
+.application-handling_search-control-tab-arrow-down {
+  position: absolute;
+  top: 62px;
+  left: 48%;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @pale-blue;
 }
 
 .application__search-control-haku {
