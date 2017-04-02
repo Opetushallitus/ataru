@@ -5,7 +5,6 @@
    [ataru.virkailija.application.application-search-control-handlers]))
 
 (defn tab [tab-id selected-tab click-dispatch-kw label-text]
-  (println "selected tab" selected-tab "when" (when (= tab-id selected-tab) ".application__search-control-selected-tab"))
   [:div.application__search-control-tab-selector
    {:on-click #(dispatch [click-dispatch-kw])
     :class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
