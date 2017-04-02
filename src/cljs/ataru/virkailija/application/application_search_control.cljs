@@ -50,15 +50,16 @@
   (let [hakukohteet-opened (r/atom false)]
     (fn [haku]
       (let [toggle-opened #(reset! hakukohteet-opened (not @hakukohteet-opened))]
-         [:div.application__search-control-haku
-         (if @hakukohteet-opened
+        [:div.application__search-control-haku
+         [:div.application__search-control-tarjonta-haku-info
+          (if @hakukohteet-opened
             [:i.zmdi.zmdi-chevron-up.application__search-control-open-hakukohteet
              {:on-click toggle-opened}]
             [:i.zmdi.zmdi-chevron-down.application__search-control-open-hakukohteet
              {:on-click toggle-opened}])
           [haku-info-link
            (str "/lomake-editori/applications/haku/" (:oid haku))
-           haku]
+           haku]]
           (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
 
 (defn direct-form-haku [haku]
