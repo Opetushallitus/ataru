@@ -70,13 +70,15 @@
 
 (defn all-haut-list [haut-subscribe-type]
   (let [haut (subscribe [haut-subscribe-type])]
-    [:div
-     (map
-      (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku])
-      (:tarjonta-haut @haut))
-     (map
-      (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
-      (:direct-form-haut @haut))]))
+    (if @haut
+      [:div
+       (map
+        (fn [haku] ^{:key (:oid haku)} [tarjonta-haku haku])
+        (:tarjonta-haut @haut))
+       (map
+        (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
+        (:direct-form-haut @haut))]
+      [:i.zmdi.zmdi-spinner.spin])))
 
 (defn incomplete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])]

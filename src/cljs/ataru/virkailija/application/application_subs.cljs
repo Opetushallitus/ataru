@@ -43,14 +43,16 @@
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
-   (-> (get-in db [:application :haut2])
-       (filter-haut >)
-       (sort-haut sort-haku-seq-by-unprocessed))))
+   (when-let [haut (get-in db [:application :haut2])]
+     (-> haut
+         (filter-haut >)
+         (sort-haut sort-haku-seq-by-unprocessed)))))
 
 (re-frame/reg-sub
  :application/complete-haut
  (fn [db]
-   (->
-    (get-in db [:application :haut2])
-    (filter-haut =)
-    (sort-haut sort-haku-seq-by-name))))
+   (when-let [haut (get-in db [:application :haut2])]
+     (->
+      haut
+      (filter-haut =)
+      (sort-haut sort-haku-seq-by-name)))))
