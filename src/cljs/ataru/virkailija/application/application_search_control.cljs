@@ -40,7 +40,7 @@
   [:div (map
          (fn [hakukohde]
            ^{:key (:oid hakukohde)}
-           [:div
+           [:div.application__search-control-hakukohde
             [haku-info-link
              (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
              hakukohde]])
