@@ -101,13 +101,9 @@
                           (ok {:username (-> session :identity :username)
                                :organizations (organization-list session)}))
 
-                 (api/GET "/forms-for-editor" {session :session}
-                   :summary "Return forms for editor view"
-                   :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
-
                  (api/GET "/forms" {session :session}
-                   :summary "Used by external services. In practice this is Tarjonta system only for now.
+                   :summary "Return forms for editor view. Also used by external services.
+                             In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
                    :return {:forms [ataru-schema/Form]}
                    (ok (access-controlled-form/get-forms-for-editor session organization-service)))
