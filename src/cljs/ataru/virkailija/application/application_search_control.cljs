@@ -27,16 +27,23 @@
       :application/show-complete-haut-list
       "Käsitellyt haut"]]))
 
+(defn haku-info-link [link-href haku-info]
+  [:a
+   {:href link-href}
+   (:name haku-info)
+   (str " (" (:application-count haku-info) ")")
+   (when (> (:unprocessed haku-info) 0)
+     [:span.application__search-control-haku-unprocessed
+      (str " " (:unprocessed haku-info) " Käsittelemättä")])])
+
 (defn hakukohde-list [hakukohteet]
   [:div (map
          (fn [hakukohde]
            ^{:key (:oid hakukohde)}
            [:div
-            [:a
-             {:href (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))}
-             (:name hakukohde)
-            (str " (" (:application-count hakukohde) ")")
-            (str " " (:unprocessed hakukohde) " Käsittelemättä")]])
+            [haku-info-link
+             (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
+             hakukohde]])
          hakukohteet)])
 
 (defn tarjonta-haku [haku]
@@ -49,20 +56,16 @@
              {:on-click toggle-opened}]
             [:i.zmdi.zmdi-chevron-down.application__search-control-open-hakukohteet
              {:on-click toggle-opened}])
-         [:a {:href (str "/lomake-editori/applications/haku/" (:oid haku))}
-          " "
-          (:name haku)
-          (str " (" (:application-count haku) ")")
-          (str " " (:unprocessed haku) " Käsittelemättä")]
+          [haku-info-link
+           (str "/lomake-editori/applications/haku/" (:oid haku))
+           haku]
           (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
 
 (defn direct-form-haku [haku]
   [:div.application__search-control-haku
-   [:a {:href (str "/lomake-editori/applications/" (:key haku))}
-    " "
-    (:name haku)
-    (str " (" (:application-count haku) ")")
-    (str " " (:unprocessed haku) " Käsittelemättä")]])
+   [haku-info-link
+    (str "/lomake-editori/applications/" (:key haku))
+    haku]])
 
 (defn all-haut-list [haut-subscribe-type]
   (let [haut (subscribe [haut-subscribe-type])]
