@@ -53,8 +53,15 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
+    (secretary/dispatch! "/lomake-editori/applications/incomplete/"))
+
+  (defroute #"^/lomake-editori/applications/incomplete/" []
     (common-actions-for-applications-route)
     (dispatch [:application/show-incomplete-haut-list]))
+
+  (defroute #"^/lomake-editori/applications/complete/" []
+    (common-actions-for-applications-route)
+    (dispatch [:application/show-complete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)

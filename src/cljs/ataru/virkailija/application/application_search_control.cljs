@@ -4,12 +4,12 @@
    [reagent.core :as r]
    [ataru.virkailija.application.application-search-control-handlers]))
 
-(defn tab [tab-id selected-tab click-dispatch-kw label-text]
+(defn tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
-   [:div.application__search-control-tab-selector
-    {:on-click #(dispatch [click-dispatch-kw])
-     :class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
-    label-text]
+   [:a {:href link-url}
+    [:div.application__search-control-tab-selector
+     {:class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
+     label-text]]
    (when (= tab-id selected-tab)
      [:div.application-handling_search-control-tab-arrow-down])])
 
@@ -19,12 +19,12 @@
      [tab
       :incomplete
       @selected-tab
-      :application/show-incomplete-haut-list
+      "/lomake-editori/applications/incomplete/"
       "Käsittelemättä olevat haut"]
      [tab
       :complete
       @selected-tab
-      :application/show-complete-haut-list
+      "/lomake-editori/applications/complete/"
       "Käsitellyt haut"]]))
 
 (defn haku-info-link [link-href haku-info]
