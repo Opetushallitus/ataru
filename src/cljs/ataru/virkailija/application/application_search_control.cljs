@@ -68,6 +68,10 @@
     (str "/lomake-editori/applications/" (:key haku))
     haku]])
 
+(defn loading-indicator []
+  [:div.application__search-control-loading-indicator
+   [:i.zmdi.zmdi-spinner]])
+
 (defn all-haut-list [haut-subscribe-type]
   (let [haut (subscribe [haut-subscribe-type])]
     (if @haut
@@ -78,7 +82,7 @@
        (map
         (fn [form-haku] ^{:key (:key form-haku)} [direct-form-haku form-haku])
         (:direct-form-haut @haut))]
-      [:i.zmdi.zmdi-spinner.spin])))
+      [loading-indicator])))
 
 (defn incomplete-haut []
   (let [show (subscribe [:state-query [:application :search-control :show]])]
