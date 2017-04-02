@@ -4,20 +4,15 @@
 
 (def show-path [:application :search-control :show])
 
-(defn toggle-show [db list-kw]
-  (if (= (get-in db show-path) list-kw)
-    (assoc-in db show-path nil)
-    (assoc-in db show-path list-kw)))
-
 (reg-event-db
  :application/show-incomplete-haut-list
  (fn [db [_ _]]
-   (toggle-show db :incomplete)))
+   (assoc-in db show-path :incomplete)))
 
 (reg-event-db
  :application/show-complete-haut-list
  (fn [db [_ _]]
-   (toggle-show db :complete)))
+   (assoc-in db show-path :complete)))
 
 (reg-event-db
  :application/close-search-control
