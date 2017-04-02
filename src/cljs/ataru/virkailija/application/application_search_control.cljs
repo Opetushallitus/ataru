@@ -62,7 +62,7 @@
           (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
 
 (defn direct-form-haku [haku]
-  [:div.application__search-control-haku
+  [:div.application__search-control-haku.application__search-control-direct-form-haku
    [haku-info-link
     (str "/lomake-editori/applications/" (:key haku))
     haku]])
