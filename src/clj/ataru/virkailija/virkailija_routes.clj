@@ -235,7 +235,7 @@
 
                  (api/GET "/haut" {session :session}
                           :summary "List haku and hakukohde information found for applications stored in system"
-                          :return s/Any
+                          :return ataru-schema/Haut
                           (ok {:tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)
                                :direct-form-haut (haku-service/get-direct-form-haut session organization-service)}))
 
