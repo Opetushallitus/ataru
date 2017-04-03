@@ -32,7 +32,7 @@
    {:href link-href}
    (:name haku-info)
    (str " (" (:application-count haku-info) ")")
-   (when (> (:unprocessed haku-info) 0)
+   (when (pos? (:unprocessed haku-info))
      [:span.application__search-control-haku-unprocessed
       (str " " (:unprocessed haku-info) " Käsittelemättä")])])
 
