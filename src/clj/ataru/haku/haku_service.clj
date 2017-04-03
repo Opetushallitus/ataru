@@ -12,7 +12,7 @@
                  (:hakukohde raw-haku-row))}))
 
 (defn- handle-haut [tarjonta-service raw-haku-rows]
-  (for [[haku-oid rows] (group-by :haku raw-haku-rows)] ;; (def hautg (group-by :haku hauts))
+  (for [[haku-oid rows] (group-by :haku raw-haku-rows)]
     {:oid               haku-oid
      :name              (or
                          (.get-haku-name tarjonta-service haku-oid)
