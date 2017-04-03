@@ -8,20 +8,14 @@
   (merge (select-keys raw-haku-row [:application-count :unprocessed :incomplete])
          {:oid (:hakukohde raw-haku-row)
           :name (or
-                 (-> tarjonta-service
-                     (.get-hakukohde (:hakukohde raw-haku-row))
-                     :hakukohteenNimet
-                     :kieli_fi)
+                 (.get-hakukohde-name tarjonta-service (:hakukohde raw-haku-row))
                  (:hakukohde raw-haku-row))}))
 
 (defn- handle-haut [tarjonta-service raw-haku-rows]
   (for [[haku-oid rows] (group-by :haku raw-haku-rows)] ;; (def hautg (group-by :haku hauts))
     {:oid               haku-oid
      :name              (or
-                         (-> tarjonta-service
-                             (.get-haku haku-oid)
-                             :nimi
-                             :kieli_fi)
+                         (.get-haku-name tarjonta-service haku-oid)
                          haku-oid)
      :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
      :application-count (apply + (map :application-count rows))

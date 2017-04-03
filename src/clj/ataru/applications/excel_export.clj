@@ -257,19 +257,10 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn get-haku-name [tarjonta-service haku-oid]
-  (-> tarjonta-service
-      (.get-haku haku-oid)
-      :nimi
-      :kieli_fi))
-
-(defn- get-hakukohde-name [tarjonta-service hakukohde-oid]
-  (-> (.get-hakukohde tarjonta-service hakukohde-oid) :hakukohteenNimet :kieli_fi))
-
 (defn- inject-hakukohde-name
   [tarjonta-service application]
   (if-let [hakukohde-oid (:hakukohde application)]
-    (merge application {:hakukohde-name (get-hakukohde-name tarjonta-service hakukohde-oid)})
+    (merge application {:hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)})
     application))
 
 (defn- inject-koulutus-information
@@ -349,7 +340,7 @@
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (get-hakukohde-name tarjonta-service hakukohde-oid)]
+  (when-let [hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)]
     (let [sanitized-name (sanitize-name hakukohde-name)
           time           (time-formatter (t/now) filename-time-format)]
       (str sanitized-name "_" time ".xlsx"))))
@@ -357,7 +348,7 @@
 (defn filename-by-haku
   [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [haku-name (get-haku-name tarjonta-service haku-oid)]
+  (when-let [haku-name (.get-haku-name tarjonta-service haku-oid)]
     (let [sanitized-name (sanitize-name haku-name)
           time           (time-formatter (t/now) filename-time-format)]
       (str sanitized-name "_" time ".xlsx"))))
