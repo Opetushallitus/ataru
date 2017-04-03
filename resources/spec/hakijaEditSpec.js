@@ -5,7 +5,7 @@
 
     for (var i = 0; i < query.length; i++) {
       var param = query[i].split('=')
-      if (param[0] == 'secret') {
+      if (param[0] == 'modify') {
         secret = param[1]
       }
     }
@@ -101,7 +101,7 @@
           "Jos haluat muuttaa henkilötietojasi, ota yhteyttä hakemaasi oppilaitokseen.",
           "Tekstikentän vastaus",
           "Toistuva vastaus 1Toistuva vastaus 3",
-          "Muokattu vastaus",
+          "Pakollisen tekstialueen vastaus",
           "Kolmas vaihtoehto",
           "Jatkokysymyksen vastaus",
           "Lisensiaatin tutkinto",
