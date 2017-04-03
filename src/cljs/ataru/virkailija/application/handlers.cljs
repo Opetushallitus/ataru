@@ -255,8 +255,6 @@
 (reg-event-db
   :editor/handle-refresh-haut
   (fn [db [_ haut]]
-    ;(println "#forms:")
-    ;(println (get-forms-from-haut haut))
     (-> db
         (assoc-in [:application :haut] haut)
         (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
