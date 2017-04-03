@@ -43,7 +43,7 @@
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
-   (when-let [haut (get-in db [:application :haut2])]
+   (when-let [haut (get-in db [:application :haut])]
      (-> haut
          (filter-haut >)
          (sort-haut sort-haku-seq-by-unprocessed)))))
@@ -51,7 +51,7 @@
 (re-frame/reg-sub
  :application/complete-haut
  (fn [db]
-   (when-let [haut (get-in db [:application :haut2])]
+   (when-let [haut (get-in db [:application :haut])]
      (->
       haut
       (filter-haut =)

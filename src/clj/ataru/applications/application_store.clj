@@ -251,14 +251,14 @@
   (exec-db :db yesql-add-person-oid!
     {:id application-id :person_oid person-oid}))
 
-(defn get-haut2
+(defn get-haut
   [organization-oids]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
                                  {:incomplete_states incomplete-states
                                   :query_type "ORGS"
                                   :authorized_organization_oids organization-oids})))
 
-(defn get-all-haut2
+(defn get-all-haut
   []
   (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
                                  {:incomplete_states incomplete-states

@@ -34,8 +34,8 @@
    organization-service
    [:view-applications :edit-applications]
    vector
-   #(handle-haut tarjonta-service (application-store/get-haut2 %))
-   #(handle-haut tarjonta-service (application-store/get-all-haut2))))
+   #(handle-haut tarjonta-service (application-store/get-haut %))
+   #(handle-haut tarjonta-service (application-store/get-all-haut))))
 
 (defn get-direct-form-haut [session organization-service]
   (session-orgs/run-org-authorized

@@ -29,7 +29,7 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-haut2]) ;; TODO this happens too often!
+  (dispatch [:application/refresh-haut])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
@@ -70,7 +70,7 @@
      :predicate
      (fn [db]
        (some #(when (= hakukohde-oid (:oid %)) %)
-             (get-in db [:application :hakukohteet2])))
+             (get-in db [:application :hakukohteet])))
      :handler
      (fn [hakukohde]
        (dispatch [:application/select-hakukohde hakukohde])
@@ -83,7 +83,7 @@
      :predicate
      (fn [db]
        (some #(when (= haku-oid (:oid %)) %)
-             (get-in db [:application :haut2 :tarjonta-haut])))
+             (get-in db [:application :haut :tarjonta-haut])))
      :handler
      (fn [haku]
        (dispatch [:application/select-haku haku])

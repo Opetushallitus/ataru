@@ -253,20 +253,20 @@
   (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
 
 (reg-event-db
-  :editor/handle-refresh-haut2
+  :editor/handle-refresh-haut
   (fn [db [_ haut]]
     ;(println "#forms:")
     ;(println (get-forms-from-haut haut))
     (-> db
-        (assoc-in [:application :haut2] haut)
-        (assoc-in [:application :hakukohteet2] (get-hakukohteet-from-haut haut))
+        (assoc-in [:application :haut] haut)
+        (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
         (assoc-in [:application :forms] (get-forms-from-haut haut)))))
 
 (reg-event-fx
-  :application/refresh-haut2
+  :application/refresh-haut
   (fn [{:keys [db]}]
     {:db   db
      :http {:method              :get
-            :path                "/lomake-editori/api/haut2"
-            :handler-or-dispatch :editor/handle-refresh-haut2}}))
+            :path                "/lomake-editori/api/haut"
+            :handler-or-dispatch :editor/handle-refresh-haut}}))
 
