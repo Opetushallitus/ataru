@@ -95,7 +95,7 @@
       [all-haut-list :application/complete-haut])))
 
 (defn application-search-control []
-  [:div.application-handling__content-wrapper
+  [:div.application-handling__header-wrapper
    [tab-row]
    [incomplete-haut]
    [complete-haut]])

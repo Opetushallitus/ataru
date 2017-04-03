@@ -330,7 +330,7 @@
      [:div.application-handling__overview
       [application-search-control]
       (when (not @show-search-control)
-        [:div.application-handling__content-wrapper.select_application_list
+        [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading filtered-applications @application-filter]
          [application-list filtered-applications]])]
      (when (not @show-search-control)

@@ -1,12 +1,21 @@
 @import "vars";
 @import "mixins";
-@review-separator-color: #D7D7D7;
+@review-separator-color: #e6e6e6;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
 @form-column-width: 33%;
 
 .application-handling__content-wrapper {
-  padding: 20px 85px 15px 85px;
+  padding: 0 85px 15px 85px;
+}
+
+.application-handling__header-wrapper {
+  padding: 20px 85px 0 85px;
+}
+
+.application-handling__bottom-wrapper {
+  padding: 0 85px;
+  margin-top: -6px;
 }
 
 .application-handling__overview {
@@ -37,7 +46,7 @@
 
 .application-handling__header-haku-name {
   font-size: 24px;
-  .semibold;
+  font-weight: 400;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
@@ -231,7 +240,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review {
-  color: #5E5E5E;
+  color: #e6e6e6;
   font-size: 14px;
   background-color: @very-light-gray;
   min-width: 407px;
@@ -245,9 +254,10 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading {
   color: @text-color;
-  .semibold;
+  font-weight: 400;
   margin-top: -5px;
   margin-bottom: 7px;
+  font-size: 22px;
 }
 
 .application-handling__review-area-hakukohde-heading {
@@ -286,7 +296,7 @@ and (max-width: 1000px) {
 .application-handling__review-state-container {
   margin-bottom: 15px;
   display: flex;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #e6e6e6;
   min-height: 62px;
 }
 
@@ -359,7 +369,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   padding: 4px 8px;
   color: #1A1919;
-  border: 1px solid #AEAEAE;
+  border: 1px solid #ccc;
   border-radius: 2px;
 }
 
@@ -370,7 +380,7 @@ and (max-width: 1000px) {
 .application-handling__score-input {
   font-size: 14px;
   padding: 6px;
-  border: 1px solid #AEAEAE;
+  border: 1px solid #ccc;
   border-radius: 2px;
 }
 
@@ -437,7 +447,7 @@ and (max-width: 1000px) {
 }
 
 .application__wrapper-element--border {
-  border-top: solid #D7D7D7 1px;
+  border-top: solid 1px #e6e6e6;
 }
 
 .application__readonly-container .application__wrapper-element--border:first-child {
@@ -502,8 +512,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-tab-selector-wrapper {
   width: 100%;
-  margin-right: 10px;
-  margin-bottom: 25px;
+  margin-right: 20px;
   position: relative;
 }
 
@@ -512,17 +521,21 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-tab-selector {
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  padding-top: 14px;
   text-align: center;
-  color: #4194bf;
+  color: #149ecb;
   border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
+  border-radius: 3px;
+  font-size: 15px;
+  min-height: 52px;
+  margin-bottom: 20px;
 }
 
 .application__search-control-selected-tab {
   background-color: @pale-blue;
-  color: white;
+  color: #fff;
 }
 
 .application__search-control-loading-indicator {
@@ -543,7 +556,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling_search-control-tab-arrow-down {
   position: absolute;
-  top: 62px;
+  top: 52px;
   left: 48%;
   width: 0;
   height: 0;
@@ -553,25 +566,34 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku {
-  color: @pale-blue;
-  margin-bottom: 28px;
-  padding: 20px 10px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  color: #149ecb;
+  margin-bottom: 20px;
+  padding: 12px 10px 15px 15px;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
   border-radius: 3px;
+  font-size: 14px;
+  background: #fff;
+  min-height: 50px;
 }
 
 .application__search-control-tarjonta-haku-info {
-  display: flex;
-  align-items: center;
+
 }
 
 .application__search-control-haku.application__search-control-direct-form-haku {
   padding-left: 46px;
+  display: flex;
+  align-items: center;
 }
 
 .application__search-control-hakukohde {
-  padding: 10px 0;
-  margin-left: 35px;
+  padding: 0 0 10px 0;
+  margin-left: 28px;
+  font-size: 13px;
+}
+
+.application__search-control-hakukohde:last-child {
+  padding-bottom: 0;
 }
 
 .application__search-control-hakukohde:first-of-type {
@@ -584,9 +606,9 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-open-hakukohteet {
-  font-size: 25px;
+  font-size: 19px;
   cursor: pointer;
   margin-left: 7px;
-  margin-right: 15px;
+  margin-right: 10px;
 }
 
