@@ -27,7 +27,7 @@ function personInfoModule() {
 }
 
 function setNthFieldInputValue(n, value) {
-  return setTextFieldValue(function() { return formFields().eq(n).find('input') }, value)
+  return setTextFieldValue(function() { return formFields().eq(n).find('input').focus() }, value)
 }
 
 function setNthFieldValue(n, selector, value) {
@@ -36,6 +36,10 @@ function setNthFieldValue(n, selector, value) {
     $e.val(value)
     triggerEvent($e, 'input') // needs to be input event because who knows why
   }
+}
+
+function setNthFieldSubInputValue(n, sub, value) {
+  return setTextFieldValue(function() { return formFields().eq(n).find('input').eq(sub).focus() }, value)
 }
 
 function setNthFieldOption(n, value) {
