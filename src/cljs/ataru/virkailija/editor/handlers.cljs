@@ -155,7 +155,7 @@
 (defn refresh-forms-for-editor []
   (http
    :get
-   (str "/lomake-editori/api/forms-for-editor")
+   (str "/lomake-editori/api/forms")
    (fn [db {:keys [forms]}]
      (assoc-in db [:editor :forms] (->> forms
                                         (mapv languages->kwd)

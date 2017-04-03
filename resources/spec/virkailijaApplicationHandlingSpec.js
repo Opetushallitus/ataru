@@ -11,13 +11,12 @@
       var firstNotSelectedCaption = null;
       before(
         navigateToApplicationHandling,
-        wait.until(closedFormListExists),
-        clickElement(closedFormList),
+        wait.until(directFormHakuListExists),
         function() {
-          // clickElement doesn't work for a href, jquery's click() does:
-          form1OnList().click()
+          //clickElement doesn't work for a href here:
+          form1OnList()[0].click()
         },
-        wait.until(function() { return closedFormList().text() ===  'Selaintestilomake1' }),
+        wait.until(function() { return applicationHeader().text() ===  'Selaintestilomake1' }),
         clickElement(applicationRow),
         wait.until(function() { return reviewHeader().length > 0 }),
         clickElement(selectedState),
@@ -34,7 +33,7 @@
         wait.until(function() { return eventCountBefore < eventCaptions().length })
       )
       it('has applications', function() {
-        expect(closedFormList().text()).to.equal('Selaintestilomake1')
+        expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (2)')
       })
       it('stores an event for review state change', function() {
@@ -78,11 +77,11 @@
       function score() { return testFrame().find('.application-handling__score-input') }
 
       function form1OnList() {
-        return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake1)')
+        return testFrame().find(".application__search-control-direct-form-haku a:contains(Selaintestilomake1)")
       }
 
-      function closedFormListExists() {
-        return elementExists(closedFormList())
+      function directFormHakuListExists() {
+        return elementExists(directFormHakuList())
       }
 
       function navigateToApplicationHandling() {
@@ -232,32 +231,17 @@
         return testFrame().find('.application-handling__list .application-handling__list-row--state').length
       }
     })
-
-    describe('second form', function() {
-      before(
-        function() { closedFormList()[0].click() },
-        wait.until(function() {
-          return form2OnList().text() === 'Selaintestilomake2'
-        }),
-        function() { form2OnList()[0].click() },
-        wait.until(function() { return closedFormList().text() === 'Selaintestilomake2' })
-      )
-      it('has no applications', function() {
-        expect(closedFormList().text()).to.equal('Selaintestilomake2')
-        expect(downloadLink()).to.have.length(0)
-      })
-    })
-
-    function form2OnList() {
-      return testFrame().find('.application-handling__form-list-link-container span:contains(Selaintestilomake2)')
-    }
   })
 
   function downloadLink() {
     return testFrame().find('.application-handling__excel-download-link')
   }
 
-  function closedFormList() {
-    return testFrame().find('.application-handling__header .zmdi-chevron-down + .application-handling__form-list-header')
+  function directFormHakuList() {
+    return testFrame().find('.application__search-control-direct-form-haku')
+  }
+
+  function applicationHeader() {
+    return testFrame().find('.application-handling__header-haku-name')
   }
 })();

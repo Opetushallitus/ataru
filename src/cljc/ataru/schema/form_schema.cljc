@@ -37,10 +37,6 @@
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)})
 
-(s/defschema Haku {:haku              s/Str
-                   :haku-name         s/Str
-                   :application-count s/Int})
-
 (s/defschema LocalizedString {:fi                  s/Str
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
@@ -203,3 +199,25 @@
    :state                          application-states
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
+
+(s/defschema Hakukohde {:oid               s/Str
+                        :name              s/Str
+                        :application-count s/Int
+                        :unprocessed       s/Int
+                        :incomplete        s/Int})
+
+(s/defschema TarjontaHaku {:oid               s/Str
+                           :name              s/Str
+                           :application-count s/Int
+                           :unprocessed       s/Int
+                           :incomplete        s/Int
+                           :hakukohteet       [Hakukohde]})
+
+(s/defschema DirectFormHaku {:name              s/Str
+                             :key               s/Str
+                             :application-count s/Int
+                             :unprocessed       s/Int
+                             :incomplete        s/Int})
+
+(s/defschema Haut {:tarjonta-haut    [TarjontaHaku]
+                   :direct-form-haut [DirectFormHaku]})
