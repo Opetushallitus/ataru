@@ -13,19 +13,26 @@
    (when (= tab-id selected-tab)
      [:div.application-handling_search-control-tab-arrow-down])])
 
+(defn haku-count-str [count]
+  (if count
+    (str " (" count ")")
+    ""))
+
 (defn tab-row []
-  (let [selected-tab (subscribe [:state-query [:application :search-control :show]])]
+  (let [selected-tab     (subscribe [:state-query [:application :search-control :show]])
+        incomplete-count (subscribe [:application/incomplete-haku-count])
+        complete-count   (subscribe [:application/complete-haku-count])]
     [:div.application__search-control-tab-row
      [tab
       :incomplete
       @selected-tab
       "/lomake-editori/applications/incomplete/"
-      "Käsittelemättä olevat haut"]
+      (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
      [tab
       :complete
       @selected-tab
       "/lomake-editori/applications/complete/"
-      "Käsitellyt haut"]]))
+      (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
 (defn haku-info-link [link-href haku-info]
   [:a

@@ -40,19 +40,46 @@
                              sort-haku-seq-fn
                              (sort-hakukohteet sort-haku-seq-fn)))))
 
+(defn when-haut [db handle-haut-fn]
+  (when-let [haut (get-in db [:application :haut])]
+     (handle-haut-fn haut)))
+
+(defn count-haut [haut]
+  (+ (count (:tarjonta-haut haut)) (count (:direct-form-haut haut))))
+
 (re-frame/reg-sub
  :application/incomplete-haut
  (fn [db]
-   (when-let [haut (get-in db [:application :haut])]
-     (-> haut
-         (filter-haut >)
-         (sort-haut sort-haku-seq-by-unprocessed)))))
+   (when-haut
+       db
+       #(-> %
+            (filter-haut >)
+            (sort-haut sort-haku-seq-by-unprocessed)))))
+
+(re-frame/reg-sub
+ :application/incomplete-haku-count
+ (fn [db]
+   (when-haut
+       db
+       #(-> %
+            (filter-haut >)
+            count-haut))))
 
 (re-frame/reg-sub
  :application/complete-haut
  (fn [db]
-   (when-let [haut (get-in db [:application :haut])]
-     (->
-      haut
-      (filter-haut =)
-      (sort-haut sort-haku-seq-by-name)))))
+   (when-haut
+       db
+       #(->
+         %
+         (filter-haut =)
+         (sort-haut sort-haku-seq-by-name)))))
+
+(re-frame/reg-sub
+ :application/complete-haku-count
+ (fn [db]
+   (when-haut
+       db
+       #(-> %
+            (filter-haut =)
+            count-haut))))
