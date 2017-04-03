@@ -240,7 +240,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review {
-  color: #e6e6e6;
+  color: @review-separator-color;
   font-size: 14px;
   background-color: @very-light-gray;
   min-width: 407px;
@@ -254,7 +254,6 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading {
   color: @text-color;
-  font-weight: 400;
   margin-top: -5px;
   margin-bottom: 7px;
   font-size: 22px;
@@ -296,7 +295,7 @@ and (max-width: 1000px) {
 .application-handling__review-state-container {
   margin-bottom: 15px;
   display: flex;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid @review-separator-color;
   min-height: 62px;
 }
 
@@ -380,7 +379,7 @@ and (max-width: 1000px) {
 .application-handling__score-input {
   font-size: 14px;
   padding: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid @section-gray-border;
   border-radius: 2px;
 }
 
@@ -447,7 +446,7 @@ and (max-width: 1000px) {
 }
 
 .application__wrapper-element--border {
-  border-top: solid 1px #e6e6e6;
+  border-top: solid 1px @review-separator-color;
 }
 
 .application__readonly-container .application__wrapper-element--border:first-child {
@@ -523,9 +522,9 @@ th.application__readonly-adjacent--header {
 .application__search-control-tab-selector {
   padding-top: 14px;
   text-align: center;
-  color: #149ecb;
+  color: @pale-blue;
   border-radius: 3px;
-  background: #fff;
+  background: @white;
   box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
   border-radius: 3px;
   font-size: 15px;
@@ -535,7 +534,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-selected-tab {
   background-color: @pale-blue;
-  color: #fff;
+  color: @white;
 }
 
 .application__search-control-loading-indicator {
@@ -566,13 +565,13 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku {
-  color: #149ecb;
+  color: @pale-blue;
   margin-bottom: 20px;
   padding: 12px 10px 15px 15px;
   box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
   border-radius: 3px;
   font-size: 14px;
-  background: #fff;
+  background: @white;
   min-height: 50px;
 }
 
