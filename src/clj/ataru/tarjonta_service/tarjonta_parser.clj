@@ -20,11 +20,12 @@
                           (->> koulutus-oids
                                (map #(.get-koulutus tarjonta-service %))
                                (map parse-koulutus)))]
-      {:tarjonta
-       {:hakukohde-oid      hakukohde-oid
-        :hakukohde-name     (-> hakukohde :hakukohteenNimet :kieli_fi)
-        :haku-tarjoaja-name (-> hakukohde :tarjoajaNimet :fi)
-        :haku-oid           haku-oid
-        :haku-name          (-> haku :nimi :kieli_fi)
-        :hakuaika-dates     (hakuaika/get-hakuaika-info hakukohde haku)
-        :koulutukset        koulutukset}})))
+      (when hakukohde ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
+        {:tarjonta
+         {:hakukohde-oid      hakukohde-oid
+          :hakukohde-name     (-> hakukohde :hakukohteenNimet :kieli_fi)
+          :haku-tarjoaja-name (-> hakukohde :tarjoajaNimet :fi)
+          :haku-oid           haku-oid
+          :haku-name          (-> haku :nimi :kieli_fi)
+          :hakuaika-dates     (hakuaika/get-hakuaika-info hakukohde haku)
+          :koulutukset        koulutukset}}))))
