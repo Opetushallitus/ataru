@@ -191,12 +191,17 @@
                   :path                path
                   :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
 
+(defn- application-has-attachments? [db]
+  (some (comp (partial = "attachment") :fieldType second)
+        (get-in db [:application :selected-application-and-form :application :answers])))
+
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [db (update-application-details db response)]
       {:db db
-       :dispatch (if (fc/feature-enabled? :attachment)
+       :dispatch (if (and (fc/feature-enabled? :attachment)
+                          (application-has-attachments? db))
                    [:application/fetch-application-attachment-metadata]
                    [:application/start-autosave])})))
 
