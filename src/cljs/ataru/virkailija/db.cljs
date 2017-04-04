@@ -12,4 +12,4 @@
    :application  {:review              {}
                   :filter              (mapv first application-review-states)
                   :sort                application-sorting/initial-sort
-                  :form-list-expanded? true}})
+                  :application-list-expanded? true}})
