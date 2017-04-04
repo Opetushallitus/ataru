@@ -41,12 +41,16 @@
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                       (let [text          (str filename " (" (util/size-bytes->str size) ")" " | " virus-scan-status)
+                       (let [text          (str filename " (" (util/size-bytes->str size) ")")
                              component-key (str "attachment-div-" idx)]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
-                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
-                           text]]))
+                          (if (= virus-scan-status "done")
+                            [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+                             text]
+                            text)
+                          [:span.application__virkailija-readonly-attachment-virus-status
+                           (str " | " virus-scan-status)]]))
                      values)]])))
 
 (declare field)
