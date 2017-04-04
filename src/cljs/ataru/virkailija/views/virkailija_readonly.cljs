@@ -42,7 +42,12 @@
        [:div
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
                        (let [text          (str filename " (" (util/size-bytes->str size) ")")
-                             component-key (str "attachment-div-" idx)]
+                             component-key (str "attachment-div-" idx)
+                             virus-text    (case virus-scan-status
+                                             "not_started" "Tarkastetaan..."
+                                             "failed" "Virus löytyi"
+                                             "done" "Tarkistettu"
+                                             "Virhe")]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
                           (if (= virus-scan-status "done")
@@ -50,7 +55,7 @@
                              text]
                             text)
                           [:span.application__virkailija-readonly-attachment-virus-status
-                           (str " | " virus-scan-status)]]))
+                           (str " | " virus-text)]]))
                      values)]])))
 
 (declare field)
