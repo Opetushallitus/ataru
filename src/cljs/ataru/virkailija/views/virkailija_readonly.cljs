@@ -40,8 +40,8 @@
        [:label.application__form-field-label
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
-        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
-                       (let [text          (str filename " (" (util/size-bytes->str size) ")")
+        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+                       (let [text          (str filename " (" (util/size-bytes->str size) ")" " | " virus-scan-status)
                              component-key (str "attachment-div-" idx)]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
