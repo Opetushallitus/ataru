@@ -130,6 +130,7 @@
    :content-type             s/Str
    :filename                 s/Str
    :size                     s/Int
+   :virus-scan-status        s/Str
    :uploaded                 #?(:clj  org.joda.time.DateTime
                                 :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
    (s/optional-key :deleted) (s/maybe #?(:clj  org.joda.time.DateTime
