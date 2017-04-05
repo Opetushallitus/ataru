@@ -40,22 +40,13 @@
        [:label.application__form-field-label
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
-        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size}]
                        (let [text          (str filename " (" (util/size-bytes->str size) ")")
-                             component-key (str "attachment-div-" idx)
-                             virus-text    (case virus-scan-status
-                                             "not_started" "Tarkastetaan..."
-                                             "failed" "Virus löytyi"
-                                             "done" "Tarkistettu"
-                                             "Virhe")]
+                             component-key (str "attachment-div-" idx)]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
-                          (if (= virus-scan-status "done")
-                            [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
-                             text]
-                            text)
-                          [:span.application__virkailija-readonly-attachment-virus-status
-                           (str " | " virus-text)]]))
+                          [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+                           text]]))
                      values)]])))
 
 (declare field)
