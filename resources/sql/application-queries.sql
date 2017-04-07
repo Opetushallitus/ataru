@@ -253,35 +253,3 @@ FROM latest_applications la
 JOIN latest_forms lf ON lf.key = la.form_key
 JOIN forms f ON f.id = lf.max_id
 GROUP BY f.name, f.key;
-
--- name: yesql-application-query-for-hakukohde
--- Get all applications for hakukohde
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id AS form,
-  a.created_time,
-  a.content,
-  a.hakukohde
-FROM applications a
-WHERE a.hakukohde = :hakukohde_oid;
-
--- name: yesql-get-application-count-by-form-key
--- Get count of applications by form key, including all versions of the form
-SELECT COUNT(DISTINCT a.key) as application_count
-FROM forms f
-LEFT JOIN applications a ON f.id = a.form_id
-WHERE f.key = :form_key
-AND (f.deleted is null or f.deleted = false)
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND (a.haku IS NULL OR a.haku = '');
-
--- name: yesql-get-application-count-with-deleteds-by-form-key
--- Get count of applications by form key, including all versions of the form
-SELECT COUNT(DISTINCT a.key) as application_count
-FROM forms f
-LEFT JOIN applications a ON f.id = a.form_id
-WHERE f.key = :form_key
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND (a.haku IS NULL OR a.haku = '');
