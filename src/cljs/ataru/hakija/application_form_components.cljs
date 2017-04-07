@@ -406,7 +406,7 @@
      (let [file-size-info-text (case language
                                  :fi "Tiedoston maksimikoko on 10 MB"
                                  :en "Maximum file size is 10 MB"
-                                 :sv "BÖÖ BÄÄ GUU")]
+                                 :sv "Den maximala filstorleken är 10 MB")]
        (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
          [:span.application__form-upload-button-error file-size-info-text]
          [:span.application__form-upload-button-info file-size-info-text]))]))
