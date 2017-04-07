@@ -45,7 +45,11 @@
 (defn- have-any-application-in-db
   []
   (let [app-count
-        (+ (count (ataru-db/exec :db yesql-get-full-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
+        (+ (count (ataru-db/exec :db
+                                 yesql-get-application-list-by-hakukohde
+                                 {:hakukohde_oid (:hakukohde @form)
+                                  :query_type "ALL"
+                                  :authorized_organization_oids [""]}))
            (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
