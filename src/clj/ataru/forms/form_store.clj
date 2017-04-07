@@ -63,21 +63,13 @@
     (execute-with-connection conn yesql-query-fn params)
     (execute-with-db :db yesql-query-fn params)))
 
-(defn get-forms
-  ([include-deleted? organization-oids]
-   (if include-deleted?
-     (execute-with-db :db yesql-get-forms-with-deleteds-in-use-query {:authorized_organization_oids organization-oids})
-     (execute-with-db :db yesql-get-forms-query {:authorized_organization_oids organization-oids})))
-  ([organization-oids]
-   (get-forms false organization-oids)))
+(defn get-forms [organization-oids]
+  (execute-with-db :db yesql-get-forms-query {:authorized_organization_oids organization-oids
+                                              :query-type "ORGS"}))
 
-(defn get-all-forms
-  ([include-deleted?]
-   (if include-deleted?
-     (execute yesql-get-all-forms-with-deleteds-in-use-query {})
-     (execute yesql-get-all-forms-query {})))
-  ([]
-   (get-all-forms false)))
+(defn get-all-forms []
+  (execute yesql-get-forms-query {:authorized_organization_oids [""]
+                                  :query-type                   "ALL"}))
 
 (defn get-organization-oid-by-key [key]
   (:organization-oid (first (execute yesql-get-latest-version-organization-by-key {:key key}))))
