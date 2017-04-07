@@ -1,26 +1,49 @@
 -- name: yesql-get-forms-query
 -- Get stored forms, without content, filtered by what's allowed for the viewing user. Use the latest version.
-select id, key, name, created_by, created_time, languages
-from forms f
-where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
-and   (:query_type = 'ALL' or f.organization_oid in (:authorized_organization_oids))
-and   (f.deleted is null or f.deleted = false)
-order by created_time desc;
+SELECT
+  id,
+  key,
+  name,
+  created_by,
+  created_time,
+  languages
+FROM forms f
+WHERE f.created_time = (SELECT max(created_time)
+                        FROM forms f2
+                        WHERE f2.key = f.key)
+      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+      AND (f.deleted IS NULL OR f.deleted = FALSE)
+ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!
 -- Add form
-insert into forms (name, content, created_by, key, languages, organization_oid, deleted) values (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted);
+INSERT INTO forms (name, content, created_by, key, languages, organization_oid, deleted)
+VALUES (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted);
 
 -- name: yesql-get-by-id
-select id, key, name, content, created_by, created_time, languages, deleted from forms where id = :id;
+SELECT
+  id,
+  key,
+  name,
+  content,
+  created_by,
+  created_time,
+  languages,
+  deleted
+FROM forms
+WHERE id = :id;
 
 -- name: yesql-fetch-latest-version-by-id
-with the_key as (
-  select key from forms where id = :id
-), latest_version as (
-  select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
+WITH the_key AS (
+    SELECT key
+    FROM forms
+    WHERE id = :id
+), latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM forms f
+      JOIN the_key tk ON f.key = tk.key
 )
-select
+SELECT
   f.id,
   f.key,
   f.name,
@@ -30,17 +53,21 @@ select
   f.languages,
   f.deleted,
   f.organization_oid,
-  count(a.id) as application_count
-from forms f
-join latest_version lv on f.created_time = lv.latest_time
-left join applications a on (a.form_id in (select id from forms where key = f.key) and a.hakukohde is null and a.haku is null)
-group by f.id, f.key, f.name, f.content, f.created_by, f.created_time, f.languages, f.deleted, f.organization_oid;
+  count(a.id) AS application_count
+FROM forms f
+  JOIN latest_version lv ON f.created_time = lv.latest_time
+  LEFT JOIN applications a ON (a.form_id IN (SELECT id
+                                             FROM forms
+                                             WHERE key = f.key) AND a.hakukohde IS NULL AND a.haku IS NULL)
+GROUP BY f.id, f.key, f.name, f.content, f.created_by, f.created_time, f.languages, f.deleted, f.organization_oid;
 
 -- name: yesql-fetch-latest-version-by-key
-with latest_version as (
-  select max(created_time) as latest_time from forms f where f.key = :key
+WITH latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM forms f
+    WHERE f.key = :key
 )
-select
+SELECT
   id,
   key,
   name,
@@ -50,16 +77,20 @@ select
   languages,
   deleted,
   organization_oid
-from forms f
-join latest_version lv on f.created_time = lv.latest_time;
+FROM forms f
+  JOIN latest_version lv ON f.created_time = lv.latest_time;
 
 -- name: yesql-fetch-latest-version-by-id-lock-for-update
-with the_key as (
-  select key from forms where id = :id
-), latest_version as (
-  select max(created_time) as latest_time from forms f join the_key tk on f.key = tk.key
+WITH the_key AS (
+    SELECT key
+    FROM forms
+    WHERE id = :id
+), latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM forms f
+      JOIN the_key tk ON f.key = tk.key
 )
-select
+SELECT
   id,
   key,
   name,
@@ -69,14 +100,21 @@ select
   organization_oid,
   languages,
   deleted
-from forms f
-join latest_version lv on f.created_time = lv.latest_time for update;
+FROM forms f
+  JOIN latest_version lv ON f.created_time = lv.latest_time
+FOR UPDATE;
 
 -- name: yesql-get-latest-version-organization-by-key
-with latest_version as (
-  select max(created_time) as latest_time from forms f where f.key = :key
+WITH latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM forms f
+    WHERE f.key = :key
 )
-select organization_oid from forms f join latest_version lv on f.created_time = lv.latest_time;
+SELECT organization_oid
+FROM forms f
+  JOIN latest_version lv ON f.created_time = lv.latest_time;
 
 -- name: yesql-get-latest-version-organization-by-id
-select organization_oid from forms f where id = :id;
+SELECT organization_oid
+FROM forms f
+WHERE id = :id;
