@@ -145,7 +145,7 @@
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [hakukohde-oid organization-oids]
   (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid                hakukohde-oid
-                                                             :query_type "ORGS"
+                                                             :query_type                   "ORGS"
                                                              :authorized_organization_oids organization-oids})
        (map ->kebab-case-kw)
        (latest-versions-only)))
