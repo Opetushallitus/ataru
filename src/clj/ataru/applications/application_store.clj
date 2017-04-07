@@ -145,6 +145,7 @@
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [hakukohde-oid organization-oids]
   (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid                hakukohde-oid
+                                                             :query_type "ORGS"
                                                              :authorized_organization_oids organization-oids})
        (map ->kebab-case-kw)
        (latest-versions-only)))
@@ -152,7 +153,9 @@
 (defn get-full-application-list-by-hakukohde
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [hakukohde-oid]
-  (->> (exec-db :db yesql-get-full-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid})
+  (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid
+                                                             :query_type "ALL"
+                                                             :authorized_organization_oids [""]})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
@@ -160,6 +163,7 @@
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [haku-oid organization-oids]
   (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid                     haku-oid
+                                                        :query_type                   "ORGS"
                                                         :authorized_organization_oids organization-oids})
        (map ->kebab-case-kw)
        (latest-versions-only)))
@@ -167,7 +171,9 @@
 (defn get-full-application-list-by-haku
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
   [haku-oid]
-  (->> (exec-db :db yesql-get-full-application-list-by-haku {:haku_oid haku-oid})
+  (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid haku-oid
+                                                        :query_type "ALL"
+                                                        :authorized_organization_oids [""]})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 

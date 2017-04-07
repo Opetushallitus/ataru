@@ -32,21 +32,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.hakukohde = :hakukohde_oid
-and f.organization_oid in (:authorized_organization_oids)
-order by a.created_time desc;
-
--- name: yesql-get-full-application-list-by-hakukohde
-select a.id,
-  a.key,
-  a.lang,
-  a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time,
-  ar.state as state,
-  ar.score as score,
-  a.form_id as form
-from applications a
-  join application_reviews ar on a.key = ar.application_key
-where a.hakukohde = :hakukohde_oid
+and (:query_type = 'ALL' OR f.organization_oid in (:authorized_organization_oids))
 order by a.created_time desc;
 
 -- name: yesql-get-application-list-by-haku
@@ -62,21 +48,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.haku = :haku_oid
-and f.organization_oid in (:authorized_organization_oids)
-order by a.created_time desc;
-
--- name: yesql-get-full-application-list-by-haku
-select a.id,
-  a.key,
-  a.lang,
-  a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time,
-  ar.state as state,
-  ar.score as score,
-  a.form_id as form
-from applications a
-join application_reviews ar on a.key = ar.application_key
-where a.haku = :haku_oid
+and (:query_type = 'ALL' OR f.organization_oid in (:authorized_organization_oids))
 order by a.created_time desc;
 
 -- name: yesql-get-application-events
