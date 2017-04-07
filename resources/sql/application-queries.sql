@@ -32,21 +32,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.hakukohde = :hakukohde_oid
-and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
-order by a.created_time desc;
-
--- name: yesql-get-full-application-list-by-hakukohde
-select a.id,
-  a.key,
-  a.lang,
-  a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time,
-  ar.state as state,
-  ar.score as score,
-  a.form_id as form
-from applications a
-  join application_reviews ar on a.key = ar.application_key
-where a.hakukohde = :hakukohde_oid
+and (:query_type = 'ALL' OR f.organization_oid in (:authorized_organization_oids))
 order by a.created_time desc;
 
 -- name: yesql-get-application-list-by-haku
@@ -62,21 +48,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.haku = :haku_oid
-and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
-order by a.created_time desc;
-
--- name: yesql-get-full-application-list-by-haku
-select a.id,
-  a.key,
-  a.lang,
-  a.preferred_name || ' ' ||  a.last_name as applicant_name,
-  a.created_time,
-  ar.state as state,
-  ar.score as score,
-  a.form_id as form
-from applications a
-join application_reviews ar on a.key = ar.application_key
-where a.haku = :haku_oid
+and (:query_type = 'ALL' OR f.organization_oid in (:authorized_organization_oids))
 order by a.created_time desc;
 
 -- name: yesql-get-application-events
@@ -200,22 +172,28 @@ where application_key = :application_key;
 update applications set person_oid = :person_oid where id = :id;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
-WITH latest_version AS (
-    select key, max(created_time) as latest_time from applications GROUP BY key
+WITH latest_applications AS (
+    SELECT
+    a.key,
+    a.haku,
+    a.hakukohde,
+    ar.state,
+    max(a.created_time) AS latest_time
+    FROM applications a
+      INNER JOIN forms f ON (a.form_id = f.id)
+      INNER JOIN application_reviews ar on a.key = ar.application_key
+    WHERE a.haku IS NOT NULL AND a.hakukohde IS NOT NULL
+    AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+    GROUP BY a.key, a.haku, a.hakukohde, ar.state
 )
 SELECT
-  a1.haku,
-  a1.hakukohde,
-  COUNT (a1.key) AS application_count,
-  SUM (CASE WHEN ar.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
-  SUM (CASE WHEN ar.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
-FROM applications a1
-INNER JOIN latest_version lv ON a1.created_time = lv.latest_time
-INNER JOIN application_reviews ar on a1.key = ar.application_key
-INNER JOIN forms f1 ON (a1.form_id = f1.id)
-WHERE a1.haku IS NOT NULL AND a1.hakukohde IS NOT NULL
-AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
-GROUP BY a1.haku, a1.hakukohde;
+  la.haku,
+  la.hakukohde,
+  COUNT (la.key) AS application_count,
+  SUM (CASE WHEN la.state = 'unprocessed' THEN 1 ELSE 0 END) as unprocessed,
+  SUM (CASE WHEN la.state in (:incomplete_states) THEN 1 ELSE 0 END) as incomplete
+FROM latest_applications la
+GROUP BY la.haku, la.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 WITH latest_applications AS (
@@ -247,35 +225,3 @@ FROM latest_applications la
 JOIN latest_forms lf ON lf.key = la.form_key
 JOIN forms f ON f.id = lf.max_id
 GROUP BY f.name, f.key;
-
--- name: yesql-application-query-for-hakukohde
--- Get all applications for hakukohde
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id AS form,
-  a.created_time,
-  a.content,
-  a.hakukohde
-FROM applications a
-WHERE a.hakukohde = :hakukohde_oid;
-
--- name: yesql-get-application-count-by-form-key
--- Get count of applications by form key, including all versions of the form
-SELECT COUNT(DISTINCT a.key) as application_count
-FROM forms f
-LEFT JOIN applications a ON f.id = a.form_id
-WHERE f.key = :form_key
-AND (f.deleted is null or f.deleted = false)
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND (a.haku IS NULL OR a.haku = '');
-
--- name: yesql-get-application-count-with-deleteds-by-form-key
--- Get count of applications by form key, including all versions of the form
-SELECT COUNT(DISTINCT a.key) as application_count
-FROM forms f
-LEFT JOIN applications a ON f.id = a.form_id
-WHERE f.key = :form_key
-AND (a.hakukohde IS NULL OR a.hakukohde = '')
-AND (a.haku IS NULL OR a.haku = '');
