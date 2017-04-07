@@ -32,7 +32,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.hakukohde = :hakukohde_oid
-and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+and f.organization_oid in (:authorized_organization_oids)
 order by a.created_time desc;
 
 -- name: yesql-get-full-application-list-by-hakukohde
@@ -62,7 +62,7 @@ from applications a
 join application_reviews ar on a.key = ar.application_key
 join forms f on a.form_id = f.id
 where a.haku = :haku_oid
-and (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+and f.organization_oid in (:authorized_organization_oids)
 order by a.created_time desc;
 
 -- name: yesql-get-full-application-list-by-haku

@@ -3,7 +3,7 @@
 select id, key, name, created_by, created_time, languages
 from forms f
 where f.created_time = (select max(created_time) from forms f2 where f2.key = f.key)
-and   (f.organization_oid in (:authorized_organization_oids) or f.organization_oid is null)
+and   f.organization_oid in (:authorized_organization_oids)
 and   (f.deleted is null or f.deleted = false)
 order by created_time desc;
 
@@ -23,7 +23,7 @@ WHERE f.key IN (SELECT f2.key
                   LEFT JOIN applications a ON f2.id = a.form_id
                 GROUP BY f2.key
                 HAVING (count(a.id) > 0) OR every(f2.deleted IS NOT TRUE))
-      AND (f.organization_oid IN (:authorized_organization_oids) OR f.organization_oid IS NULL)
+      AND f.organization_oid IN (:authorized_organization_oids)
       AND f.created_time = (SELECT max(created_time)
                             FROM forms f3
                             WHERE f.key = f3.key);
