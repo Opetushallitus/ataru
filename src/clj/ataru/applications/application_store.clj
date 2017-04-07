@@ -2,11 +2,12 @@
   (:require [ataru.log.audit-log :as audit-log]
             [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
+            [ataru.application.review-states :refer [incomplete-states]]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
             [schema.core :as s]
-            [oph.soresu.common.db :as db]
+            [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [crypto.random :as crypto]
@@ -250,31 +251,28 @@
   (exec-db :db yesql-add-person-oid!
     {:id application-id :person_oid person-oid}))
 
-(defn get-hakukohteet
-  [organization-oids]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-hakukohteet-from-applications {:authorized_organization_oids organization-oids})))
-
-(defn get-all-hakukohteet
-  []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-all-hakukohteet-from-applications {})))
-
-(defn get-application-count-by-form-key
-  [form-key]
-  (->> (exec-db :db yesql-get-application-count-by-form-key {:form_key form-key})
-       (map :application_count)
-       (first)))
-
-(defn get-application-count-with-deleteds-by-form-key
-  [form-key]
-  (->> (exec-db :db yesql-get-application-count-with-deleteds-by-form-key {:form_key form-key})
-       (map :application_count)
-       (first)))
-
 (defn get-haut
   [organization-oids]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-from-applications {:authorized_organization_oids organization-oids})))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
+                                 {:incomplete_states incomplete-states
+                                  :query_type "ORGS"
+                                  :authorized_organization_oids organization-oids})))
 
 (defn get-all-haut
   []
-  (->> (exec-db :db yesql-get-all-haut-from-applications {})
-       (map ->kebab-case-kw)))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications
+                                 {:incomplete_states incomplete-states
+                                  :query_type "ALL"
+                                  :authorized_organization_oids [""]})))
+
+(defn get-direct-form-haut [organization-oids]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
+                                 {:incomplete_states incomplete-states
+                                  :query_type "ORGS"
+                                  :authorized_organization_oids organization-oids})))
+
+(defn get-all-direct-form-haut []
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
+                                 {:incomplete_states incomplete-states
+                                  :query_type "ALL"
+                                  :authorized_organization_oids [""]})))

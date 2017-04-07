@@ -3,7 +3,7 @@
     [ataru.tarjonta-service.tarjonta-client :as client]
     [ataru.virkailija.user.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (defn forms-in-use
   [organization-service username]
@@ -22,7 +22,9 @@
 
 (defprotocol TarjontaService
   (get-hakukohde [this hakukohde-oid])
+  (get-hakukohde-name [this hakukohde-oid])
   (get-haku [this haku-oid])
+  (get-haku-name [this haku-oid])
   (get-koulutus [this haku-oid]))
 
 (defrecord CachedTarjontaService []
@@ -35,8 +37,20 @@
   (get-hakukohde [this hakukohde-oid]
     (.cache-get-or-fetch (:cache-service this) :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
 
+  (get-hakukohde-name [this hakukohde-oid]
+    (-> this
+        (.get-hakukohde hakukohde-oid)
+        :hakukohteenNimet
+        :kieli_fi))
+
   (get-haku [this haku-oid]
     (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))
+
+  (get-haku-name [this haku-oid]
+    (-> this
+        (.get-haku haku-oid)
+        :nimi
+        :kieli_fi))
 
   (get-koulutus [this koulutus-oid]
     (.cache-get-or-fetch (:cache-service this) :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
@@ -115,6 +129,10 @@
        :tarjoajaNimet                           {:fi "Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie"},
        :valintakokeet                           []}))
 
+  (get-hakukohde-name [this hakukohde-oid]
+    (when (= hakukohde-oid "hakukohde.oid")
+      "Ajoneuvonosturinkuljettajan ammattitutkinto"))
+
   (get-haku [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
       {:tila                                                 "LUONNOS",
@@ -147,6 +165,10 @@
        :hakukausiVuosi                                       2016,
        :hakuaikas                                            [{:hakuaikaId "10291885", :alkuPvm 1480330218240, :loppuPvm 1480503020479, :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
        :sijoittelu                                           false}))
+
+  (get-haku-name [this haku-oid]
+    (when (= haku-oid "1.2.246.562.29.65950024185")
+      "testing2"))
 
   (get-koulutus [this koulutus-id]
     (when (= koulutus-id "1.2.246.562.17.74335799461")

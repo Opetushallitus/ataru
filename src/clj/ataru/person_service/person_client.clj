@@ -2,7 +2,7 @@
   (:require
    [taoensso.timbre :as log]
    [cheshire.core :as json]
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [schema.core :as s]
    [clojure.core.match :refer [match]]
    [ataru.cas.client :as cas]

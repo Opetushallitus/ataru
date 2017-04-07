@@ -6,142 +6,16 @@
     [reagent.ratom :refer-macros [reaction]]
     [reagent.core :as r]
     [cljs-time.format :as f]
+    [taoensso.timbre :refer-macros [spy debug]]
     [ataru.virkailija.application.handlers]
+    [ataru.virkailija.application.application-subs]
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
-    [taoensso.timbre :refer-macros [spy debug]]
-    [ataru.application-common.koulutus :as koulutus]))
-
-(defn index-of [s val from-index]
-  (clojure.string/index-of (clojure.string/lower-case s)
-                           (clojure.string/lower-case val)
-                           from-index))
-
-(defn- should-search? [search-term]
-  (> (count search-term) 1))
-
-(defn match-text [text search-term]
-  (if-not (should-search? search-term)
-    [{:text text :hilight false}]
-    (loop [res           []
-           current-index 0]
-      (let [match-index (index-of text search-term current-index)]
-        (cond
-          (nil? match-index)
-          (conj res {:text    (subs text current-index)
-                     :hilight false})
-
-          (< current-index match-index)
-          (recur (conj res
-                       {:text    (subs text current-index match-index)
-                        :hilight false}
-                       {:text    (subs text match-index (+ (count search-term) match-index))
-                        :hilight true})
-                 (+ match-index (count search-term)))
-
-          :else
-          (recur (conj res {:text    (subs text current-index (+ (count search-term) current-index))
-                            :hilight true})
-                 (+ current-index (count search-term))))))))
-
-(defn hilighted-text->span [idx {:keys [text hilight]}]
-  (let [key (str "hilight-" idx)]
-    [:span
-     (cond-> {:key key}
-       (true? hilight)
-       (assoc :class "application-handling__form-list-link--hilight"))
-     text]))
-
-(def text-with-hilighted-parts (comp (partial some :hilight) :text))
-
-(defn toggle-form-list-open! [open]
-  (swap! open not)
-  (dispatch [:application/clear-search-term]))
-
-(defn form-list-arrow [open]
-  [:i.zmdi.application-handling__form-list-arrow
-   {:class (if @open "zmdi-chevron-up" "zmdi-chevron-down")}])
-
-(defn form-list-header []
-  (let [selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])
-        selected-form-key  (subscribe [:state-query [:application :selected-form-key]])
-        forms              (subscribe [:state-query [:application :forms]])
-        selected-haku      (subscribe [:state-query [:application :selected-haku]])]
-    (fn []
-      [:div.application-handling__form-list-header
-       (or (:name (get @forms @selected-form-key))
-           (:hakukohde-name @selected-hakukohde)
-           (:haku-name @selected-haku)
-           "Valitse haku/hakukohde")])))
-
-(defn form-list-column [forms header-text url-fn open]
-  (let [search-term (subscribe [:state-query [:application :search-term]])]
-    (fn [forms header-text url-fn open]
-      (let [forms (cond->> (map (fn [{:keys [name application-count] :as form}]
-                                  (let [text (conj (match-text name @search-term)
-                                                   {:text (str " (" (or application-count 0) ")") :hilight false})]
-                                    (assoc form :text text)))
-                                forms)
-                    (should-search? @search-term)
-                    (filter text-with-hilighted-parts))]
-        [:div.application-handling__form-list-column-and-header-container
-         [:span.application-handling__form-list-column-header
-          (when (and (should-search? @search-term)
-                     (empty? forms))
-            {:class "application-handling__form-list-column-header--no-results"})
-          header-text]
-         [:div.application-handling__form-list-column-links-container
-          (->> forms
-               (map-indexed (fn [idx {:keys [deleted text] :as form}]
-                              (let [key  (str "form-list-item-" idx)
-                                    text (map-indexed hilighted-text->span text)
-                                    href (url-fn form)]
-                                [:div.application-handling__form-list-link-container
-                                 {:key key}
-                                 [:a (cond-> {:href     href
-                                              :on-click #(toggle-form-list-open! open)}
-                                       (true? deleted)
-                                       (assoc :class "application-handling__form-list-link--deleted"))
-                                  text]])))
-               (doall))]]))))
-
-(defn hakukohde->form-list-item [{:keys [hakukohde-name] :as hakukohde}]
-  (assoc hakukohde :name hakukohde-name))
-
-(defn haku->form-list-item [{:keys [haku-name] :as haku}]
-  (assoc haku :name haku-name))
-
-(defn hakukohde-url [{:keys [hakukohde]}]
-  (str "/lomake-editori/applications/hakukohde/" hakukohde))
-
-(defn form-url [{:keys [key]}]
-  (str "/lomake-editori/applications/" key))
-
-(defn haku-url [{:keys [haku]}]
-  (str "/lomake-editori/applications/haku/" haku))
-
-(defn haku-column [open]
-  (let [haut (reaction (->> @(subscribe [:state-query [:application :haut]])
-                            (map haku->form-list-item)))]
-    (fn [open]
-      [form-list-column @haut "Haku" haku-url open])))
-
-(defn hakukohde-column [open]
-  (let [hakukohteet (reaction (->> @(subscribe [:state-query [:application :hakukohteet]])
-                                   (map hakukohde->form-list-item)))]
-    (fn [open]
-      [form-list-column @hakukohteet "Hakukohde" hakukohde-url open])))
-
-(defn forms-column [open]
-  (let [forms (reaction (->> @(subscribe [:state-query [:application :forms]])
-                             (reduce-kv (fn [forms _ form]
-                                          (conj forms form))
-                                        [])))]
-    (fn [open]
-      [form-list-column @forms "Lomake (ilman hakukohdetta)" form-url open])))
+    [ataru.application-common.koulutus :as koulutus]
+    [ataru.virkailija.application.application-search-control :refer [application-search-control]]))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
@@ -169,41 +43,15 @@
            {:href url}
            (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
 
-(defn form-list-search [open]
-  (let [search-term (subscribe [:state-query [:application :search-term]])]
-    (fn [open]
-      [:div.application-handling__form-list-search-row
-       [:input.application-handling__form-list-search-input
-        {:type      "text"
-         :value     @search-term
-         :on-change (fn [event]
-                      (let [search-term (.. event -target -value)]
-                        (dispatch [:application/search-form-list search-term])))}]
-       [:i.application-handling__input-field-clear-button.zmdi.zmdi-close
-        (cond-> {:on-click (fn [_]
-                             (dispatch [:application/clear-search-term]))}
-          (clojure.string/blank? @search-term)
-          (assoc :class "application-handling__input-field-clear-button--disabled"))]])))
+(defn haku-header []
+  (let [header (subscribe [:application/list-heading])]
+    [:div.application-handling__header-haku-name
+     @header]))
 
-(defn form-list [filtered-applications application-filter]
-  (let [open (r/atom false)]
-    (fn [filtered-applications application-filter]
-      [:div.application-handling__form-list-wrapper-outer
-       [:div.application-handling__header
-        [:div.application-handling__header-text-container
-         {:on-click #(toggle-form-list-open! open)}
-         [form-list-arrow open]
-         [form-list-header]]
-        [excel-download-link filtered-applications application-filter]]
-       [:div.application-handling__form-list-wrapper-inner
-        (when-not @open {:style {:display "none"}})
-        [form-list-search open]
-        [:div.application-handling__form-list-column-wrapper
-         [haku-column open]
-         [hakukohde-column open]
-         [forms-column open]]
-        [:i.zmdi.zmdi-close.application-handling__form-list-close-button
-         {:on-click #(toggle-form-list-open! open)}]]])))
+(defn haku-heading [filtered-applications application-filter]
+  [:div.application-handling__header
+   [haku-header]
+   [excel-download-link filtered-applications application-filter]])
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
@@ -224,7 +72,7 @@
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
-        expanded?    (subscribe [:state-query [:application :form-list-expanded?]])]
+        expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
              {:class (when (= true @expanded?)
@@ -460,12 +308,12 @@
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         included-in-filter            (fn [review-state filter] (some #{review-state} filter))
-        expanded?                     (subscribe [:state-query [:application :form-list-expanded?]])]
+        expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
                  (not @expanded?))
-        [:div.panel-content.application-handling__detail-container
+        [:div..application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
@@ -473,14 +321,18 @@
           [application-review]]]))))
 
 (defn application []
-  (let [applications       (subscribe [:state-query [:application :applications]])
-        application-filter (subscribe [:state-query [:application :filter]])
-        include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
-    (fn []
-      (let [filtered-applications (include-filtered @application-filter @applications)]
-        [:div
-         [:div.application-handling__overview
-          [:div.panel-content.select_application_list
-           [form-list filtered-applications @application-filter]
-           [application-list filtered-applications]]]
-         [application-review-area filtered-applications]]))))
+  (let [applications          (subscribe [:state-query [:application :applications]])
+        application-filter    (subscribe [:state-query [:application :filter]])
+        show-search-control   (subscribe [:state-query [:application :search-control :show]])
+        include-filtered      (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
+        filtered-applications (include-filtered @application-filter @applications)]
+    [:div
+     [:div.application-handling__overview
+      [application-search-control]
+      (when (not @show-search-control)
+        [:div.application-handling__bottom-wrapper.select_application_list
+         [haku-heading filtered-applications @application-filter]
+         [application-list filtered-applications]])]
+     (when (not @show-search-control)
+       [:div
+        [application-review-area filtered-applications]])]))

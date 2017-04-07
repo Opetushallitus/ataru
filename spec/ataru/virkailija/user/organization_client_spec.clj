@@ -5,7 +5,7 @@
    [speclj.core :refer [describe it should= tags around]]
    [ataru.virkailija.user.organization-client :as org-client]
    [ataru.cas.client :as cas-client]
-   [oph.soresu.common.config :refer [config]]
+   [ataru.config.core :refer [config]]
    [clojure.java.io :as io]))
 
 (def organization-hierarchy-data (slurp (io/resource "organisaatio_service/organization-hierarchy1.json")))

@@ -4,7 +4,7 @@
     [ataru.schema.form-schema]
     [clojure.java.shell :refer [sh]]
     [environ.core :refer [env]]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (defn generate-db-schema-diagram
   []

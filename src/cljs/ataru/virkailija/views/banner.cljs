@@ -17,8 +17,8 @@
            :height "40px"}]]])
 
 (def panels
-  {:editor      {:text "Lomakkeet" :href #(str "/lomake-editori/editor/" %)}
-   :application {:text "Hakemukset" :href #(str "/lomake-editori/applications/" %)}})
+  {:editor      {:text "Lomakkeet" :href "/lomake-editori/editor/"}
+   :application {:text "Hakemukset" :href "/lomake-editori/applications/"}})
 
 (def right-labels {:form-edit "Lomakkeen muokkaus"
                    :view-applications "Hakemusten katselu"
@@ -28,15 +28,14 @@
 
 (defn section-link [panel-kw]
   (let [active-panel     (subscribe [:active-panel])
-        active?          (reaction (= @active-panel panel-kw))
-        selected-form-key (subscribe [:state-query [:editor :selected-form-key]])]
+        active?          (reaction (= @active-panel panel-kw))]
     (fn []
       [:div.section-link {:class (name panel-kw)}
        (if @active?
          [:span.active-section
           active-section-arrow
           (-> panels panel-kw :text)]
-         [:a {:on-click (partial routes/navigate-to-click-handler (str ((-> panels panel-kw :href ) @selected-form-key)))}
+         [:a {:on-click (partial routes/navigate-to-click-handler (str (-> panels panel-kw :href)))}
           (-> panels panel-kw :text)])])))
 
 (defn title []

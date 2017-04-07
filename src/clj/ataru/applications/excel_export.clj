@@ -14,9 +14,7 @@
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy debug]]
-            [ataru.hakukohde.hakukohde-access-control :as hakukohde-access-control]
-            [ataru.haku.haku-access-control :as haku-access-control]))
+            [taoensso.timbre :refer [spy debug]]))
 
 (def tz (t/default-time-zone))
 
@@ -262,7 +260,7 @@
 (defn- inject-hakukohde-name
   [tarjonta-service application]
   (if-let [hakukohde-oid (:hakukohde application)]
-    (merge application {:hakukohde-name (-> (.get-hakukohde tarjonta-service hakukohde-oid) :hakukohteenNimet :kieli_fi)})
+    (merge application {:hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)})
     application))
 
 (defn- inject-koulutus-information
@@ -342,10 +340,7 @@
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (->> (hakukohde-access-control/get-hakukohteet session organization-service tarjonta-service)
-                                 (filter (comp (partial = hakukohde-oid) :hakukohde))
-                                 (map :hakukohde-name)
-                                 (first))]
+  (when-let [hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)]
     (let [sanitized-name (sanitize-name hakukohde-name)
           time           (time-formatter (t/now) filename-time-format)]
       (str sanitized-name "_" time ".xlsx"))))
@@ -353,10 +348,7 @@
 (defn filename-by-haku
   [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (->> (haku-access-control/get-haut session organization-service tarjonta-service)
-                                 (filter (comp (partial = haku-oid) :haku))
-                                 (map :haku-name)
-                                 (first))]
-    (let [sanitized-name (sanitize-name hakukohde-name)
+  (when-let [haku-name (.get-haku-name tarjonta-service haku-oid)]
+    (let [sanitized-name (sanitize-name haku-name)
           time           (time-formatter (t/now) filename-time-format)]
       (str sanitized-name "_" time ".xlsx"))))

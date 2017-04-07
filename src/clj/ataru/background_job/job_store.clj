@@ -6,7 +6,7 @@
    [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
    [clj-time.core :as time]
    [clojure.java.jdbc :as jdbc]
-   [oph.soresu.common.db :as db]))
+   [ataru.db.db :as db]))
 
 (defqueries "sql/background-job-queries.sql")
 

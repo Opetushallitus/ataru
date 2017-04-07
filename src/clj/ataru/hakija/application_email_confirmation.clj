@@ -9,7 +9,7 @@
     [ataru.hakija.background-jobs.email-job :as email-job]
     [ataru.translations.translation-util :refer [get-translations]]
     [ataru.translations.email-confirmation :as translations]
-    [oph.soresu.common.config :refer [config]]))
+    [ataru.config.core :refer [config]]))
 
 (defn- get-differing-translations [raw-translations translation-mappings]
   (into {} (map (fn [[key value]] [value (key raw-translations)]) translation-mappings)))

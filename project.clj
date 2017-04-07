@@ -7,7 +7,6 @@
                  [re-frame "0.9.1"]                         ; flux for re-agent
                  [secretary "1.2.3"]                        ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
-                 [oph/soresu "0.1.11-SNAPSHOT"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.8"]
                  [binaryage/devtools "0.8.3"]
@@ -68,7 +67,9 @@
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [com.hazelcast/hazelcast "3.7.5"]]
+                 [com.hazelcast/hazelcast "3.7.5"]
+                 [pandect "0.6.1"]
+                 [hikari-cp "1.3.0" :exclusions [prismatic/schema]]]
 
   :min-lein-version "2.5.3"
 

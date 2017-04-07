@@ -1,9 +1,21 @@
 @import "vars";
 @import "mixins";
-@review-separator-color: #D7D7D7;
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
 @form-column-width: 33%;
+
+.application-handling__content-wrapper {
+  padding: 0 85px 15px 85px;
+}
+
+.application-handling__header-wrapper {
+  padding: 20px 85px 0 85px;
+}
+
+.application-handling__bottom-wrapper {
+  padding: 0 85px;
+  margin-top: -6px;
+}
 
 .application-handling__overview {
   background-color: @very-light-gray;
@@ -18,71 +30,6 @@
   }
 }
 
-.application-handling__form-list-search-row {
-  display: flex;
-  flex-flow: row nowrap;
-  margin: 20px 20px 5px;
-}
-
-.application-handling__input-field-clear-button {
-  cursor: pointer;
-  position: relative;
-  right: 26px;
-  top: 11px;
-  font-size: 19px;
-}
-
-.application-handling__input-field-clear-button--disabled {
-  visibility: hidden;
-}
-
-.application-handling__form-list-close-button {
-  .semibold;
-  color: @blue-text-color;
-  cursor: pointer;
-  position: absolute;
-  right: 19px;
-  top: 15px;
-  font-size: 19px;
-}
-
-.application-handling__form-list-search-input {
-  color: @text-color;
-  font-size: 16px;
-  height: 43px;
-  padding: 11px 28px 13px 14px;
-  width: 300px;
-  border: 1px solid #AEAEAE;
-  border-radius: 2px;
-  font-weight: 600;
-}
-
-.application-handling__form-list-wrapper-outer {
-  position: relative;
-  display: inline-block;
-  width: 100%;
-  min-width: 300px;
-  margin-right: 20px;
-  z-index: 15;
-}
-
-.application-handling__form-list-wrapper-inner {
-  background-color: @application-form-list-background-color;
-  box-shadow: @modal-shadow;
-  padding-left: 20px;
-  padding-right: 20px;
-  position: absolute;
-  top: 30px;
-  width: 100%;
-  z-index: 15;
-  border-radius: 3px;
-}
-
-.application-handling__form-list-wrapper-inner::-webkit-scrollbar-thumb {
-  background-color: #9B9B9B;
-  border-radius: 5px;
-}
-
 .application-handling__header {
   display: flex;
   align-items: flex-end;
@@ -90,84 +37,19 @@
   padding-bottom: 15px;
   border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
-  padding-left: 15px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
-.application-handling__header-text-container {
-  cursor: pointer;
-}
-
-.application-handling__form-list-column-wrapper {
-  display: flex;
-  flex-flow: row nowrap;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.application-handling__form-list-column-and-header-container {
-  display: flex;
-  flex: 0 0 @form-column-width;
-  flex-flow: column nowrap;
-  min-width: 250px;
-}
-
-.application-handling__form-list-column-links-container {
-  margin-bottom: 20px;
-  margin-top: 10px;
-  max-height: calc(~"100vh - 300px");
-  overflow-y: auto;
-  font-size: 15px;
-}
-
-.application-handling__form-list-column-header {
-  border-bottom: 1px solid #E3ECEF;
-  padding: 10px 20px;
-}
-
-.application-handling__form-list-column-header--no-results {
-  color: @disabled-list-item-color;
-}
-
-.application-handling__form-list-link-container {
-  padding-right: 20px;
-  padding-left: 20px;
-  padding-top: 10px;
-  a {
-    color: #06526b;
-  }
-}
-
-.application-handling__form-list-link-container:first-of-type {
-  padding-top: 0px;
-}
-
-.application-handling__form-list-link--hilight {
-  background-color: @application-form-list-hilight-background-color;
-}
-
-.application-handling__form-list-header {
+.application-handling__header-haku-name {
   font-size: 24px;
-  .semibold;
+  font-weight: 400;
   padding: 0 10px 0 0;
   display: inline-block;
   line-height: 100%;
-  margin-left: 20px;
-}
-
-.application-handling__form-list-arrow {
-  color: #06526B;
-  font-size: 26px;
-  position: absolute;
-}
-
-.application-handling__form-list-link--deleted {
-  color: @disabled-list-item-color;
+  .semibold;
 }
 
 .application-handling__excel-download-link {
@@ -349,6 +231,7 @@ and (max-width: 1000px) {
 
 .application-handling__detail-container {
   position: relative;
+  padding: 20px 85px 15px 85px;
 }
 
 .application-handling__review-area {
@@ -357,7 +240,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review {
-  color: #5E5E5E;
+  color: @review-separator-color;
   font-size: 14px;
   background-color: @very-light-gray;
   min-width: 407px;
@@ -371,9 +254,10 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading {
   color: @text-color;
-  .semibold;
   margin-top: -5px;
   margin-bottom: 7px;
+  font-size: 22px;
+  .semibold;
 }
 
 .application-handling__review-area-hakukohde-heading {
@@ -391,6 +275,10 @@ and (max-width: 1000px) {
   min-width: 120px;
 }
 
+.application-handling__review-state-container .application-handling__review-header {
+  padding-top: 8px;
+}
+
 .application-handling__review-row {
   display: flex;
 }
@@ -401,12 +289,15 @@ and (max-width: 1000px) {
 
 .application-handling__review-sub-header {
   width: 120px;
-  color: black;
+  color: #000;
+  padding-top: 6px;
 }
 
 .application-handling__review-state-container {
   margin-bottom: 15px;
   display: flex;
+  border-bottom: 1px solid @review-separator-color;
+  min-height: 62px;
 }
 
 .application-handling__review-state-list-opened-anchor {
@@ -422,12 +313,14 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row {
   position: relative;
-  color: #06526B;
-  padding-top: 5px;
-  padding-bottom: 7px;
-  padding-left: 26px;
+  color: #2a2a2a;
+  padding-top: 9px;
+  padding-bottom: 11px;
+  padding-left: 30px;
   margin-bottom: 3px;
   cursor: pointer;
+  box-shadow: @modal-shadow;
+  background: #fff;
 }
 
 .application-handling__review-state-row:hover {
@@ -438,10 +331,15 @@ and (max-width: 1000px) {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
-  padding-left: 9px;
+  padding-left: 12px;
   width: 240px;
   display: inline-block;
   text-transform: capitalize;
+}
+
+.application-handling__review-state-list-opened .application-handling__review-state-row {
+  box-shadow: none;
+  margin-bottom: 0;
 }
 
 .application-handling__review-state-selected-icon {
@@ -471,7 +369,7 @@ and (max-width: 1000px) {
   font-size: 14px;
   padding: 4px 8px;
   color: #1A1919;
-  border: 1px solid #AEAEAE;
+  border: 1px solid #ccc;
   border-radius: 2px;
 }
 
@@ -482,7 +380,7 @@ and (max-width: 1000px) {
 .application-handling__score-input {
   font-size: 14px;
   padding: 6px;
-  border: 1px solid #AEAEAE;
+  border: 1px solid @section-gray-border;
   border-radius: 2px;
 }
 
@@ -494,6 +392,10 @@ and (max-width: 1000px) {
 .application__virkailija-readonly-attachment-text {
   font-size: 14px;
   line-height: 150%;
+}
+
+.application__virkailija-readonly-attachment-virus-status {
+  color: #F6A623;
 }
 
 .application__readonly-container {
@@ -549,7 +451,7 @@ and (max-width: 1000px) {
 }
 
 .application__wrapper-element--border {
-  border-top: solid #D7D7D7 1px;
+  border-top: solid 1px @review-separator-color;
 }
 
 .application__readonly-container .application__wrapper-element--border:first-child {
@@ -603,5 +505,114 @@ th.application__readonly-adjacent--header {
   .top-banner, .application-handling__excel-download-link, .application-handling__review, .close-details-button, .select_application_list {display: none;}
   .main-container {padding-top: 0;}
   .application-handling__header, .application-handling__overview {border-bottom: none;}
-  .panel-content {padding: 0;}
+  .application-handling__content-wrapper { padding: 0; }
 }
+
+.application__search-control-tab-row {
+  display: flex;
+  align-items: stretch;
+  align-content: space-between;
+}
+
+.application__search-control-tab-selector-wrapper {
+  width: 100%;
+  margin-right: 20px;
+  position: relative;
+}
+
+.application__search-control-tab-selector-wrapper:last-of-type {
+  margin-right: 0;
+}
+
+.application__search-control-tab-selector {
+  padding-top: 14px;
+  text-align: center;
+  color: @pale-blue;
+  border-radius: 3px;
+  background: @white;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
+  border-radius: 3px;
+  font-size: 15px;
+  min-height: 52px;
+  margin-bottom: 20px;
+}
+
+.application__search-control-selected-tab {
+  background-color: @pale-blue;
+  color: @white;
+}
+
+.application__search-control-loading-indicator {
+  text-align: center;
+  width: 100%;
+  margin-top: 40px;
+  margin-bottom: 1000px;
+}
+
+.application__search-control-loading-indicator > i {
+  font-size: 50px;
+  .spin
+}
+
+.application__search-control-tab-selector.application__search-control-selected-tab {
+  box-shadow: none;
+}
+
+.application-handling_search-control-tab-arrow-down {
+  position: absolute;
+  top: 52px;
+  left: 48%;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @pale-blue;
+}
+
+.application__search-control-haku {
+  color: @pale-blue;
+  margin-bottom: 20px;
+  padding: 12px 10px 15px 15px;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
+  border-radius: 3px;
+  font-size: 14px;
+  background: @white;
+  min-height: 50px;
+}
+
+.application__search-control-tarjonta-haku-info {
+
+}
+
+.application__search-control-haku.application__search-control-direct-form-haku {
+  padding-left: 46px;
+  display: flex;
+  align-items: center;
+}
+
+.application__search-control-hakukohde {
+  padding: 0 0 10px 0;
+  margin-left: 28px;
+  font-size: 13px;
+}
+
+.application__search-control-hakukohde:last-child {
+  padding-bottom: 0;
+}
+
+.application__search-control-hakukohde:first-of-type {
+  margin-top: 10px;
+}
+
+.application__search-control-haku-unprocessed {
+  color: #6BB432;
+  margin-left: 8px;
+}
+
+.application__search-control-open-hakukohteet {
+  font-size: 19px;
+  cursor: pointer;
+  margin-left: 7px;
+  margin-right: 10px;
+}
+

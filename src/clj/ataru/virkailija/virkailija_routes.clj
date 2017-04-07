@@ -14,8 +14,7 @@
             [ataru.util.client-error :as client-error]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
-            [ataru.hakukohde.hakukohde-access-control :as access-controlled-hakukohde]
-            [ataru.haku.haku-access-control :as access-controlled-haku]
+            [ataru.haku.haku-service :as haku-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
@@ -28,13 +27,13 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
             [ring.middleware.session :as ring-session]
             [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type set-cookie]]
-            [ring.util.response :refer [redirect]]
+            [ring.util.response :refer [redirect header]]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [spy debug error warn info]]
@@ -102,18 +101,9 @@
                           (ok {:username (-> session :identity :username)
                                :organizations (organization-list session)}))
 
-                 (api/GET "/forms-for-editor" {session :session}
-                   :summary "Return forms for editor view"
-                   :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms-for-editor session organization-service)))
-
-                 (api/GET "/forms-for-application-listing" {session :session}
-                   :summary "Return for application viewing purposes"
-                   :return {:forms [ataru-schema/Form]}
-                   (ok (access-controlled-form/get-forms-for-application-listing session organization-service)))
-
                  (api/GET "/forms" {session :session}
-                   :summary "Used by external services. In practice this is Tarjonta system only for now.
+                   :summary "Return forms for editor view. Also used by external services.
+                             In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
                    :return {:forms [ataru-schema/Form]}
                    (ok (access-controlled-form/get-forms-for-editor session organization-service)))
@@ -243,17 +233,11 @@
                       :body   (do (.cache-remove cache-service (keyword cache) key)
                                   {})}))
 
-                 (api/GET "/hakukohteet" {session :session}
-                          :summary "List hakukohde information found for applications stored in system"
-                          :return [{:hakukohde         s/Str
-                                    :hakukohde-name    s/Str
-                                    :application-count s/Int}]
-                          (ok (access-controlled-hakukohde/get-hakukohteet session organization-service tarjonta-service)))
-
                  (api/GET "/haut" {session :session}
-                          :summary "List haku information found for applications stored in system"
-                          :return [ataru-schema/Haku]
-                          (ok (access-controlled-haku/get-haut session organization-service tarjonta-service)))
+                          :summary "List haku and hakukohde information found for applications stored in system"
+                          :return ataru-schema/Haut
+                          (ok {:tarjonta-haut (haku-service/get-haut session organization-service tarjonta-service)
+                               :direct-form-haut (haku-service/get-direct-form-haut session organization-service)}))
 
                  (api/context "/koodisto" []
                               :tags ["koodisto-api"]
@@ -279,8 +263,10 @@
                    (api/GET "/content/:key" []
                      :path-params [key :- (api/describe s/Str "File key")]
                      :summary "Download a file"
-                     (if-let [file-stream (file-store/get-file key)]
-                       (ok file-stream)
+                     (if-let [file-response (file-store/get-file key)]
+                       (header (ok (:body file-response))
+                               "Content-Disposition"
+                               (:content-disposition file-response))
                        (not-found))))))
 
 (api/defroutes resource-routes

@@ -23,7 +23,7 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
-            [oph.soresu.common.config :refer [config]])
+            [ataru.config.core :refer [config]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 

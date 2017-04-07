@@ -1,7 +1,6 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
             [ataru.anonymizer.data :as data]
-            [oph.soresu.common.db :as db]
             [taoensso.timbre :as log]))
 
 (defn- select-value [coll exclude-val]

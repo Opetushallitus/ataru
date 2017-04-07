@@ -5,14 +5,14 @@
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
             [taoensso.timbre :refer [info spy error]]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [ataru.log.audit-log :as audit-log]
             [ataru.virkailija.user.user-rights :as rights]
             [ataru.config.url-helper :refer [resolve-url]])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
 (defn- redirect-to-logged-out-page []
-  (resp/redirect (resolve-url :opintopolku.login)))
+  (resp/redirect (resolve-url :cas.login)))
 
 (defn- cas-login [ticket virkailija-login-url]
   (let [cas-client (cas/cas-client (resolve-url :cas-client))
@@ -44,7 +44,7 @@
 (defn logout [session]
   (info "username" (-> session :identity :username) "logged out")
   (cas-store/logout (-> session :identity :ticket))
-  (-> (resp/redirect (resolve-url :opintopolku.logout))
+  (-> (resp/redirect (resolve-url :cas.logout))
       (assoc :session {:identity nil})))
 
 (defn cas-initiated-logout [logout-request]

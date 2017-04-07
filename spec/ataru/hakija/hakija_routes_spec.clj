@@ -7,7 +7,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.hakija-routes :as routes]
             [cheshire.core :as json]
-            [oph.soresu.common.db :as soresu-db]
+            [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [yesql.core :as sql]))
@@ -45,8 +45,8 @@
 (defn- have-any-application-in-db
   []
   (let [app-count
-        (+ (count (soresu-db/exec :db yesql-get-full-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
-           (count (soresu-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
+        (+ (count (ataru-db/exec :db yesql-get-full-application-list-by-hakukohde {:form_key (:key @form) :hakukohde_oid (:hakukohde @form)}))
+           (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
 (defmacro add-spec
@@ -58,12 +58,12 @@
 
 (defn- have-application-in-db
   [application-id]
-  (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
+  (when-let [actual (first (ataru-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
     (= (:form application-fixtures/person-info-form-application) (:form actual))))
 
 (defn- have-application-for-hakukohde-in-db
   [application-id]
-  (when-let [actual (first (soresu-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
+  (when-let [actual (first (ataru-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
     (= (:form application-fixtures/person-info-form-application-for-hakukohde) (:form actual))))
 
 (describe "POST /application"

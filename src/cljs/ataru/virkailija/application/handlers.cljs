@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
             [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
-            [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
@@ -18,7 +17,7 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
-                   (assoc-in [:application :form-list-expanded?] false))]
+                   (assoc-in [:application :application-list-expanded?] false))]
         {:db         db
          :dispatch-n [[:application/stop-autosave]
                       [:application/fetch-application application-key]]}))))
@@ -27,32 +26,12 @@
   (-> db
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
-      (assoc-in [:application :form-list-expanded?] true)))
+      (assoc-in [:application :application-list-expanded?] true)))
 
 (reg-event-db
  :application/close-application
  (fn [db [_ _]]
    (close-application db)))
-
-(defn- languages->kwd [form]
-  (update form :languages
-    (partial mapv keyword)))
-
-(defn refresh-forms-for-application-listing []
-  (http
-   :get
-   (str "/lomake-editori/api/forms-for-application-listing")
-   (fn [db {:keys [forms]}]
-     (assoc-in db [:application :forms] (->> forms
-                                        (mapv languages->kwd)
-                                        (util/group-by-first :key)
-                                        (sort-by-time-and-deletedness))))))
-
-(reg-event-db
-  :application/refresh-forms-for-application-listing
-  (fn [db _]
-    (refresh-forms-for-application-listing)
-    db))
 
 (defn review-state-counts [applications]
   (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
@@ -212,12 +191,17 @@
                   :path                path
                   :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
 
+(defn- application-has-attachments? [db]
+  (some (comp (partial = "attachment") :fieldType second)
+        (get-in db [:application :selected-application-and-form :application :answers])))
+
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [db (update-application-details db response)]
       {:db db
-       :dispatch (if (fc/feature-enabled? :attachment)
+       :dispatch (if (and (fc/feature-enabled? :attachment)
+                          (application-has-attachments? db))
                    [:application/fetch-application-attachment-metadata]
                    [:application/start-autosave])})))
 
@@ -245,16 +229,6 @@
         (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
-  :application/search-form-list
-  (fn [db [_ search-term]]
-    (assoc-in db [:application :search-term] search-term)))
-
-(reg-event-db
-  :application/clear-search-term
-  (fn [db]
-    (assoc-in db [:application :search-term] nil)))
-
-(reg-event-db
  :application/select-form
  (fn [db [_ form-key]]
    (-> db
@@ -277,25 +251,25 @@
         (assoc-in [:application :selected-haku] haku)
         (close-application))))
 
-(reg-event-db
-  :application/refresh-hakukohteet-from-applications
-  (fn [db _]
-    (http
-      :get
-      "/lomake-editori/api/hakukohteet"
-      (fn [db hakukohteet]
-        (assoc-in db [:application :hakukohteet] hakukohteet)))
-    db))
+(defn get-hakukohteet-from-haut [haut]
+  (flatten (map :hakukohteet (:tarjonta-haut haut))))
+
+(defn get-forms-from-haut [haut]
+  (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
 
 (reg-event-db
-  :editor/handle-refresh-haut-from-applications
+  :editor/handle-refresh-haut
   (fn [db [_ haut]]
-    (assoc-in db [:application :haut] haut)))
+    (-> db
+        (assoc-in [:application :haut] haut)
+        (assoc-in [:application :hakukohteet] (get-hakukohteet-from-haut haut))
+        (assoc-in [:application :forms] (get-forms-from-haut haut)))))
 
 (reg-event-fx
-  :application/refresh-haut-from-applications
+  :application/refresh-haut
   (fn [{:keys [db]}]
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut-from-applications}}))
+            :handler-or-dispatch :editor/handle-refresh-haut}}))
+

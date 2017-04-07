@@ -1,7 +1,7 @@
 (ns ataru.files.file-store
   (:require [ataru.url :as url]
             [ataru.config.url-helper :refer [resolve-url]]
-            [oph.soresu.common.config :refer [config]]
+            [ataru.config.core :refer [config]]
             [org.httpkit.client :as http]
             [cheshire.core :as json]))
 
@@ -33,4 +33,5 @@
   (let [url  (resolve-url :liiteri.file key)
         resp @(http/get url)]
     (when (= (:status resp) 200)
-      (:body resp))))
+      {:body (:body resp)
+       :content-disposition (-> resp :headers :content-disposition)})))

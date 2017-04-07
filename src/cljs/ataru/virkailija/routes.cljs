@@ -29,9 +29,7 @@
     (dispatch [:editor/select-form (:key form)])))
 
 (defn common-actions-for-applications-route []
-  (dispatch [:application/refresh-forms-for-application-listing])
-  (dispatch [:application/refresh-hakukohteet-from-applications])
-  (dispatch [:application/refresh-haut-from-applications])
+  (dispatch [:application/refresh-haut])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
@@ -55,43 +53,45 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
+    (secretary/dispatch! "/lomake-editori/applications/incomplete/"))
+
+  (defroute #"^/lomake-editori/applications/incomplete/" []
     (common-actions-for-applications-route)
-    (dispatch-after-state
-     :predicate
-     (fn [db] (not-empty (get-in db [:application :forms])))
-     :handler
-     (fn [forms]
-       (let [form (-> forms first val)]
-         (.replaceState js/history nil nil (str "/lomake-editori/applications/" (:key form)))
-         (dispatch [:application/select-form (:key form)])
-         (dispatch [:application/fetch-applications (:key form)])))))
+    (dispatch [:application/show-incomplete-haut-list]))
+
+  (defroute #"^/lomake-editori/applications/complete/" []
+    (common-actions-for-applications-route)
+    (dispatch [:application/show-complete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
-      :predicate
-      (fn [db]
-        (some #(when (= hakukohde-oid (:hakukohde %)) %)
-              (get-in db [:application :hakukohteet])))
-      :handler
-      (fn [hakukohde]
-        (dispatch [:application/select-hakukohde hakukohde])
-        (dispatch [:application/fetch-applications-by-hakukohde (:hakukohde hakukohde)]))))
+     :predicate
+     (fn [db]
+       (some #(when (= hakukohde-oid (:oid %)) %)
+             (get-in db [:application :hakukohteet])))
+     :handler
+     (fn [hakukohde]
+       (dispatch [:application/select-hakukohde hakukohde])
+       (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))))
 
   (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
     (common-actions-for-applications-route)
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
-      :predicate
-      (fn [db]
-        (some #(when (= haku-oid (:haku %)) %)
-              (get-in db [:application :haut])))
-      :handler
-      (fn [haku]
-        (dispatch [:application/select-haku haku])
-        (dispatch [:application/fetch-applications-by-haku (:haku haku)]))))
+     :predicate
+     (fn [db]
+       (some #(when (= haku-oid (:oid %)) %)
+             (get-in db [:application :haut :tarjonta-haut])))
+     :handler
+     (fn [haku]
+       (dispatch [:application/select-haku haku])
+       (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
+    (dispatch [:application/close-search-control])
     (dispatch-after-state
      :predicate
      (fn [db] (not-empty (get-in db [:application :forms key])))

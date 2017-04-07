@@ -1,7 +1,7 @@
 (ns ataru.cache.cache-service
   (:require [taoensso.timbre :refer [info warn]]
             [com.stuartsierra.component :as component]
-            [oph.soresu.common.config :refer [config]])
+            [ataru.config.core :refer [config]])
   (:import (com.hazelcast.core Hazelcast HazelcastInstance)
            (com.hazelcast.config Config MapConfig ClasspathXmlConfig)
            (java.net InetAddress)))
@@ -97,9 +97,10 @@
       (assoc component :hazelcast-instance (Hazelcast/newHazelcastInstance (build-config cluster-config)))))
 
   (stop [component]
-    (info "Shutting down Hazelcast")
-    (.shutdown hazelcast-instance)
-    (assoc component :hazelcast-instance nil))
+    (when (some? hazelcast-instance)
+      (info "Shutting down Hazelcast")
+      (.shutdown hazelcast-instance)
+      (assoc component :hazelcast-instance nil)))
 
   (cache-get [component cache key]
     (.get (get-cached-map component cache) key))
