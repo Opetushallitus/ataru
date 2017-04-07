@@ -374,6 +374,8 @@
                      label]]))
                (:options field-descriptor))]]))))
 
+(defonce max-attachment-size-bytes (* 10 1024 1024))
+
 (defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id       (str component-id "-upload-button")
         language @(subscribe [:application/form-language])]
@@ -385,19 +387,29 @@
        :key       (str "upload-button-" component-id "-" attachment-count)
        :on-change (fn [event]
                     (.preventDefault event)
-                    (let [file-list (or (some-> event .-dataTransfer .-files)
-                                        (.. event -target -files))
-                          files     (->> (.-length file-list)
-                                         (range)
-                                         (map #(.item file-list %)))]
-                      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files])))}]
+                    (let [file-list  (or (some-> event .-dataTransfer .-files)
+                                         (.. event -target -files))
+                          files      (->> (.-length file-list)
+                                          (range)
+                                          (map #(.item file-list %)))
+                          file-sizes (map #(.-size %) files)]
+                      (if (some #(> % max-attachment-size-bytes) file-sizes)
+                        (dispatch [:application/show-attachment-too-big-error component-id])
+                        (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (case language
                                                         :fi "Lisää liite..."
                                                         :en "Upload attachment..."
-                                                        :sv "Ladda upp bilagan...")]]]))
+                                                        :sv "Ladda upp bilagan...")]]
+     (let [file-size-info-text (case language
+                                 :fi "Tiedoston maksimikoko on 10 MB"
+                                 :en "Maximum file size is 10 MB"
+                                 :sv "BÖÖ BÄÄ GUU")]
+       (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
+         [:span.application__form-upload-button-error file-size-info-text]
+         [:span.application__form-upload-button-info file-size-info-text]))]))
 
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (util/size-bytes->str size) ")"))

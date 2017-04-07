@@ -84,6 +84,11 @@
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
+(reg-event-db
+  :application/show-attachment-too-big-error
+  (fn [db [_ component-id]]
+    (assoc-in db [:application :answers (keyword component-id) :too-big] true)))
+
 (reg-event-fx
   :application/submit
   (fn [{:keys [db]} _]
@@ -440,7 +445,8 @@
                                                 :valid  false
                                                 :status :uploading}))
                                            db'))
-                              (assoc-in db' [:application :answers (keyword component-id) :valid] false))]
+                              (assoc-in db' [:application :answers (keyword component-id) :valid] false)
+                              (assoc-in db' [:application :answers (keyword component-id) :too-big] false))]
       {:db         db
        :dispatch-n dispatch-list})))
 
