@@ -408,7 +408,7 @@
                                  :en "Maximum file size is 10 MB"
                                  :sv "Den maximala filstorleken är 10 MB")]
        (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
-         [:span.application__form-upload-button-error file-size-info-text]
+         [:span.application__form-upload-button-error.animated.shake file-size-info-text]
          [:span.application__form-upload-button-info file-size-info-text]))]))
 
 (defn- filename->label [{:keys [filename size]}]
