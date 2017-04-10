@@ -26,7 +26,8 @@
        [:label.application__form-field-label
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
-        (let [values       (:value answer)
+        (let [repeatable?  (-> field-descriptor :params :repeatable)
+              values       (if repeatable? (map :value (:values answer)) (:value answer))
               multi-value? (and
                              (not= "multipleChoice" (:fieldType field-descriptor))
                              (or (seq? values) (vector? values)))]

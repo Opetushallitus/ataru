@@ -3,7 +3,6 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
-            [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
@@ -272,10 +271,16 @@
 (reg-event-db
   :application/remove-repeatable-application-field-value
   (fn [db [_ key idx]]
-    (update-in db [:application :answers key :values]
-      (fn [values]
-        (vec
-          (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
+    (cond-> db
+            (get-in db [:application :answers key :values])
+            (update-in [:application :answers key :values]
+                       #(autil/remove-nth % idx))
+
+            ; when creating application, we have the value below (and it's important). when editing, we do not.
+            ; consider this a temporary, terrible bandaid solution
+            (get-in db [:application :answers key :value])
+            (update-in [:application :answers key :value]
+                       #(autil/remove-nth (vec %) idx)))))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
