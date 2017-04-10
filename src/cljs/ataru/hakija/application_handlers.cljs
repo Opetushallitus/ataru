@@ -470,16 +470,16 @@
   :application/handle-attachment-upload
   (fn [db [_ field-descriptor component-id attachment-idx response]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values attachment-idx]
-                   merge {:value response :valid true :status :ready})
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                   {:value response :valid true :status :ready})
         (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-db
   :application/handle-attachment-upload-error
   (fn [db [_ field-descriptor component-id attachment-idx filename response]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values attachment-idx]
-                   merge {:value {:filename filename} :valid false :status :error})
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                   {:value {:filename filename} :valid false :status :error})
         (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-db
