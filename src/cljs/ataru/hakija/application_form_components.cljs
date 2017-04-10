@@ -427,7 +427,7 @@
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx]
   [:div
-   [:div.application__form-filename-container.application__form-file-error
+   [:div.application__form-filename-container.application__form-file-error.animated.shake
     [:span.application__form-attachment-text
      (:filename @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
      [:a.application__form-upload-remove-attachment-link
