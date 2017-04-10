@@ -21,10 +21,16 @@
        (first)
        (:value)))
 
+;; There was issues with production genders (empty strings)
+(defn- safely-convert-to-int [gender-str]
+  (try
+    (Integer/valueOf gender-str)
+    (catch Throwable t 2)))
+
 (defn- extract-gender [application]
   (let [gender-sign (-> (extract-value application "gender")
                         (alter-old-gender-values)
-                        (Integer/valueOf))]
+                        (safely-convert-to-int))]
     (if (= (mod gender-sign 2) 0)
       :female
       :male)))
