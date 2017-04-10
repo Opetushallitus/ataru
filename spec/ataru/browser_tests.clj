@@ -11,6 +11,7 @@
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]
             [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]])
   (:import (java.util.concurrent TimeUnit)))
 
@@ -35,7 +36,9 @@
       (finally
         (component/stop-system @system)))))
 
-(defn sh-timeout [timeout-secs & args]
+(defn sh-timeout
+  [timeout-secs & args]
+  (println "run" timeout-secs args)
   (.get
     (future-call #(apply sh args))
     timeout-secs
@@ -55,18 +58,36 @@
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
 
+(defn- get-latest-form
+  []
+  (first (form-store/get-all-forms)))
+
 (describe "Hakija UI tests /"
           (tags :ui)
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
-          (it "are successful"
-              (let [latest-form (first (form-store/get-all-forms))
-                    results (sh-timeout 120 "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                        "--web-security" "false"
-                                        "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
+          (it "can fill a form successfully"
+              (let [results (sh-timeout
+                              120
+                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                              "--web-security" "false"
+                              "bin/phantomjs-runner.js" "hakija" (:key (get-latest-form)))]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
+          (it "can edit an application successfully"
+              (let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))
+                    secret (-> latest-application
+                               :id
+                               (application-store/get-application)
+                               :secret)
+                    results            (sh-timeout
+                                         120
+                                         "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                         "--web-security" "false"
+                                         "bin/phantomjs-runner.js" "hakija-edit" secret)]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
-
 
 (run-specs)

@@ -89,7 +89,7 @@
                 organization-service
                 [:form-edit]
                 vector
-                #(form-store/get-forms false %)
-                #(form-store/get-all-forms false)))})
+                #(form-store/get-forms %)
+                #(form-store/get-all-forms)))})
 
 

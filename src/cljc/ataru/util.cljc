@@ -82,3 +82,8 @@
             b-limit (str bytes " B")
             kb-limit (format "%.2f kB" (float (/ bytes 1024)))
             (format "%.2f MB" (float (/ bytes 1024000))))))
+
+(defn remove-nth
+  "remove nth elem in vector"
+  [v n]
+  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
