@@ -150,6 +150,7 @@
                                                                   "singleChoice"
                                                                   "attachment"])
                      (s/optional-key :cannot-edit) s/Bool
+                     (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
                                                               LocalizedString
                                                               s/Str))})
