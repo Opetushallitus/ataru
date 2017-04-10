@@ -49,7 +49,8 @@
                               :hakukohde      (:hakukohde application)
                               :haku           (:haku application)
                               :content        {:answers answers}
-                              :secret         (or secret (crypto/url-part 34))}
+                              :secret         (or secret (crypto/url-part 34))
+                              :person_oid     (:person-oid application)}
         application          (yesql-add-application-query<! application-to-store connection)]
     (unwrap-application application)))
 
@@ -93,13 +94,13 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :hakukohde])))
+         (select-keys old-application [:key :secret :haku :hakukohde :person-oid])))
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
           {:keys [id key] :as new-application} (add-new-application-version
-                                                 (merge-applications new-application old-application) conn)]
+                                                (merge-applications new-application old-application) conn)]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))

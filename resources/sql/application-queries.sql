@@ -1,9 +1,9 @@
 -- name: yesql-add-application-query<!
 -- Add application
 INSERT INTO applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret)
+(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid)
 VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret);
+  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid);
 
 -- name: yesql-get-application-list-by-form
 SELECT
@@ -189,7 +189,8 @@ SELECT
   created_time,
   content,
   haku,
-  hakukohde
+  hakukohde,
+  person_oid
 FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time
 FOR UPDATE;
@@ -239,7 +240,7 @@ WHERE application_key = :application_key;
 -- Add person OID to an application
 UPDATE applications
 SET person_oid = :person_oid
-WHERE id = :id;
+WHERE id = :id; -- If the person has updated a newer version of the application, add person_oid to that too
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
 WITH latest_applications AS (
