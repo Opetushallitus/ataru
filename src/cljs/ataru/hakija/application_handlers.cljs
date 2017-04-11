@@ -427,6 +427,7 @@
        :http {:method    :post
               :url       "/hakemus/api/files"
               :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx]
+              :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name]
               :body      form-data}})))
 
 (reg-event-fx
@@ -474,6 +475,14 @@
         (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-db
+  :application/handle-attachment-upload-error
+  (fn [db [_ field-descriptor component-id attachment-idx filename response]]
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                   {:value {:filename filename} :valid false :status :error})
+        (update-attachment-answer-validity field-descriptor component-id))))
+
+(reg-event-db
   :application/handle-attachment-delete
   (fn [db [_ field-descriptor component-id attachment-key _]]
     (-> db
@@ -495,3 +504,10 @@
        :http {:method  :delete
               :url     (str "/hakemus/api/files/" key)
               :handler [:application/handle-attachment-delete field-descriptor component-id key]}})))
+
+(reg-event-db
+  :application/remove-attachment-error
+  (fn [db [_ field-descriptor component-id attachment-idx]]
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values] autil/remove-nth attachment-idx)
+        (update-attachment-answer-validity field-descriptor component-id))))

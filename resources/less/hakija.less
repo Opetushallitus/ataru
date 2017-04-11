@@ -145,8 +145,8 @@
   visibility: hidden;
 }
 .application__invalid-field-status {
-  font-size: 12px;
-  margin-top: 2px;
+  font-size: 14px;
+  margin-top: 4px;
   text-align: center;
   width: 210px;
   position: relative;
@@ -442,6 +442,16 @@ textarea.application__form-text-area__size-large {
   padding: 4px 4px 4px 8px;
   line-height: 19px;
   margin-left: 2px;
+
+  &.application__form-file-error {
+    background-color: @sg-color-red;
+    color: white;
+  }
+}
+
+.application__form-attachment-error {
+  margin-left: 10px;
+  color: @sg-color-gray;
 }
 
 .application__attachment-filename-list {
