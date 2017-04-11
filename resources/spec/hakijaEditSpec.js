@@ -74,7 +74,7 @@
       )
 
       it('shows invalidity errors', function () {
-        expect(invalidFieldsStatus().text()).to.equal('2 pakollista tietoa puuttuu')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 2 tietoa')
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         expect(submitButton().prop('disabled')).to.equal(true)
