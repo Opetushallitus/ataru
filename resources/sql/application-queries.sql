@@ -237,10 +237,12 @@ SET
 WHERE application_key = :application_key;
 
 -- name: yesql-add-person-oid!
--- Add person OID to an application
+-- Add person OID to an application. Update also new versions of application if the user has updated
+-- the application while we have been talking to person service (ONR)
 UPDATE applications
 SET person_oid = :person_oid
-WHERE id = :id; -- If the person has updated a newer version of the application, add person_oid to that too
+WHERE key IN (select key from applications where id = :id)
+      AND id >= :id;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
 WITH latest_applications AS (
