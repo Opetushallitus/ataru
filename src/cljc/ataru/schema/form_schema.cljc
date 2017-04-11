@@ -162,7 +162,8 @@
    :state                           s/Str
    :score                           (s/maybe s/Int)
    (s/optional-key :form)           s/Int
-   (s/optional-key :applicant-name) (s/maybe s/Str)
+   (s/optional-key :preferred-name) (s/maybe s/Str)
+   (s/optional-key :last-name)      (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (s/defschema Application
