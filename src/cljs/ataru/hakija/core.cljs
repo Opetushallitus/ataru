@@ -8,6 +8,7 @@
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
+            [ataru.application-common.fx] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.cljs-util :as cljs-util]
             [clojure.string :as str]))
 
