@@ -51,8 +51,9 @@
 (defn- merge-uneditable-answers-from-previous
   [old-application new-application]
   (let [new-answers                 (:answers new-application)
-        uneditable-answers          (filter :cannot-edit new-answers)
-        editable-answers            (remove :cannot-edit new-answers)
+        uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
+        uneditable-answers          (filter uneditable-or-unviewable new-answers)
+        editable-answers            (remove uneditable-or-unviewable new-answers)
         merged-answers              (into editable-answers
                                           (uneditable-answers-with-labels-from-new
                                             uneditable-answers
