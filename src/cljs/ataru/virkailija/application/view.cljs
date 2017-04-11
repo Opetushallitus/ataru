@@ -32,12 +32,12 @@
 
                     (some? @hakukohde)
                     (str "/lomake-editori/api/applications/excel/hakukohde/"
-                         (:hakukohde @hakukohde)
+                         (:oid @hakukohde)
                          (query-string application-filter))
 
                     (some? @haku)
                     (str "/lomake-editori/api/applications/excel/haku/"
-                         (:haku @haku)
+                         (:oid @haku)
                          (query-string application-filter)))]
           [:a.application-handling__excel-download-link
            {:href url}
