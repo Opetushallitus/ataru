@@ -329,26 +329,25 @@
       (string/replace #"[\s]+" "-")
       (string/replace #"[^\w-]+" "")))
 
+(defn- create-filename [identifying-part]
+  {:pre [(some? identifying-part)]}
+  (str
+   (sanitize-name identifying-part)
+   "_"
+   (time-formatter (t/now) filename-time-format)
+   ".xlsx"))
+
 (defn filename-by-form
   [form-key]
   {:post [(some? %)]}
-  (let [form           (form-store/fetch-by-key form-key)
-        sanitized-name (sanitize-name (:name form))
-        time           (time-formatter (t/now) filename-time-format)]
-    (str sanitized-name "_" form-key "_" time ".xlsx")))
+  (create-filename (-> form-key form-store/fetch-by-key :name)))
 
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)]
-    (let [sanitized-name (sanitize-name hakukohde-name)
-          time           (time-formatter (t/now) filename-time-format)]
-      (str sanitized-name "_" time ".xlsx"))))
+  (create-filename (or (.get-hakukohde-name tarjonta-service hakukohde-oid) hakukohde-oid)))
 
 (defn filename-by-haku
   [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (when-let [haku-name (.get-haku-name tarjonta-service haku-oid)]
-    (let [sanitized-name (sanitize-name haku-name)
-          time           (time-formatter (t/now) filename-time-format)]
-      (str sanitized-name "_" time ".xlsx"))))
+  (create-filename (or (.get-haku-name tarjonta-service haku-oid) haku-oid)))
