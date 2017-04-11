@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(14)
+        expect(formFields().length).to.equal(25)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -35,6 +35,16 @@
           return $(e).val()
         })
         var expectedTestInputValues = [
+          "Etunimi",
+          "Etunimi",
+          "Sukunimi",
+          "***********",
+          "test@example.com",
+          "0123456789",
+          "Katutie 12 B",
+          "40100",
+          "JYVÄSKYLÄ",
+          "Jyväskylä",
           "Tekstikentän vastaus",
           "Toistuva vastaus 1",
           "Toistuva vastaus 3",
@@ -51,6 +61,8 @@
           return $(e).text()
         })
         var expectedDropdownInputValues = [
+          "Suomi",
+          "suomi",
           "Kolmas vaihtoehto",
           "Lisensiaatin tutkinto",
           ""
@@ -69,8 +81,8 @@
 
     describe('changing values to be invalid', function () {
       before(
-        setNthFieldValue(9, 'textarea', ''),
-        clickNthFieldRadio(12, 'Ensimmäinen vaihtoehto')
+        setNthFieldValue(20, 'textarea', ''),
+        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
@@ -83,8 +95,8 @@
 
     describe('change values and save', function () {
       before(
-        setNthFieldValue(9, 'textarea', 'Muokattu vastaus'),
-        clickNthFieldRadio(12, 'Toinen vaihtoehto'),
+        setNthFieldValue(20, 'textarea', 'Muokattu vastaus'),
+        clickNthFieldRadio(23, 'Toinen vaihtoehto'),
         clickElement(function () {
           return submitButton()
         }),
@@ -98,7 +110,18 @@
           return $(e).text()
         })
         var expectedValues = [
-          "Jos haluat muuttaa henkilötietojasi, ota yhteyttä hakemaasi oppilaitokseen.",
+          "Etunimi",
+          "Etunimi",
+          "Sukunimi",
+          "Suomi",
+          "***********",
+          "test@example.com",
+          "0123456789",
+          "Katutie 12 B",
+          "40100",
+          "JYVÄSKYLÄ",
+          "Jyväskylä",
+          "suomi",
           "Tekstikentän vastaus",
           "Toistuva vastaus 1Toistuva vastaus 3",
           "Pakollisen tekstialueen vastaus",

@@ -75,8 +75,8 @@
                                 "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
                   (println (:out results))
                   (.println System/err (:err results))
-                  (should= 0 (:exit results))))
-              (throw (Exception. "No test form found.")))
+                  (should= 0 (:exit results)))
+                (throw (Exception. "No test form found."))))
 
           (it "can edit an application successfully"
               (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
