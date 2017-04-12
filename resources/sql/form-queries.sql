@@ -6,18 +6,19 @@ WITH latest_forms AS (
       MAX(id) AS max_id
     FROM forms
     WHERE (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
-          AND (deleted IS NULL OR deleted = FALSE)
     GROUP BY key
 )
 SELECT
   f.id,
   f.key,
   f.name,
+  f.deleted,
   f.created_by,
   f.created_time,
   f.languages
 FROM forms f
   JOIN latest_forms lf ON f.id = lf.max_id
+WHERE (f.deleted IS NULL OR f.deleted = FALSE)
 ORDER BY created_time DESC;
 
 -- name: yesql-add-form<!
