@@ -19,7 +19,7 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -268,7 +268,8 @@
         default-lang (subscribe [:application/default-language])
         secret       (subscribe [:state-query [:application :secret]])
         disabled?    (reaction (or
-                                 (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor)))
+                                 (and @editing
+                                      (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor))))
                                  (->
                                    (:answers @application)
                                    (get (answer-key field-descriptor))

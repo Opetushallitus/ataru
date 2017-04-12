@@ -9,7 +9,8 @@
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.validator :as validator]
     [ataru.applications.application-store :as application-store]
-    [ataru.hakija.forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]))
+    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                   editing-forbidden-person-info-field-ids]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
