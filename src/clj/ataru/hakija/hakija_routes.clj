@@ -83,10 +83,6 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
 
-(defn random-rate-limit! [frequency]
-  (when (< (rand) frequency)
-    (http-response/too-many-requests!)))
-
 (defn api-routes [tarjonta-service]
   (api/context "/api" []
     :tags ["application-api"]
@@ -138,14 +134,12 @@
         :multipart-params [file :- upload/TempFileUpload]
         :middleware [upload/wrap-multipart-params]
         :return ataru-schema/File
-        (do
-          (random-rate-limit! 0.5)
-          (try
-            (if-let [resp (file-store/upload-file file)]
-              (response/ok resp)
-              (response/bad-request {:failures "Failed to upload file"}))
-            (finally
-              (io/delete-file (:tempfile file) true)))))
+        (try
+          (if-let [resp (file-store/upload-file file)]
+            (response/ok resp)
+            (response/bad-request {:failures "Failed to upload file"}))
+          (finally
+            (io/delete-file (:tempfile file) true))))
       (api/DELETE "/:key" []
         :summary "Delete a file"
         :path-params [key :- s/Str]
