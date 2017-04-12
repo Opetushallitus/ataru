@@ -6,6 +6,7 @@
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
+            [ataru.hakija.application :refer [application-in-complete-state?]]
             [ataru.application-common.koulutus :as koulutus]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -26,6 +27,7 @@
                             (partial not= selected-lang)
                             (:languages form))
         submit-status     (subscribe [:state-query [:application :submit-status]])
+        application       (subscribe [:state-query [:application]])
         secret            (:modify (util/extract-query-params))
         hakukohde-name    (-> form :tarjonta :hakukohde-name)
         haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
@@ -65,7 +67,11 @@
          [:div.application__sub-header-container
           (when-not (string/blank? koulutukset-str) [:div.application__sub-header-koulutus koulutukset-str])
           [:span.application__sub-header-organization haku-tarjoja-name]
-          [:span.application__sub-header-dates apply-dates]])])))
+          [:span.application__sub-header-dates apply-dates]])
+       (when (application-in-complete-state? @application)
+         [:div.application__sub-header-container
+          [:span.application__sub-header-modifying-prevented
+           "Tämä hakemus on käsitelty eikä ole enää muokattavissa"]])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]

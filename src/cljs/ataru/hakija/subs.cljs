@@ -25,7 +25,7 @@
 (re-frame/reg-sub
  :application/can-apply?
  (fn [db]
-   (applying-possible? (:form db))))
+   (applying-possible? (:form db) (:application db))))
 
 (re-frame/reg-sub
   :application/form-language
