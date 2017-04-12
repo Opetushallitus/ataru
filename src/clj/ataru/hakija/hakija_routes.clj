@@ -23,9 +23,7 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
-            [ataru.config.core :refer [config]]
-            [ring.util.http-response :as http-response]
-            [clojure.string :as string])
+            [ataru.config.core :refer [config]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
