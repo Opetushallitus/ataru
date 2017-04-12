@@ -3,7 +3,7 @@
   (:import (fi.vm.sade.properties OphProperties)))
 
 ; TODO component if not too much work?
-(def ^fi.vm.sade.properties.OphProperties url-properties (atom nil))
+(def ^OphProperties url-properties (atom nil))
 
 (defn- load-config
   []
