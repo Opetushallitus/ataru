@@ -114,7 +114,6 @@
       wrapper-sections)))
 
 (defn application-in-complete-state? [application]
-  (println "application-in-complete-state?" application)
   (boolean (some #{(:state application)} complete-states)))
 
 (defn applying-possible? [form application]
