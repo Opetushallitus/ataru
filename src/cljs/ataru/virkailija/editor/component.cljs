@@ -89,7 +89,7 @@
      [:br]
      [:span "[linkin teksti](http://linkin osoite)"]
      [:br]
-     [:a {:href "http://"} "Lisää muotoiluohjeita"]]]])
+     [:a {:href "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet" :target "_blank"} "Lisää muotoiluohjeita"]]]])
 
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
@@ -158,7 +158,6 @@
                    [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
                  @languages)
                (map (fn [field]
-                      (cljs.pprint/pprint field)
                       (into field [(markdown-help)]))))])])))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
