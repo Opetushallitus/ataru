@@ -3,7 +3,6 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
-            [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
@@ -83,6 +82,11 @@
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
+
+(reg-event-db
+  :application/show-attachment-too-big-error
+  (fn [db [_ component-id]]
+    (assoc-in db [:application :answers (keyword component-id) :too-big] true)))
 
 (reg-event-fx
   :application/submit
@@ -272,10 +276,16 @@
 (reg-event-db
   :application/remove-repeatable-application-field-value
   (fn [db [_ key idx]]
-    (update-in db [:application :answers key :values]
-      (fn [values]
-        (vec
-          (filter identity (map-indexed #(if (not= %1 idx) %2) values)))))))
+    (cond-> db
+            (get-in db [:application :answers key :values])
+            (update-in [:application :answers key :values]
+                       #(autil/remove-nth % idx))
+
+            ; when creating application, we have the value below (and it's important). when editing, we do not.
+            ; consider this a temporary, terrible bandaid solution
+            (get-in db [:application :answers key :value])
+            (update-in [:application :answers key :value]
+                       #(autil/remove-nth (vec %) idx)))))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
@@ -417,6 +427,7 @@
        :http {:method    :post
               :url       "/hakemus/api/files"
               :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx]
+              :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name]
               :body      form-data}})))
 
 (reg-event-fx
@@ -440,7 +451,8 @@
                                                 :valid  false
                                                 :status :uploading}))
                                            db'))
-                              (assoc-in db' [:application :answers (keyword component-id) :valid] false))]
+                              (assoc-in db' [:application :answers (keyword component-id) :valid] false)
+                              (assoc-in db' [:application :answers (keyword component-id) :too-big] false))]
       {:db         db
        :dispatch-n dispatch-list})))
 
@@ -460,6 +472,14 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                    {:value response :valid true :status :ready})
+        (update-attachment-answer-validity field-descriptor component-id))))
+
+(reg-event-db
+  :application/handle-attachment-upload-error
+  (fn [db [_ field-descriptor component-id attachment-idx filename response]]
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                   {:value {:filename filename} :valid false :status :error})
         (update-attachment-answer-validity field-descriptor component-id))))
 
 (reg-event-db
@@ -484,3 +504,10 @@
        :http {:method  :delete
               :url     (str "/hakemus/api/files/" key)
               :handler [:application/handle-attachment-delete field-descriptor component-id key]}})))
+
+(reg-event-db
+  :application/remove-attachment-error
+  (fn [db [_ field-descriptor component-id attachment-idx]]
+    (-> db
+        (update-in [:application :answers (keyword component-id) :values] autil/remove-nth attachment-idx)
+        (update-attachment-answer-validity field-descriptor component-id))))

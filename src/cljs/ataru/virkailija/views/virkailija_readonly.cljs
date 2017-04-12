@@ -41,21 +41,22 @@
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
        [:div
         (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                       (let [text          (str filename " (" (util/size-bytes->str size) ")")
-                             component-key (str "attachment-div-" idx)
-                             virus-text    (case virus-scan-status
-                                             "not_started" "Tarkastetaan..."
-                                             "failed" "Virus löytyi"
-                                             "done" "Tarkistettu"
-                                             "Virhe")]
+                       (let [text              (str filename " (" (util/size-bytes->str size) ")")
+                             component-key     (str "attachment-div-" idx)
+                             virus-status-elem (case virus-scan-status
+                                                 "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
+                                                                " | Tarkastetaan..."]
+                                                 "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                           " | Virus löytyi"]
+                                                 "done" nil
+                                                 "Virhe")]
                          [:div.application__virkailija-readonly-attachment-text
                           {:key component-key}
                           (if (= virus-scan-status "done")
                             [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
                              text]
                             text)
-                          [:span.application__virkailija-readonly-attachment-virus-status
-                           (str " | " virus-text)]]))
+                          virus-status-elem]))
                      values)]])))
 
 (declare field)

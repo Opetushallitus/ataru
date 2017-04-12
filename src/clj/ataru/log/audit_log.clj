@@ -41,8 +41,6 @@
   (or (map? x)
       (vector? x)))
 
-(def ^:private log-seq (atom 0))
-
 (def ^:private not-blank? (comp not clojure.string/blank?))
 
 (defn- diff [old new]
@@ -88,8 +86,7 @@
         log-map (cond-> {CommonLogMessageFields/ID        id
                          CommonLogMessageFields/TIMESTAMP (timestamp)
                          CommonLogMessageFields/OPERAATIO operation
-                         CommonLogMessageFields/MESSAGE   message
-                         "logSeq"                         (str (swap! log-seq inc))}
+                         CommonLogMessageFields/MESSAGE   message}
                   (not-blank? organization-oid)
                   (assoc "organizationOid" organization-oid))
         logger  (or @logger (reset! logger (Audit. (service-name) (application-type))))]

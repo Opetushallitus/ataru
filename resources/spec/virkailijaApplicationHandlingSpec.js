@@ -133,14 +133,14 @@
               expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
             })
             .then(clickElement(applicantColumn))
-            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
-            .then(function() {
-              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
-            })
-            .then(clickElement(applicantColumn))
             .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
             .then(function() {
               expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
+            })
+            .then(clickElement(applicantColumn))
+            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
+            .then(function() {
+              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
             })
             .then(done)
             .fail(done)

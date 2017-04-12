@@ -374,6 +374,8 @@
                      label]]))
                (:options field-descriptor))]]))))
 
+(defonce max-attachment-size-bytes (* 10 1024 1024))
+
 (defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id       (str component-id "-upload-button")
         language @(subscribe [:application/form-language])]
@@ -385,19 +387,29 @@
        :key       (str "upload-button-" component-id "-" attachment-count)
        :on-change (fn [event]
                     (.preventDefault event)
-                    (let [file-list (or (some-> event .-dataTransfer .-files)
-                                        (.. event -target -files))
-                          files     (->> (.-length file-list)
-                                         (range)
-                                         (map #(.item file-list %)))]
-                      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files])))}]
+                    (let [file-list  (or (some-> event .-dataTransfer .-files)
+                                         (.. event -target -files))
+                          files      (->> (.-length file-list)
+                                          (range)
+                                          (map #(.item file-list %)))
+                          file-sizes (map #(.-size %) files)]
+                      (if (some #(> % max-attachment-size-bytes) file-sizes)
+                        (dispatch [:application/show-attachment-too-big-error component-id])
+                        (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
       [:span.application__form-upload-button-add-text (case language
                                                         :fi "Lisää liite..."
                                                         :en "Upload attachment..."
-                                                        :sv "Ladda upp bilagan...")]]]))
+                                                        :sv "Ladda upp bilagan...")]]
+     (let [file-size-info-text (case language
+                                 :fi "Tiedoston maksimikoko on 10 MB"
+                                 :en "Maximum file size is 10 MB"
+                                 :sv "Den maximala filstorleken är 10 MB")]
+       (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
+         [:span.application__form-upload-button-error.animated.shake file-size-info-text]
+         [:span.application__form-upload-button-info file-size-info-text]))]))
 
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (util/size-bytes->str size) ")"))
@@ -412,6 +424,23 @@
                   (.preventDefault event)
                   (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
      [:i.zmdi.zmdi-close]]]])
+
+(defn attachment-view-file-error [field-descriptor component-id attachment-idx]
+  [:div
+   [:div.application__form-filename-container.application__form-file-error.animated.shake
+    [:span.application__form-attachment-text
+     (:filename @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
+     [:a.application__form-upload-remove-attachment-link
+      {:href     "#"
+       :on-click (fn remove-attachment [event]
+                   (.preventDefault event)
+                   (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx]))}
+      [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
+   [:span.application__form-attachment-error
+    (condp = @(subscribe [:application/form-language])
+      :fi "Kielletty tiedostomuoto"
+      :en "File type forbidden"
+      :sv "Förbjudet filformat")]])
 
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-filename-container
@@ -429,6 +458,7 @@
     [:li.application__attachment-filename-list-item
      (case status
        :ready [attachment-view-file field-descriptor component-id attachment-idx]
+       :error [attachment-view-file-error field-descriptor component-id attachment-idx]
        :uploading [attachment-uploading-file component-id attachment-idx]
        :deleting [attachment-deleting-file component-id attachment-idx])]))
 

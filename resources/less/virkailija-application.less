@@ -236,11 +236,10 @@ and (max-width: 1000px) {
 
 .application-handling__review-area {
   display: flex;
-  justify-content: flex-end;
 }
 
 .application-handling__review {
-  color: @review-separator-color;
+  color: @text-color;
   font-size: 14px;
   background-color: @very-light-gray;
   min-width: 407px;
@@ -394,8 +393,12 @@ and (max-width: 1000px) {
   line-height: 150%;
 }
 
-.application__virkailija-readonly-attachment-virus-status {
-  color: #F6A623;
+.application__virkailija-readonly-attachment-virus-status-not-started {
+  color: rgb(255, 208, 36);
+}
+
+.application__virkailija-readonly-attachment-virus-status-virus-found {
+  color: rgb(228, 78, 78);
 }
 
 .application__readonly-container {
@@ -409,6 +412,7 @@ and (max-width: 1000px) {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+  padding-right: 15px;
 }
 
 .application__form-field-label {

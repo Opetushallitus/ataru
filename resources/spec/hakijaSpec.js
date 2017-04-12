@@ -18,59 +18,6 @@
     expect(window.uiError || null).to.be.null
   })
 
-  function formHeader() {
-    return testFrame().find('.application__header')
-  }
-
-  function submitButton() {
-    return testFrame().find('.application__send-application-button')
-  }
-
-  function formSections() {
-    return testFrame().find('.application__form-content-area .application__wrapper-element')
-  }
-
-  function formFields() {
-    return testFrame().find('.application__form-content-area .application__form-field')
-  }
-
-  function invalidFieldsStatus() {
-    return testFrame().find('.application__invalid-field-status-title')
-  }
-
-  function invalidSections() {
-    return testFrame().find('.application__banner-wrapper-sections-content')
-  }
-
-  function personInfoModule() {
-    return formSections().eq(0)
-  }
-
-  function setNthFieldInputValue(n, value) {
-    return setTextFieldValue(function() { return formFields().eq(n).find('input') }, value)
-  }
-
-  function setNthFieldValue(n, selector, value) {
-    return function() {
-      var $e = formFields().eq(n).find(selector)
-      $e.val(value)
-      triggerEvent($e, 'input') // needs to be input event because who knows why
-    }
-  }
-
-  function setNthFieldOption(n, value) {
-    return function() {
-      formFields().eq(n).find('option[value="'+value+'"]').prop('selected', true)
-      triggerEvent(formFields().eq(n).find('select'), 'change')
-    }
-  }
-
-  function clickNthFieldRadio(n, value) {
-    return function() {
-      formFields().eq(n).find('label:contains('+value+')').click()
-    }
-  }
-
   describe('hakemus', function() {
 
     describe('form loads', function () {
@@ -81,7 +28,7 @@
         expect(formFields().length).to.equal(24)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(invalidFieldsStatus().text()).to.equal('13 pakollista tietoa puuttuu')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
       })
@@ -118,7 +65,7 @@
           expect(formFields().eq(3).find('select').val()).to.equal('246')
           expect(formFields().eq(9).find('input').val()).to.equal('JYVÄSKYLÄ')
           expect(formFields().eq(11).find('select').val()).to.equal('FI')
-          expect(invalidFieldsStatus().text()).to.equal('3 pakollista tietoa puuttuu')
+          expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
           expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         })
       })
@@ -129,7 +76,12 @@
     describe('user-defined fields', function() {
       before(
         setNthFieldInputValue(12, 'Tekstikentän vastaus'),
-        // TODO: repeating field 13
+        setNthFieldInputValue(13, 'Toistuva vastaus 1'),
+        setNthFieldSubInputValue(13, 1, 'Toistuva vastaus 2'),
+        setNthFieldSubInputValue(13, 2, 'Toistuva vastaus 3'),
+        clickElement(function() {
+          return formFields().eq(13).find('a.application__form-repeatable-text--addremove').eq(0)
+        }),
         setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
         setNthFieldOption(15, 'Kolmas vaihtoehto'),
         setNthFieldInputValue(16, 'Jatkokysymyksen vastaus'),
@@ -137,12 +89,17 @@
         clickNthFieldRadio(18, 'Kolmas vaihtoehto', true),
         clickNthFieldRadio(19, 'Arkkitehti', true),
         setNthFieldValue(20, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
-        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
+        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto'),
+        setNthFieldSubInputValue(24, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(24, 1, 'Oikea vierekkäinen')
+
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
         expect(submitButton().prop('disabled')).to.equal(false)
       })
+
+
     })
 
     describe('submitting', function() {
@@ -168,7 +125,7 @@
                               "Jyväskylä",
                               "suomi",
                               "Tekstikentän vastaus",
-                              "",
+                              "Toistuva vastaus 1Toistuva vastaus 3",
                               "Pakollisen tekstialueen vastaus",
                               "Kolmas vaihtoehto",
                               "Jatkokysymyksen vastaus",
@@ -179,7 +136,13 @@
                               "",
                               "",
                               "Ensimmäinen vaihtoehto"]
+
+        var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
+        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen"]
+
         expect(displayedValues).to.eql(expectedValues)
+        expect(tabularValues).to.eql(expectedTabularValues)
+
       })
     })
   })

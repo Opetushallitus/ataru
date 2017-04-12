@@ -30,10 +30,15 @@
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
-          (str (count (:invalid-fields valid-status)) (case @lang
-                                                        :fi " pakollista tietoa puuttuu"
-                                                        :sv " obligatoriska uppgifter saknas"
-                                                        :en " mandatory fields are missing"))]
+          (case @lang
+            :fi "Tarkista "
+            :en "Check "
+            :sv "Kontrollera ")
+          [:b (count (:invalid-fields valid-status))]
+          (case @lang
+            :fi " tietoa"
+            :en " answers"
+            :sv " uppgifter")]
          (when @show-details
            [:div
             [:div.application__invalid-fields-arrow-up]

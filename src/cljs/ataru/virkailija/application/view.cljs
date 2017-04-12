@@ -55,7 +55,7 @@
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
-        applicant (:applicant-name application)]
+        applicant (str (:preferred-name application) " " (:last-name application))]
     [:div.application-handling__list-row
      {:on-click #(dispatch [:application/select-application (:key application)])
       :class    (when selected?
@@ -313,7 +313,7 @@
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
                  (not @expanded?))
-        [:div..application-handling__detail-container
+        [:div.application-handling__detail-container
          [close-application]
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area

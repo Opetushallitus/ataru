@@ -29,11 +29,6 @@
 
 (reg-event-db :editor/get-user-info get-user-info)
 
-(defn- remove-nth
-  "remove nth elem in vector"
-  [v n]
-  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
-
 (defn- current-form-content-path
   [db further-path]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
@@ -42,7 +37,7 @@
   :editor/remove-dropdown-option
   (fn [cofx [_ & path]]
     (let [option-path (current-form-content-path (:db cofx) [path])]
-      {:db (update-in (:db cofx) (drop-last option-path) remove-nth (last option-path))
+      {:db (update-in (:db cofx) (drop-last option-path) util/remove-nth (last option-path))
        :dispatch [:editor/remove-followup-question (first path)]})))
 
 (reg-event-db
