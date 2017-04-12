@@ -55,7 +55,7 @@
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
-        applicant (:applicant-name application)]
+        applicant (str (:preferred-name application) " " (:last-name application))]
     [:div.application-handling__list-row
      {:on-click #(dispatch [:application/select-application (:key application)])
       :class    (when selected?
