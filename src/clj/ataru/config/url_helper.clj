@@ -2,7 +2,7 @@
   (:require [ataru.config.core :refer [config]])
   (:import (fi.vm.sade.properties OphProperties)))
 
-(def ^OphProperties url-properties
+(defonce ^OphProperties url-properties
   (let [{:keys [virkailija-host hakija-host editor-url liiteri-url] :or
                {virkailija-host "" hakija-host "" editor-url "" liiteri-url ""}} (:urls config)]
     (doto (OphProperties. (into-array String ["/ataru-oph.properties"]))
