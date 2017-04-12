@@ -76,6 +76,21 @@
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
 
+(defn markdown-help []
+  [:div.application__markdown-help
+   [:div
+    [:div.application__markdown-help-arrow-left]
+    [:div.application__markdown-help-content
+     [:span "# otsikko (# h1 – ###### h6)"]
+     [:br]
+     [:span "**boldattava sisältö**"]
+     [:br]
+     [:span "*kursivoitava sisältö*"]
+     [:br]
+     [:span "[linkin teksti](http://linkin osoite)"]
+     [:br]
+     [:a {:href "http://"} "Lisää muotoiluohjeita"]]]])
+
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
   (let [component (subscribe [:editor/get-component-value path])
@@ -138,10 +153,13 @@
         [:label {:for id} "Kysymys sisältää ohjetekstin"]]
        (when @checked?
          [:div.editor-form__info-addon-inputs
-          (input-fields-with-lang
-            (fn [lang]
-              [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
-            @languages)])])))
+          (->> (input-fields-with-lang
+                 (fn [lang]
+                   [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
+                 @languages)
+               (map (fn [field]
+                      (cljs.pprint/pprint field)
+                      (into field [(markdown-help)]))))])])))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
