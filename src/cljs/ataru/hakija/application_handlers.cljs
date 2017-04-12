@@ -482,8 +482,12 @@
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx filename file retries response]]
     (let [rate-limited? (rate-limit-error? response)
           current-error (if rate-limited?
-                          {:fi "Yritä myöhemmin uudelleen" :en "Try again later" :sv "Försök igen senare"}
-                          {:fi "Kielletty tiedostomuoto" :en "File type forbidden" :sv "Förbjudet filformat"})]
+                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                           :en "File failed to upload, try again"
+                           :sv "Fil inte laddat, försök igen"}
+                          {:fi "Kielletty tiedostomuoto"
+                           :en "File type forbidden"
+                           :sv "Förbjudet filformat"})]
       (if (and rate-limited? (< retries 3))
         {:db db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor component-id attachment-idx file retries]
