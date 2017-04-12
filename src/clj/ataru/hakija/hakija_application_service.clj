@@ -1,17 +1,15 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-   [taoensso.timbre :as log]
-   [ataru.background-job.job :as job]
-   [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-   [ataru.hakija.application-email-confirmation :as application-email]
-   [ataru.person-service.person-integration :as person-integration]
-   [ataru.tarjonta-service.hakuaika :as hakuaika]
-   [ataru.forms.form-store :as form-store]
-   [ataru.hakija.validator :as validator]
-   [ataru.applications.application-store :as application-store]))
-
-(def ^:private viewing-forbidden-person-info-field-ids #{:ssn :birth-date})
-(def ^:private editing-forbidden-person-info-field-ids #{:nationality :have-finnish-ssn})
+    [taoensso.timbre :as log]
+    [ataru.background-job.job :as job]
+    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+    [ataru.hakija.application-email-confirmation :as application-email]
+    [ataru.person-service.person-integration :as person-integration]
+    [ataru.tarjonta-service.hakuaika :as hakuaika]
+    [ataru.forms.form-store :as form-store]
+    [ataru.hakija.validator :as validator]
+    [ataru.applications.application-store :as application-store]
+    [ataru.hakija.forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]

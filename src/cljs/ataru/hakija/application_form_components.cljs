@@ -18,7 +18,8 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.hakija.forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -266,10 +267,12 @@
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         secret       (subscribe [:state-query [:application :secret]])
-        disabled?    (reaction (->
-                                 (:answers @application)
-                                 (get (answer-key field-descriptor))
-                                 :cannot-edit))
+        disabled?    (reaction (or
+                                 (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor)))
+                                 (->
+                                   (:answers @application)
+                                   (get (answer-key field-descriptor))
+                                   :cannot-edit)))
         value        (reaction
                        (or (->
                              (:answers @application)
