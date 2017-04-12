@@ -428,8 +428,6 @@
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
         lang       @(subscribe [:application/form-language])]
-    (when (:error attachment)
-      (println attachment))
     [:div
      [:div.application__form-filename-container.application__form-file-error.animated.shake
       [:span.application__form-attachment-text
