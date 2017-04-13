@@ -10,12 +10,6 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.string :as string]))
 
-(def logo
-  [:div.logo
-   [:a {:href "/"}
-    [:img {:src "/lomake-editori/images/opintopolku_large-fi.png"
-           :height "40px"}]]])
-
 (def panels
   {:editor      {:text "Lomakkeet" :href "/lomake-editori/editor/"}
    :application {:text "Hakemukset" :href "/lomake-editori/applications/"}})
@@ -64,11 +58,7 @@
                                :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
           [:div.profile
            [:div
-            [:p (:username @user-info)]
-            [:p.tooltip-indicator {:title joint-orgs-str} org-str]]
-           [:div.divider]
-           [:div
-            [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]])))))
+            [:p.tooltip-indicator {:title joint-orgs-str} org-str]]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
@@ -100,4 +90,4 @@
                 [:div]))])))
 
 (defn top-banner []
-  [:div.top-banner [:div.tabs logo [title]] [status] [profile]])
+  [:div.top-banner [profile] [:div.tabs [title]] [status]])

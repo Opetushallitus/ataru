@@ -12,13 +12,9 @@
   height: 70px;
   top: 0;
   flex-flow: row nowrap;
-  background-color: @pale-blue;
+  background-color: @banner-blue;
   color: white;
   z-index: 20;
-  .logo {
-    margin-left: 85px;
-    margin-right: 42px;
-  }
   .tabs {
     display: flex;
   }
@@ -49,74 +45,29 @@
 
   .flasher {
     font-size: 13px;
-    background: #0094C3;
+    font-style: italic; /* Apparently we don't have italic from Open Sans yet... */
     color: #A8D6E6;
     border-radius: 2px;
     padding: 10px 15px;
-    margin: 3px 20px;
+    margin-right: 50px;
     animation-delay: 2s;
     -webkit-animation-iteration-count: 1;
     -moz-animation-iteration-count: 1;
     -o-animation-iteration-count: 1;
     animation-iteration-count: 1;
-
     span {
       display: inline-block;
     }
   }
-
   .section-link {
     margin-top: 12px;
     position: relative;
   }
-
-  @media only screen and (max-width: 920px) {
-    .title {
-      display: none;
-    }
-  }
-  .applications-count {
-    font-size: 12px;
-    padding-top: 0px;
-    margin-top: 13px;
-    border-radius: 50%;
-    background-color: @selected-blue;
-    width: 19px;
-    height: 19px;
-    span {
-      padding-left: 6.5px;
-      padding-top: 2px;
-      display: inline-block;
-    }
-  }
   .profile {
-    margin-right: 50px;
-    min-width: 246px;
-    display: flex;
-    .divider {
-      margin-left: 5px;
-      margin-right: 5px;
-    }
+    margin-left: 50px;
+    color: @paler-blue;
     .tooltip-indicator {
       cursor: help;
     }
-    a { color: white; }
-    > div:nth-child(1) {
-      p {margin: 0;}
-      p:nth-child(1) {
-        margin-top: 4px;
-      }
-      p:nth-child(3) { font-size: 80%; }
-      color: @paler-blue;
-      display: inline-block;
-      padding-right: 1em;
-      height: @bar-height;
-    }
-    > div:nth-child(3) {
-      white-space: nowrap;
-      line-height: @bar-height;
-      margin-left: 1em;
-    }
   }
-
 }
