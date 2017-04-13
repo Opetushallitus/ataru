@@ -633,6 +633,9 @@ th.application__readonly-adjacent--header {
   display: block;
 }
 
+// Without this block the help popup would disappear when the user tries to click
+// the more info link, and the link wouldn't work. With this rule, the popup stays visible
+// while the user's cursor is on it, so the link works. Yay!
 .application__markdown-help:hover {
   display: block;
 }
