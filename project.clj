@@ -59,7 +59,7 @@
                  [org.http4s/blaze-http_2.11 "0.10.1"]
                  [org.http4s/http4s-json4s-native_2.11 "0.10.1"]
                  ;; And naturally this exclusion is important as well
-                 [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11/clojure]]
+                 [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
                  [ring.middleware.logger "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.3.1"]
