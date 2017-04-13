@@ -39,7 +39,8 @@
             [taoensso.timbre :refer [spy debug error warn info]]
             [com.stuartsierra.component :as component]
             [clout.core :as clout]
-            [ring.util.http-response :as response]))
+            [ring.util.http-response :as response]
+            [org.httpkit.client :as http]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -278,6 +279,11 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
+(api/defroutes local-raami-route
+  (api/undocumented
+    (api/GET "/virkailija-raamit/apply-raamit.js" []
+             @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/apply-raamit.js"))))
+
 (defn redirect-to-service-url
   []
   (redirect (get-in config [:public-config :virkailija :service_url])))
@@ -316,6 +322,7 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
+                              (when (:dev? env) local-raami-route)
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
