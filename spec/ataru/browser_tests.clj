@@ -67,27 +67,31 @@
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
           (it "can fill a form successfully"
-              (let [results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija" (:key (get-latest-form)))]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (if-let [latest-form (get-latest-form)]
+                (let [results (sh-timeout
+                                120
+                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                "--web-security" "false"
+                                "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
+                  (println (:out results))
+                  (.println System/err (:err results))
+                  (should= 0 (:exit results)))
+                (throw (Exception. "No test form found."))))
+
           (it "can edit an application successfully"
-              (let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))
-                    secret (-> latest-application
-                               :id
-                               (application-store/get-application)
-                               :secret)
-                    results            (sh-timeout
-                                         120
-                                         "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                         "--web-security" "false"
-                                         "bin/phantomjs-runner.js" "hakija-edit" secret)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results)))))
+              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
+                (let [secret  (-> latest-application
+                                  :id
+                                  (application-store/get-application)
+                                  :secret)
+                      results (sh-timeout
+                                120
+                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                "--web-security" "false"
+                                "bin/phantomjs-runner.js" "hakija-edit" secret)]
+                  (println (:out results))
+                  (.println System/err (:err results))
+                  (should= 0 (:exit results)))
+                (throw (Exception. "No test application found.")))))
 
 (run-specs)

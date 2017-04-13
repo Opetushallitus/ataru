@@ -165,7 +165,7 @@
   (-> db
       (update-in [:application :answers]
         (fn [answers]
-          (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
+          (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
                                              (and (vector? value)
@@ -191,7 +191,7 @@
 
                                  :else
                                  (update answers answer-key merge {:valid true :value value}))
-                          answer-key merge {:cannot-edit cannot-edit})
+                          answer-key merge {:cannot-edit cannot-edit :cannot-view cannot-view})
                         answers)))
                   answers
                   submitted-answers)))
