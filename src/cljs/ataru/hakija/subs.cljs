@@ -1,5 +1,4 @@
 (ns ataru.hakija.subs
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.hakija.application :refer [answers->valid-status
                                               wrapper-sections-with-validity
