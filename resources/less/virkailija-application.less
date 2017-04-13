@@ -622,11 +622,11 @@ th.application__readonly-adjacent--header {
 
 .application__markdown-help {
   font-size: 14px;
-  margin-top: 4px;
   text-align: center;
   width: 210px;
   position: relative;
   display: none;
+  align-self: flex-start;
 }
 
 .editor-form__text-field:focus + .editor-form__text-field-label + .application__markdown-help {
@@ -640,7 +640,7 @@ th.application__readonly-adjacent--header {
 .application__markdown-help-content {
   z-index: 1; /* On mobile (narrow screen) section line is above this container without this */
   position: absolute;
-  top: -26px;
+  top: 0;
   left: 0;
   background-color: white;
   color: @sg-color-gray;
@@ -655,7 +655,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__markdown-help-arrow-left {
-  top: -10px;
+  top: 10px;
   left: -21px;
   width: 21px;
   height: 15px;
