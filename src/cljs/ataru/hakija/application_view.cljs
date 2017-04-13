@@ -71,7 +71,7 @@
        (when (application-in-complete-state? @application)
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
-           "Tämä hakemus on käsitelty eikä ole enää muokattavissa"]])])))
+           (:application-processed-cant-modify translations)]])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
