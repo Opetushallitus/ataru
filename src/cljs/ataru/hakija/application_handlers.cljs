@@ -19,10 +19,12 @@
                                                  form-key
                                                  lang
                                                  hakukohde
-                                                 hakukohde-name]}]]
+                                                 hakukohde-name
+                                                 state]}]]
   {:db       (-> db
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
+                 (assoc-in [:application :state] state)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if hakukohde

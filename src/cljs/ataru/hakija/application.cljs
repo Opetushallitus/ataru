@@ -3,7 +3,8 @@
   (:require [ataru.util :as util]
             [ataru.cljs-util :refer [console-log]]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.application.review-states :refer [complete-states]]))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
@@ -114,7 +115,18 @@
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
       wrapper-sections)))
 
-(defn applying-possible? [form]
-  (if (-> form :tarjonta)
-   (-> form :tarjonta :hakuaika-dates :on)
-   true))
+(defn application-in-complete-state? [application]
+  (boolean (some #{(:state application)} complete-states)))
+
+(defn applying-possible? [form application]
+  (cond
+    (application-in-complete-state? application)
+    false
+
+    ;; When applying to hakukohde, hakuaika must be on
+    (-> form :tarjonta)
+    (-> form :tarjonta :hakuaika-dates :on)
+
+    ;; Applying to direct form haku
+    :else
+    true))

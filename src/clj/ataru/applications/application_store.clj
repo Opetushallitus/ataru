@@ -178,6 +178,9 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn get-application-review [application-key]
+  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
@@ -185,15 +188,13 @@
   (unwrap-application (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
 
 (defn get-latest-application-by-secret [secret]
-  (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
-       (first)
-       (unwrap-application)))
+  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
+                              (first)
+                              (unwrap-application))]
+    (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
-
-(defn get-application-review [application-key]
-  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
 
 (defn get-application-organization-oid [application-key]
   (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
