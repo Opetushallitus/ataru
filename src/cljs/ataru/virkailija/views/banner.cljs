@@ -65,7 +65,7 @@
         loading? (subscribe [:state-query [:flash :loading?]])
         expired? (subscribe [:state-query [:flash :expired?]])]
     (fn []
-      [:div
+      [:div.flasher-container
        (when @flash
          (match [@loading? @expired? @flash]
                 [false _ {:error-type :concurrent-edit
