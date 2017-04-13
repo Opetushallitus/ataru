@@ -279,10 +279,15 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
-(api/defroutes local-raami-route
+(api/defroutes local-raami-routes
   (api/undocumented
-    (api/GET "/virkailija-raamit/apply-raamit.js" []
-             @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/apply-raamit.js"))))
+   (api/GET "/virkailija-raamit/apply-raamit.js" []
+            :query-params [{fingerprint :- [s/Str] nil}]
+             @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/apply-raamit.js"))
+   (api/GET "/virkailija-raamit/build/bundle.css" []
+            ;; For bundle.css, using the whole response map crashed Ring, so let's use just status and body
+            (select-keys @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/build/bundle.css")
+                         [:status :body]))))
 
 (defn redirect-to-service-url
   []
@@ -322,7 +327,7 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
-                              (when (:dev? env) local-raami-route)
+                              (when (:dev? env) local-raami-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
