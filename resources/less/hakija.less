@@ -299,22 +299,18 @@
 .application__form-select {
   transition: border-color 0.2s;
   width: @form-select-width;
-
   padding-left: 10px;
   border-radius: 2px;
   height: 43px;
   font-size: 16px;
-  color: @text-color;
-  background-color: #fff;
-  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border: 1px solid #C1C1C1;
   border-radius: 2px;
 }
 
-.application__form-select--disabled {
-  color: @disabled-gray;
-  background-color: @disabled-gray-background;
-  background-image: none;
+.application__form-select--enabled {
+  color: @text-color;
+  background-color: #fff;
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
 }
 
 .application__form-select-arrow {

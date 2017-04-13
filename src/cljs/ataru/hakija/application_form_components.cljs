@@ -293,7 +293,7 @@
                                   [:div.application__form-select-wrapper
                                    (when (not @disabled?)
                                      [:span.application__form-select-arrow])
-                                   [(keyword (str "select.application__form-select" (when @disabled? ".application__form-select--disabled")))
+                                   [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
                                     {:value     @value
                                      :on-change (partial textual-field-change field-descriptor)
                                      :disabled  @disabled?}
