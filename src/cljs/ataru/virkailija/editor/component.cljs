@@ -510,13 +510,15 @@
          {:for id}
          "Liitepyyntö sisältää ohjetekstin"]]
        (when @checked?
-         (input-fields-with-lang
-           (fn attachment-textarea-input [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
-              {:value-fn #(get-in % [:params :info-text :value lang])
-               :tag      :textarea}])
-           @languages
-           :header? true))])))
+         (->> (input-fields-with-lang
+                (fn attachment-textarea-input [lang]
+                  [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
+                   {:value-fn #(get-in % [:params :info-text :value lang])
+                    :tag      :textarea}])
+                @languages
+                :header? true)
+              (map (fn [field]
+                     (into field [(markdown-help)])))))])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
