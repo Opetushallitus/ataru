@@ -437,13 +437,15 @@
           :header? true)]
        [:div.editor-form__text-field-wrapper.infoelement
         [:header.editor-form__component-item-header "Teksti"]
-        (input-fields-with-lang
-          (fn [lang]
-            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
-             {:value-fn (fn [component] (get-in component [:text lang]))
-              :tag :textarea}])
-          @languages
-          :header? true)]])))
+        (->> (input-fields-with-lang
+               (fn [lang]
+                 [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                  {:value-fn (fn [component] (get-in component [:text lang]))
+                   :tag :textarea}])
+               @languages
+               :header? true)
+             (map (fn [field]
+                    (into field [(markdown-help)]))))]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
