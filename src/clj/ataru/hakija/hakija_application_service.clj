@@ -8,6 +8,7 @@
    [ataru.tarjonta-service.hakuaika :as hakuaika]
    [ataru.forms.form-store :as form-store]
    [ataru.hakija.validator :as validator]
+   [ataru.application.review-states :refer [complete-states]]
    [ataru.applications.application-store :as application-store]))
 
 (defn- store-and-log [application store-fn]
@@ -27,7 +28,12 @@
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
       hakuaika-on)))
 
-(def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
+(def not-allowed-reply {:passed? false
+                        :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
+
+(defn- in-complete-state? [application-key]
+  (let [state (:state (application-store/get-application-review application-key))]
+    (boolean (some #{state} complete-states))))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
@@ -58,14 +64,19 @@
     (assoc new-application :answers merged-answers)))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
-  (let [form              (form-store/fetch-by-id (:form application))
-        allowed           (allowed-to-apply? tarjonta-service application)
-        final-application (if is-modify?
-                            (merge-uneditable-answers-from-previous (application-store/get-latest-application-by-secret (:secret application)) application)
-                            application)
-        validation-result (validator/valid-application? final-application form)]
+  (let [form               (form-store/fetch-by-id (:form application))
+        allowed            (allowed-to-apply? tarjonta-service application)
+        latest-application (application-store/get-latest-application-by-secret (:secret application))
+        final-application  (if is-modify?
+                             (merge-uneditable-answers-from-previous latest-application application)
+                             application)
+        validation-result  (validator/valid-application? final-application form)]
     (cond
       (not allowed)
+      not-allowed-reply
+
+      (and is-modify?
+           (in-complete-state? (:key latest-application)))
       not-allowed-reply
 
       (not (:passed? validation-result))
