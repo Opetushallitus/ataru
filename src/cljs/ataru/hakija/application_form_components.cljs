@@ -18,7 +18,8 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -40,7 +41,9 @@
 
 (defn- field-value-valid?
   [field-data value]
-  (if (and (not (:cannot-edit field-data))
+  (if (and (not (or
+                  (:cannot-view field-data)
+                  (:cannot-edit field-data)))
            (not-empty (:validators field-data)))
     (every? true? (map #(validator/validate % value)
                     (:validators field-data)))
@@ -108,10 +111,9 @@
       (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
         [markdown-paragraph info]))))
 
-(defn text-field [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+(defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        value        (subscribe [:state-query [:application :answers id :value]])
-        valid?       (subscribe [:state-query [:application :answers id :valid]])
+        answer        (subscribe [:state-query [:application :answers id]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
@@ -120,18 +122,19 @@
        [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
-       [:input.application__form-text-input
-        (merge {:id          id
-                :type        "text"
-                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (non-blank-val (get input-hint @lang)
-                                              (get input-hint @default-lang)))
-                :class       (str size-class (if (show-text-field-error-class? field-descriptor @value @valid?)
-                                               " application__form-field-error"
-                                               " application__form-text-input--normal"))
-                :value       @value
-                :on-change   (partial textual-field-change field-descriptor)}
-          (when disabled {:disabled true}))]])))
+       (let [cannot-view? (and editing (:cannot-view @answer))]
+         [:input.application__form-text-input
+          (merge {:id          id
+                  :type        "text"
+                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                 (non-blank-val (get input-hint @lang)
+                                                (get input-hint @default-lang)))
+                  :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer))
+                                                 " application__form-field-error"
+                                                 " application__form-text-input--normal"))
+                  :value       (if cannot-view? "***********" (:value @answer))
+                  :on-change   (partial textual-field-change field-descriptor)}
+                 (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
@@ -259,17 +262,24 @@
                                       [render-field followup]]))))})))
 
 (defn dropdown
-  [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+  [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         secret       (subscribe [:state-query [:application :secret]])
+        disabled?    (reaction (or
+                                 (and @editing
+                                      (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor))))
+                                 (->
+                                   (:answers @application)
+                                   (get (answer-key field-descriptor))
+                                   :cannot-edit)))
         value        (reaction
                        (or (->
                              (:answers @application)
                              (get (answer-key field-descriptor))
                              :value)
-                         ""))]
+                           ""))]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
@@ -281,21 +291,23 @@
                                   [:div.application__form-text-input-info-text
                                    [info-text field-descriptor]]
                                   [:div.application__form-select-wrapper
-                                   [:span.application__form-select-arrow]
-                                   [:select.application__form-select
-                                    {:value @value
-                                     :on-change (partial textual-field-change field-descriptor)}
+                                   (when (not @disabled?)
+                                     [:span.application__form-select-arrow])
+                                   [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+                                    {:value     @value
+                                     :on-change (partial textual-field-change field-descriptor)
+                                     :disabled  @disabled?}
                                     (concat
                                       (when
-                                          (and
-                                            (nil? (:koodisto-source field-descriptor))
-                                            (not (:no-blank-option field-descriptor))
-                                            (not= "" (:value (first (:options field-descriptor)))))
+                                        (and
+                                          (nil? (:koodisto-source field-descriptor))
+                                          (not (:no-blank-option field-descriptor))
+                                          (not= "" (:value (first (:options field-descriptor)))))
                                         [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
                                       (map-indexed
                                         (fn [idx option]
                                           (let [label        (non-blank-val (get-in option [:label lang])
-                                                               (get-in option [:label default-lang]))
+                                                                            (get-in option [:label default-lang]))
                                                 option-value (:value option)]
                                             ^{:key idx}
                                             [:option {:value option-value} label]))
@@ -547,22 +559,6 @@
                          (dispatch [:application/add-adjacent-fields field-descriptor]))}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
 
-(defn- editing-forbidden-module
-  [field-descriptor]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
-    (fn [field-descriptor]
-      (let [label   (non-blank-val (get-in field-descriptor [:label @lang])
-                                   (get-in field-descriptor [:label @default-lang]))
-            content (:cannot-edit-personal-info (get-translations @lang application-view-translations))]
-        [:div.application__wrapper-element.application__wrapper-element--border
-         [:div.application__wrapper-heading
-          [:h2 label]
-          [scroll-to-anchor field-descriptor]]
-          [:div.application__wrapper-contents
-           [:div.application__form-info-element.application__form-field
-            [:span content]]]]))))
-
 (defn- feature-enabled? [{:keys [fieldType]}]
   (or (not= fieldType "attachment")
       (fc/feature-enabled? :attachment)))
@@ -576,28 +572,26 @@
     (fn [field-descriptor & args]
       (if (feature-enabled? field-descriptor)
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
-          (if (and @editing? (= (:module field-descriptor) "person-info"))
-            [editing-forbidden-module field-descriptor]
-            (cond-> (match field-descriptor
-                           {:fieldClass "wrapperElement"
-                            :fieldType  "fieldset"
-                            :children   children} [wrapper-field field-descriptor children]
-                           {:fieldClass "wrapperElement"
-                            :fieldType  "rowcontainer"
-                            :children   children} [row-wrapper children]
-                           {:fieldClass "formField"
-                            :id         (_ :guard (complement visible?))} [:div]
-                           {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
-                           {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled?]
-                           {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
-                           {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor]
-                           {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
-                           {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
-                           {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
-                           {:fieldClass "infoElement"} [info-element field-descriptor]
-                           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-              (and (empty? (:children field-descriptor))
-                   (visible? (:id field-descriptor))) (into args))))
+          (cond-> (match field-descriptor
+                         {:fieldClass "wrapperElement"
+                          :fieldType  "fieldset"
+                          :children   children} [wrapper-field field-descriptor children]
+                         {:fieldClass "wrapperElement"
+                          :fieldType  "rowcontainer"
+                          :children   children} [row-wrapper children]
+                         {:fieldClass "formField"
+                          :id         (_ :guard (complement visible?))} [:div]
+                         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor]
+                         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor :disabled disabled? :editing editing?]
+                         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor]
+                         {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor :editing editing?]
+                         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
+                         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
+                         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                         {:fieldClass "infoElement"} [info-element field-descriptor]
+                         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
+                  (and (empty? (:children field-descriptor))
+                       (visible? (:id field-descriptor))) (into args)))
         [:div]))))
 
 (defn editable-fields [form-data]

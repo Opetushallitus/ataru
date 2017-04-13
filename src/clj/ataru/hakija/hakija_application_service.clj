@@ -1,14 +1,16 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-   [taoensso.timbre :as log]
-   [ataru.background-job.job :as job]
-   [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-   [ataru.hakija.application-email-confirmation :as application-email]
-   [ataru.person-service.person-integration :as person-integration]
-   [ataru.tarjonta-service.hakuaika :as hakuaika]
-   [ataru.forms.form-store :as form-store]
-   [ataru.hakija.validator :as validator]
-   [ataru.applications.application-store :as application-store]))
+    [taoensso.timbre :as log]
+    [ataru.background-job.job :as job]
+    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+    [ataru.hakija.application-email-confirmation :as application-email]
+    [ataru.person-service.person-integration :as person-integration]
+    [ataru.tarjonta-service.hakuaika :as hakuaika]
+    [ataru.forms.form-store :as form-store]
+    [ataru.hakija.validator :as validator]
+    [ataru.applications.application-store :as application-store]
+    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                   editing-forbidden-person-info-field-ids]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -48,8 +50,9 @@
 (defn- merge-uneditable-answers-from-previous
   [old-application new-application]
   (let [new-answers                 (:answers new-application)
-        uneditable-answers          (filter :cannot-edit new-answers)
-        editable-answers            (remove :cannot-edit new-answers)
+        uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
+        uneditable-answers          (filter uneditable-or-unviewable new-answers)
+        editable-answers            (remove uneditable-or-unviewable new-answers)
         merged-answers              (into editable-answers
                                           (uneditable-answers-with-labels-from-new
                                             uneditable-answers
@@ -82,29 +85,23 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
-(defn- find-person-info-module-field-ids
-  [{:keys [children id]}]
-  (if children
-    (map find-person-info-module-field-ids children)
-    id))
-
 (defn- flag-uneditable-answers
-  [{:keys [answers] :as application} forbidden-field-ids]
+  [{:keys [answers] :as application} cannot-view-field-ids cannot-edit-field-ids]
   (assoc application
     :answers
-    (map (fn [answer]
-           (if (contains? (set forbidden-field-ids) (:key answer))
-             (merge answer {:cannot-edit true :value nil})
-             answer))
-         answers)))
+    (map
+      (fn [answer]
+        (let [answer-kw (keyword (:key answer))]
+          (cond
+            (contains? cannot-view-field-ids answer-kw) (merge answer {:cannot-view true :value nil})
+            (contains? cannot-edit-field-ids answer-kw) (merge answer {:cannot-edit true})
+            :else answer)))
+      answers)))
 
 (defn remove-person-info-module-from-application-answers
   [application]
   (when application
-    (let [form                    (form-store/fetch-by-id (:form application))
-          person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
-          person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
-      (flag-uneditable-answers application person-module-field-ids))))
+    (flag-uneditable-answers application viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
