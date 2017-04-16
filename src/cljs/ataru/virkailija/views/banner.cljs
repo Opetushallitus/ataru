@@ -90,4 +90,23 @@
                 [:div]))])))
 
 (defn top-banner []
-  [:div.top-banner [profile] [:div.tabs [title]] [status]])
+  (let [banner-position (subscribe [:state-query [:banner :position]])]
+    (println "banner pos" @banner-position)
+    [:div.top-banner {:style {:position @banner-position}}
+     [profile]
+     [:div.tabs [title]]
+     [status]]))
+
+(defn create-banner-position-handler []
+  (let [raamit-visible (atom true)]
+    (fn [_]
+      (let [scroll-top (-> js/document .-body .-scrollTop)]
+        (if (> scroll-top 100)
+          (when @raamit-visible
+            (dispatch [:state-update #(assoc-in % [:banner :position] "fixed")])
+            (reset! raamit-visible false))
+          (when-not @raamit-visible
+            (dispatch [:state-update #(assoc-in % [:banner :position] "static")])
+            (reset! raamit-visible true)))))))
+
+(set! (.-onscroll js/window) (create-banner-position-handler))
