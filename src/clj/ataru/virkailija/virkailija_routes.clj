@@ -279,14 +279,18 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
+(defn- raami-prefix []
+  (str "https://" (get-in config [:urls :virkailija-host]) "/virkailija-raamit"))
+
 (api/defroutes local-raami-routes
   (api/undocumented
    (api/GET "/virkailija-raamit/apply-raamit.js" []
             :query-params [{fingerprint :- [s/Str] nil}]
-             @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/apply-raamit.js"))
+            (select-keys @(http/get (str (raami-prefix) "/apply-raamit.js"))
+                         [:status :body]))
    (api/GET "/virkailija-raamit/build/bundle.css" []
             ;; For bundle.css, using the whole response map crashed Ring, so let's use just status and body
-            (select-keys @(http/get "https://itest-virkailija.oph.ware.fi/virkailija-raamit/build/bundle.css")
+            (select-keys @(http/get (str (raami-prefix) "/build/bundle.css"))
                          [:status :body]))))
 
 (defn redirect-to-service-url
