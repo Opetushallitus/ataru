@@ -13,4 +13,4 @@
                   :filter              (mapv first application-review-states)
                   :sort                application-sorting/initial-sort
                   :application-list-expanded? true}
-   :banner       {:position "static"}})
+   :banner       {:type :in-flow}})

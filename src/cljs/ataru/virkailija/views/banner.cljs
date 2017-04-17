@@ -90,12 +90,20 @@
                 [:div]))])))
 
 (defn top-banner []
-  (let [banner-position (subscribe [:state-query [:banner :position]])]
-    (println "banner pos" @banner-position)
-    [:div.top-banner {:style {:position @banner-position}}
-     [profile]
-     [:div.tabs [title]]
-     [status]]))
+  (let [banner-type (subscribe [:state-query [:banner :type]])]
+    [:div
+     [:div.top-banner {:style {:position
+                               (case @banner-type
+                                 :fixed   "fixed"
+                                 :in-flow "static")}}
+      [profile]
+      [:div.tabs [title]]
+      [status]]
+     ;; When using static positioning, push the actual content of
+     ;; lomake-editori tabs downwards as much as the height of the banner is
+     ;; with this invisible placeholder
+     (when (= @banner-type :fixed)
+       [:div.fixed-top-banner-placeholder])]))
 
 (defn create-banner-position-handler []
   (let [raamit-visible (atom true)]
@@ -103,10 +111,10 @@
       (when-let [raami-element (aget (.getElementsByClassName js/document "virkailija-raamit") 0)]
         (if (<= (-> raami-element .getBoundingClientRect .-bottom) 0)
           (when @raamit-visible
-            (dispatch [:state-update #(assoc-in % [:banner :position] "fixed")])
+            (dispatch [:state-update #(assoc-in % [:banner :type] :fixed)])
             (reset! raamit-visible false))
           (when-not @raamit-visible
-            (dispatch [:state-update #(assoc-in % [:banner :position] "static")])
+            (dispatch [:state-update #(assoc-in % [:banner :type] :in-flow)])
             (reset! raamit-visible true)))))))
 
 (set! (.-onscroll js/window) (create-banner-position-handler))

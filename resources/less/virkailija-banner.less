@@ -1,6 +1,6 @@
 @import "vars";
 
-@bar-height: 44px;
+@banner-height: 43px;
 
 .top-banner {
   font-size: 14px;
@@ -9,7 +9,7 @@
   display: flex;
   flex: none;
   align-items: center;
-  height: 43px;
+  height: @banner-height;
   top: 0;
   flex-flow: row nowrap;
   background-color: @banner-blue;
@@ -74,4 +74,9 @@
       cursor: help;
     }
   }
+}
+
+.fixed-top-banner-placeholder {
+  visibility: hidden;
+  height: @banner-height;
 }
