@@ -52,13 +52,14 @@
         (let [org-count      (count (:organizations @user-info))
               org-labels     (create-org-labels (:organizations @user-info))
               joint-orgs-str (string/join " \n" org-labels)
+              tooltip-str    (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
               org-str        (cond
                                (= 0 org-count) "Ei organisaatiota"
                                (< 1 org-count) "Useita organisaatioita"
                                :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
           [:div.profile
            [:div
-            [:p.tooltip-indicator {:title joint-orgs-str} org-str]]])))))
+            [:p.tooltip-indicator {:title tooltip-str} org-str]]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
