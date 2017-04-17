@@ -87,7 +87,7 @@
                  [:span message]]
 
                 :else
-                [:div]))])))
+                nil))])))
 
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
@@ -95,7 +95,7 @@
      [:div.top-banner {:style {:position
                                (case @banner-type
                                  :fixed   "fixed"
-                                 :in-flow "static")}}
+                                 :in-flow "relative")}}
       [profile]
       [:div.tabs [title]]
       [status]]
