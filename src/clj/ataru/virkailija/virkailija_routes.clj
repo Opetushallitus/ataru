@@ -280,18 +280,15 @@
       (-> "public/images/rich.jpg" io/resource))))
 
 (defn- raami-request [path]
-  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) "/virkailija-raamit")]
-    ;; the whole response map sometimes crashed Ring, so let's use just status and body
+  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) "/virkailija-raamit/")]
     (select-keys @(http/get (str prefix path))
                  [:status :body])))
 
 (api/defroutes local-raami-routes
   (api/undocumented
-   (api/GET "/virkailija-raamit/apply-raamit.js" []
+   (api/GET "/virkailija-raamit/*" [*]
             :query-params [{fingerprint :- [s/Str] nil}]
-            (raami-request "/apply-raamit.js"))
-   (api/GET "/virkailija-raamit/build/bundle.css" []
-            (raami-request "/build/bundle.css"))))
+            (raami-request *))))
 
 (defn redirect-to-service-url
   []
