@@ -100,8 +100,8 @@
 (defn create-banner-position-handler []
   (let [raamit-visible (atom true)]
     (fn [_]
-      (let [scroll-top (-> js/document .-body .-scrollTop)]
-        (if (> scroll-top 100)
+      (when-let [raami-element (aget (.getElementsByClassName js/document "virkailija-raamit") 0)]
+        (if (<= (-> raami-element .getBoundingClientRect .-bottom) 0)
           (when @raamit-visible
             (dispatch [:state-update #(assoc-in % [:banner :position] "fixed")])
             (reset! raamit-visible false))
