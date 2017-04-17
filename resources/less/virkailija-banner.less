@@ -89,6 +89,14 @@
   height: @banner-height;
 }
 
+/*
+  1223px is the breakpoint where height of raamit reduces and a mysterious 2 px gap
+  appears which is not in any element's margin or padding. This (with position: relative)
+  is a remedy for the gap-issue.
+*/
 @media only screen and (max-width: 1223px) {
-  .top-banner { top: -2px; }
+  .top-banner {
+    top: -2px;
+    margin-bottom: 2px;
+  }
 }
