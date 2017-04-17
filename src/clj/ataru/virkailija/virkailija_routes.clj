@@ -279,16 +279,25 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
-(defn- raami-request [path]
-  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) "/virkailija-raamit/")]
+(defn- proxy-request [service-path path]
+  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) service-path)]
     (select-keys @(http/get (str prefix path))
                  [:status :body])))
 
+;; All these paths are required to be proxied when running raamit locally
+;; in your dev-environment. They will get proxied to the correct test environment
+;; (e.g. itest/luokka or qa)
 (api/defroutes local-raami-routes
   (api/undocumented
    (api/GET "/virkailija-raamit/*" [*]
             :query-params [{fingerprint :- [s/Str] nil}]
-            (raami-request *))))
+            (proxy-request "/virkailija-raamit/" *))
+   (api/GET "/authentication-service/*" [*]
+            (proxy-request "/authentication-service/" *))
+   (api/GET "/cas/*" [*]
+            (proxy-request "/cas/" *))
+   (api/GET "/lokalisointi/*" [*]
+            (proxy-request "/lokalisointi/" *))))
 
 (defn redirect-to-service-url
   []
