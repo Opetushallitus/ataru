@@ -281,6 +281,9 @@
 
 (defn- proxy-request [service-path path]
   (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) service-path)]
+    ;; Headers are now omitted because Ring wants string keys and http-kit
+    ;; gives us keyword-keys (can be easily fixed if needed of course). Hence
+    ;; select-keys below
     (select-keys @(http/get (str prefix path))
                  [:status :body])))
 
