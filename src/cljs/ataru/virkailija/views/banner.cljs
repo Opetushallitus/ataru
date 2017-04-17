@@ -92,10 +92,9 @@
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
     [:div
-     [:div.top-banner {:style {:position
-                               (case @banner-type
-                                 :fixed   "fixed"
-                                 :in-flow "relative")}}
+     [:div.top-banner {:class (case @banner-type
+                                :fixed   "fixed-top-banner"
+                                :in-flow "in-flow-top-banner")}
       [profile]
       [:div.tabs [title]]
       [status]]
