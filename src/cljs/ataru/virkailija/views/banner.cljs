@@ -90,6 +90,15 @@
                 :else
                 nil))])))
 
+(defn local-dev-logout-enabled? []
+  (boolean (-> js/config
+               js->clj
+               (get "local-dev-logout"))))
+
+(defn local-dev-logout []
+  [:div.local-dev-logout
+   [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]])
+
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
     [:div
@@ -103,7 +112,9 @@
      ;; lomake-editori tabs downwards as much as the height of the banner is
      ;; with this invisible placeholder
      (when (= @banner-type :fixed)
-       [:div.fixed-top-banner-placeholder])]))
+       [:div.fixed-top-banner-placeholder])
+
+     (when (local-dev-logout-enabled?) [local-dev-logout])]))
 
 (defn create-banner-position-handler []
   (let [raamit-visible (atom true)]

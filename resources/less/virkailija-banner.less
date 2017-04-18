@@ -1,4 +1,5 @@
 @import "vars";
+@import "mixins";
 
 @banner-height: 43px;
 
@@ -19,6 +20,7 @@
     display: flex;
   }
   .title {
+    .semibold;
     display: flex;
     white-space: nowrap;
     .active-section {
@@ -31,7 +33,7 @@
     }
   }
   .divider {
-    background-color: @paler-blue;
+    background-color: @hyper-blue;
     height: 33px;
     width: 1px;
     margin: 0 20px 0 20px;
@@ -49,6 +51,7 @@
     margin-right: 85px;
    }
   .flasher {
+    .semibold;
     font-size: 13px;
     color: #A8D6E6;
     border-radius: 2px;
@@ -67,6 +70,7 @@
     position: relative;
   }
   .profile {
+    .semibold;
     margin-left: 85px;
     min-width: 200px;
     color: @paler-blue;
@@ -87,6 +91,18 @@
 .fixed-top-banner-placeholder {
   visibility: hidden;
   height: @banner-height;
+}
+
+.local-dev-logout {
+  position: absolute;
+  right: -36px;
+  top: 186px;
+  transform: rotate(90deg);
+  > a { text-decoration: none;
+        color: red;
+        color: red;
+        font-style: italic;
+      }
 }
 
 /*
