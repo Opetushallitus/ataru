@@ -279,28 +279,29 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
-(defn- proxy-request [service-path path]
-  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) service-path)]
+(defn- proxy-request [service-path request]
+  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) service-path)
+        path   (-> request :params :*)]
     ;; Headers are now omitted because Ring wants string keys and http-kit
     ;; gives us keyword-keys (can be easily fixed if needed of course). Hence
     ;; select-keys below
-    (select-keys @(http/get (str prefix path))
+    (select-keys @(http/get (str prefix path) {:headers (:headers request)})
                  [:status :body])))
 
-;; All these paths are required to be proxied when running raamit locally
+;; All these paths are required to be proxied by raamit when running locally
 ;; in your dev-environment. They will get proxied to the correct test environment
 ;; (e.g. itest/luokka or qa)
 (api/defroutes local-raami-routes
   (api/undocumented
-   (api/GET "/virkailija-raamit/*" [*]
+   (api/GET "/virkailija-raamit/*" request;[* headers]
             :query-params [{fingerprint :- [s/Str] nil}]
-            (proxy-request "/virkailija-raamit/" *))
-   (api/GET "/authentication-service/*" [*]
-            (proxy-request "/authentication-service/" *))
-   (api/GET "/cas/*" [*]
-            (proxy-request "/cas/" *))
-   (api/GET "/lokalisointi/*" [*]
-            (proxy-request "/lokalisointi/" *))))
+            (proxy-request "/virkailija-raamit/" request))
+   (api/GET "/authentication-service/*" request
+            (proxy-request "/authentication-service/" request))
+   (api/GET "/cas/*" request
+            (proxy-request "/cas/" request))
+   (api/GET "/lokalisointi/*" request
+            (proxy-request "/lokalisointi/" request))))
 
 (defn redirect-to-service-url
   []
