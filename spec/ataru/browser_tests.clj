@@ -51,7 +51,7 @@
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
               (let [login-cookie-value (last (split (login) #"="))
-                    results (sh-timeout 120 "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                    results (sh-timeout 240 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
                                 "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
                 (println (:out results))
@@ -69,7 +69,7 @@
           (it "can fill a form successfully"
               (if-let [latest-form (get-latest-form)]
                 (let [results (sh-timeout
-                                120
+                                240
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
                                 "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
@@ -85,7 +85,7 @@
                                   (application-store/get-application)
                                   :secret)
                       results (sh-timeout
-                                120
+                                240
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
                                 "bin/phantomjs-runner.js" "hakija-edit" secret)]
