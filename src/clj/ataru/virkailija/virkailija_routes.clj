@@ -296,7 +296,7 @@
 ;; (e.g. itest/luokka or qa)
 (api/defroutes local-raami-routes
   (api/undocumented
-   (api/GET "/virkailija-raamit/*" request;[* headers]
+   (api/GET "/virkailija-raamit/*" request
             :query-params [{fingerprint :- [s/Str] nil}]
             (proxy-request "/virkailija-raamit/" request))
    (api/GET "/authentication-service/*" request
