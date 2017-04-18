@@ -40,7 +40,8 @@
             [com.stuartsierra.component :as component]
             [clout.core :as clout]
             [ring.util.http-response :as response]
-            [org.httpkit.client :as http]))
+            [org.httpkit.client :as http]
+            [medley.core :refer [map-kv]]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -280,13 +281,15 @@
       (-> "public/images/rich.jpg" io/resource))))
 
 (defn- proxy-request [service-path request]
-  (let [prefix (str "https://" (get-in config [:urls :virkailija-host]) service-path)
-        path   (-> request :params :*)]
-    ;; Headers are now omitted because Ring wants string keys and http-kit
-    ;; gives us keyword-keys (can be easily fixed if needed of course). Hence
-    ;; select-keys below
-    (select-keys @(http/get (str prefix path) {:headers (:headers request)})
-                 [:status :body])))
+  (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
+        path     (-> request :params :*)
+        response @(http/get (str prefix path) {:headers (:headers request)})]
+    (assoc
+     response
+     ;; http-kit returns header names as keywords, but Ring requires strings :(
+     :headers (map-kv
+               (fn [header-kw header-value] [(name header-kw) header-value])
+               (:headers request)))))
 
 ;; All these paths are required to be proxied by raamit when running locally
 ;; in your dev-environment. They will get proxied to the correct test environment
