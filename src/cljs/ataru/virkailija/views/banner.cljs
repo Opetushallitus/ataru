@@ -10,12 +10,6 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.string :as string]))
 
-(def logo
-  [:div.logo
-   [:a {:href "/"}
-    [:img {:src "/lomake-editori/images/opintopolku_large-fi.png"
-           :height "40px"}]]])
-
 (def panels
   {:editor      {:text "Lomakkeet" :href "/lomake-editori/editor/"}
    :application {:text "Hakemukset" :href "/lomake-editori/applications/"}})
@@ -58,24 +52,21 @@
         (let [org-count      (count (:organizations @user-info))
               org-labels     (create-org-labels (:organizations @user-info))
               joint-orgs-str (string/join " \n" org-labels)
+              tooltip-str    (str joint-orgs-str "\n\nKäyttäjätunnus: " (:username @user-info))
               org-str        (cond
                                (= 0 org-count) "Ei organisaatiota"
                                (< 1 org-count) "Useita organisaatioita"
                                :else           (get-in (first (:organizations @user-info)) [:name :fi]))]
           [:div.profile
            [:div
-            [:p (:username @user-info)]
-            [:p.tooltip-indicator {:title joint-orgs-str} org-str]]
-           [:div.divider]
-           [:div
-            [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]]])))))
+            [:p.tooltip-indicator {:title tooltip-str} org-str]]])))))
 
 (defn status []
   (let [flash    (subscribe [:state-query [:flash]])
         loading? (subscribe [:state-query [:flash :loading?]])
         expired? (subscribe [:state-query [:flash :expired?]])]
     (fn []
-      [:div
+      [:div.flasher-container
        (when @flash
          (match [@loading? @expired? @flash]
                 [false _ {:error-type :concurrent-edit
@@ -97,7 +88,44 @@
                  [:span message]]
 
                 :else
-                [:div]))])))
+                nil))])))
+
+(defn local-dev-logout-enabled? []
+  (boolean (-> js/config
+               js->clj
+               (get "local-dev-logout"))))
+
+(defn local-dev-logout []
+  [:div.local-dev-logout
+   [:a {:href "/lomake-editori/auth/logout"} "Kirjaudu ulos"]])
 
 (defn top-banner []
-  [:div.top-banner [:div.tabs logo [title]] [status] [profile]])
+  (let [banner-type (subscribe [:state-query [:banner :type]])]
+    [:div
+     [:div.top-banner {:class (case @banner-type
+                                :fixed   "fixed-top-banner"
+                                :in-flow "in-flow-top-banner")}
+      [profile]
+      [:div.tabs [title]]
+      [status]]
+     ;; When using static positioning, push the actual content of
+     ;; lomake-editori tabs downwards as much as the height of the banner is
+     ;; with this invisible placeholder
+     (when (= @banner-type :fixed)
+       [:div.fixed-top-banner-placeholder])
+
+     (when (local-dev-logout-enabled?) [local-dev-logout])]))
+
+(defn create-banner-position-handler []
+  (let [raamit-visible (atom true)]
+    (fn [_]
+      (when-let [raami-element (aget (.getElementsByClassName js/document "virkailija-raamit") 0)]
+        (if (<= (-> raami-element .getBoundingClientRect .-bottom) 0)
+          (when @raamit-visible
+            (dispatch [:state-update #(assoc-in % [:banner :type] :fixed)])
+            (reset! raamit-visible false))
+          (when-not @raamit-visible
+            (dispatch [:state-update #(assoc-in % [:banner :type] :in-flow)])
+            (reset! raamit-visible true)))))))
+
+(set! (.-onscroll js/window) (create-banner-position-handler))

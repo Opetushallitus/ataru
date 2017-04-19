@@ -12,4 +12,5 @@
    :application  {:review              {}
                   :filter              (mapv first application-review-states)
                   :sort                application-sorting/initial-sort
-                  :application-list-expanded? true}})
+                  :application-list-expanded? true}
+   :banner       {:type :in-flow}})

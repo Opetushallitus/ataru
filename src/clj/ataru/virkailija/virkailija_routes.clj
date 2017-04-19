@@ -39,7 +39,9 @@
             [taoensso.timbre :refer [spy debug error warn info]]
             [com.stuartsierra.component :as component]
             [clout.core :as clout]
-            [ring.util.http-response :as response]))
+            [ring.util.http-response :as response]
+            [org.httpkit.client :as http]
+            [medley.core :refer [map-kv]]))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -278,6 +280,32 @@
     (api/GET "/favicon.ico" []
       (-> "public/images/rich.jpg" io/resource))))
 
+(defn- proxy-request [service-path request]
+  (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
+        path     (-> request :params :*)
+        response @(http/get (str prefix path) {:headers (:headers request)})]
+    (assoc
+     response
+     ;; http-kit returns header names as keywords, but Ring requires strings :(
+     :headers (map-kv
+               (fn [header-kw header-value] [(name header-kw) header-value])
+               (:headers request)))))
+
+;; All these paths are required to be proxied by raamit when running locally
+;; in your dev-environment. They will get proxied to the correct test environment
+;; (e.g. itest/luokka or qa)
+(api/defroutes local-raami-routes
+  (api/undocumented
+   (api/GET "/virkailija-raamit/*" request
+            :query-params [{fingerprint :- [s/Str] nil}]
+            (proxy-request "/virkailija-raamit/" request))
+   (api/GET "/authentication-service/*" request
+            (proxy-request "/authentication-service/" request))
+   (api/GET "/cas/*" request
+            (proxy-request "/cas/" request))
+   (api/GET "/lokalisointi/*" request
+            (proxy-request "/lokalisointi/" request))))
+
 (defn redirect-to-service-url
   []
   (redirect (get-in config [:public-config :virkailija :service_url])))
@@ -316,6 +344,7 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               redirect-routes
                               (when (:dev? env) rich-routes)
+                              (when (:dev? env) local-raami-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
