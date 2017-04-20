@@ -15,6 +15,11 @@
    (assoc-in db show-path :complete)))
 
 (reg-event-db
+ :application/show-search-ssn
+ (fn [db [_ _]]
+   (assoc-in db show-path :search-ssn)))
+
+(reg-event-db
  :application/close-search-control
  (fn [db [_ _]]
    (assoc-in db show-path nil)))
