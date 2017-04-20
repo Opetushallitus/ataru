@@ -19,7 +19,7 @@
     ""))
 
 (defn ssn-search-field []
-  [:input {:type "text"}])
+  [:input {:type "text" :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}])
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]

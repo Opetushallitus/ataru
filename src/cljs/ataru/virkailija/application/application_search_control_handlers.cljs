@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.application-search-control-handlers
   (:require
-    [re-frame.core :refer [reg-event-fx reg-event-db]]))
+   [re-frame.core :refer [reg-event-fx reg-event-db]]
+   [ataru.ssn :as ssn]))
 
 (def show-path [:application :search-control :show])
 
@@ -23,3 +24,9 @@
  :application/close-search-control
  (fn [db [_ _]]
    (assoc-in db show-path nil)))
+
+(reg-event-fx
+ :application/ssn-search
+ (fn [{:keys [db]} [_ potential-ssn]]
+   (println "valid ssn? "(ssn/ssn? potential-ssn))
+   {:db db}))
