@@ -237,9 +237,11 @@
         (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
- :application/clear-applications
+ :application/clear-applications-and-haku-selections
  (fn [db _]
-   (assoc-in db [:application :applications] nil)))
+   (-> db
+       (assoc-in [:application :applications] nil)
+       (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
 
 (reg-event-db
  :application/select-form
