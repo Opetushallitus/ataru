@@ -237,6 +237,11 @@
         (some? autosave) (assoc :stop-autosave autosave)))))
 
 (reg-event-db
+ :application/clear-applications
+ (fn [db _]
+   (assoc-in db [:application :applications] nil)))
+
+(reg-event-db
  :application/select-form
  (fn [db [_ form-key]]
    (-> db

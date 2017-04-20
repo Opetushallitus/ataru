@@ -30,6 +30,7 @@
 
 (defn common-actions-for-applications-route []
   (dispatch [:application/refresh-haut])
+  (dispatch [:application/clear-applications])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
@@ -65,6 +66,7 @@
 
   (defroute #"^/lomake-editori/applications/search-ssn/" []
     (dispatch [:set-active-panel :application])
+    (dispatch [:application/clear-applications])
     (dispatch [:application/show-search-ssn]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
