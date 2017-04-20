@@ -7,10 +7,12 @@
    (let [selected-haku       (get-in db [:application :selected-haku])
          selected-hakukohde  (get-in db [:application :selected-hakukohde])
          selected-form-key   (get-in db [:application :selected-form-key])
-         forms               (get-in db [:application :forms])]
+         forms               (get-in db [:application :forms])
+         applications        (get-in db [:application :applications])]
     (or (:name (get forms selected-form-key))
         (:name selected-hakukohde)
-        (:name selected-haku)))))
+        (:name selected-haku)
+        (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (defn filter-haku-seq [haku-seq incomplete-eq]
   (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
