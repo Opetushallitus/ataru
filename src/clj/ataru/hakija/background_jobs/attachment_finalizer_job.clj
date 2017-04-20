@@ -9,8 +9,15 @@
 
 (defn finalize-attachments [{:keys [application-id]} _]
   (log/info "Finalize attachments")
-  (let [application (application-store/get-application application-id)]
-    (log/info application)
+  (let [application    (application-store/get-application application-id)
+        attachment-ids (->> application
+                            :answers
+                            (filter #(= (:fieldType %) "attachment"))
+                            (mapcat :value))
+        response       @(http/post (resolve-url :liiteri.finalize) {:query-params {:keys attachment-ids}})]
+    (when (not= 200 (:status response))
+      (throw (Exception. (str "Could not finalize attachments for application " application-id))))
+    (log/info (str "Finalized attachments for application " application-id))
     {:transition {:id :final}}))
 
 (def job-definition {:steps {:initial finalize-attachments}
