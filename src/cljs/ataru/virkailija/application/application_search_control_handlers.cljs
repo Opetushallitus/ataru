@@ -29,4 +29,5 @@
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]
    (println "valid ssn? "(ssn/ssn? potential-ssn))
-   {:db db}))
+   (when (ssn/ssn? potential-ssn)
+     {:dispatch [:application/fetch-applications-by-ssn potential-ssn]})))

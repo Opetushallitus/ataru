@@ -40,3 +40,12 @@
    empty-applications-result-fn
    #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))
+
+(defn get-application-list-by-ssn [ssn session organization-service]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   empty-applications-result-fn
+   #(hash-map :applications (application-store/get-application-list-by-ssn ssn %))
+   #(hash-map :applications (application-store/get-full-application-list-by-ssn ssn))))

@@ -10,8 +10,7 @@
          forms               (get-in db [:application :forms])]
     (or (:name (get forms selected-form-key))
         (:name selected-hakukohde)
-        (:name selected-haku)
-        "Valitse haku/hakukohde"))))
+        (:name selected-haku)))))
 
 (defn filter-haku-seq [haku-seq incomplete-eq]
   (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
@@ -83,3 +82,9 @@
        #(-> %
             (filter-haut =)
             count-haut))))
+
+(re-frame/reg-sub
+ :application/search-control-all-page-view?
+ (fn [db]
+   (let [show-search-control (get-in db [:application :search-control :show])]
+     (boolean (some #{show-search-control} [:complete :incomplete])))))

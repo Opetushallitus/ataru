@@ -321,18 +321,18 @@
           [application-review]]]))))
 
 (defn application []
-  (let [applications          (subscribe [:state-query [:application :applications]])
-        application-filter    (subscribe [:state-query [:application :filter]])
-        show-search-control   (subscribe [:state-query [:application :search-control :show]])
-        include-filtered      (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
-        filtered-applications (include-filtered @application-filter @applications)]
+  (let [applications            (subscribe [:state-query [:application :applications]])
+        application-filter      (subscribe [:state-query [:application :filter]])
+        search-control-all-page (subscribe [:application/search-control-all-page-view?])
+        include-filtered        (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
+        filtered-applications   (include-filtered @application-filter @applications)]
     [:div
      [:div.application-handling__overview
       [application-search-control]
-      (when (not @show-search-control)
+      (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading filtered-applications @application-filter]
          [application-list filtered-applications]])]
-     (when (not @show-search-control)
+     (when (not @search-control-all-page)
        [:div
         [application-review-area filtered-applications]])]))

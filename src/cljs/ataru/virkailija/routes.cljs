@@ -64,7 +64,7 @@
     (dispatch [:application/show-complete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/search-ssn/" []
-    (common-actions-for-applications-route)
+    (dispatch [:set-active-panel :application])
     (dispatch [:application/show-search-ssn]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
