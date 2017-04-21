@@ -28,6 +28,7 @@
 (reg-event-fx
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]
-   (if (ssn/ssn? potential-ssn)
-     {:dispatch [:application/fetch-applications-by-ssn potential-ssn]}
-     {:dispatch [:application/clear-applications-and-haku-selections]})))
+   (let [ucase-potential-ssn (clojure.string/upper-case potential-ssn)]
+     (if (ssn/ssn? ucase-potential-ssn)
+       {:dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
+       {:dispatch [:application/clear-applications-and-haku-selections]}))))
