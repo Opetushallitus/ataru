@@ -13,7 +13,7 @@
     (when (= (:status resp) 200)
       (-> (:body resp)
           (json/parse-string true)
-          (dissoc :version :deleted)))))
+          (dissoc :version :deleted :final)))))
 
 (defn delete-file [file-key]
   (let [url  (resolve-url :liiteri.file file-key)
