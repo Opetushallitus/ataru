@@ -88,40 +88,35 @@
   (fn [db [_ {:keys [applications]}]]
     (-> db
         (assoc-in [:application :applications] applications)
+        (assoc-in [:application :fetching-applications] false)
         (assoc-in [:application :review-state-counts] (review-state-counts applications))
         (assoc-in [:application :sort] application-sorting/initial-sort))))
+
+(defn fetch-applications-fx [db path]
+  {:db   (assoc-in db [:application :fetching-applications] true)
+   :http {:method              :get
+          :path                path
+          :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
   :application/fetch-applications
   (fn [{:keys [db]} [_ form-key]]
-    {:db   db
-     :http {:method              :get
-            :path                (str "/lomake-editori/api/applications/list?formKey=" form-key)
-            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?formKey=" form-key))))
 
 (reg-event-fx
   :application/fetch-applications-by-hakukohde
   (fn [{:keys [db]} [_ hakukohde-oid]]
-    {:db   db
-     :http {:method              :get
-            :path                (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid)
-            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakukohdeOid=" hakukohde-oid))))
 
 (reg-event-fx
   :application/fetch-applications-by-haku
   (fn [{:keys [db]} [_ haku-oid]]
-    {:db   db
-     :http {:method              :get
-            :path                (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid)
-            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
 
 (reg-event-fx
   :application/fetch-applications-by-ssn
   (fn [{:keys [db]} [_ ssn]]
-    {:db   db
-     :http {:method              :get
-            :path                (str "/lomake-editori/api/applications/list?ssn=" ssn)
-            :handler-or-dispatch :application/handle-fetch-applications-response}}))
+    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn))))
 
 (reg-event-db
  :application/review-updated

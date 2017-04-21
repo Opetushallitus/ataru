@@ -158,6 +158,12 @@
            [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
            [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
 
+(defn application-list-loading-indicator []
+  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
+    (when @fetching
+        [:div.application-handling__list-loading-indicator
+         [:i.zmdi.zmdi-spinner]])))
+
 (defn application-list [applications]
   [:div
    [:div.application-handling__list-header.application-handling__list-row
@@ -332,7 +338,8 @@
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading filtered-applications @application-filter]
-         [application-list filtered-applications]])]
+         [application-list filtered-applications]
+         [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
        [:div
         [application-review-area filtered-applications]])]))
