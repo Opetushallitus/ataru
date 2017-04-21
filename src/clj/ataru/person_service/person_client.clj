@@ -23,7 +23,7 @@
                  (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
       {:status 201 :body body}
-      {:status :created :oid body}
+      {:status :created :oid (:oidHenkilo (json/parse-string body true))}
 
       {:status 400} ;;Request data was invalid, no reason to retry
       {:status :failed-permanently :message (:body result)}
