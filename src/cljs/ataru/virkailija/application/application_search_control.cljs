@@ -18,8 +18,19 @@
     (str " (" count ")")
     ""))
 
+;; Clear the old-fashioned way, we don't want the ssn to be remembered when
+;; we switch the search control tabs (the field should forget it's state)
+(defn clear-ssn-search-field []
+  (set! (->  js/document (.getElementById "ssn-search-field") (.-value)) ""))
+
 (defn ssn-search-field []
-  [:input {:type "text" :placeholder "200467-9856" :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}])
+  [:div
+   [:input
+    {:type "text"
+     :id "ssn-search-field"
+     :placeholder "200467-9856"
+     :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
+   [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} "X"]])
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
