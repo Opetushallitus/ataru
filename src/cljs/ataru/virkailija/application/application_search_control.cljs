@@ -29,6 +29,7 @@
     {:type "text"
      :id "ssn-search-field"
      :placeholder "200467-9856"
+     :max-length "11"
      :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
    [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} "X"]])
 
