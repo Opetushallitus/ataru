@@ -16,7 +16,7 @@
 
   (upsert-person [{:keys [oppijanumerorekisteri-cas-client]}
                   application]
-    (person-client/upsert-person-partially-old oppijanumerorekisteri-cas-client application))
+    (person-client/find-or-create-person oppijanumerorekisteri-cas-client application))
 
   (start [this]
     (assoc
