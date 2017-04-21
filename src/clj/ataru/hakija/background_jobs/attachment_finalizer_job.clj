@@ -8,7 +8,6 @@
     [ataru.applications.application-store :as application-store]))
 
 (defn finalize-attachments [{:keys [application-id]} _]
-  (log/info "Finalize attachments")
   (let [application    (application-store/get-application application-id)
         attachment-ids (->> application
                             :answers
