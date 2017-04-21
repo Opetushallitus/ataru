@@ -25,7 +25,7 @@
 
 (defn ssn-search-field []
   [:div
-   [:input
+   [:input.application__search-control-ssn-input
     {:type "text"
      :id "ssn-search-field"
      :placeholder "200467-9856"
