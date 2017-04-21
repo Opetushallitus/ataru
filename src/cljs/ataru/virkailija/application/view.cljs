@@ -49,9 +49,11 @@
      @header]))
 
 (defn haku-heading [filtered-applications application-filter]
-  [:div.application-handling__header
-   [haku-header]
-   [excel-download-link filtered-applications application-filter]])
+  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
+    [:div.application-handling__header
+     [haku-header]
+     (when @belongs-to-haku
+       [excel-download-link filtered-applications application-filter])]))
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))

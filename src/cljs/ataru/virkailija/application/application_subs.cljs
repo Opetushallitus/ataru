@@ -14,6 +14,15 @@
         (:name selected-haku)
         (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
+(re-frame/reg-sub
+ :application/application-list-belongs-to-haku?
+ (fn [db]
+   (boolean
+    (or
+     (get-in db [:application :selected-haku])
+     (get-in db [:application :selected-hakukohde])
+     (get-in db [:application :selected-form-key])))))
+
 (defn filter-haku-seq [haku-seq incomplete-eq]
   (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
 
