@@ -150,6 +150,7 @@
                                                                   "singleChoice"
                                                                   "attachment"])
                      (s/optional-key :cannot-edit) s/Bool
+                     (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
                                                               LocalizedString
                                                               s/Str))})
@@ -171,6 +172,7 @@
    :form                          s/Int
    :lang                          s/Str
    :answers                       [Answer]
+   (s/optional-key :state)        (s/maybe s/Str)
    (s/optional-key :hakukohde)    (s/maybe s/Str)
    (s/optional-key :haku)         (s/maybe s/Str)
    (s/optional-key :id)           s/Int

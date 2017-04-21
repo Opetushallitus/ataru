@@ -19,10 +19,12 @@
                                                  form-key
                                                  lang
                                                  hakukohde
-                                                 hakukohde-name]}]]
+                                                 hakukohde-name
+                                                 state]}]]
   {:db       (-> db
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
+                 (assoc-in [:application :state] state)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if hakukohde
@@ -163,7 +165,7 @@
   (-> db
       (update-in [:application :answers]
         (fn [answers]
-          (reduce (fn [answers {:keys [key value cannot-edit] :as answer}]
+          (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
                     (let [answer-key (keyword key)
                           value      (cond-> value
                                              (and (vector? value)
@@ -189,7 +191,7 @@
 
                                  :else
                                  (update answers answer-key merge {:valid true :value value}))
-                          answer-key merge {:cannot-edit cannot-edit})
+                          answer-key merge {:cannot-edit cannot-edit :cannot-view cannot-view})
                         answers)))
                   answers
                   submitted-answers)))
@@ -419,7 +421,7 @@
 
 (reg-event-fx
   :application/add-single-attachment
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx file]]
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx file retries]]
     (let [name      (.-name file)
           form-data (doto (js/FormData.)
                       (.append "file" file name))]
@@ -427,14 +429,14 @@
        :http {:method    :post
               :url       "/hakemus/api/files"
               :handler   [:application/handle-attachment-upload field-descriptor component-id attachment-idx]
-              :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name]
+              :error-handler [:application/handle-attachment-upload-error field-descriptor component-id attachment-idx name file (inc retries)]
               :body      form-data}})))
 
 (reg-event-fx
   :application/add-attachments
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files]]
     (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
-                                       [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file])
+                                       [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file 0])
                                      files)
           db            (as-> db db'
                               (update-in db' [:application :answers (keyword component-id) :values]
@@ -474,13 +476,28 @@
                    {:value response :valid true :status :ready})
         (update-attachment-answer-validity field-descriptor component-id))))
 
-(reg-event-db
+(defn- rate-limit-error? [response]
+  (= (:status response) 429))
+
+(reg-event-fx
   :application/handle-attachment-upload-error
-  (fn [db [_ field-descriptor component-id attachment-idx filename response]]
-    (-> db
-        (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
-                   {:value {:filename filename} :valid false :status :error})
-        (update-attachment-answer-validity field-descriptor component-id))))
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx filename file retries response]]
+    (let [rate-limited? (rate-limit-error? response)
+          current-error (if rate-limited?
+                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                           :en "File failed to upload, try again"
+                           :sv "Fil inte laddat, försök igen"}
+                          {:fi "Kielletty tiedostomuoto"
+                           :en "File type forbidden"
+                           :sv "Förbjudet filformat"})]
+      (if (and rate-limited? (< retries 3))
+        {:db db
+         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor component-id attachment-idx file retries]
+                            :timeout (+ 2000 (rand-int 2000))}}
+        {:db (-> db
+                 (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
+                            {:value {:filename filename} :valid false :status :error :error current-error})
+                 (update-attachment-answer-validity field-descriptor component-id))}))))
 
 (reg-event-db
   :application/handle-attachment-delete

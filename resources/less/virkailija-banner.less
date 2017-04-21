@@ -1,6 +1,7 @@
 @import "vars";
+@import "mixins";
 
-@bar-height: 44px;
+@banner-height: 43px;
 
 .top-banner {
   font-size: 14px;
@@ -9,21 +10,17 @@
   display: flex;
   flex: none;
   align-items: center;
-  height: 70px;
-  position: fixed;
+  height: @banner-height;
   top: 0;
   flex-flow: row nowrap;
-  background-color: @pale-blue;
+  background-color: @banner-blue;
   color: white;
   z-index: 20;
-  .logo {
-    margin-left: 85px;
-    margin-right: 42px;
-  }
   .tabs {
     display: flex;
   }
   .title {
+    .semibold;
     display: flex;
     white-space: nowrap;
     .active-section {
@@ -36,88 +33,89 @@
     }
   }
   .divider {
-    background-color: @paler-blue;
+    background-color: @hyper-blue;
     height: 33px;
     width: 1px;
-    margin: 5px 20px 0 20px;
+    margin: 0 20px 0 20px;
   }
   .active-section-arrow {
     position: absolute;
-    top: 10px;
+    top: 3px;
     left: 33px;
     font-size: 20px;
   }
 
+  .flasher-container {
+    min-width: 200px;
+    padding: 10px 15px;
+    margin-right: 85px;
+   }
   .flasher {
+    .semibold;
     font-size: 13px;
-    background: #0094C3;
     color: #A8D6E6;
     border-radius: 2px;
-    padding: 10px 15px;
-    margin: 3px 20px;
     animation-delay: 2s;
     -webkit-animation-iteration-count: 1;
     -moz-animation-iteration-count: 1;
     -o-animation-iteration-count: 1;
     animation-iteration-count: 1;
-
     span {
+      font-style: italic;
       display: inline-block;
     }
   }
-
   .section-link {
-    margin-top: 12px;
+    margin-top: 5px;
     position: relative;
   }
-
-  @media only screen and (max-width: 920px) {
-    .title {
-      display: none;
-    }
-  }
-  .applications-count {
-    font-size: 12px;
-    padding-top: 0px;
-    margin-top: 13px;
-    border-radius: 50%;
-    background-color: @selected-blue;
-    width: 19px;
-    height: 19px;
-    span {
-      padding-left: 6.5px;
-      padding-top: 2px;
-      display: inline-block;
-    }
-  }
   .profile {
-    margin-right: 50px;
-    min-width: 246px;
-    display: flex;
-    .divider {
-      margin-left: 5px;
-      margin-right: 5px;
-    }
+    .semibold;
+    margin-left: 85px;
+    min-width: 200px;
+    color: @paler-blue;
     .tooltip-indicator {
       cursor: help;
     }
-    a { color: white; }
-    > div:nth-child(1) {
-      p {margin: 0;}
-      p:nth-child(1) {
-        margin-top: 4px;
-      }
-      p:nth-child(3) { font-size: 80%; }
-      color: @paler-blue;
-      display: inline-block;
-      padding-right: 1em;
-      height: @bar-height;
-    }
-    > div:nth-child(3) {
-      white-space: nowrap;
-      line-height: @bar-height;
-      margin-left: 1em;
-    }
   }
+}
 
+.fixed-top-banner {
+  position: fixed;
+}
+
+.in-flow-top-banner {
+  position: relative;
+}
+
+.fixed-top-banner-placeholder {
+  visibility: hidden;
+  height: @banner-height;
+}
+
+.local-dev-logout {
+  position: absolute;
+  right: -36px;
+  top: 186px;
+  transform: rotate(90deg);
+  > a {
+    text-decoration: none;
+    color: red;
+    font-style: italic;
+  }
+}
+
+/*
+  1223px is the breakpoint where height of raamit reduces and a mysterious 2 px gap
+  appears which is not in any element's margin or padding. This (with position: relative)
+  is a remedy for the gap-issue.
+*/
+@media only screen and (max-width: 1223px) {
+  .top-banner {
+    top: -2px;
+    margin-bottom: 2px;
+  }
+  .local-dev-logout {
+    top: 145px;
+  }
 }

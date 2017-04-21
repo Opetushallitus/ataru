@@ -252,6 +252,10 @@
   font-size: 14px;
   color: @gray-of-the-beast;
 }
+.application__sub-header-modifying-prevented {
+  font-size: 14px;
+  color: @gray-of-the-beast;
+}
 .application__header {
   font-size: 24px;
   font-weight: normal;
@@ -299,16 +303,18 @@
 .application__form-select {
   transition: border-color 0.2s;
   width: @form-select-width;
-
   padding-left: 10px;
   border-radius: 2px;
   height: 43px;
   font-size: 16px;
+  border: 1px solid #C1C1C1;
+  border-radius: 2px;
+}
+
+.application__form-select--enabled {
   color: @text-color;
   background-color: #fff;
   background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
-  border: 1px solid #C1C1C1;
-  border-radius: 2px;
 }
 
 .application__form-select-arrow {
@@ -451,7 +457,7 @@ textarea.application__form-text-area__size-large {
 
 .application__form-attachment-error {
   margin-left: 10px;
-  color: @sg-color-gray;
+  color: @sg-color-gray-2;
 }
 
 .application__attachment-filename-list {
@@ -514,7 +520,7 @@ textarea.application__form-text-area__size-large {
 
 .application__form-upload-button-info {
   font-size: 14px;
-  color: @sg-color-gray;
+  color: @sg-color-gray-2;
 }
 
 .application__form-upload-attachment-container {

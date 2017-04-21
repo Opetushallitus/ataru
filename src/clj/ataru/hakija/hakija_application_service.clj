@@ -8,7 +8,10 @@
    [ataru.tarjonta-service.hakuaika :as hakuaika]
    [ataru.forms.form-store :as form-store]
    [ataru.hakija.validator :as validator]
-   [ataru.applications.application-store :as application-store]))
+   [ataru.application.review-states :refer [complete-states]]
+   [ataru.applications.application-store :as application-store]
+   [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                  editing-forbidden-person-info-field-ids]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -27,7 +30,12 @@
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
       hakuaika-on)))
 
-(def not-allowed-reply {:passed? false :failures ["Not allowed to apply (probably hakuaika is not on)"]})
+(def not-allowed-reply {:passed? false
+                        :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
+
+(defn- in-complete-state? [application-key]
+  (let [state (:state (application-store/get-application-review application-key))]
+    (boolean (some #{state} complete-states))))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
@@ -48,8 +56,9 @@
 (defn- merge-uneditable-answers-from-previous
   [old-application new-application]
   (let [new-answers                 (:answers new-application)
-        uneditable-answers          (filter :cannot-edit new-answers)
-        editable-answers            (remove :cannot-edit new-answers)
+        uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
+        uneditable-answers          (filter uneditable-or-unviewable new-answers)
+        editable-answers            (remove uneditable-or-unviewable new-answers)
         merged-answers              (into editable-answers
                                           (uneditable-answers-with-labels-from-new
                                             uneditable-answers
@@ -58,14 +67,19 @@
     (assoc new-application :answers merged-answers)))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
-  (let [form              (form-store/fetch-by-id (:form application))
-        allowed           (allowed-to-apply? tarjonta-service application)
-        final-application (if is-modify?
-                            (merge-uneditable-answers-from-previous (application-store/get-latest-application-by-secret (:secret application)) application)
-                            application)
-        validation-result (validator/valid-application? final-application form)]
+  (let [form               (form-store/fetch-by-id (:form application))
+        allowed            (allowed-to-apply? tarjonta-service application)
+        latest-application (application-store/get-latest-application-by-secret (:secret application))
+        final-application  (if is-modify?
+                             (merge-uneditable-answers-from-previous latest-application application)
+                             application)
+        validation-result  (validator/valid-application? final-application form)]
     (cond
       (not allowed)
+      not-allowed-reply
+
+      (and is-modify?
+           (in-complete-state? (:key latest-application)))
       not-allowed-reply
 
       (not (:passed? validation-result))
@@ -82,29 +96,23 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     {:passed? true :id application-id}))
 
-(defn- find-person-info-module-field-ids
-  [{:keys [children id]}]
-  (if children
-    (map find-person-info-module-field-ids children)
-    id))
-
 (defn- flag-uneditable-answers
-  [{:keys [answers] :as application} forbidden-field-ids]
+  [{:keys [answers] :as application} cannot-view-field-ids cannot-edit-field-ids]
   (assoc application
     :answers
-    (map (fn [answer]
-           (if (contains? (set forbidden-field-ids) (:key answer))
-             (merge answer {:cannot-edit true :value nil})
-             answer))
-         answers)))
+    (map
+      (fn [answer]
+        (let [answer-kw (keyword (:key answer))]
+          (cond
+            (contains? cannot-view-field-ids answer-kw) (merge answer {:cannot-view true :value nil})
+            (contains? cannot-edit-field-ids answer-kw) (merge answer {:cannot-edit true})
+            :else answer)))
+      answers)))
 
 (defn remove-person-info-module-from-application-answers
   [application]
   (when application
-    (let [form                    (form-store/fetch-by-id (:form application))
-          person-module-fields    (first (filter #(= (:module %) "person-info") (:content form)))
-          person-module-field-ids (flatten (find-person-info-module-field-ids person-module-fields))]
-      (flag-uneditable-answers application person-module-field-ids))))
+    (flag-uneditable-answers application viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)

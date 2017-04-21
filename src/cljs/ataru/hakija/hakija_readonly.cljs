@@ -21,10 +21,11 @@
 
 (defn text [field-descriptor application lang]
   (let [answer ((answer-key field-descriptor) (:answers application))]
-    (when-not (:cannot-edit answer)
-      [:div.application__form-field
-       [:label.application__form-field-label
-        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+    [:div.application__form-field
+     [:label.application__form-field-label
+      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+     (if (:cannot-view answer)
+       [:div "***********"]
        [:div
         (let [repeatable?  (-> field-descriptor :params :repeatable)
               values       (if repeatable? (map :value (:values answer)) (:value answer))
@@ -33,7 +34,7 @@
                              (or (seq? values) (vector? values)))]
           (cond
             multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-            :else (textual-field-value field-descriptor application :lang lang)))]])))
+            :else (textual-field-value field-descriptor application :lang lang)))])]))
 
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))
@@ -138,9 +139,7 @@
 (defn field
   [content application lang]
   (match content
-         {:fieldClass "wrapperElement" :module "person-info" :children children} (if (:editing? application)
-                                                                                   [person-info-uneditable-wrapper content lang]
-                                                                                   [wrapper content application lang children])
+         {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]

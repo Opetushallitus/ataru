@@ -29,7 +29,7 @@
     :hakija ApplicationType/OPISKELIJA
     ApplicationType/BACKEND))
 
-(def ^:private logger (atom nil))
+(def ^:private logger (Audit. (service-name) (application-type)))
 
 (def ^:private date-time-formatter (f/formatter :date-time))
 
@@ -88,8 +88,7 @@
                          CommonLogMessageFields/OPERAATIO operation
                          CommonLogMessageFields/MESSAGE   message}
                   (not-blank? organization-oid)
-                  (assoc "organizationOid" organization-oid))
-        logger  (or @logger (reset! logger (Audit. (service-name) (application-type))))]
+                  (assoc "organizationOid" organization-oid))]
     (->> (proxy [AbstractLogMessage] [log-map])
          (.log logger))))
 

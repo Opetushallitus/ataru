@@ -10,7 +10,8 @@
  :public-config {:applicant        {:service_url "http://localhost:8351"}
                  :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}
                  :environment-name "test"
-                 :enable-re-frisk  true}
+                 :enable-re-frisk  true
+                 :local-dev-logout  true}
  :dev           {:fake-dependencies true}
  :urls          {:virkailija-host "itest-virkailija.oph.ware.fi"
                  :hakija-host     "itest-hakija.oph.ware.fi"
