@@ -24,7 +24,7 @@
   PersonService
 
   (create-or-find-person [{:keys [oppijanumerorekisteri-cas-client]} application]
-    (person-client/find-or-create-person oppijanumerorekisteri-cas-client application)))
+    (person-client/create-or-find-person oppijanumerorekisteri-cas-client application)))
 
 (defrecord FakePersonService []
   component/Lifecycle
@@ -33,7 +33,7 @@
   (start [this] this)
   (stop [this] this)
 
-  (find-or-create-person [this person] {:personOid  "1.2.3.4.5.6"
+  (create-or-find-person [this person] {:personOid  "1.2.3.4.5.6"
                                         :firstName  "Foo"
                                         :lastName   "Bar"
                                         :email      "foo.bar@mailinator.com"

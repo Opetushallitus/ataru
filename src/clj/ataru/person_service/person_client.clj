@@ -47,5 +47,5 @@
   (log/info "Sending person to oppijanumerorekisteri" person)
   (create-person cas-client person))
 
-(defn find-or-create-person [oppijanumerorekisteri-cas-client application]
+(defn create-or-find-person [oppijanumerorekisteri-cas-client application]
   (upsert-person oppijanumerorekisteri-cas-client (orpe/extract-person-from-application application)))
