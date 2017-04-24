@@ -28,7 +28,7 @@
    [:input.application__search-control-ssn-input
     {:type "text"
      :id "ssn-search-field"
-     :placeholder "200467-9856"
+     :placeholder "Etsi henkilötunnuksella"
      :max-length "11"
      :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
    [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} [:i.zmdi.zmdi-close]]])
