@@ -32,4 +32,5 @@
       (assoc
        basic-fields
        :syntymaaika (extract-birth-date application)
+       :identifications [{:idpEntityId "oppijaToken" :identifier email}]
        :eiSuomalaistaHetua true))))
