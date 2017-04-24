@@ -40,6 +40,7 @@
                  [bk/ring-gzip "0.2.1"]
                  [buddy/buddy-auth "1.4.1"]
                  [yesql "0.5.3"]
+                 ; Flyway 4 breaks our migrations
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
                  [camel-snake-kebab "0.4.0"]
                  [environ "1.1.0"]
@@ -56,8 +57,10 @@
                  ;; Used by clj-util below. Without these, we would not be able to
                  ;; authenticate to /oppijanumerorekisteri-service, we would just get:
                  ;; BadResponse Response lacks status Reason  [trace missing]
-                 [org.http4s/blaze-http_2.11 "0.13.0"]
-                 [org.http4s/http4s-json4s-native_2.11 "0.15.9"]
+                 ;; We can't upgrade these either. Looks like Cas requires a specific
+                 ;; version, and it's this one.
+                 [org.http4s/blaze-http_2.11 "0.10.1" :upgrade false]
+                 [org.http4s/http4s-json4s-native_2.11 "0.10.1" :upgrade false]
                  ;; And naturally this exclusion is important as well
                  [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
                  [ring.middleware.logger "0.5.0"]
