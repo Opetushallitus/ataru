@@ -28,7 +28,14 @@
 (reg-event-fx
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]
-   (let [ucase-potential-ssn (clojure.string/upper-case potential-ssn)]
+   (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
+         show-error            (if (= 11 (count ucase-potential-ssn)) (not (ssn/ssn? ucase-potential-ssn)) false)
+         db-with-potential-ssn (-> db
+                                   (assoc-in [:application :search-control :ssn :value] potential-ssn)
+                                   (assoc-in [:application :search-control :ssn :show-error] show-error))]
+     (println "DB with ssn" db-with-potential-ssn)
      (if (ssn/ssn? ucase-potential-ssn)
-       {:dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
-       {:dispatch [:application/clear-applications-and-haku-selections]}))))
+       {:db db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
+       {:db db-with-potential-ssn
+        :dispatch [:application/clear-applications-and-haku-selections]}))))
