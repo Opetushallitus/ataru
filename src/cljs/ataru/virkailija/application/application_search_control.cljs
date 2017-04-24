@@ -18,11 +18,6 @@
     (str " (" count ")")
     ""))
 
-;; Clear the old-fashioned way, we don't want the ssn to be remembered when
-;; we switch the search control tabs (the field should forget it's state)
-(defn clear-ssn-search-field []
-  (set! (->  js/document (.getElementById "ssn-search-field") (.-value)) ""))
-
 (defn ssn-search-field []
   [:div
    [:input.application__search-control-ssn-input
@@ -34,7 +29,7 @@
      :value @(subscribe [:state-query [:application :search-control :ssn :value]])
      :max-length "11"
      :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
-   [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} [:i.zmdi.zmdi-close]]])
+   [:span.application__search-control-clear-ssn {:on-click #(dispatch [:application/clear-ssn])} [:i.zmdi.zmdi-close]]])
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
