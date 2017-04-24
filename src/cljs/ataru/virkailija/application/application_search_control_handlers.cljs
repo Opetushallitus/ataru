@@ -7,22 +7,22 @@
 
 (reg-event-db
  :application/show-incomplete-haut-list
- (fn [db [_ _]]
+ (fn [db]
    (assoc-in db show-path :incomplete)))
 
 (reg-event-db
  :application/show-complete-haut-list
- (fn [db [_ _]]
+ (fn [db]
    (assoc-in db show-path :complete)))
 
 (reg-event-db
  :application/show-search-ssn
- (fn [db [_ _]]
+ (fn [db]
    (assoc-in db show-path :search-ssn)))
 
 (reg-event-db
  :application/close-search-control
- (fn [db [_ _]]
+ (fn [db]
    (assoc-in db show-path nil)))
 
 (reg-event-fx
