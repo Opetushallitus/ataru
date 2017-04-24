@@ -51,9 +51,11 @@
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
               (let [login-cookie-value (last (split (login) #"="))
-                    results (sh-timeout 240 "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                "--web-security" "false"
-                                "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
+                    results (sh-timeout
+                              120
+                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                              "--web-security" "false"
+                              "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
