@@ -24,7 +24,7 @@
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
 
       {:status 200 :body body}
-      {:status :created :oid (:oidHenkilo (json/parse-string body true))}
+      {:status :exists :oid (:oidHenkilo (json/parse-string body true))}
 
       {:status 400} ;;Request data was invalid, no reason to retry
       {:status :failed-permanently :message (:body result)}
