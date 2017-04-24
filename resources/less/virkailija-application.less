@@ -561,6 +561,7 @@ th.application__readonly-adjacent--header {
 .application__search-control-selected-tab-with-input {
   border: solid @pale-blue 3px;
   color: @white;
+  box-shadow: none;
 }
 
 .application__search-control-tab-selector.application__search-control-selected-tab-with-input  {
@@ -595,7 +596,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-clear-ssn {
-  color: black;
+  color: @sg-color-gray;
   position: absolute;
   right: 15px;
   top: 16px;
@@ -604,7 +605,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-ssn-input {
   border: 0;
-  font-weight: bold;
+  .semibold;
   font-size: 16px;
   text-align: center;
   padding-bottom: 5px;
