@@ -46,6 +46,7 @@
                               :lang           (:lang application)
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
+                              :ssn            (find-value-from-answers "ssn" answers)
                               :hakukohde      (:hakukohde application)
                               :haku           (:haku application)
                               :content        {:answers answers}
