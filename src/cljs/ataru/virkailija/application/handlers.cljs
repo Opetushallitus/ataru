@@ -236,6 +236,7 @@
  (fn [db _]
    (-> db
        (assoc-in [:application :applications] nil)
+       (assoc-in [:application :search-control :ssn] nil)
        (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
 
 (reg-event-db

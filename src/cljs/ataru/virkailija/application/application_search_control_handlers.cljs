@@ -33,9 +33,7 @@
          db-with-potential-ssn (-> db
                                    (assoc-in [:application :search-control :ssn :value] potential-ssn)
                                    (assoc-in [:application :search-control :ssn :show-error] show-error))]
-     (println "DB with ssn" db-with-potential-ssn)
      (if (ssn/ssn? ucase-potential-ssn)
        {:db db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
-       {:db db-with-potential-ssn
-        :dispatch [:application/clear-applications-and-haku-selections]}))))
+       {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))
