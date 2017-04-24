@@ -60,7 +60,9 @@
 
 (defn- get-latest-form
   []
-  (first (form-store/get-all-forms)))
+  (->> (form-store/get-all-forms)
+       (filter #(= (:name %) "Testilomake"))
+       (first)))
 
 (describe "Hakija UI tests /"
           (tags :ui)
@@ -69,7 +71,7 @@
           (it "can fill a form successfully"
               (if-let [latest-form (get-latest-form)]
                 (let [results (sh-timeout
-                                240
+                                120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
                                 "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
@@ -84,8 +86,9 @@
                                   :id
                                   (application-store/get-application)
                                   :secret)
+                      _       (println "Using application" (:id latest-application) "with secret" secret)
                       results (sh-timeout
-                                240
+                                120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
                                 "bin/phantomjs-runner.js" "hakija-edit" secret)]
