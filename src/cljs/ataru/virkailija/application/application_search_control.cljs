@@ -31,7 +31,7 @@
      :placeholder "200467-9856"
      :max-length "11"
      :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
-   [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} "X"]])
+   [:span.application__search-control-clear-ssn {:on-click #(clear-ssn-search-field)} [:i.zmdi.zmdi-close]]])
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
