@@ -13,7 +13,9 @@
                             :answers
                             (filter #(= (:fieldType %) "attachment"))
                             (mapcat :value))
-        response       @(http/post (resolve-url :liiteri.finalize) {:query-params {:keys attachment-ids}})]
+        response       @(http/post (resolve-url :liiteri.finalize)
+                                   {:headers {"Content-Type" "application/json"}
+                                    :body    (json/generate-string {:keys attachment-ids})})]
     (when (not= 200 (:status response))
       (throw (Exception. (str "Could not finalize attachments for application " application-id))))
     (log/info (str "Finalized attachments for application " application-id))
