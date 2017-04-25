@@ -30,7 +30,7 @@
 
 (defn common-actions-for-applications-route []
   (dispatch [:application/refresh-haut])
-  (dispatch [:application/clear-applications-and-haku-selections])
+  (dispatch [:application/clear-applications-haku-and-form-selections])
   (dispatch [:set-active-panel :application]))
 
 (defn app-routes []
