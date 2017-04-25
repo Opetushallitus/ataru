@@ -127,5 +127,3 @@
           (when-not @raamit-visible
             (dispatch [:state-update #(assoc-in % [:banner :type] :in-flow)])
             (reset! raamit-visible true)))))))
-
-(set! (.-onscroll js/window) (create-banner-position-handler))
