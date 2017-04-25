@@ -24,7 +24,7 @@
     {:type "text"
      :id "ssn-search-field"
      :class (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
-              "application__search-control-ssn-input-error")
+              "application__search-control-ssn-input-error animated shake")
      :placeholder "Etsi henkilötunnuksella"
      :value @(subscribe [:state-query [:application :search-control :ssn :value]])
      :max-length "11"
