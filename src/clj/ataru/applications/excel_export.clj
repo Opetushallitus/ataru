@@ -141,17 +141,17 @@
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
       (writer 0 (:column meta-field) meta-value)))
-  (doseq [answer (:answers application)
-          :when (some (comp (partial = (:label answer)) :header) headers)]
+  (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
-          value-or-values (-> (:value answer))
+          value-or-values (:value answer)
           value           (if (or (seq? value-or-values) (vector? value-or-values))
                             (->> value-or-values
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
                                  (interpose "\n")
                                  (apply str))
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
-      (writer 0 (+ column (count application-meta-fields)) value)))
+      (when (and value column)
+        (writer 0 (+ column (count application-meta-fields)) value))))
   (let [application-review  (application-store/get-application-review (:key application))
         beef-header-count   (- (apply max (map :column headers)) (count review-headers))
         prev-header-count   (+ beef-header-count
@@ -170,15 +170,26 @@
 (defn- hidden-answer? [form-element]
   (:exclude-from-answers form-element))
 
+(defn- pick-label
+  [form-element pick-cond]
+  (when (pick-cond form-element)
+    [[(:id form-element)
+      (label/get-language-label-in-preferred-order (:label form-element))]]))
+
 (defn pick-form-labels
   [form-content pick-cond]
   (->> (reduce
          (fn [acc form-element]
-           (if (< 0 (count (:children form-element)))
-             (into acc (pick-form-labels (:children form-element) pick-cond))
-             (into acc (when (pick-cond form-element)
-                         [[(:id form-element)
-                           (label/get-language-label-in-preferred-order (:label form-element))]]))))
+           (let [followups (remove nil? (mapcat :followups (:options form-element)))]
+             (cond
+               (pos? (count (:children form-element)))
+               (into acc (pick-form-labels (:children form-element) pick-cond))
+
+               (pos? (count followups))
+               (into (into acc (pick-label form-element pick-cond)) (pick-form-labels followups pick-cond))
+
+               :else
+               (into acc (pick-label form-element pick-cond)))))
          []
          form-content)))
 
@@ -225,14 +236,22 @@
                            (vals (select-keys answer [:key :label]))))))
             applications)))
 
+(defn- remove-duplicates-by-field-id
+  [labels-in-form labels-in-applications]
+  (let [form-element-ids (set (map first labels-in-form))]
+    (remove (fn [[key _]]
+              (contains? form-element-ids key))
+            labels-in-applications)))
+
 (defn- extract-headers
   [applications form]
-  (let [labels-in-form         (pick-form-labels (:content form) form-label?)
-        labels-in-applications (extract-headers-from-applications applications form)
-        all-labels             (distinct (concat labels-in-form labels-in-applications (map vector (repeat nil) review-headers)))
-        decorator              (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
+  (let [labels-in-form              (pick-form-labels (:content form) form-label?)
+        labels-in-applications      (extract-headers-from-applications applications form)
+        labels-only-in-applications (remove-duplicates-by-field-id labels-in-form labels-in-applications)
+        all-labels                  (distinct (concat labels-in-form labels-only-in-applications (map vector (repeat nil) review-headers)))
+        decorator                   (partial decorate (util/flatten-form-fields (:content form)) (:content form))]
     (for [[idx [id header]] (map vector (range) all-labels)
-          :when             (string? header)]
+          :when (string? header)]
       {:id               id
        :decorated-header (decorator id header)
        :header           header
