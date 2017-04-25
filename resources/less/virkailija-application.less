@@ -15,6 +15,7 @@
 .application-handling__bottom-wrapper {
   padding: 0 85px;
   margin-top: -6px;
+  min-height: 145px;
 }
 
 .application-handling__overview {
@@ -227,6 +228,18 @@ and (max-width: 1000px) {
 .application-handling__list-row--state {
   width: 20%;
   display: inline-block;
+}
+
+.application-handling__list-loading-indicator {
+  text-align: center;
+  width: 100%;
+  margin-top: 40px;
+  margin-bottom: 1000px;
+}
+
+.application-handling__list-loading-indicator > i {
+  font-size: 50px;
+  .spin
 }
 
 .application-handling__detail-container {
@@ -546,6 +559,16 @@ th.application__readonly-adjacent--header {
   color: @white;
 }
 
+.application__search-control-selected-tab-with-input {
+  border: solid @pale-blue 3px;
+  color: @white;
+  box-shadow: none;
+}
+
+.application__search-control-tab-selector.application__search-control-selected-tab-with-input  {
+  padding-top: 10px;
+}
+
 .application__search-control-loading-indicator {
   text-align: center;
   width: 100%;
@@ -573,6 +596,50 @@ th.application__readonly-adjacent--header {
   border-top: 9px solid @pale-blue;
 }
 
+.application__search-control-clear-ssn {
+  color: @sg-color-gray;
+  position: absolute;
+  right: 15px;
+  top: 16px;
+  > i { font-weight: bold; }
+}
+
+.application__search-control-ssn-input {
+  border: 0;
+  font-size: 16px;
+  text-align: center;
+  padding-bottom: 5px;
+}
+
+.application__search-control-ssn-input-error {
+  color: @sg-color-red;
+}
+
+.application__search-control-ssn-input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: @sg-gray-lighten-3;
+  font-style: italic;
+}
+
+.application__search-control-ssn-input::-moz-placeholder { /* Chrome/Opera/Safari */
+  color: @sg-gray-lighten-3;
+  font-style: italic;
+}
+
+.application__search-control-ssn-input:-ms-input-placeholder { /* IE 10+ */
+  color: @sg-gray-lighten-3;
+  font-style: italic;
+}
+
+
+.application__search-control-ssn-input:-moz-placeholder { /* Firefox 18- */
+  color: @sg-gray-lighten-3;
+  font-style: italic;
+}
+
+.application__search-control-ssn-input:focus {
+  outline: none;
+}
+
 .application__search-control-haku {
   color: @pale-blue;
   margin-bottom: 20px;
@@ -582,10 +649,6 @@ th.application__readonly-adjacent--header {
   font-size: 14px;
   background: @white;
   min-height: 50px;
-}
-
-.application__search-control-tarjonta-haku-info {
-
 }
 
 .application__search-control-haku.application__search-control-direct-form-haku {
@@ -683,4 +746,3 @@ th.application__readonly-adjacent--header {
   left: 16px;
   box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
 }
-

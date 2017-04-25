@@ -7,11 +7,21 @@
    (let [selected-haku       (get-in db [:application :selected-haku])
          selected-hakukohde  (get-in db [:application :selected-hakukohde])
          selected-form-key   (get-in db [:application :selected-form-key])
-         forms               (get-in db [:application :forms])]
+         forms               (get-in db [:application :forms])
+         applications        (get-in db [:application :applications])]
     (or (:name (get forms selected-form-key))
         (:name selected-hakukohde)
         (:name selected-haku)
-        "Valitse haku/hakukohde"))))
+        (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
+
+(re-frame/reg-sub
+ :application/application-list-belongs-to-haku?
+ (fn [db]
+   (boolean
+    (or
+     (get-in db [:application :selected-haku])
+     (get-in db [:application :selected-hakukohde])
+     (get-in db [:application :selected-form-key])))))
 
 (defn filter-haku-seq [haku-seq incomplete-eq]
   (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
@@ -83,3 +93,9 @@
        #(-> %
             (filter-haut =)
             count-haut))))
+
+(re-frame/reg-sub
+ :application/search-control-all-page-view?
+ (fn [db]
+   (let [show-search-control (get-in db [:application :search-control :show])]
+     (boolean (some #{show-search-control} [:complete :incomplete])))))

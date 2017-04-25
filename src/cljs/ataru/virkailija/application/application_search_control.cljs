@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [ataru.virkailija.application.application-search-control-handlers]))
 
-(defn tab [tab-id selected-tab link-url label-text]
+(defn haku-tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
    [:a {:href link-url}
     [:div.application__search-control-tab-selector
@@ -18,17 +18,47 @@
     (str " (" count ")")
     ""))
 
+(defn ssn-search-field []
+  [:div
+   [:input.application__search-control-ssn-input
+    {:type "text"
+     :id "ssn-search-field"
+     :class (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
+              "application__search-control-ssn-input-error animated shake")
+     :placeholder "Etsi henkilötunnuksella"
+     :value @(subscribe [:state-query [:application :search-control :ssn :value]])
+     :max-length "11"
+     :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
+   [:span.application__search-control-clear-ssn {:on-click #(dispatch [:application/clear-ssn])} [:i.zmdi.zmdi-close]]])
+
+(defn search-ssn-tab [tab-id selected-tab link-url label-text]
+  (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
+    [:div.application__search-control-tab-selector-wrapper
+     [:a {:href link-url}
+      [:div.application__search-control-tab-selector
+       {:class (when tab-selected "application__search-control-selected-tab-with-input")}
+       (if tab-selected
+         [ssn-search-field]
+         label-text)]]
+     (when (= tab-id selected-tab)
+       [:div.application-handling_search-control-tab-arrow-down])]))
+
 (defn tab-row []
   (let [selected-tab     (subscribe [:state-query [:application :search-control :show]])
         incomplete-count (subscribe [:application/incomplete-haku-count])
         complete-count   (subscribe [:application/complete-haku-count])]
     [:div.application__search-control-tab-row
-     [tab
+     [haku-tab
       :incomplete
       @selected-tab
       "/lomake-editori/applications/incomplete/"
       (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
-     [tab
+     [search-ssn-tab
+      :search-ssn
+      @selected-tab
+      "/lomake-editori/applications/search-ssn/"
+      "Etsi henkilötunnuksella"]
+     [haku-tab
       :complete
       @selected-tab
       "/lomake-editori/applications/complete/"

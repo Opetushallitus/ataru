@@ -49,9 +49,11 @@
      @header]))
 
 (defn haku-heading [filtered-applications application-filter]
-  [:div.application-handling__header
-   [haku-header]
-   [excel-download-link filtered-applications application-filter]])
+  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
+    [:div.application-handling__header
+     [haku-header]
+     (when @belongs-to-haku
+       [excel-download-link filtered-applications application-filter])]))
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
@@ -157,6 +159,12 @@
          (if (= :descending (:order @application-sort))
            [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
            [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
+
+(defn application-list-loading-indicator []
+  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
+    (when @fetching
+        [:div.application-handling__list-loading-indicator
+         [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
   [:div
@@ -321,18 +329,19 @@
           [application-review]]]))))
 
 (defn application []
-  (let [applications          (subscribe [:state-query [:application :applications]])
-        application-filter    (subscribe [:state-query [:application :filter]])
-        show-search-control   (subscribe [:state-query [:application :search-control :show]])
-        include-filtered      (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
-        filtered-applications (include-filtered @application-filter @applications)]
+  (let [applications            (subscribe [:state-query [:application :applications]])
+        application-filter      (subscribe [:state-query [:application :filter]])
+        search-control-all-page (subscribe [:application/search-control-all-page-view?])
+        include-filtered        (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
+        filtered-applications   (include-filtered @application-filter @applications)]
     [:div
      [:div.application-handling__overview
       [application-search-control]
-      (when (not @show-search-control)
+      (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
          [haku-heading filtered-applications @application-filter]
-         [application-list filtered-applications]])]
-     (when (not @show-search-control)
+         [application-list filtered-applications]
+         [application-list-loading-indicator]])]
+     (when (not @search-control-all-page)
        [:div
         [application-review-area filtered-applications]])]))
