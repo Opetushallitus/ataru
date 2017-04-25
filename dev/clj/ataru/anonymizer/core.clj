@@ -62,6 +62,9 @@
                              (randomize-first-name gender preferred_name))
         last-name        (or (get-in applications [key :last-name])
                              (select-value data/last-names last_name))
+        ssn              (case gender
+                           :male "020202A0213"
+                           :female "020202A0202")
         address          (or (get-in applications [key :address])
                              (randomize-address (extract-value application "address")))
         phone            (or (get-in application [key :phone])
@@ -76,9 +79,7 @@
                                          "preferred-name" first-name
                                          "last-name" last-name
                                          "address" address
-                                         "ssn" (case gender
-                                                 :male "020202A0213"
-                                                 :female "020202A0202")
+                                         "ssn" ssn
                                          "phone" phone
                                          "email" email
                                          "postal-code" postal-code
@@ -93,6 +94,7 @@
                                                content)
         application      (merge application {:preferred_name first-name
                                              :last_name      last-name
+                                             :ssn            ssn
                                              :content        content})]
     (cond-> (update applications :applications conj application)
       (not (contains? applications key))
