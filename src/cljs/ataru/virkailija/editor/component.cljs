@@ -77,10 +77,10 @@
     "Poista"]])
 
 (defn markdown-help []
-  [:div.application__markdown-help
+  [:div.editor-form__markdown-help
    [:div
-    [:div.application__markdown-help-arrow-left]
-    [:div.application__markdown-help-content
+    [:div.editor-form__markdown-help-arrow-left]
+    [:div.editor-form__markdown-help-content
      [:span "# otsikko (# h1 – ###### h6)"]
      [:br]
      [:span "**boldattava sisältö**"]
