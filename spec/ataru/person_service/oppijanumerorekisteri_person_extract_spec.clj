@@ -36,7 +36,9 @@
                               :sukupuoli          "1"
                               :yhteystieto        [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
                                                     :yhteystietoArvo   "roger.moore@ankkalinna.com"}]
-                              :henkiloTyyppi      "OPPIJA"})
+                              :henkiloTyyppi      "OPPIJA"
+                              :identifications    [{:idpEntityId "oppijaToken"
+                                                    :identifier "roger.moore@ankkalinna.com"}]})
 
 (describe
  "person extract"

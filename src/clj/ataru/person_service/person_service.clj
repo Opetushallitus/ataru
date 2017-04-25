@@ -5,34 +5,26 @@
             [ataru.config.core :refer [config]]))
 
 (defprotocol PersonService
-  (upsert-person [this person]
-    "Upsert a person to person service. Returns the possibly updated
-     person as returned to the PersonService by the remote person
-     service."))
+  (create-or-find-person [this person]
+    "Create or find a person in Oppijanumerorekisteri."))
 
 (defrecord IntegratedPersonService []
   component/Lifecycle
-  PersonService
-
-  (upsert-person [{:keys [oppijanumerorekisteri-cas-client
-                          authentication-service-cas-client]}
-                  application]
-    (person-client/upsert-person-partially-old
-     oppijanumerorekisteri-cas-client
-     authentication-service-cas-client
-     application))
 
   (start [this]
     (assoc
      this
-     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")
-     :authentication-service-cas-client (cas/new-client "/authentication-service")))
+     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service")))
 
   (stop [this]
     (assoc
      this
-     :oppijanumerorekisteri-cas-client nil
-     :authentication-service-cas-client nil)))
+     :oppijanumerorekisteri-cas-client nil))
+
+  PersonService
+
+  (create-or-find-person [{:keys [oppijanumerorekisteri-cas-client]} application]
+    (person-client/create-or-find-person oppijanumerorekisteri-cas-client application)))
 
 (defrecord FakePersonService []
   component/Lifecycle
@@ -41,11 +33,11 @@
   (start [this] this)
   (stop [this] this)
 
-  (upsert-person [this person] {:personOid  "1.2.3.4.5.6"
-                                :firstName  "Foo"
-                                :lastName   "Bar"
-                                :email      "foo.bar@mailinator.com"
-                                :idpEntitys []}))
+  (create-or-find-person [this person] {:personOid  "1.2.3.4.5.6"
+                                        :firstName  "Foo"
+                                        :lastName   "Bar"
+                                        :email      "foo.bar@mailinator.com"
+                                        :idpEntitys []}))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

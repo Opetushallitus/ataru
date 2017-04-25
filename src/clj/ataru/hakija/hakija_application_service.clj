@@ -4,6 +4,7 @@
    [ataru.background-job.job :as job]
    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
    [ataru.hakija.application-email-confirmation :as application-email]
+   [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
    [ataru.person-service.person-integration :as person-integration]
    [ataru.tarjonta-service.hakuaika :as hakuaika]
    [ataru.forms.form-store :as form-store]
@@ -91,9 +92,13 @@
 (defn- start-submit-jobs [application-id]
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
                                              (:type person-integration/job-definition)
-                                             {:application-id application-id})]
+                                             {:application-id application-id})
+        attachment-finalizer-job-id (job/start-job hakija-jobs/job-definitions
+                                                   (:type attachment-finalizer-job/job-definition)
+                                                   {:application-id application-id})]
     (application-email/start-email-submit-confirmation-job application-id)
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
+    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
 
 (defn- flag-uneditable-answers

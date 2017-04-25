@@ -6,7 +6,7 @@
 
 (defn upsert-and-log-person [person-service application-id]
   (let [application (application-store/get-application application-id)]
-    (let [result (.upsert-person person-service application)]
+    (let [result (.create-or-find-person person-service application)]
       (match result
         {:status :created :oid oid}
         (do
