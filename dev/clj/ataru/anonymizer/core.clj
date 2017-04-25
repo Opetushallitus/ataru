@@ -1,7 +1,10 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
             [ataru.anonymizer.data :as data]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.anonymizer.ssn-generator :as ssn-gen]))
+
+(def ssn-mappings (atom {}))
 
 (defn- select-value [coll exclude-val]
   (loop [val (rand-nth coll)]
@@ -55,36 +58,44 @@
       number
       (recur (apply str "+35850" (take 7 (repeatedly #(rand-int 9))))))))
 
+(defn ssn-for-answer [actual-ssn]
+  (if-let [already-anonymized (get @ssn-mappings actual-ssn)]
+    already-anonymized
+    (let [new-anonymized-ssn (ssn-gen/generate-ssn)]
+      (swap! ssn-mappings assoc actual-ssn new-anonymized-ssn)
+      new-anonymized-ssn)))
+
 (defn- anonymize [applications {:keys [key preferred_name last_name content] :as application}]
-  (let [gender           (or (get-in applications [key :gender])
+  (let [actual-ssn       (or (get-in applications [key :actual-ssn])
+                             (extract-value application "ssn"))
+        fake-ssn         (or (get-in applications [key :fake-ssn])
+                             (when actual-ssn (ssn-for-answer actual-ssn)))
+        gender           (or (get-in applications [key :gender])
                              (extract-gender application))
         first-name       (or (get-in applications [key :first-name])
                              (randomize-first-name gender preferred_name))
         last-name        (or (get-in applications [key :last-name])
                              (select-value data/last-names last_name))
-        ssn              (case gender
-                           :male "020202A0213"
-                           :female "020202A0202")
         address          (or (get-in applications [key :address])
                              (randomize-address (extract-value application "address")))
-        phone            (or (get-in application [key :phone])
+        phone            (or (get-in applications [key :phone])
                              (randomize-phone-number (extract-value application "phone")))
-        email            (or (get-in application [key :email])
+        email            (or (get-in applications [key :email])
                              (str first-name "." last-name "@devnull.com"))
-        postal-code      (or (get-in application [key :postal-code])
+        postal-code      (or (get-in applications [key :postal-code])
                              (apply str (take 5 (repeatedly #(rand-int 9)))))
         anonymize-answer (fn [{:keys [key value] :as answer}]
                            (let [value (case key
-                                         "first-name" first-name
+                                         "first-name"     first-name
                                          "preferred-name" first-name
-                                         "last-name" last-name
-                                         "address" address
-                                         "ssn" ssn
-                                         "phone" phone
-                                         "email" email
-                                         "postal-code" postal-code
-                                         "postal-office" "Helsinki"
-                                         "home-town" "Äkäslompolo"
+                                         "last-name"      last-name
+                                         "address"        address
+                                         "ssn"            fake-ssn
+                                         "phone"          phone
+                                         "email"          email
+                                         "postal-code"    postal-code
+                                         "postal-office"  "Helsinki"
+                                         "home-town"      "Äkäslompolo"
                                          value)]
                              (assoc answer :value value)))
         content          (clojure.walk/prewalk (fn [x]
@@ -94,11 +105,13 @@
                                                content)
         application      (merge application {:preferred_name first-name
                                              :last_name      last-name
-                                             :ssn            ssn
+                                             :ssn            fake-ssn
                                              :content        content})]
     (cond-> (update applications :applications conj application)
       (not (contains? applications key))
       (update key merge {:gender      gender
+                         :actual-ssn  actual-ssn
+                         :fake-ssn    fake-ssn
                          :first-name  first-name
                          :last-name   last-name
                          :address     address
