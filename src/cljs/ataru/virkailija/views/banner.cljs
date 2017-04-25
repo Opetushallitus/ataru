@@ -18,7 +18,7 @@
                    :view-applications "Hakemusten katselu"
                    :edit-applications "Hakemusten arviointi"})
 
-(def active-section-arrow [:span.active-section-arrow {:dangerouslySetInnerHTML {:__html "&#x2304;"}}])
+(def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
 (defn section-link [panel-kw]
   (let [active-panel     (subscribe [:active-panel])
