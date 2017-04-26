@@ -221,15 +221,14 @@
                                     :jvm-opts ^:replace ["-Dapp=hakija"
                                                          "-Duser.home=."]}]
              :uberjar        {:aot            :all
-                              :resource-paths ["resources"]}
+                              :resource-paths ["resources"]}}
 
-             :db-schema      {:main "ataru.scripts.generate-schema-diagram"}}
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
             "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
             "figwheel-hakija"     ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
-            "db-schema"           ["with-profile" "db-schema" "run"]})
+            "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]})
 
 
 
