@@ -284,7 +284,8 @@
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review :positioning]])]
     [:div.application-handling__review
-     {:class (when (= :fixed @review-positioning) "application-handling__review-floating")}
+     {:class (when (= :fixed @review-positioning)
+               "application-handling__review-floating animated fadeIn")}
      [application-review-state]
      [application-review-inputs]
      [application-review-events]]))
