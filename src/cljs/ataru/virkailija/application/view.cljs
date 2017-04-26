@@ -282,10 +282,12 @@
           :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
 (defn application-review []
-  [:div.application-handling__review
-   [application-review-state]
-   [application-review-inputs]
-   [application-review-events]])
+  (let [review-positioning (subscribe [:state-query [:application :review :positioning]])]
+    [:div.application-handling__review
+     {:class (when (= :fixed @review-positioning) "application-handling__review-floating")}
+     [application-review-state]
+     [application-review-inputs]
+     [application-review-events]]))
 
 (defn application-heading [application]
   (let [answers        (:answers application)
@@ -326,6 +328,7 @@
          [application-heading (:application @selected-application-and-form)]
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
+          [:span.application-handling__review-position-canary]
           [application-review]]]))))
 
 (defn application []
@@ -345,3 +348,13 @@
      (when (not @search-control-all-page)
        [:div
         [application-review-area filtered-applications]])]))
+
+(defn create-review-position-handler []
+  (let [review-canary-visible (atom true)]
+    (fn [_]
+      (when-let [canary-element (aget (.getElementsByClassName js/document "application-handling__review-position-canary") 0)]
+        (if (<= (-> canary-element .getBoundingClientRect .-top) 45)
+          (do
+            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :fixed)]))
+          (do
+            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :in-flow)])))))))
