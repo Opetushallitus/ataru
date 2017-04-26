@@ -354,7 +354,9 @@
     (fn [_]
       (when-let [canary-element (aget (.getElementsByClassName js/document "application-handling__review-position-canary") 0)]
         (if (<= (-> canary-element .getBoundingClientRect .-top) 45)
-          (do
-            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :fixed)]))
-          (do
-            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :in-flow)])))))))
+          (when @review-canary-visible
+            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :fixed)])
+            (reset! review-canary-visible false))
+          (when-not @review-canary-visible
+            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :in-flow)])
+            (reset! review-canary-visible true)))))))
