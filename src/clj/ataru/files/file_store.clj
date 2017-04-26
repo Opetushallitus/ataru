@@ -3,13 +3,14 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
             [org.httpkit.client :as http]
-            [cheshire.core :as json]))
+            [cheshire.core :as json])
+  (:import (java.text Normalizer Normalizer$Form)))
 
 (defn upload-file [{:keys [tempfile filename]}]
   (let [url  (resolve-url :liiteri.files)
         resp @(http/post url {:multipart [{:name     "file"
                                            :content  tempfile
-                                           :filename filename}]})]
+                                           :filename (Normalizer/normalize filename Normalizer$Form/NFD)}]})]
     (when (= (:status resp) 200)
       (-> (:body resp)
           (json/parse-string true)
