@@ -4,6 +4,17 @@
 @blue-border-color: #06526B;
 @form-column-width: 33%;
 
+.application-handling-webkit-scrollbar-mixin {
+  ::-webkit-scrollbar {
+    width: 7px;
+    background-color: @light-gray;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #9B9B9B;
+    border-radius: 5px;
+  }
+}
+
 .application-handling__content-wrapper {
   padding: 0 85px 15px 85px;
 }
@@ -21,14 +32,7 @@
 .application-handling__overview {
   background-color: @very-light-gray;
   border-bottom: 1px solid @separator-color;
-  ::-webkit-scrollbar {
-    width: 7px;
-    background-color: @light-gray;
-  }
-  ::-webkit-scrollbar-thumb {
-    background-color: #9B9B9B;
-    border-radius: 5px;
-  }
+  .application-handling-webkit-scrollbar-mixin;
 }
 
 .application-handling__header {
@@ -258,14 +262,7 @@ and (max-width: 1000px) {
   min-width: 407px;
   border-top: solid @review-separator-color 1px;
   padding: 21px;
-  ::-webkit-scrollbar {
-    width: 7px;
-    background-color: #f2f2f2;
-  }
-  ::-webkit-scrollbar-thumb {
-    background-color: #9B9B9B;
-    border-radius: 5px;
-  }
+  .application-handling-webkit-scrollbar-mixin;
 }
 
 .application-handling__floating-application-review-placeholder {
