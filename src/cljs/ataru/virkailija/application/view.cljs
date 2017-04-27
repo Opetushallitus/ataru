@@ -290,6 +290,11 @@
      [application-review-inputs]
      [application-review-events]]))
 
+(defn floating-application-review-placeholder
+  "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
+  []
+  [:div.application-handling__floating-application-review-placeholder])
+
 (defn application-heading [application]
   (let [answers        (:answers application)
         pref-name      (-> answers :preferred-name :value)
@@ -319,7 +324,8 @@
         application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         included-in-filter            (fn [review-state filter] (some #{review-state} filter))
-        expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])]
+        expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
+        review-positioning            (subscribe [:state-query [:application :review :positioning]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
@@ -330,6 +336,7 @@
          [:div.application-handling__review-area
           [application-contents @selected-application-and-form]
           [:span.application-handling__review-position-canary]
+          (when (= :fixed @review-positioning) [floating-application-review-placeholder])
           [application-review]]]))))
 
 (defn application []
