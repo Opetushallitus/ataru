@@ -14,7 +14,9 @@
             [ataru.virkailija.editor.handlers]
             [taoensso.timbre :refer-macros [spy info]]
             [ataru.application-common.fx] ; ataru.application-common.fx must be required to have common fx handlers enabled
-            [ataru.virkailija.virkailija-fx])) ; virkailija specific fx handlers
+            [ataru.virkailija.virkailija-fx] ; virkailija specific fx handlers
+            [ataru.virkailija.views.banner :as banner]
+            [ataru.virkailija.application.view :as app-handling-view]))
 
 (enable-console-print!)
 
@@ -27,6 +29,10 @@
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 
+(defn init-scroll-listeners []
+  (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
+  (.addEventListener js/window "scroll" (app-handling-view/create-review-position-handler)))
+
 (defn ^:export init []
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
   (routes/app-routes)
@@ -36,4 +42,5 @@
             (get "enable-re-frisk"))
     (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
-  (mount-root))
+  (mount-root)
+  (init-scroll-listeners))
