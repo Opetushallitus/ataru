@@ -134,7 +134,8 @@
              (apply str)))
       (if (= (:fieldType field-descriptor) "attachment")
         (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
-          (str filename " (" (util/size-bytes->str size) ")"))
+          (when (and filename size)
+            (str filename " (" (util/size-bytes->str size) ")")))
         value))))
 
 (defn- write-application! [writer application headers application-meta-fields form]
