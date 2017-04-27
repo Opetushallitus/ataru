@@ -3,7 +3,6 @@
 @total-banner-height: 130px;
 @blue-border-color: #06526B;
 @form-column-width: 33%;
-@review-min-width: 407px;
 
 .application-handling__content-wrapper {
   padding: 0 85px 15px 85px;
@@ -256,7 +255,7 @@ and (max-width: 1000px) {
   color: @text-color;
   font-size: 14px;
   background-color: @very-light-gray;
-  min-width: @review-min-width;
+  min-width: 407px;
   border-top: solid @review-separator-color 1px;
   padding: 21px;
   ::-webkit-scrollbar {
@@ -270,7 +269,8 @@ and (max-width: 1000px) {
 }
 
 .application-handling__floating-application-review-placeholder {
-  width: @review-min-width;
+  width: 587px;
+  visibility: hidden;
 }
 
 .application-handling__review-floating {
