@@ -358,10 +358,11 @@
         [application-review-area filtered-applications]])]))
 
 (defn create-review-position-handler []
-  (let [review-canary-visible (atom true)]
+  (let [review-canary-visible        (atom true)
+        positioning-change-threshold 45]
     (fn [_]
       (when-let [canary-element (aget (.getElementsByClassName js/document "application-handling__review-position-canary") 0)]
-        (if (<= (-> canary-element .getBoundingClientRect .-top) 45)
+        (if (<= (-> canary-element .getBoundingClientRect .-top) positioning-change-threshold)
           (when @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review :positioning] :fixed)])
             (reset! review-canary-visible false))
