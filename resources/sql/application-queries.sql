@@ -173,7 +173,8 @@ SELECT
   form_id AS form,
   created_time,
   content,
-  hakukohde
+  hakukohde,
+  (SELECT DISTINCT COUNT(key) FROM applications a2 WHERE a2.ssn = a.ssn) AS applications_count
 FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time;
 
