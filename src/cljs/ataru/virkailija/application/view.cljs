@@ -282,7 +282,7 @@
           :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
 (defn application-review []
-  (let [review-positioning (subscribe [:state-query [:application :review :positioning]])]
+  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating animated fadeIn")}
@@ -325,7 +325,7 @@
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         included-in-filter            (fn [review-state filter] (some #{review-state} filter))
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        review-positioning            (subscribe [:state-query [:application :review :positioning]])]
+        review-positioning            (subscribe [:state-query [:application :review-positioning]])]
     (fn [applications]
       (when (and (included-in-filter @review-state @application-filter)
                  (belongs-to-current-form @selected-key applications)
@@ -364,8 +364,8 @@
       (when-let [canary-element (aget (.getElementsByClassName js/document "application-handling__review-position-canary") 0)]
         (if (<= (-> canary-element .getBoundingClientRect .-top) positioning-change-threshold)
           (when @review-canary-visible
-            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :fixed)])
+            (dispatch [:state-update #(assoc-in % [:application :review-positioning] :fixed)])
             (reset! review-canary-visible false))
           (when-not @review-canary-visible
-            (dispatch [:state-update #(assoc-in % [:application :review :positioning] :in-flow)])
+            (dispatch [:state-update #(assoc-in % [:application :review-positioning] :in-flow)])
             (reset! review-canary-visible true)))))))
