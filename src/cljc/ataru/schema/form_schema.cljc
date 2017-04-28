@@ -173,6 +173,7 @@
    :form                          s/Int
    :lang                          s/Str
    :answers                       [Answer]
+   :applications-count            s/Int
    (s/optional-key :state)        (s/maybe s/Str)
    (s/optional-key :hakukohde)    (s/maybe s/Str)
    (s/optional-key :haku)         (s/maybe s/Str)
