@@ -307,7 +307,11 @@
      [:div.application-handling__review-area-main-heading-container
       [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]
       (when (> applications-count 1)
-      [:a.application-handling__review-area-main-heading-applications-link (str applications-count " hakemusta")])]
+      [:a.application-handling__review-area-main-heading-applications-link
+       {:href "/lomake-editori/applications/search-ssn/"
+        :on-click (fn search-applications-by-ssn [_]
+                    (dispatch [:application/ssn-search ssn]))}
+       (str applications-count " hakemusta")])]
      (when-not (string/blank? hakukohde-name)
        [:div.application-handling__review-area-hakukohde-heading hakukohde-name])
      (when-not (or
