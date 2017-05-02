@@ -66,7 +66,7 @@
 
   (defroute #"^/lomake-editori/applications/search-ssn/" []
     (dispatch [:set-active-panel :application])
-    (dispatch [:application/clear-applications-and-haku-selections])
+    (dispatch [:application/clear-applications-haku-and-form-selections])
     (dispatch [:application/show-search-ssn]))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
