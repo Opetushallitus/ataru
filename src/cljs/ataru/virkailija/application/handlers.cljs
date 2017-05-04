@@ -285,3 +285,21 @@
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut}}))
 
+(reg-event-fx
+  :application/navigate
+  (fn [{:keys [db]} [_ path]]
+    {:db       db
+     :navigate path}))
+
+(reg-event-fx
+  :application/dispatch
+  (fn [{:keys [db]} [_ dispatch-vec]]
+    {:db       db
+     :dispatch dispatch-vec}))
+
+(reg-event-fx
+  :application/navigate-with-callback
+  (fn [{:keys [db]} [_ path dispatch-vec]]
+    {:db db
+     :dispatch-n [[:application/navigate path]
+                  [:application/dispatch dispatch-vec]]}))
