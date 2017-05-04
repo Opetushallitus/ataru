@@ -22,7 +22,7 @@ lein less auto
 
 ### Create database
 
-Just use the postgres Docker (9.4) image:
+Just use the postgres Docker (9.5) image:
 
 ```
 docker run -d --name ataru-dev-db -p 5432:5432 -e POSTGRES_DB=ataru-dev -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph postgres:9.5

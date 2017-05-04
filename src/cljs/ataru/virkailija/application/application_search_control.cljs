@@ -19,17 +19,22 @@
     ""))
 
 (defn ssn-search-field []
-  [:div
-   [:input.application__search-control-ssn-input
-    {:type "text"
-     :id "ssn-search-field"
-     :class (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
-              "application__search-control-ssn-input-error animated shake")
-     :placeholder "Etsi henkilötunnuksella"
-     :value @(subscribe [:state-query [:application :search-control :ssn :value]])
-     :max-length "11"
-     :on-change (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
-   [:span.application__search-control-clear-ssn {:on-click #(dispatch [:application/clear-ssn])} [:i.zmdi.zmdi-close]]])
+  (let [ssn-value (subscribe [:state-query [:application :search-control :ssn :value]])]
+    [:div
+     [:input.application__search-control-ssn-input
+      {:type        "text"
+       :auto-focus  true
+       :id          "ssn-search-field"
+       :class       (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
+                      "application__search-control-ssn-input-error animated shake")
+       :placeholder "Etsi henkilötunnuksella"
+       :value       @ssn-value
+       :max-length  "11"
+       :on-change   (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
+     (when-not (clojure.string/blank? @ssn-value)
+       [:span.application__search-control-clear-ssn
+        {:on-click #(dispatch [:application/clear-ssn])}
+        [:i.zmdi.zmdi-close]])]))
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
