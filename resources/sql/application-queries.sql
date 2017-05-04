@@ -174,7 +174,11 @@ SELECT
   created_time,
   content,
   hakukohde,
-  (SELECT DISTINCT COUNT(key) FROM applications a2 WHERE a2.ssn = a.ssn) AS applications_count
+  (SELECT DISTINCT COUNT(a2.key)
+    FROM applications a2
+    JOIN forms f2 ON a2.form_id = f2.id
+    WHERE a2.ssn = a.ssn
+    AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS applications_count
 FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time;
 
