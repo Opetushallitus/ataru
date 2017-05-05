@@ -116,7 +116,10 @@
 (reg-event-fx
   :application/fetch-applications-by-ssn
   (fn [{:keys [db]} [_ ssn]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn))))
+    (let [db (cond-> db
+               (clojure.string/blank? (get-in db [:application :search-control :ssn :value]))
+               (assoc-in [:application :search-control :ssn :value] ssn))]
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn)))))
 
 (reg-event-db
  :application/review-updated
