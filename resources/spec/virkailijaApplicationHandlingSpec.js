@@ -196,11 +196,11 @@
         expect(applicationStates().length).to.equal(3)
 
         var stateOfFirstApplication = applicationStates().eq(0).text()
-        var stateOfSecondApplication = applicationStates().eq(1).text()
+        var stateOfSecondApplication = applicationStates().eq(2).text()
 
         filterOutBasedOnFirstApplicationState(stateOfFirstApplication)
         wait.until(function() {
-          var expectedFilteredCount = stateOfFirstApplication === stateOfSecondApplication ? 0 : 2
+          var expectedFilteredCount = stateOfFirstApplication === stateOfSecondApplication ? 0 : 1
           return filteredApplicationsCount() === expectedFilteredCount
         })()
         .then(function() {
