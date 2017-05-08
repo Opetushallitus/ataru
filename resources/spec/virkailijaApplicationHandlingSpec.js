@@ -238,6 +238,55 @@
         return testFrame().find('.application-handling__list .application-handling__list-row--state').length
       }
     })
+
+    describe('finding all applications belonging to a given ssn', function() {
+      before(
+        clickElement(multipleApplicationsApplicant)
+      )
+
+      it('shows link to all applications belonging to a given ssn', function(done) {
+        wait.until(function() {
+          return searchApplicationsBySsnLink().text() === '2 hakemusta'
+        })()
+        .then(clickElement(searchApplicationsBySsnLink))
+        .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
+        .then(function() {
+          expectApplicants(['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
+        })
+        .then(done)
+        .fail(done)
+      })
+
+      function multipleApplicationsApplicant() {
+        return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)')
+      }
+
+      function searchApplicationsBySsnLink() {
+        return testFrame().find('.application-handling__review-area-main-heading-applications-link')
+      }
+
+      function ssnSearchField() {
+        return testFrame().find('.application__search-control-ssn-input')
+      }
+
+      function ssnSearchFieldHasValue(value) {
+        return function() {
+          return ssnSearchField().val() === value
+        }
+      }
+
+      function expectApplicants(expected) {
+        expect(_.isEqual(applicantNames(), expected)).to.be.true
+      }
+
+      function applicantNames() {
+        var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant')
+        return _(scoreColumnObjects)
+          .map(function (obj) { return $(obj).text() })
+          .filter(function (val) { return val !== 'Hakija' })
+          .value()
+      }
+    })
   })
 
   function downloadLink() {
