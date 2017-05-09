@@ -25,11 +25,6 @@
  (fn [db]
    (assoc-in db show-path nil)))
 
-(reg-event-db
- :application/clear-ssn
- (fn [db]
-   (assoc-in db [:application :search-control :ssn] nil)))
-
 (reg-event-fx
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]

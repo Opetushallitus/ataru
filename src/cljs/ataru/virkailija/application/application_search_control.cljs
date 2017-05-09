@@ -36,7 +36,7 @@
        :on-change   (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @ssn-value)
        [:span.application__search-control-clear-ssn
-        {:on-click #(dispatch [:application/clear-ssn])}
+        {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
         [:i.zmdi.zmdi-close]])]))
 
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
