@@ -6,7 +6,10 @@
 
 (defn haku-tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
-   [:a {:href link-url}
+   [:a {:href link-url
+        :on-click (fn [event]
+                    (.preventDefault event)
+                    (dispatch [:navigate link-url]))}
     [:div.application__search-control-tab-selector
      {:class (when (= tab-id selected-tab) "application__search-control-selected-tab")}
      label-text]]
@@ -39,7 +42,10 @@
 (defn search-ssn-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
     [:div.application__search-control-tab-selector-wrapper
-     [:a {:href link-url}
+     [:a {:href link-url
+          :on-click (fn [event]
+                      (.preventDefault event)
+                      (dispatch [:navigate link-url]))}
       [:div.application__search-control-tab-selector
        {:class (when tab-selected "application__search-control-selected-tab-with-input")}
        (if tab-selected
