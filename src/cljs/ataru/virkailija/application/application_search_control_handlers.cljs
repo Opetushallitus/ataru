@@ -29,7 +29,6 @@
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]
    (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
-         previous-ssn-value    (get-in db [:application :search-control :ssn :value])
          show-error            (if (= 11 (count ucase-potential-ssn)) (not (ssn/ssn? ucase-potential-ssn)) false)
          db-with-potential-ssn (-> db
                                    (assoc-in [:application :search-control :ssn :value] potential-ssn)
