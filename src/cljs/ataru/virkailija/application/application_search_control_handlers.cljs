@@ -40,9 +40,6 @@
                                    (assoc-in [:application :search-control :ssn :value] potential-ssn)
                                    (assoc-in [:application :search-control :ssn :show-error] show-error))]
      (cond
-       (= potential-ssn previous-ssn-value)
-       nil
-
        (ssn/ssn? ucase-potential-ssn)
        {:db db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
