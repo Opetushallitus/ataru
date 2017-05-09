@@ -173,8 +173,13 @@ SELECT
   form_id AS form,
   created_time,
   content,
-  hakukohde
-FROM applications a
+  hakukohde,
+  (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
+                         FROM applications a2
+                           JOIN forms f2 ON a2.form_id = f2.id
+                         WHERE a2.ssn = a.ssn
+                               AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp) AS applications_count
+  FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time;
 
 -- name: yesql-get-latest-application-by-secret

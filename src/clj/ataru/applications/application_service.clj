@@ -60,7 +60,7 @@
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service]
-  (let [bare-application (application-store/get-latest-application-by-key application-key)
+  (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         form             (form-store/fetch-by-id (:form bare-application))
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info tarjonta-service (:hakukohde bare-application))
         application      (populate-koodisto-fields bare-application form)]

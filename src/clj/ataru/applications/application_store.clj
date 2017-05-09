@@ -204,8 +204,19 @@
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
 
-(defn get-latest-application-by-key [application-key]
-  (unwrap-application (first (exec-db :db yesql-get-latest-application-by-key {:application_key application-key}))))
+(defn get-latest-application-by-key [application-key organization-oids]
+  (-> (exec-db :db yesql-get-latest-application-by-key {:application_key              application-key
+                                                        :query_type                   "ORGS"
+                                                        :authorized_organization_oids organization-oids})
+      (first)
+      (unwrap-application)))
+
+(defn get-latest-application-by-key-unrestricted [application-key]
+  (-> (exec-db :db yesql-get-latest-application-by-key {:application_key              application-key
+                                                        :query_type                   "ALL"
+                                                        :authorized_organization_oids [""]})
+      (first)
+      (unwrap-application)))
 
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})

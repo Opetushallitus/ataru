@@ -116,7 +116,10 @@
 (reg-event-fx
   :application/fetch-applications-by-ssn
   (fn [{:keys [db]} [_ ssn]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn))))
+    (let [db (cond-> db
+               (clojure.string/blank? (get-in db [:application :search-control :ssn :value]))
+               (assoc-in [:application :search-control :ssn :value] ssn))]
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn)))))
 
 (reg-event-db
  :application/review-updated
@@ -285,3 +288,21 @@
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut}}))
 
+(reg-event-fx
+  :application/navigate
+  (fn [{:keys [db]} [_ path]]
+    {:db       db
+     :navigate path}))
+
+(reg-event-fx
+  :application/dispatch
+  (fn [{:keys [db]} [_ dispatch-vec]]
+    {:db       db
+     :dispatch dispatch-vec}))
+
+(reg-event-fx
+  :application/navigate-with-callback
+  (fn [{:keys [db]} [_ path dispatch-vec]]
+    {:db db
+     :dispatch-n [[:application/navigate path]
+                  [:application/dispatch dispatch-vec]]}))

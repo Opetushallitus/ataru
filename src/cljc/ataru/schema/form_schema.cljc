@@ -169,18 +169,19 @@
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (s/defschema Application
-  {(s/optional-key :key)          s/Str
-   :form                          s/Int
-   :lang                          s/Str
-   :answers                       [Answer]
-   (s/optional-key :state)        (s/maybe s/Str)
-   (s/optional-key :hakukohde)    (s/maybe s/Str)
-   (s/optional-key :haku)         (s/maybe s/Str)
-   (s/optional-key :id)           s/Int
-   (s/optional-key :created-time) org.joda.time.DateTime
-   (s/optional-key :secret)       s/Str
-   (s/optional-key :form-key)     s/Str
-   (s/optional-key :tarjonta)     FormTarjontaMetadata})
+  {(s/optional-key :key)                s/Str
+   :form                                s/Int
+   :lang                                s/Str
+   :answers                             [Answer]
+   (s/optional-key :applications-count) s/Int
+   (s/optional-key :state)              (s/maybe s/Str)
+   (s/optional-key :hakukohde)          (s/maybe s/Str)
+   (s/optional-key :haku)               (s/maybe s/Str)
+   (s/optional-key :id)                 s/Int
+   (s/optional-key :created-time)       org.joda.time.DateTime
+   (s/optional-key :secret)             s/Str
+   (s/optional-key :form-key)           s/Str
+   (s/optional-key :tarjonta)           FormTarjontaMetadata})
 
 
 (def application-states

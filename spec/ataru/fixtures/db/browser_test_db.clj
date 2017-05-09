@@ -83,10 +83,31 @@
                            :key "email",
                            :value "ari.vatanen@iki.fi"}]})
 
+(def application3 {:form 1,
+                   :lang "fi",
+                   :key "application-key3",
+                   :answers
+                         [{:key "c2e4536c-1cdb-4450-b019-1b38856296ae",
+                           :value "47",
+                           :fieldType "textField",}
+                          {:fieldType "textField",
+                           :key "preferred-name",
+                           :value "Johanna Irmeli"}
+                          {:fieldType "textField",
+                           :key "last-name",
+                           :value "Tyrni"}
+                          {:fieldType "textField",
+                           :key "ssn",
+                           :value "020202A0202"}
+                          {:fieldType "textField",
+                           :key "email",
+                           :value "seija.kuikeloinen@gmail.com"}]})
+
 (defn init-db-fixture []
   (form-store/create-form-or-increment-version! form1)
   (form-store/create-form-or-increment-version! form2)
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
-    (application-store/add-application application2)))
+    (application-store/add-application application2)
+    (application-store/add-application application3)))
 
