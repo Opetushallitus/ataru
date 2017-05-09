@@ -26,4 +26,14 @@
                                                                  {:fieldType "attachment"
                                                                   :value     ["attachment-key-2" "attachment-key-3"]}]})]
       (let [result (job/finalize-attachments {:application-id 3} nil)]
+        (should= {:transition {:id :final}} result))))
+
+  (it "should not call finalize API without any attachments"
+    (with-redefs [http/post                         (fn [_ _]
+                                                      (should-fail))
+                  application-store/get-application (fn [application-id]
+                                                      (should= application-id 3)
+                                                      {:answers [{:fieldType "textField"
+                                                                  :value     "lolbal"}]})]
+      (let [result (job/finalize-attachments {:application-id 3} nil)]
         (should= {:transition {:id :final}} result)))))
