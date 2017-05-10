@@ -15,9 +15,26 @@
       []
       options)))
 
+(defn- validate-birthdate-and-gender-component
+  [answers-by-key child-answers]
+  (if
+    (or
+      (= (-> answers-by-key :nationality :value) "246")
+      (= (boolean (-> answers-by-key :have-finnish-ssn :value)) true))
+    (and                                                    ; finnish or have ssn
+      (:ssn child-answers)
+      (:birth-date child-answers)
+      (:gender child-answers))
+    (and                                                    ; not finnish, no ssn
+      (:birth-date child-answers)
+      (:gender child-answers))))
+
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
-    :one-of ; one of the answers of a group of fields must validate to true
+    :birthdate-and-gender-component
+    validate-birthdate-and-gender-component
+
+    :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
     (fn [answers]
       (boolean (some true? answers)))))
 
@@ -42,7 +59,7 @@
                     answers))))
 
 (defn build-results
-  [answers-by-key results [{:keys [id] :as field} & forms]]
+  [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
   (let [id      (keyword id)
         answers (wrap-coll (:value (get answers-by-key id)))]
     (into {}
@@ -54,7 +71,7 @@
         (build-results
           answers-by-key
           results
-          forms)
+          rest-form-fields)
 
         {:fieldClass      "wrapperElement"
          :children        children
@@ -62,18 +79,17 @@
         (build-results
           answers-by-key
           (concat results
-            {id {:passed?
-                 ((validator-keyword->fn validation-keyword)
-                  (mapv (comp :passed? second)
-                    (build-results answers-by-key [] children)))}})
-          forms)
+                  {id {:passed?
+                       ((partial (validator-keyword->fn validation-keyword) answers-by-key)
+                         (build-results answers-by-key [] children))}})
+          rest-form-fields)
 
         {:fieldClass "wrapperElement"
          :children   children}
         (build-results
           answers-by-key
           (concat results (build-results answers-by-key [] children))
-          forms)
+          rest-form-fields)
 
         {:fieldClass "formField"
          :fieldType  (:or "dropdown" "multipleChoice")
@@ -106,7 +122,7 @@
                   answers-by-key
                   results
                   followups)))
-            forms))
+            rest-form-fields))
 
         {:fieldClass "formField"
          :validators validators}
@@ -114,7 +130,7 @@
           answers-by-key
           (concat results
             {id {:passed? (passes-all? validators answers)}})
-          forms)
+          rest-form-fields)
 
         :else results))))
 
