@@ -35,8 +35,8 @@
     validate-birthdate-and-gender-component
 
     :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
-    (fn [answers]
-      (boolean (some true? answers)))))
+    (fn [_ child-answers]
+      (boolean (some true? child-answers)))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
