@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.application-search-control-handlers
   (:require
    [re-frame.core :refer [reg-event-fx reg-event-db]]
+   [ataru.dob :as dob]
    [ataru.ssn :as ssn]))
 
 (def show-path [:application :search-control :show])
@@ -36,7 +37,11 @@
      (cond
        (ssn/ssn? ucase-potential-ssn)
        {:db db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
+        :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :ssn]}
+
+       (dob/dob? ucase-potential-ssn)
+       {:db       db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :dob]}
 
        :else
        {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))
