@@ -75,6 +75,24 @@ WHERE a.ssn = :ssn
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
+-- name: yesql-get-application-list-by-dob
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.preferred_name,
+  a.last_name,
+  a.created_time,
+  ar.state                               AS state,
+  ar.score                               AS score,
+  a.form_id                              AS form
+FROM applications a
+  JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN forms f ON a.form_id = f.id
+WHERE a.dob = :dob
+      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+ORDER BY a.created_time DESC;
+
 -- name: yesql-get-application-events
 SELECT
   event_type,

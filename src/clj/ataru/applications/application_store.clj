@@ -197,6 +197,19 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn get-application-list-by-dob [dob organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
+                                                       :query_type                   "ORGS"
+                                                       :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-full-application-list-by-dob [dob]
+  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
+                                                       :query_type                   "ALL"
+                                                       :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
