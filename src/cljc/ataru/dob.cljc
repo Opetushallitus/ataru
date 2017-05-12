@@ -4,17 +4,18 @@
 
 (defonce date-pattern #"^(\d{1,2})\.(\d{1,2})\.(\d{4})$")
 
-(defn dob? [dob]
+(defn str->dob [dob-str]
   (try
-    (if-let [[_ day month year] (re-find date-pattern dob)]
-      (let [date (t/date-time #?@(:clj  [(Integer/valueOf year)
-                                         (Integer/valueOf month)
-                                         (Integer/valueOf day)]
-                                  :cljs [(int year)
-                                         (int month)
-                                         (int day)]))
-            now  (t/now)]
-        (t/before? date now))
-      false)
-    (catch #?(:clj Exception :cljs :default) _
-      false)))
+    (when-let [[_ day month year] (re-find date-pattern dob-str)]
+      (t/date-time #?@(:clj  [(Integer/valueOf year)
+                              (Integer/valueOf month)
+                              (Integer/valueOf day)]
+                       :cljs [(int year)
+                              (int month)
+                              (int day)])))
+    (catch #?(:clj Exception :cljs :default) _)))
+
+(defn dob? [dob-str]
+  (if (str->dob dob-str)
+    true
+    false))
