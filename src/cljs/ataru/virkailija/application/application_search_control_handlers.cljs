@@ -2,6 +2,7 @@
   (:require
    [re-frame.core :refer [reg-event-fx reg-event-db]]
    [ataru.dob :as dob]
+   [ataru.email :as email]
    [ataru.ssn :as ssn]))
 
 (def show-path [:application :search-control :show])
@@ -36,7 +37,7 @@
                                      (dob/dob? ucase-potential-ssn)
                                      :dob
 
-                                     :else
+                                     (email/email? potential-ssn)
                                      :email)
          show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-potential-ssn (-> db
@@ -51,7 +52,7 @@
        {:db       db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :dob]}
 
-       (not (clojure.string/blank? potential-ssn))
+       (= type :email)
        {:db       db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term potential-ssn :email]}
 

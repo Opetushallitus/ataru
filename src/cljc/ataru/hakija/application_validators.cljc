@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-validators
   (:require [clojure.string]
+            [ataru.email :as email]
             [ataru.ssn :as ssn]
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
@@ -17,15 +18,6 @@
 (defn- ssn?
   [value]
   (ssn/ssn? value))
-
-(def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9]){2,}$")
-(def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")
-
-(defn ^:private email?
-  [value]
-  (and (not (nil? value))
-       (not (nil? (re-matches email-pattern value)))
-       (nil? (re-find invalid-email-pattern value))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
@@ -79,7 +71,7 @@
 
 (def validators {:required    required?
                  :ssn         ssn?
-                 :email       email?
+                 :email       email/email?
                  :postal-code postal-code?
                  :phone       phone?
                  :past-date   past-date?})
