@@ -26,7 +26,7 @@
       (:birth-date child-answers)
       (:gender child-answers))
     (and                                                    ; not finnish, no ssn
-      (clojure.string/blank? (-> answers-by-key :ssn))
+      (clojure.string/blank? (-> answers-by-key :ssn :value))
       (:birth-date child-answers)
       (:gender child-answers))))
 
