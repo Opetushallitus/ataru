@@ -1,9 +1,9 @@
 -- name: yesql-add-application-query<!
 -- Add application
 INSERT INTO applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn)
+(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn, dob)
 VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn);
+  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn, :dob);
 
 -- name: yesql-get-application-list-by-form
 SELECT

@@ -10,6 +10,7 @@
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
+            [ataru.dob :as dob]
             [crypto.random :as crypto]
             [taoensso.timbre :refer [info]]))
 
@@ -47,6 +48,7 @@
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
                               :ssn            (find-value-from-answers "ssn" answers)
+                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
                               :hakukohde      (:hakukohde application)
                               :haku           (:haku application)
                               :content        {:answers answers}
