@@ -299,19 +299,21 @@
   (let [answers            (:answers application)
         pref-name          (-> answers :preferred-name :value)
         last-name          (-> answers :last-name :value)
-        ssn                (or (-> answers :ssn :value) (-> answers :birth-date :value))
+        ssn                (get-in answers [:ssn :value])
+        email              (get-in answers [:email :value])
+        birth-date         (get-in answers [:birth-date :value])
         hakukohde-name     (-> application :tarjonta :hakukohde-name)
         applications-count (:applications-count application)
         koulutus-info      (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
-      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]
+      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " (or ssn birth-date))]
       (when (> applications-count 1)
         [:a.application-handling__review-area-main-heading-applications-link
          {:on-click (fn [_]
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search-ssn/"
-                                 [:application/ssn-search ssn]]))}
+                                 [:application/ssn-search (or ssn email)]]))}
          (str applications-count " hakemusta")])]
      (when-not (string/blank? hakukohde-name)
        [:div.application-handling__review-area-hakukohde-heading hakukohde-name])

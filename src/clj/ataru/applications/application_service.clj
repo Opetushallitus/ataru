@@ -56,11 +56,21 @@
                                  (= (count human-readable-value) 1)
                                  first))))))))))
 
+(defn- set-applications-count [{:keys [applications-by-ssn-count applications-by-email-count] :as application}]
+  (let [applications-count (cond
+                             (> applications-by-ssn-count 0) applications-by-ssn-count
+                             (> applications-by-email-count 0) applications-by-email-count)
+        application        (dissoc application :applications-by-ssn-count :applications-by-email-count)]
+    (cond-> application
+      (some? applications-count)
+      (assoc :applications-count applications-count))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service]
-  (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
+  (let [bare-application (-> (aac/get-latest-application-by-key application-key session organization-service)
+                             (set-applications-count))
         form             (form-store/fetch-by-id (:form bare-application))
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info tarjonta-service (:hakukohde bare-application))
         application      (populate-koodisto-fields bare-application form)]
