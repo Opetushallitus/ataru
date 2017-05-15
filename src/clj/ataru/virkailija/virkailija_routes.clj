@@ -147,7 +147,8 @@
                                           {hakukohdeOid :- s/Str nil}
                                           {hakuOid      :- s/Str nil}
                                           {ssn          :- s/Str nil}
-                                          {dob          :- s/Str nil}]
+                                          {dob          :- s/Str nil}
+                                          {email        :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (cond
@@ -165,7 +166,10 @@
 
                              (some? dob)
                              (let [dob (dob/str->dob dob)]
-                               (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))))
+                               (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))
+
+                             (some? email)
+                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]

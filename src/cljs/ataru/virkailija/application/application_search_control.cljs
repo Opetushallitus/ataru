@@ -30,9 +30,8 @@
        :id          "ssn-search-field"
        :class       (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
                       "application__search-control-ssn-input-error animated shake")
-       :placeholder "Etsi henkilötunnuksella tai syntymäajalla"
+       :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
        :value       @ssn-value
-       :max-length  "11"
        :on-change   (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @ssn-value)
        [:span.application__search-control-clear-ssn
@@ -68,7 +67,7 @@
       :search-ssn
       @selected-tab
       "/lomake-editori/applications/search-ssn/"
-      "Etsi henkilötunnuksella tai syntymäajalla"]
+      "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"]
      [haku-tab
       :complete
       @selected-tab

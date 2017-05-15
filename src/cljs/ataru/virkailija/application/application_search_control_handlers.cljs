@@ -30,7 +30,15 @@
  :application/ssn-search
  (fn [{:keys [db]} [_ potential-ssn]]
    (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
-         show-error            (if (= 11 (count ucase-potential-ssn)) (not (ssn/ssn? ucase-potential-ssn)) false)
+         type                  (cond (ssn/ssn? ucase-potential-ssn)
+                                     :ssn
+
+                                     (dob/dob? ucase-potential-ssn)
+                                     :dob
+
+                                     :else
+                                     :email)
+         show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-potential-ssn (-> db
                                    (assoc-in [:application :search-control :ssn :value] potential-ssn)
                                    (assoc-in [:application :search-control :ssn :show-error] show-error))]
@@ -42,6 +50,10 @@
        (dob/dob? ucase-potential-ssn)
        {:db       db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :dob]}
+
+       (not (clojure.string/blank? potential-ssn))
+       {:db       db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-term potential-ssn :email]}
 
        :else
        {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))

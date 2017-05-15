@@ -121,7 +121,8 @@
                         (assoc-in [:application :search-control :ssn :value] search-kwd))
           query-param (case type
                         :ssn "ssn"
-                        :dob "dob")]
+                        :dob "dob"
+                        :email "email")]
       (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
 
 (reg-event-db
