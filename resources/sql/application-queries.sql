@@ -214,7 +214,12 @@ SELECT
                          FROM applications a2
                            JOIN forms f2 ON a2.form_id = f2.id
                          WHERE a2.ssn = a.ssn
-                               AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp) AS applications_count
+                               AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp) AS applications_count,
+  (SELECT COUNT(*) FROM (SELECT DISTINCT(a3.key)
+                         FROM applications a3
+                           JOIN forms f3 ON a3.form_id = f3.id
+                         WHERE a3.email = a.email
+                               AND (:query_type = 'ALL' OR f3.organization_oid IN (:authorized_organization_oids))) AS temp) AS applications_by_email_count
   FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time;
 
