@@ -36,7 +36,7 @@
 
     :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
     (fn [_ child-answers]
-      (boolean (some true? child-answers)))))
+      (boolean (some true? (map (comp :passed? second) child-answers))))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
