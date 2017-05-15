@@ -43,18 +43,17 @@
          db-with-potential-ssn (-> db
                                    (assoc-in [:application :search-control :ssn :value] potential-ssn)
                                    (assoc-in [:application :search-control :ssn :show-error] show-error))]
-     (cond
-       (ssn/ssn? ucase-potential-ssn)
+     (case type
+       :ssn
        {:db db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :ssn]}
 
-       (dob/dob? ucase-potential-ssn)
+       :dob
        {:db       db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :dob]}
 
-       (= type :email)
+       :email
        {:db       db-with-potential-ssn
         :dispatch [:application/fetch-applications-by-term potential-ssn :email]}
 
-       :else
        {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))
