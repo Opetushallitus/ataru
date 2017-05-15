@@ -68,7 +68,7 @@
       :search-ssn
       @selected-tab
       "/lomake-editori/applications/search-ssn/"
-      "Etsi henkilötunnuksella"]
+      "Etsi henkilötunnuksella tai syntymäajalla"]
      [haku-tab
       :complete
       @selected-tab
