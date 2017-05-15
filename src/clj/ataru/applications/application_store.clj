@@ -49,6 +49,7 @@
                               :last_name      (find-value-from-answers "last-name" answers)
                               :ssn            (find-value-from-answers "ssn" answers)
                               :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                              :email          (find-value-from-answers "email" answers)
                               :hakukohde      (:hakukohde application)
                               :haku           (:haku application)
                               :content        {:answers answers}
