@@ -66,7 +66,7 @@
      [search-term-tab
       :search-term
       @selected-tab
-      "/lomake-editori/applications/search-ssn/"
+      "/lomake-editori/applications/search/"
       "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"]
      [haku-tab
       :complete
