@@ -18,7 +18,7 @@
    (assoc-in db show-path :complete)))
 
 (reg-event-db
- :application/show-search-ssn
+ :application/show-search-term
  (fn [db]
    (assoc-in db show-path :search-ssn)))
 
