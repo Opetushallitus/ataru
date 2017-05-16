@@ -84,7 +84,8 @@
 
 (defn- main-first-name?
   [value answers-by-key]
-  true)
+  (let [first-names (-> answers-by-key :first-name :value)]
+    (clojure.string/includes? first-names value)))
 
 (def validators {:required        required?
                  :ssn             ssn?

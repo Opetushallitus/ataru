@@ -19,7 +19,7 @@
 
 (defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"} :size "S" :id :preferred-name))
+  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"} :size "S" :id :preferred-name :validators [:main-first-name]))
 
 (defn ^:private first-name-section
   []
