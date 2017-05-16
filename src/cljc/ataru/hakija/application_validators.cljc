@@ -10,19 +10,31 @@
                :cljs [cljs.core.match :refer-macros [match]])))
 
 (defn ^:private required?
-  [value]
+  [value _]
   (if (or (seq? value) (vector? value))
     (not (empty? value))
     (not (clojure.string/blank? value))))
 
 (defn- ssn?
-  [value]
+  [value _]
   (ssn/ssn? value))
 
+<<<<<<< HEAD
+=======
+(def ^:private email-pattern #"^[^\s@]+@(([a-zA-Z\-0-9])+\.)+([a-zA-Z\-0-9]){2,}$")
+(def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")
+
+(defn ^:private email?
+  [value _]
+  (and (not (nil? value))
+       (not (nil? (re-matches email-pattern value)))
+       (nil? (re-find invalid-email-pattern value))))
+
+>>>>>>> Pass all current answers to validation function, not just the value of the answer in question
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
-  [value]
+  [value _]
   (and (not (nil? value))
        (not (nil? (re-matches postal-code-pattern value)))))
 
@@ -31,7 +43,7 @@
 (def ^:private finnish-date-pattern #"^\d{1,2}\.\d{1,2}\.\d{4}$")
 
 (defn ^:private phone?
-  [value]
+  [value _]
   (if-not (nil? value)
     (let [parsed (clojure.string/replace value whitespace-pattern "")]
       (not (nil? (re-matches phone-pattern parsed))))
@@ -57,30 +69,33 @@
            nil)))))
 
 (defn ^:private date?
-  [value]
+  [value _]
   (boolean
     (some->>
       value
       parse-date)))
 
-(defn ^:private past-date? [value]
+(defn ^:private past-date?
+  [value _]
   (boolean
-    (and (date? value)
+    (and (date? value _)
          (some-> (parse-date value)
                  (c/before? (c/today-at-midnight))))))
 
-(def validators {:required    required?
-                 :ssn         ssn?
-                 :email       email/email?
-                 :postal-code postal-code?
-                 :phone       phone?
-                 :past-date   past-date?})
+(defn- main-first-name?
+  [value answers-by-key]
+  true)
+
+(def validators {:required        required?
+                 :ssn             ssn?
+                 :email           email/email?
+                 :postal-code     postal-code?
+                 :phone           phone?
+                 :past-date       past-date?
+                 :main-first-name main-first-name?})
 
 (defn validate
-  [validator value]
+  [validator value answers-by-key]
   (boolean
-    (when-let [validator-fn (get validators
-                              (if (keyword? validator)
-                                validator
-                                (keyword validator)))]
-      (validator-fn value))))
+    (when-let [validator-fn ((keyword validator) validators)]
+      (validator-fn value answers-by-key))))
