@@ -77,8 +77,8 @@
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
-             {:class (when (= true @expanded?)
-                       "application-handling__list--expanded")}]
+             {:class (str (when (= true @expanded?) "application-handling__list--expanded")
+                          (when (> (count applications) 0) " animated fadeIn"))}]
             (for [application applications
                   :let        [selected? (= @selected-key (:key application))]]
               (if selected?
