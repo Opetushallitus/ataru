@@ -313,7 +313,7 @@
          {:on-click (fn [_]
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search-ssn/"
-                                 [:application/ssn-search (or ssn email)]]))}
+                                 [:application/search-by-term (or ssn email)]]))}
          (str applications-count " hakemusta")])]
      (when-not (string/blank? hakukohde-name)
        [:div.application-handling__review-area-hakukohde-heading hakukohde-name])

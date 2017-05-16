@@ -28,7 +28,7 @@
    (assoc-in db show-path nil)))
 
 (reg-event-fx
- :application/ssn-search
+ :application/search-by-term
  (fn [{:keys [db]} [_ potential-ssn]]
    (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
          type                  (cond (ssn/ssn? ucase-potential-ssn)

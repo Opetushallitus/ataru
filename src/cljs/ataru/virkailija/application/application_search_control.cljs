@@ -32,7 +32,7 @@
                       "application__search-control-ssn-input-error animated shake")
        :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
        :value       @ssn-value
-       :on-change   (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
+       :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @ssn-value)
        [:span.application__search-control-clear-ssn
         {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
