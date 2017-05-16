@@ -38,7 +38,7 @@
         {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
         [:i.zmdi.zmdi-close]])]))
 
-(defn search-ssn-tab [tab-id selected-tab link-url label-text]
+(defn search-term-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
     [:div.application__search-control-tab-selector-wrapper
      [:a {:href link-url
@@ -63,7 +63,7 @@
       @selected-tab
       "/lomake-editori/applications/incomplete/"
       (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
-     [search-ssn-tab
+     [search-term-tab
       :search-term
       @selected-tab
       "/lomake-editori/applications/search-ssn/"
