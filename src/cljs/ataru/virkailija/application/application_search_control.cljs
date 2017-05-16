@@ -64,7 +64,7 @@
       "/lomake-editori/applications/incomplete/"
       (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
      [search-ssn-tab
-      :search-ssn
+      :search-term
       @selected-tab
       "/lomake-editori/applications/search-ssn/"
       "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"]

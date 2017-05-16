@@ -20,7 +20,7 @@
 (reg-event-db
  :application/show-search-term
  (fn [db]
-   (assoc-in db show-path :search-ssn)))
+   (assoc-in db show-path :search-term)))
 
 (reg-event-db
  :application/close-search-control
