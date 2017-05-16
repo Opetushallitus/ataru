@@ -117,8 +117,8 @@
   :application/fetch-applications-by-term
   (fn [{:keys [db]} [_ search-kwd type]]
     (let [db          (cond-> db
-                        (clojure.string/blank? (get-in db [:application :search-control :ssn :value]))
-                        (assoc-in [:application :search-control :ssn :value] search-kwd))
+                        (clojure.string/blank? (get-in db [:application :search-control :search-term :value]))
+                        (assoc-in [:application :search-control :search-term :value] search-kwd))
           query-param (case type
                         :ssn "ssn"
                         :dob "dob"
@@ -244,7 +244,7 @@
    (-> db
        (assoc-in [:editor :selected-form-key] nil)
        (assoc-in [:application :applications] nil)
-       (assoc-in [:application :search-control :ssn] nil)
+       (assoc-in [:application :search-control :search-term] nil)
        (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
 
 (reg-event-db

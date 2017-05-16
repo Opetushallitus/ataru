@@ -22,13 +22,13 @@
     ""))
 
 (defn ssn-search-field []
-  (let [ssn-value (subscribe [:state-query [:application :search-control :ssn :value]])]
+  (let [ssn-value (subscribe [:state-query [:application :search-control :search-term :value]])]
     [:div
      [:input.application__search-control-ssn-input
       {:type        "text"
        :auto-focus  true
        :id          "ssn-search-field"
-       :class       (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
+       :class       (when (true? @(subscribe [:state-query [:application :search-control :search-term :show-error]]))
                       "application__search-control-ssn-input-error animated shake")
        :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
        :value       @ssn-value

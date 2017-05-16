@@ -41,8 +41,8 @@
                                      :email)
          show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-potential-ssn (-> db
-                                   (assoc-in [:application :search-control :ssn :value] search-term)
-                                   (assoc-in [:application :search-control :ssn :show-error] show-error))]
+                                   (assoc-in [:application :search-control :search-term :value] search-term)
+                                   (assoc-in [:application :search-control :search-term :show-error] show-error))]
      (case type
        :ssn
        {:db db-with-potential-ssn
