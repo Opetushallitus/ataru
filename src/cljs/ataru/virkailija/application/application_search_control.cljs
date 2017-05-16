@@ -22,7 +22,7 @@
     ""))
 
 (defn search-term-field []
-  (let [ssn-value (subscribe [:state-query [:application :search-control :search-term :value]])]
+  (let [search-term (subscribe [:state-query [:application :search-control :search-term :value]])]
     [:div
      [:input.application__search-control-ssn-input
       {:type        "text"
@@ -31,9 +31,9 @@
        :class       (when (true? @(subscribe [:state-query [:application :search-control :search-term :show-error]]))
                       "application__search-control-ssn-input-error animated shake")
        :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
-       :value       @ssn-value
+       :value       @search-term
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
-     (when-not (clojure.string/blank? @ssn-value)
+     (when-not (clojure.string/blank? @search-term)
        [:span.application__search-control-clear-ssn
         {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
         [:i.zmdi.zmdi-close]])]))
