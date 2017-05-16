@@ -21,7 +21,7 @@
     (str " (" count ")")
     ""))
 
-(defn ssn-search-field []
+(defn search-term-field []
   (let [ssn-value (subscribe [:state-query [:application :search-control :search-term :value]])]
     [:div
      [:input.application__search-control-ssn-input
@@ -48,7 +48,7 @@
       [:div.application__search-control-tab-selector
        {:class (when tab-selected "application__search-control-selected-tab-with-input")}
        (if tab-selected
-         [ssn-search-field]
+         [search-term-field]
          label-text)]]
      (when (= tab-id selected-tab)
        [:div.application-handling_search-control-tab-arrow-down])]))
