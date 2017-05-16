@@ -29,31 +29,31 @@
 
 (reg-event-fx
  :application/search-by-term
- (fn [{:keys [db]} [_ potential-ssn]]
-   (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
-         type                  (cond (ssn/ssn? ucase-potential-ssn)
+ (fn [{:keys [db]} [_ search-term]]
+   (let [search-term-ucase     (clojure.string/upper-case search-term)
+         type                  (cond (ssn/ssn? search-term-ucase)
                                      :ssn
 
-                                     (dob/dob? ucase-potential-ssn)
+                                     (dob/dob? search-term-ucase)
                                      :dob
 
-                                     (email/email? potential-ssn)
+                                     (email/email? search-term)
                                      :email)
          show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-potential-ssn (-> db
-                                   (assoc-in [:application :search-control :ssn :value] potential-ssn)
+                                   (assoc-in [:application :search-control :ssn :value] search-term)
                                    (assoc-in [:application :search-control :ssn :show-error] show-error))]
      (case type
        :ssn
        {:db db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :ssn]}
+        :dispatch [:application/fetch-applications-by-term search-term-ucase :ssn]}
 
        :dob
        {:db       db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term ucase-potential-ssn :dob]}
+        :dispatch [:application/fetch-applications-by-term search-term-ucase :dob]}
 
        :email
        {:db       db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term potential-ssn :email]}
+        :dispatch [:application/fetch-applications-by-term search-term :email]}
 
        {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))
