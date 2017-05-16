@@ -266,7 +266,7 @@
       }
 
       function ssnSearchField() {
-        return testFrame().find('.application__search-control-ssn-input')
+        return testFrame().find('.application__search-control-search-term-input')
       }
 
       function ssnSearchFieldHasValue(value) {
