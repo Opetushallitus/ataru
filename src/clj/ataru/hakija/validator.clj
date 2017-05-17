@@ -15,20 +15,26 @@
       []
       options)))
 
+(defn- child-answer-passed?
+  [child-answers key]
+  (-> child-answers key :passed?))
+
 (defn- validate-birthdate-and-gender-component
   [answers-by-key child-answers]
-  (if
-    (or
-      (= (-> answers-by-key :nationality :value) "246")
-      (= (boolean (-> answers-by-key :have-finnish-ssn :value)) true))
-    (and                                                    ; finnish or have ssn
-      (:ssn child-answers)
-      (:birth-date child-answers)
-      (:gender child-answers))
-    (and                                                    ; not finnish, no ssn
-      (clojure.string/blank? (-> answers-by-key :ssn :value))
-      (:birth-date child-answers)
-      (:gender child-answers))))
+  (let [answer-passed? (partial child-answer-passed? child-answers)]
+    (boolean
+      (if
+        (or
+          (= (-> answers-by-key :nationality :value) "246")
+          (= (boolean (-> answers-by-key :have-finnish-ssn :value)) true))
+        (and                                                ; finnish or have ssn
+          (answer-passed? :ssn)
+          (answer-passed? :birth-date)
+          (answer-passed? :gender))
+        (and                                                ; not finnish, no ssn
+          (clojure.string/blank? (-> answers-by-key :ssn :value))
+          (answer-passed? :birth-date)
+          (answer-passed? :gender))))))
 
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
@@ -169,6 +175,7 @@
                           (into {} (filter #(not (:passed? (second %))) results))
                           (build-failed-results answers-by-key))
          failed-meta-fields (validate-meta-fields application)]
+     (println "valid" results)
      (when (not (empty? extra-answers))
        (warn "Extra answers in application" (apply str extra-answers)))
      (when (not (empty? failed-results))
