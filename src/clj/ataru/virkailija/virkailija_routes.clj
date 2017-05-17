@@ -6,6 +6,7 @@
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
+            [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.applications.application-service :as application-service]
@@ -145,7 +146,9 @@
                            :query-params [{formKey      :- s/Str nil}
                                           {hakukohdeOid :- s/Str nil}
                                           {hakuOid      :- s/Str nil}
-                                          {ssn          :- s/Str nil}]
+                                          {ssn          :- s/Str nil}
+                                          {dob          :- s/Str nil}
+                                          {email        :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (cond
@@ -159,7 +162,14 @@
                              (ok (access-controlled-application/get-application-list-by-haku hakuOid session organization-service))
 
                              (some? ssn)
-                             (ok (access-controlled-application/get-application-list-by-ssn ssn session organization-service))))
+                             (ok (access-controlled-application/get-application-list-by-ssn ssn session organization-service))
+
+                             (some? dob)
+                             (let [dob (dob/str->dob dob)]
+                               (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))
+
+                             (some? email)
+                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]

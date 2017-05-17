@@ -1,6 +1,8 @@
 (ns ataru.virkailija.application.application-search-control-handlers
   (:require
    [re-frame.core :refer [reg-event-fx reg-event-db]]
+   [ataru.dob :as dob]
+   [ataru.email :as email]
    [ataru.ssn :as ssn]))
 
 (def show-path [:application :search-control :show])
@@ -16,9 +18,9 @@
    (assoc-in db show-path :complete)))
 
 (reg-event-db
- :application/show-search-ssn
+ :application/show-search-term
  (fn [db]
-   (assoc-in db show-path :search-ssn)))
+   (assoc-in db show-path :search-term)))
 
 (reg-event-db
  :application/close-search-control
@@ -26,17 +28,32 @@
    (assoc-in db show-path nil)))
 
 (reg-event-fx
- :application/ssn-search
- (fn [{:keys [db]} [_ potential-ssn]]
-   (let [ucase-potential-ssn   (clojure.string/upper-case potential-ssn)
-         show-error            (if (= 11 (count ucase-potential-ssn)) (not (ssn/ssn? ucase-potential-ssn)) false)
-         db-with-potential-ssn (-> db
-                                   (assoc-in [:application :search-control :ssn :value] potential-ssn)
-                                   (assoc-in [:application :search-control :ssn :show-error] show-error))]
-     (cond
-       (ssn/ssn? ucase-potential-ssn)
-       {:db db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-ssn ucase-potential-ssn]}
+ :application/search-by-term
+ (fn [{:keys [db]} [_ search-term]]
+   (let [search-term-ucase     (clojure.string/upper-case search-term)
+         type                  (cond (ssn/ssn? search-term-ucase)
+                                     :ssn
 
-       :else
+                                     (dob/dob? search-term-ucase)
+                                     :dob
+
+                                     (email/email? search-term)
+                                     :email)
+         show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
+         db-with-potential-ssn (-> db
+                                   (assoc-in [:application :search-control :search-term :value] search-term)
+                                   (assoc-in [:application :search-control :search-term :show-error] show-error))]
+     (case type
+       :ssn
+       {:db db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-term search-term-ucase :ssn]}
+
+       :dob
+       {:db       db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-term search-term-ucase :dob]}
+
+       :email
+       {:db       db-with-potential-ssn
+        :dispatch [:application/fetch-applications-by-term search-term :email]}
+
        {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))

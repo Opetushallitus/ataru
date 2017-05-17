@@ -10,6 +10,7 @@
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
+            [ataru.dob :as dob]
             [crypto.random :as crypto]
             [taoensso.timbre :refer [info]]))
 
@@ -47,6 +48,8 @@
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
                               :ssn            (find-value-from-answers "ssn" answers)
+                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                              :email          (find-value-from-answers "email" answers)
                               :hakukohde      (:hakukohde application)
                               :haku           (:haku application)
                               :content        {:answers answers}
@@ -197,6 +200,33 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn get-application-list-by-dob [dob organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
+                                                       :query_type                   "ORGS"
+                                                       :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-full-application-list-by-dob [dob]
+  (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
+                                                       :query_type                   "ALL"
+                                                       :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-application-list-by-email [email organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
+                                                         :query_type                   "ORGS"
+                                                         :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
+(defn get-full-application-list-by-email [email]
+  (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
+                                                         :query_type                   "ALL"
+                                                         :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
 
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))

@@ -114,12 +114,16 @@
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
 
 (reg-event-fx
-  :application/fetch-applications-by-ssn
-  (fn [{:keys [db]} [_ ssn]]
-    (let [db (cond-> db
-               (clojure.string/blank? (get-in db [:application :search-control :ssn :value]))
-               (assoc-in [:application :search-control :ssn :value] ssn))]
-      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn)))))
+  :application/fetch-applications-by-term
+  (fn [{:keys [db]} [_ search-kwd type]]
+    (let [db          (cond-> db
+                        (clojure.string/blank? (get-in db [:application :search-control :search-term :value]))
+                        (assoc-in [:application :search-control :search-term :value] search-kwd))
+          query-param (case type
+                        :ssn "ssn"
+                        :dob "dob"
+                        :email "email")]
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
 
 (reg-event-db
  :application/review-updated
@@ -240,7 +244,7 @@
    (-> db
        (assoc-in [:editor :selected-form-key] nil)
        (assoc-in [:application :applications] nil)
-       (assoc-in [:application :search-control :ssn] nil)
+       (assoc-in [:application :search-control :search-term] nil)
        (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
 
 (reg-event-db

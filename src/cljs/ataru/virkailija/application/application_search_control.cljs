@@ -21,35 +21,35 @@
     (str " (" count ")")
     ""))
 
-(defn ssn-search-field []
-  (let [ssn-value (subscribe [:state-query [:application :search-control :ssn :value]])]
+(defn search-term-field []
+  (let [search-term (subscribe [:state-query [:application :search-control :search-term :value]])]
     [:div
-     [:input.application__search-control-ssn-input
+     [:input.application__search-control-search-term-input
       {:type        "text"
        :auto-focus  true
        :id          "ssn-search-field"
-       :class       (when (true? @(subscribe [:state-query [:application :search-control :ssn :show-error]]))
-                      "application__search-control-ssn-input-error animated shake")
-       :placeholder "Etsi henkilötunnuksella"
-       :value       @ssn-value
-       :max-length  "11"
-       :on-change   (fn [evt] (dispatch [:application/ssn-search (-> evt .-target .-value)]))}]
-     (when-not (clojure.string/blank? @ssn-value)
-       [:span.application__search-control-clear-ssn
+       :class       (when (true? @(subscribe [:state-query [:application :search-control :search-term :show-error]]))
+                      "application__search-control-search-term-input-error animated shake")
+       :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
+       :value       @search-term
+       :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
+     (when-not (clojure.string/blank? @search-term)
+       [:span.application__search-control-clear-search-term
         {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
         [:i.zmdi.zmdi-close]])]))
 
-(defn search-ssn-tab [tab-id selected-tab link-url label-text]
+(defn search-term-tab [tab-id selected-tab link-url label-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
     [:div.application__search-control-tab-selector-wrapper
      [:a {:href link-url
           :on-click (fn [event]
                       (.preventDefault event)
-                      (dispatch [:application/navigate link-url]))}
+                      (when-not tab-selected
+                        (dispatch [:application/navigate link-url])))}
       [:div.application__search-control-tab-selector
        {:class (when tab-selected "application__search-control-selected-tab-with-input")}
        (if tab-selected
-         [ssn-search-field]
+         [search-term-field]
          label-text)]]
      (when (= tab-id selected-tab)
        [:div.application-handling_search-control-tab-arrow-down])]))
@@ -64,11 +64,11 @@
       @selected-tab
       "/lomake-editori/applications/incomplete/"
       (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
-     [search-ssn-tab
-      :search-ssn
+     [search-term-tab
+      :search-term
       @selected-tab
-      "/lomake-editori/applications/search-ssn/"
-      "Etsi henkilötunnuksella"]
+      "/lomake-editori/applications/search/"
+      "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"]
      [haku-tab
       :complete
       @selected-tab

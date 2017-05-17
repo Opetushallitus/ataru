@@ -1,9 +1,9 @@
 -- name: yesql-add-application-query<!
 -- Add application
 INSERT INTO applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn)
+(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn, dob, email)
 VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn);
+  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn, :dob, :email);
 
 -- name: yesql-get-application-list-by-form
 SELECT
@@ -72,6 +72,42 @@ FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
 WHERE a.ssn = :ssn
+      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+ORDER BY a.created_time DESC;
+
+-- name: yesql-get-application-list-by-dob
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.preferred_name,
+  a.last_name,
+  a.created_time,
+  ar.state                               AS state,
+  ar.score                               AS score,
+  a.form_id                              AS form
+FROM applications a
+  JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN forms f ON a.form_id = f.id
+WHERE a.dob = :dob
+      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+ORDER BY a.created_time DESC;
+
+-- name: yesql-get-application-list-by-email
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.preferred_name,
+  a.last_name,
+  a.created_time,
+  ar.state                               AS state,
+  ar.score                               AS score,
+  a.form_id                              AS form
+FROM applications a
+  JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN forms f ON a.form_id = f.id
+WHERE a.email = :email
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
@@ -174,11 +210,18 @@ SELECT
   created_time,
   content,
   hakukohde,
-  (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
-                         FROM applications a2
-                           JOIN forms f2 ON a2.form_id = f2.id
-                         WHERE a2.ssn = a.ssn
-                               AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp) AS applications_count
+  CASE
+    WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
+                                                     FROM applications a2
+                                                       JOIN forms f2 ON a2.form_id = f2.id
+                                                     WHERE a2.ssn = a.ssn
+                                                           AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp)
+    WHEN email IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a3.key)
+                                                       FROM applications a3
+                                                         JOIN forms f3 ON a3.form_id = f3.id
+                                                       WHERE a3.email = a.email
+                                                             AND (:query_type = 'ALL' OR f3.organization_oid IN (:authorized_organization_oids))) AS temp)
+  END AS applications_count
   FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time;
 

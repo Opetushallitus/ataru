@@ -183,7 +183,6 @@
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata})
 
-
 (def application-states
   (apply s/enum (keys review-states/application-review-states)))
 
