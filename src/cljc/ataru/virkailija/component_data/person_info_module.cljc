@@ -90,7 +90,7 @@
     (component/row-section
       [(ssn-component)
        (birthdate-and-gender-component)])
-    :child-validator :one-of))
+    :child-validator :birthdate-and-gender-component))
 
 (defn ^:private email-component
   []
