@@ -190,4 +190,26 @@
                     :else form))
                 (:content f)))
           :fbe3522d-6f1d-4e05-85e3-4e716146c686
-          :passed?))))
+          :passed?)))
+
+  (it "fails validation when incorrect birth-date data is used with :birthdate-and-gender-component validation"
+      (should-not
+        (-> (validator/build-results
+              (->
+                a
+                :answers
+                util/answers-by-key
+                (assoc :birth-date {:key       "birth-date",
+                                    :value     "02.02.2022",
+                                    :fieldType "textField",
+                                    :label     {:fi "Syntymäaika", :sv "Födelsetid"}}))
+              []
+              (clojure.walk/postwalk
+                (fn [form-field]
+                  (match form-field
+                         {:id "a3199cdf-fba3-4be1-8ab1-760f75f16d54"}
+                         (assoc form-field :child-validator "birthdate-and-gender-component")
+                         :else form-field))
+                (:content f)))
+            :a3199cdf-fba3-4be1-8ab1-760f75f16d54
+            :passed?))))

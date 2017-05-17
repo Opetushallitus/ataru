@@ -32,6 +32,10 @@
            :value     "020202A0202",
            :fieldType "textField",
            :label     {:fi "Henkilötunnus", :sv "Personnummer"}}
+          {:key       "birth-date",
+           :value     "02.02.2002",
+           :fieldType "textField",
+           :label     {:fi "Syntymäaika", :sv "Födelsetid"}}
           {:key       "first-name",
            :value     "Eemil",
            :fieldType "textField",
