@@ -8,7 +8,7 @@
                           ["01.01.2010" true]
                           ["1.01.2010" true]
                           ["01.1.2010" true]
-                          ["1.13.2010" true] ; purposefully true
+                          ["1.13.2010" true] ; purposefully true, thanks to cljs.time's ability to parse dates
                           ["31.1.2010" true]
                           ["29.10.2010" true]
                           ["40.10.2010" true] ; purposefully true
