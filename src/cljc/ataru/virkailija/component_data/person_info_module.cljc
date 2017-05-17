@@ -5,11 +5,12 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators rules] :or {size "M" validators [] rules {}}}]
+  [labels & {:keys [size id validators rules params] :or {size "M" validators [] rules {} params {}}}]
   (-> (component/text-field)
       (assoc :rules rules)
       (assoc :label labels)
       (assoc :validators (conj validators :required))
+      (assoc :params params)
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
@@ -19,7 +20,11 @@
 
 (defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"} :size "S" :id :preferred-name :validators [:main-first-name]))
+  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"}
+              :size "S"
+              :id :preferred-name
+              :validators [:main-first-name]
+              :params {:info-text {:label {:fi "Kutsumanimen on oltava osa etunimiä." :sv "Bork bork bork bork." :en "The main forename must be part of the first names."}}}))
 
 (defn ^:private first-name-section
   []
