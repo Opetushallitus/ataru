@@ -17,7 +17,7 @@
 
 (defn- validate-birthdate-and-gender-component
   [answers-by-key child-answers]
-  (let [answer-passed? (partial (fn [child-answers key] child-answers key :passed?) child-answers)]
+  (let [answer-passed? (partial (fn [child-answers key] (-> child-answers key :passed?)) child-answers)]
     (boolean
       (if
         (or
