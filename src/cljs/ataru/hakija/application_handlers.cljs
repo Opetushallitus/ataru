@@ -148,7 +148,7 @@
           answer
           options))
 
-(defn- merge-multiple-choice-option-values [value answer answers-by-key]
+(defn- merge-multiple-choice-option-values [value answers-by-key answer]
   (if (string? value)
     (toggle-values answer (clojure.string/split value #"\s*,\s*") answers-by-key)
     (toggle-values answer value answers-by-key)))
@@ -175,7 +175,7 @@
                         (update
                           (match answer
                                  {:fieldType "multipleChoice"}
-                                 (update answers answer-key (partial merge-multiple-choice-option-values value submitted-answers))
+                                 (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
 
                                  {:fieldType "dropdown"}
                                  (update answers answer-key merge {:valid true :value value})
