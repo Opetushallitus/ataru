@@ -49,7 +49,7 @@
       (let [option (->> (:options field-descriptor)
                         (filter (comp (partial = value-or-koodi-uri) :value))
                         (first))]
-        (get-in option [:label lang]))
+        (get-in option [:label lang] value-or-koodi-uri))
 
       (and (sequential? split-values) (< 1 (count split-values)))
       [:ul.application__form-field-list
