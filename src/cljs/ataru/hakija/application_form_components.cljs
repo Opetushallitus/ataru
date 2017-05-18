@@ -502,7 +502,7 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text]]))
 
-(defn- adjacent-field-input-change [field-descriptor row-idx event answers-by-key]
+(defn- adjacent-field-input-change [field-descriptor row-idx answers-by-key event]
   (let [value  (some-> event .-target .-value)
         valid? (field-value-valid? field-descriptor value answers-by-key)
         id     (keyword (:id field-descriptor))]
