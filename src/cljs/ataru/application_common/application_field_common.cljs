@@ -20,6 +20,16 @@
   ^{:key value}
   [:li value])
 
+(defn- predefined-value-answer?
+  "Does the answer have predefined values? Form elements like dropdowns
+   and single and multi-choice buttons have fixed, predefined values, as
+   opposed to a text input field where an user can provide anything as
+   the answer."
+  [{:keys [fieldClass fieldType options]}]
+  (and (= fieldClass "formField")
+       (some #{fieldType} ["dropdown" "singleChoice" "multipleChoice"])
+       (not-empty options)))
+
 (defn textual-field-value [field-descriptor application & {:keys [lang]}]
   (let [key                (answer-key field-descriptor)
         value-or-koodi-uri (:value (get (:answers application) key))
@@ -34,6 +44,12 @@
           (first values)
           [:ul.application__form-field-list
            (map wrap-value values)]))
+
+      (predefined-value-answer? field-descriptor)
+      (let [option (->> (:options field-descriptor)
+                        (filter (comp (partial = value-or-koodi-uri) :value))
+                        (first))]
+        (get-in option [:label lang]))
 
       (and (sequential? split-values) (< 1 (count split-values)))
       [:ul.application__form-field-list
