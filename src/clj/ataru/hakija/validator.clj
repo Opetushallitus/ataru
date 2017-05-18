@@ -172,7 +172,6 @@
                           (into {} (filter #(not (:passed? (second %))) results))
                           (build-failed-results answers-by-key))
          failed-meta-fields (validate-meta-fields application)]
-     (println "valid" results)
      (when (not (empty? extra-answers))
        (warn "Extra answers in application" (apply str extra-answers)))
      (when (not (empty? failed-results))
