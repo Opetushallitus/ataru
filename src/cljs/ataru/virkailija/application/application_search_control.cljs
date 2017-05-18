@@ -30,7 +30,7 @@
        :id          "ssn-search-field"
        :class       (when (true? @(subscribe [:state-query [:application :search-control :search-term :show-error]]))
                       "application__search-control-search-term-input-error animated shake")
-       :placeholder "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"
+       :placeholder "Etsi hetulla, syntymäajalla tai sähköpostiosoitteella"
        :value       @search-term
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @search-term)
@@ -68,7 +68,7 @@
       :search-term
       @selected-tab
       "/lomake-editori/applications/search/"
-      "Etsi henkilötunnuksella, syntymäajalla tai sähköpostiosoitteella"]
+      "Etsi hetulla, syntymäajalla tai sähköpostiosoitteella"]
      [haku-tab
       :complete
       @selected-tab
