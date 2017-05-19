@@ -324,7 +324,9 @@
 
 (defn close-application []
   [:a {:href     "#"
-       :on-click (fn [event] (dispatch [:application/close-application]))}
+       :on-click (fn [event]
+                   (.preventDefault event)
+                   (dispatch [:application/close-application]))}
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
