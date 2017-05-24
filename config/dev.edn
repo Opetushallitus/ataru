@@ -16,5 +16,4 @@
  :urls          {:virkailija-host "itest-virkailija.oph.ware.fi"
                  :hakija-host     "itest-hakija.oph.ware.fi"
                  :editor-url      "http://localhost:8350/lomake-editori"
-                 :liiteri-url     ""}}
-
+                 :liiteri-url     "http://localhost:16832/liiteri"}}
