@@ -91,7 +91,10 @@
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
                  (assoc-in [:application :sort] application-sorting/initial-sort))]
-      {:db db})))
+      {:db       db
+       :dispatch (if (= (count applications) 1)
+                   [:application/select-application (-> applications first :key)]
+                   [:application/close-application])})))
 
 (defn fetch-applications-fx [db path]
   {:db   (assoc-in db [:application :fetching-applications] true)
