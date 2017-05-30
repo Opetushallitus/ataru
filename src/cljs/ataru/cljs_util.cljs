@@ -66,7 +66,7 @@
         sanity-count (atom 0)
         dispatcher (fn [db]
                      (match [(swap! sanity-count inc) (predicate db)]
-                            [10 _] (js/clearInterval @handler-ref)
+                            [50 _] (js/clearInterval @handler-ref)
                             [_ (result :guard (comp true? boolean))]
                             (do
                               (js/clearInterval @handler-ref)
