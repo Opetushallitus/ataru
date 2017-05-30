@@ -83,14 +83,15 @@
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-fetch-applications-response
-  (fn [db [_ {:keys [applications]}]]
-    (-> db
-        (assoc-in [:application :applications] applications)
-        (assoc-in [:application :fetching-applications] false)
-        (assoc-in [:application :review-state-counts] (review-state-counts applications))
-        (assoc-in [:application :sort] application-sorting/initial-sort))))
+  (fn [{:keys [db]} [_ {:keys [applications]}]]
+    (let [db (-> db
+                 (assoc-in [:application :applications] applications)
+                 (assoc-in [:application :fetching-applications] false)
+                 (assoc-in [:application :review-state-counts] (review-state-counts applications))
+                 (assoc-in [:application :sort] application-sorting/initial-sort))]
+      {:db db})))
 
 (defn fetch-applications-fx [db path]
   {:db   (assoc-in db [:application :fetching-applications] true)
