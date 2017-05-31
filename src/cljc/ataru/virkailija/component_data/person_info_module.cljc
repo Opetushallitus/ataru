@@ -23,8 +23,7 @@
   (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"}
               :size "S"
               :id :preferred-name
-              :validators [:main-first-name]
-              :params {:info-text {:label {:fi "Kutsumanimen on oltava osa etunimiä." :sv "Bork bork bork bork." :en "The main forename must be part of the first names."}}}))
+              :validators [:main-first-name]))
 
 (defn ^:private first-name-section
   []
