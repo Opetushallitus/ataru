@@ -4,6 +4,7 @@
             [ataru.fixtures.date :as date]
             [ataru.fixtures.postal-code :as postal-code]
             [ataru.fixtures.ssn :as ssn]
+            [ataru.fixtures.first-name :as first-name]
             [ataru.hakija.application-validators :as validator]
             [speclj.core :refer :all]))
 
@@ -89,3 +90,11 @@
     (for [[input expected] date/date-list]
       (it (str "should validate past-date " input " to " expected)
           (should= expected (validator/validate :past-date input {}))))))
+
+(describe "main first name validation"
+  (tags :unit)
+
+  (doall
+    (for [[first main expected] first-name/first-name-list]
+      (it (str "should validate first-name " first " with main name " main " as " expected)
+          (should= expected (validator/validate :main-first-name main {:first-name {:value first}}))))))
