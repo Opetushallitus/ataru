@@ -122,8 +122,22 @@
             (assoc-in [:application :ui :have-finnish-ssn :visible?] true)
             (assoc-in [:application :answers :have-finnish-ssn :value] (str have-ssn?)))))))
 
+(defn- prefill-preferred-first-name
+  [db _]
+  (let [answers          (-> db :application :answers)
+        first-names      (-> answers :first-name :value)
+        main-first-name  (-> answers :preferred-name :value)
+        first-first-name (first (clojure.string/split first-names #" "))]
+    (if (and
+          first-first-name
+          (clojure.string/blank? main-first-name))
+      (update-in db [:application :answers :preferred-name] merge {:value first-first-name :valid true})
+      db)))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
+    :prefill-preferred-first-name
+    prefill-preferred-first-name
     :swap-ssn-birthdate-based-on-nationality
     swap-ssn-birthdate-based-on-nationality
     :update-gender-and-birth-date-based-on-ssn

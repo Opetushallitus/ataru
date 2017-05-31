@@ -5,9 +5,10 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators rules params] :or {size "M" validators [] rules {} params {}}}]
+  [labels & {:keys [size id validators rules params blur-rules] :or {size "M" validators [] rules {} params {} blur-rules {}}}]
   (-> (component/text-field)
       (assoc :rules rules)
+      (assoc :blur-rules blur-rules)
       (assoc :label labels)
       (assoc :validators (conj validators :required))
       (assoc :params params)
@@ -16,7 +17,7 @@
 
 (defn ^:private first-name-component
   []
-  (text-field {:fi "Etunimet" :sv "Förnamn" :en "Forenames"} :id :first-name))
+  (text-field {:fi "Etunimet" :sv "Förnamn" :en "Forenames"} :id :first-name :blur-rules {:prefill-preferred-first-name :main-first-name}))
 
 (defn ^:private preferred-name-component
   []

@@ -49,6 +49,13 @@
                     (:validators field-data)))
     true))
 
+(defn- textual-field-blur [text-field-data answers-by-key evt]
+  (let [value  (-> evt .-target .-value)
+        blur-rules (:blur-rules text-field-data)]
+    (when (and (not-empty blur-rules)
+               (field-value-valid? text-field-data value answers-by-key))
+      (dispatch [:application/run-rule blur-rules]))))
+
 (defn- textual-field-change [text-field-data answers-by-key evt]
   (let [value  (-> evt .-target .-value)
         valid? (field-value-valid? text-field-data value answers-by-key)]
@@ -134,6 +141,7 @@
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
+                  :on-blur     (partial textual-field-blur field-descriptor @answers)
                   :on-change   (partial textual-field-change field-descriptor @answers)}
                  (when (or disabled cannot-view?) {:disabled true}))])])))
 
