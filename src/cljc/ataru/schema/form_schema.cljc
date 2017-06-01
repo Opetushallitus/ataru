@@ -53,6 +53,7 @@
                         :id                                    s/Str
                         (s/optional-key :validators)           [(apply s/enum (keys validator/validators))]
                         (s/optional-key :rules)                {s/Keyword s/Any}
+                        (s/optional-key :blur-rules)           {s/Keyword s/Any}
                         (s/optional-key :label)                LocalizedString
                         (s/optional-key :initialValue)         (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params)               s/Any

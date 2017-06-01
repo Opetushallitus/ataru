@@ -35,7 +35,7 @@
           return $(e).val()
         })
         var expectedTestInputValues = [
-          "Etunimi",
+          "Etunimi Tokanimi",
           "Etunimi",
           "Sukunimi",
           "***********",
@@ -81,20 +81,22 @@
 
     describe('changing values to be invalid', function () {
       before(
+        setNthFieldInputValue(1, '420noscope'),
         setNthFieldValue(20, 'textarea', ''),
         clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
-        expect(invalidFieldsStatus().text()).to.equal('Tarkista 2 tietoa')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
         expect(invalidSections().find('a').length).to.equal(3)
-        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
+        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
         expect(submitButton().prop('disabled')).to.equal(true)
       })
     })
 
     describe('change values and save', function () {
       before(
+        setNthFieldInputValue(1, 'Tokanimi'),
         setNthFieldValue(20, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(23, 'Toinen vaihtoehto'),
         clickElement(function () {
@@ -110,8 +112,8 @@
           return $(e).text()
         })
         var expectedValues = [
-          "Etunimi",
-          "Etunimi",
+          "Etunimi Tokanimi",
+          "Tokanimi",
           "Sukunimi",
           "Suomi",
           "***********",

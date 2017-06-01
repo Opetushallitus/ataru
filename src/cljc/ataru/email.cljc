@@ -4,7 +4,7 @@
 (def ^:private invalid-email-pattern #".*([^\x00-\x7F]|%0[aA]).")
 
 (defn email?
-  [value]
+  [value _]
   (and (not (nil? value))
        (not (nil? (re-matches email-pattern value)))
        (nil? (re-find invalid-email-pattern value))))
