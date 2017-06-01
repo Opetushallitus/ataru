@@ -338,7 +338,7 @@
                   ^{:key "options-input"}
                   [:div.editor-form__multi-options-container
                    (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages :include-followup? (= field-type "dropdown")))
+                                  (dropdown-option idx path languages :include-followup? (some #{field-type} ["dropdown" "multipleChoice"])))
                      (:options @value))]
                   ^{:key "options-input-add"}
                   [:div.editor-form__add-dropdown-item
