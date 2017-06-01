@@ -328,30 +328,31 @@
       (let [options      @options
             lang         @lang
             default-lang @default-lang]
-        [div-kwd
-         [label field-descriptor]
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
-         [:div.application__form-outer-checkbox-container
-          [:div ; prevents inner div items from reserving full space of the outer checkbox container
-           (map (fn [option]
-                  (let [label     (non-blank-val (get-in option [:label lang])
-                                                 (get-in option [:label default-lang]))
-                        value     (:value option)
-                        option-id (util/component-id)]
-                    [:div {:key option-id}
-                     [:input.application__form-checkbox
-                      {:id        option-id
-                       :type      "checkbox"
-                       :checked   (multiple-choice-option-checked? options value)
-                       :value     value
-                       :on-change (fn [event]
-                                    (let [value (.. event -target -value)]
-                                      (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
-                     [:label
-                      {:for option-id}
-                      label]]))
-                (:options field-descriptor))]]]))))
+        [:div.application__form-field-wrapper
+         [div-kwd
+          [label field-descriptor]
+          [:div.application__form-text-input-info-text
+           [info-text field-descriptor]]
+          [:div.application__form-outer-checkbox-container
+           [:div ; prevents inner div items from reserving full space of the outer checkbox container
+            (map (fn [option]
+                   (let [label     (non-blank-val (get-in option [:label lang])
+                                                  (get-in option [:label default-lang]))
+                         value     (:value option)
+                         option-id (util/component-id)]
+                     [:div {:key option-id}
+                      [:input.application__form-checkbox
+                       {:id        option-id
+                        :type      "checkbox"
+                        :checked   (multiple-choice-option-checked? options value)
+                        :value     value
+                        :on-change (fn [event]
+                                     (let [value (.. event -target -value)]
+                                       (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
+                      [:label
+                       {:for option-id}
+                       label]]))
+                 (:options field-descriptor))]]]]))))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id (answer-key field-descriptor)
