@@ -141,13 +141,22 @@
 
 (defn- change-country-of-residence
   [db _]
-  (-> db
-      ; TODO should get validators from form fields instead of hard-coded ones
-      (assoc-in [:application :answers :postal-code :valid] (validators/validate :postal-code (-> db :application :answers :postal-code :value) (-> db :application :answers)))
-      (assoc-in [:application :answers :postal-office :valid] (validators/validate :required (-> db :application :answers :postal-office :value) (-> db :application :answers)))
-      (cond-> (not= (-> db :application :answers :country-of-residence)
-                    finland-country-code)
-              (assoc-in [:application :ui :postal-office :disabled?] false))))
+  (let [answers     (-> db :application :answers)
+        is-finland? (= (-> answers :country-of-residence :value)
+                       finland-country-code)]
+    (-> db
+        (cond-> is-finland?
+                (assoc-in [:application :answers :city] nil))
+        (cond-> (not is-finland?)
+                (->
+                  (assoc-in [:application :answers :postal-office] nil)
+                  (assoc-in [:application :answers :home-town] nil)))
+        (update-in [:application :answers :postal-code] merge {:valid false :value ""})
+        (assoc-in [:application :answers :postal-office :valid] (validators/validate :postal-office (-> db :application :answers :postal-office :value) answers))
+        (assoc-in [:application :answers :city :valid] (validators/validate :city (-> db :application :answers :city :value) answers))
+        (assoc-in [:application :ui :postal-office :visible?] is-finland?)
+        (assoc-in [:application :ui :home-town :visible?] is-finland?)
+        (assoc-in [:application :ui :city :visible?] (not is-finland?)))))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule

@@ -5,12 +5,12 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators rules params blur-rules] :or {size "M" validators [] rules {} params {} blur-rules {}}}]
+  [labels & {:keys [size id validators rules params blur-rules] :or {size "M" validators [:required] rules {} params {} blur-rules {}}}]
   (-> (component/text-field)
       (assoc :rules rules)
       (assoc :blur-rules blur-rules)
       (assoc :label labels)
-      (assoc :validators (conj validators :required))
+      (assoc :validators validators)
       (assoc :params params)
       (assoc-in [:params :size] size)
       (assoc :id id)))
@@ -24,7 +24,7 @@
   (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"}
               :size "S"
               :id :preferred-name
-              :validators [:main-first-name]))
+              :validators [:main-first-name :required]))
 
 (defn ^:private first-name-section
   []
@@ -108,11 +108,11 @@
 
 (defn ^:private email-component
   []
-  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:email]))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:email :required]))
 
 (defn ^:private phone-component
   []
-  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer" :en "Mobile phone number"} :id :phone :validators [:phone]))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer" :en "Mobile phone number"} :id :phone :validators [:phone :required]))
 
 (defn ^:private street-address-component
   []
@@ -120,7 +120,11 @@
 
 (defn ^:private home-town-component
   []
-  (text-field {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"} :id :home-town))
+  (text-field {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"} :id :home-town :validators [:home-town]))
+
+(defn- city-component
+  []
+  (text-field {:fi "Kaupunki" :sv "Stad" :en "City"} :id :city :validators [:city]))
 
 (defn ^:private postal-code-component
   []
@@ -133,7 +137,7 @@
 
 (defn ^:private postal-office-component
   []
-  (text-field {:fi "Postitoimipaikka" :sv "Postkontor" :en "Postal office"} :id :postal-office))
+  (text-field {:fi "Postitoimipaikka" :sv "Postkontor" :en "Postal office"} :id :postal-office :validators [:postal-office]))
 
 (defn ^:private postal-office-section
   []
@@ -168,5 +172,6 @@
                        (street-address-component)
                        (postal-office-section)
                        (home-town-component)
+                       (city-component)
                        (native-language-section)]
      :module          :person-info}))

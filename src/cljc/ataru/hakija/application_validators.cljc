@@ -16,6 +16,11 @@
     (not (empty? value))
     (not (clojure.string/blank? value))))
 
+(defn- residence-in-finland?
+  [answers-by-key]
+  (= (str finland-country-code)
+     (str (-> answers-by-key :country-of-residence :value))))
+
 (defn- ssn?
   [value _]
   (ssn/ssn? value))
@@ -24,8 +29,7 @@
 
 (defn ^:private postal-code?
   [value answers-by-key]
-  (if (= finland-country-code
-         (-> answers-by-key :country-of-residence :value))
+  (if (residence-in-finland? answers-by-key)
     (and (not (nil? value))
          (not (nil? (re-matches postal-code-pattern value))))
     (not (nil? value))))
@@ -74,6 +78,12 @@
          (some-> (parse-date value)
                  (c/before? (c/today-at-midnight))))))
 
+(defn- postal-office?
+  [value answers-by-key]
+  (if (residence-in-finland? answers-by-key)
+    (not (clojure.string/blank? value))
+    true))
+
 (defn- main-first-name?
   [value answers-by-key]
   (let [first-names     (clojure.string/split (-> answers-by-key :first-name :value) #"[\s-]+")
@@ -85,13 +95,28 @@
                             (clojure.string/join " " (subvec first-names start-idx (+ start-idx sub-length)))))]
     (contains? possible-names (clojure.string/replace value "-" " "))))
 
+(defn- home-town?
+  [value answers-by-key]
+  (if (residence-in-finland? answers-by-key)
+    (not (clojure.string/blank? value))
+    true))
+
+(defn- city?
+  [value answers-by-key]
+  (if (residence-in-finland? answers-by-key)
+    true
+    (not (clojure.string/blank? value))))
+
 (def validators {:required        required?
                  :ssn             ssn?
                  :email           email/email?
                  :postal-code     postal-code?
+                 :postal-office   postal-office?
                  :phone           phone?
                  :past-date       past-date?
-                 :main-first-name main-first-name?})
+                 :main-first-name main-first-name?
+                 :home-town       home-town?
+                 :city            city?})
 
 (defn validate
   [validator value answers-by-key]
