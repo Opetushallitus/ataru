@@ -12,7 +12,8 @@
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
             [cljs-time.coerce :refer [from-long]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [goog.string :as gstring]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -97,6 +98,60 @@
        (when @can-apply?
          [render-fields @form])])))
 
+(defn- star-number-from-event
+  [event]
+  (js/parseInt (.-starN (.-dataset (.-target event))) 10))
+
+(defn feedback-form
+  []
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])
+        star-hovered  (subscribe [:state-query [:application :feedback :star-hovered]])
+        stars         (subscribe [:state-query [:application :feedback :stars]])
+        hidden?       (subscribe [:state-query [:application :feedback :hidden?]])
+        rating-status (subscribe [:state-query [:application :feedback :status]])]
+    (fn []
+      (when (and
+              (= :submitted @submit-status)
+              (not @hidden?))
+        [:div.application-feedback-form
+         [:a.application-feedback-form__close-button
+          {:on-click #(dispatch [:application/rating-form-toggle])}
+          [:i.zmdi.zmdi-close.close-details-button-mark]]
+         [:div.application-feedback-form-container
+          [:h1.application-feedback-form__header "Hei, kerro vielä mitä pidit hakulomakkeesta!"]
+          [:div.application-feedback-form__rating-container
+           {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
+            :on-mouse-out  #(dispatch [:application/rating-hover 0])
+            :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
+           (let [stars-active (or @stars @star-hovered 0)]
+             (map (fn [n]
+                    (let [star-classes (if (< n stars-active)
+                                         :i.zmdi.zmdi-star.zmdi-hc-5x
+                                         :i.zmdi.zmdi-star-outline.zmdi-hc-5x)]
+                      [star-classes
+                       {:key         (str "rating-star-" n)
+                        :data-star-n (inc n)}])) (range 5)))]
+          [:div.application-feedback-form__rating-text
+           (case @star-hovered
+             1 ":'("
+             2 ":("
+             3 ":|"
+             4 ":)"
+             5 ":D"
+             (gstring/unescapeEntities "&nbsp;"))]
+          (when (= :rating-given @rating-status)
+            [:div.application-feedback-form__text-feedback-container
+             [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
+              {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
+               :placeholder "Anna lisäpalautetta!"}]])
+          (when (= :rating-given @rating-status)
+            [:a.application__send-feedback-button
+             {:on-click (fn [evt]
+                          (.preventDefault evt)
+                          (dispatch [:application/rating-feedback-submit]))} "Lähetä palaute"])
+          (when (= :feedback-submitted @rating-status)
+            [:div "Kiitos palautteestasi!"])]]))))
+
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])
         detail (subscribe [:state-query [:error :detail]])]
@@ -108,4 +163,5 @@
   [:div
    [banner]
    [error-display]
-   [application-contents]])
+   [application-contents]
+   [feedback-form]])

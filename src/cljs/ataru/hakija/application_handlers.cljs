@@ -533,3 +533,30 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values] autil/remove-nth attachment-idx)
         (update-attachment-answer-validity field-descriptor component-id))))
+
+(reg-event-db
+  :application/rating-hover
+  (fn [db [_ star-number]]
+    (assoc-in db [:application :feedback :star-hovered] star-number)))
+
+(reg-event-db
+  :application/rating-submit
+  (fn [db [_ star-number]]
+    (-> db
+        (assoc-in [:application :feedback :stars] star-number)
+        (assoc-in [:application :feedback :status] :rating-given))))
+
+(reg-event-db
+  :application/rating-update-feedback
+  (fn [db [_ feedback-text]]
+    (assoc-in db [:application :feedback :text] feedback-text)))
+
+(reg-event-db
+  :application/rating-feedback-submit
+  (fn [db _]
+    (assoc-in db [:application :feedback :status] :feedback-submitted)))
+
+(reg-event-db
+  :application/rating-form-toggle
+  (fn [db _]
+    (update-in db [:application :feedback :hidden?] not)))
