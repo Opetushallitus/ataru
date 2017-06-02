@@ -2,6 +2,7 @@
   (:require [clojure.string]
             [ataru.email :as email]
             [ataru.ssn :as ssn]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
             #?(:clj  [clj-time.format :as f]
@@ -22,9 +23,12 @@
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
-  [value _]
-  (and (not (nil? value))
-       (not (nil? (re-matches postal-code-pattern value)))))
+  [value answers-by-key]
+  (if (= finland-country-code
+         (-> answers-by-key :country-of-residence :value))
+    (and (not (nil? value))
+         (not (nil? (re-matches postal-code-pattern value))))
+    (not (nil? value))))
 
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")

@@ -51,6 +51,15 @@
               :id :nationality
               :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
 
+(defn- country-of-residence-component
+  []
+  (-> (component/dropdown)
+      (merge {:label {:fi "Asuinmaa" :sv "Boningsland" :en "Country of residence"}
+              :validators [:required]
+              :rules {:change-country-of-residence nil}
+              :id :country-of-residence
+              :koodisto-source {:uri "maatjavaltiot2" :version 1 :default-option "Suomi"}})))
+
 (defn- have-finnish-ssn-component
   []
   (-> (component/dropdown)
@@ -155,6 +164,7 @@
                        (ssn-birthdate-gender-wrapper)
                        (email-component)
                        (phone-component)
+                       (country-of-residence-component)
                        (street-address-component)
                        (postal-office-section)
                        (home-town-component)

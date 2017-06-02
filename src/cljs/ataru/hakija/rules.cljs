@@ -1,6 +1,8 @@
 (ns ataru.hakija.rules
   (:require [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.hakija-ajax :as ajax]))
+            [ataru.hakija.hakija-ajax :as ajax]
+            [ataru.hakija.application-validators :as validators]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (def ^:private no-required-answer {:valid false :value ""})
 
@@ -16,7 +18,7 @@
                               (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
       (match value
-        "246"
+        finland-country-code
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -70,17 +72,20 @@
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (if (-> db :application :answers :postal-code :valid)
-    (let [postal-code (-> db :application :answers :postal-code :value)]
-      (when-not (clojure.string/blank? postal-code)
-        (ajax/get
-          (str "/hakemus/api/postal-codes/" postal-code)
-          :application/handle-postal-code-input
-          :application/handle-postal-code-error))
-      db)
-    (-> db
-        (update-in [:application :answers :postal-office] merge no-required-answer)
-        (update-in [:application :ui] dissoc :postal-office))))
+  (if (= (-> db :application :answers :country-of-residence :value)
+         finland-country-code)                                           ; only prefill postal office for finnish addresses
+    (if (-> db :application :answers :postal-code :valid)
+      (let [postal-code (-> db :application :answers :postal-code :value)]
+        (when-not (clojure.string/blank? postal-code)
+          (ajax/get
+            (str "/hakemus/api/postal-codes/" postal-code)
+            :application/handle-postal-code-input
+            :application/handle-postal-code-error))
+        db)
+      (-> db
+          (update-in [:application :answers :postal-office] merge no-required-answer)
+          (update-in [:application :ui] dissoc :postal-office)))
+    db))
 
 (defn- toggle-ssn-based-fields
   [db _]
@@ -104,7 +109,7 @@
       [(_ :guard nil?) _]
       db
 
-      [_ "246"]
+      [_ finland-country-code]
       (do
         (-> db
             (assoc-in [:application :ui :ssn :visible?] true)
@@ -134,6 +139,16 @@
       (update-in db [:application :answers :preferred-name] merge {:value first-first-name :valid true})
       db)))
 
+(defn- change-country-of-residence
+  [db _]
+  (-> db
+      ; TODO should get validators from form fields instead of hard-coded ones
+      (assoc-in [:application :answers :postal-code :valid] (validators/validate :postal-code (-> db :application :answers :postal-code :value) (-> db :application :answers)))
+      (assoc-in [:application :answers :postal-office :valid] (validators/validate :required (-> db :application :answers :postal-office :value) (-> db :application :answers)))
+      (cond-> (not= (-> db :application :answers :country-of-residence)
+                    finland-country-code)
+              (assoc-in [:application :ui :postal-office :disabled?] false))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -148,6 +163,8 @@
     toggle-ssn-based-fields
     :toggle-ssn-based-fields-for-existing-application
     toggle-ssn-based-fields-for-existing-application
+    :change-country-of-residence
+    change-country-of-residence
     nil))
 
 (defn extract-rules [content]
