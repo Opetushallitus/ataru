@@ -10,7 +10,7 @@
   (into {}
         (map-indexed
           (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(= % "required") (:validators field)))
+            [(keyword (:id field)) {:valid (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
                                     :label (:label field)
                                     :order-idx idx}]) flattened-form-fields)))
 

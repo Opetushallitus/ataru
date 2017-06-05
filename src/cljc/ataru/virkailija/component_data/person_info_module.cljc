@@ -10,7 +10,7 @@
       (assoc :rules rules)
       (assoc :blur-rules blur-rules)
       (assoc :label labels)
-      (assoc :validators (conj validators :required))
+      (assoc :validators validators)
       (assoc :params params)
       (assoc-in [:params :size] size)
       (assoc :id id)))
@@ -24,7 +24,7 @@
   (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"}
               :size "S"
               :id :preferred-name
-              :validators [:main-first-name]))
+              :validators [:required :main-first-name]))
 
 (defn ^:private first-name-section
   []
@@ -108,11 +108,11 @@
 
 (defn ^:private email-component
   []
-  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:email]))
+  (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:required :email]))
 
 (defn ^:private phone-component
   []
-  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer" :en "Mobile phone number"} :id :phone :validators [:phone]))
+  (text-field {:fi "Matkapuhelin" :sv "Mobiltelefonnummer" :en "Mobile phone number"} :id :phone :validators [:required :phone]))
 
 (defn ^:private street-address-component
   []
