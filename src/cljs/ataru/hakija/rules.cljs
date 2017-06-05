@@ -143,17 +143,15 @@
   [db _]
   (let [answers     (-> db :application :answers)
         is-finland? (= (-> answers :country-of-residence :value)
-                       finland-country-code)]
+                       finland-country-code)
+        validate-answer (fn [db answer-key validator-key]
+                          (assoc-in db
+                                    [:application :answers answer-key :valid]
+                                    (validators/validate validator-key (-> db :application :answers answer-key :value) answers)))]
     (-> db
-        (cond-> is-finland?
-                (assoc-in [:application :answers :city] nil))
-        (cond-> (not is-finland?)
-                (->
-                  (assoc-in [:application :answers :postal-office] nil)
-                  (assoc-in [:application :answers :home-town] nil)))
-        (update-in [:application :answers :postal-code] merge {:valid false :value ""})
-        (assoc-in [:application :answers :postal-office :valid] (validators/validate :postal-office (-> db :application :answers :postal-office :value) answers))
-        (assoc-in [:application :answers :city :valid] (validators/validate :city (-> db :application :answers :city :value) answers))
+        (validate-answer :postal-code :postal-code)
+        (validate-answer :postal-office :postal-office)
+        (validate-answer :city :city)
         (assoc-in [:application :ui :postal-office :visible?] is-finland?)
         (assoc-in [:application :ui :home-town :visible?] is-finland?)
         (assoc-in [:application :ui :city :visible?] (not is-finland?)))))

@@ -5,9 +5,13 @@
 
 (def required-validators #{"required" "postal-code" "postal-office" "home-town" "city"})
 
+(defn is-required-field?
+  [field-descriptor]
+  (some #(contains? required-validators %) (:validators field-descriptor)))
+
 (defn required-hint
   [field-descriptor]
-  (if (some #(contains? required-validators %) (:validators field-descriptor))
+  (if (is-required-field? field-descriptor)
     " *"
     ""))
 
