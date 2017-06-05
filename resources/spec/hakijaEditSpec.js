@@ -41,7 +41,6 @@
           "***********",
           "test@example.com",
           "0123456789",
-          "Suomi",
           "Katutie 12 B",
           "40100",
           "JYVÄSKYLÄ",
@@ -62,6 +61,7 @@
           return $(e).text()
         })
         var expectedDropdownInputValues = [
+          "Suomi",
           "Suomi",
           "suomi",
           "Kolmas vaihtoehto",
