@@ -318,6 +318,13 @@
 (defn- multiple-choice-option-checked? [options value]
   (true? (get options value)))
 
+(defn- multi-choice-followups [followups]
+  [:div.application__form-multi-choice-followups-container
+   (map (fn [followup]
+          ^{:key (:id followup)}
+          [render-field followup])
+        followups)])
+
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [multiple-choice-id (answer-key field-descriptor)
@@ -339,19 +346,23 @@
                    (let [label     (non-blank-val (get-in option [:label lang])
                                                   (get-in option [:label default-lang]))
                          value     (:value option)
-                         option-id (util/component-id)]
+                         option-id (util/component-id)
+                         checked?  (multiple-choice-option-checked? options value)
+                         followups? (and checked? (not-empty (:followups option)))]
                      [:div {:key option-id}
                       [:input.application__form-checkbox
                        {:id        option-id
                         :type      "checkbox"
-                        :checked   (multiple-choice-option-checked? options value)
+                        :checked   checked?
                         :value     value
                         :on-change (fn [event]
                                      (let [value (.. event -target -value)]
                                        (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
                       [:label
                        {:for option-id}
-                       label]]))
+                       label]
+                      (when followups?
+                        [multi-choice-followups (:followups option)])]))
                  (:options field-descriptor))]]]]))))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
