@@ -3,7 +3,13 @@
 (defn answer-key [field-data]
   (keyword (:id field-data)))
 
-(defn required-hint [field-descriptor] (if (some #(= % "required") (:validators field-descriptor)) " *" ""))
+(def required-validators #{"required" "postal-code" "postal-office" "home-town" "city"})
+
+(defn required-hint
+  [field-descriptor]
+  (if (some #(contains? required-validators %) (:validators field-descriptor))
+    " *"
+    ""))
 
 (defn- get-koodi [field-descriptor koodi-uri]
   (->> (:options field-descriptor)
