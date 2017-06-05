@@ -583,10 +583,22 @@ textarea.application__form-text-area__size-large {
   display: flex;
   flex-flow: column nowrap;
   padding: 20px;
+  position: relative;
 }
 
 .application__form-multi-choice-followups-container > .application__form-field {
   margin-left: 0px;
+}
+
+.application__form-multi-choice-followups-indicator {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @section-header-text;
+  top: -1px;
+  left: 52px;
 }
 
 .application__readonly-adjacent{

@@ -320,6 +320,7 @@
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-container
+   [:div.application__form-multi-choice-followups-indicator]
    (map (fn [followup]
           ^{:key (:id followup)}
           [render-field followup])
