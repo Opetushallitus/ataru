@@ -32,7 +32,7 @@
   (if (residence-in-finland? answers-by-key)
     (and (not (nil? value))
          (not (nil? (re-matches postal-code-pattern value))))
-    (not (nil? value))))
+    (not (clojure.string/blank? value))))
 
 (def ^:private whitespace-pattern #"\s*")
 (def ^:private phone-pattern #"^\+?\d{4,}$")
