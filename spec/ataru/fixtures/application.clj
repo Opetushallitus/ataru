@@ -158,6 +158,7 @@
                                               :fieldType "textField",
                                               :label {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
                                              {:key "nationality", :value "Suomi", :fieldType "dropdown", :label {:fi "Kansalaisuus", :sv "Nationalitet"}}
+                                             {:key "country-of-residence", :value "246", :fieldType "dropdown", :label {:fi "Asuinmaa", :sv "Boningsland"}}
                                              {:key "ssn", :value "010101A123N", :fieldType "textField", :label {:fi "Henkilötunnus", :sv "Personnummer"}}
                                              {:key "home-town",
                                               :value "Ankkalinna",
@@ -189,6 +190,7 @@
                      :fieldType "textField",
                      :label     {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
                     {:key "nationality", :value "Suomi", :fieldType "dropdown", :label {:fi "Kansalaisuus", :sv "Nationalitet"}}
+                    {:key "country-of-residence", :value "246", :fieldType "dropdown", :label {:fi "Asuinmaa", :sv "Boningsland"}}
                     {:key "ssn", :value "010101A123N", :fieldType "textField", :label {:fi "Henkilötunnus", :sv "Personnummer"}}
                     {:key       "home-town",
                      :value     "Ankkalinna",

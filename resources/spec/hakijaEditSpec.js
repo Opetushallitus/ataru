@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(25)
+        expect(formFields().length).to.equal(26)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -41,6 +41,7 @@
           "***********",
           "test@example.com",
           "0123456789",
+          "Suomi",
           "Katutie 12 B",
           "40100",
           "JYVÄSKYLÄ",
@@ -82,8 +83,8 @@
     describe('changing values to be invalid', function () {
       before(
         setNthFieldInputValue(1, '420noscope'),
-        setNthFieldValue(20, 'textarea', ''),
-        clickNthFieldRadio(23, 'Ensimmäinen vaihtoehto')
+        setNthFieldValue(21, 'textarea', ''),
+        clickNthFieldRadio(24, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
@@ -97,8 +98,8 @@
     describe('change values and save', function () {
       before(
         setNthFieldInputValue(1, 'Tokanimi'),
-        setNthFieldValue(20, 'textarea', 'Muokattu vastaus'),
-        clickNthFieldRadio(23, 'Toinen vaihtoehto'),
+        setNthFieldValue(21, 'textarea', 'Muokattu vastaus'),
+        clickNthFieldRadio(24, 'Toinen vaihtoehto'),
         clickElement(function () {
           return submitButton()
         }),
@@ -119,6 +120,7 @@
           "***********",
           "test@example.com",
           "0123456789",
+          "Suomi",
           "Katutie 12 B",
           "40100",
           "JYVÄSKYLÄ",
