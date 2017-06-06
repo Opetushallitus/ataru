@@ -366,11 +366,10 @@
        [info-text field-descriptor]]
       [:div.application__form-outer-checkbox-container
        ; prevents inner div items from reserving full space of the outer checkbox container
-       [:div
         (map-indexed (fn [idx option]
                        ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
                        [multiple-choice-option option parent-id validators])
-                     (:options field-descriptor))]]]]))
+                     (:options field-descriptor))]]]))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id (answer-key field-descriptor)
