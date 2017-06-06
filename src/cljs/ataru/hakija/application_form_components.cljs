@@ -315,56 +315,62 @@
 
                                  [dropdown-followups lang value field-descriptor]]))})))
 
-(defn- multiple-choice-option-checked? [options value]
-  (true? (get options value)))
+(defn- multi-choice-followups [followups parent-checked?]
+  (r/create-class
+    {:component-did-mount (fn []
+                            (dispatch [:state-update
+                                       (fn [db]
+                                         (reduce (fn [db followup]
+                                                   (update-in db [:application :ui (answer-key followup)] assoc :visible? parent-checked?))
+                                                 db
+                                                 followups))]))
+     :reagent-render      (fn [followups parent-checked?]
+                            (when (and parent-checked? (not-empty followups))
+                              [:div.application__form-multi-choice-followups-container
+                               [:div.application__form-multi-choice-followups-indicator]
+                               (map (fn [followup]
+                                      ^{:key (:id followup)}
+                                      [render-field followup])
+                                    followups)]))}))
 
-(defn- multi-choice-followups [followups]
-  [:div.application__form-multi-choice-followups-container
-   [:div.application__form-multi-choice-followups-indicator]
-   (map (fn [followup]
-          ^{:key (:id followup)}
-          [render-field followup])
-        followups)])
+(defn- multiple-choice-option [option parent-id validators]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])
+        label        (non-blank-val (get-in option [:label @lang])
+                                    (get-in option [:label @default-lang]))
+        value        (:value option)
+        option-id    (util/component-id)
+        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])]
+    [:div {:key option-id}
+     [:input.application__form-checkbox
+      {:id        option-id
+       :type      "checkbox"
+       :checked   @checked?
+       :value     value
+       :on-change (fn [event]
+                    (let [value (.. event -target -value)]
+                      (dispatch [:application/toggle-multiple-choice-option parent-id value validators])))}]
+     [:label
+      {:for option-id}
+      label]
+     [multi-choice-followups (:followups option) @checked?]]))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-  (let [multiple-choice-id (answer-key field-descriptor)
-        options            (subscribe [:state-query [:application :answers multiple-choice-id :options]])
-        lang               (subscribe [:application/form-language])
-        default-lang       (subscribe [:application/default-language])]
-    (fn [field-descriptor]
-      (let [options      @options
-            lang         @lang
-            default-lang @default-lang]
-        [:div.application__form-field-wrapper
-         [div-kwd
-          [label field-descriptor]
-          [:div.application__form-text-input-info-text
-           [info-text field-descriptor]]
-          [:div.application__form-outer-checkbox-container
-           [:div ; prevents inner div items from reserving full space of the outer checkbox container
-            (map (fn [option]
-                   (let [label     (non-blank-val (get-in option [:label lang])
-                                                  (get-in option [:label default-lang]))
-                         value     (:value option)
-                         option-id (util/component-id)
-                         checked?  (multiple-choice-option-checked? options value)
-                         followups? (and checked? (not-empty (:followups option)))]
-                     [:div {:key option-id}
-                      [:input.application__form-checkbox
-                       {:id        option-id
-                        :type      "checkbox"
-                        :checked   checked?
-                        :value     value
-                        :on-change (fn [event]
-                                     (let [value (.. event -target -value)]
-                                       (dispatch [:application/toggle-multiple-choice-option multiple-choice-id value (:validators field-descriptor)])))}]
-                      [:label
-                       {:for option-id}
-                       label]
-                      (when followups?
-                        [multi-choice-followups (:followups option)])]))
-                 (:options field-descriptor))]]]]))))
+  (let [parent-id  (answer-key field-descriptor)
+        validators (:validators field-descriptor)]
+    [:div.application__form-field-wrapper
+     [div-kwd
+      [label field-descriptor]
+      [:div.application__form-text-input-info-text
+       [info-text field-descriptor]]
+      [:div.application__form-outer-checkbox-container
+       ; prevents inner div items from reserving full space of the outer checkbox container
+       [:div
+        (map-indexed (fn [idx option]
+                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
+                       [multiple-choice-option option parent-id validators])
+                     (:options field-descriptor))]]]]))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id (answer-key field-descriptor)
