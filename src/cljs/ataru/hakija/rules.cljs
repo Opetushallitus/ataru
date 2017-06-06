@@ -17,8 +17,8 @@
                               (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
                               (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
-      (match value
-        finland-country-code
+      (cond
+        (= value finland-country-code)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -27,7 +27,8 @@
             (update-in [:application :ui :ssn] assoc :visible? true)
             (update-in [:application :ui :gender] assoc :visible? false)
             (update-in [:application :ui :have-finnish-ssn] assoc :visible? false))
-        (_ :guard string?)
+
+        (string? value)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -37,7 +38,9 @@
             (update-in [:application :ui :ssn] assoc :visible? true)
             (update-in [:application :ui :gender] assoc :visible? false)
             (update-in [:application :ui :have-finnish-ssn] assoc :visible? true))
-        :else (hide-both-fields))
+
+        :else
+        (hide-both-fields))
       (hide-both-fields))))
 
 (defn- parse-birth-date-from-ssn
