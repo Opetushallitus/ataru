@@ -53,6 +53,7 @@
                         :id                                    s/Str
                         (s/optional-key :validators)           [(apply s/enum (keys validator/validators))]
                         (s/optional-key :rules)                {s/Keyword s/Any}
+                        (s/optional-key :blur-rules)           {s/Keyword s/Any}
                         (s/optional-key :label)                LocalizedString
                         (s/optional-key :initialValue)         (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params)               s/Any
@@ -99,7 +100,7 @@
                                                                                (s/recursive #'WrapperElement)
                                                                                :else
                                                                                BasicElement)]
-                             (s/optional-key :child-validator) (s/enum :one-of)
+                             (s/optional-key :child-validator) (s/enum :one-of :birthdate-and-gender-component)
                              (s/optional-key :params)          s/Any
                              (s/optional-key :label)           LocalizedString
                              (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
@@ -169,19 +170,19 @@
    (s/optional-key :created-time)   org.joda.time.DateTime})
 
 (s/defschema Application
-  {(s/optional-key :key)          s/Str
-   :form                          s/Int
-   :lang                          s/Str
-   :answers                       [Answer]
-   (s/optional-key :state)        (s/maybe s/Str)
-   (s/optional-key :hakukohde)    (s/maybe s/Str)
-   (s/optional-key :haku)         (s/maybe s/Str)
-   (s/optional-key :id)           s/Int
-   (s/optional-key :created-time) org.joda.time.DateTime
-   (s/optional-key :secret)       s/Str
-   (s/optional-key :form-key)     s/Str
-   (s/optional-key :tarjonta)     FormTarjontaMetadata})
-
+  {(s/optional-key :key)                s/Str
+   :form                                s/Int
+   :lang                                s/Str
+   :answers                             [Answer]
+   (s/optional-key :applications-count) s/Int
+   (s/optional-key :state)              (s/maybe s/Str)
+   (s/optional-key :hakukohde)          (s/maybe s/Str)
+   (s/optional-key :haku)               (s/maybe s/Str)
+   (s/optional-key :id)                 s/Int
+   (s/optional-key :created-time)       org.joda.time.DateTime
+   (s/optional-key :secret)             s/Str
+   (s/optional-key :form-key)           s/Str
+   (s/optional-key :tarjonta)           FormTarjontaMetadata})
 
 (def application-states
   (apply s/enum (keys review-states/application-review-states)))

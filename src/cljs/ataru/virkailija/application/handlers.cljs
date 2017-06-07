@@ -83,14 +83,18 @@
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-fetch-applications-response
-  (fn [db [_ {:keys [applications]}]]
-    (-> db
-        (assoc-in [:application :applications] applications)
-        (assoc-in [:application :fetching-applications] false)
-        (assoc-in [:application :review-state-counts] (review-state-counts applications))
-        (assoc-in [:application :sort] application-sorting/initial-sort))))
+  (fn [{:keys [db]} [_ {:keys [applications]}]]
+    (let [db (-> db
+                 (assoc-in [:application :applications] applications)
+                 (assoc-in [:application :fetching-applications] false)
+                 (assoc-in [:application :review-state-counts] (review-state-counts applications))
+                 (assoc-in [:application :sort] application-sorting/initial-sort))]
+      {:db       db
+       :dispatch (if (= (count applications) 1)
+                   [:application/select-application (-> applications first :key)]
+                   [:application/close-application])})))
 
 (defn fetch-applications-fx [db path]
   {:db   (assoc-in db [:application :fetching-applications] true)
@@ -114,9 +118,16 @@
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
 
 (reg-event-fx
-  :application/fetch-applications-by-ssn
-  (fn [{:keys [db]} [_ ssn]]
-    (fetch-applications-fx db (str "/lomake-editori/api/applications/list?ssn=" ssn))))
+  :application/fetch-applications-by-term
+  (fn [{:keys [db]} [_ search-kwd type]]
+    (let [db          (cond-> db
+                        (clojure.string/blank? (get-in db [:application :search-control :search-term :value]))
+                        (assoc-in [:application :search-control :search-term :value] search-kwd))
+          query-param (case type
+                        :ssn "ssn"
+                        :dob "dob"
+                        :email "email")]
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
 
 (reg-event-db
  :application/review-updated
@@ -237,7 +248,7 @@
    (-> db
        (assoc-in [:editor :selected-form-key] nil)
        (assoc-in [:application :applications] nil)
-       (assoc-in [:application :search-control :ssn] nil)
+       (assoc-in [:application :search-control :search-term] nil)
        (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
 
 (reg-event-db
@@ -285,3 +296,21 @@
             :path                "/lomake-editori/api/haut"
             :handler-or-dispatch :editor/handle-refresh-haut}}))
 
+(reg-event-fx
+  :application/navigate
+  (fn [{:keys [db]} [_ path]]
+    {:db       db
+     :navigate path}))
+
+(reg-event-fx
+  :application/dispatch
+  (fn [{:keys [db]} [_ dispatch-vec]]
+    {:db       db
+     :dispatch dispatch-vec}))
+
+(reg-event-fx
+  :application/navigate-with-callback
+  (fn [{:keys [db]} [_ path dispatch-vec]]
+    {:db db
+     :dispatch-n [[:application/navigate path]
+                  [:application/dispatch dispatch-vec]]}))

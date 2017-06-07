@@ -77,8 +77,8 @@
         expanded?    (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn [applications]
       (into [:div.application-handling__list
-             {:class (when (= true @expanded?)
-                       "application-handling__list--expanded")}]
+             {:class (str (when (= true @expanded?) "application-handling__list--expanded")
+                          (when (> (count applications) 0) " animated fadeIn"))}]
             (for [application applications
                   :let        [selected? (= @selected-key (:key application))]]
               (if selected?
@@ -296,14 +296,25 @@
   [:div.application-handling__floating-application-review-placeholder])
 
 (defn application-heading [application]
-  (let [answers        (:answers application)
-        pref-name      (-> answers :preferred-name :value)
-        last-name      (-> answers :last-name :value)
-        ssn            (or (-> answers :ssn :value) (-> answers :birth-date :value))
-        hakukohde-name (-> application :tarjonta :hakukohde-name)
-        koulutus-info  (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
+  (let [answers            (:answers application)
+        pref-name          (-> answers :preferred-name :value)
+        last-name          (-> answers :last-name :value)
+        ssn                (get-in answers [:ssn :value])
+        email              (get-in answers [:email :value])
+        birth-date         (get-in answers [:birth-date :value])
+        hakukohde-name     (-> application :tarjonta :hakukohde-name)
+        applications-count (:applications-count application)
+        koulutus-info      (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
     [:div.application__handling-heading
-     [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " ssn)]
+     [:div.application-handling__review-area-main-heading-container
+      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " (or ssn birth-date))]
+      (when (> applications-count 1)
+        [:a.application-handling__review-area-main-heading-applications-link
+         {:on-click (fn [_]
+                      (dispatch [:application/navigate-with-callback
+                                 "/lomake-editori/applications/search/"
+                                 [:application/search-by-term (or ssn email)]]))}
+         (str applications-count " hakemusta")])]
      (when-not (string/blank? hakukohde-name)
        [:div.application-handling__review-area-hakukohde-heading hakukohde-name])
      (when-not (or
@@ -313,7 +324,9 @@
 
 (defn close-application []
   [:a {:href     "#"
-       :on-click (fn [event] (dispatch [:application/close-application]))}
+       :on-click (fn [event]
+                   (.preventDefault event)
+                   (dispatch [:application/close-application]))}
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 

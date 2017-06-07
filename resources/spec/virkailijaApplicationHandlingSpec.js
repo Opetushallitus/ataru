@@ -34,7 +34,7 @@
       )
       it('has applications', function() {
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
-        expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (2)')
+        expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (3)')
       })
       it('stores an event for review state change', function() {
         expect(eventCountBefore+1).to.equal(eventCaptions().length)
@@ -44,6 +44,7 @@
       it('Successfully stores notes and score for an application', function(done) {
         var scoreForVatanen = Math.floor((Math.random() * 50) + 1)
         var scoreForKuikeloinen = (scoreForVatanen + 5)
+        var scoreForTyrni = scoreForKuikeloinen - 10
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(setTextFieldValue(score, scoreForVatanen))
@@ -59,7 +60,11 @@
           expect(reviewNotes().val()).to.equal('Reipas kaveri')
           expect(score().val()).to.equal(scoreForVatanen + '')
           done()
-        }).fail(done)
+        })
+        .then(clickElement(thirdApplication))
+        .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+        .then(setTextFieldValue(score, scoreForTyrni))
+        .fail(done)
       })
 
       function applicationHeadingIs(expected) {
@@ -71,6 +76,8 @@
       function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)') }
 
       function secondApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)') }
+
+      function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Tyrni)') }
 
       function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
 
@@ -93,7 +100,7 @@
       }
 
       function applicationRow() {
-        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header)')
+        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) > .application-handling__list-row--applicant:contains(Vatanen)')
       }
 
       function selectedState() {
@@ -125,22 +132,22 @@
             .then(clickElement(scoreColumn))
             .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
             .then(function() {
-              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
+              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen", "Johanna Irmeli Tyrni"])
             })
             .then(clickElement(scoreColumn))
-            .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
+            .then(wait.until(firstApplicantNameIs("Johanna Irmeli Tyrni")))
             .then(function() {
-              expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
+              expectApplicants(["Johanna Irmeli Tyrni", "Ari Vatanen", "Seija Susanna Kuikeloinen"])
             })
             .then(clickElement(applicantColumn))
             .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
             .then(function() {
-              expectApplicants(["Ari Vatanen", "Seija Susanna Kuikeloinen"])
+              expectApplicants(["Ari Vatanen", "Johanna Irmeli Tyrni", "Seija Susanna Kuikeloinen"])
             })
             .then(clickElement(applicantColumn))
             .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
             .then(function() {
-              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen"])
+              expectApplicants(["Seija Susanna Kuikeloinen", "Johanna Irmeli Tyrni", "Ari Vatanen"])
             })
             .then(done)
             .fail(done)
@@ -186,10 +193,10 @@
       before(clickElement(filterLink))
       it('reduces application list', function(done) {
         expect(includedFilters()).to.equal(11)
-        expect(applicationStates().length).to.equal(2)
+        expect(applicationStates().length).to.equal(3)
 
         var stateOfFirstApplication = applicationStates().eq(0).text()
-        var stateOfSecondApplication = applicationStates().eq(1).text()
+        var stateOfSecondApplication = applicationStates().eq(2).text()
 
         filterOutBasedOnFirstApplicationState(stateOfFirstApplication)
         wait.until(function() {
@@ -199,7 +206,7 @@
         .then(function() {
           filterInBasedOnFirstApplicationState(stateOfFirstApplication)
           return wait.until(function() {
-            return filteredApplicationsCount() === 2
+            return filteredApplicationsCount() === 3
           })()
         })
         .then(clickElement(filterLink))
@@ -229,6 +236,55 @@
 
       function filteredApplicationsCount() {
         return testFrame().find('.application-handling__list .application-handling__list-row--state').length
+      }
+    })
+
+    describe('finding all applications belonging to a given ssn', function() {
+      before(
+        clickElement(multipleApplicationsApplicant)
+      )
+
+      it('shows link to all applications belonging to a given ssn', function(done) {
+        wait.until(function() {
+          return searchApplicationsBySsnLink().text() === '2 hakemusta'
+        })()
+        .then(clickElement(searchApplicationsBySsnLink))
+        .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
+        .then(function() {
+          expectApplicants(['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
+        })
+        .then(done)
+        .fail(done)
+      })
+
+      function multipleApplicationsApplicant() {
+        return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)')
+      }
+
+      function searchApplicationsBySsnLink() {
+        return testFrame().find('.application-handling__review-area-main-heading-applications-link')
+      }
+
+      function ssnSearchField() {
+        return testFrame().find('.application__search-control-search-term-input')
+      }
+
+      function ssnSearchFieldHasValue(value) {
+        return function() {
+          return ssnSearchField().val() === value
+        }
+      }
+
+      function expectApplicants(expected) {
+        expect(_.isEqual(applicantNames(), expected)).to.be.true
+      }
+
+      function applicantNames() {
+        var scoreColumnObjects = testFrame().find('.application-handling__list-row--applicant')
+        return _(scoreColumnObjects)
+          .map(function (obj) { return $(obj).text() })
+          .filter(function (val) { return val !== 'Hakija' })
+          .value()
       }
     })
   })

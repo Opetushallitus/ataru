@@ -15,18 +15,38 @@
       []
       options)))
 
+(defn- validate-birthdate-and-gender-component
+  [answers-by-key child-answers]
+  (let [answer-passed? (partial (fn [child-answers key] (-> child-answers key :passed?)) child-answers)]
+    (boolean
+      (if
+        (or
+          (= (-> answers-by-key :nationality :value) "246")
+          (= (boolean (-> answers-by-key :have-finnish-ssn :value)) true))
+        (and                                                ; finnish or have ssn
+          (answer-passed? :ssn)
+          (answer-passed? :birth-date)
+          (answer-passed? :gender))
+        (and                                                ; not finnish, no ssn
+          (clojure.string/blank? (-> answers-by-key :ssn :value))
+          (answer-passed? :birth-date)
+          (answer-passed? :gender))))))
+
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
-    :one-of ; one of the answers of a group of fields must validate to true
-    (fn [answers]
-      (boolean (some true? answers)))))
+    :birthdate-and-gender-component
+    validate-birthdate-and-gender-component
+
+    :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
+    (fn [_ child-answers]
+      (boolean (some true? (map (comp :passed? second) child-answers))))))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn passed? [answer validators]
+(defn passed? [answer validators answers-by-key]
   (every? (fn [validator]
-            (validator/validate validator answer))
+            (validator/validate validator answer answers-by-key))
           validators))
 
 (defn- wrap-coll [xs]
@@ -34,15 +54,16 @@
     xs
     [xs]))
 
-(defn- passes-all? [validators answers]
+(defn- passes-all?
+  [validators answers answers-by-key]
   (every? true? (map
-                  #(passed? % validators)
+                  #(passed? % validators answers-by-key)
                   (or
                     (when (empty? answers) [nil])
                     answers))))
 
 (defn build-results
-  [answers-by-key results [{:keys [id] :as field} & forms]]
+  [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
   (let [id      (keyword id)
         answers (wrap-coll (:value (get answers-by-key id)))]
     (into {}
@@ -54,7 +75,7 @@
         (build-results
           answers-by-key
           results
-          forms)
+          rest-form-fields)
 
         {:fieldClass      "wrapperElement"
          :children        children
@@ -62,18 +83,17 @@
         (build-results
           answers-by-key
           (concat results
-            {id {:passed?
-                 ((validator-keyword->fn validation-keyword)
-                  (mapv (comp :passed? second)
-                    (build-results answers-by-key [] children)))}})
-          forms)
+                  {id {:passed?
+                       ((partial (validator-keyword->fn validation-keyword) answers-by-key)
+                         (build-results answers-by-key [] children))}})
+          rest-form-fields)
 
         {:fieldClass "wrapperElement"
          :children   children}
         (build-results
           answers-by-key
           (concat results (build-results answers-by-key [] children))
-          forms)
+          rest-form-fields)
 
         {:fieldClass "formField"
          :fieldType  (:or "dropdown" "multipleChoice")
@@ -95,7 +115,7 @@
                               (or
                                 (nil? allowed-values)
                                 (clojure.set/subset? answers allowed-values))
-                              (passes-all? validators answers))}}
+                              (passes-all? validators answers answers-by-key))}}
               (when-let [followups (not-empty (eduction (comp
                                                           (filter (fn [option]
                                                                     (and (not-empty (:followups option))
@@ -106,15 +126,15 @@
                   answers-by-key
                   results
                   followups)))
-            forms))
+            rest-form-fields))
 
         {:fieldClass "formField"
          :validators validators}
         (build-results
           answers-by-key
           (concat results
-            {id {:passed? (passes-all? validators answers)}})
-          forms)
+            {id {:passed? (passes-all? validators answers answers-by-key)}})
+          rest-form-fields)
 
         :else results))))
 

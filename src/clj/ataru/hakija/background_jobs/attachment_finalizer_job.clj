@@ -12,13 +12,14 @@
         attachment-ids (->> application
                             :answers
                             (filter #(= (:fieldType %) "attachment"))
-                            (mapcat :value))
-        response       @(http/post (resolve-url :liiteri.finalize)
-                                   {:headers {"Content-Type" "application/json"}
-                                    :body    (json/generate-string {:keys attachment-ids})})]
-    (when (not= 200 (:status response))
-      (throw (Exception. (str "Could not finalize attachments for application " application-id))))
-    (log/info (str "Finalized attachments for application " application-id))
+                            (mapcat :value))]
+    (when (> (count attachment-ids) 0)
+      (let [response @(http/post (resolve-url :liiteri.finalize)
+                                 {:headers {"Content-Type" "application/json"}
+                                  :body    (json/generate-string {:keys attachment-ids})})]
+        (when (not= 200 (:status response))
+          (throw (Exception. (str "Could not finalize attachments for application " application-id))))
+        (log/info (str "Finalized attachments for application " application-id))))
     {:transition {:id :final}}))
 
 (def job-definition {:steps {:initial finalize-attachments}

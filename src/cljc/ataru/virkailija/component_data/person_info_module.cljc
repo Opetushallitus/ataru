@@ -5,21 +5,26 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators rules] :or {size "M" validators [] rules {}}}]
+  [labels & {:keys [size id validators rules params blur-rules] :or {size "M" validators [] rules {} params {} blur-rules {}}}]
   (-> (component/text-field)
       (assoc :rules rules)
+      (assoc :blur-rules blur-rules)
       (assoc :label labels)
       (assoc :validators (conj validators :required))
+      (assoc :params params)
       (assoc-in [:params :size] size)
       (assoc :id id)))
 
 (defn ^:private first-name-component
   []
-  (text-field {:fi "Etunimet" :sv "Förnamn" :en "Forenames"} :id :first-name))
+  (text-field {:fi "Etunimet" :sv "Förnamn" :en "Forenames"} :id :first-name :blur-rules {:prefill-preferred-first-name :main-first-name}))
 
 (defn ^:private preferred-name-component
   []
-  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"} :size "S" :id :preferred-name))
+  (text-field {:fi "Kutsumanimi" :sv "Tilltalsnamn" :en "Main forename"}
+              :size "S"
+              :id :preferred-name
+              :validators [:main-first-name]))
 
 (defn ^:private first-name-section
   []
@@ -90,7 +95,7 @@
     (component/row-section
       [(ssn-component)
        (birthdate-and-gender-component)])
-    :child-validator :one-of))
+    :child-validator :birthdate-and-gender-component))
 
 (defn ^:private email-component
   []

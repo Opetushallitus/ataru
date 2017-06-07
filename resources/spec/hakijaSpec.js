@@ -48,8 +48,7 @@
 
       describe('filling out', function() {
         before(
-          setNthFieldInputValue(0, 'Etunimi'),
-          setNthFieldInputValue(1, 'Etunimi'),
+          setNthFieldInputValue(0, 'Etunimi Tokanimi'),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
           setNthFieldInputValue(5, 'test@example.com'),
@@ -112,7 +111,7 @@
 
       it('shows submitted form', function() {
         var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
-        var expectedValues = ["Etunimi",
+        var expectedValues = ["Etunimi Tokanimi",
                               "Etunimi",
                               "Sukunimi",
                               "Suomi",
