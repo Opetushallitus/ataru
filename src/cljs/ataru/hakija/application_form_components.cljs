@@ -285,7 +285,7 @@
        :reagent-render      (fn [field-descriptor]
                               (let [lang         @lang
                                     default-lang @default-lang]
-                                [:div.application__form-field-wrapper
+                                [:div
                                  [div-kwd
                                   [label field-descriptor]
                                   [:div.application__form-text-input-info-text
