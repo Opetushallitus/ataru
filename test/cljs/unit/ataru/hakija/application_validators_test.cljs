@@ -30,7 +30,7 @@
   (doseq [postal-code (keys postal-code/postal-code-list)]
     (let [expected (get postal-code/postal-code-list postal-code)
           pred     (if expected true? false?)
-          actual   (validator/validate "postal-code" postal-code {})
+          actual   (validator/validate "postal-code" postal-code {:country-of-residence {:value "246"}})
           message  (if expected "valid" "invalid")]
       (is (pred actual)
           (str "postal code " postal-code " was not " message)))))

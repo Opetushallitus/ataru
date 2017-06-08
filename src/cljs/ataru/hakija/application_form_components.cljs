@@ -12,7 +12,8 @@
              [answer-key
               required-hint
               textual-field-value
-              scroll-to-anchor]]
+              scroll-to-anchor
+              is-required-field?]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -97,7 +98,7 @@
   [field-descriptor value valid? answers-by-key]
   (and
     (not valid?)
-    (some #(= % "required") (:validators field-descriptor))
+    (is-required-field? field-descriptor)
     (validator/validate "required" value answers-by-key)))
 
 (defn- add-link-target-prop

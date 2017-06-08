@@ -88,6 +88,12 @@
                                               :id "phone",
                                               :params {:size "M"},
                                               :fieldType "textField"}
+                                             {:label {:fi "Asuinmaa", :sv "Boningsland"},
+                                              :validators ["required"],
+                                              :fieldClass "formField",
+                                              :id "country-of-residence",
+                                              :params {:size "M"},
+                                              :fieldType "textField"}
                                              {:label {:fi "Katuosoite", :sv "Adress"},
                                               :validators ["required"],
                                               :fieldClass "formField",

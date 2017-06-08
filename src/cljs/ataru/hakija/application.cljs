@@ -10,7 +10,7 @@
   (into {}
         (map-indexed
           (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(= % "required") (:validators field)))
+            [(keyword (:id field)) {:valid (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
                                     :label (:label field)
                                     :order-idx idx}]) flattened-form-fields)))
 
@@ -50,6 +50,20 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
+(defn- remove-invisible-answers
+  [answers flat-form ui]
+  (let [fields-to-remove-if-hidden (->> flat-form
+                                        (filter-vals :exclude-from-answers-if-hidden)
+                                        (keys)
+                                        (map keyword)
+                                        (set))
+        hidden-field-ids           (->> ui
+                                        (filter-vals #(false? (:visible? %)))
+                                        (keys)
+                                        (set))
+        fields-to-remove           (clojure.set/intersection fields-to-remove-if-hidden hidden-field-ids)]
+    (remove-keys #(contains? fields-to-remove %) answers)))
+
 (defn- value->str [field-map value]
   (cond (= (:fieldType field-map) "attachment")
         (get-in value [:value :key])
@@ -58,7 +72,9 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values cannot-edit cannot-view]}] (remove-invisible-followup-values answers flat-form-map ui)
+    (for [[ans-key {:keys [value values cannot-edit cannot-view]}] (-> answers
+                                                                       (remove-invisible-followup-values flat-form-map ui)
+                                                                       (remove-invisible-answers flat-form-map ui))
           :let [field-map    (get flat-form-map (name ans-key))
                 field-type   (:fieldType field-map)
                 label        (:label field-map)]
