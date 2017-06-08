@@ -5,15 +5,17 @@
 ; validators defined in ataru.hakija.application-validators
 
 (defn ^:private text-field
-  [labels & {:keys [size id validators rules params blur-rules] :or {size "M" validators [:required] rules {} params {} blur-rules {}}}]
+  [labels & {:keys [size id validators rules params blur-rules exclude-from-answers-if-hidden] :or
+                   {size "M" validators [:required] rules {} params {} blur-rules {} exclude-from-answers-if-hidden false}}]
   (-> (component/text-field)
+      (assoc :id id)
       (assoc :rules rules)
-      (assoc :blur-rules blur-rules)
       (assoc :label labels)
       (assoc :validators validators)
-      (assoc :params params)
       (assoc-in [:params :size] size)
-      (assoc :id id)))
+      (cond-> (not (empty? params)) (assoc :params params))
+      (cond-> (not (empty? blur-rules)) (assoc :blur-rules blur-rules))
+      (cond-> exclude-from-answers-if-hidden (assoc :exclude-from-answers-if-hidden true))))
 
 (defn ^:private first-name-component
   []
@@ -120,11 +122,17 @@
 
 (defn ^:private home-town-component
   []
-  (text-field {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"} :id :home-town :validators [:home-town]))
+  (text-field {:fi "Kotikunta" :sv "Hemkommun" :en "Home town"}
+              :id :home-town
+              :validators [:home-town]
+              :exclude-from-answers-if-hidden true))
 
 (defn- city-component
   []
-  (text-field {:fi "Kaupunki" :sv "Stad" :en "City"} :id :city :validators [:city]))
+  (text-field {:fi "Kaupunki" :sv "Stad" :en "City"}
+              :id :city
+              :validators [:city]
+              :exclude-from-answers-if-hidden true))
 
 (defn ^:private postal-code-component
   []
@@ -137,7 +145,10 @@
 
 (defn ^:private postal-office-component
   []
-  (text-field {:fi "Postitoimipaikka" :sv "Postkontor" :en "Postal office"} :id :postal-office :validators [:postal-office]))
+  (text-field {:fi "Postitoimipaikka" :sv "Postkontor" :en "Postal office"}
+              :id :postal-office
+              :validators [:postal-office]
+              :exclude-from-answers-if-hidden true))
 
 (defn ^:private postal-office-section
   []
