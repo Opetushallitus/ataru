@@ -1,6 +1,8 @@
 (ns ataru.hakija.rules
   (:require [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.hakija-ajax :as ajax]))
+            [ataru.hakija.hakija-ajax :as ajax]
+            [ataru.hakija.application-validators :as validators]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (def ^:private no-required-answer {:valid false :value ""})
 
@@ -15,8 +17,8 @@
                               (update-in [:application :ui :have-finnish-ssn] assoc :visible? false)
                               (update-in [:application :ui :gender] assoc :visible? false))]
     (if-let [value (and (:valid nationality) (not-empty (:value nationality)))]
-      (match value
-        "246"
+      (cond
+        (= value finland-country-code)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -25,7 +27,8 @@
             (update-in [:application :ui :ssn] assoc :visible? true)
             (update-in [:application :ui :gender] assoc :visible? false)
             (update-in [:application :ui :have-finnish-ssn] assoc :visible? false))
-        (_ :guard string?)
+
+        (string? value)
         (-> db
             (update-in [:application :answers :ssn] merge no-required-answer)
             (update-in [:application :answers :gender] merge no-required-answer)
@@ -35,7 +38,9 @@
             (update-in [:application :ui :ssn] assoc :visible? true)
             (update-in [:application :ui :gender] assoc :visible? false)
             (update-in [:application :ui :have-finnish-ssn] assoc :visible? true))
-        :else (hide-both-fields))
+
+        :else
+        (hide-both-fields))
       (hide-both-fields))))
 
 (defn- parse-birth-date-from-ssn
@@ -70,17 +75,20 @@
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (if (-> db :application :answers :postal-code :valid)
-    (let [postal-code (-> db :application :answers :postal-code :value)]
-      (when-not (clojure.string/blank? postal-code)
-        (ajax/get
-          (str "/hakemus/api/postal-codes/" postal-code)
-          :application/handle-postal-code-input
-          :application/handle-postal-code-error))
-      db)
-    (-> db
-        (update-in [:application :answers :postal-office] merge no-required-answer)
-        (update-in [:application :ui] dissoc :postal-office))))
+  (if (= (-> db :application :answers :country-of-residence :value)
+         finland-country-code)                                           ; only prefill postal office for finnish addresses
+    (if (-> db :application :answers :postal-code :valid)
+      (let [postal-code (-> db :application :answers :postal-code :value)]
+        (when-not (clojure.string/blank? postal-code)
+          (ajax/get
+            (str "/hakemus/api/postal-codes/" postal-code)
+            :application/handle-postal-code-input
+            :application/handle-postal-code-error))
+        db)
+      (-> db
+          (update-in [:application :answers :postal-office] merge no-required-answer)
+          (update-in [:application :ui] dissoc :postal-office)))
+    db))
 
 (defn- toggle-ssn-based-fields
   [db _]
@@ -104,7 +112,7 @@
       [(_ :guard nil?) _]
       db
 
-      [_ "246"]
+      [_ finland-country-code]
       (do
         (-> db
             (assoc-in [:application :ui :ssn :visible?] true)
@@ -122,8 +130,39 @@
             (assoc-in [:application :ui :have-finnish-ssn :visible?] true)
             (assoc-in [:application :answers :have-finnish-ssn :value] (str have-ssn?)))))))
 
+(defn- prefill-preferred-first-name
+  [db _]
+  (let [answers          (-> db :application :answers)
+        first-names      (-> answers :first-name :value)
+        main-first-name  (-> answers :preferred-name :value)
+        first-first-name (first (clojure.string/split first-names #" "))]
+    (if (and
+          first-first-name
+          (clojure.string/blank? main-first-name))
+      (update-in db [:application :answers :preferred-name] merge {:value first-first-name :valid true})
+      db)))
+
+(defn- change-country-of-residence
+  [db _]
+  (let [answers     (-> db :application :answers)
+        is-finland? (= (-> answers :country-of-residence :value)
+                       finland-country-code)
+        validate-answer (fn [db answer-key validator-key]
+                          (assoc-in db
+                                    [:application :answers answer-key :valid]
+                                    (validators/validate validator-key (-> db :application :answers answer-key :value) answers)))]
+    (-> db
+        (validate-answer :postal-code :postal-code)
+        (validate-answer :postal-office :postal-office)
+        (validate-answer :city :city)
+        (assoc-in [:application :ui :postal-office :visible?] is-finland?)
+        (assoc-in [:application :ui :home-town :visible?] is-finland?)
+        (assoc-in [:application :ui :city :visible?] (not is-finland?)))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
+    :prefill-preferred-first-name
+    prefill-preferred-first-name
     :swap-ssn-birthdate-based-on-nationality
     swap-ssn-birthdate-based-on-nationality
     :update-gender-and-birth-date-based-on-ssn
@@ -134,6 +173,8 @@
     toggle-ssn-based-fields
     :toggle-ssn-based-fields-for-existing-application
     toggle-ssn-based-fields-for-existing-application
+    :change-country-of-residence
+    change-country-of-residence
     nil))
 
 (defn extract-rules [content]

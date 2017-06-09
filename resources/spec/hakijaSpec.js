@@ -25,7 +25,7 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(24)
+        expect(formFields().length).to.equal(25)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
@@ -39,8 +39,9 @@
       describe('structure', function() {
         it('has the correct fields', function() {
           var labels = _.map(personInfoModule().find('label'), function(e) { return $(e).text() })
-          var expectedLabels = ["Etunimet *.","Kutsumanimi *.","Sukunimi *.","Kansalaisuus *.","Henkilötunnus *.","Sähköpostiosoite *.","Matkapuhelin *.","Katuosoite *.","Postinumero *.","Postitoimipaikka *.","Kotikunta *.","Äidinkieli *."]
+          var expectedLabels = ["Etunimet *.","Kutsumanimi *.","Sukunimi *.","Kansalaisuus *.","Henkilötunnus *.","Sähköpostiosoite *.","Matkapuhelin *.","Asuinmaa *.","Katuosoite *.","Postinumero *.","Postitoimipaikka *.","Kotikunta *.","Äidinkieli *."]
 
+          console.log("?", labels, expectedLabels)
           expect(personInfoModule().find('.application__wrapper-heading h2').text()).to.equal('Henkilötiedot')
           expect(labels).to.eql(expectedLabels)
         })
@@ -48,23 +49,22 @@
 
       describe('filling out', function() {
         before(
-          setNthFieldInputValue(0, 'Etunimi'),
-          setNthFieldInputValue(1, 'Etunimi'),
+          setNthFieldInputValue(0, 'Etunimi Tokanimi'),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
           setNthFieldInputValue(5, 'test@example.com'),
           setNthFieldInputValue(6, '0123456789'),
-          setNthFieldInputValue(7, 'Katutie 12 B'),
-          setNthFieldInputValue(8, '40100'),
-          setNthFieldInputValue(10, 'Jyväskylä'),
+          setNthFieldInputValue(8, 'Katutie 12 B'),
+          setNthFieldInputValue(9, '40100'),
+          setNthFieldInputValue(11, 'Jyväskylä'),
           wait.until(function() {
-            return formFields().eq(9).find('input').val() !== ''
+            return formFields().eq(10).find('input').val() !== ''
           })
         )
         it('works and validates correctly', function() {
           expect(formFields().eq(3).find('select').val()).to.equal('246')
-          expect(formFields().eq(9).find('input').val()).to.equal('JYVÄSKYLÄ')
-          expect(formFields().eq(11).find('select').val()).to.equal('FI')
+          expect(formFields().eq(10).find('input').val()).to.equal('JYVÄSKYLÄ')
+          expect(formFields().eq(12).find('select').val()).to.equal('FI')
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
           expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         })
@@ -75,24 +75,24 @@
 
     describe('user-defined fields', function() {
       before(
-        setNthFieldInputValue(12, 'Tekstikentän vastaus'),
-        setNthFieldInputValue(13, 'Toistuva vastaus 1'),
-        setNthFieldSubInputValue(13, 1, 'Toistuva vastaus 2'),
-        setNthFieldSubInputValue(13, 2, 'Toistuva vastaus 3'),
+        setNthFieldInputValue(13, 'Tekstikentän vastaus'),
+        setNthFieldInputValue(14, 'Toistuva vastaus 1'),
+        setNthFieldSubInputValue(14, 1, 'Toistuva vastaus 2'),
+        setNthFieldSubInputValue(14, 2, 'Toistuva vastaus 3'),
         clickElement(function() {
-          return formFields().eq(13).find('a.application__form-repeatable-text--addremove').eq(0)
+          return formFields().eq(14).find('a.application__form-repeatable-text--addremove').eq(0)
         }),
-        setNthFieldValue(14, 'textarea', 'Pakollisen tekstialueen vastaus'),
-        setNthFieldOption(15, 'Kolmas vaihtoehto'),
-        setNthFieldInputValue(16, 'Jatkokysymyksen vastaus'),
-        setNthFieldOption(17, '120'),
-        clickNthFieldRadio(18, 'Toinen vaihtoehto', true),
-        clickNthFieldRadio(19, 'En'),
-        clickNthFieldRadio(20, 'Arkkitehti', true),
-        setNthFieldValue(21, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
-        clickNthFieldRadio(24, 'Ensimmäinen vaihtoehto'),
-        setNthFieldSubInputValue(25, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(25, 1, 'Oikea vierekkäinen')
+        setNthFieldValue(15, 'textarea', 'Pakollisen tekstialueen vastaus'),
+        setNthFieldOption(16, 'Kolmas vaihtoehto'),
+        setNthFieldInputValue(17, 'Jatkokysymyksen vastaus'),
+        setNthFieldOption(18, '120'),
+        clickNthFieldRadio(19, 'Toinen vaihtoehto', true),
+        clickNthFieldRadio(20, 'En'),
+        clickNthFieldRadio(21, 'Arkkitehti', true),
+        setNthFieldValue(22, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
+        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto'),
+        setNthFieldSubInputValue(26, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(26, 1, 'Oikea vierekkäinen')
 
       )
       it('works and validates correctly', function() {
@@ -113,13 +113,14 @@
 
       it('shows submitted form', function() {
         var displayedValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
-        var expectedValues = ["Etunimi",
+        var expectedValues = ["Etunimi Tokanimi",
                               "Etunimi",
                               "Sukunimi",
                               "Suomi",
                               "020202A0202",
                               "test@example.com",
                               "0123456789",
+                              "Suomi",
                               "Katutie 12 B",
                               "40100",
                               "JYVÄSKYLÄ",

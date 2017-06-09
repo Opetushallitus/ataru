@@ -81,9 +81,9 @@
    [:div
     [:div.editor-form__markdown-help-arrow-left]
     [:div.editor-form__markdown-help-content
-     [:span "# otsikko (# h1 – ###### h6)"]
+     [:span "# otsikko (# ylin - ###### alin)"]
      [:br]
-     [:span "**boldattava sisältö**"]
+     [:span "**lihavoitava sisältö**"]
      [:br]
      [:span "*kursivoitava sisältö*"]
      [:br]

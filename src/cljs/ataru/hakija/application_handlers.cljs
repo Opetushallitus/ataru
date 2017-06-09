@@ -119,13 +119,13 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn- toggle-multiple-choice-option [answer option-value validators]
+(defn- toggle-multiple-choice-option [answer option-value validators answers-by-key]
   (let [answer (update-in answer [:options option-value] not)
         value  (->> (:options answer)
                     (filter (comp true? second))
                     (map first))
         valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value) validators))
+                 (every? true? (map #(validator/validate % value answers-by-key) validators))
                  true)]
     (merge answer {:value value :valid valid})))
 
@@ -136,25 +136,29 @@
     (update-in db button-path
                (fn [answer]
                  (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value) validators))
+                                (every? true? (map #(validator/validate % new-value (-> db :application :answers)) validators))
                                 true)]
                    (merge answer {:value new-value
                                   :valid valid?}))))))
 
 (defn- toggle-values
-  [answer options]
+  [answer options answers-by-key]
   (reduce (fn [answer option-value]
-            (toggle-multiple-choice-option answer option-value nil))
+            (toggle-multiple-choice-option answer option-value nil answers-by-key))
           answer
           options))
 
-(defn- merge-multiple-choice-option-values [value answer]
+(defn- merge-multiple-choice-option-values [value answers-by-key answer]
   (if (string? value)
-    (toggle-values answer (clojure.string/split value #"\s*,\s*"))
-    (toggle-values answer value)))
+    (toggle-values answer (clojure.string/split value #"\s*,\s*") answers-by-key)
+    (toggle-values answer value answers-by-key)))
 
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
+
+(defn- set-country-specific-fields-visibility
+  [db]
+  (rules/run-rule {:change-country-of-residence nil} db))
 
 (defonce multi-value-field-types #{"textField" "attachment"})
 
@@ -175,7 +179,7 @@
                         (update
                           (match answer
                                  {:fieldType "multipleChoice"}
-                                 (update answers answer-key (partial merge-multiple-choice-option-values value))
+                                 (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
 
                                  {:fieldType "dropdown"}
                                  (update answers answer-key merge {:valid true :value value})
@@ -195,7 +199,8 @@
                         answers)))
                   answers
                   submitted-answers)))
-      (set-ssn-field-visibility)))
+      (set-ssn-field-visibility)
+      (set-country-specific-fields-visibility)))
 
 (reg-event-db
   :application/merge-submitted-answers
@@ -342,7 +347,7 @@
   (fn [db [_ multiple-choice-id option-value validators]]
     (update-in db [:application :answers multiple-choice-id]
       (fn [answer]
-        (toggle-multiple-choice-option answer option-value validators)))))
+        (toggle-multiple-choice-option answer option-value validators (-> db :application :answers))))))
 
 (reg-event-db
   :application/select-single-choice-button
@@ -462,7 +467,7 @@
   (update-in db [:application :answers (keyword component-id)]
              (fn [{:keys [values] :as component}]
                (let [validators (:validators field-descriptor)
-                     validated? (every? true? (map #(validator/validate % values) validators))]
+                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers)) validators))]
                  (assoc component
                    :valid
                    (and validated?

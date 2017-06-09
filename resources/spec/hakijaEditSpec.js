@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(26)
+        expect(formFields().length).to.equal(27)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -35,7 +35,7 @@
           return $(e).val()
         })
         var expectedTestInputValues = [
-          "Etunimi",
+          "Etunimi Tokanimi",
           "Etunimi",
           "Sukunimi",
           "***********",
@@ -62,6 +62,7 @@
         })
         var expectedDropdownInputValues = [
           "Suomi",
+          "Suomi",
           "suomi",
           "Kolmas vaihtoehto",
           "Lisensiaatin tutkinto",
@@ -81,22 +82,24 @@
 
     describe('changing values to be invalid', function () {
       before(
-        setNthFieldValue(21, 'textarea', ''),
-        clickNthFieldRadio(24, 'Ensimmäinen vaihtoehto')
+        setNthFieldInputValue(1, '420noscope'),
+        setNthFieldValue(22, 'textarea', ''),
+        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
-        expect(invalidFieldsStatus().text()).to.equal('Tarkista 2 tietoa')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
         expect(invalidSections().find('a').length).to.equal(3)
-        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
+        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
         expect(submitButton().prop('disabled')).to.equal(true)
       })
     })
 
     describe('change values and save', function () {
       before(
-        setNthFieldValue(21, 'textarea', 'Muokattu vastaus'),
-        clickNthFieldRadio(24, 'Toinen vaihtoehto'),
+        setNthFieldInputValue(1, 'Tokanimi'),
+        setNthFieldValue(22, 'textarea', 'Muokattu vastaus'),
+        clickNthFieldRadio(25, 'Toinen vaihtoehto'),
         clickElement(function () {
           return submitButton()
         }),
@@ -110,13 +113,14 @@
           return $(e).text()
         })
         var expectedValues = [
-          "Etunimi",
-          "Etunimi",
+          "Etunimi Tokanimi",
+          "Tokanimi",
           "Sukunimi",
           "Suomi",
           "***********",
           "test@example.com",
           "0123456789",
+          "Suomi",
           "Katutie 12 B",
           "40100",
           "JYVÄSKYLÄ",

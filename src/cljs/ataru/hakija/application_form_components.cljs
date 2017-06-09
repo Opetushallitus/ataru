@@ -12,7 +12,8 @@
              [answer-key
               required-hint
               textual-field-value
-              scroll-to-anchor]]
+              scroll-to-anchor
+              is-required-field?]]
             [ataru.hakija.application-validators :as validator]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -40,18 +41,25 @@
     default))
 
 (defn- field-value-valid?
-  [field-data value]
+  [field-data value answers-by-key]
   (if (and (not (or
                   (:cannot-view field-data)
                   (:cannot-edit field-data)))
            (not-empty (:validators field-data)))
-    (every? true? (map #(validator/validate % value)
+    (every? true? (map #(validator/validate % value answers-by-key)
                     (:validators field-data)))
     true))
 
-(defn- textual-field-change [text-field-data evt]
+(defn- textual-field-blur [text-field-data answers-by-key evt]
   (let [value  (-> evt .-target .-value)
-        valid? (field-value-valid? text-field-data value)]
+        blur-rules (:blur-rules text-field-data)]
+    (when (and (not-empty blur-rules)
+               (field-value-valid? text-field-data value answers-by-key))
+      (dispatch [:application/run-rule blur-rules]))))
+
+(defn- textual-field-change [text-field-data answers-by-key evt]
+  (let [value  (-> evt .-target .-value)
+        valid? (field-value-valid? text-field-data value answers-by-key)]
     (do
       ; dispatch-sync because we really really want the value to change NOW. Is a minor UI speed boost.
       (dispatch-sync [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
@@ -67,7 +75,7 @@
                          (map :value))
                        (:options dropdown-data)))
                  (-> select .-value))
-        valid? (field-value-valid? dropdown-data value)]
+        valid? (field-value-valid? dropdown-data value {})]
     (if-not (some? secret)
       (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
     (when-let [rules (not-empty (:rules dropdown-data))]
@@ -87,11 +95,11 @@
          [scroll-to-anchor field-descriptor]]))))
 
 (defn- show-text-field-error-class?
-  [field-descriptor value valid?]
+  [field-descriptor value valid? answers-by-key]
   (and
     (not valid?)
-    (some #(= % "required") (:validators field-descriptor))
-    (validator/validate "required" value)))
+    (is-required-field? field-descriptor)
+    (validator/validate "required" value answers-by-key)))
 
 (defn- add-link-target-prop
   [text state]
@@ -113,7 +121,8 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer        (subscribe [:state-query [:application :answers id]])
+        answers      (subscribe [:state-query [:application :answers]])
+        answer       (subscribe [:state-query [:application :answers id]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
@@ -129,21 +138,23 @@
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                  (non-blank-val (get input-hint @lang)
                                                 (get input-hint @default-lang)))
-                  :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer))
+                  :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer) @answers)
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
-                  :on-change   (partial textual-field-change field-descriptor)}
+                  :on-blur     (partial textual-field-blur field-descriptor @answers)
+                  :on-change   (partial textual-field-change field-descriptor @answers)}
                  (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
+        answers-by-key (subscribe [:state-query [:application :answers]])
         lang       (subscribe [:application/form-language])
-        on-change  (fn [idx evt]
+        on-change  (fn [idx answers-by-key evt]
                      (let [value (some-> evt .-target .-value)
-                           valid (field-value-valid? field-descriptor value)]
+                           valid (field-value-valid? field-descriptor value answers-by-key)]
                        (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
@@ -155,13 +166,13 @@
             [:div
              [:input.application__form-text-input
               {:type      "text"
-               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid @answers-by-key)
                                             " application__form-field-error"
                                             " application__form-text-input--normal"))
                :value     value
                :on-blur   #(when (empty? (-> % .-target .-value))
                              (dispatch [:application/remove-repeatable-application-field-value id 0]))
-               :on-change (partial on-change 0)}]])
+               :on-change (partial on-change 0 answers-by-key)}]])
           (map-indexed
            (let [first-is-empty? (empty? (first (map :value @values)))
                  translations    (get-translations (keyword @lang) application-view-translations)]
@@ -181,7 +192,7 @@
                                          (not last?)
                                          (empty? (-> % .-target .-value)))
                                     (clicky))
-                      :on-change (partial on-change (inc idx))}
+                      :on-change (partial on-change (inc idx) answers-by-key)}
                       (when last?
                         {:placeholder
                          (:add-more translations)}))]
@@ -200,7 +211,8 @@
          :else "application__form-text-area__size-medium"))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])]
+  (let [application (subscribe [:state-query [:application]])
+        answers     (subscribe [:state-query [:application :answers]])]
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
@@ -211,7 +223,7 @@
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
          ; dynamically made changes to the text-field value.
          :default-value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor)
+         :on-change (partial textual-field-change field-descriptor @answers)
          :value (textual-field-value field-descriptor @application)}]])))
 
 (declare render-field)
@@ -264,6 +276,7 @@
 (defn dropdown
   [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
+        answers      (subscribe [:state-query [:application :answers]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         secret       (subscribe [:state-query [:application :secret]])
@@ -295,7 +308,7 @@
                                      [:span.application__form-select-arrow])
                                    [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
                                     {:value     @value
-                                     :on-change (partial textual-field-change field-descriptor)
+                                     :on-change (partial textual-field-change field-descriptor @answers)
                                      :disabled  @disabled?}
                                     (concat
                                       (when
@@ -514,26 +527,27 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text]]))
 
-(defn- adjacent-field-input-change [field-descriptor row-idx event]
+(defn- adjacent-field-input-change [field-descriptor row-idx answers-by-key event]
   (let [value  (some-> event .-target .-value)
-        valid? (field-value-valid? field-descriptor value)
+        valid? (field-value-valid? field-descriptor value answers-by-key)
         id     (keyword (:id field-descriptor))]
     (dispatch [:application/set-adjacent-field-answer field-descriptor id row-idx {:value value :valid valid?}])))
 
 (defn- adjacent-field-input [{:keys [id] :as child} row-idx]
-  (let [on-change (partial adjacent-field-input-change child row-idx)
+  (let [answers-by-key (subscribe [:state-query [:application :answers]])
+        on-change (partial adjacent-field-input-change child row-idx)
         value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
     (r/create-class
       {:component-did-mount
        (fn [this]
-         (when-not value (on-change nil)))
+         (when-not value (partial on-change nil @answers-by-key)))
        :reagent-render
        (fn [{:keys [id]} row-idx]
          [:input.application__form-text-input.application__form-text-input--normal
           {:id        (str id "-" row-idx)
            :type      "text"
            :value     @value
-           :on-change on-change}])})))
+           :on-change (partial on-change @answers-by-key)}])})))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [language   (subscribe [:application/form-language])
