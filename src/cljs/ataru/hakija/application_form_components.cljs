@@ -382,38 +382,40 @@
                       [multiple-choice-option option parent-id validators])
                     (:options field-descriptor))]]))
 
+(defn- single-choice-option [option parent-id validators]
+  (let [lang           (subscribe [:application/form-language])
+        default-lang   (subscribe [:application/default-language])
+        label          (non-blank-val (get-in option [:label @lang])
+                                      (get-in option [:label @default-lang]))
+        option-value   (:value option)
+        option-id      (util/component-id)
+        selected-value (subscribe [:state-query [:application :answers parent-id :value]])]
+    [:div.application__form-single-choice-button-inner-container {:key option-id}
+     [:input.application__form-single-choice-button
+      {:id        option-id
+       :type      "checkbox"
+       :checked   (= option-value @selected-value)
+       :value     option-value
+       :on-change (fn [event]
+                    (let [value (.. event -target -value)]
+                      (dispatch [:application/select-single-choice-button parent-id value validators])))}]
+     [:label
+      {:for option-id}
+      label]]))
+
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id (answer-key field-descriptor)
-        lang            (subscribe [:application/form-language])
-        default-lang    (subscribe [:application/default-language])
-        selected-value  (subscribe [:state-query [:application :answers button-id :value]])]
+  (let [button-id  (answer-key field-descriptor)
+        validators (:validators field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (let [lang           @lang
-            default-lang   @default-lang
-            selected-value @selected-value]
-        [div-kwd
-         [label field-descriptor]
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
-         [:div.application__form-single-choice-button-outer-container
-          (map (fn [option]
-                 (let [label        (non-blank-val (get-in option [:label lang])
-                                                   (get-in option [:label default-lang]))
-                       option-value (:value option)
-                       option-id    (util/component-id)]
-                   [:div.application__form-single-choice-button-inner-container {:key option-id}
-                    [:input.application__form-single-choice-button
-                     {:id        option-id
-                      :type      "checkbox"
-                      :checked   (= option-value selected-value)
-                      :value     option-value
-                      :on-change (fn [event]
-                                   (let [value (.. event -target -value)]
-                                     (dispatch [:application/select-single-choice-button button-id value (:validators field-descriptor)])))}]
-                    [:label
-                     {:for option-id}
-                     label]]))
-               (:options field-descriptor))]]))))
+      [div-kwd
+       [label field-descriptor]
+       [:div.application__form-text-input-info-text
+        [info-text field-descriptor]]
+       [:div.application__form-single-choice-button-outer-container
+        (map-indexed (fn [idx option]
+                       ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
+                       [single-choice-option option button-id validators])
+                     (:options field-descriptor))]])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
