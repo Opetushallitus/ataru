@@ -389,12 +389,12 @@
                                       (get-in option [:label @default-lang]))
         option-value   (:value option)
         option-id      (util/component-id)
-        selected-value (subscribe [:state-query [:application :answers parent-id :value]])]
+        checked?       (subscribe [:application/single-choice-option-checked? parent-id option-value])]
     [:div.application__form-single-choice-button-inner-container {:key option-id}
      [:input.application__form-single-choice-button
       {:id        option-id
        :type      "checkbox"
-       :checked   (= option-value @selected-value)
+       :checked   @checked?
        :value     option-value
        :on-change (fn [event]
                     (let [value (.. event -target -value)]
