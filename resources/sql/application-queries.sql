@@ -210,6 +210,7 @@ SELECT
   created_time,
   content,
   hakukohde,
+  person_oid,
   CASE
     WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
                                                      FROM applications a2
