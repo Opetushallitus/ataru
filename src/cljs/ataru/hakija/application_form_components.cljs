@@ -383,13 +383,13 @@
                     (:options field-descriptor))]]))
 
 (defn- single-choice-option [option parent-id validators]
-  (let [lang           (subscribe [:application/form-language])
-        default-lang   (subscribe [:application/default-language])
-        label          (non-blank-val (get-in option [:label @lang])
-                                      (get-in option [:label @default-lang]))
-        option-value   (:value option)
-        option-id      (util/component-id)
-        checked?       (subscribe [:application/single-choice-option-checked? parent-id option-value])]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])
+        label        (non-blank-val (get-in option [:label @lang])
+                                    (get-in option [:label @default-lang]))
+        option-value (:value option)
+        option-id    (util/component-id)
+        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
     [:div.application__form-single-choice-button-inner-container {:key option-id}
      [:input.application__form-single-choice-button
       {:id        option-id
