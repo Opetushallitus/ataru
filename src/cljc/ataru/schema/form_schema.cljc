@@ -49,31 +49,32 @@
                      (s/optional-key :params) s/Any
                      :fieldType               s/Keyword})
 
-(s/defschema FormField {:fieldClass                            (s/eq "formField")
-                        :id                                    s/Str
-                        (s/optional-key :validators)           [(apply s/enum (keys validator/validators))]
-                        (s/optional-key :rules)                {s/Keyword s/Any}
-                        (s/optional-key :blur-rules)           {s/Keyword s/Any}
-                        (s/optional-key :label)                LocalizedString
-                        (s/optional-key :initialValue)         (s/cond-pre LocalizedString s/Int)
-                        (s/optional-key :params)               s/Any
-                        (s/optional-key :no-blank-option)      s/Bool
-                        (s/optional-key :exclude-from-answers) s/Bool
-                        (s/optional-key :koodisto-source)      {:uri                             s/Str
-                                                                :version                         s/Int
-                                                                (s/optional-key :default-option) s/Any
-                                                                (s/optional-key :title)          s/Str}
-                        (s/optional-key :options)              [{:value                          s/Str
-                                                                 (s/optional-key :label)         LocalizedString
-                                                                 (s/optional-key :default-value) (s/maybe s/Bool)
-                                                                 (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        :fieldType                             (apply s/enum ["textField"
-                                                                              "textArea"
-                                                                              "dropdown"
-                                                                              "singleChoice"
-                                                                              "multipleChoice"
-                                                                              "koodistoField"
-                                                                              "attachment"])})
+(s/defschema FormField {:fieldClass                                      (s/eq "formField")
+                        :id                                              s/Str
+                        (s/optional-key :validators)                     [(apply s/enum (keys validator/validators))]
+                        (s/optional-key :rules)                          {s/Keyword s/Any}
+                        (s/optional-key :blur-rules)                     {s/Keyword s/Any}
+                        (s/optional-key :label)                          LocalizedString
+                        (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
+                        (s/optional-key :params)                         s/Any
+                        (s/optional-key :no-blank-option)                s/Bool
+                        (s/optional-key :exclude-from-answers)           s/Bool
+                        (s/optional-key :exclude-from-answers-if-hidden) s/Bool
+                        (s/optional-key :koodisto-source)                {:uri                             s/Str
+                                                                          :version                         s/Int
+                                                                          (s/optional-key :default-option) s/Any
+                                                                          (s/optional-key :title)          s/Str}
+                        (s/optional-key :options)                        [{:value                          s/Str
+                                                                           (s/optional-key :label)         LocalizedString
+                                                                           (s/optional-key :default-value) (s/maybe s/Bool)
+                                                                           (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
+                        :fieldType                                       (apply s/enum ["textField"
+                                                                                        "textArea"
+                                                                                        "dropdown"
+                                                                                        "singleChoice"
+                                                                                        "multipleChoice"
+                                                                                        "koodistoField"
+                                                                                        "attachment"])})
 
 (s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
                           :id                      s/Str
@@ -182,7 +183,8 @@
    (s/optional-key :created-time)       org.joda.time.DateTime
    (s/optional-key :secret)             s/Str
    (s/optional-key :form-key)           s/Str
-   (s/optional-key :tarjonta)           FormTarjontaMetadata})
+   (s/optional-key :tarjonta)           FormTarjontaMetadata
+   (s/optional-key :person-oid)         (s/maybe s/Str)})
 
 (def application-states
   (apply s/enum (keys review-states/application-review-states)))

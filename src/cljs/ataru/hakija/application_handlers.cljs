@@ -156,6 +156,10 @@
 (defn- set-ssn-field-visibility [db]
   (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
 
+(defn- set-country-specific-fields-visibility
+  [db]
+  (rules/run-rule {:change-country-of-residence nil} db))
+
 (defonce multi-value-field-types #{"textField" "attachment"})
 
 (defn- supports-multiple-values [field-type]
@@ -195,7 +199,8 @@
                         answers)))
                   answers
                   submitted-answers)))
-      (set-ssn-field-visibility)))
+      (set-ssn-field-visibility)
+      (set-country-specific-fields-visibility)))
 
 (reg-event-db
   :application/merge-submitted-answers

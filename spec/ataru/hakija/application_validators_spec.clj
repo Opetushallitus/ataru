@@ -68,8 +68,8 @@
   (mapv (fn [postal-code]
           (let [expected (get postal-code/postal-code-list postal-code)
                 pred     (if expected true? false?)
-                actual   (validator/validate "postal-code" postal-code {})]
-            (it (str "should validate " postal-code)
+                actual   (validator/validate "postal-code" postal-code {:country-of-residence {:value "246"}})]
+            (it (str "should validate " postal-code expected)
               (should (pred actual)))))
     (keys postal-code/postal-code-list)))
 

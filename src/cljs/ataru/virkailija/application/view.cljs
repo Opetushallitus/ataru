@@ -304,10 +304,13 @@
         birth-date         (get-in answers [:birth-date :value])
         hakukohde-name     (-> application :tarjonta :hakukohde-name)
         applications-count (:applications-count application)
+        person-oid         (:person-oid application)
         koulutus-info      (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
-      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", " (or ssn birth-date))]
+      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", "
+                                                               (or ssn birth-date))]
+      (when person-oid [:p.application-handling__review-area-main-heading-person-oid person-oid])
       (when (> applications-count 1)
         [:a.application-handling__review-area-main-heading-applications-link
          {:on-click (fn [_]
