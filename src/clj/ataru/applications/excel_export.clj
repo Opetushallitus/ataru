@@ -63,7 +63,10 @@
     :format-fn str}
    {:label     "Koulutuskoodin nimi ja tunniste"
     :field     :koulutus-identifiers
-    :format-fn (partial string/join "; ")}])
+    :format-fn (partial string/join "; ")}
+   {:label     "Hakijan henkilö-OID"
+    :field     :person-oid
+    :format-fn str}])
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 

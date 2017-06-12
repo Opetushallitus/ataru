@@ -183,7 +183,8 @@
    (s/optional-key :created-time)       org.joda.time.DateTime
    (s/optional-key :secret)             s/Str
    (s/optional-key :form-key)           s/Str
-   (s/optional-key :tarjonta)           FormTarjontaMetadata})
+   (s/optional-key :tarjonta)           FormTarjontaMetadata
+   (s/optional-key :person-oid)         (s/maybe s/Str)})
 
 (def application-states
   (apply s/enum (keys review-states/application-review-states)))

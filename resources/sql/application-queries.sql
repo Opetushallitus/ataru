@@ -142,6 +142,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.person_oid,
   ar.state  AS state
 FROM applications a
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key
@@ -158,6 +159,7 @@ SELECT
   a.created_time,
   a.content,
   a.hakukohde,
+  a.person_oid,
   ar.state  AS state,
   f.key     AS form_key
 FROM applications a
@@ -177,6 +179,7 @@ SELECT
   a.content,
   a.hakukohde,
   a.haku,
+  a.person_oid,
   ar.state  AS state,
   f.key     AS form_key
 FROM applications a
@@ -192,6 +195,7 @@ SELECT
   form_id AS form,
   created_time,
   content,
+  person_oid,
   secret
 FROM applications
 WHERE id = :application_id;
@@ -210,6 +214,7 @@ SELECT
   created_time,
   content,
   hakukohde,
+  person_oid,
   CASE
     WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
                                                      FROM applications a2

@@ -65,6 +65,7 @@
                                 :hakukohde_name "Hakukohde name"
                                 :haku           "haku.oid"
                                 :haku_name      "Haku name"
+                                :person-oid     "1.123.345456567123"
                                 :answers        [{:key       "form_field_1_0"
                                                   :label     "Kysymys 4"
                                                   :value     "Vastaus 4"
