@@ -403,6 +403,15 @@
       {:for option-id}
       label]]))
 
+(defn- hide-followups [db {:keys [followups]}]
+  (reduce (fn hide-followup [db followup]
+            (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
+          db
+          followups))
+
+(defn- show-followup [db followup]
+  (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
+
 (defn- single-choice-followups [parent-id options]
   (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])
         followups           (reaction (->> options
@@ -421,16 +430,10 @@
                                (dispatch [:state-update
                                           (fn [db]
                                             (as-> db db'
-                                                  (reduce (fn [db option]
-                                                            (let [followups (:followups option)]
-                                                              (reduce (fn [db followup]
-                                                                        (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
-                                                                      db
-                                                                      followups)))
+                                                  (reduce hide-followups
                                                           db'
                                                           (filter (comp (partial not= @single-choice-value) :value) options))
-                                                  (reduce (fn [db followup]
-                                                            (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
+                                                  (reduce show-followup
                                                           db'
                                                           @followups)))]))})))
 
