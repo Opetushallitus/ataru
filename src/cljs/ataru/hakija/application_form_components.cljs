@@ -403,6 +403,37 @@
       {:for option-id}
       label]]))
 
+(defn- single-choice-followups [parent-id options]
+  (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])
+        followups           (reaction (->> options
+                                           (filter (comp (partial = @single-choice-value) :value))
+                                           (map :followups)
+                                           (first)))]
+    (r/create-class
+      {:reagent-render       (fn [parent-id options]
+                               (when (not-empty @followups)
+                                 [:div
+                                  (map (fn [followup]
+                                         ^{:key (str (:id followup))}
+                                         [render-field followup])
+                                       @followups)]))
+       :component-did-update (fn []
+                               (dispatch [:state-update
+                                          (fn [db]
+                                            (as-> db db'
+                                                  (reduce (fn [db option]
+                                                            (let [followups (:followups option)]
+                                                              (reduce (fn [db followup]
+                                                                        (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
+                                                                      db
+                                                                      followups)))
+                                                          db'
+                                                          (filter (comp (partial not= @single-choice-value) :value) options))
+                                                  (reduce (fn [db followup]
+                                                            (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
+                                                          db'
+                                                          @followups)))]))})))
+
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id  (answer-key field-descriptor)
         validators (:validators field-descriptor)]
@@ -415,7 +446,8 @@
         (map-indexed (fn [idx option]
                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
                        [single-choice-option option button-id validators])
-                     (:options field-descriptor))]])))
+                     (:options field-descriptor))]
+       [single-choice-followups button-id (:options field-descriptor)]])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
