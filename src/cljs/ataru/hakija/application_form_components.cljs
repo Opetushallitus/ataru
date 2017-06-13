@@ -427,6 +427,9 @@
                                          [render-field followup])
                                        @followups)]))
        :component-did-update (fn []
+                               ; Setting visible? state to true/false determines answer's visibility
+                               ; in the "required answers" list on the header, below the submit application
+                               ; button
                                (dispatch [:state-update
                                           (fn [db]
                                             (as-> db db'
