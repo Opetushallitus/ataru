@@ -421,7 +421,7 @@
     (r/create-class
       {:reagent-render       (fn [parent-id options]
                                (when (not-empty @followups)
-                                 [:div
+                                 [:div.application__form-multi-choice-followups-container
                                   (map (fn [followup]
                                          ^{:key (str (:id followup))}
                                          [render-field followup])
