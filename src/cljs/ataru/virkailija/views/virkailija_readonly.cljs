@@ -146,7 +146,7 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice") :options (options :guard util/followups?)}
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
