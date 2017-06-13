@@ -401,7 +401,9 @@
                       (dispatch [:application/select-single-choice-button parent-id value validators])))}]
      [:label
       {:for option-id}
-      label]]))
+      label]
+     (when (and @checked? (not-empty (:followups option)))
+       [:div.application__form-single-choice-followups-indicator])]))
 
 (defn- hide-followups [db {:keys [followups]}]
   (reduce (fn hide-followup [db followup]
