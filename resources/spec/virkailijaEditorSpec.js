@@ -307,14 +307,22 @@
           clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
           setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Ensimmäinen vaihtoehto'),
           clickElement(function() { return formComponents().eq(11).find('.editor-form__add-dropdown-item a') }),
-          setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto')
+          setTextFieldValue(function () { return formComponents().eq(11).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto'),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question:eq(0) a:contains("Lisäkysymykset")') }),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay a:contains("Lista, monta valittavissa")') }),
+          setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Monivalinta jatkokysymyksenä"),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label') }),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)') }, 'Jatkokysymys A'),
+          clickElement(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function() { return formComponents().eq(11).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)') }, 'Jatkokysymys B')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(12)
           expect(formComponents().eq(11).find('.editor-form__text-field:first').val()).to.equal('Lyhyen listan kysymys')
           expect(formComponents().eq(11).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
-          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(1) .editor-form__text-field').val()).to.equal('Ensimmäinen vaihtoehto')
-          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(2) .editor-form__text-field').val()).to.equal('Toinen vaihtoehto')
+          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(1) .editor-form__text-field').not('.editor-form__followup-question-overlay input').val()).to.equal('Ensimmäinen vaihtoehto')
+          expect(formComponents().eq(11).find('.editor-form__multi-options-container > div:nth-child(2) .editor-form__text-field').not('.editor-form__followup-question-overlay input').val()).to.equal('Toinen vaihtoehto')
         })
       })
 
