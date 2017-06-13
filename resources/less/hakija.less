@@ -828,12 +828,35 @@ and (max-width: @desktop-content-width) {
   right: 20px;
 }
 
+.application-feedback-form__rating-star--inactive {
+  color: @sg-gray-lighten-3;
+  cursor: pointer;
+}
+
+.application-feedback-form__rating-star--active {
+  color: @gold;
+  cursor: pointer;
+}
+
+.application-feedback-form__rating-text {
+  color: @gold;
+  margin-bottom: 10px;
+}
+
 .application-feedback-form-container {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+.application-feedback-form__text-feedback-container {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .application__send-feedback-button {
