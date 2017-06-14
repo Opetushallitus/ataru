@@ -99,6 +99,12 @@
       (if-let [form (form-service/fetch-form-by-key key)]
         (response/ok form)
         (response/not-found)))
+    (api/POST "/feedback" []
+      :summary "Add feedback sent by applicant"
+      :body [feedback ataru-schema/ApplicationFeedback]
+      (if-let [saved-application (application-service/save-application-feedback feedback)]
+        (response/ok {:id (:id saved-application)})
+        (response/bad-request)))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]

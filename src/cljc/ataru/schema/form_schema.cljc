@@ -229,3 +229,9 @@
 
 (s/defschema Haut {:tarjonta-haut    [TarjontaHaku]
                    :direct-form-haut [DirectFormHaku]})
+
+(s/defschema ApplicationFeedback {:form-key   s/Str
+                                  :form-id    s/Int
+                                  :user-agent s/Str
+                                  :rating     s/Int
+                                  :feedback   (s/maybe s/Str)})

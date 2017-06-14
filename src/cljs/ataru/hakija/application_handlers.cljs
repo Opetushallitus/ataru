@@ -551,10 +551,20 @@
   (fn [db [_ feedback-text]]
     (assoc-in db [:application :feedback :text] feedback-text)))
 
-(reg-event-db
+(reg-event-fx
   :application/rating-feedback-submit
-  (fn [db _]
-    (assoc-in db [:application :feedback :status] :feedback-submitted)))
+  (fn [{:keys [db]}]
+    (let [new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
+          feedback  (-> db :application :feedback)
+          post-data {:form-key   (-> db :form :key)
+                     :form-id    (-> db :form :id)
+                     :user-agent (.-userAgent js/navigator)
+                     :rating     (:stars feedback)
+                     :feedback   (-> feedback :text (subs 0 2000))}]
+      {:db   new-db
+       :http {:method    :post
+              :post-data post-data
+              :url       "/hakemus/api/feedback"}})))
 
 (reg-event-db
   :application/rating-form-toggle

@@ -147,7 +147,8 @@
             [:div.application-feedback-form__text-feedback-container
              [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
               {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
-               :placeholder "Anna halutessasi kehitysideoita tai kommentteja hakijan palvelusta"}]])
+               :placeholder "Anna halutessasi kehitysideoita tai kommentteja hakijan palvelusta"
+               :max-length  2000}]])
           (when (= :rating-given @rating-status)
             [:a.application__send-feedback-button
              {:on-click (fn [evt]
