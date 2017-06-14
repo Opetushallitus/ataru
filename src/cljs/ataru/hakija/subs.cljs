@@ -50,3 +50,9 @@
       (if (= row-amount 0)
         1
         row-amount))))
+
+(re-frame/reg-sub
+  :application/multiple-choice-option-checked?
+  (fn [db [_ parent-id option-value]]
+    (let [options (get-in db [:application :answers parent-id :options])]
+      (true? (get options option-value)))))

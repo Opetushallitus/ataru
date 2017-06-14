@@ -212,14 +212,22 @@
           setTextFieldValue(function () { return formComponents().eq(5).find('.editor-form__text-field:last') }, 'Toinen vaihtoehto'),
           clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') }),
           setTextFieldValue(function () { return formComponents().eq(5).find('.editor-form__text-field:last') }, 'Kolmas vaihtoehto'),
-          clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') })
+          clickElement(function () { return formComponents().eq(5).find('.editor-form__add-dropdown-item a') }),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question:eq(1) a') }),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay a:contains("Painikkeet, yksi valittavissa")') }),
+          setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Oletko punavihervärisokea?"),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)') }, 'Kyllä'),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)') }, 'En'),
+          clickElement(function() { return formComponents().eq(5).find('.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label') })
         )
         it('has expected contents', function () {
           expect(formComponents()).to.have.length(6)
           expect(formComponents().eq(5).find('.editor-form__text-field:first').val()).to.equal('Viides kysymys')
           expect(formComponents().eq(5).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
-          expect(formComponents().eq(5).find('.editor-form__multi-option-wrapper input').length).to.equal(4)
-          var options = _.map(formComponents().eq(5).find('.editor-form__multi-option-wrapper input'), function (inputField) {
+          expect(formComponents().eq(5).find('.editor-form__multi-option-wrapper input').not('.editor-form__followup-question-overlay input').length).to.equal(4)
+          var options = _.map(formComponents().eq(5).find('.editor-form__multi-option-wrapper input').not('.editor-form__followup-question-overlay input'), function (inputField) {
             return $(inputField).val()
           })
           expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])

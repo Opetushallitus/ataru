@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(26)
+        expect(formFields().length).to.equal(27)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -72,7 +72,7 @@
         var checkboxInputValues = _.map(testFrame().find('input.application__form-checkbox:checked'), function (e) {
           return $(e).val()
         })
-        var expectedCheckboxInputValues = ["Kolmas vaihtoehto", "139"]
+        var expectedCheckboxInputValues = ["Toinen vaihtoehto", "139"]
 
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
@@ -83,8 +83,8 @@
     describe('changing values to be invalid', function () {
       before(
         setNthFieldInputValue(1, '420noscope'),
-        setNthFieldValue(21, 'textarea', ''),
-        clickNthFieldRadio(24, 'Ensimmäinen vaihtoehto')
+        setNthFieldValue(22, 'textarea', ''),
+        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
@@ -98,8 +98,8 @@
     describe('change values and save', function () {
       before(
         setNthFieldInputValue(1, 'Tokanimi'),
-        setNthFieldValue(21, 'textarea', 'Muokattu vastaus'),
-        clickNthFieldRadio(24, 'Toinen vaihtoehto'),
+        setNthFieldValue(22, 'textarea', 'Muokattu vastaus'),
+        clickNthFieldRadio(25, 'Toinen vaihtoehto'),
         clickElement(function () {
           return submitButton()
         }),
@@ -132,7 +132,8 @@
           "Kolmas vaihtoehto",
           "Jatkokysymyksen vastaus",
           "Lisensiaatin tutkinto",
-          "Kolmas vaihtoehto",
+          "Toinen vaihtoehto",
+          "En",
           "Arkkitehti",
           "Muokattu vastaus",
           "",

@@ -86,12 +86,13 @@
         setNthFieldOption(16, 'Kolmas vaihtoehto'),
         setNthFieldInputValue(17, 'Jatkokysymyksen vastaus'),
         setNthFieldOption(18, '120'),
-        clickNthFieldRadio(19, 'Kolmas vaihtoehto', true),
-        clickNthFieldRadio(20, 'Arkkitehti', true),
-        setNthFieldValue(21, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
-        clickNthFieldRadio(24, 'Ensimmäinen vaihtoehto'),
-        setNthFieldSubInputValue(25, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(25, 1, 'Oikea vierekkäinen')
+        clickNthFieldRadio(19, 'Toinen vaihtoehto', true),
+        clickNthFieldRadio(20, 'En'),
+        clickNthFieldRadio(21, 'Arkkitehti', true),
+        setNthFieldValue(22, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
+        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto'),
+        setNthFieldSubInputValue(26, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(26, 1, 'Oikea vierekkäinen')
 
       )
       it('works and validates correctly', function() {
@@ -131,7 +132,8 @@
                               "Kolmas vaihtoehto",
                               "Jatkokysymyksen vastaus",
                               "Lisensiaatin tutkinto",
-                              "Kolmas vaihtoehto",
+                              "Toinen vaihtoehto",
+                              "En",
                               "Arkkitehti",
                               "Toisen pakollisen tekstialueen vastaus",
                               "",

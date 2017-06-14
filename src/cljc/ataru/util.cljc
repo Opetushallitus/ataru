@@ -28,7 +28,7 @@
          :children   children}
         (flatten-form-fields children)
 
-        {:fieldType "dropdown"
+        {:fieldType (:or "dropdown" "multipleChoice")
          :options options}
         (cons field
           (->> options

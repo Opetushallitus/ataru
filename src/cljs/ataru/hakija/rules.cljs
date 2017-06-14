@@ -75,20 +75,23 @@
 
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (if (= (-> db :application :answers :country-of-residence :value)
-         finland-country-code)                                           ; only prefill postal office for finnish addresses
-    (if (-> db :application :answers :postal-code :valid)
-      (let [postal-code (-> db :application :answers :postal-code :value)]
-        (when-not (clojure.string/blank? postal-code)
-          (ajax/get
-            (str "/hakemus/api/postal-codes/" postal-code)
-            :application/handle-postal-code-input
-            :application/handle-postal-code-error))
-        db)
-      (-> db
-          (update-in [:application :answers :postal-office] merge no-required-answer)
-          (update-in [:application :ui] dissoc :postal-office)))
-    db))
+  (let [answers (-> db :application :answers)
+        country (-> answers :country-of-residence :value)]
+    (if (or (= country
+               finland-country-code)
+            (clojure.string/blank? country))                       ; only prefill postal office for finnish addresses
+      (if (-> answers :postal-code :valid)
+        (let [postal-code (-> answers :postal-code :value)]
+          (when-not (clojure.string/blank? postal-code)
+            (ajax/get
+              (str "/hakemus/api/postal-codes/" postal-code)
+              :application/handle-postal-code-input
+              :application/handle-postal-code-error))
+          db)
+        (-> db
+            (update-in [:application :answers :postal-office] merge no-required-answer)
+            (update-in [:application :ui] dissoc :postal-office)))
+      db)))
 
 (defn- toggle-ssn-based-fields
   [db _]
@@ -145,8 +148,10 @@
 (defn- change-country-of-residence
   [db _]
   (let [answers     (-> db :application :answers)
-        is-finland? (= (-> answers :country-of-residence :value)
-                       finland-country-code)
+        country     (-> answers :country-of-residence :value)
+        is-finland? (or (= country
+                           finland-country-code)
+                        (clojure.string/blank? country))
         validate-answer (fn [db answer-key validator-key]
                           (assoc-in db
                                     [:application :answers answer-key :valid]

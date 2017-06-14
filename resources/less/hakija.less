@@ -544,7 +544,10 @@ textarea.application__form-text-area__size-large {
 
 .application__form-outer-checkbox-container {
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
+  max-width: 610px;
+  width: 100%;
+  padding-right: 10px;
 }
 
 .application__form-checkbox {
@@ -563,7 +566,6 @@ textarea.application__form-text-area__size-large {
   justify-content: flex-start;
   padding: 0px 19px;
   margin-bottom: 1px;
-  min-width: 305px;
 }
 
 .application__form-checkbox:checked + label {
@@ -575,6 +577,35 @@ textarea.application__form-text-area__size-large {
   content: url('../../images/icon_check.png');
   margin-bottom: 2px;
   margin-right: 6px;
+}
+
+.application__form-multi-choice-followups-container {
+  align-items: flex-start;
+  background-color: @light-gray;
+  display: flex;
+  flex-flow: column nowrap;
+  padding: 20px;
+  position: relative;
+}
+
+.application__form-multi-choice-followups-container .application__form-field {
+  margin-left: 0px;
+  width: 100%;
+}
+
+.application__form-multi-choice-followups-container .application__form-text-input__size-large,.application__form-text-area {
+  width: auto;
+}
+
+.application__form-multi-choice-followups-indicator {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @section-header-text;
+  top: -1px;
+  left: 52px;
 }
 
 .application__readonly-adjacent{
