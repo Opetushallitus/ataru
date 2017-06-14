@@ -270,7 +270,7 @@
                                (when-let [followups (resolve-followups @value)]
                                  (into [:div.application__form-dropdown-followups]
                                    (for [followup followups]
-                                     [:div.application__form-dropdown-followup
+                                     [:div.application__form-dropdown-followups.animated.fadeIn
                                       [render-field followup]]))))})))
 
 (defn dropdown
@@ -339,12 +339,13 @@
                                                  followups))]))
      :reagent-render      (fn [followups parent-checked?]
                             (when (and parent-checked? (not-empty followups))
-                              [:div.application__form-multi-choice-followups-container
+                              [:div.application__form-multi-choice-followups-outer-container
                                [:div.application__form-multi-choice-followups-indicator]
-                               (map (fn [followup]
-                                      ^{:key (:id followup)}
-                                      [render-field followup])
-                                    followups)]))}))
+                               [:div.application__form-multi-choice-followups-container.animated.fadeIn
+                                (map (fn [followup]
+                                       ^{:key (:id followup)}
+                                       [render-field followup])
+                                     followups)]]))}))
 
 (defn- multiple-choice-option [option parent-id validators]
   (let [lang         (subscribe [:application/form-language])
@@ -423,7 +424,7 @@
     (r/create-class
       {:reagent-render       (fn [parent-id options]
                                (when (not-empty @followups)
-                                 [:div.application__form-multi-choice-followups-container
+                                 [:div.application__form-multi-choice-followups-container.animated.fadeIn
                                   (map (fn [followup]
                                          ^{:key (str (:id followup))}
                                          [render-field followup])
