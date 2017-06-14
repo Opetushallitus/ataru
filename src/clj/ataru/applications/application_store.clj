@@ -348,4 +348,5 @@
 
 (defn add-application-feedback!
   [feedback]
-  (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback)))
+  (->kebab-case-kw
+    (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
