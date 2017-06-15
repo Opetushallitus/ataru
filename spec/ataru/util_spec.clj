@@ -19,3 +19,20 @@
           second
           (map keys)
           flatten))))
+
+(def field-descriptor-id "64d4a625-370b-4814-ae4f-d5956e8881be")
+(def field-descriptor {:id         field-descriptor-id
+                       :label      {:fi "Pohjakoulutuksesi?" :sv ""}
+                       :fieldType  "textField"
+                       :fieldClass "formField"})
+
+(describe "get-field-descriptor"
+  (tags :get-fd)
+
+  (it "gets field-descriptor from simple list"
+    (should= field-descriptor (util/get-field-descriptor [field-descriptor] field-descriptor-id)))
+
+  (it "gets field-descriptor from a child list"
+    (should= field-descriptor (util/get-field-descriptor [{:id "invalid"
+                                                           :children [field-descriptor]}]
+                                                         field-descriptor-id))))
