@@ -55,14 +55,6 @@
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
     [field child application lang]))
 
-(defn- person-info-uneditable-wrapper [content lang]
-  [:div.application__wrapper-element.application__wrapper-element--border
-   [:div.application__wrapper-heading
-    [:h2 (-> content :label lang)]
-    [scroll-to-anchor content]]
-   [:div.application__form-field
-    [:div.application__form-field--person-info-note (:cannot-edit-personal-info (get-translations lang application-view-translations))]]])
-
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
