@@ -87,3 +87,13 @@
   "remove nth elem in vector"
   [v n]
   (vec (concat (subvec v 0 n) (subvec v (inc n)))))
+
+(defn get-field-descriptor [field-descriptors key]
+  (loop [field-descriptors field-descriptors]
+    (if-let [field-descriptor (first field-descriptors)]
+      (let [ret (if (contains? field-descriptor :children)
+                  (get-field-descriptor (:children field-descriptor) key)
+                  field-descriptor)]
+        (if (= key (:id ret))
+          ret
+          (recur (next field-descriptors)))))))
