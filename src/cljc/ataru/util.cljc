@@ -91,9 +91,17 @@
 (defn get-field-descriptor [field-descriptors key]
   (loop [field-descriptors field-descriptors]
     (if-let [field-descriptor (first field-descriptors)]
-      (let [ret (if (contains? field-descriptor :children)
-                  (get-field-descriptor (:children field-descriptor) key)
-                  field-descriptor)]
-        (if (= key (:id ret))
+      (let [ret (cond (contains? field-descriptor :children)
+                      (get-field-descriptor (:children field-descriptor) key)
+
+                      (contains? field-descriptor :followups)
+                      (get-field-descriptor (:followups field-descriptor) key)
+
+                      (some :followups (:options field-descriptor))
+                      (get-field-descriptor (:options field-descriptor) key)
+
+                      :else
+                      field-descriptor)]
+        (if (= (:id ret) key)
           ret
           (recur (next field-descriptors)))))))
