@@ -384,6 +384,6 @@ FROM latest_applications la
 GROUP BY f.name, f.key;
 
 -- name: yesql-add-application-feedback<!
-INSERT INTO application_feedback (created_time, form_key, form_id, stars, feedback, user_agent)
+INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
 VALUES
-  (now(), :form_key, :form_id, :rating, left(:feedback, 2000), :user_agent);
+  (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);

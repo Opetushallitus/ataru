@@ -146,4 +146,4 @@
 (defn save-application-feedback
   [feedback]
   (log/info "Saving feedback" feedback)
-  (application-store/add-application-feedback! feedback))
+  (application-store/add-application-feedback feedback))

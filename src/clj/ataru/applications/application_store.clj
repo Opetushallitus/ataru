@@ -346,7 +346,7 @@
                                   :query_type "ALL"
                                   :authorized_organization_oids [""]})))
 
-(defn add-application-feedback!
+(defn add-application-feedback
   [feedback]
   (->kebab-case-kw
     (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
