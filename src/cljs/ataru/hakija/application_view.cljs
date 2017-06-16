@@ -125,8 +125,9 @@
             {:on-click #(dispatch [:application/rating-form-toggle])}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
-            (when (not submitted?)
-              [:h1.application-feedback-form__header (:feedback-header translations)])
+            (when (and (not submitted?)
+                       (not rated?))
+              [:h2.application-feedback-form__header (:feedback-header translations)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -135,8 +136,8 @@
                (let [stars-active (or @stars @star-hovered 0)]
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
-                                             :i.application-feedback-form__rating-star--active.zmdi.zmdi-star.zmdi-hc-5x
-                                             :i.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline.zmdi-hc-5x)]
+                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
+                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
                           [star-classes
                            {:key         (str "rating-star-" n)
                             :data-star-n (inc n)}])) (range 5)))])

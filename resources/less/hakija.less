@@ -804,7 +804,7 @@ and (max-width: @desktop-content-width) {
 
 @keyframes slide-from-bottom {
   0% {
-    bottom: -100px;
+    bottom: -200px;
   }
 
   100% {
@@ -834,14 +834,21 @@ and (max-width: @desktop-content-width) {
   margin-top: 10px;
 }
 
+.application-feedback-form__rating-star {
+  font-size: 5em;
+  cursor: pointer;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    font-size: 3em;
+  }
+}
+
 .application-feedback-form__rating-star--inactive {
   color: @sg-gray-lighten-3;
-  cursor: pointer;
 }
 
 .application-feedback-form__rating-star--active {
   color: @gold;
-  cursor: pointer;
 }
 
 .application-feedback-form__rating-text {
