@@ -21,7 +21,7 @@
    :external_thread_id (str (UUID/randomUUID))
    :author             {:name "anonyymi"}
    :tags               ["#palaute"]
-   :thread             {:title  (str "Palaute lomakkeelle " (:form-key feedback))
+   :thread             {:title  (str "Palaute: " (:form-name feedback))
                         :body   (:feedback feedback)
                         :fields [{:label "Rating" :value (:stars feedback)}
                                  {:label "User-Agent" :value (:user-agent feedback)}
@@ -35,4 +35,7 @@
     (log/info "Sending feedback to Flowdock" feedback)
     @(http/post "https://api.flowdock.com/messages"
                 {:headers {"content-type" "application/json"}
-                 :body    (json/generate-string (build-flowdock-request feedback token))})))
+                 :body    (-> feedback
+                              (build-flowdock-request token)
+                              (json/generate-string))})))
+

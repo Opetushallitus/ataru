@@ -556,11 +556,14 @@
   (fn [{:keys [db]}]
     (let [new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
           feedback  (-> db :application :feedback)
+          text (:text feedback)
           post-data {:form-key   (-> db :form :key)
                      :form-id    (-> db :form :id)
+                     :form-name  (-> db :form :name)
                      :user-agent (.-userAgent js/navigator)
                      :rating     (:stars feedback)
-                     :feedback   (-> feedback :text (subs 0 2000))}]
+                     :feedback   (when text
+                                   (subs text 0 2000))}]
       {:db   new-db
        :http {:method    :post
               :post-data post-data

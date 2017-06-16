@@ -232,6 +232,7 @@
 
 (s/defschema ApplicationFeedback {:form-key   s/Str
                                   :form-id    s/Int
+                                  :form-name  s/Str
                                   :user-agent s/Str
                                   :rating     s/Int
                                   :feedback   (s/maybe s/Str)})
