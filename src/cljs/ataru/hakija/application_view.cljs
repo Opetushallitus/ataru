@@ -119,7 +119,6 @@
                            translations/application-view-translations)
             rated?       (= :rating-given @rating-status)
             submitted?   (= :feedback-submitted @rating-status)]
-        (println "trans" (keyword (:selected-language @form)) translations)
         (when @show-feedback?
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
