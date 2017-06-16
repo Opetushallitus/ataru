@@ -91,8 +91,10 @@
         clickNthFieldRadio(21, 'Arkkitehti', true),
         setNthFieldValue(22, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
         clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto'),
-        setNthFieldSubInputValue(26, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(26, 1, 'Oikea vierekkäinen')
+        clickNthFieldRadio(26, 'Jatkokysymys A'),
+        clickNthFieldRadio(26, 'Jatkokysymys B'),
+        setNthFieldSubInputValue(27, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(27, 1, 'Oikea vierekkäinen')
 
       )
       it('works and validates correctly', function() {
@@ -138,7 +140,8 @@
                               "Toisen pakollisen tekstialueen vastaus",
                               "",
                               "",
-                              "Ensimmäinen vaihtoehto"]
+                              "Ensimmäinen vaihtoehto",
+                              "Jatkokysymys AJatkokysymys B"]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
         var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen"]

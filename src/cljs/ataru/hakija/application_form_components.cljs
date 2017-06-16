@@ -270,7 +270,7 @@
                                (when-let [followups (resolve-followups @value)]
                                  (into [:div.application__form-dropdown-followups]
                                    (for [followup followups]
-                                     [:div.application__form-dropdown-followup
+                                     [:div.application__form-dropdown-followups.animated.fadeIn
                                       [render-field followup]]))))})))
 
 (defn dropdown
@@ -339,12 +339,13 @@
                                                  followups))]))
      :reagent-render      (fn [followups parent-checked?]
                             (when (and parent-checked? (not-empty followups))
-                              [:div.application__form-multi-choice-followups-container
+                              [:div.application__form-multi-choice-followups-outer-container
                                [:div.application__form-multi-choice-followups-indicator]
-                               (map (fn [followup]
-                                      ^{:key (:id followup)}
-                                      [render-field followup])
-                                    followups)]))}))
+                               [:div.application__form-multi-choice-followups-container.animated.fadeIn
+                                (map (fn [followup]
+                                       ^{:key (:id followup)}
+                                       [render-field followup])
+                                     followups)]]))}))
 
 (defn- multiple-choice-option [option parent-id validators]
   (let [lang         (subscribe [:application/form-language])
@@ -382,38 +383,80 @@
                       [multiple-choice-option option parent-id validators])
                     (:options field-descriptor))]]))
 
+(defn- single-choice-option [option parent-id validators]
+  (let [lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])
+        label        (non-blank-val (get-in option [:label @lang])
+                                    (get-in option [:label @default-lang]))
+        option-value (:value option)
+        option-id    (util/component-id)
+        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
+    [:div.application__form-single-choice-button-inner-container {:key option-id}
+     [:input.application__form-single-choice-button
+      {:id        option-id
+       :type      "checkbox"
+       :checked   @checked?
+       :value     option-value
+       :on-change (fn [event]
+                    (let [value (.. event -target -value)]
+                      (dispatch [:application/select-single-choice-button parent-id value validators])))}]
+     [:label
+      {:for option-id}
+      label]
+     (when (and @checked? (not-empty (:followups option)))
+       [:div.application__form-single-choice-followups-indicator])]))
+
+(defn- hide-followups [db {:keys [followups]}]
+  (reduce (fn hide-followup [db followup]
+            (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
+          db
+          followups))
+
+(defn- show-followup [db followup]
+  (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
+
+(defn- single-choice-followups [parent-id options]
+  (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])
+        followups           (reaction (->> options
+                                           (filter (comp (partial = @single-choice-value) :value))
+                                           (map :followups)
+                                           (first)))]
+    (r/create-class
+      {:reagent-render       (fn [parent-id options]
+                               (when (not-empty @followups)
+                                 [:div.application__form-multi-choice-followups-container.animated.fadeIn
+                                  (map (fn [followup]
+                                         ^{:key (str (:id followup))}
+                                         [render-field followup])
+                                       @followups)]))
+       :component-did-update (fn []
+                               ; Setting visible? state to true/false determines answer's visibility
+                               ; in the "required answers" list on the header, below the submit application
+                               ; button
+                               (dispatch [:state-update
+                                          (fn [db]
+                                            (as-> db db'
+                                                  (reduce hide-followups
+                                                          db'
+                                                          (filter (comp (partial not= @single-choice-value) :value) options))
+                                                  (reduce show-followup
+                                                          db'
+                                                          @followups)))]))})))
+
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id (answer-key field-descriptor)
-        lang            (subscribe [:application/form-language])
-        default-lang    (subscribe [:application/default-language])
-        selected-value  (subscribe [:state-query [:application :answers button-id :value]])]
+  (let [button-id  (answer-key field-descriptor)
+        validators (:validators field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (let [lang           @lang
-            default-lang   @default-lang
-            selected-value @selected-value]
-        [div-kwd
-         [label field-descriptor]
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
-         [:div.application__form-single-choice-button-outer-container
-          (map (fn [option]
-                 (let [label        (non-blank-val (get-in option [:label lang])
-                                                   (get-in option [:label default-lang]))
-                       option-value (:value option)
-                       option-id    (util/component-id)]
-                   [:div.application__form-single-choice-button-inner-container {:key option-id}
-                    [:input.application__form-single-choice-button
-                     {:id        option-id
-                      :type      "checkbox"
-                      :checked   (= option-value selected-value)
-                      :value     option-value
-                      :on-change (fn [event]
-                                   (let [value (.. event -target -value)]
-                                     (dispatch [:application/select-single-choice-button button-id value (:validators field-descriptor)])))}]
-                    [:label
-                     {:for option-id}
-                     label]]))
-               (:options field-descriptor))]]))))
+      [div-kwd
+       [label field-descriptor]
+       [:div.application__form-text-input-info-text
+        [info-text field-descriptor]]
+       [:div.application__form-single-choice-button-outer-container
+        (map-indexed (fn [idx option]
+                       ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
+                       [single-choice-option option button-id validators])
+                     (:options field-descriptor))]
+       [single-choice-followups button-id (:options field-descriptor)]])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 

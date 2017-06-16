@@ -573,10 +573,8 @@ textarea.application__form-text-area__size-large {
   color: @white;
 }
 
-.application__form-checkbox:checked + label::before {
-  content: url('../../images/icon_check.png');
-  margin-bottom: 2px;
-  margin-right: 6px;
+.application__form-multi-choice-followups-outer-container {
+  position: relative;
 }
 
 .application__form-multi-choice-followups-container {
@@ -586,11 +584,16 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   padding: 20px;
   position: relative;
+  max-width: 600px;
 }
 
 .application__form-multi-choice-followups-container .application__form-field {
   margin-left: 0px;
   width: 100%;
+}
+
+.application__form-multi-choice-followups-container .application__form-field:last-child {
+  margin-bottom: 0;
 }
 
 .application__form-multi-choice-followups-container .application__form-text-input__size-large,.application__form-text-area {
@@ -606,6 +609,7 @@ textarea.application__form-text-area__size-large {
   border-top: 9px solid @section-header-text;
   top: -1px;
   left: 52px;
+  z-index: 1;
 }
 
 .application__readonly-adjacent{
@@ -641,6 +645,22 @@ th.application__readonly-adjacent--header {
   min-width: 100px;
 }
 
+.application__form-single-choice-followups-indicator {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @section-header-text;
+  top: 43px;
+  left: 40px;
+  z-index: 1;
+}
+
+.application__form-single-choice-button-inner-container {
+  position: relative;
+}
+
 .application__form-single-choice-button-inner-container:first-child label {
   border-radius: 3px 0 0 3px;
 }
@@ -656,14 +676,6 @@ th.application__readonly-adjacent--header {
 .application__form-single-choice-button:checked + label {
   color: @white;
   background-color: @section-header-text;
-}
-
-.application__form-single-choice-button:checked + label::before {
-  content: url('/hakemus/images/icon_check.png');
-  margin-bottom: 2px;
-  margin-right: 6px;
-  margin-left: -20px;
-  padding-left: 7px;
 }
 
 .application__form-adjacent-text-fields-wrapper {
@@ -763,6 +775,14 @@ and (max-width: @desktop-content-width) {
     margin-right: 10px;
   }
 
+  .application__form-multi-choice-followups-container
+  .application__form-text-input__size-large,
+  .application__form-text-area__size-small,
+  .application__form-text-area__size-medium,
+  .application__form-text-area__size-large {
+    margin-right: 0;
+  }
+
   .application__form-adjacent-text-fields-wrapper {
     flex-flow: column wrap;
     margin-bottom: 20px;
@@ -776,6 +796,9 @@ and (max-width: @desktop-content-width) {
   }
   .application__form-adjacent-row--desktop-only {
     display: none;
+  }
+  .application__form-multi-choice-followups-container {
+    margin-right: 10px;
   }
 }
 

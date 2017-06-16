@@ -56,3 +56,9 @@
   (fn [db [_ parent-id option-value]]
     (let [options (get-in db [:application :answers parent-id :options])]
       (true? (get options option-value)))))
+
+(re-frame/reg-sub
+  :application/single-choice-option-checked?
+  (fn [db [_ parent-id option-value]]
+    (let [value (get-in db [:application :answers parent-id :value])]
+      (= option-value value))))
