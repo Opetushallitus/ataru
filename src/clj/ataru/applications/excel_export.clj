@@ -108,16 +108,6 @@
   (doseq [header headers]
     (writer 0 (+ (:column header) (count meta-fields)) (:decorated-header header))))
 
-(defn- get-field-descriptor [field-descriptors key]
-  (loop [field-descriptors field-descriptors]
-    (if-let [field-descriptor (first field-descriptors)]
-      (let [ret (if (contains? field-descriptor :children)
-                  (get-field-descriptor (:children field-descriptor) key)
-                  field-descriptor)]
-        (if (= key (:id ret))
-          ret
-          (recur (next field-descriptors)))))))
-
 (defn- get-label [koodisto lang koodi-uri]
   (let [koodi (->> koodisto
                    (filter (fn [{:keys [value]}]
@@ -126,7 +116,7 @@
     (get-in koodi [:label lang])))
 
 (defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
-  (let [field-descriptor (get-field-descriptor content key)
+  (let [field-descriptor (util/get-field-descriptor content key)
         lang             (-> lang clojure.string/lower-case keyword)]
     (if-some [koodisto-source (:koodisto-source field-descriptor)]
       (let [koodisto         (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
