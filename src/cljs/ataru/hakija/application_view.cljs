@@ -126,7 +126,7 @@
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
-              [:h3.application-feedback-form__header (:feedback-header translations)])
+              [:h2.application-feedback-form__header (:feedback-header translations)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -165,9 +165,9 @@
               [:a.application__send-feedback-button.application__send-feedback-button--disabled
                (:feedback-send translations)])
             (when (not submitted?)
-              [:div.application-feedback-form__disclaimer ])
+              [:div.application-feedback-form__disclaimer (:feedback-disclaimer translations)])
             (when submitted?
-              [:div (:feedback-thanks translations)])]])))))
+              [:div.application__thanks [:i.zmdi.zmdi-thumb-up.application__thanks-icon] [:span.application__thanks-text (:feedback-thanks translations)]])]])))))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])
