@@ -36,8 +36,8 @@
                                             3 "OK"
                                             4 "Good"
                                             5 "Excellent"}}
-   :feedback-text-placeholder         {:fi "Anna halutessasi kehitysideoita tai kommentteja hakijan palvelusta"
-                                       :en "Feel free to also share your comments or ideas regarding the service"}
+   :feedback-text-placeholder         {:fi "Anna halutessasi kommentteja hakulomakkeesta."
+                                       :en "Feel free to also share your comments regarding the application form."}
    :feedback-send                     {:fi "Lähetä palaute"
                                        :en "Send feedback"}
    :feedback-thanks                   {:fi "Kiitos palautteestasi!"

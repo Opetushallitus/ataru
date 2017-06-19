@@ -125,9 +125,8 @@
             {:on-click #(dispatch [:application/rating-form-toggle])}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
-            (when (and (not submitted?)
-                       (not rated?))
-              [:h2.application-feedback-form__header (:feedback-header translations)])
+            (when (not submitted?)
+              [:h3.application-feedback-form__header (:feedback-header translations)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -148,19 +147,25 @@
                           (< 0 stars-selected 6))
                    (get (:feedback-ratings translations) stars-selected)
                    (gstring/unescapeEntities "&nbsp;")))])
-            (when rated?
+            (when (not submitted?)
               [:div.application-feedback-form__text-feedback-container
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
                  :placeholder (:feedback-text-placeholder translations)
                  :max-length  2000}]])
-            (when rated?
-              [:a.application__send-feedback-button
+            (when (and (not submitted?)
+                     rated?)
+              [:a.application__send-feedback-button.application__send-feedback-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))} (:feedback-send translations)])
+                            (dispatch [:application/rating-feedback-submit]))}
+               (:feedback-send translations)])
+            (when (and (not submitted?)
+                       (not rated?))
+              [:a.application__send-feedback-button.application__send-feedback-button--disabled
+               (:feedback-send translations)])
             (when (not submitted?)
-              [:div.application-feedback-form__disclaimer (:feedback-disclaimer translations)])
+              [:div.application-feedback-form__disclaimer ])
             (when submitted?
               [:div (:feedback-thanks translations)])]])))))
 
