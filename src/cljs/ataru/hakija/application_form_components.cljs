@@ -334,7 +334,13 @@
                             (dispatch [:state-update
                                        (fn [db]
                                          (reduce (fn [db followup]
-                                                   (update-in db [:application :ui (answer-key followup)] assoc :visible? parent-checked?))
+                                                   (let [db (update-in db [:application :ui (answer-key followup)] assoc :visible? parent-checked?)]
+                                                     (if (= (:fieldType followup) "adjacentfieldset")
+                                                       (reduce (fn [db adjacent-fieldset-question]
+                                                                 (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] parent-checked?))
+                                                               db
+                                                               (:children followup))
+                                                       db)))
                                                  db
                                                  followups))]))
      :reagent-render      (fn [followups parent-checked?]
