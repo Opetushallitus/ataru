@@ -23,7 +23,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
-            [ataru.config.core :refer [config]])
+            [ataru.config.core :refer [config]]
+            [ataru.flowdock.flowdock-client :as flowdock-client])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -99,6 +100,14 @@
       (if-let [form (form-service/fetch-form-by-key key)]
         (response/ok form)
         (response/not-found)))
+    (api/POST "/feedback" []
+      :summary "Add feedback sent by applicant"
+      :body [feedback ataru-schema/ApplicationFeedback]
+      (if-let [saved-application (application-service/save-application-feedback feedback)]
+        (do
+          (flowdock-client/send-application-feedback saved-application)
+          (response/ok {:id (:id saved-application)}))
+        (response/bad-request)))
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]

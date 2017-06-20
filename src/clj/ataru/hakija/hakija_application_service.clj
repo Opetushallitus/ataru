@@ -142,3 +142,8 @@
         (application-email/start-email-edit-confirmation-job application-id)
         {:passed? true :id application-id})
       validation-result)))
+
+(defn save-application-feedback
+  [feedback]
+  (log/info "Saving feedback" feedback)
+  (application-store/add-application-feedback feedback))
