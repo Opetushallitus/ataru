@@ -19,6 +19,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
+            [ataru.statistics.statistics-service :as statistics-service]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -283,7 +284,14 @@
                        (header (ok (:body file-response))
                                "Content-Disposition"
                                (:content-disposition file-response))
-                       (not-found))))))
+                       (not-found))))
+
+                 (api/context "/statistics" []
+                   :tags ["statistics-api"]
+                   (api/GET "/applications/:time-period" []
+                            :path-params [time-period :- (api/describe (s/enum "month" "week" "day") "One of: month, week, day")]
+                            :summary "Get info about number of submitted applications for past time period"
+                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))))
 
 (api/defroutes resource-routes
   (api/undocumented
