@@ -255,7 +255,7 @@
   (let [prev (r/atom @value)
         resolve-followups (partial util/resolve-followups (:options field-descriptor))
         toggle-visibility (fn [visible? db followup]
-                            (update-in db [:application :ui (answer-key followup)] assoc :visible? visible?))]
+                            (assoc-in db [:application :ui (answer-key followup) :visible?] visible?))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
