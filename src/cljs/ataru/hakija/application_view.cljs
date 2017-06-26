@@ -130,7 +130,7 @@
             (when (not submitted?)
               [:h2.application-feedback-form__header (:feedback-header translations)])
             (when (not submitted?)
-              [:div.application-feedback-form__rating-container
+              [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
                 :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
