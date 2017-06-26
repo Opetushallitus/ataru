@@ -1,0 +1,95 @@
+<html>
+<head>
+  <script src="http://www.chartjs.org/dist/2.6.0/Chart.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+  <style type="text/css">
+    canvas {
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+<div>
+  <h2>Hakemukset kuukauden ajalta</h2>
+  <canvas id="applications-for-month"></canvas>
+</div>
+<div>
+  <h2>Hakemukset viikon ajalta</h2>
+  <canvas id="applications-for-week"></canvas>
+</div>
+<div>
+  <h2>Hakemukset päivän ajalta</h2>
+  <canvas id="applications-for-day"></canvas>
+</div>
+</body>
+
+<script type="text/javascript">
+  function createLabels(datasets) {
+    var categories = _.flatMap(datasets, function(dataset) {
+      return _.map(dataset.data, function(datum) {
+        return datum.x
+      })
+    })
+
+    return _.sortBy(_.uniq(categories))
+  }
+
+  function createDatasets(applications) {
+    return _.map(applications, function(application, formId) {
+      return {
+        "label": formId,
+        "fill": false,
+        "data": _.map(application, function(n, category) {
+          return {
+            "x": category,
+            "y": n,
+          }
+        })
+      }
+    })
+  }
+
+  function loadChartFor(period) {
+    fetch('/lomake-editori/api/statistics/applications/' + period, {credentials: 'same-origin'})
+      .then(function(response) {
+        return response.json()
+      })
+      .then(function(applications) {
+        if (_.keys(applications).length > 0) {
+          var datasets = createDatasets(applications)
+          var labels = createLabels(datasets)
+
+          new Chart(document.getElementById("applications-for-" + period), {
+            type: 'line',
+            data: {
+              datasets: datasets,
+              labels: labels,
+              scales: {
+                xAxes: [{
+                  display: true,
+                  scaleLabel: {
+                    display: true,
+                    labelString: "Aika"
+                  }
+                }],
+                yAxes: [{
+                  display: true,
+                  scaleLabel: {
+                    display: true,
+                    labelString: "Hakemusten lkm"
+                  }
+                }]
+              }
+
+            }
+          })
+        }
+      })
+  }
+
+  loadChartFor('day')
+  loadChartFor('week')
+  loadChartFor('month')
+
+</script>
+</html>

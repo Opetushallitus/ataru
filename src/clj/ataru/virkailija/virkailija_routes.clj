@@ -92,6 +92,8 @@
 
 (api/defroutes test-routes
   (api/undocumented
+    (api/GET "/dashboard" []
+      (render-file-in-dev "templates/dashboard.html"))
     (api/GET "/virkailija-test.html" []
       (render-file-in-dev "templates/virkailija-test.html"))
     (api/GET "/spec/:filename.js" [filename]
