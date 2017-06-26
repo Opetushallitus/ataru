@@ -556,7 +556,7 @@
   (fn [{:keys [db]}]
     (let [new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
           feedback  (-> db :application :feedback)
-          text (:text feedback)
+          text      (:text feedback)
           post-data {:form-key   (-> db :form :key)
                      :form-id    (-> db :form :id)
                      :form-name  (-> db :form :name)

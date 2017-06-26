@@ -40,12 +40,16 @@
   (reagent/render [form-view]
                   (.getElementById js/document "app")))
 
+(defn- re-frisk-environment?
+  []
+  (let [cfg (js->clj js/config)]
+    (or (get cfg "enable-re-frisk")
+        (= (get cfg "environment-name") "luokka"))))
+
 (defn ^:export init []
   (cljs-util/set-global-error-handler! #(post "/hakemus/api/client-error" %))
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
-  (when (-> js/config
-            js->clj
-            (get "enable-re-frisk"))
+  (when (re-frisk-environment?)
     (re-frisk/enable-re-frisk!))
   (dispatch-form-load))
