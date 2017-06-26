@@ -27,4 +27,5 @@
  :urls {:virkailija-host "{{ataru_virkailija_host}}"
         :hakija-host "{{ataru_hakija_host}}"
         :liiteri-url "{{ataru_liiteri_url}}"
-        :editor-url  "{{ataru_editor_url}}"}}
+        :editor-url  "{{ataru_editor_url}}"}
+ :feedback {:application-feedback-flow-token "{{ataru_application_feedback_flow_token}}"}}

@@ -31,7 +31,7 @@
 
 (defn send-application-feedback
   [feedback]
-  (when-let [token (:flowdock-application-feedback-token config)]
+  (when-let [token (-> config :feedback :application-feedback-flow-token)]
     (log/info "Sending feedback to Flowdock" feedback)
     @(http/post "https://api.flowdock.com/messages"
                 {:headers {"content-type" "application/json"}
