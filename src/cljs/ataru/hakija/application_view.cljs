@@ -102,9 +102,7 @@
 (defn- star-number-from-event
   [event]
   (-> event
-      (aget "target")
-      (aget "dataset")
-      (aget "starN")
+      (aget "target" "dataset" "starN")
       (js/parseInt 10)))
 
 (defn feedback-form
