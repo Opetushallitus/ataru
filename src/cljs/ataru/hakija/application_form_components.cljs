@@ -255,7 +255,13 @@
   (let [prev (r/atom @value)
         resolve-followups (partial util/resolve-followups (:options field-descriptor))
         toggle-visibility (fn [visible? db followup]
-                            (assoc-in db [:application :ui (answer-key followup) :visible?] visible?))]
+                            (let [db (assoc-in db [:application :ui (answer-key followup) :visible?] visible?)]
+                              (if (= (:fieldType followup) "adjacentfieldset")
+                                (reduce (fn [db adjacent-fieldset-question]
+                                          (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] visible?))
+                                        db
+                                        (:children followup))
+                                db)))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
