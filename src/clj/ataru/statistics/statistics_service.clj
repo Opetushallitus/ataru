@@ -4,8 +4,8 @@
             [clj-time.format :as time-format]))
 
 (def category-formatters {:month (time-format/formatter "yyyy-MM-dd")
-                          :week  (time-format/formatter "yyyy-MM-dd-HH")
-                          :day   (time-format/formatter "yyyy-MM-dd-HH-mm")})
+                          :week  (time-format/formatter "yyyy-MM-dd HH:00")
+                          :day   (time-format/formatter "yyyy-MM-dd HH:mm")})
 
 (defn- get-and-parse-application-stats
   [start-time time-period]
@@ -13,16 +13,16 @@
         applications                    (store/get-application-stats start-time)]
     (reduce
       (fn [acc application]
-        (let [form-id (-> application
-                          :form-id
-                          (str)
-                          (keyword))
+        (let [form-key (-> application
+                           :key
+                           (keyword))
               category (time-format/unparse group-by-fn (:created-time application))]
-          (if-let [category-map (form-id acc)]
-            (if (get category-map category)
-              (update-in acc [form-id category] inc)
-              (assoc-in acc [form-id category] 1))
-            (assoc-in acc [form-id category] 1))))
+          (if-let [form-map (form-key acc)]
+            (if (get-in form-map [:counts category])
+              (update-in acc [form-key :counts category] inc)
+              (assoc-in acc [form-key :counts category] 1))
+            (assoc acc form-key {:form-name (:form-name application)
+                                 :counts    {category 1}}))))
       {}
       applications)))
 

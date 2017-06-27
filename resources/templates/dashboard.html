@@ -1,95 +1,83 @@
 <html>
 <head>
-  <script src="http://www.chartjs.org/dist/2.6.0/Chart.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.9.1/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.11.0/metricsgraphics.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.11.0/metricsgraphics.min.css" rel="stylesheet">
   <style type="text/css">
-    canvas {
-      max-width: 600px;
+    .stat-container {
+      margin-bottom: 40px;
+    }
+
+    .stat-legend {
+      margin-left: 30px;
     }
   </style>
 </head>
 <body>
-<div>
-  <h2>Hakemukset kuukauden ajalta</h2>
-  <canvas id="applications-for-month"></canvas>
-</div>
-<div>
-  <h2>Hakemukset viikon ajalta</h2>
-  <canvas id="applications-for-week"></canvas>
-</div>
-<div>
-  <h2>Hakemukset päivän ajalta</h2>
-  <canvas id="applications-for-day"></canvas>
-</div>
+  <div class="stat-container">
+    <div id="applications-for-month"></div>
+    <div id="applications-for-month-legend" class="stat-legend"></div>
+  </div>
+  <div class="stat-container">
+    <div id="applications-for-week"></div>
+    <div id="applications-for-week-legend" class="stat-legend"></div>
+  </div>
+  <div class="stat-container">
+    <div id="applications-for-day"></div>
+    <div id="applications-for-day-legend" class="stat-legend"></div>
+  </div>
 </body>
 
 <script type="text/javascript">
-  function createLabels(datasets) {
-    var categories = _.flatMap(datasets, function(dataset) {
-      return _.map(dataset.data, function(datum) {
-        return datum.x
+
+  function createLegend(forms) {
+    return _.map(forms, function(form, formKey) {
+      return form['form-name']
+    })
+  }
+
+  function createData(forms, dateFormat) {
+    var arrs = _.map(forms, function(form, formKey) {
+      return _.map(form.counts, function(n, category) {
+        return {
+          date: category,
+          value: n
+        }
       })
     })
-
-    return _.sortBy(_.uniq(categories))
-  }
-
-  function createDatasets(applications) {
-    return _.map(applications, function(application, formId) {
-      return {
-        "label": formId,
-        "fill": false,
-        "data": _.map(application, function(n, category) {
-          return {
-            "x": category,
-            "y": n,
-          }
-        })
-      }
+    return _.map(arrs, function(arr) {
+      return MG.convert.date(arr, 'date', dateFormat)
     })
   }
 
-  function loadChartFor(period) {
+  function loadChartFor(period, dateFormat) {
     fetch('/lomake-editori/api/statistics/applications/' + period, {credentials: 'same-origin'})
       .then(function(response) {
         return response.json()
       })
-      .then(function(applications) {
-        if (_.keys(applications).length > 0) {
-          var datasets = createDatasets(applications)
-          var labels = createLabels(datasets)
-
-          new Chart(document.getElementById("applications-for-" + period), {
-            type: 'line',
-            data: {
-              datasets: datasets,
-              labels: labels,
-              scales: {
-                xAxes: [{
-                  display: true,
-                  scaleLabel: {
-                    display: true,
-                    labelString: "Aika"
-                  }
-                }],
-                yAxes: [{
-                  display: true,
-                  scaleLabel: {
-                    display: true,
-                    labelString: "Hakemusten lkm"
-                  }
-                }]
-              }
-
-            }
-          })
+      .then(function(forms) {
+        if (_.keys(forms).length > 0) {
+          MG.data_graphic({
+            title: "Applications per " + period,
+            data: createData(forms, dateFormat),
+            width: 600,
+            height: 200,
+            right: 40,
+            interpolate: d3.curveLinear,
+            missing_is_zero: true,
+            target: '#applications-for-' + period,
+            legend: createLegend(forms),
+            legend_target: '#applications-for-' + period + "-legend"
+          });
         }
-      })
+      });
   }
 
-  loadChartFor('day')
-  loadChartFor('week')
-  loadChartFor('month')
+  loadChartFor('day', '%Y-%m-%d %H:%M')
+  loadChartFor('week', '%Y-%m-%d %H:%M')
+  loadChartFor('month', '%Y-%m-%d')
 
 </script>
 </html>
