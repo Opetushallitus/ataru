@@ -88,22 +88,30 @@
         setNthFieldOption(18, '120'),
         clickNthFieldRadio(19, 'Toinen vaihtoehto', true),
         clickNthFieldRadio(20, 'En'),
-        clickNthFieldRadio(21, 'Arkkitehti', true),
-        setNthFieldValue(22, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
-        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto'),
-        clickNthFieldRadio(26, 'Jatkokysymys A'),
-        clickNthFieldRadio(26, 'Jatkokysymys B'),
-        setNthFieldSubInputValue(27, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(27, 1, 'Oikea vierekkäinen'),
-        setNthFieldOption(28, 'Pudotusvalikon 1. kysymys'),
-        setNthFieldSubInputValue(29, 0, 'A1'),
-        setNthFieldSubInputValue(29, 1, 'B1'),
-        setNthFieldSubInputValue(29, 2, 'C1'),
+        setNthFieldSubInputValue(21, 0, 'A1'),
+        setNthFieldSubInputValue(21, 1, 'B1'),
         clickElement(function() {
-          return formFields().eq(29).find('.application__form-add-new-row')
+          return formFields().eq(21).find('.application__form-add-new-row')
         }),
-        setNthFieldSubInputValue(29, 3, 'A2'),
-        setNthFieldSubInputValue(29, 5, 'C2')
+        setNthFieldSubInputValue(21, 2, 'C1'),
+        setNthFieldSubInputValue(21, 3, 'A2'),
+        setNthFieldSubInputValue(21, 5, 'C2'),
+        clickNthFieldRadio(22, 'Arkkitehti', true),
+        setNthFieldValue(23, 'textarea', 'Toisen pakollisen tekstialueen vastaus'),
+        clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
+        clickNthFieldRadio(27, 'Jatkokysymys A'),
+        clickNthFieldRadio(27, 'Jatkokysymys B'),
+        setNthFieldSubInputValue(28, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(28, 1, 'Oikea vierekkäinen'),
+        setNthFieldOption(29, 'Pudotusvalikon 1. kysymys'),
+        setNthFieldSubInputValue(30, 0, 'A1'),
+        setNthFieldSubInputValue(30, 1, 'B1'),
+        setNthFieldSubInputValue(30, 2, 'C1'),
+        clickElement(function() {
+          return formFields().eq(30).find('.application__form-add-new-row')
+        }),
+        setNthFieldSubInputValue(30, 3, 'A2'),
+        setNthFieldSubInputValue(30, 5, 'C2')
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
@@ -153,7 +161,7 @@
                               "Pudotusvalikon 1. kysymys"]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
-        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
+        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)

@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(30)
+        expect(formFields().length).to.equal(31)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -51,6 +51,12 @@
           "",
           "Pakollisen tekstialueen vastaus",
           "Jatkokysymyksen vastaus",
+          "A1",
+          "B1",
+          "C1",
+          "A2",
+          "",
+          "C2",
           "Toisen pakollisen tekstialueen vastaus",
           "",
           "Vasen vierekkäinen",
@@ -96,8 +102,8 @@
     describe('changing values to be invalid', function () {
       before(
         setNthFieldInputValue(1, '420noscope'),
-        setNthFieldValue(22, 'textarea', ''),
-        clickNthFieldRadio(25, 'Ensimmäinen vaihtoehto')
+        setNthFieldValue(23, 'textarea', ''),
+        clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
@@ -111,8 +117,8 @@
     describe('change values and save', function () {
       before(
         setNthFieldInputValue(1, 'Tokanimi'),
-        setNthFieldValue(22, 'textarea', 'Muokattu vastaus'),
-        clickNthFieldRadio(25, 'Toinen vaihtoehto'),
+        setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
+        clickNthFieldRadio(26, 'Toinen vaihtoehto'),
         clickElement(function () {
           return submitButton()
         }),
@@ -158,7 +164,7 @@
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
           return $(e).text()
         })
-        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
+        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)
