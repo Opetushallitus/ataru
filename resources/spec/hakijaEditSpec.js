@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(28)
+        expect(formFields().length).to.equal(30)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -54,7 +54,13 @@
           "Toisen pakollisen tekstialueen vastaus",
           "",
           "Vasen vierekkäinen",
-          "Oikea vierekkäinen"
+          "Oikea vierekkäinen",
+          "A1",
+          "B1",
+          "C1",
+          "A2",
+          "",
+          "C2"
         ]
 
         var dropdownInputValues = _.map(testFrame().find('select.application__form-select option:selected'), function (e) {
@@ -66,7 +72,8 @@
           "suomi",
           "Kolmas vaihtoehto",
           "Lisensiaatin tutkinto",
-          ""
+          "",
+          "Pudotusvalikon 1. kysymys"
         ]
 
         var checkboxInputValues = _.map(testFrame().find('input.application__form-checkbox:checked').not('.application__form-multi-choice-followups-container .application__form-checkbox'), function (e) {
@@ -144,13 +151,14 @@
           "Muokattu vastaus",
           "",
           "",
-          "Toinen vaihtoehto"
+          "Toinen vaihtoehto",
+          "Pudotusvalikon 1. kysymys"
         ]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
           return $(e).text()
         })
-        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen"]
+        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)

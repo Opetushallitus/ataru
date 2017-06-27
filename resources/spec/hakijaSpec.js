@@ -25,7 +25,7 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(25)
+        expect(formFields().length).to.equal(26)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
@@ -94,8 +94,16 @@
         clickNthFieldRadio(26, 'Jatkokysymys A'),
         clickNthFieldRadio(26, 'Jatkokysymys B'),
         setNthFieldSubInputValue(27, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(27, 1, 'Oikea vierekkäinen')
-
+        setNthFieldSubInputValue(27, 1, 'Oikea vierekkäinen'),
+        setNthFieldOption(28, 'Pudotusvalikon 1. kysymys'),
+        setNthFieldSubInputValue(29, 0, 'A1'),
+        setNthFieldSubInputValue(29, 1, 'B1'),
+        setNthFieldSubInputValue(29, 2, 'C1'),
+        clickElement(function() {
+          return formFields().eq(29).find('.application__form-add-new-row')
+        }),
+        setNthFieldSubInputValue(29, 3, 'A2'),
+        setNthFieldSubInputValue(29, 5, 'C2')
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
@@ -141,14 +149,14 @@
                               "",
                               "",
                               "Ensimmäinen vaihtoehto",
-                              "Jatkokysymys AJatkokysymys B"]
+                              "Jatkokysymys AJatkokysymys B",
+                              "Pudotusvalikon 1. kysymys"]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
-        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen"]
+        var expectedTabularValues = ["Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)
-
       })
     })
   })
