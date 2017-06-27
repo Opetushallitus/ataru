@@ -31,7 +31,7 @@
   function formComponents() {
     return testFrame().find('.editor-form__component-wrapper')
       // exclude followup question components
-      .not('.editor-form__followup-question-overlay > div > div > .editor-form__component-wrapper')
+      .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
   }
 
   function formSections() {
@@ -363,7 +363,7 @@
           clickElement(function() { return formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")').eq(2) })
         )
         it('has expected contents', function() {
-          expect(formComponents()).to.have.length(19)
+          expect(formComponents()).to.have.length(16)
           expect(formComponents().eq(15).find('.editor-form__text-field:first').val()).to.equal('Päätason pudotusvalikko')
           expect(formComponents().eq(15).find('.editor-form__multi-options-wrapper-outer .editor-form__text-field').eq(0).val()).to.equal('Pudotusvalikon 1. kysymys')
           expect(formComponents().eq(15).find('.editor-form__multi-options-wrapper-outer .editor-form__text-field').eq(1).val()).to.equal('Pudotusvalikon 2. kysymys')
