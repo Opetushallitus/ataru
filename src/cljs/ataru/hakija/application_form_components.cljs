@@ -420,12 +420,24 @@
 
 (defn- hide-followups [db {:keys [followups]}]
   (reduce (fn hide-followup [db followup]
-            (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
+            (let [db (assoc-in db [:application :ui (answer-key followup) :visible?] false)]
+              (if (= (:fieldType followup) "adjacentfieldset")
+                (reduce (fn [db adjacent-fieldset-question]
+                          (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] false))
+                        db
+                        (:children followup)))
+              db))
           db
           followups))
 
 (defn- show-followup [db followup]
-  (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
+  (let [db (assoc-in db [:application :ui (answer-key followup) :visible?] true)]
+    (if (= (:fieldType followup) "adjacentfieldset")
+      (reduce (fn [db adjacent-fieldset-question]
+                (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] true))
+              db
+              (:children followup))
+      db)))
 
 (defn- single-choice-followups [parent-id options]
   (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])

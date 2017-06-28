@@ -22,7 +22,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(31)
+        expect(formFields().length).to.equal(32)
         expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -59,6 +59,12 @@
           "C2",
           "Toisen pakollisen tekstialueen vastaus",
           "",
+          "A1",
+          "B1",
+          "C1",
+          "A2",
+          "",
+          "C2",
           "Vasen vierekkäinen",
           "Oikea vierekkäinen",
           "A1",

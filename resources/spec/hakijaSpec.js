@@ -101,17 +101,25 @@
         clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
         clickNthFieldRadio(27, 'Jatkokysymys A'),
         clickNthFieldRadio(27, 'Jatkokysymys B'),
-        setNthFieldSubInputValue(28, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(28, 1, 'Oikea vierekkäinen'),
-        setNthFieldOption(29, 'Pudotusvalikon 1. kysymys'),
-        setNthFieldSubInputValue(30, 0, 'A1'),
-        setNthFieldSubInputValue(30, 1, 'B1'),
-        setNthFieldSubInputValue(30, 2, 'C1'),
+        setNthFieldSubInputValue(28, 0, 'A1'),
+        setNthFieldSubInputValue(28, 1, 'B1'),
+        setNthFieldSubInputValue(28, 2, 'C1'),
         clickElement(function() {
-          return formFields().eq(30).find('.application__form-add-new-row')
+          return formFields().eq(28).find('.application__form-add-new-row')
         }),
-        setNthFieldSubInputValue(30, 3, 'A2'),
-        setNthFieldSubInputValue(30, 5, 'C2')
+        setNthFieldSubInputValue(28, 3, 'A2'),
+        setNthFieldSubInputValue(28, 5, 'C2'),
+        setNthFieldSubInputValue(29, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(29, 1, 'Oikea vierekkäinen'),
+        setNthFieldOption(30, 'Pudotusvalikon 1. kysymys'),
+        setNthFieldSubInputValue(31, 0, 'A1'),
+        setNthFieldSubInputValue(31, 1, 'B1'),
+        setNthFieldSubInputValue(31, 2, 'C1'),
+        clickElement(function() {
+          return formFields().eq(31).find('.application__form-add-new-row')
+        }),
+        setNthFieldSubInputValue(31, 3, 'A2'),
+        setNthFieldSubInputValue(31, 5, 'C2')
       )
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
@@ -161,7 +169,7 @@
                               "Pudotusvalikon 1. kysymys"]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
-        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
+        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
 
         expect(displayedValues).to.eql(expectedValues)
         expect(tabularValues).to.eql(expectedTabularValues)
