@@ -12,6 +12,7 @@
 
     .stat-legend {
       margin-left: 30px;
+      max-width: 1000px;
     }
   </style>
 </head>
@@ -62,7 +63,7 @@
           MG.data_graphic({
             title: "Applications per " + period,
             data: createData(forms, dateFormat),
-            width: 800,
+            width: 1000,
             height: 400,
             right: 40,
             interpolate: d3.curveLinear,
