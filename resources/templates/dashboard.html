@@ -58,12 +58,12 @@
         return response.json()
       })
       .then(function(forms) {
-        if (_.keys(forms).length > 0) {
+        if (_.keys(forms).length > 1) {
           MG.data_graphic({
             title: "Applications per " + period,
             data: createData(forms, dateFormat),
-            width: 600,
-            height: 200,
+            width: 800,
+            height: 400,
             right: 40,
             interpolate: d3.curveLinear,
             missing_is_zero: true,

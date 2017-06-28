@@ -7,23 +7,28 @@
                           :week  (time-format/formatter "yyyy-MM-dd HH:00")
                           :day   (time-format/formatter "yyyy-MM-dd HH:mm")})
 
+(defn- inc-or-1
+  [m keys]
+  (if (get-in m keys)
+    (update-in m keys inc)
+    (assoc-in m keys 1)))
+
 (defn- get-and-parse-application-stats
   [start-time time-period]
-  (let [group-by-fn                     (time-period category-formatters)
-        applications                    (store/get-application-stats start-time)]
+  (let [group-by-fn  (time-period category-formatters)
+        applications (store/get-application-stats start-time)]
     (reduce
       (fn [acc application]
-        (let [form-key (-> application
-                           :key
-                           (keyword))
-              category (time-format/unparse group-by-fn (:created-time application))]
-          (if-let [form-map (form-key acc)]
-            (if (get-in form-map [:counts category])
-              (update-in acc [form-key :counts category] inc)
-              (assoc-in acc [form-key :counts category] 1))
-            (assoc acc form-key {:form-name (:form-name application)
-                                 :counts    {category 1}}))))
-      {}
+        (let [form-key       (-> application
+                                 :key
+                                 (keyword))
+              category       (time-format/unparse group-by-fn (:created-time application))
+              acc-with-total (inc-or-1 acc [:TOTAL :counts category])]
+          (if (form-key acc-with-total)
+            (inc-or-1 acc-with-total [form-key :counts category])
+            (assoc acc-with-total form-key {:form-name (:form-name application)
+                                            :counts    {category 1}}))))
+      {:TOTAL {:form-name "Yhteensä" :counts {}}}
       applications)))
 
 (defn- earlier-at-midnight
