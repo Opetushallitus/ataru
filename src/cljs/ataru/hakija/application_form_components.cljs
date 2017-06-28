@@ -425,8 +425,8 @@
                 (reduce (fn [db adjacent-fieldset-question]
                           (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] false))
                         db
-                        (:children followup)))
-              db))
+                        (:children followup))
+                db)))
           db
           followups))
 
