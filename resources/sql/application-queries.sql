@@ -35,7 +35,7 @@ SELECT
 FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
-WHERE a.hakukohde = :hakukohde_oid
+WHERE :hakukohde_oid = ANY (a.hakukohde)
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
@@ -343,7 +343,7 @@ WITH latest_applications AS (
     SELECT
       a.key,
       a.haku,
-      a.hakukohde,
+      unnest(a.hakukohde) as hakukohde,
       ar.state,
       max(a.created_time) AS latest_time
     FROM applications a

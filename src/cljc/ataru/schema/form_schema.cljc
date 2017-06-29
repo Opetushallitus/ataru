@@ -113,8 +113,8 @@
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema FormTarjontaMetadata
-  {:hakukohde-oid                       s/Str
-   :hakukohde-name                      s/Str
+  {:hakukohde-oid                       [s/Str]
+   :hakukohde-name                      [s/Str]
    :haku-oid                            s/Str
    :haku-name                           s/Str
    (s/optional-key :koulutukset)        [{:oid                  s/Str
@@ -179,7 +179,7 @@
    :answers                             [Answer]
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
-   (s/optional-key :hakukohde)          (s/maybe s/Str)
+   (s/optional-key :hakukohde)          (s/maybe [s/Str])
    (s/optional-key :haku)               (s/maybe s/Str)
    (s/optional-key :id)                 s/Int
    (s/optional-key :created-time)       org.joda.time.DateTime
