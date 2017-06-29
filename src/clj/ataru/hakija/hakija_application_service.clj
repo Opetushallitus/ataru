@@ -12,7 +12,9 @@
    [ataru.application.review-states :refer [complete-states]]
    [ataru.applications.application-store :as application-store]
    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
-                                                  editing-forbidden-person-info-field-ids]]))
+                                                  editing-forbidden-person-info-field-ids]]
+   [ataru.util :as util]
+   [ataru.files.file-store :as file-store]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -67,6 +69,20 @@
                                             (:answers old-application)))]
     (assoc new-application :answers merged-answers)))
 
+(defn- flatten-attachment-keys [application]
+  (->> (:answers application)
+       (filter (comp (partial = "attachment") :fieldType))
+       (map :value)
+       (flatten)))
+
+(defn- remove-orphan-attachments [new-application old-application]
+  (let [new-attachments    (set (flatten-attachment-keys new-application))
+        orphan-attachments (->> (flatten-attachment-keys old-application)
+                                (filter (comp not (partial contains? new-attachments))))]
+    (doseq [attachment-key orphan-attachments]
+      (file-store/delete-file (name attachment-key)))
+    (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [form               (form-store/fetch-by-id (:form application))
         allowed            (allowed-to-apply? tarjonta-service application)
@@ -87,7 +103,9 @@
       validation-result
 
       :else
-      (store-and-log final-application store-fn))))
+      (do
+        (remove-orphan-attachments final-application latest-application)
+        (store-and-log final-application store-fn)))))
 
 (defn- start-submit-jobs [application-id]
   (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
