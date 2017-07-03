@@ -120,12 +120,14 @@
 
 (defn- followup-has-answer?
   [followup application]
-  (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
-    (and
-      (boolean answer-value)
-      (if (sequential? answer-value)
-        (< 0 (count answer-value))
-        true))))
+  (if (not-empty (:children followup))
+    (some #(followup-has-answer? % application) (:children followup))
+    (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
+      (and
+        (boolean answer-value)
+        (if (sequential? answer-value)
+          (< 0 (count answer-value))
+          true)))))
 
 (defn- followups [followups content application lang]
   [:div

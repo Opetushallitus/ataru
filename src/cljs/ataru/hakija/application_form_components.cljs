@@ -251,11 +251,18 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
+(defn- toggle-followup-visibility [db followup visible?]
+  (let [db (assoc-in db [:application :ui (answer-key followup) :visible?] visible?)]
+    (if (= (:fieldType followup) "adjacentfieldset")
+      (reduce (fn [db adjacent-fieldset-question]
+                (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] visible?))
+              db
+              (:children followup))
+      db)))
+
 (defn dropdown-followups [lang value field-descriptor]
   (let [prev (r/atom @value)
-        resolve-followups (partial util/resolve-followups (:options field-descriptor))
-        toggle-visibility (fn [visible? db followup]
-                            (update-in db [:application :ui (answer-key followup)] assoc :visible? visible?))]
+        resolve-followups (partial util/resolve-followups (:options field-descriptor))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
@@ -264,8 +271,8 @@
                                          current-followups  (resolve-followups @value)]
                                      (dispatch [:state-update
                                                 (fn [db]
-                                                  (let [reduced (reduce (partial toggle-visibility false) db previous-followups)]
-                                                    (reduce (partial toggle-visibility true) reduced current-followups)))])))))
+                                                  (let [reduced (reduce #(toggle-followup-visibility %1 %2 false) db previous-followups)]
+                                                    (reduce #(toggle-followup-visibility %1 %2 true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
                                (when-let [followups (resolve-followups @value)]
                                  (into [:div.application__form-dropdown-followups]
@@ -333,8 +340,7 @@
     {:component-did-mount (fn []
                             (dispatch [:state-update
                                        (fn [db]
-                                         (reduce (fn [db followup]
-                                                   (update-in db [:application :ui (answer-key followup)] assoc :visible? parent-checked?))
+                                         (reduce #(toggle-followup-visibility %1 %2 parent-checked?)
                                                  db
                                                  followups))]))
      :reagent-render      (fn [followups parent-checked?]
@@ -407,13 +413,9 @@
        [:div.application__form-single-choice-followups-indicator])]))
 
 (defn- hide-followups [db {:keys [followups]}]
-  (reduce (fn hide-followup [db followup]
-            (update-in db [:application :ui (answer-key followup)] assoc :visible? false))
+  (reduce #(toggle-followup-visibility %1 %2 false)
           db
           followups))
-
-(defn- show-followup [db followup]
-  (update-in db [:application :ui (answer-key followup)] assoc :visible? true))
 
 (defn- single-choice-followups [parent-id options]
   (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])
@@ -439,7 +441,7 @@
                                                   (reduce hide-followups
                                                           db'
                                                           (filter (comp (partial not= @single-choice-value) :value) options))
-                                                  (reduce show-followup
+                                                  (reduce #(toggle-followup-visibility %1 %2 true)
                                                           db'
                                                           @followups)))]))})))
 
