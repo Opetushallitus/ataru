@@ -9,9 +9,12 @@
 (def default-map-config {:ttl      600
                          :max-size 500})
 
-(def cached-map-config {:hakukohde {:config {:max-size 1000 :ttl 3600}}
-                        :haku      {:config {:max-size 1000 :ttl 3600}}
-                        :koulutus  {:config {:max-size 1000 :ttl 3600}}})
+(def cached-map-config {:hakukohde        {:config {:max-size 1000 :ttl 3600}}
+                        :haku             {:config {:max-size 1000 :ttl 3600}}
+                        :koulutus         {:config {:max-size 1000 :ttl 3600}}
+                        :statistics-month {:config {:max-size 500 :ttl 36000}}
+                        :statistics-week  {:config {:max-size 500 :ttl 3600}}
+                        :statistics-day   {:config {:max-size 500 :ttl 300}}})
 
 (def local-cluster-cfg {:clustered? true
                         :hosts ["127.0.0.1"]})
@@ -84,8 +87,9 @@
 
 (defn- get-cached-map [component cache]
   "Only allow access to preconfigured maps"
-  (when (cache cached-map-config)
-    (.getMap (:hazelcast-instance component) (name cache))))
+  (if (cache cached-map-config)
+    (.getMap (:hazelcast-instance component) (name cache))
+    (throw (RuntimeException. (str "Invalid cache: " cache)))))
 
 (defrecord HazelcastCacheService [hazelcast-instance]
   component/Lifecycle

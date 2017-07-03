@@ -1,5 +1,6 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
+            [clj-time.jdbc] ; for java.sql.Timestamp / org.joda.time.DateTime coercion
             [clojure.tools.namespace.repl :refer [refresh]]
             [ataru.log.audit-log :as audit-log]
             [ataru.util.app-utils :as app-utils]
