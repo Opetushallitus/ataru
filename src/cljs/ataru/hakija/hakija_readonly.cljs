@@ -19,6 +19,10 @@
                                                                        scroll-to-anchor]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(defn- multiple-choice-with-koodisto [field-descriptor]
+  (and (= (:fieldType field-descriptor) "multipleChoice")
+       (contains? field-descriptor :koodisto-source)))
+
 (defn text [field-descriptor application lang]
   (let [answer ((answer-key field-descriptor) (:answers application))]
     [:div.application__form-field
@@ -30,7 +34,7 @@
         (let [repeatable?  (-> field-descriptor :params :repeatable)
               values       (if repeatable? (map :value (:values answer)) (:value answer))
               multi-value? (and
-                             (not= "multipleChoice" (:fieldType field-descriptor))
+                             (not (multiple-choice-with-koodisto field-descriptor))
                              (or (seq? values) (vector? values)))]
           (cond
             multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
