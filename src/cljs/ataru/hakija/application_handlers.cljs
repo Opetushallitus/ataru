@@ -521,11 +521,13 @@
                   (assoc-in [:application :answers (keyword component-id) :valid] false)
                   (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                     {:status :deleting
-                     :valid  false}))]
-      {:db   db
-       :http {:method  :delete
-              :url     (str "/hakemus/api/files/" key)
-              :handler [:application/handle-attachment-delete field-descriptor component-id key]}})))
+                     :valid  false}))
+          db-and-fx {:db db}]
+      (if (get-in db [:application :editing?])
+        (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id key])
+        (assoc db-and-fx :http {:method  :delete
+                                :url     (str "/hakemus/api/files/" key)
+                                :handler [:application/handle-attachment-delete field-descriptor component-id key]})))))
 
 (reg-event-db
   :application/remove-attachment-error
