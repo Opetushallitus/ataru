@@ -41,6 +41,10 @@
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
 
+(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
+                                      (s/optional-key :sv) s/Str
+                                      (s/optional-key :en) s/Str})
+
 (s/defschema Module (s/enum :person-info))
 
 (s/defschema Button {:fieldClass              (s/eq "button")
@@ -113,19 +117,20 @@
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
 (s/defschema FormTarjontaMetadata
-  {:hakukohde-oid                       [s/Str]
-   :hakukohde-name                      [s/Str]
-   :haku-oid                            s/Str
-   :haku-name                           s/Str
-   (s/optional-key :koulutukset)        [{:oid                  s/Str
-                                          :koulutuskoodi-name   (s/maybe s/Str)
-                                          :tutkintonimike-name  (s/maybe s/Str)
-                                          :koulutusohjelma-name (s/maybe s/Str)
-                                          :tarkenne             (s/maybe s/Str)}]
-   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-   (s/optional-key :hakuaika-dates)     {:start                s/Int
-                                         (s/optional-key :end) (s/maybe s/Int)
-                                         :on                   s/Bool}})
+  {:hakukohteet                     [{:oid                       s/Str
+                                      :name                      LocalizedStringOptional
+                                      :tarjoaja-name             LocalizedStringOptional
+                                      (s/optional-key :form-key) (s/maybe s/Str)
+                                      (s/optional-key :koulutukset)    [{:oid                  s/Str
+                                                                         :koulutuskoodi-name   (s/maybe s/Str)
+                                                                         :tutkintonimike-name  (s/maybe s/Str)
+                                                                         :koulutusohjelma-name (s/maybe s/Str)
+                                                                         :tarkenne             (s/maybe s/Str)}]}]
+   :haku-oid                        s/Str
+   :haku-name                       s/Str
+   (s/optional-key :hakuaika-dates) {:start                s/Int
+                                     (s/optional-key :end) (s/maybe s/Int)
+                                     :on                   s/Bool}})
 
 (s/defschema File
   {:key                      s/Str

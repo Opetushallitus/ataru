@@ -31,12 +31,14 @@
         submit-status     (subscribe [:state-query [:application :submit-status]])
         application       (subscribe [:state-query [:application]])
         secret            (:modify (util/extract-query-params))
-        hakukohde-name    (-> form :tarjonta :hakukohde-name)
-        haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
+
+        hakukohde-name    (-> form :tarjonta :haku-name)
+        haku-tarjoja-name "FIXME"                           ; TODO!
         koulutukset-str   (koulutus/koulutukset->str (-> form :tarjonta :koulutukset))
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
+
         translations      (get-translations
                            (keyword selected-lang)
                            translations/application-view-translations)

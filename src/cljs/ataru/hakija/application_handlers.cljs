@@ -64,6 +64,14 @@
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
 
+(reg-event-fx
+  :application/get-latest-form-by-haku
+  (fn [{:keys [db]} [_ haku-oid answers]]
+    {:db db
+     :http {:method  :get
+            :url     (str "/hakemus/api/haku/" haku-oid)
+            :handler [:application/handle-form answers]}}))
+
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
@@ -219,6 +227,7 @@
                                    (assoc :hakukohde-name hakukohde-name))))
                  (assoc-in [:application :answers] (create-initial-answers form))
                  (assoc :wrapper-sections (extract-wrapper-sections form)))]
+
     {:db               db
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
