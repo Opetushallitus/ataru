@@ -28,6 +28,11 @@
    (applying-possible? (:form db) (:application db))))
 
 (re-frame/reg-sub
+  :application/hakukohde-count
+  (fn [db]
+    (count (-> db :tarjonta :hakukohteet))))
+
+(re-frame/reg-sub
   :application/form-language
   (fn [db]
     (or

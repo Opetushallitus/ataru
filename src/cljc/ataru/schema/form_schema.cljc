@@ -116,21 +116,25 @@
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
+(s/defschema FormTarjontaHakukohde
+  {:oid                          s/Str
+   :name                         LocalizedStringOptional
+   :tarjoaja-name                LocalizedStringOptional
+   (s/optional-key :form-key)    (s/maybe s/Str)
+   (s/optional-key :koulutukset) [{:oid                  s/Str
+                                   :koulutuskoodi-name   (s/maybe s/Str)
+                                   :tutkintonimike-name  (s/maybe s/Str)
+                                   :koulutusohjelma-name (s/maybe s/Str)
+                                   :tarkenne             (s/maybe s/Str)}]})
+
 (s/defschema FormTarjontaMetadata
-  {:hakukohteet                     [{:oid                       s/Str
-                                      :name                      LocalizedStringOptional
-                                      :tarjoaja-name             LocalizedStringOptional
-                                      (s/optional-key :form-key) (s/maybe s/Str)
-                                      (s/optional-key :koulutukset)    [{:oid                  s/Str
-                                                                         :koulutuskoodi-name   (s/maybe s/Str)
-                                                                         :tutkintonimike-name  (s/maybe s/Str)
-                                                                         :koulutusohjelma-name (s/maybe s/Str)
-                                                                         :tarkenne             (s/maybe s/Str)}]}]
-   :haku-oid                        s/Str
-   :haku-name                       s/Str
-   (s/optional-key :hakuaika-dates) {:start                s/Int
-                                     (s/optional-key :end) (s/maybe s/Int)
-                                     :on                   s/Bool}})
+  {:hakukohteet                        [FormTarjontaHakukohde]
+   :haku-oid                           s/Str
+   :haku-name                          s/Str
+   (s/optional-key :default-hakukohde) FormTarjontaHakukohde
+   (s/optional-key :hakuaika-dates)    {:start                s/Int
+                                        (s/optional-key :end) (s/maybe s/Int)
+                                        :on                   s/Bool}})
 
 (s/defschema File
   {:key                      s/Str

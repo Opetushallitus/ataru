@@ -215,27 +215,31 @@
   merge-submitted-answers)
 
 (defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language))
-        db   (-> db
-                 (update :form (fn [{:keys [selected-language hakukohde-name]}]
-                                 (cond-> form
-                                   (some? selected-language)
-                                   (assoc :selected-language selected-language)
-
-                                   (some? hakukohde-name)
-                                   (assoc :hakukohde-name hakukohde-name))))
-                 (assoc-in [:application :answers] (create-initial-answers form))
-                 ; TODO support for default hakukohde when loading page via /hakukohde/:oid
-                 (assoc-in [:application :selected-hakukohteet] #{})
-                 (assoc :wrapper-sections (extract-wrapper-sections form)))]
-
-    {:db               db
+  (let [form               (-> (languages->kwd form)
+                               (set-form-language))
+        hakukohteet        (-> form :tarjonta :hakukohteet)
+        default-hakukohde  (-> form :tarjonta :default-hakukohde)
+        selected-hakukohde (case (count hakukohteet)
+                             0 nil
+                             1 (set hakukohteet)
+                             (if default-hakukohde
+                               (set [default-hakukohde])
+                               #{}))
+        _ (println "sel" default-hakukohde selected-hakukohde)
+        db                 (-> db
+                               (update :form (fn [{:keys [selected-language]}]
+                                               (cond-> form
+                                                       (some? selected-language)
+                                                       (assoc :selected-language selected-language))))
+                               (assoc-in [:application :answers] (create-initial-answers form))
+                               (assoc-in [:application :selected-hakukohteet] selected-hakukohde)
+                               (assoc :wrapper-sections (extract-wrapper-sections form)))]
+    {:db             db
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
      :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
-     :dispatch [:application/set-followup-visibility-to-false]}))
+     :dispatch       [:application/set-followup-visibility-to-false]}))
 
 (reg-event-db
   :flasher

@@ -29,14 +29,10 @@
 
 (defn fetch-form-by-hakukohde-oid
   [tarjonta-service hakukohde-oid]
-  (let [hakukohde     (.get-hakukohde tarjonta-service hakukohde-oid)
-        haku-oid      (:hakuOid hakukohde)
-        haku          (when haku-oid (.get-haku tarjonta-service haku-oid))
-        tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-hakukohde tarjonta-service hakukohde-oid)
-        form-key      (:form-key hakukohde)
-        form          (when form-key (fetch-form-by-key form-key))]
-    (when (and hakukohde (not haku))
-      (throw (Exception. (str "No haku found for hakukohde" hakukohde-oid))))
-    (if form
-      (merge form tarjonta-info)
-      (warn "could not find local form for hakukohde" hakukohde-oid "with key" form-key))))
+  (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
+        form      (fetch-form-by-haku-oid tarjonta-service (:hakuOid hakukohde))]
+    (when form
+      (assoc-in
+        form
+        [:tarjonta :default-hakukohde]
+        (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde)))))
