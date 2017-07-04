@@ -824,7 +824,12 @@ and (max-width: @desktop-content-width) {
   }
 }
 
+.application__hakukohde-selected-list {
+  margin-right: 30px;
+}
+
 .application__hakukohde-selection-search-container {
+  margin: 30px 0;
   border: 1px solid @separator-color;
   box-shadow: @modal-shadow;
   padding: 20px;
@@ -835,8 +840,32 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row {
-  margin: 10px 0;
+  padding: 20px 0;
+  position: relative;
+  border-bottom: 1px solid @separator-color;
 }
+
+.application__hakukohde-row-text-container {
+  padding-right: 120px;
+}
+
+.application__hakukohde-row-button-container {
+  position: absolute;
+  right: 20px;
+  top: 25px;
+}
+
+.application__hakukohde-selected-check {
+  color: @sg-gray-lighten-3;
+}
+
+.application__hakukohde-select-button {
+  border-radius: 3px;
+  padding: 5px 20px;
+  color: @white;
+  background-color: @pale-blue;
+}
+
 
 .application-feedback-form {
   animation: slide-from-bottom 1s;

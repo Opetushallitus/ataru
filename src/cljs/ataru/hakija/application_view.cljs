@@ -77,18 +77,19 @@
   [hakukohde]
   ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
   [:div.application__hakukohde-row
-   [:div.application__hakukohde-selected-row-header
-    ; TODO support other languages
-    (-> hakukohde :name :fi)]
-   [:div.application__hakukohde-selected-row-description
-    (koulutus/koulutukset->str (:koulutukset hakukohde))]
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+     ; TODO support other languages
+     (-> hakukohde :name :fi)]
+    [:div.application__hakukohde-selected-row-description
+     (koulutus/koulutukset->str (:koulutukset hakukohde))]]
    [:div.application__hakukohde-row-button-container
     [:a.application__hakukohde-remove-link
      {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
      "Poista"]]])
 
 (defn- search-hit-hakukohde-row
-  [hakukohde]
+  [hakukohde is-selected]
   ^{:key (str "found-hakukohde-row-" (:oid hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -98,16 +99,20 @@
     [:div.application__hakukohde-selected-row-description
      (koulutus/koulutukset->str (:koulutukset hakukohde))]]
    [:div.application__hakukohde-row-button-container
-    [:a.application__hakukohde-select-button
-     {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
-     "Lisää"]]])
+    (if is-selected
+      [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+      [:a.application__hakukohde-select-button
+       {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
+       "Lisää"])]])
 
 (defn- hakukohde-selection
   [form selected-hakukohteet hakukohde-query]
-
   (let [tarjonta                (:tarjonta form)
         hakukohteet             (:hakukohteet tarjonta)
         query-pattern           (re-pattern (str "(?i)" hakukohde-query))
+        selected-hakukohde-oids (->> selected-hakukohteet
+                                     (map :oid)
+                                     (set))
         search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
@@ -118,16 +123,19 @@
       (if multiple-hakukohde?
         "Hakemasi koulutukset"
         "Hakemasi koulutus")]
-     (into
-       [:div.application__hakukohde-selected-list]
-       (map selected-hakukohde-row selected-hakukohteet))
+     (if (pos? (count selected-hakukohteet))
+       (into
+         [:div.application__hakukohde-selected-list]
+         (map selected-hakukohde-row selected-hakukohteet))
+       [:div.application__hakukohde-none-selected
+        "Ei valittuja hakukohteita"])
      [:div.application__hakukohde-selection-search-container
       [:input.application__hakukohde-selection-search-input.application__form-text-input
        {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
         :placeholder "Etsi tämän haun koulutuksia"}]
       (into
         [:div.application__hakukohde-selection-search-results
-         (map search-hit-hakukohde-row search-hit-hakukohteet)])]]))
+         (map #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %))) search-hit-hakukohteet)])]]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
