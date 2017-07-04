@@ -521,11 +521,13 @@
                   (assoc-in [:application :answers (keyword component-id) :valid] false)
                   (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                     {:status :deleting
-                     :valid  false}))]
-      {:db   db
-       :http {:method  :delete
-              :url     (str "/hakemus/api/files/" key)
-              :handler [:application/handle-attachment-delete field-descriptor component-id key]}})))
+                     :valid  false}))
+          db-and-fx {:db db}]
+      (if (get-in db [:application :editing?])
+        (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id key])
+        (assoc db-and-fx :http {:method  :delete
+                                :url     (str "/hakemus/api/files/" key)
+                                :handler [:application/handle-attachment-delete field-descriptor component-id key]})))))
 
 (reg-event-db
   :application/remove-attachment-error
@@ -533,3 +535,43 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values] autil/remove-nth attachment-idx)
         (update-attachment-answer-validity field-descriptor component-id))))
+
+(reg-event-db
+  :application/rating-hover
+  (fn [db [_ star-number]]
+    (assoc-in db [:application :feedback :star-hovered] star-number)))
+
+(reg-event-db
+  :application/rating-submit
+  (fn [db [_ star-number]]
+    (-> db
+        (assoc-in [:application :feedback :stars] star-number)
+        (assoc-in [:application :feedback :status] :rating-given))))
+
+(reg-event-db
+  :application/rating-update-feedback
+  (fn [db [_ feedback-text]]
+    (assoc-in db [:application :feedback :text] feedback-text)))
+
+(reg-event-fx
+  :application/rating-feedback-submit
+  (fn [{:keys [db]}]
+    (let [new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
+          feedback  (-> db :application :feedback)
+          text      (:text feedback)
+          post-data {:form-key   (-> db :form :key)
+                     :form-id    (-> db :form :id)
+                     :form-name  (-> db :form :name)
+                     :user-agent (.-userAgent js/navigator)
+                     :rating     (:stars feedback)
+                     :feedback   (when text
+                                   (subs text 0 2000))}]
+      {:db   new-db
+       :http {:method    :post
+              :post-data post-data
+              :url       "/hakemus/api/feedback"}})))
+
+(reg-event-db
+  :application/rating-form-toggle
+  (fn [db _]
+    (update-in db [:application :feedback :hidden?] not)))

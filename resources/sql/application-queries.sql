@@ -382,3 +382,8 @@ FROM latest_applications la
   JOIN latest_forms lf ON lf.key = la.form_key
   JOIN forms f ON f.id = lf.max_id
 GROUP BY f.name, f.key;
+
+-- name: yesql-add-application-feedback<!
+INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
+VALUES
+  (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);

@@ -573,10 +573,8 @@ textarea.application__form-text-area__size-large {
   color: @white;
 }
 
-.application__form-checkbox:checked + label::before {
-  content: url('../../images/icon_check.png');
-  margin-bottom: 2px;
-  margin-right: 6px;
+.application__form-multi-choice-followups-outer-container {
+  position: relative;
 }
 
 .application__form-multi-choice-followups-container {
@@ -586,11 +584,16 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   padding: 20px;
   position: relative;
+  max-width: 600px;
 }
 
 .application__form-multi-choice-followups-container .application__form-field {
   margin-left: 0px;
   width: 100%;
+}
+
+.application__form-multi-choice-followups-container .application__form-field:last-child {
+  margin-bottom: 0;
 }
 
 .application__form-multi-choice-followups-container .application__form-text-input__size-large,.application__form-text-area {
@@ -606,6 +609,7 @@ textarea.application__form-text-area__size-large {
   border-top: 9px solid @section-header-text;
   top: -1px;
   left: 52px;
+  z-index: 1;
 }
 
 .application__readonly-adjacent{
@@ -641,6 +645,22 @@ th.application__readonly-adjacent--header {
   min-width: 100px;
 }
 
+.application__form-single-choice-followups-indicator {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 9px solid @section-header-text;
+  top: 43px;
+  left: 40px;
+  z-index: 1;
+}
+
+.application__form-single-choice-button-inner-container {
+  position: relative;
+}
+
 .application__form-single-choice-button-inner-container:first-child label {
   border-radius: 3px 0 0 3px;
 }
@@ -656,14 +676,6 @@ th.application__readonly-adjacent--header {
 .application__form-single-choice-button:checked + label {
   color: @white;
   background-color: @section-header-text;
-}
-
-.application__form-single-choice-button:checked + label::before {
-  content: url('/hakemus/images/icon_check.png');
-  margin-bottom: 2px;
-  margin-right: 6px;
-  margin-left: -20px;
-  padding-left: 7px;
 }
 
 .application__form-adjacent-text-fields-wrapper {
@@ -763,6 +775,14 @@ and (max-width: @desktop-content-width) {
     margin-right: 10px;
   }
 
+  .application__form-multi-choice-followups-container
+  .application__form-text-input__size-large,
+  .application__form-text-area__size-small,
+  .application__form-text-area__size-medium,
+  .application__form-text-area__size-large {
+    margin-right: 0;
+  }
+
   .application__form-adjacent-text-fields-wrapper {
     flex-flow: column wrap;
     margin-bottom: 20px;
@@ -777,7 +797,157 @@ and (max-width: @desktop-content-width) {
   .application__form-adjacent-row--desktop-only {
     display: none;
   }
+  .application__form-multi-choice-followups-container {
+    margin-right: 10px;
+  }
 }
+
+@keyframes slide-from-bottom {
+  0% {
+    bottom: -200px;
+  }
+
+  100% {
+    bottom: 20px;
+  }
+}
+
+@media only screen and (max-width: @desktop-content-width) {
+  @keyframes slide-from-bottom {
+    0% {
+      bottom: -200px;
+    }
+
+    100% {
+      bottom: 0;
+    }
+  }
+}
+
+.application-feedback-form {
+  animation: slide-from-bottom 1s;
+  bottom: 20px;
+  position: fixed;
+  left: 10%;
+  right: 10%;
+  padding: 10px 20px;
+  background-color: @white;
+  border: 1px solid @separator-color;
+  box-shadow: @modal-shadow;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+.application-feedback-form__close-button {
+  position: absolute;
+  right: 20px;
+  color: @gray-of-the-beast;
+  font-size: 1.5em;
+}
+
+.application-feedback-form__header {
+  .semibold;
+  margin: 10px 0;
+}
+
+.application-feedback-form__disclaimer {
+  color: @sg-gray-lighten-3;
+  font-style: italic;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.application-feedback-form__rating-container {
+  animation-delay: 0.2s;
+}
+
+.application-feedback-form__rating-star {
+  font-size: 4em;
+  cursor: pointer;
+  padding: 0 3px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    font-size: 3em;
+  }
+}
+
+.application-feedback-form__rating-star--inactive {
+  color: @sg-gray-lighten-3;
+}
+
+.application-feedback-form__rating-star--active {
+  color: @gold;
+}
+
+.application-feedback-form__rating-text {
+  color: @gold;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.application-feedback-form-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  .placeholder-color();
+}
+
+.application-feedback-form-container textarea {
+  height: 100px;
+  padding: 10px;
+}
+
+.application-feedback-form__text-feedback-container {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.application__send-feedback-button {
+  align-items: center;
+  border-radius: 3px;
+  display: flex;
+  height: 41px;
+  justify-content: center;
+  padding: 0 30px;
+  color: @white;
+}
+
+.application__send-feedback-button--disabled {
+  background-color: @sg-gray-lighten-3;
+}
+
+.application__send-feedback-button--enabled {
+  background-color: @pale-blue;
+
+  &:hover {
+    background-color: @button-blue;
+  }
+}
+
+.application__thanks {
+  color: @opintopolku-green;
+}
+
+.application__thanks-text {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 24px;
+}
+
+.application__thanks-icon {
+  margin-right: 10px;
+  font-size: 2em;
+}
+
 
 @media print {
   .application__banner-container {
@@ -797,3 +967,4 @@ and (max-width: @desktop-content-width) {
 .application__form-add-new-row {
   font-size: 14px;
 }
+

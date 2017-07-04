@@ -19,6 +19,10 @@
                                                                        scroll-to-anchor]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
+(defn- multiple-choice-with-koodisto [field-descriptor]
+  (and (= (:fieldType field-descriptor) "multipleChoice")
+       (contains? field-descriptor :koodisto-source)))
+
 (defn text [field-descriptor application lang]
   (let [answer ((answer-key field-descriptor) (:answers application))]
     [:div.application__form-field
@@ -30,7 +34,7 @@
         (let [repeatable?  (-> field-descriptor :params :repeatable)
               values       (if repeatable? (map :value (:values answer)) (:value answer))
               multi-value? (and
-                             (not= "multipleChoice" (:fieldType field-descriptor))
+                             (not (multiple-choice-with-koodisto field-descriptor))
                              (or (seq? values) (vector? values)))]
           (cond
             multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
@@ -54,14 +58,6 @@
   (for [child children
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
     [field child application lang]))
-
-(defn- person-info-uneditable-wrapper [content lang]
-  [:div.application__wrapper-element.application__wrapper-element--border
-   [:div.application__wrapper-heading
-    [:h2 (-> content :label lang)]
-    [scroll-to-anchor content]]
-   [:div.application__form-field
-    [:div.application__form-field--person-info-note (:cannot-edit-personal-info (get-translations lang application-view-translations))]]])
 
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -145,7 +141,7 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice") :options (options :guard util/followups?)}
+         {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
          {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))

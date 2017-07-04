@@ -83,3 +83,28 @@ span, p {
     transform:rotate(360deg);
   }
 }
+
+.placeholder-color(@color: @sg-color-gray-2) {
+  ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color:    @color;
+    font-style: italic;
+  }
+  :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color:    @color;
+    opacity:  1;
+    font-style: italic;
+  }
+  ::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color:    @color;
+    opacity:  1;
+    font-style: italic;
+  }
+  :-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color:    @color;
+    font-style: italic;
+  }
+  ::-ms-input-placeholder { /* Microsoft Edge */
+    color:    @color;
+    font-style: italic;
+  }
+}

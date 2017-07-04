@@ -19,6 +19,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
+            [ataru.statistics.statistics-service :as statistics-service]
             [cheshire.core :as json]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -283,7 +284,14 @@
                        (header (ok (:body file-response))
                                "Content-Disposition"
                                (:content-disposition file-response))
-                       (not-found))))))
+                       (not-found))))
+
+                 (api/context "/statistics" []
+                   :tags ["statistics-api"]
+                   (api/GET "/applications/:time-period" []
+                            :path-params [time-period :- (api/describe (s/enum "month" "week" "day") "One of: month, week, day")]
+                            :summary "Get info about number of submitted applications for past time period"
+                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))))
 
 (api/defroutes resource-routes
   (api/undocumented
@@ -334,6 +342,11 @@
     ;; and verify that it works on test environment as well.
     (api/GET "/lomake-editori" [] (redirect-to-service-url))))
 
+(api/defroutes dashboard-routes
+  (api/undocumented
+    (api/GET "/dashboard" []
+      (render-file-in-dev "templates/dashboard.html"))))
+
 (defrecord Handler []
   component/Lifecycle
 
@@ -362,6 +375,7 @@
                               resource-routes
                               (api/context "/lomake-editori" []
                                 test-routes
+                                dashboard-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
                                                  auth-middleware/with-authentication]
