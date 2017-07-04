@@ -226,6 +226,8 @@
                                    (some? hakukohde-name)
                                    (assoc :hakukohde-name hakukohde-name))))
                  (assoc-in [:application :answers] (create-initial-answers form))
+                 ; TODO support for default hakukohde when loading page via /hakukohde/:oid
+                 (assoc-in [:application :selected-hakukohteet] #{})
                  (assoc :wrapper-sections (extract-wrapper-sections form)))]
 
     {:db               db
@@ -584,3 +586,18 @@
   :application/rating-form-toggle
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(reg-event-db
+  :application/hakukohde-query-change
+  (fn [db [_ value]]
+    (assoc-in db [:application :hakukohde-query] value)))
+
+(reg-event-db
+  :application/hakukohde-add-selection
+  (fn [db [_ hakukohde]]
+    (update-in db [:application :selected-hakukohteet] conj hakukohde)))
+
+(reg-event-db
+  :application/hakukohde-remove-selection
+  (fn [db [_ hakukohde]]
+    (update-in db [:application :selected-hakukohteet] (fn [s] (remove #(= (:oid hakukohde) (:oid %)) s)))))

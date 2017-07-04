@@ -24,38 +24,36 @@
 (def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
-  (let [selected-lang     (:selected-language form)
-        languages         (filter
-                            (partial not= selected-lang)
-                            (:languages form))
-        submit-status     (subscribe [:state-query [:application :submit-status]])
-        application       (subscribe [:state-query [:application]])
-        secret            (:modify (util/extract-query-params))
+  (let [selected-lang    (:selected-language form)
+        languages        (filter
+                           (partial not= selected-lang)
+                           (:languages form))
+        submit-status    (subscribe [:state-query [:application :submit-status]])
+        application      (subscribe [:state-query [:application]])
+        secret           (:modify (util/extract-query-params))
 
-        hakukohde-name    (-> form :tarjonta :haku-name)
-        haku-tarjoja-name "FIXME"                           ; TODO!
-        koulutukset-str   (koulutus/koulutukset->str (-> form :tarjonta :koulutukset))
-        apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
-        apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
-        hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
+        haku-name        (-> form :tarjonta :haku-name)
+        apply-start-date (-> form :tarjonta :hakuaika-dates :start)
+        apply-end-date   (-> form :tarjonta :hakuaika-dates :end)
+        hakuaika-on      (-> form :tarjonta :hakuaika-dates :on)
 
-        translations      (get-translations
+        translations     (get-translations
                            (keyword selected-lang)
                            translations/application-view-translations)
-        apply-dates       (when hakukohde-name
-                            (if (and apply-start-date apply-end-date)
-                              (str (:application-period translations)
-                                   ": "
-                                   (unparse date-format (from-long apply-start-date))
-                                   " - "
-                                   (unparse date-format (from-long apply-end-date))
-                                   (when-not hakuaika-on
-                                     (str " (" (:not-within-application-period translations) ")")))
-                              (:continuous-period translations)))]
+        apply-dates      (when haku-name
+                           (if (and apply-start-date apply-end-date)
+                             (str (:application-period translations)
+                                  ": "
+                                  (unparse date-format (from-long apply-start-date))
+                                  " - "
+                                  (unparse date-format (from-long apply-end-date))
+                                  (when-not hakuaika-on
+                                    (str " (" (:not-within-application-period translations) ")")))
+                             (:continuous-period translations)))]
     (fn [form]
       [:div
        [:div.application__header-container
-        [:span.application__header (or hakukohde-name (:name form))]
+        [:span.application__header (or haku-name (:name form))]
         (when (and (not= :submitted @submit-status)
                    (> (count languages) 0)
                    (nil? secret))
@@ -67,15 +65,69 @@
                                   (> (dec (count languages)) idx)
                                   (conj [:span.application__header-language-link-separator " | "])))
                         languages)])]
-       (when (and haku-tarjoja-name apply-dates)
+       (when apply-dates
          [:div.application__sub-header-container
-          (when-not (string/blank? koulutukset-str) [:div.application__sub-header-koulutus koulutukset-str])
-          [:span.application__sub-header-organization haku-tarjoja-name]
           [:span.application__sub-header-dates apply-dates]])
        (when (application-in-complete-state? @application)
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
+
+(defn- selected-hakukohde-row
+  [hakukohde]
+  ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-selected-row-header
+    ; TODO support other languages
+    (-> hakukohde :name :fi)]
+   [:div.application__hakukohde-selected-row-description
+    (koulutus/koulutukset->str (:koulutukset hakukohde))]
+   [:div.application__hakukohde-row-button-container
+    [:a.application__hakukohde-remove-link
+     {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
+     "Poista"]]])
+
+(defn- search-hit-hakukohde-row
+  [hakukohde]
+  ^{:key (str "found-hakukohde-row-" (:oid hakukohde))}
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+     ; TODO support other languages
+     (-> hakukohde :name :fi)]
+    [:div.application__hakukohde-selected-row-description
+     (koulutus/koulutukset->str (:koulutukset hakukohde))]]
+   [:div.application__hakukohde-row-button-container
+    [:a.application__hakukohde-select-button
+     {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
+     "Lisää"]]])
+
+(defn- hakukohde-selection
+  [form selected-hakukohteet hakukohde-query]
+
+  (let [tarjonta                (:tarjonta form)
+        hakukohteet             (:hakukohteet tarjonta)
+        query-pattern           (re-pattern (str "(?i)" hakukohde-query))
+        search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
+                                  ; TODO support other languages
+                                  (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
+                                  [])
+        multiple-hakukohde?     (< 1 (count (:hakukohteet tarjonta)))]
+    [:div.application__hakukohde-selection
+     [:h3.application__hakukohde-selection-header
+      (if multiple-hakukohde?
+        "Hakemasi koulutukset"
+        "Hakemasi koulutus")]
+     (into
+       [:div.application__hakukohde-selected-list]
+       (map selected-hakukohde-row selected-hakukohteet))
+     [:div.application__hakukohde-selection-search-container
+      [:input.application__hakukohde-selection-search-input.application__form-text-input
+       {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+        :placeholder "Etsi tämän haun koulutuksia"}]
+      (into
+        [:div.application__hakukohde-selection-search-results
+         (map search-hit-hakukohde-row search-hit-hakukohteet)])]]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -88,17 +140,25 @@
       (if (= :submitted @submit-status)
         [readonly-fields form]
         (do
-          (dispatch [:application/run-rule])
+          (dispatch [:application/run-rule])                ; wtf
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form       (subscribe [:state-query [:form]])
-        can-apply? (subscribe [:application/can-apply?])]
+  (let [form                 (subscribe [:state-query [:form]])
+        can-apply?           (subscribe [:application/can-apply?])
+        selected-hakukohteet (subscribe [:state-query [:application :selected-hakukohteet]])
+        hakukohde-query      (subscribe [:state-query [:application :hakukohde-query]])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
+
+       (when (pos? (count (-> @form :tarjonta :hakukohteet)))
+         ^{:key "application-hakukohde-selection"}
+         [hakukohde-selection @form @selected-hakukohteet @hakukohde-query])
+
        (when @can-apply?
+         ^{:key "form-fields"}
          [render-fields @form])])))
 
 (defn- star-number-from-event
