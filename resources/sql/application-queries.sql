@@ -178,6 +178,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.haku,
   a.hakukohde,
   a.person_oid,
   ar.state  AS state,
@@ -186,7 +187,7 @@ FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
 WHERE state IN (:filtered_states)
-      AND a.hakukohde = :hakukohde_oid;
+      AND :hakukohde_oid = ANY (a.hakukohde);
 
 -- name: yesql-get-applications-for-haku
 -- Get applications for form-key/haku
