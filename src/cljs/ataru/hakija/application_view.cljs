@@ -81,7 +81,7 @@
     "Poista"]])
 
 (defn- selected-hakukohde-row
-  [hakukohde multiple-hakukohde?]
+  [hakukohde multiple-hakukohde? submitted?]
   ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -90,7 +90,7 @@
      (-> hakukohde :name :fi)]
     [:div.application__hakukohde-selected-row-description
      (koulutus/koulutukset->str (:koulutukset hakukohde))]]
-   (when multiple-hakukohde?
+   (when (and multiple-hakukohde? (not submitted?))
      (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
@@ -131,7 +131,7 @@
         search-hit-hakukohteet)])]))
 
 (defn- hakukohde-selection
-  [hakukohteet selected-hakukohteet hakukohde-query]
+  [hakukohteet selected-hakukohteet hakukohde-query submitted?]
   (let [multiple-hakukohde? (< 1 (count hakukohteet))]
     [:div.application__hakukohde-selection
      [:h3.application__hakukohde-selection-header
@@ -141,10 +141,10 @@
      (if (pos? (count selected-hakukohteet))
        (into
          [:div.application__hakukohde-selected-list]
-         (map #(selected-hakukohde-row % multiple-hakukohde?) selected-hakukohteet))
+         (map #(selected-hakukohde-row % multiple-hakukohde? submitted?) selected-hakukohteet))
        [:div.application__hakukohde-none-selected
         "Ei valittuja hakukohteita"])
-     (when multiple-hakukohde?
+     (when (and multiple-hakukohde? (not submitted?))
        (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
 
 (defn readonly-fields [form]
@@ -164,6 +164,7 @@
 (defn application-contents []
   (let [form                 (subscribe [:state-query [:form]])
         can-apply?           (subscribe [:application/can-apply?])
+        submit-status        (subscribe [:state-query [:application :submit-status]])
         hakukohteet          (subscribe [:state-query [:form :tarjonta :hakukohteet]])
         selected-hakukohteet (subscribe [:state-query [:application :selected-hakukohteet]])
         hakukohde-query      (subscribe [:state-query [:application :hakukohde-query]])]
@@ -174,7 +175,11 @@
 
        (when (pos? (count @hakukohteet))
          ^{:key "application-hakukohde-selection"}
-         [hakukohde-selection @hakukohteet @selected-hakukohteet @hakukohde-query])
+         [hakukohde-selection
+          @hakukohteet
+          @selected-hakukohteet
+          @hakukohde-query
+          (= :submitted @submit-status)])
 
        (when @can-apply?
          ^{:key "form-fields"}
