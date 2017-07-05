@@ -106,7 +106,7 @@
        {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
        "Lisää"])]])
 
-(defn- hakukohde-selection
+(defn- hakukohde-selection-search
   [hakukohteet selected-hakukohteet hakukohde-query]
   (let [query-pattern           (re-pattern (str "(?i)" hakukohde-query))
         selected-hakukohde-oids (->> selected-hakukohteet
@@ -115,8 +115,20 @@
         search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
-                                  [])
-        multiple-hakukohde?     (< 1 (count hakukohteet))]
+                                  [])]
+    [:div.application__hakukohde-selection-search-container
+     [:input.application__hakukohde-selection-search-input.application__form-text-input
+      {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+       :placeholder "Etsi tämän haun koulutuksia"}]
+     (into
+      [:div.application__hakukohde-selection-search-results
+       (map
+        #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %)))
+        search-hit-hakukohteet)])]))
+
+(defn- hakukohde-selection
+  [hakukohteet selected-hakukohteet hakukohde-query]
+  (let [multiple-hakukohde? (< 1 (count hakukohteet))]
     [:div.application__hakukohde-selection
      [:h3.application__hakukohde-selection-header
       (if multiple-hakukohde?
@@ -129,15 +141,7 @@
        [:div.application__hakukohde-none-selected
         "Ei valittuja hakukohteita"])
      (when multiple-hakukohde?
-       [:div.application__hakukohde-selection-search-container
-        [:input.application__hakukohde-selection-search-input.application__form-text-input
-         {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
-          :placeholder "Etsi tämän haun koulutuksia"}]
-        (into
-          [:div.application__hakukohde-selection-search-results
-           (map
-             #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %)))
-             search-hit-hakukohteet)])])]))
+       (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
