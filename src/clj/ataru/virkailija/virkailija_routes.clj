@@ -345,7 +345,7 @@
 (api/defroutes dashboard-routes
   (api/undocumented
     (api/GET "/dashboard" []
-      (render-file-in-dev "templates/dashboard.html"))))
+      (selmer/render-file "templates/dashboard.html" {}))))
 
 (defrecord Handler []
   component/Lifecycle
