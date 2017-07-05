@@ -73,6 +73,13 @@
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
 
+(defn- selected-hakukohde-row-remove
+  [hakukohde]
+  [:div.application__hakukohde-row-button-container
+   [:a.application__hakukohde-remove-link
+    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
+    "Poista"]])
+
 (defn- selected-hakukohde-row
   [hakukohde multiple-hakukohde?]
   ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
@@ -84,10 +91,7 @@
     [:div.application__hakukohde-selected-row-description
      (koulutus/koulutukset->str (:koulutukset hakukohde))]]
    (when multiple-hakukohde?
-     [:div.application__hakukohde-row-button-container
-      [:a.application__hakukohde-remove-link
-       {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
-       "Poista"]])])
+     (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
   [hakukohde selected?]
