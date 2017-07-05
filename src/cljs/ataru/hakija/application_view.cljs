@@ -173,7 +173,8 @@
        ^{:key (:id @form)}
        [application-header @form]
 
-       (when (pos? (count @hakukohteet))
+       (when (and @can-apply?
+                  (pos? (count @hakukohteet)))
          ^{:key "application-hakukohde-selection"}
          [hakukohde-selection
           @hakukohteet
