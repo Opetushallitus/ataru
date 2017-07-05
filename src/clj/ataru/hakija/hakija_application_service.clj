@@ -25,9 +25,10 @@
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
-  (if (not (:hakukohde application))
+  (if (empty? (:selected-hakukohteet application))
     true ;; plain form, always allowed to apply
-    (let [hakukohde         (.get-hakukohde tarjonta-service (:hakukohde application))
+    ; TODO check apply times for each hakukohde separately?
+    (let [hakukohde         (.get-hakukohde tarjonta-service (first (:selected-hakukohteet application)))
           haku-oid          (:hakuOid hakukohde)
           haku              (when haku-oid (.get-haku tarjonta-service haku-oid))
           {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
@@ -92,6 +93,10 @@
                              application)
         validation-result  (validator/valid-application? final-application form)]
     (cond
+      (and (:haku application)
+           (empty? (:hakukohde application)))
+      {:passed? false :failures ["Hakukohde must be specified"]}
+
       (not allowed)
       not-allowed-reply
 

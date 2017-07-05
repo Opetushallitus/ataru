@@ -225,7 +225,6 @@
                              (if default-hakukohde
                                (set [default-hakukohde])
                                #{}))
-        _ (println "sel" default-hakukohde selected-hakukohde)
         db                 (-> db
                                (update :form (fn [{:keys [selected-language]}]
                                                (cond-> form

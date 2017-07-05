@@ -3,7 +3,7 @@
 INSERT INTO applications
 (form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn, dob, email)
 VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn, :dob, :email);
+  (:form_id, :key, :content, :lang, :preferred_name, :last_name, ARRAY[:hakukohde], :haku, :secret, :person_oid, :ssn, :dob, :email);
 
 -- name: yesql-get-application-list-by-form
 SELECT
