@@ -295,6 +295,19 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
+(defn- hakukohteet-list-row [hakukohde]
+  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
+  [:li.application-handling__hakukohteet-list-row
+   [:div.application-handling__review-area-hakukohde-heading
+                                        ; TODO support other languages
+    (-> hakukohde :name :fi)]
+   [:div.application-handling__review-area-koulutus-heading
+    (koulutus/koulutukset->str (:koulutukset hakukohde))]])
+
+(defn- hakukohteet-list [hakukohteet]
+  (into [:ul.application-handling__hakukohteet-list]
+        (map hakukohteet-list-row hakukohteet)))
+
 (defn application-heading [application]
   (let [answers            (:answers application)
         pref-name          (-> answers :preferred-name :value)
@@ -302,6 +315,7 @@
         ssn                (get-in answers [:ssn :value])
         email              (get-in answers [:email :value])
         birth-date         (get-in answers [:birth-date :value])
+        hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
         hakukohde-name     (-> application :tarjonta :hakukohde-name)
         applications-count (:applications-count application)
         person-oid         (:person-oid application)
@@ -318,12 +332,8 @@
                                  "/lomake-editori/applications/search/"
                                  [:application/search-by-term (or ssn email)]]))}
          (str applications-count " hakemusta")])]
-     (when-not (string/blank? hakukohde-name)
-       [:div.application-handling__review-area-hakukohde-heading hakukohde-name])
-     (when-not (or
-                 (= hakukohde-name koulutus-info)
-                 (string/blank? koulutus-info))
-       [:div.application-handling__review-area-koulutus-heading koulutus-info])]))
+     (when-not (empty? (:hakukohde application))
+       (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]))
 
 (defn close-application []
   [:a {:href     "#"
