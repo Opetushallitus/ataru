@@ -154,6 +154,13 @@
         (if-let [resp (file-store/delete-file key)]
           (response/ok resp)
           (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
+    (api/context "/secure" []
+      :tags ["secure-application-api"]
+      (api/GET "/applications/:person-oid" []
+        :summary "Get latest versions of every application belonging to a user with given person OID"
+        :path-params [person-oid :- (api/describe s/Str "Person OID")]
+        :return [ataru-schema/ApplicationInfo]
+        (response/ok (application-store/get-full-application-list-by-person-oid person-oid))))
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]
@@ -180,7 +187,8 @@
                                             :data {:info {:version     "1.0.0"
                                                           :title       "Ataru Hakija API"
                                                           :description "Specifies the Hakija API for Ataru"}}
-                                            :tags [{:name "application-api" :description "Application handling"}]}
+                                            :tags [{:name "application-api" :description "Application handling"}
+                                                   {:name "secure-application-api" :description "Secure application handling"}]}
                                :exceptions {:handlers {::ex/request-parsing
                                                        (ex/with-logging ex/request-parsing-handler :warn)
                                                        ::ex/request-validation
