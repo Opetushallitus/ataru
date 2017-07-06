@@ -120,24 +120,26 @@
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
                                   [])]
-    [:div.application__hakukohde-selection-search-container
-     [:div.application__hakukohde-selection-search-input.application__form-text-input-box
-      [:input.application__form-text-input-in-box
-       {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
-        :placeholder "Etsi tämän haun koulutuksia"
-        :value hakukohde-query}]
-      (when (not (empty? hakukohde-query))
-        [:div.application__form-clear-text-input-in-box
-         {:on-click #(dispatch [:application/hakukohde-query-clear])}
-         [:i.zmdi.zmdi-close]])]
-     (into
-      [:div.application__hakukohde-selection-search-results
-       (map
-        #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %)))
-        search-hit-hakukohteet)])]))
+    [:div
+     [:div.application__hakukohde-selection-search-arrow-up]
+     [:div.application__hakukohde-selection-search-container
+      [:div.application__hakukohde-selection-search-input.application__form-text-input-box
+       [:input.application__form-text-input-in-box
+        {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+         :placeholder "Etsi tämän haun koulutuksia"
+         :value hakukohde-query}]
+       (when (not (empty? hakukohde-query))
+         [:div.application__form-clear-text-input-in-box
+          {:on-click #(dispatch [:application/hakukohde-query-clear])}
+          [:i.zmdi.zmdi-close]])]
+      (into
+       [:div.application__hakukohde-selection-search-results
+        (map
+         #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %)))
+         search-hit-hakukohteet)])]]))
 
 (defn- hakukohde-selection
-  [hakukohteet selected-hakukohteet hakukohde-query submitted?]
+  [hakukohteet selected-hakukohteet hakukohde-query submitted? show-hakukohde-search?]
   (let [multiple-hakukohde? (< 1 (count hakukohteet))]
     [:div.application__hakukohde-selection
      [:h3.application__hakukohde-selection-header
@@ -150,7 +152,10 @@
          (map #(selected-hakukohde-row % multiple-hakukohde? submitted?) selected-hakukohteet))
        [:div.application__hakukohde-none-selected
         "Ei valittuja hakukohteita"])
-     (when (and multiple-hakukohde? (not submitted?))
+     [:div.application__hakukohde-selection-open-search
+      {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+      "Lisää hakukohde"]
+     (when show-hakukohde-search?
        (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
 
 (defn readonly-fields [form]
@@ -168,12 +173,13 @@
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form                 (subscribe [:state-query [:form]])
-        can-apply?           (subscribe [:application/can-apply?])
-        submit-status        (subscribe [:state-query [:application :submit-status]])
-        hakukohteet          (subscribe [:state-query [:form :tarjonta :hakukohteet]])
-        selected-hakukohteet (subscribe [:state-query [:application :selected-hakukohteet]])
-        hakukohde-query      (subscribe [:state-query [:application :hakukohde-query]])]
+  (let [form                  (subscribe [:state-query [:form]])
+        can-apply?            (subscribe [:application/can-apply?])
+        submit-status         (subscribe [:state-query [:application :submit-status]])
+        hakukohteet           (subscribe [:state-query [:form :tarjonta :hakukohteet]])
+        selected-hakukohteet  (subscribe [:state-query [:application :selected-hakukohteet]])
+        show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])
+        hakukohde-query       (subscribe [:state-query [:application :hakukohde-query]])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
@@ -186,7 +192,10 @@
           @hakukohteet
           @selected-hakukohteet
           @hakukohde-query
-          (= :submitted @submit-status)])
+          (= :submitted @submit-status)
+          (and (< 1 (count @hakukohteet))
+               (not= :submitted @submit-status)
+               @show-hakukohde-search)])
 
        (when @can-apply?
          ^{:key "form-fields"}

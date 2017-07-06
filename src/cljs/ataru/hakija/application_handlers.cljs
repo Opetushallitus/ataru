@@ -232,6 +232,7 @@
                                                        (assoc :selected-language selected-language))))
                                (assoc-in [:application :answers] (create-initial-answers form))
                                (assoc-in [:application :selected-hakukohteet] selected-hakukohde)
+                               (assoc-in [:application :show-hakukohde-search] true)
                                (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db             db
      ;; Previously submitted answers must currently be merged to the app db
@@ -589,6 +590,11 @@
   :application/rating-form-toggle
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(reg-event-db
+  :application/hakukohde-search-toggle
+  (fn [db _]
+    (update-in db [:application :show-hakukohde-search] not)))
 
 (reg-event-db
   :application/hakukohde-query-change
