@@ -71,7 +71,7 @@
   [application-key session organization-service tarjonta-service]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         form             (form-store/fetch-by-id (:form bare-application))
-        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku bare-application))
+        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku bare-application) (:hakukohde bare-application))
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application (merge application tarjonta-info)

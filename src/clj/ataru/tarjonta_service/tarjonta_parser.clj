@@ -23,24 +23,23 @@
                          (map parse-koulutus))}))
 
 (defn parse-tarjonta-info-by-haku
-  [tarjonta-service haku-oid]
-  (when haku-oid
-    (let [haku          (.get-haku tarjonta-service haku-oid)
-          hakukohteet   (->> (:hakukohdeOids haku)
-                             (map #(.get-hakukohde tarjonta-service %))
-                             (map #(parse-hakukohde tarjonta-service %))
-                             (remove nil?))]
-      (when (pos? (count hakukohteet))                      ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
-        {:tarjonta
-         {:hakukohteet    hakukohteet
-          :haku-oid       haku-oid
-          :haku-name      (-> haku :nimi :kieli_fi)
-          :hakuaika-dates (hakuaika/get-hakuaika-info (first hakukohteet) haku) ; TODO take into account each hakukohde time?
-          }}))))
-
-(defn parse-tarjonta-info-by-hakukohde
-  [tarjonta-service hakukohde-oid]
-  (when hakukohde-oid
-    (let [hakukohde     (.get-hakukohde tarjonta-service hakukohde-oid)
-          haku-oid      (:hakuOid hakukohde)]
-      (parse-tarjonta-info-by-haku tarjonta-service haku-oid))))
+  ([tarjonta-service haku-oid included-hakukohde-oids]
+   (when haku-oid
+     (let [haku        (.get-haku tarjonta-service haku-oid)
+           hakukohteet (->> included-hakukohde-oids
+                            (map #(.get-hakukohde tarjonta-service %))
+                            (map #(parse-hakukohde tarjonta-service %))
+                            (remove nil?))]
+       (when (pos? (count hakukohteet))                     ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
+         {:tarjonta
+          {:hakukohteet    hakukohteet
+           :haku-oid       haku-oid
+           :haku-name      (-> haku :nimi :kieli_fi)
+           :hakuaika-dates (hakuaika/get-hakuaika-info (first hakukohteet) haku) ; TODO take into account each hakukohde time?
+           }}))))
+  ([tarjonta-service haku-oid]
+   (when haku-oid
+     (parse-tarjonta-info-by-haku tarjonta-service haku-oid (or (->> haku-oid
+                                                                     (.get-haku tarjonta-service)
+                                                                     :hakukohdeOids)
+                                                                [])))))
