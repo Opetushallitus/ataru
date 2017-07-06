@@ -121,9 +121,15 @@
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
                                   [])]
     [:div.application__hakukohde-selection-search-container
-     [:input.application__hakukohde-selection-search-input.application__form-text-input
-      {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
-       :placeholder "Etsi tämän haun koulutuksia"}]
+     [:div.application__hakukohde-selection-search-input.application__form-text-input-box
+      [:input.application__form-text-input-in-box
+       {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+        :placeholder "Etsi tämän haun koulutuksia"
+        :value hakukohde-query}]
+      (when (not (empty? hakukohde-query))
+        [:div.application__form-clear-text-input-in-box
+         {:on-click #(dispatch [:application/hakukohde-query-clear])}
+         [:i.zmdi.zmdi-close]])]
      (into
       [:div.application__hakukohde-selection-search-results
        (map

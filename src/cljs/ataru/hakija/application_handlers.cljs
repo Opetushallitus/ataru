@@ -596,6 +596,11 @@
     (assoc-in db [:application :hakukohde-query] value)))
 
 (reg-event-db
+  :application/hakukohde-query-clear
+  (fn [db _]
+    (assoc-in db [:application :hakukohde-query] "")))
+
+(reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde]]
     (update-in db [:application :selected-hakukohteet] conj hakukohde)))
