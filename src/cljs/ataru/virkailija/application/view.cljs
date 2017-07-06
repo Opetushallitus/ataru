@@ -297,16 +297,18 @@
 
 (defn- hakukohteet-list-row [hakukohde]
   ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
-  [:li.application-handling__hakukohteet-list-row
-   [:div.application-handling__review-area-hakukohde-heading
-                                        ; TODO support other languages
-    (-> hakukohde :name :fi)]
-   [:div.application-handling__review-area-koulutus-heading
-    (koulutus/koulutukset->str (:koulutukset hakukohde))]])
+  [:div.application__form-field
+   [:div.application-handling__hakukohde-wrapper
+    [:div.application-handling__review-area-hakukohde-heading (-> hakukohde :name :fi)]
+    [:div.application-handling__review-area-koulutus-heading (koulutus/koulutukset->str (:koulutukset hakukohde))]]])
 
 (defn- hakukohteet-list [hakukohteet]
-  (into [:ul.application-handling__hakukohteet-list]
-        (map hakukohteet-list-row hakukohteet)))
+  [:div.application__readonly-container
+   [:div.application__wrapper-element.application__wrapper-element--border
+    [:div.application__wrapper-heading [:h2 "Hakukohteet"]]
+    [:div.application__wrapper-contents
+     (into [:div]
+           (map hakukohteet-list-row hakukohteet))]]])
 
 (defn application-heading [application]
   (let [answers            (:answers application)
@@ -315,11 +317,8 @@
         ssn                (get-in answers [:ssn :value])
         email              (get-in answers [:email :value])
         birth-date         (get-in answers [:birth-date :value])
-        hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
-        hakukohde-name     (-> application :tarjonta :hakukohde-name)
         applications-count (:applications-count application)
-        person-oid         (:person-oid application)
-        koulutus-info      (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
+        person-oid         (:person-oid application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", "
@@ -331,9 +330,7 @@
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search/"
                                  [:application/search-by-term (or ssn email)]]))}
-         (str applications-count " hakemusta")])]
-     (when-not (empty? (:hakukohde application))
-       (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]))
+         (str applications-count " hakemusta")])]]))
 
 (defn close-application []
   [:a {:href     "#"
@@ -353,17 +350,22 @@
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])]
     (fn [applications]
-      (when (and (included-in-filter @review-state @application-filter)
-                 (belongs-to-current-form @selected-key applications)
-                 (not @expanded?))
-        [:div.application-handling__detail-container
-         [close-application]
-         [application-heading (:application @selected-application-and-form)]
-         [:div.application-handling__review-area
-          [application-contents @selected-application-and-form]
-          [:span.application-handling__review-position-canary]
-          (when (= :fixed @review-positioning) [floating-application-review-placeholder])
-          [application-review]]]))))
+      (let [application        (:application @selected-application-and-form)
+            hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))]
+        (when (and (included-in-filter @review-state @application-filter)
+                   (belongs-to-current-form @selected-key applications)
+                   (not @expanded?))
+          [:div.application-handling__detail-container
+           [close-application]
+           [application-heading application]
+           [:div.application-handling__review-area
+            [:div.application-handling__application-contents
+             (when-not (empty? (:hakukohde application))
+               (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))
+             [application-contents @selected-application-and-form]]
+            [:span.application-handling__review-position-canary]
+            (when (= :fixed @review-positioning) [floating-application-review-placeholder])
+            [application-review]]])))))
 
 (defn application []
   (let [applications            (subscribe [:state-query [:application :applications]])
