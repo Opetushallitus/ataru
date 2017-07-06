@@ -111,7 +111,7 @@ WHERE a.email = :email
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
--- name: yesql-get-application-list-by-person-oid
+-- name: yesql-get-application-list-by-person-oid-for-omatsivut
 SELECT
   a.id,
   a.key,

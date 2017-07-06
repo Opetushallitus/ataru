@@ -228,10 +228,11 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
-(defn get-full-application-list-by-person-oid [person-oid]
-  (->> (exec-db :db yesql-get-application-list-by-person-oid {:person_oid                   person-oid
-                                                              :query_type                   "ALL"
-                                                              :authorized_organization_oids [""]})
+(defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
+  (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
+         {:person_oid                   person-oid
+          :query_type                   "ALL"
+          :authorized_organization_oids [""]})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
