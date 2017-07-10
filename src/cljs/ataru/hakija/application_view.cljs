@@ -120,7 +120,7 @@
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
                                   [])]
-    [:div.application__hakukohde-selection-search
+    [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
@@ -157,9 +157,9 @@
               [:div.application__hakukohde-row
                [:a.application__hakukohde-selection-open-search
                 {:on-click #(dispatch [:application/hakukohde-search-toggle])}
-                "Lisää hakukohde"]])))
-     (when show-hakukohde-search?
-       (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
+                "Lisää hakukohde"]
+               (when show-hakukohde-search?
+                 (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))])))]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
