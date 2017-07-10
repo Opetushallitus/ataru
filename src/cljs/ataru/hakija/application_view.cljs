@@ -130,8 +130,9 @@
          :value hakukohde-query}]
        (when (not (empty? hakukohde-query))
          [:div.application__form-clear-text-input-in-box
-          {:on-click #(dispatch [:application/hakukohde-query-clear])}
-          [:i.zmdi.zmdi-close]])]
+          [:a
+           {:on-click #(dispatch [:application/hakukohde-query-clear])}
+           [:i.zmdi.zmdi-close]]])]
       (into
        [:div.application__hakukohde-selection-search-results
         (map
@@ -153,8 +154,9 @@
        [:div.application__hakukohde-none-selected
         "Ei valittuja hakukohteita"])
      [:div.application__hakukohde-selection-open-search
-      {:on-click #(dispatch [:application/hakukohde-search-toggle])}
-      "Lisää hakukohde"]
+      [:a
+       {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+       "Lisää hakukohde"]]
      (when show-hakukohde-search?
        (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
 
