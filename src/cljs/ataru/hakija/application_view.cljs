@@ -147,12 +147,10 @@
       (if multiple-hakukohde?
         "Hakemasi koulutukset"
         "Hakemasi koulutus")]
-     (if (pos? (count selected-hakukohteet))
+     (when (pos? (count selected-hakukohteet))
        (into
          [:div.application__hakukohde-selected-list]
-         (map #(selected-hakukohde-row % multiple-hakukohde? submitted?) selected-hakukohteet))
-       [:div.application__hakukohde-none-selected
-        "Ei valittuja hakukohteita"])
+         (map #(selected-hakukohde-row % multiple-hakukohde? submitted?) selected-hakukohteet)))
      [:div.application__hakukohde-selection-open-search
       [:a
        {:on-click #(dispatch [:application/hakukohde-search-toggle])}
