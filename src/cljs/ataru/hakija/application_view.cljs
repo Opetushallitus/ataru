@@ -159,6 +159,8 @@
         selected-hakukohteet-elements (vec (map #(selected-hakukohde-row % multiple-hakukohde? submitted?)
                                                 selected-hakukohteet))]
     [:div
+     [:span.application__scroll-to-anchor
+      {:id "scroll-to-hakukohteet"}]
      (hakukohde-selection-header hakukohteet max-hakukohteet selected-hakukohteet)
      (into
       [:div.application__hakukohde-selected-list]

@@ -19,38 +19,45 @@
        (map :fieldType)
        (first)))
 
-(defn invalid-field-status [valid-status]
+(defn invalid-field-status [valid-status selected-hakukohteet max-hakukohteet]
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
         default-lang        (subscribe [:application/default-language])
         form-fields         (reaction (util/flatten-form-fields @(subscribe [:state-query [:form :content]])))]
-    (fn [valid-status]
-      (when (seq (:invalid-fields valid-status))
-        [:div.application__invalid-field-status
-         [:span.application__invalid-field-status-title
-          {:on-click toggle-show-details}
-          (case @lang
-            :fi "Tarkista "
-            :en "Check "
-            :sv "Kontrollera ")
-          [:b (count (:invalid-fields valid-status))]
-          (case @lang
-            :fi " tietoa"
-            :en " answers"
-            :sv " uppgifter")]
-         (when @show-details
-           [:div
-            [:div.application__invalid-fields-arrow-up]
-            (into [:div.application__invalid-fields
-                   [:span.application__close-invalid-fields
-                    {:on-click toggle-show-details}
-                    "x"]]
-                  (mapv (fn [field]
-                          (let [label (or (get-in field [:label @lang])
-                                          (get-in field [:label @default-lang]))]
-                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
-                        (:invalid-fields valid-status)))])]))))
+    (fn [valid-status selected-hakukohteet max-hakukohteet]
+      (let [invalid-hakukohteet (or (and selected-hakukohteet
+                                         (zero? (count selected-hakukohteet)))
+                                    (and max-hakukohteet
+                                         (< max-hakukohteet (count selected-hakukohteet))))]
+        (when (seq (:invalid-fields valid-status))
+          [:div.application__invalid-field-status
+           [:span.application__invalid-field-status-title
+            {:on-click toggle-show-details}
+            (case @lang
+              :fi "Tarkista "
+              :en "Check "
+              :sv "Kontrollera ")
+            [:b (+ (count (:invalid-fields valid-status))
+                   (if invalid-hakukohteet 1 0))]
+            (case @lang
+              :fi " tietoa"
+              :en " answers"
+              :sv " uppgifter")]
+           (when @show-details
+             [:div
+              [:div.application__invalid-fields-arrow-up]
+              (into [:div.application__invalid-fields
+                     [:span.application__close-invalid-fields
+                      {:on-click toggle-show-details}
+                      "x"]]
+                    (concat (when invalid-hakukohteet
+                              [[:a {:href "#scroll-to-hakukohteet"} "Hakukohteet"]])
+                            (map (fn [field]
+                                   (let [label (or (get-in field [:label @lang])
+                                                   (get-in field [:label @default-lang]))]
+                                     [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                                 (:invalid-fields valid-status))))])])))))
 
 (defn sent-indicator [submit-status]
   (let [lang (subscribe [:application/form-language])]
@@ -89,14 +96,16 @@
                       :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
-  (let [valid-status  (subscribe [:application/valid-status])
-        submit-status (subscribe [:state-query [:application :submit-status]])
-        can-apply?    (subscribe [:application/can-apply?])]
+  (let [valid-status         (subscribe [:application/valid-status])
+        submit-status        (subscribe [:state-query [:application :submit-status]])
+        selected-hakukohteet (subscribe [:state-query [:application :selected-hakukohteet]])
+        max-hakukohteet      (subscribe [:state-query [:form :tarjonta :max-hakukohteet]])
+        can-apply?           (subscribe [:application/can-apply?])]
     (fn []
       (when @can-apply?
         [:div.application__status-controls
          [send-button-or-placeholder @valid-status @submit-status]
-         [invalid-field-status @valid-status]
+         [invalid-field-status @valid-status @selected-hakukohteet @max-hakukohteet]
          [sent-indicator @submit-status]]))))
 
 (defn wrapper-section-link [ws]
