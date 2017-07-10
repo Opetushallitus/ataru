@@ -94,7 +94,7 @@
      (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
-  [hakukohde selected?]
+  [hakukohde max-hakukohteet selected? full?]
   ^{:key (str "found-hakukohde-row-" (:oid hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -106,12 +106,14 @@
    [:div.application__hakukohde-row-button-container
     (if selected?
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-      [:a.application__hakukohde-select-button
-       {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
-       "Lisää"])]])
+      (if full?
+        (str "Tässä haussa voit valita " (str max-hakukohteet) " hakukohdetta")
+        [:a.application__hakukohde-select-button
+         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
+         "Lisää"]))]])
 
 (defn- hakukohde-selection-search
-  [hakukohteet selected-hakukohteet hakukohde-query]
+  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query]
   (let [query-pattern           (re-pattern (str "(?i)" hakukohde-query))
         selected-hakukohde-oids (->> selected-hakukohteet
                                      (map :oid)
@@ -119,7 +121,9 @@
         search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
-                                  [])]
+                                  [])
+        full? (and max-hakukohteet
+                   (<= max-hakukohteet (count selected-hakukohteet)))]
     [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
@@ -136,19 +140,26 @@
       (into
        [:div.application__hakukohde-selection-search-results
         (map
-         #(search-hit-hakukohde-row % (contains? selected-hakukohde-oids (:oid %)))
+         #(search-hit-hakukohde-row % max-hakukohteet (contains? selected-hakukohde-oids (:oid %)) full?)
          search-hit-hakukohteet)])]]))
 
+(defn- hakukohde-selection-header
+  [hakukohteet max-hakukohteet selected-hakukohteet]
+  (let [counter (if max-hakukohteet
+                  (str " (" (count selected-hakukohteet) "/" max-hakukohteet ")")
+                  "")]
+    [:h3.application__hakukohde-selection-header
+     (if (< 1 (count hakukohteet))
+       (str "Hakemasi koulutukset" counter)
+       "Hakemasi koulutus")]))
+
 (defn- hakukohde-selection
-  [hakukohteet selected-hakukohteet hakukohde-query submitted? show-hakukohde-search?]
+  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query submitted? show-hakukohde-search?]
   (let [multiple-hakukohde?           (< 1 (count hakukohteet))
         selected-hakukohteet-elements (vec (map #(selected-hakukohde-row % multiple-hakukohde? submitted?)
                                                 selected-hakukohteet))]
     [:div
-     [:h3.application__hakukohde-selection-header
-      (if multiple-hakukohde?
-        "Hakemasi koulutukset"
-        "Hakemasi koulutus")]
+     (hakukohde-selection-header hakukohteet max-hakukohteet selected-hakukohteet)
      (into
       [:div.application__hakukohde-selected-list]
       (if submitted?
@@ -159,7 +170,11 @@
                 {:on-click #(dispatch [:application/hakukohde-search-toggle])}
                 "Lisää hakukohde"]
                (when show-hakukohde-search?
-                 (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))])))]))
+                 (hakukohde-selection-search
+                  hakukohteet
+                  max-hakukohteet
+                  selected-hakukohteet
+                  hakukohde-query))])))]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -180,6 +195,7 @@
         can-apply?            (subscribe [:application/can-apply?])
         submit-status         (subscribe [:state-query [:application :submit-status]])
         hakukohteet           (subscribe [:state-query [:form :tarjonta :hakukohteet]])
+        max-hakukohteet       (subscribe [:state-query [:form :tarjonta :max-hakukohteet]])
         selected-hakukohteet  (subscribe [:state-query [:application :selected-hakukohteet]])
         show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])
         hakukohde-query       (subscribe [:state-query [:application :hakukohde-query]])]
@@ -193,6 +209,7 @@
          ^{:key "application-hakukohde-selection"}
          [hakukohde-selection
           @hakukohteet
+          @max-hakukohteet
           @selected-hakukohteet
           @hakukohde-query
           (= :submitted @submit-status)

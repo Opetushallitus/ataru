@@ -29,13 +29,18 @@
            hakukohteet (->> included-hakukohde-oids
                             (map #(.get-hakukohde tarjonta-service %))
                             (map #(parse-hakukohde tarjonta-service %))
-                            (remove nil?))]
+                            (remove nil?))
+           max-hakukohteet (:maxHakukohdes haku)]
        (when (pos? (count hakukohteet))                     ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
          {:tarjonta
-          {:hakukohteet    hakukohteet
-           :haku-oid       haku-oid
-           :haku-name      (-> haku :nimi :kieli_fi)
-           :hakuaika-dates (hakuaika/get-hakuaika-info (first hakukohteet) haku) ; TODO take into account each hakukohde time?
+          {:hakukohteet     hakukohteet
+           :haku-oid        haku-oid
+           :haku-name       (-> haku :nimi :kieli_fi)
+           :max-hakukohteet (when (and max-hakukohteet (pos? max-hakukohteet))
+                              max-hakukohteet)
+           :hakuaika-dates  (hakuaika/get-hakuaika-info
+                             (first hakukohteet)
+                             haku) ; TODO take into account each hakukohde time?
            }}))))
   ([tarjonta-service haku-oid]
    (when haku-oid
