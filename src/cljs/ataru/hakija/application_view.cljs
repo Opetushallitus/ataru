@@ -120,7 +120,7 @@
                                   ; TODO support other languages
                                   (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
                                   [])]
-    [:div
+    [:div.application__hakukohde-selection-search
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
@@ -141,20 +141,23 @@
 
 (defn- hakukohde-selection
   [hakukohteet selected-hakukohteet hakukohde-query submitted? show-hakukohde-search?]
-  (let [multiple-hakukohde? (< 1 (count hakukohteet))]
-    [:div.application__hakukohde-selection
+  (let [multiple-hakukohde?           (< 1 (count hakukohteet))
+        selected-hakukohteet-elements (vec (map #(selected-hakukohde-row % multiple-hakukohde? submitted?)
+                                                selected-hakukohteet))]
+    [:div
      [:h3.application__hakukohde-selection-header
       (if multiple-hakukohde?
         "Hakemasi koulutukset"
         "Hakemasi koulutus")]
-     (when (pos? (count selected-hakukohteet))
-       (into
-         [:div.application__hakukohde-selected-list]
-         (map #(selected-hakukohde-row % multiple-hakukohde? submitted?) selected-hakukohteet)))
-     [:div.application__hakukohde-selection-open-search
-      [:a
-       {:on-click #(dispatch [:application/hakukohde-search-toggle])}
-       "Lisää hakukohde"]]
+     (into
+      [:div.application__hakukohde-selected-list]
+      (if submitted?
+        selected-hakukohteet-elements
+        (conj selected-hakukohteet-elements
+              [:div.application__hakukohde-row
+               [:a.application__hakukohde-selection-open-search
+                {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+                "Lisää hakukohde"]])))
      (when show-hakukohde-search?
        (hakukohde-selection-search hakukohteet selected-hakukohteet hakukohde-query))]))
 
