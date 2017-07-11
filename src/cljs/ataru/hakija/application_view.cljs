@@ -81,7 +81,7 @@
     "Poista"]])
 
 (defn- selected-hakukohde-row
-  [hakukohde multiple-hakukohde? submitted?]
+  [hakukohde edit-hakukohteet?]
   ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -90,7 +90,7 @@
      (-> hakukohde :name :fi)]
     [:div.application__hakukohde-selected-row-description
      (koulutus/koulutukset->str (:koulutukset hakukohde))]]
-   (when (and multiple-hakukohde? (not submitted?))
+   (when edit-hakukohteet?
      (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
@@ -154,18 +154,16 @@
        "Hakemasi koulutus")]))
 
 (defn- hakukohde-selection
-  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query submitted? show-hakukohde-search?]
-  (let [multiple-hakukohde?           (< 1 (count hakukohteet))
-        selected-hakukohteet-elements (vec (map #(selected-hakukohde-row % multiple-hakukohde? submitted?)
-                                                selected-hakukohteet))]
+  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query edit-hakukohteet? show-hakukohde-search?]
+  (let [selected-hakukohteet-elements (mapv #(selected-hakukohde-row % edit-hakukohteet?)
+                                            selected-hakukohteet)]
     [:div
      [:span.application__scroll-to-anchor
       {:id "scroll-to-hakukohteet"}]
      (hakukohde-selection-header hakukohteet max-hakukohteet selected-hakukohteet)
      (into
       [:div.application__hakukohde-selected-list]
-      (if submitted?
-        selected-hakukohteet-elements
+      (if edit-hakukohteet?
         (conj selected-hakukohteet-elements
               [:div.application__hakukohde-row
                [:a.application__hakukohde-selection-open-search
@@ -176,7 +174,8 @@
                   hakukohteet
                   max-hakukohteet
                   selected-hakukohteet
-                  hakukohde-query))])))]))
+                  hakukohde-query))])
+        selected-hakukohteet-elements))]))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -214,10 +213,9 @@
           @max-hakukohteet
           @selected-hakukohteet
           @hakukohde-query
-          (= :submitted @submit-status)
-          (and (< 1 (count @hakukohteet))
-               (not= :submitted @submit-status)
-               @show-hakukohde-search)])
+          (and (not= :submitted @submit-status)
+               (< 1 (count @hakukohteet)))
+          @show-hakukohde-search])
 
        (when @can-apply?
          ^{:key "form-fields"}
