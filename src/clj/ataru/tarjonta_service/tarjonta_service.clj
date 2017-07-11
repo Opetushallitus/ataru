@@ -76,7 +76,8 @@
   (stop [this] this)
 
   (get-hakukohde [this hakukohde-oid]
-    (when (= hakukohde-oid "hakukohde.oid")
+    (when (or (= hakukohde-oid "1.2.246.562.20.49028196522")
+              (= hakukohde-oid "hakukohde.oid"))
       {:tila                                    "LUONNOS",
        :ataruLomakeAvain                        "41101b4f-1762-49af-9db0-e3603adae3ad",
        :ryhmaliitokset                          [],
@@ -163,7 +164,12 @@
        :modifiedBy                                           "1.2.246.562.24.70906349358",
        :koulutuksenAlkamiskausiUri                           "kausi_s#1",
        :hakukausiVuosi                                       2016,
-       :hakuaikas                                            [{:hakuaikaId "10291885", :alkuPvm 1480330218240, :loppuPvm 1480503020479, :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
+       :hakuaikas                                            [{:hakuaikaId "10291885",
+                                                               :alkuPvm (- (System/currentTimeMillis)
+                                                                           86400000),
+                                                               :loppuPvm (+ (System/currentTimeMillis)
+                                                                            86400000),
+                                                               :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
        :sijoittelu                                           false}))
 
   (get-haku-name [this haku-oid]

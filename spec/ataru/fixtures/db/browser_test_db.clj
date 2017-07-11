@@ -43,6 +43,23 @@
                             :fieldType "textField"}],
               :label {:fi "Pää", :sv "Avsnitt namn"}}]})
 
+(def form3 {:id 3,
+            :key "41101b4f-1762-49af-9db0-e3603adae3ad",
+            :name "Selaintestilomake3",
+            :created-by "DEVELOPER"
+            :organization-oid "1.2.246.562.10.0439845"
+            :content
+            [{:fieldClass "wrapperElement",
+              :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
+              :fieldType "fieldset",
+              :children
+                          [{:label {:fi "Pään ympärys", :sv ""},
+                            :fieldClass "formField",
+                            :id "e257afce-ff30-40e1-ad6f-c224a1537d01",
+                            :params {},
+                            :fieldType "textField"}],
+              :label {:fi "Pää", :sv "Avsnitt namn"}}]})
+
 (def application1 {:form 1,
                    :lang "fi",
                    :key "application-key1",
@@ -104,8 +121,9 @@
                            :value "seija.kuikeloinen@gmail.com"}]})
 
 (defn init-db-fixture []
-  (form-store/create-form-or-increment-version! form1)
-  (form-store/create-form-or-increment-version! form2)
+  (form-store/create-new-form! form1 (:key form1))
+  (form-store/create-new-form! form2 (:key form2))
+  (form-store/create-new-form! form3 (:key form3))
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)

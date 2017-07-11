@@ -94,14 +94,17 @@
 (defn latest-version-same? [form latest-version]
   (= (:id form) (:id latest-version)))
 
-(defn create-new-form! [form]
-  (first
+(defn create-new-form!
+  ([form]
+   (create-new-form! form (str (UUID/randomUUID))))
+  ([form key]
+   (first
     (execute yesql-add-form<!
              (->
-               form
-               (dissoc :created-time :id)
-               (assoc :key (str (UUID/randomUUID)))
-               (update :deleted identity)))))
+              form
+              (dissoc :created-time :id)
+              (assoc :key key)
+              (update :deleted identity))))))
 
 (defn increment-version [{:keys [key id] :as form} conn]
   {:pre [(some? key)

@@ -18,12 +18,20 @@ function invalidFieldsStatus() {
   return testFrame().find('.application__invalid-field-status-title')
 }
 
+function selectedHakukohteet() {
+  return testFrame().find('.application__hakukohde-row')
+}
+
 function invalidSections() {
   return testFrame().find('.application__banner-wrapper-sections-content')
 }
 
 function personInfoModule() {
   return formSections().eq(0)
+}
+
+function selectedHakukohdeName(hakukohdeRow) {
+  return $(hakukohdeRow).find('.application__hakukohde-selected-row-header')[0].textContent
 }
 
 function setNthFieldInputValue(n, value) {

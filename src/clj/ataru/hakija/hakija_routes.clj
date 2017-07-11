@@ -70,8 +70,10 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/hakija-edit-test.html" []
-      (render-file-in-dev "templates/hakija-edit-test.html"))
+   (api/GET "/hakija-edit-test.html" []
+            (render-file-in-dev "templates/hakija-edit-test.html"))
+   (api/GET "/hakija-haku-test.html" []
+            (render-file-in-dev "templates/hakija-haku-test.html"))
    (api/GET "/hakija-test.html" []
             (render-file-in-dev "templates/hakija-test.html"))
    (api/GET "/spec/:filename.js" [filename]
