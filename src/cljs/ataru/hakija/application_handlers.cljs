@@ -19,12 +19,14 @@
                                                  form-key
                                                  lang
                                                  haku
+                                                 hakukohde
                                                  hakukohde-name
                                                  state]}]]
   {:db       (-> db
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:application :state] state)
+                 (assoc-in [:application :selected-hakukohteet] hakukohde)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if haku
@@ -214,24 +216,30 @@
   :application/merge-submitted-answers
   merge-submitted-answers)
 
+(defn update-selected-hakukohteet [selected-hakukohteet tarjonta]
+  (cond (not (empty? selected-hakukohteet))
+        (let [hakukohteet-by-oid (into {} (map (juxt :oid identity)
+                                               (:hakukohteet tarjonta)))]
+          (mapv hakukohteet-by-oid selected-hakukohteet))
+        (empty? (rest (:hakukohteet tarjonta)))
+        (vec (:hakukohteet tarjonta))
+        (some? (:default-hakukohde tarjonta))
+        [(:default-hakukohde tarjonta)]
+        :else
+        []))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form               (-> (languages->kwd form)
                                (set-form-language))
-        hakukohteet        (-> form :tarjonta :hakukohteet)
-        default-hakukohde  (-> form :tarjonta :default-hakukohde)
-        selected-hakukohde (case (count hakukohteet)
-                             0 nil
-                             1 (set hakukohteet)
-                             (if default-hakukohde
-                               (set [default-hakukohde])
-                               #{}))
         db                 (-> db
                                (update :form (fn [{:keys [selected-language]}]
                                                (cond-> form
                                                        (some? selected-language)
                                                        (assoc :selected-language selected-language))))
                                (assoc-in [:application :answers] (create-initial-answers form))
-                               (assoc-in [:application :selected-hakukohteet] selected-hakukohde)
+                               (update-in [:application :selected-hakukohteet]
+                                          update-selected-hakukohteet
+                                          (-> form :tarjonta))
                                (assoc-in [:application :show-hakukohde-search] true)
                                (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db             db
