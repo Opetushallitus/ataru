@@ -1,9 +1,34 @@
 -- name: yesql-add-application-query<!
 -- Add application
-INSERT INTO applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn, dob, email)
-VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, ARRAY[:hakukohde]::character varying(127)[], :haku, :secret, :person_oid, :ssn, :dob, :email);
+INSERT INTO applications (
+  form_id,
+  key,
+  content,
+  lang,
+  preferred_name,
+  last_name,
+  hakukohde,
+  haku,
+  secret,
+  person_oid,
+  ssn,
+  dob,
+  email
+) VALUES (
+  :form_id,
+  :key,
+  :content,
+  :lang,
+  :preferred_name,
+  :last_name,
+  ARRAY[:hakukohde]::character varying(127)[],
+  :haku,
+  :secret,
+  :person_oid,
+  :ssn,
+  :dob,
+  :email
+);
 
 -- name: yesql-get-application-list-by-form
 SELECT
