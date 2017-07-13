@@ -43,7 +43,7 @@ SELECT
 FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key
-WHERE a.hakukohde IS NULL
+WHERE a.haku IS NULL
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-hakukohde
@@ -192,7 +192,7 @@ SELECT
 FROM applications a
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key
   JOIN application_reviews ar ON a.key = ar.application_key
-WHERE a.hakukohde IS NULL AND state IN (:filtered_states);
+WHERE a.haku IS NULL AND state IN (:filtered_states);
 
 -- name: yesql-get-applications-for-hakukohde
 -- Get applications for form-key/hakukohde
@@ -376,7 +376,7 @@ WITH latest_applications AS (
     FROM applications a
       INNER JOIN forms f ON (a.form_id = f.id)
       INNER JOIN application_reviews ar ON a.key = ar.application_key
-    WHERE a.haku IS NOT NULL AND a.hakukohde IS NOT NULL
+    WHERE a.haku IS NOT NULL
           AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
     GROUP BY a.key, a.haku, a.hakukohde, ar.state
 )
@@ -403,7 +403,7 @@ WITH latest_applications AS (
     FROM applications a1
       INNER JOIN forms f1 ON (a1.form_id = f1.id)
       INNER JOIN application_reviews ar ON a1.key = ar.application_key
-    WHERE a1.haku IS NULL AND a1.hakukohde IS NULL
+    WHERE a1.haku IS NULL
           AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
     GROUP BY a1.key, form_key, ar.state
 ),

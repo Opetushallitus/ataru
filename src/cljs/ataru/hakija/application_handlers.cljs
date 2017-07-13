@@ -18,7 +18,7 @@
                                [_ secret {:keys [answers
                                                  form-key
                                                  lang
-                                                 hakukohde
+                                                 haku
                                                  hakukohde-name
                                                  state]}]]
   {:db       (-> db
@@ -27,8 +27,8 @@
                  (assoc-in [:application :state] state)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch (if hakukohde
-               [:application/get-latest-form-by-hakukohde hakukohde answers]
+   :dispatch (if haku
+               [:application/get-latest-form-by-haku haku answers]
                [:application/get-latest-form-by-key form-key answers])})
 
 (reg-event-fx
