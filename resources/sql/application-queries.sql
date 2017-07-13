@@ -290,6 +290,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.haku,
   a.hakukohde,
   f.key     AS form_key
 FROM applications a
