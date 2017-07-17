@@ -277,7 +277,7 @@
   (fn [db _]
     (post-new-form
      {:name             "Uusi lomake"
-      :content          [(pm/person-info-module)]
+      :content          [(component/hakukohteet) (pm/person-info-module)]
       :languages        [:fi]})
     db))
 

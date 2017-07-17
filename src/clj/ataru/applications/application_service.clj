@@ -65,13 +65,54 @@
                                  (= (count human-readable-value) 1)
                                  first))))))))))
 
+(defn- koulutukset->str
+  "Produces a condensed string to better identify a hakukohde by its koulutukset"
+  [koulutukset]
+  (->> koulutukset
+       (map (fn [koulutus]
+              (->> [(:koulutuskoodi-name koulutus)
+                    (:tutkintonimike-name koulutus)
+                    (:tarkenne koulutus)]
+                   (remove clojure.string/blank?)
+                   (distinct)
+                   (clojure.string/join ", "))))
+       (remove clojure.string/blank?)
+       (distinct)
+       (clojure.string/join "; ")))
+
+(defn- populate-hakukohde-answer-options [form tarjonta-info]
+  (update form :content
+          (fn [content]
+            (clojure.walk/prewalk
+             (fn [field]
+               (if (= (:fieldType field) "hakukohteet")
+                 (-> field
+                     (assoc :options
+                            (map (fn [{:keys [oid name koulutukset]}]
+                                   {:value oid
+                                    :label {:fi (or (:fi name) "")
+                                            :sv (or (:sv name) "")
+                                            :en (or (:en name) "")}
+                                    :description {:fi (koulutukset->str koulutukset)
+                                                  :sv ""
+                                                  :en ""}})
+                                 (get-in tarjonta-info [:tarjonta :hakukohteet])))
+                     (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
+                 field))
+             content))))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
-        form             (form-store/fetch-by-id (:form bare-application))
-        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku bare-application) (:hakukohde bare-application))
+        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
+                          tarjonta-service
+                          (:haku bare-application)
+                          (:hakukohde bare-application))
+        form             (populate-hakukohde-answer-options
+                          (form-store/fetch-by-id (:form bare-application))
+                          tarjonta-info)
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application (merge application tarjonta-info)

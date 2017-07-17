@@ -12,6 +12,42 @@
       (-> form
           (koodisto/populate-form-koodisto-fields)))))
 
+(defn- koulutukset->str
+  "Produces a condensed string to better identify a hakukohde by its koulutukset"
+  [koulutukset]
+  (->> koulutukset
+       (map (fn [koulutus]
+              (->> [(:koulutuskoodi-name koulutus)
+                    (:tutkintonimike-name koulutus)
+                    (:tarkenne koulutus)]
+                   (remove clojure.string/blank?)
+                   (distinct)
+                   (clojure.string/join ", "))))
+       (remove clojure.string/blank?)
+       (distinct)
+       (clojure.string/join "; ")))
+
+(defn- populate-hakukohde-answer-options [form tarjonta-info]
+  (update form :content
+          (fn [content]
+            (clojure.walk/prewalk
+             (fn [field]
+               (if (= (:fieldType field) "hakukohteet")
+                 (-> field
+                     (assoc :options
+                            (map (fn [{:keys [oid name koulutukset]}]
+                                   {:value oid
+                                    :label {:fi (or (:fi name) "")
+                                            :sv (or (:sv name) "")
+                                            :en (or (:en name) "")}
+                                    :description {:fi (koulutukset->str koulutukset)
+                                                  :sv ""
+                                                  :en ""}})
+                                 (get-in tarjonta-info [:tarjonta :hakukohteet])))
+                     (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
+                 field))
+             content))))
+
 (defn fetch-form-by-haku-oid
   [tarjonta-service haku-oid]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service haku-oid)
@@ -24,7 +60,8 @@
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku" haku-oid "and keys" (pr-str form-keys)))))
     (if form
-      (merge form tarjonta-info)
+      (populate-hakukohde-answer-options (merge form (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
+                                         tarjonta-info)
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid

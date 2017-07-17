@@ -132,6 +132,34 @@
        [:div
         [field followup application lang]]))])
 
+(defn- selected-hakukohde-row
+  [content hakukohde lang]
+  ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+     (-> hakukohde :label lang)]
+    [:div.application__hakukohde-selected-row-description
+     (-> hakukohde :description :fi)]]])
+
+(defn- hakukohde-selection-header
+  [lang content]
+  [:div.application__wrapper-heading.application__wrapper-heading-block
+   [:h2 (get-in content [:label lang])]
+   [scroll-to-anchor content]])
+
+(defn- hakukohteet [content application lang]
+  (let [hakukohteet-by-oid (into {} (map (juxt :value identity)
+                                         (:options content [])))
+        selected-hakukohteet (map (comp hakukohteet-by-oid :value)
+                                  (get-in application [:answers :hakukohteet :values] []))
+        selected-hakukohteet-elements (mapv #(selected-hakukohde-row content % lang)
+                                            selected-hakukohteet)]
+    [:div.application__wrapper-element.application__wrapper-element-border
+     (hakukohde-selection-header lang content)
+     (into [:div.application__hakukohde-selected-list]
+           selected-hakukohteet-elements)]))
+
 (defn field
   [content application lang]
   (match content
@@ -144,7 +172,8 @@
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content application lang]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

@@ -141,6 +141,24 @@
        [:div
         [field followup application lang]]))])
 
+(defn- hakukohteet-list-row [hakukohde]
+  ^{:key (str "hakukohteet-list-row-" (:value hakukohde))}
+  [:div.application__form-field
+   [:div.application-handling__hakukohde-wrapper
+    [:div.application-handling__review-area-hakukohde-heading (-> hakukohde :label :fi)]
+    [:div.application-handling__review-area-koulutus-heading (-> hakukohde :description :fi)]]])
+
+(defn- hakukohteet [content application]
+  (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
+        hakukohteet (map hakukohteet-by-oid
+                         (get-in application [:answers :hakukohteet :value] []))]
+    [:div.application__wrapper-element.application__wrapper-element--border
+     [:div.application__wrapper-heading
+      [:h2 "Hakukohteet"]
+      [scroll-to-anchor content]]
+     (into [:div.application__wrapper-contents]
+           (map hakukohteet-list-row hakukohteet))]))
+
 (defn field [content application lang]
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
@@ -151,7 +169,8 @@
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content application]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

@@ -14,7 +14,6 @@
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
-    [ataru.application-common.koulutus :as koulutus]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]))
 
 (defn excel-download-link [applications application-filter]
@@ -295,21 +294,6 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
-(defn- hakukohteet-list-row [hakukohde]
-  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
-  [:div.application__form-field
-   [:div.application-handling__hakukohde-wrapper
-    [:div.application-handling__review-area-hakukohde-heading (-> hakukohde :name :fi)]
-    [:div.application-handling__review-area-koulutus-heading (koulutus/koulutukset->str (:koulutukset hakukohde))]]])
-
-(defn- hakukohteet-list [hakukohteet]
-  [:div.application__readonly-container
-   [:div.application__wrapper-element.application__wrapper-element--border
-    [:div.application__wrapper-heading [:h2 "Hakukohteet"]]
-    [:div.application__wrapper-contents
-     (into [:div]
-           (map hakukohteet-list-row hakukohteet))]]])
-
 (defn application-heading [application]
   (let [answers            (:answers application)
         pref-name          (-> answers :preferred-name :value)
@@ -350,8 +334,7 @@
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])]
     (fn [applications]
-      (let [application        (:application @selected-application-and-form)
-            hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))]
+      (let [application        (:application @selected-application-and-form)]
         (when (and (included-in-filter @review-state @application-filter)
                    (belongs-to-current-form @selected-key applications)
                    (not @expanded?))
@@ -360,8 +343,6 @@
            [application-heading application]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
-             (when-not (empty? (:hakukohde application))
-               (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))
              [application-contents @selected-application-and-form]]
             [:span.application-handling__review-position-canary]
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])

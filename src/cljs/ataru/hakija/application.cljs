@@ -99,7 +99,7 @@
     (cond-> {:form      (:id form)
              :lang      lang
              :haku      (-> form :tarjonta :haku-oid)
-             :hakukohde (map :oid (:selected-hakukohteet application))
+             :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
              :answers   (create-answers-to-submit (:answers application) form (:ui application))}
             (some? secret)
             (assoc :secret secret))))

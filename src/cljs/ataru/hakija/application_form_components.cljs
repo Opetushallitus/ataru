@@ -563,6 +563,139 @@
                       [attachment-row field-descriptor id attachment-idx])))])
        [attachment-upload field-descriptor id @attachment-count]])))
 
+(defn- selected-hakukohde-row-remove
+  [hakukohde]
+  [:div.application__hakukohde-row-button-container
+   [:a.application__hakukohde-remove-link
+    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
+    "Poista"]])
+
+(defn- selected-hakukohde-row
+  [hakukohde edit-hakukohteet?]
+  ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+     ; TODO support other languages
+     (-> hakukohde :label :fi)]
+    [:div.application__hakukohde-selected-row-description
+     (-> hakukohde :description :fi)]]
+   (when edit-hakukohteet?
+     (selected-hakukohde-row-remove hakukohde))])
+
+(defn- search-hit-hakukohde-row
+  [hakukohde max-hakukohteet selected? full?]
+  ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+                                        ; TODO support other languages
+     (-> hakukohde :label :fi)]
+    [:div.application__hakukohde-selected-row-description
+     (-> hakukohde :description :fi)]]
+   [:div.application__hakukohde-row-button-container
+    (if selected?
+      [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+      (if full?
+        (str "Tässä haussa voit valita " (str max-hakukohteet) " hakukohdetta")
+        [:a.application__hakukohde-select-button
+         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
+         "Lisää"]))]])
+
+(defn- hakukohde-selection-search
+  [field-descriptor selected-hakukohteet hakukohde-query]
+  (let [query-pattern           (re-pattern (str "(?i)" hakukohde-query))
+        selected-hakukohde-oids (->> selected-hakukohteet
+                                     (map :value)
+                                     (set))
+        search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
+                                  ; TODO support other languages
+                                  (filter #(re-find query-pattern (get-in % [:label :fi] ""))
+                                          (:options field-descriptor))
+                                  [])
+        max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])
+        full? (and max-hakukohteet
+                   (<= max-hakukohteet (count selected-hakukohteet)))]
+    [:div
+     [:div.application__hakukohde-selection-search-arrow-up]
+     [:div.application__hakukohde-selection-search-container
+      [:div.application__hakukohde-selection-search-input.application__form-text-input-box
+       [:input.application__form-text-input-in-box
+        {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+         :placeholder "Etsi tämän haun koulutuksia"
+         :value hakukohde-query}]
+       (when (not (empty? hakukohde-query))
+         [:div.application__form-clear-text-input-in-box
+          [:a
+           {:on-click #(dispatch [:application/hakukohde-query-clear])}
+           [:i.zmdi.zmdi-close]]])]
+      (into
+       [:div.application__hakukohde-selection-search-results
+        (map
+         #(search-hit-hakukohde-row % max-hakukohteet (contains? selected-hakukohde-oids (:value %)) full?)
+         search-hit-hakukohteet)])]]))
+
+(defn- hakukohde-selection-header
+  [lang default-lang field-descriptor selected-hakukohteet]
+  (let [label (non-blank-val (get-in field-descriptor [:label lang])
+                             (get-in field-descriptor [:label default-lang]))
+        max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])
+        counter (if max-hakukohteet
+                  (str " (" (count selected-hakukohteet) "/" max-hakukohteet ")")
+                  "")]
+    [:div.application__wrapper-heading.application__wrapper-heading-block
+     [:h2 (str label counter)]
+     [scroll-to-anchor field-descriptor]]))
+
+(defn- hakukohde-selection
+  [lang
+   default-lang
+   field-descriptor
+   selected-hakukohteet
+   hakukohde-query
+   edit-hakukohteet?
+   show-hakukohde-search?]
+  (let [selected-hakukohteet-elements (mapv #(selected-hakukohde-row % edit-hakukohteet?)
+                                            selected-hakukohteet)]
+    [:div.application__wrapper-element.application__wrapper-element-border
+     (hakukohde-selection-header
+      lang
+      default-lang
+      field-descriptor
+      selected-hakukohteet)
+     (into
+      [:div.application__hakukohde-selected-list]
+      (if edit-hakukohteet?
+        (conj selected-hakukohteet-elements
+              [:div.application__hakukohde-row
+               [:a.application__hakukohde-selection-open-search
+                {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+                "Lisää hakukohde"]
+               (when show-hakukohde-search?
+                 (hakukohde-selection-search
+                  field-descriptor
+                  selected-hakukohteet
+                  hakukohde-query))])
+        selected-hakukohteet-elements))]))
+
+(defn hakukohteet [_]
+  (fn [field-descriptor]
+    (let [lang                  (subscribe [:application/form-language])
+          default-lang          (subscribe [:application/default-language])
+          hakukohteet-by-oid    (into {} (map (juxt :value identity)
+                                              (:options field-descriptor)))
+          selected-hakukohteet  (subscribe [:state-query [:application :answers :hakukohteet :values]])
+          show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])
+          hakukohde-query       (subscribe [:state-query [:application :hakukohde-query]])]
+      [hakukohde-selection
+       @lang
+       @default-lang
+       field-descriptor
+       (map (comp hakukohteet-by-oid :value) @selected-hakukohteet)
+       @hakukohde-query
+       (< 1 (count (:options field-descriptor)))
+       @show-hakukohde-search])))
+
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
         header   (some-> (get-in field-descriptor [:label @language]))
@@ -661,6 +794,7 @@
                          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor]
                          {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor]
                          {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor]
+                         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet field-descriptor]
                          {:fieldClass "infoElement"} [info-element field-descriptor]
                          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
                   (and (empty? (:children field-descriptor))

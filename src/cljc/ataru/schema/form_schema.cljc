@@ -70,6 +70,7 @@
                                                                           (s/optional-key :title)          s/Str}
                         (s/optional-key :options)                        [{:value                          s/Str
                                                                            (s/optional-key :label)         LocalizedString
+                                                                           (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         :fieldType                                       (apply s/enum ["textField"
@@ -78,7 +79,8 @@
                                                                                         "singleChoice"
                                                                                         "multipleChoice"
                                                                                         "koodistoField"
-                                                                                        "attachment"])})
+                                                                                        "attachment"
+                                                                                        "hakukohteet"])})
 
 (s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
                           :id                      s/Str
@@ -161,7 +163,8 @@
                                                                   "dropdown"
                                                                   "multipleChoice"
                                                                   "singleChoice"
-                                                                  "attachment"])
+                                                                  "attachment"
+                                                                  "hakukohteet"])
                      (s/optional-key :cannot-edit) s/Bool
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre

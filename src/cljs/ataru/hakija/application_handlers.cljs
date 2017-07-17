@@ -26,7 +26,6 @@
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:application :state] state)
-                 (assoc-in [:application :selected-hakukohteet] hakukohde)
                  (assoc-in [:form :selected-language] (keyword lang))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if haku
@@ -170,7 +169,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"textField" "attachment"})
+(defonce multi-value-field-types #{"textField" "attachment" "hakukohteet"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -216,18 +215,6 @@
   :application/merge-submitted-answers
   merge-submitted-answers)
 
-(defn update-selected-hakukohteet [selected-hakukohteet tarjonta]
-  (cond (not (empty? selected-hakukohteet))
-        (let [hakukohteet-by-oid (into {} (map (juxt :oid identity)
-                                               (:hakukohteet tarjonta)))]
-          (mapv hakukohteet-by-oid selected-hakukohteet))
-        (empty? (rest (:hakukohteet tarjonta)))
-        (vec (:hakukohteet tarjonta))
-        (some? (:default-hakukohde tarjonta))
-        [(:default-hakukohde tarjonta)]
-        :else
-        []))
-
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form               (-> (languages->kwd form)
                                (set-form-language))
@@ -237,9 +224,6 @@
                                                        (some? selected-language)
                                                        (assoc :selected-language selected-language))))
                                (assoc-in [:application :answers] (create-initial-answers form))
-                               (update-in [:application :selected-hakukohteet]
-                                          update-selected-hakukohteet
-                                          (-> form :tarjonta))
                                (assoc-in [:application :show-hakukohde-search] true)
                                (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db             db
@@ -617,9 +601,11 @@
 (reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde]]
-    (update-in db [:application :selected-hakukohteet] conj hakukohde)))
+    (update-in db [:application :answers :hakukohteet :values]
+               conj {:valid true :value (:value hakukohde)})))
 
 (reg-event-db
   :application/hakukohde-remove-selection
   (fn [db [_ hakukohde]]
-    (update-in db [:application :selected-hakukohteet] (fn [s] (remove #(= (:oid hakukohde) (:oid %)) s)))))
+    (update-in db [:application :answers :hakukohteet :values]
+               (fn [oids] (remove #(= (:value hakukohde) (:value %)) oids)))))

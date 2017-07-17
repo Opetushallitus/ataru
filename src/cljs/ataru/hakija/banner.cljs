@@ -98,8 +98,8 @@
 (defn status-controls []
   (let [valid-status         (subscribe [:application/valid-status])
         submit-status        (subscribe [:state-query [:application :submit-status]])
-        selected-hakukohteet (subscribe [:state-query [:application :selected-hakukohteet]])
-        max-hakukohteet      (subscribe [:state-query [:form :tarjonta :max-hakukohteet]])
+        selected-hakukohteet (subscribe [:state-query [:application :answers :hakukohteet :values]])
+        max-hakukohteet      (subscribe [:state-query [:application :answers :hakukohteet :params :max-hakukohteet]])
         can-apply?           (subscribe [:application/can-apply?])]
     (fn []
       (when @can-apply?

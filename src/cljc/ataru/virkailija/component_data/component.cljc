@@ -76,7 +76,7 @@
    :label      {:fi ""}
    :fieldType  "adjacentfieldset"
    :children   []})
-   
+
 (defn single-choice-button []
   {:fieldClass "formField"
    :fieldType  "singleChoice"
@@ -92,3 +92,16 @@
    :label      {:fi "" :sv ""}
    :params     {}
    :options    []})
+
+(defn hakukohteet []
+  {:fieldClass "formField"
+   :fieldType "hakukohteet"
+   :id :hakukohteet
+   :label {:fi "Hakukohteet"
+           :sv ""
+           :en ""}
+   :label-amendment {:fi "(Osio lisätää automaattisesti lomakkeelle)"
+                     :sv ""
+                     :en ""}
+   :params {}
+   :options []})

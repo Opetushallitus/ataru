@@ -73,110 +73,6 @@
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
 
-(defn- selected-hakukohde-row-remove
-  [hakukohde]
-  [:div.application__hakukohde-row-button-container
-   [:a.application__hakukohde-remove-link
-    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
-    "Poista"]])
-
-(defn- selected-hakukohde-row
-  [hakukohde edit-hakukohteet?]
-  ^{:key (str "selected-hakukohde-row-" (:oid hakukohde))}
-  [:div.application__hakukohde-row
-   [:div.application__hakukohde-row-text-container
-    [:div.application__hakukohde-selected-row-header
-     ; TODO support other languages
-     (-> hakukohde :name :fi)]
-    [:div.application__hakukohde-selected-row-description
-     (koulutus/koulutukset->str (:koulutukset hakukohde))]]
-   (when edit-hakukohteet?
-     (selected-hakukohde-row-remove hakukohde))])
-
-(defn- search-hit-hakukohde-row
-  [hakukohde max-hakukohteet selected? full?]
-  ^{:key (str "found-hakukohde-row-" (:oid hakukohde))}
-  [:div.application__hakukohde-row
-   [:div.application__hakukohde-row-text-container
-    [:div.application__hakukohde-selected-row-header
-     ; TODO support other languages
-     (-> hakukohde :name :fi)]
-    [:div.application__hakukohde-selected-row-description
-     (koulutus/koulutukset->str (:koulutukset hakukohde))]]
-   [:div.application__hakukohde-row-button-container
-    (if selected?
-      [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-      (if full?
-        (str "Tässä haussa voit valita " (str max-hakukohteet) " hakukohdetta")
-        [:a.application__hakukohde-select-button
-         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
-         "Lisää"]))]])
-
-(defn- hakukohde-selection-search
-  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query]
-  (let [query-pattern           (re-pattern (str "(?i)" hakukohde-query))
-        selected-hakukohde-oids (->> selected-hakukohteet
-                                     (map :oid)
-                                     (set))
-        search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
-                                  ; TODO support other languages
-                                  (filter #(re-find query-pattern (get-in % [:name :fi] "")) hakukohteet)
-                                  [])
-        full? (and max-hakukohteet
-                   (<= max-hakukohteet (count selected-hakukohteet)))]
-    [:div
-     [:div.application__hakukohde-selection-search-arrow-up]
-     [:div.application__hakukohde-selection-search-container
-      [:div.application__hakukohde-selection-search-input.application__form-text-input-box
-       [:input.application__form-text-input-in-box
-        {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
-         :placeholder "Etsi tämän haun koulutuksia"
-         :value hakukohde-query}]
-       (when (not (empty? hakukohde-query))
-         [:div.application__form-clear-text-input-in-box
-          [:a
-           {:on-click #(dispatch [:application/hakukohde-query-clear])}
-           [:i.zmdi.zmdi-close]]])]
-      (into
-       [:div.application__hakukohde-selection-search-results
-        (map
-         #(search-hit-hakukohde-row % max-hakukohteet (contains? selected-hakukohde-oids (:oid %)) full?)
-         search-hit-hakukohteet)])]]))
-
-(defn- hakukohde-selection-header
-  [hakukohteet max-hakukohteet selected-hakukohteet]
-  (let [counter (if max-hakukohteet
-                  (str " (" (count selected-hakukohteet) "/" max-hakukohteet ")")
-                  "")]
-    [:h3.application__hakukohde-selection-header
-     (if (< 1 (count hakukohteet))
-       (str "Hakemasi koulutukset" counter)
-       "Hakemasi koulutus")]))
-
-(defn- hakukohde-selection
-  [hakukohteet max-hakukohteet selected-hakukohteet hakukohde-query edit-hakukohteet? show-hakukohde-search?]
-  (let [selected-hakukohteet-elements (mapv #(selected-hakukohde-row % edit-hakukohteet?)
-                                            selected-hakukohteet)]
-    [:div
-     [:span.application__scroll-to-anchor
-      {:id "scroll-to-hakukohteet"}]
-     (hakukohde-selection-header hakukohteet max-hakukohteet selected-hakukohteet)
-     (into
-      [:div.application__hakukohde-selected-list]
-      (if edit-hakukohteet?
-        (conj selected-hakukohteet-elements
-              [:div.application__hakukohde-row
-               [:a.application__hakukohde-selection-open-search
-                {:on-click #(dispatch [:application/hakukohde-search-toggle])}
-                "Lisää hakukohde"]
-               (when show-hakukohde-search?
-                 (hakukohde-selection-search
-                  hakukohteet
-                  max-hakukohteet
-                  selected-hakukohteet
-                  hakukohde-query))])
-        selected-hakukohteet-elements))]))
-
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
     (fn [form]
@@ -193,29 +89,11 @@
 
 (defn application-contents []
   (let [form                  (subscribe [:state-query [:form]])
-        can-apply?            (subscribe [:application/can-apply?])
-        submit-status         (subscribe [:state-query [:application :submit-status]])
-        hakukohteet           (subscribe [:state-query [:form :tarjonta :hakukohteet]])
-        max-hakukohteet       (subscribe [:state-query [:form :tarjonta :max-hakukohteet]])
-        selected-hakukohteet  (subscribe [:state-query [:application :selected-hakukohteet]])
-        show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])
-        hakukohde-query       (subscribe [:state-query [:application :hakukohde-query]])]
+        can-apply?            (subscribe [:application/can-apply?])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
-
-       (when (and @can-apply?
-                  (pos? (count @hakukohteet)))
-         ^{:key "application-hakukohde-selection"}
-         [hakukohde-selection
-          @hakukohteet
-          @max-hakukohteet
-          @selected-hakukohteet
-          @hakukohde-query
-          (and (not= :submitted @submit-status)
-               (< 1 (count @hakukohteet)))
-          @show-hakukohde-search])
 
        (when @can-apply?
          ^{:key "form-fields"}
