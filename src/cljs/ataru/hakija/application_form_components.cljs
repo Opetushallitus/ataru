@@ -603,16 +603,12 @@
          "Lisää"]))]])
 
 (defn- hakukohde-selection-search
-  [field-descriptor selected-hakukohteet hakukohde-query]
-  (let [query-pattern           (re-pattern (str "(?i)" hakukohde-query))
+  [field-descriptor selected-hakukohteet]
+  (let [hakukohde-query @(subscribe [:application/hakukohde-query])
         selected-hakukohde-oids (->> selected-hakukohteet
                                      (map :value)
                                      (set))
-        search-hit-hakukohteet  (if (< 1 (count hakukohde-query))
-                                  ; TODO support other languages
-                                  (filter #(re-find query-pattern (get-in % [:label :fi] ""))
-                                          (:options field-descriptor))
-                                  [])
+        search-hit-hakukohteet  @(subscribe [:application/hakukohde-hits])
         max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])
         full? (and max-hakukohteet
                    (<= max-hakukohteet (count selected-hakukohteet)))]
@@ -652,7 +648,6 @@
    default-lang
    field-descriptor
    selected-hakukohteet
-   hakukohde-query
    edit-hakukohteet?
    show-hakukohde-search?]
   (let [selected-hakukohteet-elements (mapv #(selected-hakukohde-row % edit-hakukohteet?)
@@ -674,8 +669,7 @@
                (when show-hakukohde-search?
                  (hakukohde-selection-search
                   field-descriptor
-                  selected-hakukohteet
-                  hakukohde-query))])
+                  selected-hakukohteet))])
         selected-hakukohteet-elements))]))
 
 (defn hakukohteet [_]
@@ -685,14 +679,12 @@
           hakukohteet-by-oid    (into {} (map (juxt :value identity)
                                               (:options field-descriptor)))
           selected-hakukohteet  (subscribe [:state-query [:application :answers :hakukohteet :values]])
-          show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])
-          hakukohde-query       (subscribe [:state-query [:application :hakukohde-query]])]
+          show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])]
       [hakukohde-selection
        @lang
        @default-lang
        field-descriptor
        (map (comp hakukohteet-by-oid :value) @selected-hakukohteet)
-       @hakukohde-query
        (< 1 (count (:options field-descriptor)))
        @show-hakukohde-search])))
 

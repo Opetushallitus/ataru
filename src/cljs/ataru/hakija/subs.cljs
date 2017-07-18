@@ -67,3 +67,22 @@
   (fn [db [_ parent-id option-value]]
     (let [value (get-in db [:application :answers parent-id :value])]
       (= option-value value))))
+
+(defn- hakukohde-query [db]
+  (get-in db [:application :hakukohde-query]))
+
+(re-frame/reg-sub
+  :application/hakukohde-query
+  (fn [db _] (hakukohde-query db)))
+
+(re-frame/reg-sub
+  :application/hakukohde-hits
+  (fn [db _]
+    (let [hakukohde-query         (hakukohde-query db)
+          query-pattern           (re-pattern (str "(?i)" hakukohde-query))
+          hakukohde-options       (:options (first (filter #(= "hakukohteet" (:id %)) (get-in db [:form :content] []))))]
+      (if (< 1 (count hakukohde-query))
+                                        ; TODO support other languages
+        (filter #(re-find query-pattern (get-in % [:label :fi] ""))
+                hakukohde-options)
+        []))))
