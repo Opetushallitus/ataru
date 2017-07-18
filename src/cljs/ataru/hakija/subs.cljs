@@ -106,9 +106,8 @@
 
 (re-frame/reg-sub
   :application/hakukohde-selected?
-  (fn [db [_ hakukohde]]
-    (some #(= % (:value hakukohde))
-          (selected-hakukohde-oids db))))
+  (fn [db [_ hakukohde-oid]]
+    (some #(= % hakukohde-oid) (selected-hakukohde-oids db))))
 
 (re-frame/reg-sub
   :application/max-hakukohteet

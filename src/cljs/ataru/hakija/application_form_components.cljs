@@ -591,7 +591,7 @@
     [:div.application__hakukohde-selected-row-description
      @(subscribe [:application/hakukohde-description (:value hakukohde)])]]
    [:div.application__hakukohde-row-button-container
-    (if @(subscribe [:application/hakukohde-selected? hakukohde])
+    (if @(subscribe [:application/hakukohde-selected? (:value hakukohde)])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
       (if @(subscribe [:application/hakukohteet-full?])
         (str "Tässä haussa voit valita "
