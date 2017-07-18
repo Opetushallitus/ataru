@@ -600,9 +600,9 @@
 
 (reg-event-db
   :application/hakukohde-add-selection
-  (fn [db [_ hakukohde]]
+  (fn [db [_ hakukohde-oid]]
     (update-in db [:application :answers :hakukohteet :values]
-               conj {:valid true :value (:value hakukohde)})))
+               conj {:valid true :value hakukohde-oid})))
 
 (reg-event-db
   :application/hakukohde-remove-selection

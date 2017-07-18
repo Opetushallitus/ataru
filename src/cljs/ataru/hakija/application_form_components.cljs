@@ -582,23 +582,23 @@
      [selected-hakukohde-row-remove hakukohde-oid])])
 
 (defn- search-hit-hakukohde-row
-  [hakukohde]
+  [hakukohde-oid]
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
                                         ; TODO support other languages
-     @(subscribe [:application/hakukohde-label (:value hakukohde)])]
+     @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:div.application__hakukohde-selected-row-description
-     @(subscribe [:application/hakukohde-description (:value hakukohde)])]]
+     @(subscribe [:application/hakukohde-description hakukohde-oid])]]
    [:div.application__hakukohde-row-button-container
-    (if @(subscribe [:application/hakukohde-selected? (:value hakukohde)])
+    (if @(subscribe [:application/hakukohde-selected? hakukohde-oid])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
       (if @(subscribe [:application/hakukohteet-full?])
         (str "Tässä haussa voit valita "
              @(subscribe [:application/max-hakukohteet])
              " hakukohdetta")
         [:a.application__hakukohde-select-button
-         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
+         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde-oid])}
          "Lisää"]))]])
 
 (defn- hakukohde-selection-search
@@ -621,7 +621,7 @@
       [:div.application__hakukohde-selection-search-results
        (for [hakukohde search-hit-hakukohteet]
          ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
-         [search-hit-hakukohde-row hakukohde])]]]))
+         [search-hit-hakukohde-row (:value hakukohde)])]]]))
 
 (defn- hakukohde-selection-header
   [lang default-lang field-descriptor selected-hakukohteet]
