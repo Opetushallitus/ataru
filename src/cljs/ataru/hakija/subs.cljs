@@ -71,6 +71,14 @@
 (defn- hakukohde-query [db]
   (get-in db [:application :hakukohde-query]))
 
+(defn- selected-hakukohteet [db]
+  (get-in db [:application :answers :hakukohteet :values] []))
+
+(defn- hakukohteet-field [db]
+  (->> (get-in db [:form :content] [])
+       (filter #(= "hakukohteet" (:id %)))
+       first))
+
 (re-frame/reg-sub
   :application/hakukohde-query
   (fn [db _] (hakukohde-query db)))
@@ -78,15 +86,12 @@
 (re-frame/reg-sub
   :application/hakukohde-hits
   (fn [db _]
-    (let [hakukohde-query         (hakukohde-query db)
-          query-pattern           (re-pattern (str "(?i)" hakukohde-query))
-          hakukohde-options       (->> (get-in db [:form :content] [])
-                                       (filter #(= "hakukohteet" (:id %)))
-                                       first
-                                       :options)
-          selected-hakukohteet    (->> (get-in db [:application :answers :hakukohteet :values] [])
-                                       (map :value)
-                                       set)]
+    (let [hakukohde-query (hakukohde-query db)
+          query-pattern (re-pattern (str "(?i)" hakukohde-query))
+          hakukohde-options (:options (hakukohteet-field db))
+          selected-hakukohteet (->> (selected-hakukohteet db)
+                                    (map :value)
+                                    set)]
       (if (< 1 (count hakukohde-query))
                                         ; TODO support other languages
         (filter #(re-find query-pattern (get-in % [:label :fi] ""))
@@ -98,3 +103,10 @@
   (fn [db [_ hakukohde]]
     (some #(= (:value %) (:value hakukohde))
           (selected-hakukohteet db))))
+
+(re-frame/reg-sub
+  :application/hakukohteet-full?
+  (fn [db _]
+    (let [max-hakukohteet (get-in (hakukohteet-field db)
+                                  [:params :max-hakukohteet])]
+      (<= max-hakukohteet (count (selected-hakukohteet db))))))

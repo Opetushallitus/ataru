@@ -584,7 +584,7 @@
      (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
-  [hakukohde max-hakukohteet full?]
+  [hakukohde max-hakukohteet]
   ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -596,7 +596,7 @@
    [:div.application__hakukohde-row-button-container
     (if @(subscribe [:application/hakukohde-selected? hakukohde])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-      (if full?
+      (if @(subscribe [:application/hakukohteet-full?])
         (str "Tässä haussa voit valita " (str max-hakukohteet) " hakukohdetta")
         [:a.application__hakukohde-select-button
          {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde])}
@@ -606,9 +606,7 @@
   [field-descriptor selected-hakukohteet]
   (let [hakukohde-query @(subscribe [:application/hakukohde-query])
         search-hit-hakukohteet @(subscribe [:application/hakukohde-hits])
-        max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])
-        full? (and max-hakukohteet
-                   (<= max-hakukohteet (count selected-hakukohteet)))]
+        max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])]
     [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
@@ -624,9 +622,10 @@
            [:i.zmdi.zmdi-close]]])]
       (into
        [:div.application__hakukohde-selection-search-results
-        (map
-         #(search-hit-hakukohde-row % max-hakukohteet full?)
-         search-hit-hakukohteet)])]]))
+        (doall
+         (map
+          #(search-hit-hakukohde-row % max-hakukohteet)
+          search-hit-hakukohteet))])]]))
 
 (defn- hakukohde-selection-header
   [lang default-lang field-descriptor selected-hakukohteet]
