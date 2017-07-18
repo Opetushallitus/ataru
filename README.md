@@ -67,11 +67,6 @@ lein figwheel hakija-dev
 ```
 Browse to [http://localhost:8351/hakemus/<uuid>](http://localhost:8351/hakemus/<uuid>).
 
-_Note: figwheel nrepl ports now conflict (they are the same and it's not easy to configure
-separate ports in project.clj), so you can run only either hakija/virkailija
-figwheel process at once. You can still run both applications just fine, but the other
- one will have to be either with lein cljsbuild once or auto <id>_
-
 ### Backend & browser tests
 
 Tests require a special database. Here is an example of running it
