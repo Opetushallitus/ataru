@@ -100,8 +100,9 @@
           hakukohde-options (:options (hakukohteet-field db))]
       (if (< 1 (count hakukohde-query))
                                         ; TODO support other languages
-        (filter #(re-find query-pattern (get-in % [:label :fi] ""))
-                hakukohde-options)
+        (->> hakukohde-options
+             (filter #(re-find query-pattern (get-in % [:label :fi] "")))
+             (map :value))
         []))))
 
 (re-frame/reg-sub

@@ -603,8 +603,7 @@
 
 (defn- hakukohde-selection-search
   []
-  (let [hakukohde-query @(subscribe [:application/hakukohde-query])
-        search-hit-hakukohteet @(subscribe [:application/hakukohde-hits])]
+  (let [hakukohde-query @(subscribe [:application/hakukohde-query])]
     [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
@@ -619,9 +618,9 @@
            {:on-click #(dispatch [:application/hakukohde-query-clear])}
            [:i.zmdi.zmdi-close]]])]
       [:div.application__hakukohde-selection-search-results
-       (for [hakukohde search-hit-hakukohteet]
-         ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
-         [search-hit-hakukohde-row (:value hakukohde)])]]]))
+       (for [hakukohde-oid @(subscribe [:application/hakukohde-hits])]
+         ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
+         [search-hit-hakukohde-row hakukohde-oid])]]]))
 
 (defn- hakukohde-selection-header
   [lang default-lang field-descriptor selected-hakukohteet]
