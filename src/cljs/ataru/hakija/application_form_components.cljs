@@ -571,7 +571,7 @@
     "Poista"]])
 
 (defn- selected-hakukohde-row
-  [hakukohde edit-hakukohteet?]
+  [hakukohde]
   ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
@@ -580,7 +580,7 @@
      (-> hakukohde :label :fi)]
     [:div.application__hakukohde-selected-row-description
      (-> hakukohde :description :fi)]]
-   (when edit-hakukohteet?
+   (when @(subscribe [:application/hakukohteet-editable?])
      (selected-hakukohde-row-remove hakukohde))])
 
 (defn- search-hit-hakukohde-row
@@ -643,9 +643,8 @@
    default-lang
    field-descriptor
    selected-hakukohteet
-   edit-hakukohteet?
    show-hakukohde-search?]
-  (let [selected-hakukohteet-elements (mapv #(selected-hakukohde-row % edit-hakukohteet?)
+  (let [selected-hakukohteet-elements (mapv selected-hakukohde-row
                                             selected-hakukohteet)]
     [:div.application__wrapper-element.application__wrapper-element-border
      (hakukohde-selection-header
@@ -655,7 +654,7 @@
       selected-hakukohteet)
      (into
       [:div.application__hakukohde-selected-list]
-      (if edit-hakukohteet?
+      (if @(subscribe [:application/hakukohteet-editable?])
         (conj selected-hakukohteet-elements
               [:div.application__hakukohde-row
                [:a.application__hakukohde-selection-open-search
@@ -680,7 +679,6 @@
        @default-lang
        field-descriptor
        (map (comp hakukohteet-by-oid :value) @selected-hakukohteet)
-       (< 1 (count (:options field-descriptor)))
        @show-hakukohde-search])))
 
 (defn info-element [field-descriptor]
