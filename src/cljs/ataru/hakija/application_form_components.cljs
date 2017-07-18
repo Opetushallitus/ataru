@@ -623,9 +623,10 @@
          [search-hit-hakukohde-row hakukohde-oid])]]]))
 
 (defn- hakukohde-selection-header
-  [lang default-lang field-descriptor selected-hakukohteet]
+  [lang default-lang field-descriptor]
   (let [label (non-blank-val (get-in field-descriptor [:label lang])
                              (get-in field-descriptor [:label default-lang]))
+        selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
         max-hakukohteet (get-in field-descriptor [:params :max-hakukohteet])
         counter (if max-hakukohteet
                   (str " (" (count selected-hakukohteet) "/" max-hakukohteet ")")
@@ -638,18 +639,16 @@
   [lang
    default-lang
    field-descriptor
-   selected-hakukohteet
    show-hakukohde-search?]
   [:div.application__wrapper-element.application__wrapper-element-border
    [hakukohde-selection-header
     lang
     default-lang
-    field-descriptor
-    selected-hakukohteet]
+    field-descriptor]
    [:div.application__hakukohde-selected-list
-    (for [hakukohde selected-hakukohteet]
-      ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
-      [selected-hakukohde-row (:value hakukohde)])
+    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+      [selected-hakukohde-row hakukohde-oid])
     (when @(subscribe [:application/hakukohteet-editable?])
       [:div.application__hakukohde-row
        [:a.application__hakukohde-selection-open-search
@@ -662,15 +661,11 @@
   (fn [field-descriptor]
     (let [lang                  (subscribe [:application/form-language])
           default-lang          (subscribe [:application/default-language])
-          hakukohteet-by-oid    (into {} (map (juxt :value identity)
-                                              (:options field-descriptor)))
-          selected-hakukohteet  (subscribe [:state-query [:application :answers :hakukohteet :values]])
           show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])]
       [hakukohde-selection
        @lang
        @default-lang
        field-descriptor
-       (map (comp hakukohteet-by-oid :value) @selected-hakukohteet)
        @show-hakukohde-search])))
 
 (defn info-element [field-descriptor]

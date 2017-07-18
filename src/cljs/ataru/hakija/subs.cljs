@@ -85,6 +85,11 @@
           nil))
 
 (re-frame/reg-sub
+  :application/selected-hakukohteet
+  (fn [db _]
+    (selected-hakukohde-oids db)))
+
+(re-frame/reg-sub
   :application/hakukohteet-editable?
   (fn [db _] (< 1 (count (:options (hakukohteet-field db))))))
 
