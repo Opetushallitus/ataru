@@ -68,41 +68,41 @@
     (let [value (get-in db [:application :answers parent-id :value])]
       (= option-value value))))
 
-(defn- hakukohde-query [db]
-  (get-in db [:application :hakukohde-query]))
-
-(defn- selected-hakukohde-oids [db]
-  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-
 (defn- hakukohteet-field [db]
   (->> (get-in db [:form :content] [])
        (filter #(= "hakukohteet" (:id %)))
        first))
 
-(defn- max-hakukohteet [db]
-  (get-in (hakukohteet-field db)
-          [:params :max-hakukohteet]
-          nil))
+(re-frame/reg-sub
+  :application/hakukohde-options
+  (fn [db _]
+    (:options (hakukohteet-field db))))
+
+(re-frame/reg-sub
+  :application/hakukohde-options-by-oid
+  (fn [db _]
+    (into {} (map (juxt :value identity)
+                  @(re-frame/subscribe [:application/hakukohde-options])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohteet
   (fn [db _]
-    (selected-hakukohde-oids db)))
+    (map :value (get-in db [:application :answers :hakukohteet :values] []))))
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
-  (fn [db _] (< 1 (count (:options (hakukohteet-field db))))))
+  (fn [db _] (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
-  (fn [db _] (hakukohde-query db)))
+  (fn [db _] (get-in db [:application :hakukohde-query])))
 
 (re-frame/reg-sub
   :application/hakukohde-hits
   (fn [db _]
-    (let [hakukohde-query (hakukohde-query db)
+    (let [hakukohde-query @(re-frame/subscribe [:application/hakukohde-query])
           query-pattern (re-pattern (str "(?i)" hakukohde-query))
-          hakukohde-options (:options (hakukohteet-field db))]
+          hakukohde-options @(re-frame/subscribe [:application/hakukohde-options])]
       (if (< 1 (count hakukohde-query))
                                         ; TODO support other languages
         (->> hakukohde-options
@@ -113,28 +113,31 @@
 (re-frame/reg-sub
   :application/hakukohde-selected?
   (fn [db [_ hakukohde-oid]]
-    (some #(= % hakukohde-oid) (selected-hakukohde-oids db))))
+    (some #(= % hakukohde-oid)
+          @(re-frame/subscribe [:application/selected-hakukohteet]))))
 
 (re-frame/reg-sub
   :application/max-hakukohteet
-  (fn [db _] (max-hakukohteet db)))
+  (fn [db _]
+    (get-in (hakukohteet-field db)
+            [:params :max-hakukohteet]
+            nil)))
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
-  (fn [db _] (<= (max-hakukohteet db) (count (selected-hakukohde-oids db)))))
+  (fn [db _] (<= @(re-frame/subscribe [:application/max-hakukohteet])
+                 (count @(re-frame/subscribe [:application/selected-hakukohteet])))))
 
 (re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
     (let [lang :fi ;; FIXME
-          hakukohteet-by-oid (into {} (map (juxt :value identity)
-                                           (:options (hakukohteet-field db))))]
+          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])]
       (get-in hakukohteet-by-oid [hakukohde-oid :label lang]))))
 
 (re-frame/reg-sub
   :application/hakukohde-description
   (fn [db [_ hakukohde-oid]]
     (let [lang :fi ;; FIXME
-          hakukohteet-by-oid (into {} (map (juxt :value identity)
-                                           (:options (hakukohteet-field db))))]
+          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])]
       (get-in hakukohteet-by-oid [hakukohde-oid :description lang]))))
