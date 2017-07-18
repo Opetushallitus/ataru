@@ -80,9 +80,21 @@
   (fn [db _]
     (let [hakukohde-query         (hakukohde-query db)
           query-pattern           (re-pattern (str "(?i)" hakukohde-query))
-          hakukohde-options       (:options (first (filter #(= "hakukohteet" (:id %)) (get-in db [:form :content] []))))]
+          hakukohde-options       (->> (get-in db [:form :content] [])
+                                       (filter #(= "hakukohteet" (:id %)))
+                                       first
+                                       :options)
+          selected-hakukohteet    (->> (get-in db [:application :answers :hakukohteet :values] [])
+                                       (map :value)
+                                       set)]
       (if (< 1 (count hakukohde-query))
                                         ; TODO support other languages
         (filter #(re-find query-pattern (get-in % [:label :fi] ""))
                 hakukohde-options)
         []))))
+
+(re-frame/reg-sub
+  :application/hakukohde-selected?
+  (fn [db [_ hakukohde]]
+    (some #(= (:value %) (:value hakukohde))
+          (selected-hakukohteet db))))
