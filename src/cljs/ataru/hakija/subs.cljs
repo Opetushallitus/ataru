@@ -100,15 +100,7 @@
 (re-frame/reg-sub
   :application/hakukohde-hits
   (fn [db _]
-    (let [hakukohde-query @(re-frame/subscribe [:application/hakukohde-query])
-          query-pattern (re-pattern (str "(?i)" hakukohde-query))
-          hakukohde-options @(re-frame/subscribe [:application/hakukohde-options])]
-      (if (< 1 (count hakukohde-query))
-                                        ; TODO support other languages
-        (->> hakukohde-options
-             (filter #(re-find query-pattern (get-in % [:label :fi] "")))
-             (map :value))
-        []))))
+    (get-in db [:application :hakukohde-hits])))
 
 (re-frame/reg-sub
   :application/hakukohde-selected?

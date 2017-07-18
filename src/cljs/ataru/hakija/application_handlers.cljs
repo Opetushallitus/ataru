@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -588,15 +588,37 @@
   (fn [db _]
     (update-in db [:application :show-hakukohde-search] not)))
 
-(reg-event-db
+(reg-event-fx
+  :application/hakukohde-query-process
+  (fn [{db :db} [_ query hakukohde-options]]
+    (if (or (empty? hakukohde-options)
+            (not= (get-in db [:application :hakukohde-query]) query)
+            (empty? query))
+      {:db db}
+      (let [pattern (re-pattern (str "(?i)" query))
+            [hakukohde & rest] hakukohde-options]
+        {:db (if (re-find pattern (get-in hakukohde [:label :fi] ""))
+               (update-in db [:application :hakukohde-hits]
+                          conj (:value hakukohde))
+               db)
+         :dispatch [:application/hakukohde-query-process query rest]}))))
+
+(reg-event-fx
   :application/hakukohde-query-change
-  (fn [db [_ value]]
-    (assoc-in db [:application :hakukohde-query] value)))
+  (fn [{db :db} [_ hakukohde-query]]
+    {:db (-> db
+             (assoc-in [:application :hakukohde-query] hakukohde-query)
+             (assoc-in [:application :hakukohde-hits] []))
+     :dispatch [:application/hakukohde-query-process
+                hakukohde-query
+                @(subscribe [:application/hakukohde-options])]}))
 
 (reg-event-db
   :application/hakukohde-query-clear
   (fn [db _]
-    (assoc-in db [:application :hakukohde-query] "")))
+    (-> db
+        (assoc-in [:application :hakukohde-query] "")
+        (assoc-in [:application :hakukohde-hits] []))))
 
 (reg-event-db
   :application/hakukohde-add-selection
