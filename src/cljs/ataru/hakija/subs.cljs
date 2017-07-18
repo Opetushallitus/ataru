@@ -79,6 +79,11 @@
        (filter #(= "hakukohteet" (:id %)))
        first))
 
+(defn- max-hakukohteet [db]
+  (get-in (hakukohteet-field db)
+          [:params :max-hakukohteet]
+          nil))
+
 (re-frame/reg-sub
   :application/hakukohde-query
   (fn [db _] (hakukohde-query db)))
@@ -105,8 +110,9 @@
           (selected-hakukohteet db))))
 
 (re-frame/reg-sub
+  :application/max-hakukohteet
+  (fn [db _] (max-hakukohteet db)))
+
+(re-frame/reg-sub
   :application/hakukohteet-full?
-  (fn [db _]
-    (let [max-hakukohteet (get-in (hakukohteet-field db)
-                                  [:params :max-hakukohteet])]
-      (<= max-hakukohteet (count (selected-hakukohteet db))))))
+  (fn [db _] (<= (max-hakukohteet db) (count (selected-hakukohteet db)))))
