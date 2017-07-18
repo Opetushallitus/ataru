@@ -71,8 +71,8 @@
 (defn- hakukohde-query [db]
   (get-in db [:application :hakukohde-query]))
 
-(defn- selected-hakukohteet [db]
-  (get-in db [:application :answers :hakukohteet :values] []))
+(defn- selected-hakukohde-oids [db]
+  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
 
 (defn- hakukohteet-field [db]
   (->> (get-in db [:form :content] [])
@@ -97,10 +97,7 @@
   (fn [db _]
     (let [hakukohde-query (hakukohde-query db)
           query-pattern (re-pattern (str "(?i)" hakukohde-query))
-          hakukohde-options (:options (hakukohteet-field db))
-          selected-hakukohteet (->> (selected-hakukohteet db)
-                                    (map :value)
-                                    set)]
+          hakukohde-options (:options (hakukohteet-field db))]
       (if (< 1 (count hakukohde-query))
                                         ; TODO support other languages
         (filter #(re-find query-pattern (get-in % [:label :fi] ""))
@@ -110,8 +107,8 @@
 (re-frame/reg-sub
   :application/hakukohde-selected?
   (fn [db [_ hakukohde]]
-    (some #(= (:value %) (:value hakukohde))
-          (selected-hakukohteet db))))
+    (some #(= % (:value hakukohde))
+          (selected-hakukohde-oids db))))
 
 (re-frame/reg-sub
   :application/max-hakukohteet
@@ -119,4 +116,20 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
-  (fn [db _] (<= (max-hakukohteet db) (count (selected-hakukohteet db)))))
+  (fn [db _] (<= (max-hakukohteet db) (count (selected-hakukohde-oids db)))))
+
+(re-frame/reg-sub
+  :application/hakukohde-label
+  (fn [db [_ hakukohde-oid]]
+    (let [lang :fi ;; FIXME
+          hakukohteet-by-oid (into {} (map (juxt :value identity)
+                                           (:options (hakukohteet-field db))))]
+      (get-in hakukohteet-by-oid [hakukohde-oid :label lang]))))
+
+(re-frame/reg-sub
+  :application/hakukohde-description
+  (fn [db [_ hakukohde-oid]]
+    (let [lang :fi ;; FIXME
+          hakukohteet-by-oid (into {} (map (juxt :value identity)
+                                           (:options (hakukohteet-field db))))]
+      (get-in hakukohteet-by-oid [hakukohde-oid :description lang]))))

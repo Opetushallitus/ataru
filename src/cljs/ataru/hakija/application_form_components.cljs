@@ -571,16 +571,15 @@
     "Poista"]])
 
 (defn- selected-hakukohde-row
-  [hakukohde]
+  [hakukohde-oid]
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
-     ; TODO support other languages
-     (-> hakukohde :label :fi)]
+     @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:div.application__hakukohde-selected-row-description
-     (-> hakukohde :description :fi)]]
+     @(subscribe [:application/hakukohde-description hakukohde-oid])]]
    (when @(subscribe [:application/hakukohteet-editable?])
-     [selected-hakukohde-row-remove (:value hakukohde)])])
+     [selected-hakukohde-row-remove hakukohde-oid])])
 
 (defn- search-hit-hakukohde-row
   [hakukohde]
@@ -588,9 +587,9 @@
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
                                         ; TODO support other languages
-     (-> hakukohde :label :fi)]
+     @(subscribe [:application/hakukohde-label (:value hakukohde)])]
     [:div.application__hakukohde-selected-row-description
-     (-> hakukohde :description :fi)]]
+     @(subscribe [:application/hakukohde-description (:value hakukohde)])]]
    [:div.application__hakukohde-row-button-container
     (if @(subscribe [:application/hakukohde-selected? hakukohde])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
@@ -651,7 +650,7 @@
    [:div.application__hakukohde-selected-list
     (for [hakukohde selected-hakukohteet]
       ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
-      [selected-hakukohde-row hakukohde])
+      [selected-hakukohde-row (:value hakukohde)])
     (when @(subscribe [:application/hakukohteet-editable?])
       [:div.application__hakukohde-row
        [:a.application__hakukohde-selection-open-search
