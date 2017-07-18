@@ -572,7 +572,6 @@
 
 (defn- selected-hakukohde-row
   [hakukohde]
-  ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
@@ -581,11 +580,10 @@
     [:div.application__hakukohde-selected-row-description
      (-> hakukohde :description :fi)]]
    (when @(subscribe [:application/hakukohteet-editable?])
-     (selected-hakukohde-row-remove hakukohde))])
+     [selected-hakukohde-row-remove hakukohde])])
 
 (defn- search-hit-hakukohde-row
   [hakukohde]
-  ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
@@ -605,7 +603,7 @@
          "Lisää"]))]])
 
 (defn- hakukohde-selection-search
-  [field-descriptor selected-hakukohteet]
+  []
   (let [hakukohde-query @(subscribe [:application/hakukohde-query])
         search-hit-hakukohteet @(subscribe [:application/hakukohde-hits])]
     [:div
@@ -621,10 +619,10 @@
           [:a
            {:on-click #(dispatch [:application/hakukohde-query-clear])}
            [:i.zmdi.zmdi-close]]])]
-      (into
-       [:div.application__hakukohde-selection-search-results
-        (doall
-         (map search-hit-hakukohde-row search-hit-hakukohteet))])]]))
+      [:div.application__hakukohde-selection-search-results
+       (for [hakukohde search-hit-hakukohteet]
+         ^{:key (str "found-hakukohde-row-" (:value hakukohde))}
+         [search-hit-hakukohde-row hakukohde])]]]))
 
 (defn- hakukohde-selection-header
   [lang default-lang field-descriptor selected-hakukohteet]
@@ -644,27 +642,23 @@
    field-descriptor
    selected-hakukohteet
    show-hakukohde-search?]
-  (let [selected-hakukohteet-elements (mapv selected-hakukohde-row
-                                            selected-hakukohteet)]
-    [:div.application__wrapper-element.application__wrapper-element-border
-     (hakukohde-selection-header
-      lang
-      default-lang
-      field-descriptor
-      selected-hakukohteet)
-     (into
-      [:div.application__hakukohde-selected-list]
-      (if @(subscribe [:application/hakukohteet-editable?])
-        (conj selected-hakukohteet-elements
-              [:div.application__hakukohde-row
-               [:a.application__hakukohde-selection-open-search
-                {:on-click #(dispatch [:application/hakukohde-search-toggle])}
-                "Lisää hakukohde"]
-               (when show-hakukohde-search?
-                 (hakukohde-selection-search
-                  field-descriptor
-                  selected-hakukohteet))])
-        selected-hakukohteet-elements))]))
+  [:div.application__wrapper-element.application__wrapper-element-border
+   [hakukohde-selection-header
+    lang
+    default-lang
+    field-descriptor
+    selected-hakukohteet]
+   [:div.application__hakukohde-selected-list
+    (for [hakukohde selected-hakukohteet]
+      ^{:key (str "selected-hakukohde-row-" (:value hakukohde))}
+      [selected-hakukohde-row hakukohde])
+    (when @(subscribe [:application/hakukohteet-editable?])
+      [:div.application__hakukohde-row
+       [:a.application__hakukohde-selection-open-search
+        {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+        "Lisää hakukohde"]
+       (when show-hakukohde-search?
+         [hakukohde-selection-search])])]])
 
 (defn hakukohteet [_]
   (fn [field-descriptor]
