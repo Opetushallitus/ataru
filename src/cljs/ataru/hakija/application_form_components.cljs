@@ -564,10 +564,10 @@
        [attachment-upload field-descriptor id @attachment-count]])))
 
 (defn- selected-hakukohde-row-remove
-  [hakukohde]
+  [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
    [:a.application__hakukohde-remove-link
-    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde])}
+    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde-oid])}
     "Poista"]])
 
 (defn- selected-hakukohde-row
@@ -580,7 +580,7 @@
     [:div.application__hakukohde-selected-row-description
      (-> hakukohde :description :fi)]]
    (when @(subscribe [:application/hakukohteet-editable?])
-     [selected-hakukohde-row-remove hakukohde])])
+     [selected-hakukohde-row-remove (:value hakukohde)])])
 
 (defn- search-hit-hakukohde-row
   [hakukohde]

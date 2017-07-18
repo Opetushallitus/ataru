@@ -606,6 +606,6 @@
 
 (reg-event-db
   :application/hakukohde-remove-selection
-  (fn [db [_ hakukohde]]
+  (fn [db [_ hakukohde-oid]]
     (update-in db [:application :answers :hakukohteet :values]
-               (fn [oids] (remove #(= (:value hakukohde) (:value %)) oids)))))
+               (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))))
