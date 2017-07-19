@@ -590,18 +590,18 @@
 
 (reg-event-fx
   :application/hakukohde-query-process
-  (fn [{db :db} [_ query hakukohde-options]]
+  (fn [{db :db} [_ query pattern hakukohde-options]]
     (if (or (empty? hakukohde-options)
             (not= (get-in db [:application :hakukohde-query]) query)
             (empty? query))
       {:db db}
-      (let [pattern (re-pattern (str "(?i)" query))
-            [hakukohde & rest] hakukohde-options]
+      (let [[hakukohde & rest] hakukohde-options]
         {:db (if (re-find pattern (get-in hakukohde [:label :fi] ""))
                (update-in db [:application :hakukohde-hits]
                           conj (:value hakukohde))
                db)
-         :dispatch [:application/hakukohde-query-process query rest]}))))
+         :dispatch [:application/hakukohde-query-process
+                    query pattern rest]}))))
 
 (reg-event-fx
   :application/hakukohde-query-change
@@ -611,6 +611,7 @@
              (assoc-in [:application :hakukohde-hits] []))
      :dispatch [:application/hakukohde-query-process
                 hakukohde-query
+                (re-pattern (str "(?i)" hakukohde-query))
                 @(subscribe [:application/hakukohde-options])]}))
 
 (reg-event-db
