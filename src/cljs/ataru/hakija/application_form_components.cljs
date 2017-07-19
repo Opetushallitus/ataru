@@ -638,7 +638,7 @@
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor field-descriptor]])
 
-(defn- hakukohde-selection
+(defn- hakukohteet
   [field-descriptor]
   [:div.application__wrapper-element.application__wrapper-element-border
    [hakukohde-selection-header field-descriptor]
@@ -653,10 +653,6 @@
         "Lisää hakukohde"]
        (when @(subscribe [:application/show-hakukohde-search])
          [hakukohde-selection-search])])]])
-
-(defn hakukohteet [_]
-  (fn [field-descriptor]
-    [hakukohde-selection field-descriptor]))
 
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])
