@@ -147,8 +147,10 @@
           max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])
           counter (str "(" (count selected-hakukohteet) "/" max-hakukohteet ")")]
       @(re-frame/subscribe [:application/get-i18n-text
-                   (into {} (for [[k label] label-translations]
-                              [k (str label " " counter)]))]))))
+                            (if max-hakukohteet
+                              (into {} (for [[k label] label-translations]
+                                         [k (str label " " counter)]))
+                              label-translations)]))))
 
 (re-frame/reg-sub
   :application/max-hakukohteet-reached-label
