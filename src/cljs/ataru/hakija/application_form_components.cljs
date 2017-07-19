@@ -639,7 +639,7 @@
    [scroll-to-anchor field-descriptor]])
 
 (defn- hakukohde-selection
-  [field-descriptor show-hakukohde-search?]
+  [field-descriptor]
   [:div.application__wrapper-element.application__wrapper-element-border
    [hakukohde-selection-header field-descriptor]
    [:div.application__hakukohde-selected-list
@@ -651,13 +651,12 @@
        [:a.application__hakukohde-selection-open-search
         {:on-click #(dispatch [:application/hakukohde-search-toggle])}
         "Lisää hakukohde"]
-       (when show-hakukohde-search?
+       (when @(subscribe [:application/show-hakukohde-search])
          [hakukohde-selection-search])])]])
 
 (defn hakukohteet [_]
   (fn [field-descriptor]
-    (let [show-hakukohde-search (subscribe [:state-query [:application :show-hakukohde-search]])]
-      [hakukohde-selection field-descriptor @show-hakukohde-search])))
+    [hakukohde-selection field-descriptor]))
 
 (defn info-element [field-descriptor]
   (let [language (subscribe [:application/form-language])

@@ -142,3 +142,8 @@
           selected-hakukohteet @(re-frame/subscribe [:application/selected-hakukohteet])
           max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
       (str label " (" (count selected-hakukohteet) "/" max-hakukohteet ")"))))
+
+(re-frame/reg-sub
+  :application/show-hakukohde-search
+  (fn [db _]
+    (get-in db [:application :show-hakukohde-search])))
