@@ -563,11 +563,20 @@
                       [attachment-row field-descriptor id attachment-idx])))])
        [attachment-upload field-descriptor id @attachment-count]])))
 
+(defn- hakukohde-remove-event-handler [e]
+  (dispatch [:application/hakukohde-remove-selection
+             (.getAttribute (.-target e) "data-hakukohde-oid")]))
+
+(defn- hakukohde-select-event-handler [e]
+  (dispatch [:application/hakukohde-add-selection
+             (.getAttribute (.-target e) "data-hakukohde-oid")]))
+
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
    [:a.application__hakukohde-remove-link
-    {:on-click #(dispatch [:application/hakukohde-remove-selection hakukohde-oid])}
+    {:on-click hakukohde-remove-event-handler
+     :data-hakukohde-oid hakukohde-oid}
     "Poista"]])
 
 (defn- selected-hakukohde-row
@@ -598,7 +607,8 @@
              @(subscribe [:application/max-hakukohteet])
              " hakukohdetta")
         [:a.application__hakukohde-select-button
-         {:on-click #(dispatch [:application/hakukohde-add-selection hakukohde-oid])}
+         {:on-click hakukohde-select-event-handler
+          :data-hakukohde-oid hakukohde-oid}
          "Lisää"]))]])
 
 (defn- hakukohde-selection-search
