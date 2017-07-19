@@ -19,7 +19,7 @@
        (map :fieldType)
        (first)))
 
-(defn invalid-field-status [valid-status selected-hakukohteet max-hakukohteet]
+(defn invalid-field-status []
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
@@ -30,7 +30,8 @@
                                          (zero? (count selected-hakukohteet)))
                                     (and max-hakukohteet
                                          (< max-hakukohteet (count selected-hakukohteet))))]
-        (when (seq (:invalid-fields valid-status))
+        (when (or (seq (:invalid-fields valid-status))
+                  invalid-hakukohteet)
           [:div.application__invalid-field-status
            [:span.application__invalid-field-status-title
             {:on-click toggle-show-details}
@@ -98,15 +99,14 @@
 (defn status-controls []
   (let [valid-status         (subscribe [:application/valid-status])
         submit-status        (subscribe [:state-query [:application :submit-status]])
-        selected-hakukohteet (subscribe [:state-query [:application :answers :hakukohteet :values]])
-        max-hakukohteet      (subscribe [:state-query [:application :answers :hakukohteet :params :max-hakukohteet]])
+        selected-hakukohteet (subscribe [:application/selected-hakukohteet])
+        max-hakukohteet      (subscribe [:application/max-hakukohteet])
         can-apply?           (subscribe [:application/can-apply?])]
-    (fn []
-      (when @can-apply?
-        [:div.application__status-controls
-         [send-button-or-placeholder @valid-status @submit-status]
-         [invalid-field-status @valid-status @selected-hakukohteet @max-hakukohteet]
-         [sent-indicator @submit-status]]))))
+    (when @can-apply?
+      [:div.application__status-controls
+       [send-button-or-placeholder @valid-status @submit-status]
+       [invalid-field-status @valid-status @selected-hakukohteet @max-hakukohteet]
+       [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
   (let [lang         (subscribe [:application/form-language])
