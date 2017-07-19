@@ -99,3 +99,59 @@
  (fn [db]
    (let [show-search-control (get-in db [:application :search-control :show])]
      (boolean (some #{show-search-control} [:complete :incomplete])))))
+
+(re-frame/reg-sub
+  :application/get-i18n-text
+  (fn [db [_ translations]]
+    (get translations (keyword (get-in db [:application
+                                           :selected-application-and-form
+                                           :application
+                                           :lang]
+                                       "fi")))))
+
+(re-frame/reg-sub
+  :application/hakukohteet-field
+  (fn [db _]
+    (first
+     (filter #(= "hakukohteet" (:id %))
+             (get-in db [:application
+                         :selected-application-and-form
+                         :form
+                         :content])))))
+
+(re-frame/reg-sub
+  :application/hakukohde-options-by-oid
+  (fn [db _]
+    (->> @(re-frame/subscribe [:application/hakukohteet-field])
+         :options
+         (map (juxt :value identity))
+         (into {}))))
+
+(re-frame/reg-sub
+  :application/hakukohteet-header
+  (fn [db _]
+    @(re-frame/subscribe [:application/get-i18n-text
+                          (:label @(re-frame/subscribe [:application/hakukohteet-field]))])))
+(re-frame/reg-sub
+  :application/hakukohde-label
+  (fn [db [_ hakukohde-oid]]
+    @(re-frame/subscribe [:application/get-i18n-text
+                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+                                  [hakukohde-oid :label])])))
+
+(re-frame/reg-sub
+  :application/hakukohde-description
+  (fn [db [_ hakukohde-oid]]
+    @(re-frame/subscribe [:application/get-i18n-text
+                          (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+                                  [hakukohde-oid :description])])))
+
+(re-frame/reg-sub
+  :application/hakukohteet
+  (fn [db _]
+    (get-in db [:application
+                :selected-application-and-form
+                :application
+                :answers
+                :hakukohteet
+                :value])))

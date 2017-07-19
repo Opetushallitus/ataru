@@ -141,12 +141,13 @@
        [:div
         [field followup application lang]]))])
 
-(defn- hakukohteet-list-row [hakukohde]
-  ^{:key (str "hakukohteet-list-row-" (:value hakukohde))}
+(defn- hakukohteet-list-row [hakukohde-oid]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
-    [:div.application-handling__review-area-hakukohde-heading (-> hakukohde :label :fi)]
-    [:div.application-handling__review-area-koulutus-heading (-> hakukohde :description :fi)]]])
+    [:div.application-handling__review-area-hakukohde-heading
+     @(subscribe [:application/hakukohde-label hakukohde-oid])]
+    [:div.application-handling__review-area-koulutus-heading
+     @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
 (defn- hakukohteet [content application]
   (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
@@ -154,10 +155,12 @@
                          (get-in application [:answers :hakukohteet :value] []))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
-      [:h2 "Hakukohteet"]
+      [:h2 @(subscribe [:application/hakukohteet-header])]
       [scroll-to-anchor content]]
-     (into [:div.application__wrapper-contents]
-           (map hakukohteet-list-row hakukohteet))]))
+     [:div.application__wrapper-contents
+      (for [hakukohde-oid @(subscribe [:application/hakukohteet])]
+        ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
+        [hakukohteet-list-row hakukohde-oid])]]))
 
 (defn field [content application lang]
   (match content
