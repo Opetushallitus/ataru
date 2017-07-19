@@ -123,25 +123,33 @@
 (re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
-    (let [lang :fi ;; FIXME
-          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])]
-      (get-in hakukohteet-by-oid [hakukohde-oid :label lang]))))
+    (let [lang @(re-frame/subscribe [:application/form-language])
+          default-lang @(re-frame/subscribe [:application/default-language])
+          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+          hakukohde (get hakukohteet-by-oid hakukohde-oid)]
+      (or (get-in hakukohde [:label lang])
+          (get-in hakukohde [:label default-lang])))))
 
 (re-frame/reg-sub
   :application/hakukohde-description
   (fn [db [_ hakukohde-oid]]
-    (let [lang :fi ;; FIXME
-          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])]
-      (get-in hakukohteet-by-oid [hakukohde-oid :description lang]))))
+    (let [lang @(re-frame/subscribe [:application/form-language])
+          default-lang @(re-frame/subscribe [:application/default-language])
+          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+          hakukohde (get hakukohteet-by-oid hakukohde-oid)]
+      (or (get-in hakukohde [:description lang])
+          (get-in hakukohde [:description default-lang])))))
 
 (re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
-    (let [lang :fi ;; FIXME
-          label (get-in (hakukohteet-field db) [:label lang])
+    (let [lang @(re-frame/subscribe [:application/form-language])
+          default-lang @(re-frame/subscribe [:application/default-language])
+          label (:label (hakukohteet-field db))
           selected-hakukohteet @(re-frame/subscribe [:application/selected-hakukohteet])
           max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
-      (str label " (" (count selected-hakukohteet) "/" max-hakukohteet ")"))))
+      (str (or (get label lang) (get label default-lang))
+           " (" (count selected-hakukohteet) "/" max-hakukohteet ")"))))
 
 (re-frame/reg-sub
   :application/show-hakukohde-search

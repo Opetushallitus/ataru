@@ -604,7 +604,6 @@
   [:div.application__hakukohde-row
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
-                                        ; TODO support other languages
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:div.application__hakukohde-selected-row-description
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]
