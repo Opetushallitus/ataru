@@ -59,6 +59,7 @@
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
+                        (s/optional-key :label-amendment)                LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params)                         s/Any
                         (s/optional-key :no-blank-option)                s/Bool
