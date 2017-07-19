@@ -47,6 +47,11 @@
         first)))
 
 (re-frame/reg-sub
+  :application/get-i18n-text
+  (fn [db [_ translations]]
+    (get translations @(re-frame/subscribe [:application/form-language]))))
+
+(re-frame/reg-sub
   :application/adjacent-field-row-amount
   (fn [db [_ field-descriptor]]
     (let [child-id   (-> (:children field-descriptor) first :id keyword)
@@ -123,33 +128,38 @@
 (re-frame/reg-sub
   :application/hakukohde-label
   (fn [db [_ hakukohde-oid]]
-    (let [lang @(re-frame/subscribe [:application/form-language])
-          default-lang @(re-frame/subscribe [:application/default-language])
-          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-          hakukohde (get hakukohteet-by-oid hakukohde-oid)]
-      (or (get-in hakukohde [:label lang])
-          (get-in hakukohde [:label default-lang])))))
+    @(re-frame/subscribe [:application/get-i18n-text
+                 (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+                         [hakukohde-oid :label])])))
 
 (re-frame/reg-sub
   :application/hakukohde-description
   (fn [db [_ hakukohde-oid]]
-    (let [lang @(re-frame/subscribe [:application/form-language])
-          default-lang @(re-frame/subscribe [:application/default-language])
-          hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])
-          hakukohde (get hakukohteet-by-oid hakukohde-oid)]
-      (or (get-in hakukohde [:description lang])
-          (get-in hakukohde [:description default-lang])))))
+    @(re-frame/subscribe [:application/get-i18n-text
+                 (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
+                         [hakukohde-oid :description])])))
 
 (re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
-    (let [lang @(re-frame/subscribe [:application/form-language])
-          default-lang @(re-frame/subscribe [:application/default-language])
-          label (:label (hakukohteet-field db))
+    (let [label-translations (:label (hakukohteet-field db))
           selected-hakukohteet @(re-frame/subscribe [:application/selected-hakukohteet])
-          max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
-      (str (or (get label lang) (get label default-lang))
-           " (" (count selected-hakukohteet) "/" max-hakukohteet ")"))))
+          max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])
+          counter (str "(" (count selected-hakukohteet) "/" max-hakukohteet ")")]
+      @(re-frame/subscribe [:application/get-i18n-text
+                   (into {} (for [[k label] label-translations]
+                              [k (str label " " counter)]))]))))
+
+(re-frame/reg-sub
+  :application/max-hakukohteet-reached-label
+  (fn [db _]
+    (let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
+      @(re-frame/subscribe [:application/get-i18n-text
+                   {:fi (str "Tässä haussa voit valita "
+                             max-hakukohteet
+                             " hakukohdetta")
+                    :sv ""
+                    :en ""}]))))
 
 (re-frame/reg-sub
   :application/show-hakukohde-search

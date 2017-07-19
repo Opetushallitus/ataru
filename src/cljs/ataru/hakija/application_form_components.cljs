@@ -586,7 +586,10 @@
    [:a.application__hakukohde-remove-link
     {:on-click hakukohde-remove-event-handler
      :data-hakukohde-oid hakukohde-oid}
-    "Poista"]])
+    @(subscribe [:application/get-i18n-text
+                 {:fi "Poista"
+                  :sv ""
+                  :en ""}])]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -611,13 +614,14 @@
     (if @(subscribe [:application/hakukohde-selected? hakukohde-oid])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
       (if @(subscribe [:application/hakukohteet-full?])
-        (str "Tässä haussa voit valita "
-             @(subscribe [:application/max-hakukohteet])
-             " hakukohdetta")
+        @(subscribe [:application/max-hakukohteet-reached-label])
         [:a.application__hakukohde-select-button
          {:on-click hakukohde-select-event-handler
           :data-hakukohde-oid hakukohde-oid}
-         "Lisää"]))]])
+         @(subscribe [:application/get-i18n-text
+                      {:fi "Lisää"
+                       :sv ""
+                       :en ""}])]))]])
 
 (defn- hakukohde-selection-search
   []
@@ -628,7 +632,10 @@
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
         {:on-change   hakukohde-query-change-event-handler
-         :placeholder "Etsi tämän haun koulutuksia"
+         :placeholder @(subscribe [:application/get-i18n-text
+                                   {:fi "Etsi tämän haun koulutuksia"
+                                    :sv ""
+                                    :en ""}])
          :value hakukohde-query}]
        (when (not (empty? hakukohde-query))
          [:div.application__form-clear-text-input-in-box
@@ -658,7 +665,10 @@
       [:div.application__hakukohde-row
        [:a.application__hakukohde-selection-open-search
         {:on-click hakukohde-search-toggle-event-handler}
-        "Lisää hakukohde"]
+        @(subscribe [:application/get-i18n-text
+                     {:fi "Lisää hakukohde"
+                      :sv ""
+                      :en ""}])]
        (when @(subscribe [:application/show-hakukohde-search])
          [hakukohde-selection-search])])]])
 
