@@ -133,3 +133,12 @@
     (let [lang :fi ;; FIXME
           hakukohteet-by-oid @(re-frame/subscribe [:application/hakukohde-options-by-oid])]
       (get-in hakukohteet-by-oid [hakukohde-oid :description lang]))))
+
+(re-frame/reg-sub
+  :application/hakukohteet-header
+  (fn [db _]
+    (let [lang :fi ;; FIXME
+          label (get-in (hakukohteet-field db) [:label lang])
+          selected-hakukohteet @(re-frame/subscribe [:application/selected-hakukohteet])
+          max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
+      (str label " (" (count selected-hakukohteet) "/" max-hakukohteet ")"))))
