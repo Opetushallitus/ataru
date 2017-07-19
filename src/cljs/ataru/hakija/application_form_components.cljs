@@ -571,6 +571,15 @@
   (dispatch [:application/hakukohde-add-selection
              (.getAttribute (.-target e) "data-hakukohde-oid")]))
 
+(defn- hakukohde-query-change-event-handler [e]
+  (dispatch [:application/hakukohde-query-change (.-value (.-target e))]))
+
+(defn- hakukohde-query-clear-event-handler [_]
+  (dispatch [:application/hakukohde-query-clear]))
+
+(defn- hakukohde-search-toggle-event-handler [_]
+  (dispatch [:application/hakukohde-search-toggle]))
+
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
@@ -619,13 +628,13 @@
      [:div.application__hakukohde-selection-search-container
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
-        {:on-change   #(dispatch [:application/hakukohde-query-change (aget % "target" "value")])
+        {:on-change   hakukohde-query-change-event-handler
          :placeholder "Etsi tämän haun koulutuksia"
          :value hakukohde-query}]
        (when (not (empty? hakukohde-query))
          [:div.application__form-clear-text-input-in-box
           [:a
-           {:on-click #(dispatch [:application/hakukohde-query-clear])}
+           {:on-click hakukohde-query-clear-event-handler}
            [:i.zmdi.zmdi-close]]])]
       [:div.application__hakukohde-selection-search-results
        (for [hakukohde-oid @(subscribe [:application/hakukohde-hits])]
@@ -649,7 +658,7 @@
     (when @(subscribe [:application/hakukohteet-editable?])
       [:div.application__hakukohde-row
        [:a.application__hakukohde-selection-open-search
-        {:on-click #(dispatch [:application/hakukohde-search-toggle])}
+        {:on-click hakukohde-search-toggle-event-handler}
         "Lisää hakukohde"]
        (when @(subscribe [:application/show-hakukohde-search])
          [hakukohde-selection-search])])]])
