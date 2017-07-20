@@ -105,7 +105,7 @@
       (assoc :secret secret))))
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label])
+  (map #(select-keys % [:id :label :children])
        (filter #(and (= (:fieldClass %) "wrapperElement")
                      (not (= (:fieldType %) "adjacentfieldset")))
                (:content form))))
