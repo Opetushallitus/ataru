@@ -47,6 +47,7 @@ lein figwheel virkailija-dev
 The above assumes that your ataru-secrets repo is checked out beside
 ataru repo. Figwheel will automatically push cljs changes to the browser.
 
+Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
 Browse to [http://localhost:8350](http://localhost:8350).
 
 You can also run a "minimal" version of the virkailija system with
@@ -134,27 +135,24 @@ and
 lein virkailija-dev
 ```
 
+Remeber to compile all changed UI code before running UI-tests. To clean and recompile all UI code:
+
+```
+./bin/cibuild ui-compile
+```
+
+Also remember to restart applications after re-compiling code!
+
 Tests assume a blank database on which to run and create new
 data to. We assume the DB has been started as instructed in _Backend &
-browser tests_. Now we'll wipe it clean with:
+browser tests_. We also need to run migrations and insert fixtures. 
+This can all be done with:
 
 ```
-./bin/cibuild.sh nuke-test-db
+./bin/cibuild reset-test-database-with-fixture
 ```
 
-We'll need a fixture, but to insert that into the DB, we must run the
-migrations in first (since we just wiped everything):
-
-```
-./bin/cibuild.sh run-migrations
-```
-
-And now the fixture:
-
-```
-./bin/lein with-profile dev run -m ataru.fixtures.db.browser-test-db/init-db-fixture
-```
-
+Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
 Navigate to [Virkailija tests](http://localhost:8350/lomake-editori/virkailija-test.html)
 
 That will run the tests for virkailija.
