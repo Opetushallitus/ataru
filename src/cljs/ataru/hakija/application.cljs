@@ -105,8 +105,10 @@
       (assoc :secret secret))))
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label :children])
-       (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
+  (map #(select-keys % [:id :label])
+       (filter #(and (= (:fieldClass %) "wrapperElement")
+                     (not (= (:fieldType %) "adjacentfieldset")))
+               (:content form))))
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
