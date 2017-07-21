@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
@@ -587,9 +587,13 @@
   (fn [db [_ hakukohde-query]]
     (if (and (= hakukohde-query (get-in db [:application :hakukohde-query]))
              (< 1 (count hakukohde-query)))
-      (let [pattern (re-pattern (str "(?i)" hakukohde-query))]
+      (let [hakukohde-options (->> (get-in db [:form :content] [])
+                                   (filter #(= "hakukohteet" (:id %)))
+                                   first
+                                   :options)
+            pattern (re-pattern (str "(?i)" hakukohde-query))]
         (assoc-in db [:application :hakukohde-hits]
-                  (->> @(subscribe [:application/hakukohde-options])
+                  (->> hakukohde-options
                        (filter #(re-find pattern (get-in % [:label :fi] "")))
                        (map :value))))
       db)))
