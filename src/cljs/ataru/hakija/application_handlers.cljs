@@ -577,6 +577,11 @@
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
 
+(defn- hakukohteet-field [db]
+  (->> (get-in db [:form :content] [])
+       (filter #(= "hakukohteet" (:id %)))
+       first))
+
 (reg-event-db
   :application/hakukohde-search-toggle
   (fn [db _]
@@ -587,10 +592,7 @@
   (fn [db [_ hakukohde-query]]
     (if (and (= hakukohde-query (get-in db [:application :hakukohde-query]))
              (< 1 (count hakukohde-query)))
-      (let [hakukohde-options (->> (get-in db [:form :content] [])
-                                   (filter #(= "hakukohteet" (:id %)))
-                                   first
-                                   :options)
+      (let [hakukohde-options (:options (hakukohteet-field db))
             pattern (re-pattern (str "(?i)" hakukohde-query))]
         (assoc-in db [:application :hakukohde-hits]
                   (->> hakukohde-options
@@ -618,11 +620,22 @@
 (reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde-oid]]
-    (update-in db [:application :answers :hakukohteet :values]
-               conj {:valid true :value hakukohde-oid})))
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values])
+          max-hakukohteet (get-in (hakukohteet-field db) [:params :max-hakukohteet])]
+      (-> db
+          (update-in [:application :answers :hakukohteet :values]
+                     conj {:valid true
+                           :value hakukohde-oid})
+          (assoc-in [:application :answers :hakukohteet :valid]
+                    (or (nil? max-hakukohteet)
+                        (< (count selected-hakukohteet) max-hakukohteet)))))))
 
 (reg-event-db
   :application/hakukohde-remove-selection
   (fn [db [_ hakukohde-oid]]
-    (update-in db [:application :answers :hakukohteet :values]
-               (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))))
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values])]
+      (-> db
+          (update-in [:application :answers :hakukohteet :values]
+                     (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))
+          (assoc-in [:application :answers :hakukohteet :valid]
+                    (< 1 (count selected-hakukohteet)))))))

@@ -25,40 +25,32 @@
         lang                (subscribe [:application/form-language])
         default-lang        (subscribe [:application/default-language])
         form-fields         (reaction (util/flatten-form-fields @(subscribe [:state-query [:form :content]])))]
-    (fn [valid-status selected-hakukohteet max-hakukohteet]
-      (let [invalid-hakukohteet (or (and selected-hakukohteet
-                                         (zero? (count selected-hakukohteet)))
-                                    (and max-hakukohteet
-                                         (< max-hakukohteet (count selected-hakukohteet))))]
-        (when (or (seq (:invalid-fields valid-status))
-                  invalid-hakukohteet)
-          [:div.application__invalid-field-status
-           [:span.application__invalid-field-status-title
-            {:on-click toggle-show-details}
-            (case @lang
-              :fi "Tarkista "
-              :en "Check "
-              :sv "Kontrollera ")
-            [:b (+ (count (:invalid-fields valid-status))
-                   (if invalid-hakukohteet 1 0))]
-            (case @lang
-              :fi " tietoa"
-              :en " answers"
-              :sv " uppgifter")]
-           (when @show-details
-             [:div
-              [:div.application__invalid-fields-arrow-up]
-              (into [:div.application__invalid-fields
-                     [:span.application__close-invalid-fields
-                      {:on-click toggle-show-details}
-                      "x"]]
-                    (concat (when invalid-hakukohteet
-                              [[:a {:href "#scroll-to-hakukohteet"} "Hakukohteet"]])
-                            (map (fn [field]
-                                   (let [label (or (get-in field [:label @lang])
-                                                   (get-in field [:label @default-lang]))]
-                                     [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
-                                 (:invalid-fields valid-status))))])])))))
+    (fn [valid-status]
+      (when (seq (:invalid-fields valid-status))
+        [:div.application__invalid-field-status
+         [:span.application__invalid-field-status-title
+          {:on-click toggle-show-details}
+          (case @lang
+            :fi "Tarkista "
+            :en "Check "
+            :sv "Kontrollera ")
+          [:b (count (:invalid-fields valid-status))]
+          (case @lang
+            :fi " tietoa"
+            :en " answers"
+            :sv " uppgifter")]
+         (when @show-details
+           [:div
+            [:div.application__invalid-fields-arrow-up]
+            (into [:div.application__invalid-fields
+                   [:span.application__close-invalid-fields
+                    {:on-click toggle-show-details}
+                    "x"]]
+                  (map (fn [field]
+                         (let [label (or (get-in field [:label @lang])
+                                         (get-in field [:label @default-lang]))]
+                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
   (let [lang (subscribe [:application/form-language])]
@@ -99,13 +91,11 @@
 (defn status-controls []
   (let [valid-status         (subscribe [:application/valid-status])
         submit-status        (subscribe [:state-query [:application :submit-status]])
-        selected-hakukohteet (subscribe [:application/selected-hakukohteet])
-        max-hakukohteet      (subscribe [:application/max-hakukohteet])
         can-apply?           (subscribe [:application/can-apply?])]
     (when @can-apply?
       [:div.application__status-controls
        [send-button-or-placeholder @valid-status @submit-status]
-       [invalid-field-status @valid-status @selected-hakukohteet @max-hakukohteet]
+       [invalid-field-status @valid-status]
        [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
