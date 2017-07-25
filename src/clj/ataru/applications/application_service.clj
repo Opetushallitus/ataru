@@ -7,6 +7,7 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
+    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [taoensso.timbre :refer [spy debug]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser])
   (:import [java.io ByteArrayInputStream]))
@@ -64,42 +65,6 @@
                                (cond-> human-readable-value
                                  (= (count human-readable-value) 1)
                                  first))))))))))
-
-(defn- koulutukset->str
-  "Produces a condensed string to better identify a hakukohde by its koulutukset"
-  [koulutukset]
-  (->> koulutukset
-       (map (fn [koulutus]
-              (->> [(:koulutuskoodi-name koulutus)
-                    (:tutkintonimike-name koulutus)
-                    (:tarkenne koulutus)]
-                   (remove clojure.string/blank?)
-                   (distinct)
-                   (clojure.string/join ", "))))
-       (remove clojure.string/blank?)
-       (distinct)
-       (clojure.string/join "; ")))
-
-(defn- populate-hakukohde-answer-options [form tarjonta-info]
-  (update form :content
-          (fn [content]
-            (clojure.walk/prewalk
-             (fn [field]
-               (if (= (:fieldType field) "hakukohteet")
-                 (-> field
-                     (assoc :options
-                            (map (fn [{:keys [oid name koulutukset]}]
-                                   {:value oid
-                                    :label {:fi (or (:fi name) "")
-                                            :sv (or (:sv name) "")
-                                            :en (or (:en name) "")}
-                                    :description {:fi (koulutukset->str koulutukset)
-                                                  :sv ""
-                                                  :en ""}})
-                                 (get-in tarjonta-info [:tarjonta :hakukohteet])))
-                     (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
-                 field))
-             content))))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated

@@ -2,6 +2,7 @@
   (:require [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+            [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
             [taoensso.timbre :refer [warn]]))
 
 (defn fetch-form-by-key
@@ -11,42 +12,6 @@
                (not (true? (:deleted form))))
       (-> form
           (koodisto/populate-form-koodisto-fields)))))
-
-(defn- koulutukset->str
-  "Produces a condensed string to better identify a hakukohde by its koulutukset"
-  [koulutukset]
-  (->> koulutukset
-       (map (fn [koulutus]
-              (->> [(:koulutuskoodi-name koulutus)
-                    (:tutkintonimike-name koulutus)
-                    (:tarkenne koulutus)]
-                   (remove clojure.string/blank?)
-                   (distinct)
-                   (clojure.string/join ", "))))
-       (remove clojure.string/blank?)
-       (distinct)
-       (clojure.string/join "; ")))
-
-(defn- populate-hakukohde-answer-options [form tarjonta-info]
-  (update form :content
-          (fn [content]
-            (clojure.walk/prewalk
-             (fn [field]
-               (if (= (:fieldType field) "hakukohteet")
-                 (-> field
-                     (assoc :options
-                            (map (fn [{:keys [oid name koulutukset]}]
-                                   {:value oid
-                                    :label {:fi (or (:fi name) "")
-                                            :sv (or (:sv name) "")
-                                            :en (or (:en name) "")}
-                                    :description {:fi (koulutukset->str koulutukset)
-                                                  :sv ""
-                                                  :en ""}})
-                                 (get-in tarjonta-info [:tarjonta :hakukohteet])))
-                     (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
-                 field))
-             content))))
 
 (defn fetch-form-by-haku-oid
   [tarjonta-service haku-oid]
