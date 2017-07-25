@@ -7,12 +7,10 @@
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
             [ataru.hakija.application :refer [application-in-complete-state?]]
-            [ataru.application-common.koulutus :as koulutus]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
             [cljs-time.coerce :refer [from-long]]
-            [clojure.string :as string]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]))
 
