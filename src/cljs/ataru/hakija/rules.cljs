@@ -8,7 +8,8 @@
 
 (defn- set-empty-invalid
   [a]
-  (if (= "" (:value a))
+  (if (and (clojure.string/blank? (:value a))
+           (not (:cannot-view a)))
     (assoc a :valid false)
     a))
 
