@@ -17,20 +17,12 @@
 
 (defn- validate-birthdate-and-gender-component
   [answers-by-key child-answers]
-  (let [answer-passed? (partial (fn [child-answers key] (-> child-answers key :passed?)) child-answers)]
-    (boolean
-      (if
-        (or
-          (= (-> answers-by-key :nationality :value) "246")
-          (= (boolean (-> answers-by-key :have-finnish-ssn :value)) true))
-        (and                                                ; finnish or have ssn
-          (answer-passed? :ssn)
-          (answer-passed? :birth-date)
-          (answer-passed? :gender))
-        (and                                                ; not finnish, no ssn
-          (clojure.string/blank? (-> answers-by-key :ssn :value))
-          (answer-passed? :birth-date)
-          (answer-passed? :gender))))))
+  (boolean
+   (and (-> child-answers :birth-date :passed?)
+        (-> child-answers :gender :passed?)
+        (or (-> child-answers :ssn :passed?)
+            (and (clojure.string/blank? (-> answers-by-key :ssn :value))
+                 (not= (-> answers-by-key :nationality :value) "246"))))))
 
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
