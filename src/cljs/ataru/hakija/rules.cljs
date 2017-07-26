@@ -66,11 +66,15 @@
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
         ssn (get-in db [:application :answers :ssn])]
     (if (= "true" have-finnish-ssn)
-      (let [[birth-date gender] (if (and (:valid ssn)
-                                         (not-empty (:value ssn)))
-                                  [(parse-birth-date-from-ssn (:value ssn))
-                                   (parse-gender-from-ssn (:value ssn))]
-                                  ["" ""])]
+      (let [[birth-date gender] (cond (and (:valid ssn)
+                                           (not-empty (:value ssn)))
+                                      [(parse-birth-date-from-ssn (:value ssn))
+                                       (parse-gender-from-ssn (:value ssn))]
+                                      (:cannot-view ssn)
+                                      [(get-in db [:application :answers :birth-date :value])
+                                       (get-in db [:application :answers :gender :value])]
+                                      :else
+                                      ["" ""])]
         (-> db
             (update-in [:application :answers :birth-date]
                        merge {:valid true :value birth-date})
