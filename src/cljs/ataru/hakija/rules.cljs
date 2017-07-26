@@ -105,25 +105,28 @@
       ssn
       birth-date-and-gender))
 
+(defn- postal-office
+  ^{:dependencies [:country-of-residence :postal-code]}
+  [db]
+  (let [answers (-> db :application :answers)
+        country (-> answers :country-of-residence :value)
+        is-finland? (or (= country finland-country-code)
+                        (clojure.string/blank? country))
+        postal-code (-> answers :postal-code)]
+    (when (and is-finland? (:valid postal-code))
+      (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
+                      :application/handle-postal-code-input
+                      :application/handle-postal-code-error))
+    (-> db
+        (update-in [:application :answers :postal-office]
+                   merge {:valid (not is-finland?) :value ""})
+        (assoc-in [:application :ui :postal-office :visible?] is-finland?)
+        (assoc-in [:application :ui :postal-office :disabled?]
+                  (and is-finland? (:valid postal-code))))))
+
 (defn- select-postal-office-based-on-postal-code
   [db _]
-  (let [answers (-> db :application :answers)
-        country (-> answers :country-of-residence :value)]
-    (if (or (= country
-               finland-country-code)
-            (clojure.string/blank? country))                       ; only prefill postal office for finnish addresses
-      (if (-> answers :postal-code :valid)
-        (let [postal-code (-> answers :postal-code :value)]
-          (when-not (clojure.string/blank? postal-code)
-            (ajax/get
-              (str "/hakemus/api/postal-codes/" postal-code)
-              :application/handle-postal-code-input
-              :application/handle-postal-code-error))
-          db)
-        (-> db
-            (update-in [:application :answers :postal-office] merge no-required-answer)
-            (update-in [:application :ui] dissoc :postal-office)))
-      db)))
+  (postal-office db))
 
 (defn- prefill-preferred-first-name
   [db _]
@@ -150,11 +153,10 @@
                                     (validators/validate validator-key (-> db :application :answers answer-key :value) answers nil)))]
     (-> db
         (validate-answer :postal-code :postal-code)
-        (validate-answer :postal-office :postal-office)
         (validate-answer :city :city)
-        (assoc-in [:application :ui :postal-office :visible?] is-finland?)
         (assoc-in [:application :ui :home-town :visible?] is-finland?)
-        (assoc-in [:application :ui :city :visible?] (not is-finland?)))))
+        (assoc-in [:application :ui :city :visible?] (not is-finland?))
+        postal-office)))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
