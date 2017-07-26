@@ -154,7 +154,7 @@
     (toggle-values answer value answers-by-key)))
 
 (defn- set-ssn-field-visibility [db]
-  (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
+  (rules/run-rule {:toggle-ssn-based-fields "ssn"} db))
 
 (defn- set-country-specific-fields-visibility
   [db]
@@ -164,6 +164,15 @@
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
+
+(defn- set-have-finnish-ssn
+  [db]
+  (let [ssn (get-in db [:application :answers :ssn])]
+    (update-in db [:application :answers :have-finnish-ssn]
+               merge {:valid true
+                      :value (str (or (and (clojure.string/blank? (:value ssn))
+                                           (:cannot-view ssn))
+                                      (not (clojure.string/blank? (:value ssn)))))})))
 
 (defn- merge-submitted-answers [db [_ submitted-answers]]
   (-> db
@@ -199,6 +208,7 @@
                         answers)))
                   answers
                   submitted-answers)))
+      set-have-finnish-ssn
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
