@@ -61,10 +61,8 @@
                                 :form           321
                                 :name           "Form with hakukohde and haku"
                                 :lang           "fi"
-                                :hakukohde      "hakukohde.oid"
-                                :hakukohde_name "Hakukohde name"
+                                :hakukohde      ["hakukohde.oid"]
                                 :haku           "haku.oid"
-                                :haku_name      "Haku name"
                                 :person-oid     "1.123.345456567123"
                                 :answers        [{:key       "form_field_1_0"
                                                   :label     "Kysymys 4"

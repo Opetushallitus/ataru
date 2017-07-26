@@ -77,7 +77,8 @@
 
   (get-hakukohde [this hakukohde-oid]
     (when (or (= hakukohde-oid "1.2.246.562.20.49028196522")
-              (= hakukohde-oid "hakukohde.oid"))
+              (= hakukohde-oid "hakukohde.oid")
+              (= hakukohde-oid "hakukohde_oid"))
       {:tila                                    "LUONNOS",
        :ataruLomakeAvain                        "41101b4f-1762-49af-9db0-e3603adae3ad",
        :ryhmaliitokset                          [],
@@ -135,7 +136,8 @@
       "Ajoneuvonosturinkuljettajan ammattitutkinto"))
 
   (get-haku [this haku-oid]
-    (when (= haku-oid "1.2.246.562.29.65950024185")
+    (case haku-oid
+      "1.2.246.562.29.65950024185"
       {:tila                                                 "LUONNOS",
        :ataruLomakeAvain                                     "41101b4f-1762-49af-9db0-e3603adae3ad",
        :maksumuuriKaytossa                                   false,
@@ -170,7 +172,9 @@
                                                                :loppuPvm (+ (System/currentTimeMillis)
                                                                             86400000),
                                                                :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
-       :sijoittelu                                           false}))
+       :sijoittelu                                           false}
+      "haku.oid"
+      {:hakukohdeOids ["hakukohde_oid"]}))
 
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
