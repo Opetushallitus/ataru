@@ -124,6 +124,26 @@
         (assoc-in [:application :ui :postal-office :disabled?]
                   (and is-finland? (:valid postal-code))))))
 
+(defn- home-town-and-city
+  ^{:dependencies [:country-of-residence]}
+  [db]
+  (let [country (get-in db [:application :answers :country-of-residence :value])
+        is-finland? (or (= country finland-country-code)
+                        (clojure.string/blank? country))]
+    (if is-finland?
+      (-> db
+          (update-in [:application :answers :home-town] set-empty-invalid)
+          (update-in [:application :answers :city]
+                     merge {:valid true :value ""})
+          (assoc-in [:application :ui :home-town :visible?] true)
+          (assoc-in [:application :ui :city :visible?] false))
+      (-> db
+          (update-in [:application :answers :home-town]
+                     merge {:valid true :value ""})
+          (update-in [:application :answers :city] set-empty-invalid)
+          (assoc-in [:application :ui :home-town :visible?] false)
+          (assoc-in [:application :ui :city :visible?] true)))))
+
 (defn- select-postal-office-based-on-postal-code
   [db _]
   (postal-office db))
@@ -142,21 +162,9 @@
 
 (defn- change-country-of-residence
   [db _]
-  (let [answers     (-> db :application :answers)
-        country     (-> answers :country-of-residence :value)
-        is-finland? (or (= country
-                           finland-country-code)
-                        (clojure.string/blank? country))
-        validate-answer (fn [db answer-key validator-key]
-                          (assoc-in db
-                                    [:application :answers answer-key :valid]
-                                    (validators/validate validator-key (-> db :application :answers answer-key :value) answers nil)))]
-    (-> db
-        (validate-answer :postal-code :postal-code)
-        (validate-answer :city :city)
-        (assoc-in [:application :ui :home-town :visible?] is-finland?)
-        (assoc-in [:application :ui :city :visible?] (not is-finland?))
-        postal-office)))
+  (-> db
+      home-town-and-city
+      postal-office))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
