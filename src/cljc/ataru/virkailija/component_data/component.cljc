@@ -100,8 +100,6 @@
    :label {:fi "Hakukohteet"
            :sv ""
            :en ""}
-   :label-amendment {:fi "(Osio lisätää automaattisesti lomakkeelle)"
-                     :sv ""
-                     :en ""}
    :params {}
-   :options []})
+   :options []
+   :exclude-from-answers-if-hidden true})

@@ -109,6 +109,11 @@
   (fn [{:keys [db]} _]
     (send-application db :put)))
 
+(reg-event-db
+  :application/hide-hakukohteet-if-no-tarjonta
+  (fn [db _]
+    (assoc-in db [:application :ui :hakukohteet :visible?] (boolean (-> db :form :tarjonta)))))
+
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
                       :lang
@@ -231,7 +236,9 @@
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
      :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
-     :dispatch       [:application/set-followup-visibility-to-false]}))
+     :dispatch-n     (list
+                       [:application/set-followup-visibility-to-false]
+                       [:application/hide-hakukohteet-if-no-tarjonta])}))
 
 (reg-event-db
   :flasher
