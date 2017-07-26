@@ -188,7 +188,7 @@
                                            (:cannot-view ssn))
                                       (not (clojure.string/blank? (:value ssn)))))})))
 
-(defn- merge-submitted-answers [db [_ submitted-answers]]
+(defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
         (fn [answers]
@@ -226,29 +226,21 @@
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
-(reg-event-db
-  :application/merge-submitted-answers
-  merge-submitted-answers)
-
 (defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form               (-> (languages->kwd form)
-                               (set-form-language))
-        db                 (-> db
-                               (update :form (fn [{:keys [selected-language]}]
-                                               (cond-> form
-                                                       (some? selected-language)
-                                                       (assoc :selected-language selected-language))))
-                               (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
-                               (assoc-in [:application :show-hakukohde-search] true)
-                               (assoc :wrapper-sections (extract-wrapper-sections form)))]
-    {:db             db
-     ;; Previously submitted answers must currently be merged to the app db
-     ;; after a delay or rules will ruin them and the application will not
-     ;; look completely as valid (eg. SSN field will be blank)
-     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
-     :dispatch-n     (list
-                       [:application/set-followup-visibility-to-false]
-                       [:application/hide-hakukohteet-if-no-tarjonta])}))
+  (let [form (-> (languages->kwd form)
+                 (set-form-language))]
+    {:db (-> db
+             (update :form (fn [{:keys [selected-language]}]
+                             (cond-> form
+                               (some? selected-language)
+                               (assoc :selected-language selected-language))))
+             (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+             (assoc-in [:application :show-hakukohde-search] true)
+             (assoc :wrapper-sections (extract-wrapper-sections form))
+             (merge-submitted-answers answers))
+     :dispatch-n (list
+                  [:application/set-followup-visibility-to-false]
+                  [:application/hide-hakukohteet-if-no-tarjonta])}))
 
 (reg-event-db
   :flasher
