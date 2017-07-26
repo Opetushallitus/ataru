@@ -46,7 +46,7 @@
                   (:cannot-view field-data)
                   (:cannot-edit field-data)))
            (not-empty (:validators field-data)))
-    (every? true? (map #(validator/validate % value answers-by-key)
+    (every? true? (map #(validator/validate % value answers-by-key field-data)
                     (:validators field-data)))
     true))
 
@@ -99,7 +99,7 @@
   (and
     (not valid?)
     (is-required-field? field-descriptor)
-    (validator/validate "required" value answers-by-key)))
+    (validator/validate "required" value answers-by-key field-descriptor)))
 
 (defn- add-link-target-prop
   [text state]

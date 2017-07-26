@@ -155,7 +155,7 @@
         validate-answer (fn [db answer-key validator-key]
                           (assoc-in db
                                     [:application :answers answer-key :valid]
-                                    (validators/validate validator-key (-> db :application :answers answer-key :value) answers)))]
+                                    (validators/validate validator-key (-> db :application :answers answer-key :value) answers nil)))]
     (-> db
         (validate-answer :postal-code :postal-code)
         (validate-answer :postal-office :postal-office)

@@ -139,7 +139,7 @@
                     (filter (comp true? second))
                     (map first))
         valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value answers-by-key) validators))
+                 (every? true? (map #(validator/validate % value answers-by-key nil) validators))
                  true)]
     (merge answer {:value value :valid valid})))
 
@@ -150,7 +150,7 @@
     (update-in db button-path
                (fn [answer]
                  (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers)) validators))
+                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
                                 true)]
                    (merge answer {:value new-value
                                   :valid valid?}))))))
@@ -475,7 +475,7 @@
   (update-in db [:application :answers (keyword component-id)]
              (fn [{:keys [values] :as component}]
                (let [validators (:validators field-descriptor)
-                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers)) validators))]
+                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers) nil) validators))]
                  (assoc component
                    :valid
                    (and validated?

@@ -44,9 +44,9 @@
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn passed? [answer validators answers-by-key]
+(defn passed? [answer validators answers-by-key field-descriptor]
   (every? (fn [validator]
-            (validator/validate validator answer answers-by-key))
+            (validator/validate validator answer answers-by-key field-descriptor))
           validators))
 
 (defn- wrap-coll [xs]
@@ -55,9 +55,9 @@
     [xs]))
 
 (defn- passes-all?
-  [validators answers answers-by-key]
+  [validators answers answers-by-key field-descriptor]
   (every? true? (map
-                  #(passed? % validators answers-by-key)
+                  #(passed? % validators answers-by-key field-descriptor)
                   (or
                     (when (empty? answers) [nil])
                     answers))))
@@ -115,7 +115,7 @@
                               (or
                                 (nil? allowed-values)
                                 (clojure.set/subset? answers allowed-values))
-                              (passes-all? validators answers answers-by-key))}}
+                              (passes-all? validators answers answers-by-key field))}}
               (when-let [followups (not-empty (eduction (comp
                                                           (filter (fn [option]
                                                                     (and (not-empty (:followups option))
@@ -133,7 +133,7 @@
         (build-results
           answers-by-key
           (concat results
-            {id {:passed? (passes-all? validators answers answers-by-key)}})
+            {id {:passed? (passes-all? validators answers answers-by-key field)}})
           rest-form-fields)
 
         :else results))))
