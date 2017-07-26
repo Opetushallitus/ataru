@@ -226,6 +226,20 @@
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
+(defn- set-followup-visibility-to-false
+  [db]
+  (assoc-in db [:application :ui]
+            (->> (autil/flatten-form-fields (:content (:form db)))
+                 (filter :followup?)
+                 (map (fn [field]
+                        (let [id (keyword (:id field))
+                              has-value? (or (some? (get-in db [:application :answers id :value]))
+                                             (some #(some? (:value %))
+                                                   (get-in db [:application :answers id :values] [])))
+                              has-children? (not (empty? (:children field)))]
+                          {id {:visible? (or has-value? has-children?)}})))
+                 (reduce merge))))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))]
@@ -237,10 +251,9 @@
              (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
              (assoc-in [:application :show-hakukohde-search] true)
              (assoc :wrapper-sections (extract-wrapper-sections form))
-             (merge-submitted-answers answers))
-     :dispatch-n (list
-                  [:application/set-followup-visibility-to-false]
-                  [:application/hide-hakukohteet-if-no-tarjonta])}))
+             (merge-submitted-answers answers)
+             set-followup-visibility-to-false)
+     :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
 
 (reg-event-db
   :flasher
@@ -364,17 +377,6 @@
 (reg-event-db
   :application/select-single-choice-button
   select-single-choice-button)
-
-(reg-event-db
-  :application/set-followup-visibility-to-false
-  (fn [db _]
-    (assoc-in db [:application :ui]
-      (->> (autil/flatten-form-fields (:content (:form db)))
-        (filter :followup?)
-        (map (fn [field] {(keyword (:id field))
-                          ; prevent hiding followups with children
-                          {:visible? (not (empty? (:children field)))}}))
-        (reduce merge)))))
 
 (defn- required? [field-descriptor]
   (some? ((set (:validators field-descriptor)) "required")))
