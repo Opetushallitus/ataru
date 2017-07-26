@@ -105,16 +105,6 @@
       ssn
       birth-date-and-gender))
 
-(defn- toggle-ssn-based-fields-for-existing-application
-  [db _]
-  (let [have-ssn? (not (clojure.string/blank? (get-in db [:application :answers :ssn :value])))]
-    (-> db
-        (update-in [:application :answers :have-finnish-ssn]
-                   merge {:valid true :value (str have-ssn?)})
-        have-finnish-ssn
-        ssn
-        birth-date-and-gender)))
-
 (defn- select-postal-office-based-on-postal-code
   [db _]
   (let [answers (-> db :application :answers)
@@ -178,8 +168,6 @@
     select-postal-office-based-on-postal-code
     :toggle-ssn-based-fields
     toggle-ssn-based-fields
-    :toggle-ssn-based-fields-for-existing-application
-    toggle-ssn-based-fields-for-existing-application
     :change-country-of-residence
     change-country-of-residence
     nil))
