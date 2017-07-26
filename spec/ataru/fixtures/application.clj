@@ -93,7 +93,7 @@
     :state "unprocessed"
     :form_id 703
     :id 4
-    :hakukohde "1.2.246.562.29.11111111110"
+    :hakukohde ["1.2.246.562.29.11111111110"]
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "1", :fieldType "textField"}
@@ -108,7 +108,7 @@
     :state "unprocessed"
     :form_id 703
     :id 5
-    :hakukohde "1.2.246.562.29.11111111110"
+    :hakukohde ["1.2.246.562.29.11111111110"]
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "q", :fieldType "textField"}
@@ -123,7 +123,7 @@
     :state "unprocessed"
     :form_id 703
     :id 6
-    :hakukohde "1.2.246.562.29.11111111119"
+    :hakukohde ["1.2.246.562.29.11111111119"]
     :content
     {:answers
      [{:key "G__19", :label {:fi "Eka kysymys"}, :value "z", :fieldType "textField"}
@@ -173,7 +173,7 @@
   {:form           2147483647
    :lang           "fi"
    :id             2
-   :hakukohde      "1.2.246.562.29.11111111110"
+   :hakukohde      ["1.2.246.562.29.11111111110"]
    :answers        [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
                      :value     "Vastaus tekstikysymykseen",
                      :fieldType "textField",
