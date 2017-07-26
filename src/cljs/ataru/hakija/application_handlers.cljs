@@ -342,15 +342,17 @@
 (reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
-    (-> db
-        (update-in [:application :ui :postal-office] assoc :disabled? true)
-        (update-in [:application :answers :postal-office] merge {:value (:fi postal-office-name) :valid true}))))
+    (update-in db [:application :answers :postal-office]
+               merge {:value (:fi postal-office-name) :valid true})))
 
 (reg-event-db
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
-        (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
+        (update-in [:application :answers :postal-code]
+                   merge {:valid false})
+        (update-in [:application :answers :postal-office]
+                   merge {:value "" :valid false}))))
 
 (reg-event-db
   :application/toggle-multiple-choice-option
