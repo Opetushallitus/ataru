@@ -82,16 +82,16 @@
                   (should= 0 (:exit results)))
                 (throw (Exception. "No test form found."))))
 
-          (it "can fill a form for haku successfully"
-              (let [haku-oid "1.2.246.562.29.65950024185"
-                    results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+          ;(it "can fill a form for haku successfully"
+          ;    (let [haku-oid "1.2.246.562.29.65950024185"
+          ;          results (sh-timeout
+          ;                   120
+          ;                   "node_modules/phantomjs-prebuilt/bin/phantomjs"
+          ;                   "--web-security" "false"
+          ;                   "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
+          ;      (println (:out results))
+          ;      (.println System/err (:err results))
+          ;      (should= 0 (:exit results))))
 
           (it "can edit an application successfully"
               (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
