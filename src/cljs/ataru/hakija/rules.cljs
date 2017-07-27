@@ -88,11 +88,50 @@
           (assoc-in [:application :ui :birth-date :visible?] true)
           (assoc-in [:application :ui :gender :visible?] true)))))
 
+(defn- passport-number
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (-> db
+          (update-in [:application :answers :passport-number] merge {:valid true :value ""})
+          (assoc-in [:application :ui :passport-number :visible?] false))
+      (-> db
+          (update-in [:application :answers :passport-number] set-empty-invalid)
+          (assoc-in [:application :ui :passport-number :visible?] true)))))
+
+(defn- national-id-number
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (-> db
+          (update-in [:application :answers :national-id-number] merge {:valid true :value ""})
+          (assoc-in [:application :ui :national-id-number :visible?] false))
+      (-> db
+          (update-in [:application :answers :national-id-number] set-empty-invalid)
+          (assoc-in [:application :ui :national-id-number :visible?] true)))))
+
+(defn- birthplace
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (-> db
+          (update-in [:application :answers :birthplace] merge {:valid true :value ""})
+          (assoc-in [:application :ui :birthplace :visible?] false))
+      (-> db
+          (update-in [:application :answers :birthplace] set-empty-invalid)
+          (assoc-in [:application :ui :birthplace :visible?] true)))))
+
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- update-gender-and-birth-date-based-on-ssn
@@ -100,6 +139,9 @@
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- toggle-ssn-based-fields
@@ -107,6 +149,9 @@
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- postal-office
