@@ -37,7 +37,7 @@
                                      (dob/dob? search-term-ucase)
                                      :dob
 
-                                     (email/email? search-term)
+                                     (email/email? search-term nil)
                                      :email)
          show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-potential-ssn (-> db
