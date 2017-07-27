@@ -173,6 +173,7 @@
                                                                             86400000),
                                                                :nimet {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
        :sijoittelu                                           false}
+
       "haku.oid"
       {:hakukohdeOids ["hakukohde_oid"]}))
 

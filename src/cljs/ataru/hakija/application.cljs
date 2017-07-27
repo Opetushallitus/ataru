@@ -10,12 +10,23 @@
   (into {}
         (map-indexed
           (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
-                                    :label (:label field)
-                                    :order-idx idx}]) flattened-form-fields)))
+            (let [id      (keyword (:id field))
+                  options (:options field)]
+              (if (and (= id :hakukohteet)
+                       (= 1 (count options)))
+                ; if only one hakukohde is available, use it as the default (uneditable) answer
+                [:hakukohteet {:valid     true
+                               :order-idx idx
+                               :label     (:label field)
+                               :values    [{:value (:value (first options))
+                                            :valid true}]}]
+                [id {:valid     (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
+                     :label     (:label field)
+                     :order-idx idx}])))
+          flattened-form-fields)))
 
 (defn create-initial-answers
-  "Create initial answer structure based on form structure. Mainly validity for now."
+  "Create initial answer structure based on form structure. Only validity + default hakukohde for now."
   [form]
   (initial-valid-status (util/flatten-form-fields (:content form))))
 

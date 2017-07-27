@@ -25,8 +25,10 @@
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku" haku-oid "and keys" (pr-str form-keys)))))
     (if form
-      (populate-hakukohde-answer-options (merge form (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
-                                         tarjonta-info)
+      (populate-hakukohde-answer-options
+        ; remove hakukohteet from form tarjonta for deduplication
+        (merge form (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
+        tarjonta-info)
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid

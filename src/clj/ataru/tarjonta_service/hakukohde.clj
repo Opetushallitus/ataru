@@ -29,6 +29,7 @@
                                      :label {:fi (or (:fi name) "")
                                              :sv (or (:sv name) "")
                                              :en (or (:en name) "")}
+                                     ; TODO support other languages
                                      :description {:fi (koulutukset->str koulutukset)
                                                    :sv ""
                                                    :en ""}})
