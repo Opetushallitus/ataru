@@ -26,7 +26,7 @@
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:application :state] state)
-                 (assoc-in [:form :selected-language] (keyword lang))
+                 (assoc-in [:form :selected-language] (or (keyword lang) :fi))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if haku
                [:application/get-latest-form-by-haku haku answers]

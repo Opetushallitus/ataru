@@ -4,8 +4,9 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
-            [ataru.fixtures.application :as app-fixture]
-            [ataru.db.db :as db]))
+            [ataru.db.db :as db]
+            [ataru.virkailija.component-data.component :as component]
+            [ataru.virkailija.component-data.person-info-module :as person-info-module]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -43,22 +44,25 @@
                             :fieldType "textField"}],
               :label {:fi "Pää", :sv "Avsnitt namn"}}]})
 
-(def form3 {:id 3,
-            :key "41101b4f-1762-49af-9db0-e3603adae3ad",
-            :name "Selaintestilomake3",
-            :created-by "DEVELOPER"
+(def form3 {:id               3,
+            :key              "41101b4f-1762-49af-9db0-e3603adae3ad",
+            :name             "Selaintestilomake3",
+            :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi", "en"]
             :content
-            [{:fieldClass "wrapperElement",
-              :id "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
-              :fieldType "fieldset",
-              :children
-                          [{:label {:fi "Pään ympärys", :sv ""},
-                            :fieldClass "formField",
-                            :id "e257afce-ff30-40e1-ad6f-c224a1537d01",
-                            :params {},
-                            :fieldType "textField"}],
-              :label {:fi "Pää", :sv "Avsnitt namn"}}]})
+                              [(component/hakukohteet)
+                               (person-info-module/person-info-module)
+                               {:fieldClass "wrapperElement",
+                                :id         "d5cd3c63-02a3-4c19-a61e-35d85e46602f",
+                                :fieldType  "fieldset",
+                                :children
+                                            [{:label      {:fi "Pään ympärys", :sv ""},
+                                              :fieldClass "formField",
+                                              :id         "e257afce-ff30-40e1-ad6f-c224a1537d01",
+                                              :params     {},
+                                              :fieldType  "textField"}],
+                                :label      {:fi "Pää", :sv "Avsnitt namn"}}]})
 
 (def application1 {:form 1,
                    :lang "fi",
