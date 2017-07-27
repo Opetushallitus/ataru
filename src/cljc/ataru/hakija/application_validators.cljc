@@ -25,6 +25,10 @@
   [value _ _]
   (ssn/ssn? value))
 
+(defn- email?
+  [value _ _]
+  (email/email? value))
+
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
@@ -115,7 +119,7 @@
 
 (def validators {:required        required?
                  :ssn             ssn?
-                 :email           email/email?
+                 :email           email?
                  :postal-code     postal-code?
                  :postal-office   postal-office?
                  :phone           phone?
