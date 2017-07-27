@@ -61,9 +61,9 @@
                 (should= 0 (:exit results)))))
 
 (defn- get-latest-form
-  []
+  [form-name]
   (->> (form-store/get-all-forms)
-       (filter #(= (:name %) "Testilomake"))
+       (filter #(= (:name %) form-name))
        (first)))
 
 (describe "Hakija UI tests /"
@@ -71,7 +71,7 @@
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
           (it "can fill a form successfully"
-              (if-let [latest-form (get-latest-form)]
+              (if-let [latest-form (get-latest-form "Testilomake")]
                 (let [results (sh-timeout
                                 120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -115,8 +115,20 @@
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
 
+          (it "can fill a form successfully with non-finnish ssn"
+              (if-let [latest-form (get-latest-form "SSN_testilomake")]
+                (let [results (sh-timeout
+                               120
+                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                               "--web-security" "false"
+                               "bin/phantomjs-runner.js" "hakija-ssn" (:key latest-form))]
+                  (println (:out results))
+                  (.println System/err (:err results))
+                  (should= 0 (:exit results)))
+                (throw (Exception. "No test form found."))))
+
           (it "can edit an application successfully"
-              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
+              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form "Testilomake"))))]
                 (let [secret  (-> latest-application
                                   :id
                                   (application-store/get-application)
