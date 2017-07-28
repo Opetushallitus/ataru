@@ -82,11 +82,11 @@
          [scroll-to-anchor field-descriptor]]))))
 
 (defn- show-text-field-error-class?
-  [field-descriptor value valid? answers-by-key]
+  [field-descriptor value valid?]
   (and
     (not valid?)
     (is-required-field? field-descriptor)
-    (validator/validate "required" value answers-by-key field-descriptor)))
+    (validator/validate "required" value nil field-descriptor)))
 
 (defn- add-link-target-prop
   [text state]
@@ -108,7 +108,6 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answers      (subscribe [:state-query [:application :answers]])
         answer       (subscribe [:state-query [:application :answers id]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -127,7 +126,9 @@
                   :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                  (non-blank-val (get input-hint @lang)
                                                 (get input-hint @default-lang)))
-                  :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer) @answers)
+                  :class       (str size-class (if (show-text-field-error-class? field-descriptor
+                                                                                 (:value @answer)
+                                                                                 (:valid @answer))
                                                  " application__form-field-error"
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
@@ -155,7 +156,7 @@
             [:div
              [:input.application__form-text-input
               {:type      "text"
-               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid @answers-by-key)
+               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
                                             " application__form-field-error"
                                             " application__form-text-input--normal"))
                :value     value
