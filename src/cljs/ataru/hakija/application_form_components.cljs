@@ -614,7 +614,8 @@
     (if @(subscribe [:application/hakukohde-selected? hakukohde-oid])
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
       (if @(subscribe [:application/hakukohteet-full?])
-        @(subscribe [:application/max-hakukohteet-reached-label])
+        [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
+         @(subscribe [:application/max-hakukohteet-reached-label])]
         [:a.application__hakukohde-select-button
          {:on-click hakukohde-select-event-handler
           :data-hakukohde-oid hakukohde-oid}

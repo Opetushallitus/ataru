@@ -157,9 +157,7 @@
   (fn [db _]
     (let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
       @(re-frame/subscribe [:application/get-i18n-text
-                   {:fi (str "Tässä haussa voit valita "
-                             max-hakukohteet
-                             " hakukohdetta")
+                   {:fi (str "Lisätty " max-hakukohteet "/" max-hakukohteet)
                     :sv ""
                     :en ""}]))))
 
