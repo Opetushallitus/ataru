@@ -360,16 +360,19 @@
 
 .application__form-text-input-box {
   height: 43px;
-  padding: 8px;
+  padding: 0;
   background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border: 1px solid #C1C1C1;
   border-radius: 2px;
+  position: relative;
 }
 
 .application__form-text-input-in-box {
   font-size: 16px;
   border: 0;
-  width: 95%;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
 }
 
 .application__form-clear-text-input-in-box {
@@ -377,7 +380,12 @@
   width: 5%;
   text-align: right;
   > i { font-weight: bold; }
-  > a { color: @sg-color-gray; }
+  > a {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    color: @sg-color-gray;
+  }
 }
 
 .application__form-text-input {
@@ -893,6 +901,7 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-selection-search-input {
   width: 400px;
+  padding: 0;
 }
 
 .application__hakukohde-row {
