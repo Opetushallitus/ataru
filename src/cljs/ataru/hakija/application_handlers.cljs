@@ -269,6 +269,16 @@
   initialize-db)
 
 (reg-event-fx
+  :application/textual-field-blur
+  (fn [{db :db} [_ field]]
+    (let [id (keyword (:id field))
+          answer (get-in db [:application :answers id])]
+      {:dispatch-n (if (or (empty? (:blur-rules field))
+                           (not (:valid answer)))
+                     []
+                     [[:application/run-rule (:blur-rules field)]])})))
+
+(reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value]]
     (let [id (keyword (:id field))
