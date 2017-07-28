@@ -57,14 +57,9 @@
                (field-value-valid? text-field-data value answers-by-key))
       (dispatch [:application/run-rule blur-rules]))))
 
-(defn- textual-field-change [text-field-data answers-by-key evt]
-  (let [value  (-> evt .-target .-value)
-        valid? (field-value-valid? text-field-data value answers-by-key)]
-    (do
-      ; dispatch-sync because we really really want the value to change NOW. Is a minor UI speed boost.
-      (dispatch-sync [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
-      (when-let [rules (not-empty (:rules text-field-data))]
-        (dispatch [:application/run-rule rules])))))
+(defn- textual-field-change [field-descriptor evt]
+  (let [value  (-> evt .-target .-value)]
+    (dispatch [:application/set-application-field field-descriptor value])))
 
 (defn- init-dropdown-value
   [dropdown-data lang secret this]
@@ -74,10 +69,9 @@
                        (comp (filter :default-value)
                          (map :value))
                        (:options dropdown-data)))
-                 (-> select .-value))
-        valid? (field-value-valid? dropdown-data value {})]
+                 (-> select .-value))]
     (if-not (some? secret)
-      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
+      (dispatch [:application/set-application-field dropdown-data value]))
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
@@ -125,7 +119,8 @@
         answer       (subscribe [:state-query [:application :answers id]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
+        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        on-change    (partial textual-field-change field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
@@ -143,7 +138,7 @@
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
                   :on-blur     (partial textual-field-blur field-descriptor @answers)
-                  :on-change   (partial textual-field-change field-descriptor @answers)}
+                  :on-change   on-change}
                  (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -212,18 +207,20 @@
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
-        answers     (subscribe [:state-query [:application :answers]])]
+        answers     (subscribe [:state-query [:application :answers]])
+        on-change   (partial textual-field-change field-descriptor)]
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
        [:div.application__form-text-area-info-text
         [info-text field-descriptor]]
        [:textarea.application__form-text-input.application__form-text-area
-        {:class (text-area-size->class (-> field-descriptor :params :size))
+        {:id (:id field-descriptor)
+         :class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
          ; dynamically made changes to the text-field value.
          :default-value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor @answers)
+         :on-change on-change
          :value (textual-field-value field-descriptor @application)}]])))
 
 (declare render-field)
@@ -299,7 +296,8 @@
                              (:answers @application)
                              (get (answer-key field-descriptor))
                              :value)
-                           ""))]
+                           ""))
+        on-change    (partial textual-field-change field-descriptor)]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
@@ -314,8 +312,9 @@
                                    (when (not @disabled?)
                                      [:span.application__form-select-arrow])
                                    [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
-                                    {:value     @value
-                                     :on-change (partial textual-field-change field-descriptor @answers)
+                                    {:id (:id field-descriptor)
+                                     :value     @value
+                                     :on-change on-change
                                      :disabled  @disabled?}
                                     (concat
                                       (when

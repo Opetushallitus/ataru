@@ -268,16 +268,21 @@
   :application/initialize-db
   initialize-db)
 
-(defn set-application-field [db [_ key values]]
-  (let [path                [:application :answers key]
-        current-answer-data (get-in db path)]
-    (assoc-in db path
-      (when values
-        (merge current-answer-data values)))))
-
-(reg-event-db
+(reg-event-fx
   :application/set-application-field
-  set-application-field)
+  (fn [{db :db} [_ field value]]
+    (let [id (keyword (:id field))
+          answers (get-in db [:application :answers])
+          answer (get answers id)
+          valid? (or (:cannot-view answer)
+                     (:cannot-edit answer)
+                     (every? #(validator/validate % value answers)
+                             (:validators field)))]
+      {:db (update-in db [:application :answers id]
+                      merge {:valid valid? :value value})
+       :dispatch-n (if (empty? (:rules field))
+                     []
+                     [[:application/run-rule (:rules field)]])})))
 
 (reg-event-db
   :application/set-repeatable-application-field
