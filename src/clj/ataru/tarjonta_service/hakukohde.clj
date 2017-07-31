@@ -31,14 +31,17 @@
   [m]
   (assoc m :fi (or (:fi m) (:en m) (:sv m))))
 
+(defn- hakukohde->option
+  [{:keys [oid name koulutukset]}]
+  {:value oid
+   :label (ensure-finnish name)
+   :description (ensure-finnish (koulutukset->str koulutukset))})
+
 (defn- populate-hakukohteet-field
   [field tarjonta-info]
   (-> field
       (assoc :options
-             (map (fn [{:keys [oid name koulutukset]}]
-                    {:value oid
-                     :label (ensure-finnish name)
-                     :description (ensure-finnish (koulutukset->str koulutukset))})
+             (map hakukohde->option
                   (get-in tarjonta-info [:tarjonta :hakukohteet])))
       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet]))))
 
