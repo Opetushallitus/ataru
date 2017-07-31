@@ -12,16 +12,17 @@
   (doseq [ssn ssn/ssn-list]
     (doseq [century-char ["A"]]
       (let [ssn (str (:start ssn) century-char (:end ssn))]
-        (is (validator/validate "ssn" ssn {}) (str "SSN " ssn " is not valid")))))
+        (is (validator/validate "ssn" ssn {} nil)
+            (str "SSN " ssn " is not valid")))))
 
-  (is (not (validator/validate "ssn" nil {})))
-  (is (not (validator/validate "ssn" "" {}))))
+  (is (not (validator/validate "ssn" nil {} nil)))
+  (is (not (validator/validate "ssn" "" {} nil))))
 
 (deftest email-validation
   (doseq [email (keys email/email-list)]
     (let [expected (get email/email-list email)
           pred     (if expected true? false?)
-          actual   (validator/validate "email" email {})
+          actual   (validator/validate "email" email {} nil)
           message  (if expected "valid" "invalid")]
       (is (pred actual)
           (str "email " email " was not " message)))))
@@ -30,7 +31,7 @@
   (doseq [postal-code (keys postal-code/postal-code-list)]
     (let [expected (get postal-code/postal-code-list postal-code)
           pred     (if expected true? false?)
-          actual   (validator/validate "postal-code" postal-code {:country-of-residence {:value "246"}})
+          actual   (validator/validate "postal-code" postal-code {:country-of-residence {:value "246"}} nil)
           message  (if expected "valid" "invalid")]
       (is (pred actual)
           (str "postal code " postal-code " was not " message)))))
@@ -39,7 +40,7 @@
   (doseq [number (keys phone/phone-list)]
     (let [expected (get phone/phone-list number)
           pred     (if expected true? false?)
-          actual   (validator/validate "phone" number {})
+          actual   (validator/validate "phone" number {} nil)
           message  (if expected "valid" "invalid")]
       (is (pred actual)
           (str "phone number " number " was not " message)))))
@@ -48,10 +49,10 @@
   (doall
     (for [[input expected] date/date-list]
       (testing (str input " = " expected)
-        (is (= expected (validator/validate :past-date input {})))))))
+        (is (= expected (validator/validate :past-date input {} nil)))))))
 
 (deftest main-first-name-validation
   (doall
     (for [[first main expected] first-name/first-name-list]
       (testing (str "should validate first-name " first " with main name " main " as " expected)
-        (is (= expected (validator/validate :main-first-name main {:first-name {:value first}})))))))
+        (is (= expected (validator/validate :main-first-name main {:first-name {:value first}} nil)))))))
