@@ -44,9 +44,10 @@
   [tarjonta-service hakukohde]
   (when (:oid hakukohde)
     {:oid           (:oid hakukohde)
-     :name          (clojure.set/rename-keys
-                      (:hakukohteenNimet hakukohde)
-                      lang-key-renames)
+     :name          (->> (clojure.set/rename-keys (:hakukohteenNimet hakukohde)
+                                                  lang-key-renames)
+                         (remove (comp clojure.string/blank? second))
+                         (into {}))
      :tarjoaja-name (:tarjoajaNimet hakukohde)
      :form-key      (:ataruLomakeAvain hakukohde)
      :koulutukset   (->> (map :oid (:koulutukset hakukohde))

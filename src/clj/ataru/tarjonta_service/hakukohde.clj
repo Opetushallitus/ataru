@@ -37,9 +37,7 @@
                       (assoc :options
                              (map (fn [{:keys [oid name koulutukset]}]
                                     {:value oid
-                                     :label {:fi (or (:fi name) "")
-                                             :sv (or (:sv name) "")
-                                             :en (or (:en name) "")}
+                                     :label name
                                      :description (koulutukset->str koulutukset)})
                                   (get-in tarjonta-info [:tarjonta :hakukohteet])))
                       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
