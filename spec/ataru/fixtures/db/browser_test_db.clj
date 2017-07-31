@@ -64,6 +64,16 @@
                                               :fieldType  "textField"}],
                                 :label      {:fi "Pää", :sv "Avsnitt namn"}}]})
 
+(def form4 {:id               4,
+            :key              "41101b4f-1762-49af-9db0-e3603adae3ae",
+            :name             "Selaintestilomake 4",
+            :created-by       "DEVELOPER"
+            :organization-oid "1.2.246.562.10.0439845"
+            :languages        ["fi"]
+            :content
+                              [(component/hakukohteet)
+                               (person-info-module/person-info-module)]})
+
 (def application1 {:form 1,
                    :lang "fi",
                    :key "application-key1",
