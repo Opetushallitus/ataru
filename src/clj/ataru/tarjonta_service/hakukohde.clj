@@ -27,6 +27,10 @@
        (remove (comp blank? second))
        (into {})))
 
+(defn- ensure-finnish
+  [m]
+  (assoc m :fi (or (:fi m) (:en m) (:sv m))))
+
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   (update form :content
           (fn [content]
@@ -37,8 +41,8 @@
                       (assoc :options
                              (map (fn [{:keys [oid name koulutukset]}]
                                     {:value oid
-                                     :label name
-                                     :description (koulutukset->str koulutukset)})
+                                     :label (ensure-finnish name)
+                                     :description (ensure-finnish (koulutukset->str koulutukset))})
                                   (get-in tarjonta-info [:tarjonta :hakukohteet])))
                       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
                   field))
