@@ -1,11 +1,43 @@
 (ns ataru.tarjonta-service.tarjonta-parser
-  (:require [ataru.tarjonta-service.hakuaika :as hakuaika]))
+  (:require [taoensso.timbre :as log]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]))
+
+(def ^:private lang-key-renames {:kieli_fi :fi :kieli_en :en :kieli_sv :sv})
+
+(defn- localized-names
+  [names]
+  (into {}
+        (for [lang [:fi :sv :en]
+              :when (contains? names lang)]
+          [lang (get-in names [lang :nimi])])))
+
+(defn- parse-koulutuskoodi
+  [koulutus]
+  (-> koulutus
+      :koulutuskoodi
+      :meta
+      (clojure.set/rename-keys lang-key-renames)
+      localized-names))
+
+(defn- parse-tutkintonimike
+  [koulutus]
+  (if-let [ms (-> koulutus :tutkintonimikes :meta)]
+    (do (when (< 1 (count ms))
+          (log/warn (format "Koulutuksella %s useita tutkintonimikekoodistoja"
+                            (:oid koulutus))))
+        (-> ms
+            first
+            val
+            :meta
+            (clojure.set/rename-keys lang-key-renames)
+            localized-names))
+    {}))
 
 (defn- parse-koulutus
   [response]
   {:oid                  (:oid response)
-   :koulutuskoodi-name   (-> response :koulutuskoodi :nimi)
-   :tutkintonimike-name  (-> response :tutkintonimike :nimi)
+   :koulutuskoodi-name   (parse-koulutuskoodi response)
+   :tutkintonimike-name  (parse-tutkintonimike response)
    :koulutusohjelma-name (-> response :koulutusohjelma :nimi)
    :tarkenne             (:tarkenne response)})
 
@@ -15,7 +47,7 @@
     {:oid           (:oid hakukohde)
      :name          (clojure.set/rename-keys
                       (:hakukohteenNimet hakukohde)
-                      {:kieli_fi :fi :kieli_en :en :kieli_sv :sv})
+                      lang-key-renames)
      :tarjoaja-name (:tarjoajaNimet hakukohde)
      :form-key      (:ataruLomakeAvain hakukohde)
      :koulutukset   (->> (map :oid (:koulutukset hakukohde))

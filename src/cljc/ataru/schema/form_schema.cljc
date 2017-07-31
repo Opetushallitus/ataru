@@ -125,8 +125,8 @@
    :tarjoaja-name                LocalizedStringOptional
    (s/optional-key :form-key)    (s/maybe s/Str)
    (s/optional-key :koulutukset) [{:oid                  s/Str
-                                   :koulutuskoodi-name   (s/maybe s/Str)
-                                   :tutkintonimike-name  (s/maybe s/Str)
+                                   :koulutuskoodi-name   LocalizedStringOptional
+                                   :tutkintonimike-name  LocalizedStringOptional
                                    :koulutusohjelma-name (s/maybe s/Str)
                                    :tarkenne             (s/maybe s/Str)}]})
 

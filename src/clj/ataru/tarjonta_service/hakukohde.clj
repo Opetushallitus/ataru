@@ -6,8 +6,8 @@
   [koulutukset]
   (->> koulutukset
        (map (fn [koulutus]
-              (->> [(:koulutuskoodi-name koulutus)
-                    (:tutkintonimike-name koulutus)
+              (->> [(-> koulutus :koulutuskoodi-name :fi)
+                    (-> koulutus :tutkintonimike-name :fi)
                     (:tarkenne koulutus)]
                    (remove blank?)
                    (distinct)
