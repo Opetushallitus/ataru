@@ -31,19 +31,23 @@
   [m]
   (assoc m :fi (or (:fi m) (:en m) (:sv m))))
 
+(defn- populate-hakukohteet-field
+  [field tarjonta-info]
+  (-> field
+      (assoc :options
+             (map (fn [{:keys [oid name koulutukset]}]
+                    {:value oid
+                     :label (ensure-finnish name)
+                     :description (ensure-finnish (koulutukset->str koulutukset))})
+                  (get-in tarjonta-info [:tarjonta :hakukohteet])))
+      (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet]))))
+
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   (update form :content
           (fn [content]
             (clojure.walk/prewalk
               (fn [field]
                 (if (= (:fieldType field) "hakukohteet")
-                  (-> field
-                      (assoc :options
-                             (map (fn [{:keys [oid name koulutukset]}]
-                                    {:value oid
-                                     :label (ensure-finnish name)
-                                     :description (ensure-finnish (koulutukset->str koulutukset))})
-                                  (get-in tarjonta-info [:tarjonta :hakukohteet])))
-                      (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
+                  (populate-hakukohteet-field field tarjonta-info)
                   field))
               content))))
