@@ -1,20 +1,31 @@
 (ns ataru.tarjonta-service.hakukohde
   (:require [clojure.string :refer [join blank?]]))
 
+(defn- koulutus->str
+  [koulutus lang]
+  (->> [(-> koulutus :koulutuskoodi-name lang)
+        (-> koulutus :tutkintonimike-name lang)
+        (:tarkenne koulutus)]
+       (remove #(or (nil? %) (blank? %)))
+       (distinct)
+       (join ", ")))
+
+(defn- koulutus->str-map
+  [koulutus]
+  (->> [:fi :sv :en]
+       (map (juxt identity (partial koulutus->str koulutus)))
+       (remove (comp blank? second))
+       (into {})))
+
 (defn- koulutukset->str
   "Produces a condensed string to better identify a hakukohde by its koulutukset"
   [koulutukset]
   (->> koulutukset
-       (map (fn [koulutus]
-              (->> [(-> koulutus :koulutuskoodi-name :fi)
-                    (-> koulutus :tutkintonimike-name :fi)
-                    (:tarkenne koulutus)]
-                   (remove blank?)
-                   (distinct)
-                   (join ", "))))
-       (remove blank?)
-       (distinct)
-       (join "; ")))
+       (map koulutus->str-map)
+       (apply merge-with conj {:fi [] :sv [] :en []})
+       (reduce-kv #(assoc %1 %2 (join "; " %3)) {})
+       (remove (comp blank? second))
+       (into {})))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   (update form :content
@@ -29,10 +40,7 @@
                                      :label {:fi (or (:fi name) "")
                                              :sv (or (:sv name) "")
                                              :en (or (:en name) "")}
-                                     ; TODO support other languages
-                                     :description {:fi (koulutukset->str koulutukset)
-                                                   :sv ""
-                                                   :en ""}})
+                                     :description (koulutukset->str koulutukset)})
                                   (get-in tarjonta-info [:tarjonta :hakukohteet])))
                       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet])))
                   field))
