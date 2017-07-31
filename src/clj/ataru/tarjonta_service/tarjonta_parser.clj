@@ -38,7 +38,6 @@
   {:oid                  (:oid response)
    :koulutuskoodi-name   (parse-koulutuskoodi response)
    :tutkintonimike-name  (parse-tutkintonimike response)
-   :koulutusohjelma-name (-> response :koulutusohjelma :nimi)
    :tarkenne             (:tarkenne response)})
 
 (defn parse-hakukohde
