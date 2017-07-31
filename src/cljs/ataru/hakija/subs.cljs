@@ -122,8 +122,11 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-full?
-  (fn [db _] (<= @(re-frame/subscribe [:application/max-hakukohteet])
-                 (count @(re-frame/subscribe [:application/selected-hakukohteet])))))
+  (fn [_ _]
+    (if-let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
+      (<= max-hakukohteet
+          (count @(re-frame/subscribe [:application/selected-hakukohteet])))
+      false)))
 
 (re-frame/reg-sub
   :application/hakukohde-label
