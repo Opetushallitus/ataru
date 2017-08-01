@@ -155,14 +155,15 @@
          (let [{:keys [value valid]} (first @values)]
             [:div
              [:input.application__form-text-input
-              {:type      "text"
-               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                            " application__form-field-error"
-                                            " application__form-text-input--normal"))
-               :value     value
-               :on-blur   #(when (empty? (-> % .-target .-value))
-                             (dispatch [:application/remove-repeatable-application-field-value id 0]))
-               :on-change (partial on-change 0 answers-by-key)}]])
+              (merge
+               {:type      "text"
+                :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                             " application__form-field-error"
+                                             " application__form-text-input--normal"))
+                :value     value
+                :on-change (partial on-change 0 answers-by-key)}
+               (when (empty? value)
+                 {:on-blur #(dispatch [:application/remove-repeatable-application-field-value id 0])}))]])
           (map-indexed
            (let [first-is-empty? (empty? (first (map :value @values)))
                  translations    (get-translations (keyword @lang) application-view-translations)]
@@ -178,11 +179,9 @@
                                   size-class " application__form-text-input--normal"
                                   (when-not value " application__form-text-input--disabled"))
                       :value     value
-                      :on-blur   #(when (and
-                                         (not last?)
-                                         (empty? (-> % .-target .-value)))
-                                    (clicky))
                       :on-change (partial on-change (inc idx) answers-by-key)}
+                      (when (and (not last?) (empty? value))
+                        {:on-blur clicky})
                       (when last?
                         {:placeholder
                          (:add-more translations)}))]
