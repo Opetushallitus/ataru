@@ -1,14 +1,6 @@
 (function () {
   before(function () {
-    var query = location.search.substring(1).split('&')
-    var secret = ''
-
-    for (var i = 0; i < query.length; i++) {
-      var param = query[i].split('=')
-      if (param[0] == 'modify') {
-        secret = param[1]
-      }
-    }
+    var secret = getQueryParam('modify')
 
     console.log("secret", secret || 'UNDEFINED')
     loadInFrame('/hakemus?modify=' + secret)
