@@ -93,6 +93,17 @@
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
 
+          (it "can fill a form for hakukohde successfully"
+              (let [hakukohde-oid "1.2.246.562.20.49028196523"
+                    results (sh-timeout
+                              120
+                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                              "--web-security" "false"
+                              "bin/phantomjs-runner.js" "hakija-hakukohde" hakukohde-oid)]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
+
           (it "can edit an application successfully"
               (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
                 (let [secret  (-> latest-application

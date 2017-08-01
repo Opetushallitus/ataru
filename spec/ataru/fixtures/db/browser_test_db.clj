@@ -138,6 +138,7 @@
   (form-store/create-new-form! form1 (:key form1))
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
+  (form-store/create-new-form! form3 (:key form4))
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)

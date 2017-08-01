@@ -21,11 +21,14 @@ switch (app) {
   case 'hakija-haku':
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html?hakuOid=' + cookieOrFormIdOrSecret
     break;
+  case 'hakija-hakukohde':
+    url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html?hakukohdeOid=' + cookieOrFormIdOrSecret
+    break;
   case 'hakija-edit':
     url = 'http://localhost:8351/hakemus/hakija-edit-test.html?modify=' + cookieOrFormIdOrSecret
     break;
   default:
-    console.log('invalid app: ' + app + ', must be one of [virkailija, hakija, hakija-edit]')
+    console.log('invalid app: ' + app)
     phantom.exit(1)
 }
 

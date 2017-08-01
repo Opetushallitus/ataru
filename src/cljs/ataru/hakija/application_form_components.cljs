@@ -593,7 +593,7 @@
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row
+  [:div.application__hakukohde-row.application__hakukohde-row--selected
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
@@ -604,7 +604,7 @@
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row
+  [:div.application__hakukohde-row.application__hakukohde-row--search-hit
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
@@ -663,7 +663,7 @@
       ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
       [selected-hakukohde-row hakukohde-oid])
     (when @(subscribe [:application/hakukohteet-editable?])
-      [:div.application__hakukohde-row
+      [:div.application__hakukohde-row.application__hakukohde-row--search-toggle
        [:a.application__hakukohde-selection-open-search
         {:on-click hakukohde-search-toggle-event-handler}
         @(subscribe [:application/get-i18n-text
