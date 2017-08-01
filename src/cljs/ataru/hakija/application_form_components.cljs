@@ -142,6 +142,9 @@
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
         answers-by-key (subscribe [:state-query [:application :answers]])
         lang       (subscribe [:application/form-language])
+        on-blur    (fn [evt]
+                     (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
+                       (dispatch [:application/remove-repeatable-application-field-value id idx])))
         on-change  (fn [idx answers-by-key evt]
                      (let [value (some-> evt .-target .-value)
                            valid (field-value-valid? field-descriptor value answers-by-key)]
@@ -161,34 +164,36 @@
                                              " application__form-field-error"
                                              " application__form-text-input--normal"))
                 :value     value
+                :data-idx  0
                 :on-change (partial on-change 0 answers-by-key)}
                (when (empty? value)
-                 {:on-blur #(dispatch [:application/remove-repeatable-application-field-value id 0])}))]])
+                 {:on-blur on-blur}))]])
           (map-indexed
            (let [first-is-empty? (empty? (first (map :value @values)))
                  translations    (get-translations (keyword @lang) application-view-translations)]
              (fn [idx {:keys [value last?]}]
-               (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
-                  [:div.application__form-repeatable-text-wrap
-                   [:input.application__form-text-input
-                    (merge
-                     {:type      "text"
+               [:div.application__form-repeatable-text-wrap
+                [:input.application__form-text-input
+                 (merge
+                  {:type      "text"
                                         ; prevent adding second answer when first is empty
-                      :disabled  (and last? first-is-empty?)
-                      :class     (str
-                                  size-class " application__form-text-input--normal"
-                                  (when-not value " application__form-text-input--disabled"))
-                      :value     value
-                      :on-change (partial on-change (inc idx) answers-by-key)}
-                      (when (and (not last?) (empty? value))
-                        {:on-blur clicky})
-                      (when last?
-                        {:placeholder
-                         (:add-more translations)}))]
-                   (when value
-                     [:a.application__form-repeatable-text--addremove
-                      {:on-click clicky}
-                      [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))
+                   :disabled  (and last? first-is-empty?)
+                   :class     (str
+                               size-class " application__form-text-input--normal"
+                               (when-not value " application__form-text-input--disabled"))
+                   :value     value
+                   :data-idx  (inc idx)
+                   :on-change (partial on-change (inc idx) answers-by-key)}
+                  (when (and (not last?) (empty? value))
+                    {:on-blur on-blur})
+                  (when last?
+                    {:placeholder
+                     (:add-more translations)}))]
+                (when value
+                  [:a.application__form-repeatable-text--addremove
+                   [:i.zmdi.zmdi-close.zmdi-hc-lg
+                    {:data-idx (inc idx)
+                     :on-click on-blur}]])]))
             (concat (rest @values)
                     [{:value nil :valid true :last? true}])))))))
 
