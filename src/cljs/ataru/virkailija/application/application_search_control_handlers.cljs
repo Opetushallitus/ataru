@@ -30,30 +30,20 @@
 (reg-event-fx
  :application/search-by-term
  (fn [{:keys [db]} [_ search-term]]
-   (let [search-term-ucase     (clojure.string/upper-case search-term)
-         type                  (cond (ssn/ssn? search-term-ucase)
-                                     :ssn
+   (let [search-term-ucase   (clojure.string/upper-case search-term)
+         term-type           (cond (ssn/ssn? search-term-ucase)
+                                   [search-term-ucase :ssn]
 
-                                     (dob/dob? search-term-ucase)
-                                     :dob
+                                   (dob/dob? search-term-ucase)
+                                   [search-term-ucase :dob]
 
-                                     (email/email? search-term)
-                                     :email)
-         show-error            false ; temporarily disabled for now, no sense in showing it if email is always default
-         db-with-potential-ssn (-> db
-                                   (assoc-in [:application :search-control :search-term :value] search-term)
-                                   (assoc-in [:application :search-control :search-term :show-error] show-error))]
-     (case type
-       :ssn
-       {:db db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term search-term-ucase :ssn]}
-
-       :dob
-       {:db       db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term search-term-ucase :dob]}
-
-       :email
-       {:db       db-with-potential-ssn
-        :dispatch [:application/fetch-applications-by-term search-term :email]}
-
-       {:db (assoc-in db-with-potential-ssn [:application :applications] nil)}))))
+                                   (email/email? search-term nil)
+                                   [search-term :email])
+         show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
+         db-with-search-term (-> db
+                                 (assoc-in [:application :search-control :search-term :value] search-term)
+                                 (assoc-in [:application :search-control :search-term :show-error] show-error))]
+     (if-let [[term type] term-type]
+       {:db db-with-search-term
+        :dispatch [:application/fetch-applications-by-term term type]}
+       {:db (assoc-in db-with-search-term [:application :applications] nil)}))))

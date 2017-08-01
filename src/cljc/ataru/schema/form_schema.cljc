@@ -168,7 +168,9 @@
    (s/optional-key :form)           s/Int
    (s/optional-key :preferred-name) (s/maybe s/Str)
    (s/optional-key :last-name)      (s/maybe s/Str)
-   (s/optional-key :created-time)   org.joda.time.DateTime})
+   (s/optional-key :created-time)   org.joda.time.DateTime
+   (s/optional-key :haku)           (s/maybe s/Str)
+   (s/optional-key :secret)         s/Str})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str

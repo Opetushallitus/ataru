@@ -70,6 +70,25 @@ create-db-schema() {
     ./bin/lein db-schema
 }
 
+reset-test-database-with-fixture() {
+    nuke-test-db
+    run-migrations
+    ./bin/lein with-profile dev run -m ataru.fixtures.db.browser-test-db/init-db-fixture
+}
+
+ui-compile() {
+    clean
+    build-clojurescript-hakija
+    build-clojurescript-virkailija
+    compile-less
+}
+
+prepare-ui-tests() {
+    ui-compile
+    reset-test-database-with-fixture
+}
+
+
 create-uberjar() {
     clean
     build-clojurescript-hakija
@@ -96,7 +115,7 @@ run-tests() {
 
 run-browser-tests() {
     echo "Starting browser test run"
-    ./bin/lein clean
+    clean
     npm-dependencies
     nuke-test-db
     run-migrations
@@ -123,6 +142,15 @@ case "$command" in
         ;;
     "build-clojurescript-hakija" )
         build-clojurescript-hakija
+        ;;
+    "prepare-ui-tests" )
+        prepare-ui-tests
+        ;;
+    "reset-test-database-with-fixture" )
+        reset-test-database-with-fixture
+        ;;
+    "ui-compile" )
+        ui-compile
         ;;
     "create-uberjar" )
         create-uberjar

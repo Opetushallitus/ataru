@@ -228,6 +228,14 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
+  (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
+         {:person_oid                   person-oid
+          :query_type                   "ALL"
+          :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)
+       (latest-versions-only)))
+
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
 
