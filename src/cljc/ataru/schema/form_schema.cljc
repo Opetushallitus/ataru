@@ -169,7 +169,7 @@
    (s/optional-key :preferred-name) (s/maybe s/Str)
    (s/optional-key :last-name)      (s/maybe s/Str)
    (s/optional-key :created-time)   org.joda.time.DateTime
-   (s/optional-key :haku)           s/Str
+   (s/optional-key :haku)           (s/maybe s/Str)
    (s/optional-key :secret)         s/Str})
 
 (s/defschema Application
