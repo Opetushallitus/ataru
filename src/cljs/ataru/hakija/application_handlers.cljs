@@ -329,13 +329,13 @@
   :application/remove-repeatable-application-field-value
   (fn [db [_ key idx]]
     (cond-> db
-            (get-in db [:application :answers key :values])
+            (seq (get-in db [:application :answers key :values]))
             (update-in [:application :answers key :values]
                        #(autil/remove-nth % idx))
 
             ; when creating application, we have the value below (and it's important). when editing, we do not.
             ; consider this a temporary, terrible bandaid solution
-            (get-in db [:application :answers key :value])
+            (seq (get-in db [:application :answers key :value]))
             (update-in [:application :answers key :value]
                        #(autil/remove-nth (vec %) idx)))))
 
