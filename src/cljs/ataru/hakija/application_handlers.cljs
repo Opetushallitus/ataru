@@ -238,7 +238,8 @@
      :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
      :dispatch-n     (list
                        [:application/set-followup-visibility-to-false]
-                       [:application/hide-hakukohteet-if-no-tarjonta])}))
+                       [:application/hide-hakukohteet-if-no-tarjonta]
+                       [:application/hide-answers-belonging-to-hakukohteet])}))
 
 (reg-event-db
   :flasher
@@ -646,3 +647,13 @@
                      (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))
           (assoc-in [:application :answers :hakukohteet :valid]
                     (< 1 (count selected-hakukohteet)))))))
+
+(reg-event-db
+  :application/hide-answers-belonging-to-hakukohteet
+  (fn [db _]
+    (reduce-kv (fn [db answer-key {:keys [belongs-to-hakukohteet]}]
+                 (cond-> db
+                   (not-empty belongs-to-hakukohteet)
+                   (assoc-in [:application :ui answer-key :visible?] false)))
+               db
+               (get-in db [:application :answers]))))
