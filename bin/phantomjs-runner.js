@@ -15,8 +15,8 @@ switch (app) {
     });
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
     break;
-  case 'hakija':
-    url = 'http://localhost:8351/hakemus/hakija-test.html?formId=' + cookieOrFormIdOrSecret
+  case 'hakija-form':
+    url = 'http://localhost:8351/hakemus/hakija-form-test.html?formId=' + cookieOrFormIdOrSecret
     break;
   case 'hakija-haku':
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html?hakuOid=' + cookieOrFormIdOrSecret

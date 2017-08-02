@@ -76,7 +76,7 @@
                                 120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
+                                "bin/phantomjs-runner.js" "hakija-form" (:key latest-form))]
                   (println (:out results))
                   (.println System/err (:err results))
                   (should= 0 (:exit results)))
