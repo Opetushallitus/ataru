@@ -146,9 +146,8 @@
                      (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
                        (dispatch [:application/remove-repeatable-application-field-value id idx])))
         on-change  (fn [idx answers-by-key evt]
-                     (let [value (some-> evt .-target .-value)
-                           valid (field-value-valid? field-descriptor value answers-by-key)]
-                       (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
+                     (let [value (some-> evt .-target .-value)]
+                       (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
               [label field-descriptor]

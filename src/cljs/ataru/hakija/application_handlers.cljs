@@ -320,7 +320,7 @@
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
+  (fn [db [_ field-descriptor idx value]]
     (-> db
         (set-repeatable-field-values field-descriptor idx value)
         (set-repeatable-field-value field-descriptor))))
