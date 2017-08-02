@@ -37,7 +37,7 @@
                                    (dob/dob? search-term-ucase)
                                    [search-term-ucase :dob]
 
-                                   (email/email? search-term nil)
+                                   (email/email? search-term)
                                    [search-term :email])
          show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-search-term (-> db

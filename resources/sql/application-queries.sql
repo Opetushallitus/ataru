@@ -1,9 +1,34 @@
 -- name: yesql-add-application-query<!
 -- Add application
-INSERT INTO applications
-(form_id, key, content, lang, preferred_name, last_name, hakukohde, haku, secret, person_oid, ssn, dob, email)
-VALUES
-  (:form_id, :key, :content, :lang, :preferred_name, :last_name, :hakukohde, :haku, :secret, :person_oid, :ssn, :dob, :email);
+INSERT INTO applications (
+  form_id,
+  key,
+  content,
+  lang,
+  preferred_name,
+  last_name,
+  hakukohde,
+  haku,
+  secret,
+  person_oid,
+  ssn,
+  dob,
+  email
+) VALUES (
+  :form_id,
+  :key,
+  :content,
+  :lang,
+  :preferred_name,
+  :last_name,
+  ARRAY[:hakukohde]::character varying(127)[],
+  :haku,
+  :secret,
+  :person_oid,
+  :ssn,
+  :dob,
+  :email
+);
 
 -- name: yesql-get-application-list-by-form
 SELECT
@@ -18,7 +43,7 @@ SELECT
 FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key
-WHERE a.hakukohde IS NULL
+WHERE a.haku IS NULL
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-hakukohde
@@ -35,7 +60,7 @@ SELECT
 FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
-WHERE a.hakukohde = :hakukohde_oid
+WHERE :hakukohde_oid = ANY (a.hakukohde)
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
@@ -167,7 +192,7 @@ SELECT
 FROM applications a
   JOIN forms f ON f.id = a.form_id AND f.key = :form_key
   JOIN application_reviews ar ON a.key = ar.application_key
-WHERE a.hakukohde IS NULL AND state IN (:filtered_states);
+WHERE a.haku IS NULL AND state IN (:filtered_states);
 
 -- name: yesql-get-applications-for-hakukohde
 -- Get applications for form-key/hakukohde
@@ -178,6 +203,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.haku,
   a.hakukohde,
   a.person_oid,
   ar.state  AS state,
@@ -186,7 +212,7 @@ FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
 WHERE state IN (:filtered_states)
-      AND a.hakukohde = :hakukohde_oid;
+      AND :hakukohde_oid = ANY (a.hakukohde);
 
 -- name: yesql-get-applications-for-haku
 -- Get applications for form-key/haku
@@ -234,6 +260,7 @@ SELECT
   created_time,
   content,
   hakukohde,
+  haku,
   person_oid,
   CASE
     WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
@@ -263,6 +290,7 @@ SELECT
   a.form_id AS form,
   a.created_time,
   a.content,
+  a.haku,
   a.hakukohde,
   f.key     AS form_key
 FROM applications a
@@ -343,13 +371,13 @@ WITH latest_applications AS (
     SELECT
       a.key,
       a.haku,
-      a.hakukohde,
+      unnest(a.hakukohde) as hakukohde,
       ar.state,
       max(a.created_time) AS latest_time
     FROM applications a
       INNER JOIN forms f ON (a.form_id = f.id)
       INNER JOIN application_reviews ar ON a.key = ar.application_key
-    WHERE a.haku IS NOT NULL AND a.hakukohde IS NOT NULL
+    WHERE a.haku IS NOT NULL
           AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
     GROUP BY a.key, a.haku, a.hakukohde, ar.state
 )
@@ -376,7 +404,7 @@ WITH latest_applications AS (
     FROM applications a1
       INNER JOIN forms f1 ON (a1.form_id = f1.id)
       INNER JOIN application_reviews ar ON a1.key = ar.application_key
-    WHERE a1.haku IS NULL AND a1.hakukohde IS NULL
+    WHERE a1.haku IS NULL
           AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
     GROUP BY a1.key, form_key, ar.state
 ),

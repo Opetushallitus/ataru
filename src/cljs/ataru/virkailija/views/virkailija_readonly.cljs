@@ -141,6 +141,27 @@
        [:div
         [field followup application lang]]))])
 
+(defn- hakukohteet-list-row [hakukohde-oid]
+  [:div.application__form-field
+   [:div.application-handling__hakukohde-wrapper
+    [:div.application-handling__review-area-hakukohde-heading
+     @(subscribe [:application/hakukohde-label hakukohde-oid])]
+    [:div.application-handling__review-area-koulutus-heading
+     @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
+
+(defn- hakukohteet [content application]
+  (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
+        hakukohteet (map hakukohteet-by-oid
+                         (get-in application [:answers :hakukohteet :value] []))]
+    [:div.application__wrapper-element.application__wrapper-element--border
+     [:div.application__wrapper-heading
+      [:h2 @(subscribe [:application/hakukohteet-header])]
+      [scroll-to-anchor content]]
+     [:div.application__wrapper-contents
+      (for [hakukohde-oid @(subscribe [:application/hakukohteet])]
+        ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
+        [hakukohteet-list-row hakukohde-oid])]]))
+
 (defn field [content application lang]
   (match content
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
@@ -151,7 +172,8 @@
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content application]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

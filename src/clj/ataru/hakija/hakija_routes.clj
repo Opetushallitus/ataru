@@ -70,12 +70,10 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/hakija-edit-test.html" []
-      (render-file-in-dev "templates/hakija-edit-test.html"))
-   (api/GET "/hakija-test.html" []
-            (render-file-in-dev "templates/hakija-test.html"))
-   (api/GET "/spec/:filename.js" [filename]
-            (render-file-in-dev (str "spec/" filename ".js")))))
+    (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
+      (render-file-in-dev (str "templates/hakija-" testname "-test.html")))
+    (api/GET "/spec/:filename.js" [filename]
+      (render-file-in-dev (str "spec/" filename ".js")))))
 
 (api/defroutes james-routes
   (api/undocumented
@@ -85,14 +83,23 @@
 (defn api-routes [tarjonta-service]
   (api/context "/api" []
     :tags ["application-api"]
+    (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
+      :summary "Gets form for haku"
+      :path-params [haku-oid :- s/Str]
+      :return ataru-schema/FormWithContentAndTarjontaMetadata
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
+                                     tarjonta-service
+                                     haku-oid)]
+        (response/ok form-with-tarjonta)
+        (response/not-found)))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
-      :summary "Gets form by hakukohde (assumes 1:1 mapping for form and hakukohde)"
+      :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
-      (if-let [form-with-hakukohde (form-service/fetch-form-by-hakukohde-oid
+      (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
                                     tarjonta-service
                                     hakukohde-oid)]
-        (response/ok form-with-hakukohde)
+        (response/ok form-with-tarjonta)
         (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
@@ -200,16 +207,18 @@
                               (when (is-dev-env?) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
-                                             test-routes
-                                             (api-routes (:tarjonta-service this))
-                                             (route/resources "/")
-                                             (api/undocumented
-                                             (api/GET "/hakukohde/:oid" []
-                                               (render-application))
-                                             (api/GET "/:key" []
-                                               (render-application))
-                                             (api/GET "/" []
-                                               (render-application))))
+                                  test-routes
+                                  (api-routes (:tarjonta-service this))
+                                  (route/resources "/")
+                                  (api/undocumented
+                                    (api/GET "/haku/:oid" []
+                                      (render-application))
+                                    (api/GET "/hakukohde/:oid" []
+                                      (render-application))
+                                    (api/GET "/:key" []
+                                      (render-application))
+                                    (api/GET "/" []
+                                      (render-application))))
                                 (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity

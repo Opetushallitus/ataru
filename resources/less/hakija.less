@@ -136,6 +136,11 @@
     display: inline-block;
   }
 }
+
+.application__wrapper-heading-block {
+  position: relative;
+}
+
 .application__wrapper-element--border {
   border-top: solid 1px @review-separator-color;
 }
@@ -351,6 +356,36 @@
   border-top: 8px solid #fff;
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
+}
+
+.application__form-text-input-box {
+  height: 43px;
+  padding: 0;
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
+  border: 1px solid #C1C1C1;
+  border-radius: 2px;
+  position: relative;
+}
+
+.application__form-text-input-in-box {
+  font-size: 16px;
+  border: 0;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
+}
+
+.application__form-clear-text-input-in-box {
+  display: inline-block;
+  width: 5%;
+  text-align: right;
+  > i { font-weight: bold; }
+  > a {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    color: @sg-color-gray;
+  }
 }
 
 .application__form-text-input {
@@ -822,6 +857,89 @@ and (max-width: @desktop-content-width) {
       bottom: 0;
     }
   }
+}
+
+.application__hakukohde-selection-header {
+  margin-bottom: 0;
+}
+
+.application__hakukohde-selected-list {
+  margin-right: 30px;
+}
+
+.application__hakukohde-selection-open-search {
+  color: @pale-blue;
+}
+
+.application__hakukohde-selection-search-arrow-up {
+  top: 1px;
+  left: 50px;
+  width: 30px;
+  height: 16px;
+  position: relative;
+  overflow: hidden;
+  z-index: 11;
+}
+
+.application__hakukohde-selection-search-arrow-up:after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  transform: rotate(135deg);
+  top: 6px;
+  left: 5px;
+  box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
+}
+
+.application__hakukohde-selection-search-container {
+  border: 1px solid @separator-color;
+  box-shadow: @modal-shadow;
+  padding: 20px;
+}
+
+.application__hakukohde-selection-search-input {
+  width: 400px;
+  padding: 0;
+}
+
+.application__hakukohde-row {
+  padding: 20px 0;
+  position: relative;
+  border-bottom: 1px solid @separator-color;
+}
+
+.application__hakukohde-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.application__hakukohde-row-text-container {
+  padding-right: 120px;
+}
+
+.application__hakukohde-row-button-container {
+  position: absolute;
+  right: 20px;
+  top: 25px;
+}
+
+.application__hakukohde-selected-check {
+  color: @sg-gray-lighten-3;
+}
+
+.application__hakukohde-select-button {
+  border-radius: 3px;
+  padding: 5px 20px;
+  color: @white;
+  background-color: @pale-blue;
+}
+
+.application__hakukohde-select-button--disabled {
+  background-color: @sg-gray-lighten-3;
+  color: @white;
+  cursor: default;
 }
 
 .application-feedback-form {

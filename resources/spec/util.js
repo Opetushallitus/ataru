@@ -7,6 +7,20 @@ mocha.timeout(30000)
 var expect = chai.expect;
 chai.should();
 
+var getQueryParam = function(keyName) {
+  var query = location.search.substring(1).split('&')
+  var value = ''
+
+  for (var i = 0; i < query.length; i++) {
+    var param = query[i].split('=')
+    if (param[0] == keyName) {
+      value = param[1]
+    }
+  }
+
+  return value
+}
+
 var loadInFrame = function(src) {
   $('#test')
     .attr('src', src)

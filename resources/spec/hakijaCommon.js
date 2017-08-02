@@ -18,12 +18,24 @@ function invalidFieldsStatus() {
   return testFrame().find('.application__invalid-field-status-title')
 }
 
+function selectedHakukohteet() {
+  return testFrame().find('.application__hakukohde-row--selected')
+}
+
+function hakukohdeSearchInput() {
+  return testFrame().find('.application__hakukohde-selection-search-input input')
+}
+
 function invalidSections() {
   return testFrame().find('.application__banner-wrapper-sections-content')
 }
 
 function personInfoModule() {
   return formSections().eq(0)
+}
+
+function selectedHakukohdeName(hakukohdeRow) {
+  return $(hakukohdeRow).find('.application__hakukohde-selected-row-header')[0].textContent
 }
 
 function setNthFieldInputValue(n, value) {
@@ -53,4 +65,12 @@ function clickNthFieldRadio(n, value) {
   return function() {
     formFields().eq(n).find('label:contains('+value+')').click()
   }
+}
+
+function hakukohdeSearchHits() {
+  return testFrame().find('.application__hakukohde-row--search-hit')
+}
+
+function nthHakukohdeSearchResultButton(n) {
+  return hakukohdeSearchHits().eq(n).find('a')
 }

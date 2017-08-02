@@ -19,7 +19,7 @@
        (map :fieldType)
        (first)))
 
-(defn invalid-field-status [valid-status]
+(defn invalid-field-status []
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
@@ -46,11 +46,11 @@
                    [:span.application__close-invalid-fields
                     {:on-click toggle-show-details}
                     "x"]]
-                  (mapv (fn [field]
-                          (let [label (or (get-in field [:label @lang])
-                                          (get-in field [:label @default-lang]))]
-                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
-                        (:invalid-fields valid-status)))])]))))
+                  (map (fn [field]
+                         (let [label (or (get-in field [:label @lang])
+                                         (get-in field [:label @default-lang]))]
+                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
   (let [lang (subscribe [:application/form-language])]
@@ -89,15 +89,14 @@
                       :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
-  (let [valid-status  (subscribe [:application/valid-status])
-        submit-status (subscribe [:state-query [:application :submit-status]])
-        can-apply?    (subscribe [:application/can-apply?])]
-    (fn []
-      (when @can-apply?
-        [:div.application__status-controls
-         [send-button-or-placeholder @valid-status @submit-status]
-         [invalid-field-status @valid-status]
-         [sent-indicator @submit-status]]))))
+  (let [valid-status         (subscribe [:application/valid-status])
+        submit-status        (subscribe [:state-query [:application :submit-status]])
+        can-apply?           (subscribe [:application/can-apply?])]
+    (when @can-apply?
+      [:div.application__status-controls
+       [send-button-or-placeholder @valid-status @submit-status]
+       [invalid-field-status @valid-status]
+       [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
   (let [lang         (subscribe [:application/form-language])

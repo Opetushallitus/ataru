@@ -76,11 +76,33 @@
                                 120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                 "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija" (:key latest-form))]
+                                "bin/phantomjs-runner.js" "hakija-form" (:key latest-form))]
                   (println (:out results))
                   (.println System/err (:err results))
                   (should= 0 (:exit results)))
                 (throw (Exception. "No test form found."))))
+
+          (it "can fill a form for haku successfully"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    results (sh-timeout
+                             120
+                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                             "--web-security" "false"
+                             "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
+
+          (it "can fill a form for hakukohde successfully"
+              (let [hakukohde-oid "1.2.246.562.20.49028196523"
+                    results (sh-timeout
+                              120
+                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                              "--web-security" "false"
+                              "bin/phantomjs-runner.js" "hakija-hakukohde" hakukohde-oid)]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
 
           (it "can edit an application successfully"
               (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]

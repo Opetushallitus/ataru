@@ -11,7 +11,7 @@
                :cljs [cljs.core.match :refer-macros [match]])))
 
 (defn ^:private required?
-  [value _]
+  [value _ _]
   (if (or (seq? value) (vector? value))
     (not (empty? value))
     (not (clojure.string/blank? value))))
@@ -22,13 +22,17 @@
      (str (-> answers-by-key :country-of-residence :value))))
 
 (defn- ssn?
-  [value _]
+  [value _ _]
   (ssn/ssn? value))
+
+(defn- email?
+  [value _ _]
+  (email/email? value))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
 (defn ^:private postal-code?
-  [value answers-by-key]
+  [value answers-by-key _]
   (if (residence-in-finland? answers-by-key)
     (and (not (nil? value))
          (not (nil? (re-matches postal-code-pattern value))))
@@ -39,7 +43,7 @@
 (def ^:private finnish-date-pattern #"^\d{1,2}\.\d{1,2}\.\d{4}$")
 
 (defn ^:private phone?
-  [value _]
+  [value _ _]
   (if-not (nil? value)
     (let [parsed (clojure.string/replace value whitespace-pattern "")]
       (not (nil? (re-matches phone-pattern parsed))))
@@ -65,27 +69,27 @@
            nil)))))
 
 (defn ^:private date?
-  [value _]
+  [value _ _]
   (boolean
     (some->>
       value
       parse-date)))
 
 (defn ^:private past-date?
-  [value _]
+  [value _ _]
   (boolean
-    (and (date? value _)
+    (and (date? value _ _)
          (some-> (parse-date value)
                  (c/before? (c/today-at-midnight))))))
 
 (defn- postal-office?
-  [value answers-by-key]
+  [value answers-by-key _]
   (if (residence-in-finland? answers-by-key)
     (not (clojure.string/blank? value))
     true))
 
 (defn- main-first-name?
-  [value answers-by-key]
+  [value answers-by-key _]
   (let [first-names     (clojure.string/split (-> answers-by-key :first-name :value) #"[\s-]+")
         num-first-names (count first-names)
         possible-names  (set
@@ -96,30 +100,39 @@
     (contains? possible-names (clojure.string/replace value "-" " "))))
 
 (defn- home-town?
-  [value answers-by-key]
+  [value answers-by-key _]
   (if (residence-in-finland? answers-by-key)
     (not (clojure.string/blank? value))
     true))
 
 (defn- city?
-  [value answers-by-key]
+  [value answers-by-key _]
   (if (residence-in-finland? answers-by-key)
     true
     (not (clojure.string/blank? value))))
 
+(defn- hakukohteet?
+  [value _ field-descriptor]
+  (if (pos? (count (:options field-descriptor)))
+    (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
+      (< 0 (count value) (inc max-hakukohteet))
+      (pos? (count value)))
+    true))
+
 (def validators {:required        required?
                  :ssn             ssn?
-                 :email           email/email?
+                 :email           email?
                  :postal-code     postal-code?
                  :postal-office   postal-office?
                  :phone           phone?
                  :past-date       past-date?
                  :main-first-name main-first-name?
                  :home-town       home-town?
-                 :city            city?})
+                 :city            city?
+                 :hakukohteet     hakukohteet?})
 
 (defn validate
-  [validator value answers-by-key]
+  [validator value answers-by-key field-descriptor]
   (boolean
     (when-let [validator-fn ((keyword validator) validators)]
-      (validator-fn value answers-by-key))))
+      (validator-fn value answers-by-key field-descriptor))))

@@ -75,6 +75,10 @@
            [ec/attachment content path]
            [:div])
 
+         {:fieldClass "formField"
+          :fieldType  "hakukohteet"}
+         [ec/hakukohteet content path]
+
          :else (do
                  (error content)
                  (throw "error" content)))])))

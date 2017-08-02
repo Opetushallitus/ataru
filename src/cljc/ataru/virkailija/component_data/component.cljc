@@ -76,7 +76,7 @@
    :label      {:fi ""}
    :fieldType  "adjacentfieldset"
    :children   []})
-   
+
 (defn single-choice-button []
   {:fieldClass "formField"
    :fieldType  "singleChoice"
@@ -92,3 +92,15 @@
    :label      {:fi "" :sv ""}
    :params     {}
    :options    []})
+
+(defn hakukohteet []
+  {:fieldClass "formField"
+   :fieldType "hakukohteet"
+   :id :hakukohteet
+   :label {:fi "Hakukohteet"
+           :sv ""
+           :en ""}
+   :params {}
+   :options []
+   :validators [:hakukohteet]
+   :exclude-from-answers-if-hidden true})

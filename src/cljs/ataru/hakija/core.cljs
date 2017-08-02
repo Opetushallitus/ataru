@@ -19,15 +19,23 @@
       (clojure.string/split #"/")
       (nth 2)))
 
+(defn- path-match
+  [path re]
+  (when-let [re-match (re-matches re path)]
+    (nth re-match 1)))
+
 (defn- dispatch-form-load
   []
   (let [path            (cljs-util/get-path)
-        hakukohde-match (re-matches #"/hakemus/hakukohde/(.+)/?" path)
-        hakukohde-oid   (when hakukohde-match (nth hakukohde-match 1))
+        hakukohde-oid   (path-match path #"/hakemus/hakukohde/(.+)/?")
+        haku-oid        (path-match path #"/hakemus/haku/(.+)/?")
         secret          (:modify (cljs-util/extract-query-params))]
     (cond
       (some? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
+
+      (some? haku-oid)
+      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
 
       (some? secret)
       (re-frame/dispatch [:application/get-application-by-secret secret])

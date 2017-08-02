@@ -132,6 +132,30 @@
        [:div
         [field followup application lang]]))])
 
+(defn- selected-hakukohde-row
+  [hakukohde-oid]
+  [:div.application__hakukohde-row
+   [:div.application__hakukohde-row-text-container
+    [:div.application__hakukohde-selected-row-header
+     @(subscribe [:application/hakukohde-label hakukohde-oid])]
+    [:div.application__hakukohde-selected-row-description
+     @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
+
+(defn- hakukohde-selection-header
+  [content]
+  [:div.application__wrapper-heading.application__wrapper-heading-block
+   [:h2 @(subscribe [:application/hakukohteet-header])]
+   [scroll-to-anchor content]])
+
+(defn- hakukohteet
+  [content]
+  [:div.application__wrapper-element.application__wrapper-element-border
+   [hakukohde-selection-header content]
+   [:div.application__hakukohde-selected-list
+    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+      [selected-hakukohde-row hakukohde-oid])]])
+
 (defn field
   [content application lang]
   (match content
@@ -144,7 +168,8 @@
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
          [followups (mapcat :followups options) content application lang]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]))
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

@@ -48,7 +48,6 @@
                  [org.clojure/java.jdbc "0.6.1"]
                  [org.postgresql/postgresql "42.0.0"]
                  [clj-time "0.13.0"]
-                 [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                  [cheshire/cheshire "5.7.1"]
                  [selmer "1.10.7"]
                  [metosin/ring-http-response "0.8.2"]
@@ -191,8 +190,7 @@
                               :githash   ~(System/getenv "githash")}
              :silent         false}
 
-  :profiles {:repl           {:plugins [[cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]]}
-             :dev            {:dependencies   [[com.cemerick/piggieback "0.2.1"]
+  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.1"]
                                                [figwheel-sidecar "0.5.10"]
                                                [refactor-nrepl "2.3.0"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
@@ -202,7 +200,6 @@
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.4"]]
                               :plugins        [[refactor-nrepl "2.3.0"]
-                                               [cider/cider-nrepl "0.15.0-SNAPSHOT" :exclusions [org.clojure/clojure]]
                                                [lein-cljfmt "0.5.6"]
                                                [lein-kibit "0.1.3"]]
                               :source-paths   ["dev/clj" "test/cljc/unit"]

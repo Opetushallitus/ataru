@@ -18,6 +18,7 @@
                                [_ secret {:keys [answers
                                                  form-key
                                                  lang
+                                                 haku
                                                  hakukohde
                                                  hakukohde-name
                                                  state]}]]
@@ -25,10 +26,10 @@
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:application :state] state)
-                 (assoc-in [:form :selected-language] (keyword lang))
+                 (assoc-in [:form :selected-language] (or (keyword lang) :fi))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch (if hakukohde
-               [:application/get-latest-form-by-hakukohde hakukohde answers]
+   :dispatch (if haku
+               [:application/get-latest-form-by-haku haku answers]
                [:application/get-latest-form-by-key form-key answers])})
 
 (reg-event-fx
@@ -55,7 +56,7 @@
             :handler [:application/handle-form answers]}}))
 
 (defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
-  {:db   db
+  {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
           :handler [:application/handle-form answers]}})
@@ -63,6 +64,14 @@
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
+
+(reg-event-fx
+  :application/get-latest-form-by-haku
+  (fn [{:keys [db]} [_ haku-oid answers]]
+    {:db db
+     :http {:method  :get
+            :url     (str "/hakemus/api/haku/" haku-oid)
+            :handler [:application/handle-form answers]}}))
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
@@ -100,6 +109,11 @@
   (fn [{:keys [db]} _]
     (send-application db :put)))
 
+(reg-event-db
+  :application/hide-hakukohteet-if-no-tarjonta
+  (fn [db _]
+    (assoc-in db [:application :ui :hakukohteet :visible?] (boolean (-> db :form :tarjonta)))))
+
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
                       :lang
@@ -125,7 +139,7 @@
                     (filter (comp true? second))
                     (map first))
         valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value answers-by-key) validators))
+                 (every? true? (map #(validator/validate % value answers-by-key nil) validators))
                  true)]
     (merge answer {:value value :valid valid})))
 
@@ -136,7 +150,7 @@
     (update-in db button-path
                (fn [answer]
                  (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers)) validators))
+                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
                                 true)]
                    (merge answer {:value new-value
                                   :valid valid?}))))))
@@ -160,7 +174,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"textField" "attachment"})
+(defonce multi-value-field-types #{"textField" "attachment" "hakukohteet"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -207,24 +221,24 @@
   merge-submitted-answers)
 
 (defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language))
-        db   (-> db
-                 (update :form (fn [{:keys [selected-language hakukohde-name]}]
-                                 (cond-> form
-                                   (some? selected-language)
-                                   (assoc :selected-language selected-language)
-
-                                   (some? hakukohde-name)
-                                   (assoc :hakukohde-name hakukohde-name))))
-                 (assoc-in [:application :answers] (create-initial-answers form))
-                 (assoc :wrapper-sections (extract-wrapper-sections form)))]
-    {:db               db
+  (let [form               (-> (languages->kwd form)
+                               (set-form-language))
+        db                 (-> db
+                               (update :form (fn [{:keys [selected-language]}]
+                                               (cond-> form
+                                                       (some? selected-language)
+                                                       (assoc :selected-language selected-language))))
+                               (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+                               (assoc-in [:application :show-hakukohde-search] true)
+                               (assoc :wrapper-sections (extract-wrapper-sections form)))]
+    {:db             db
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
      ;; look completely as valid (eg. SSN field will be blank)
      :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
-     :dispatch [:application/set-followup-visibility-to-false]}))
+     :dispatch-n     (list
+                       [:application/set-followup-visibility-to-false]
+                       [:application/hide-hakukohteet-if-no-tarjonta])}))
 
 (reg-event-db
   :flasher
@@ -322,12 +336,6 @@
   (fn [db [_ f]]
     (or (f db)
         db)))
-
-(reg-event-fx
-  :state-update-fx
-  (fn [cofx [_ f]]
-    (or (f cofx)
-        (dissoc cofx :event))))
 
 (reg-event-db
   :application/handle-postal-code-input
@@ -467,7 +475,7 @@
   (update-in db [:application :answers (keyword component-id)]
              (fn [{:keys [values] :as component}]
                (let [validators (:validators field-descriptor)
-                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers)) validators))]
+                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers) nil) validators))]
                  (assoc component
                    :valid
                    (and validated?
@@ -575,3 +583,66 @@
   :application/rating-form-toggle
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(defn- hakukohteet-field [db]
+  (->> (get-in db [:form :content] [])
+       (filter #(= "hakukohteet" (:id %)))
+       first))
+
+(reg-event-db
+  :application/hakukohde-search-toggle
+  (fn [db _]
+    (update-in db [:application :show-hakukohde-search] not)))
+
+(reg-event-db
+  :application/hakukohde-query-process
+  (fn [db [_ hakukohde-query]]
+    (if (and (= hakukohde-query (get-in db [:application :hakukohde-query]))
+             (< 1 (count hakukohde-query)))
+      (let [hakukohde-options (:options (hakukohteet-field db))
+            pattern (re-pattern (str "(?i)" hakukohde-query))]
+        (assoc-in db [:application :hakukohde-hits]
+                  (->> hakukohde-options
+                       (filter #(re-find pattern (get-in % [:label :fi] "")))
+                       (map :value))))
+      db)))
+
+(reg-event-fx
+  :application/hakukohde-query-change
+  (fn [{db :db} [_ hakukohde-query]]
+    {:db (-> db
+             (assoc-in [:application :hakukohde-query] hakukohde-query)
+             (assoc-in [:application :hakukohde-hits] []))
+     :dispatch-later [{:ms 1000
+                       :dispatch [:application/hakukohde-query-process
+                                  hakukohde-query]}]}))
+
+(reg-event-db
+  :application/hakukohde-query-clear
+  (fn [db _]
+    (-> db
+        (assoc-in [:application :hakukohde-query] "")
+        (assoc-in [:application :hakukohde-hits] []))))
+
+(reg-event-db
+  :application/hakukohde-add-selection
+  (fn [db [_ hakukohde-oid]]
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+          hakukohteet-field    (hakukohteet-field db)
+          new-hakukohde-values (conj selected-hakukohteet {:valid true :value hakukohde-oid})]
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values]
+                     new-hakukohde-values)
+          (assoc-in [:application :answers :hakukohteet :valid]
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))))))
+
+(reg-event-db
+  :application/hakukohde-remove-selection
+  (fn [db [_ hakukohde-oid]]
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+          new-hakukohde-values (remove #(= hakukohde-oid (:value %)) selected-hakukohteet)]
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values]
+                    new-hakukohde-values)
+          (assoc-in [:application :answers :hakukohteet :valid]
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))))))

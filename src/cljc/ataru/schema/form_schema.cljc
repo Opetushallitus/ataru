@@ -41,6 +41,10 @@
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
 
+(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
+                                      (s/optional-key :sv) s/Str
+                                      (s/optional-key :en) s/Str})
+
 (s/defschema Module (s/enum :person-info))
 
 (s/defschema Button {:fieldClass              (s/eq "button")
@@ -55,6 +59,7 @@
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
+                        (s/optional-key :label-amendment)                LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params)                         s/Any
                         (s/optional-key :no-blank-option)                s/Bool
@@ -66,6 +71,7 @@
                                                                           (s/optional-key :title)          s/Str}
                         (s/optional-key :options)                        [{:value                          s/Str
                                                                            (s/optional-key :label)         LocalizedString
+                                                                           (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         :fieldType                                       (apply s/enum ["textField"
@@ -74,7 +80,8 @@
                                                                                         "singleChoice"
                                                                                         "multipleChoice"
                                                                                         "koodistoField"
-                                                                                        "attachment"])})
+                                                                                        "attachment"
+                                                                                        "hakukohteet"])})
 
 (s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
                           :id                      s/Str
@@ -112,20 +119,25 @@
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
+(s/defschema FormTarjontaHakukohde
+  {:oid                          s/Str
+   :name                         LocalizedStringOptional
+   :tarjoaja-name                LocalizedStringOptional
+   (s/optional-key :form-key)    (s/maybe s/Str)
+   (s/optional-key :koulutukset) [{:oid                  s/Str
+                                   :koulutuskoodi-name   LocalizedStringOptional
+                                   :tutkintonimike-name  LocalizedStringOptional
+                                   :tarkenne             (s/maybe s/Str)}]})
+
 (s/defschema FormTarjontaMetadata
-  {:hakukohde-oid                       s/Str
-   :hakukohde-name                      s/Str
-   :haku-oid                            s/Str
-   :haku-name                           s/Str
-   (s/optional-key :koulutukset)        [{:oid                  s/Str
-                                          :koulutuskoodi-name   (s/maybe s/Str)
-                                          :tutkintonimike-name  (s/maybe s/Str)
-                                          :koulutusohjelma-name (s/maybe s/Str)
-                                          :tarkenne             (s/maybe s/Str)}]
-   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-   (s/optional-key :hakuaika-dates)     {:start                s/Int
-                                         (s/optional-key :end) (s/maybe s/Int)
-                                         :on                   s/Bool}})
+  {:hakukohteet                        [FormTarjontaHakukohde]
+   :haku-oid                           s/Str
+   :haku-name                          s/Str
+   :max-hakukohteet                    (s/maybe s/Int)
+   (s/optional-key :default-hakukohde) FormTarjontaHakukohde
+   (s/optional-key :hakuaika-dates)    {:start                s/Int
+                                        (s/optional-key :end) (s/maybe s/Int)
+                                        :on                   s/Bool}})
 
 (s/defschema File
   {:key                      s/Str
@@ -151,7 +163,8 @@
                                                                   "dropdown"
                                                                   "multipleChoice"
                                                                   "singleChoice"
-                                                                  "attachment"])
+                                                                  "attachment"
+                                                                  "hakukohteet"])
                      (s/optional-key :cannot-edit) s/Bool
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
@@ -179,7 +192,7 @@
    :answers                             [Answer]
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
-   (s/optional-key :hakukohde)          (s/maybe s/Str)
+   (s/optional-key :hakukohde)          (s/maybe [s/Str])
    (s/optional-key :haku)               (s/maybe s/Str)
    (s/optional-key :id)                 s/Int
    (s/optional-key :created-time)       org.joda.time.DateTime

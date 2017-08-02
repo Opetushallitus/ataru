@@ -4,20 +4,40 @@
             [ataru.cljs-util :refer [console-log]]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.application.review-states :refer [complete-states]]))
+            [ataru.application.review-states :refer [complete-states]]
+            [clojure.core.match :refer [match]]))
 
-(defn- initial-valid-status [flattened-form-fields]
+(defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
         (map-indexed
           (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
+            (let [id      (keyword (:id field))
+                  options (:options field)]
+              (match [id (count options) preselected-hakukohde]
+                     [:hakukohteet 1 _]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
                                     :label (:label field)
-                                    :order-idx idx}]) flattened-form-fields)))
+                                    :values [{:value (:value (first options))
+                                              :valid true}]}]
+
+                     [:hakukohteet _ (default-hakukohde :guard some?)]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
+                                    :label (:label field)
+                                    :values [{:value default-hakukohde
+                                              :valid true}]}]
+
+                     [_ _ _]
+                     [id {:valid     (not (some #(contains? #{"required" "home-town" "hakukohde"} %) (:validators field)))
+                          :label     (:label field)
+                          :order-idx idx}])))
+          flattened-form-fields)))
 
 (defn create-initial-answers
-  "Create initial answer structure based on form structure. Mainly validity for now."
-  [form]
-  (initial-valid-status (util/flatten-form-fields (:content form))))
+  "Create initial answer structure based on form structure. Only validity + default hakukohde for now."
+  [form preselected-hakukohde]
+  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
 
 (defn answers->valid-status [all-answers ui]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
@@ -96,13 +116,13 @@
 
 (defn create-application-to-submit [application form lang]
   (let [secret (:secret application)]
-    (cond-> {:form           (:id form)
-             :lang           lang
-             :hakukohde      (-> form :tarjonta :hakukohde-oid)
-             :haku           (-> form :tarjonta :haku-oid)
-             :answers        (create-answers-to-submit (:answers application) form (:ui application))}
-      (some? secret)
-      (assoc :secret secret))))
+    (cond-> {:form      (:id form)
+             :lang      lang
+             :haku      (-> form :tarjonta :haku-oid)
+             :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
+             :answers   (create-answers-to-submit (:answers application) form (:ui application))}
+            (some? secret)
+            (assoc :secret secret))))
 
 (defn extract-wrapper-sections [form]
   (map #(select-keys % [:id :label :children])

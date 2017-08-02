@@ -9,6 +9,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -33,6 +34,16 @@
 (defn state-formatter [state]
   (or (get application-review-states state) "Tuntematon"))
 
+(defn- tarjonta-formatter
+  [tarjonta-info]
+  (->> (:hakukohteet tarjonta-info)
+       (map (fn [{:keys [name oid]}]
+              (str
+                (or (:fi name) (:sv name) (:en name))
+                " (" oid ") ")))
+       (interpose "\n")
+       (apply str)))
+
 (def ^:private form-meta-fields
   [{:label "Nimi"
     :field :name}
@@ -55,15 +66,9 @@
    {:label     "Tila"
     :field     :state
     :format-fn state-formatter}
-   {:label     "Hakukohde"
-    :field     :hakukohde-name
-    :format-fn str}
-   {:label     "Hakukohteen OID"
-    :field     :hakukohde
-    :format-fn str}
-   {:label     "Koulutuskoodin nimi ja tunniste"
-    :field     :koulutus-identifiers
-    :format-fn (partial string/join "; ")}
+   {:label     "Hakukohteet"
+    :field     :tarjonta
+    :format-fn tarjonta-formatter}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
     :format-fn str}])
@@ -270,31 +275,10 @@
       (> (count name) 30)
       (subs 0 30))))
 
-(defn- inject-hakukohde-name
+(defn- inject-haku-info
   [tarjonta-service application]
-  (if-let [hakukohde-oid (:hakukohde application)]
-    (merge application {:hakukohde-name (.get-hakukohde-name tarjonta-service hakukohde-oid)})
-    application))
-
-(defn- inject-koulutus-information
-  [tarjonta-service application]
-  (if-let [hakukohde-oid (:hakukohde application)]
-    (let [hakukohde            (.get-hakukohde tarjonta-service hakukohde-oid)
-          koulutus-oids        (map :oid (:koulutukset hakukohde))
-          koulutus-identifiers (when koulutus-oids
-                                 (->> koulutus-oids
-                                      (map #(.get-koulutus tarjonta-service %))
-                                      (map (fn [koulutus]
-                                             (string/join
-                                              ", "
-                                              (remove string/blank?
-                                                      [(-> koulutus :koulutuskoodi :nimi)
-                                                       (-> koulutus :tutkintonimike :nimi)
-                                                       (-> koulutus :tarkenne)]))))))]
-      (if koulutus-identifiers
-        (merge application {:koulutus-identifiers koulutus-identifiers})
-        application))
-    application))
+  (merge application
+         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application))))
 
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
@@ -325,8 +309,7 @@
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
-                               (map (partial inject-hakukohde-name tarjonta-service))
-                               (map (partial inject-koulutus-information tarjonta-service))
+                               (map (partial inject-haku-info tarjonta-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx))]
                                                 (write-application! row-writer application headers application-meta-fields form))))

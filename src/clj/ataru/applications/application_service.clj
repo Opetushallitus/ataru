@@ -7,6 +7,7 @@
     [ataru.applications.application-store :as application-store]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
+    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [taoensso.timbre :refer [spy debug]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser])
   (:import [java.io ByteArrayInputStream]))
@@ -70,8 +71,13 @@
    onto raw koodi values."
   [application-key session organization-service tarjonta-service]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
-        form             (form-store/fetch-by-id (:form bare-application))
-        tarjonta-info    (tarjonta-parser/parse-tarjonta-info tarjonta-service (:hakukohde bare-application))
+        tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
+                          tarjonta-service
+                          (:haku bare-application)
+                          (:hakukohde bare-application))
+        form             (populate-hakukohde-answer-options
+                          (form-store/fetch-by-id (:form bare-application))
+                          tarjonta-info)
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application (merge application tarjonta-info)
