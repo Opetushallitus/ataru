@@ -690,8 +690,7 @@
      [markdown-paragraph text]]))
 
 (defn- adjacent-field-input [{:keys [id] :as child} row-idx]
-  (let [answers-by-key (subscribe [:state-query [:application :answers]])
-        on-change (fn [evt]
+  (let [on-change (fn [evt]
                     (let [value (-> evt .-target .-value)]
                       (dispatch [:application/set-adjacent-field-answer child row-idx value])))
         value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
