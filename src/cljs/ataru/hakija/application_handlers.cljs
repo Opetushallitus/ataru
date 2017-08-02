@@ -415,9 +415,9 @@
 
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor id idx value]]
+  (fn [db [_ field-descriptor idx value]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx (:value value))
+        (set-repeatable-field-values field-descriptor idx value)
         (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db

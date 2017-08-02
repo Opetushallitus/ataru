@@ -689,11 +689,9 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text]]))
 
-(defn- adjacent-field-input-change [field-descriptor row-idx answers-by-key event]
-  (let [value  (some-> event .-target .-value)
-        valid? (field-value-valid? field-descriptor value answers-by-key)
-        id     (keyword (:id field-descriptor))]
-    (dispatch [:application/set-adjacent-field-answer field-descriptor id row-idx {:value value :valid valid?}])))
+(defn- adjacent-field-input-change [field-descriptor row-idx event]
+  (let [value  (some-> event .-target .-value)]
+    (dispatch [:application/set-adjacent-field-answer field-descriptor row-idx value])))
 
 (defn- adjacent-field-input [{:keys [id] :as child} row-idx]
   (let [answers-by-key (subscribe [:state-query [:application :answers]])
@@ -709,7 +707,7 @@
           {:id        (str id "-" row-idx)
            :type      "text"
            :value     @value
-           :on-change (partial on-change @answers-by-key)}])})))
+           :on-change on-change}])})))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [language        (subscribe [:application/form-language])
