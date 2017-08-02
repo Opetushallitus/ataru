@@ -697,14 +697,12 @@
   (let [answers-by-key (subscribe [:state-query [:application :answers]])
         on-change (partial adjacent-field-input-change child row-idx)
         value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
-    (r/create-class
-      {:reagent-render
-       (fn [{:keys [id]} row-idx]
-         [:input.application__form-text-input.application__form-text-input--normal
-          {:id        (str id "-" row-idx)
-           :type      "text"
-           :value     @value
-           :on-change on-change}])})))
+    (fn [{:keys [id]} row-idx]
+      [:input.application__form-text-input.application__form-text-input--normal
+       {:id        (str id "-" row-idx)
+        :type      "text"
+        :value     @value
+        :on-change on-change}])))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [language        (subscribe [:application/form-language])
