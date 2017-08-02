@@ -144,7 +144,7 @@
         lang       (subscribe [:application/form-language])
         on-blur    (fn [evt]
                      (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
-                       (dispatch [:application/remove-repeatable-application-field-value id idx])))
+                       (dispatch [:application/remove-repeatable-application-field-value field-descriptor idx])))
         on-change  (fn [evt]
                      (let [value (some-> evt .-target .-value)
                            idx (int (.getAttribute (.-target evt) "data-idx"))]

@@ -327,17 +327,21 @@
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ key idx]]
-    (cond-> db
-            (seq (get-in db [:application :answers key :values]))
-            (update-in [:application :answers key :values]
-                       #(autil/remove-nth % idx))
+  (fn [db [_ field-descriptor idx]]
+    (let [id (keyword (:id field-descriptor))]
+      (cond-> db
+        (seq (get-in db [:application :answers id :values]))
+        (update-in [:application :answers id :values]
+                   #(autil/remove-nth % idx))
 
-            ; when creating application, we have the value below (and it's important). when editing, we do not.
-            ; consider this a temporary, terrible bandaid solution
-            (seq (get-in db [:application :answers key :value]))
-            (update-in [:application :answers key :value]
-                       #(autil/remove-nth (vec %) idx)))))
+        ;; when creating application, we have the value below (and it's important). when editing, we do not.
+        ;; consider this a temporary, terrible bandaid solution
+        (seq (get-in db [:application :answers id :value]))
+        (update-in [:application :answers id :value]
+                   #(autil/remove-nth (vec %) idx))
+
+        true
+        (set-repeatable-field-value field-descriptor)))))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
