@@ -20,9 +20,10 @@
                                :label     (:label field)
                                :values    [{:value (:value (first options))
                                             :valid true}]}]
-                [id {:valid     (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
-                     :label     (:label field)
-                     :order-idx idx}])))
+                [id {:valid                  (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
+                     :label                  (:label field)
+                     :order-idx              idx
+                     :belongs-to-hakukohteet (:belongs-to-hakukohteet field)}])))
           flattened-form-fields)))
 
 (defn create-initial-answers
