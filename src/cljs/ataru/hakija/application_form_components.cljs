@@ -140,7 +140,6 @@
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
-        answers-by-key (subscribe [:state-query [:application :answers]])
         lang       (subscribe [:application/form-language])
         on-blur    (fn [evt]
                      (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
