@@ -21,6 +21,7 @@
       it('with complete form and no hakukohde selected', function() {
         expect(formFields().length).to.equal(14)
         expect(submitButton().prop('disabled')).to.equal(true)
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 11 tietoa')
         expect(formHeader().text()).to.equal('testing2')
         expect(selectedHakukohteet().length).to.equal(0)
         expect(hakukohdeSearchHits().length).to.equal(0)
@@ -49,6 +50,7 @@
         wait.until(function() { return selectedHakukohteet().length === 1})
       )
       it('adds hakukohde to selected list', function() {
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1Tarkenne APoista')
       })
     })

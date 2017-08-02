@@ -102,4 +102,5 @@
            :en ""}
    :params {}
    :options []
+   :validators [:required]
    :exclude-from-answers-if-hidden true})
