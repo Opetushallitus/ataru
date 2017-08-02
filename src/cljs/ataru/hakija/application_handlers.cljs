@@ -298,7 +298,8 @@
   :application/set-repeatable-application-field
   (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
     (let [path                      [:application :answers key :values]
-          required?                 (some? ((set (:validators field-descriptor)) "required"))
+          required?                 (some (partial = "required")
+                                          (:validators field-descriptor))
           with-answer               (if (and
                                           (zero? idx)
                                           (empty? value)
