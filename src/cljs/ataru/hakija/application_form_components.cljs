@@ -395,21 +395,23 @@
                                     (get-in option [:label @default-lang]))
         option-value (:value option)
         option-id    (util/component-id)
-        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
-    [:div.application__form-single-choice-button-inner-container {:key option-id}
-     [:input.application__form-single-choice-button
-      {:id        option-id
-       :type      "checkbox"
-       :checked   @checked?
-       :value     option-value
-       :on-change (fn [event]
-                    (let [value (.. event -target -value)]
-                      (dispatch [:application/select-single-choice-button parent-id value validators])))}]
-     [:label
-      {:for option-id}
-      label]
-     (when (and @checked? (not-empty (:followups option)))
-       [:div.application__form-single-choice-followups-indicator])]))
+        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])
+        on-change    (fn [event]
+                       (let [value (.. event -target -value)]
+                         (dispatch [:application/select-single-choice-button parent-id value validators])))]
+    (fn [option parent-id validators]
+      [:div.application__form-single-choice-button-inner-container {:key option-id}
+       [:input.application__form-single-choice-button
+        {:id        option-id
+         :type      "checkbox"
+         :checked   @checked?
+         :value     option-value
+         :on-change on-change}]
+       [:label
+        {:for option-id}
+        label]
+       (when (and @checked? (not-empty (:followups option)))
+         [:div.application__form-single-choice-followups-indicator])])))
 
 (defn- hide-followups [db {:keys [followups]}]
   (reduce #(toggle-followup-visibility %1 %2 false)
