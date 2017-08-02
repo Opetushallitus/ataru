@@ -424,21 +424,6 @@
   :application/select-single-choice-button
   select-single-choice-button)
 
-(defn- required? [field-descriptor]
-  (some? ((set (:validators field-descriptor)) "required")))
-
-(defn- set-adjacent-field-validity
-  [field-descriptor {:keys [values] :as answer}]
-    (assoc answer
-      :valid
-      (boolean
-        (some->>
-          (map :valid (or
-                        (not-empty values)
-                        [{:valid (not (required? field-descriptor))}]))
-          not-empty
-          (every? true?)))))
-
 (reg-event-db
   :application/set-adjacent-field-answer
   (fn [db [_ field-descriptor idx value]]
