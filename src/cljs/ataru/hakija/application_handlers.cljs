@@ -294,31 +294,36 @@
                      []
                      [[:application/run-rule (:rules field)]])})))
 
+(defn- set-repeatable-field-values
+  [db field-descriptor idx value]
+  (let [id (keyword (:id field-descriptor))
+        answers (get-in db [:application :answers])
+        answer (get answers id)
+        valid? (or (:cannot-view answer)
+                   (:cannot-edit answer)
+                   (every? #(validator/validate % value answers)
+                           (:validators field-descriptor)))]
+    (update-in db [:application :answers id :values]
+               (fnil assoc []) idx {:valid valid? :value value})))
+
+(defn- set-repeatable-field-value
+  [db field-descriptor]
+  (let [id (keyword (:id field-descriptor))
+        values (get-in db [:application :answers id :values])
+        required? (some (partial = "required")
+                        (:validators field-descriptor))
+        valid? (if (empty? values)
+                 (not required?)
+                 (every? :valid values))]
+    (update-in db [:application :answers id]
+               merge {:valid valid? :value (mapv :value values)})))
+
 (reg-event-db
   :application/set-repeatable-application-field
   (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
-    (let [path                      [:application :answers key :values]
-          required?                 (some (partial = "required")
-                                          (:validators field-descriptor))
-          with-answer               (update-in db path (fnil assoc []) idx values)
-          all-values                (get-in with-answer path)
-          validity-for-validation   (boolean
-                                      (some->>
-                                        (map :valid (or
-                                                      (when (= 1 (count all-values))
-                                                        [values])
-                                                      (when (and (not required?) (empty? all-values))
-                                                        [{:valid true}])
-                                                      (butlast all-values)))
-                                        not-empty
-                                        (every? true?)))
-          value-for-readonly-fields-and-db (mapv :value all-values)]
-      (update-in
-        with-answer
-        (butlast path)
-        assoc
-        :valid validity-for-validation
-        :value value-for-readonly-fields-and-db))))
+    (-> db
+        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
