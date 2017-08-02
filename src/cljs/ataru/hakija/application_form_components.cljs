@@ -504,15 +504,17 @@
   (str filename " (" (util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
-  [:div.application__form-filename-container
-   [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
-    [:a.application__form-upload-remove-attachment-link
-     {:href     "#"
-      :on-click (fn remove-attachment [event]
+  (let [on-click (fn remove-attachment [event]
                   (.preventDefault event)
-                  (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
-     [:i.zmdi.zmdi-close]]]])
+                   (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))]
+    (fn [field-descriptor component-id attachment-idx]
+      [:div.application__form-filename-container
+       [:span.application__form-attachment-text
+        (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
+        [:a.application__form-upload-remove-attachment-link
+         {:href     "#"
+          :on-click on-click}
+         [:i.zmdi.zmdi-close]]]])))
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
