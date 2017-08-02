@@ -125,11 +125,8 @@
         answer               (subscribe [:state-query [:application :answers id]])
         lang                 (subscribe [:application/form-language])
         default-lang         (subscribe [:application/default-language])
-        size-class           (text-field-size->class (get-in field-descriptor [:params :size]))
-        selected-hakukohteet (reaction (map :value @(subscribe [:state-query [:application :answers :hakukohteet :values]])))]
+        size-class           (text-field-size->class (get-in field-descriptor [:params :size]))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-      (when (or (empty? (:belongs-to-hakukohteet field-descriptor))
-                (not-empty (clojure.set/intersection (set @selected-hakukohteet) (set (:belongs-to-hakukohteet field-descriptor)))))
         [div-kwd
          [label field-descriptor]
          [:div.application__form-text-input-info-text
@@ -147,7 +144,7 @@
                     :value       (if cannot-view? "***********" (:value @answer))
                     :on-blur     (partial textual-field-blur field-descriptor @answers)
                     :on-change   (partial textual-field-change field-descriptor @answers)}
-                   (when (or disabled cannot-view?) {:disabled true}))])]))))
+                   (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
@@ -749,14 +746,21 @@
   (or (not= fieldType "attachment")
       (fc/feature-enabled? :attachment)))
 
+(defn- hakukohde-allows-visibility? [{:keys [belongs-to-hakukohteet]} selected-hakukohteet]
+  (or (empty? belongs-to-hakukohteet)
+      (not-empty (clojure.set/intersection (set selected-hakukohteet)
+                                           (set belongs-to-hakukohteet)))))
+
 (defn render-field
   [field-descriptor & args]
-  (let [ui       (subscribe [:state-query [:application :ui]])
-        editing? (subscribe [:state-query [:application :editing?]])
-        visible? (fn [id]
-                   (get-in @ui [(keyword id) :visible?] true))]
+  (let [ui                   (subscribe [:state-query [:application :ui]])
+        editing?             (subscribe [:state-query [:application :editing?]])
+        visible?             (fn [id]
+                               (get-in @ui [(keyword id) :visible?] true))
+        selected-hakukohteet (subscribe [:state-query [:application :answers :hakukohteet :values]])]
     (fn [field-descriptor & args]
-      (if (feature-enabled? field-descriptor)
+      (if (and (feature-enabled? field-descriptor)
+               (hakukohde-allows-visibility? field-descriptor (map :value @selected-hakukohteet)))
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
           (cond-> (match field-descriptor
                          {:fieldClass "wrapperElement"
