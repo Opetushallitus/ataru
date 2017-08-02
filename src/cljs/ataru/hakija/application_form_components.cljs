@@ -357,20 +357,22 @@
                                     (get-in option [:label @default-lang]))
         value        (:value option)
         option-id    (util/component-id)
-        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])]
-    [:div {:key option-id}
-     [:input.application__form-checkbox
-      {:id        option-id
-       :type      "checkbox"
-       :checked   @checked?
-       :value     value
-       :on-change (fn [event]
-                    (let [value (.. event -target -value)]
-                      (dispatch [:application/toggle-multiple-choice-option parent-id value validators])))}]
-     [:label
-      {:for option-id}
-      label]
-     [multi-choice-followups (:followups option) @checked?]]))
+        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])
+        on-change    (fn [event]
+                       (let [value (.. event -target -value)]
+                         (dispatch [:application/toggle-multiple-choice-option parent-id value validators])))]
+    (fn [option parent-id validators]
+      [:div {:key option-id}
+       [:input.application__form-checkbox
+        {:id        option-id
+         :type      "checkbox"
+         :checked   @checked?
+         :value     value
+         :on-change on-change}]
+       [:label
+        {:for option-id}
+        label]
+       [multi-choice-followups (:followups option) @checked?]])))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
