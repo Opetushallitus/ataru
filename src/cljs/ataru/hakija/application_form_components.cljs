@@ -120,31 +120,34 @@
         [markdown-paragraph info]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
-  (let [id           (keyword (:id field-descriptor))
-        answers      (subscribe [:state-query [:application :answers]])
-        answer       (subscribe [:state-query [:application :answers id]])
-        lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])
-        size-class (text-field-size->class (get-in field-descriptor [:params :size]))]
+  (let [id                   (keyword (:id field-descriptor))
+        answers              (subscribe [:state-query [:application :answers]])
+        answer               (subscribe [:state-query [:application :answers id]])
+        lang                 (subscribe [:application/form-language])
+        default-lang         (subscribe [:application/default-language])
+        size-class           (text-field-size->class (get-in field-descriptor [:params :size]))
+        selected-hakukohteet (reaction (map :value @(subscribe [:state-query [:application :answers :hakukohteet :values]])))]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-      [div-kwd
-       [label field-descriptor]
-       [:div.application__form-text-input-info-text
-        [info-text field-descriptor]]
-       (let [cannot-view? (and editing (:cannot-view @answer))]
-         [:input.application__form-text-input
-          (merge {:id          id
-                  :type        "text"
-                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                 (non-blank-val (get input-hint @lang)
-                                                (get input-hint @default-lang)))
-                  :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer) @answers)
-                                                 " application__form-field-error"
-                                                 " application__form-text-input--normal"))
-                  :value       (if cannot-view? "***********" (:value @answer))
-                  :on-blur     (partial textual-field-blur field-descriptor @answers)
-                  :on-change   (partial textual-field-change field-descriptor @answers)}
-                 (when (or disabled cannot-view?) {:disabled true}))])])))
+      (when (or (empty? (:belongs-to-hakukohteet field-descriptor))
+                (not-empty (clojure.set/intersection (set @selected-hakukohteet) (set (:belongs-to-hakukohteet field-descriptor)))))
+        [div-kwd
+         [label field-descriptor]
+         [:div.application__form-text-input-info-text
+          [info-text field-descriptor]]
+         (let [cannot-view? (and editing (:cannot-view @answer))]
+           [:input.application__form-text-input
+            (merge {:id          id
+                    :type        "text"
+                    :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (non-blank-val (get input-hint @lang)
+                                                  (get input-hint @default-lang)))
+                    :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer) @answers)
+                                                   " application__form-field-error"
+                                                   " application__form-text-input--normal"))
+                    :value       (if cannot-view? "***********" (:value @answer))
+                    :on-blur     (partial textual-field-blur field-descriptor @answers)
+                    :on-change   (partial textual-field-change field-descriptor @answers)}
+                   (when (or disabled cannot-view?) {:disabled true}))])]))))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
