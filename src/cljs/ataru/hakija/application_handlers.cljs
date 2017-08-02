@@ -443,18 +443,9 @@
 (reg-event-db
   :application/remove-adjacent-field
   (fn [db [_ field-descriptor index]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (-> db
-                    (update-in [:application :answers id :values]
-                      (fn [answers]
-                        (vec (concat
-                               (subvec answers 0 index)
-                               (subvec answers (inc index))))))
-                    (update-in [:application :answers id]
-                      (partial set-adjacent-field-validity child-descriptor))))
-              db
-              children))))
+    (reduce #(remove-repeatable-field-value %1 %2 index)
+            db
+            (:children field-descriptor))))
 
 (reg-event-fx
   :application/add-single-attachment
