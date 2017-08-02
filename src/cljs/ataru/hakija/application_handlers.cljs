@@ -391,12 +391,34 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
+(defn- set-field-visibility
+  [db field-descriptor visible?]
+  (let [id (keyword (:id field-descriptor))
+        db (assoc-in db [:application :ui id :visible?] visible?)]
+    (if (= "adjacentfieldset" (:fieldType field-descriptor))
+      (reduce #(set-field-visibility %1 %2 visible?)
+              db
+              (:children field-descriptor))
+      db)))
+
+(defn- set-multiple-choice-followup-visibility
+  [db field-descriptor option]
+  (let [id (keyword (:id field-descriptor))
+        selected? (get-in db [:application :answers id :options (:value option)])]
+    (reduce #(set-field-visibility %1 %2 selected?)
+            db
+            (:followups option))))
+
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id option-value validators]]
-    (update-in db [:application :answers multiple-choice-id]
-      (fn [answer]
-        (toggle-multiple-choice-option answer option-value validators (-> db :application :answers))))))
+  (fn [db [_ field-descriptor option]]
+    (let [id (keyword (:id field-descriptor))
+          validators (:validators field-descriptor)]
+      (-> db
+          (update-in [:application :answers id]
+                     (fn [answer]
+                       (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
+          (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
   :application/select-single-choice-button

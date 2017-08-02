@@ -332,25 +332,16 @@
 
                                  [dropdown-followups lang value field-descriptor]]))})))
 
-(defn- multi-choice-followups [followups parent-checked?]
-  (r/create-class
-    {:component-did-mount (fn []
-                            (dispatch [:state-update
-                                       (fn [db]
-                                         (reduce #(toggle-followup-visibility %1 %2 parent-checked?)
-                                                 db
-                                                 followups))]))
-     :reagent-render      (fn [followups parent-checked?]
-                            (when (and parent-checked? (not-empty followups))
-                              [:div.application__form-multi-choice-followups-outer-container
-                               [:div.application__form-multi-choice-followups-indicator]
-                               [:div.application__form-multi-choice-followups-container.animated.fadeIn
-                                (map (fn [followup]
-                                       ^{:key (:id followup)}
-                                       [render-field followup])
-                                     followups)]]))}))
+(defn- multi-choice-followups [followups]
+  [:div.application__form-multi-choice-followups-outer-container
+   [:div.application__form-multi-choice-followups-indicator]
+   [:div.application__form-multi-choice-followups-container.animated.fadeIn
+    (map (fn [followup]
+           ^{:key (:id followup)}
+           [render-field followup])
+         followups)]])
 
-(defn- multiple-choice-option [option parent-id validators]
+(defn- multiple-choice-option [field-descriptor option parent-id]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
@@ -358,10 +349,9 @@
         value        (:value option)
         option-id    (util/component-id)
         checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])
-        on-change    (fn [event]
-                       (let [value (.. event -target -value)]
-                         (dispatch [:application/toggle-multiple-choice-option parent-id value validators])))]
-    (fn [option parent-id validators]
+        on-change    (fn [_]
+                       (dispatch [:application/toggle-multiple-choice-option field-descriptor option]))]
+    (fn [field-descriptor option parent-id]
       [:div {:key option-id}
        [:input.application__form-checkbox
         {:id        option-id
@@ -372,7 +362,8 @@
        [:label
         {:for option-id}
         label]
-       [multi-choice-followups (:followups option) @checked?]])))
+       (when (and @checked? (not-empty (:followups option)))
+         [multi-choice-followups (:followups option)])])))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
@@ -385,7 +376,7 @@
       [:div.application__form-outer-checkbox-container
        (map-indexed (fn [idx option]
                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                      [multiple-choice-option option parent-id validators])
+                      [multiple-choice-option field-descriptor option parent-id])
                     (:options field-descriptor))]]))
 
 (defn- single-choice-option [option parent-id validators]
