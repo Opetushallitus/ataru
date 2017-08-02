@@ -625,6 +625,9 @@
         (assoc-in [:application :hakukohde-query] "")
         (assoc-in [:application :hakukohde-hits] []))))
 
+(defn toggle-hakukohde-field-visibility [db hakukohde-oid visible]
+  (rules/run-rule {:set-visibility-based-on-hakukohde [hakukohde-oid visible]} db))
+
 (reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde-oid]]
@@ -636,7 +639,8 @@
                            :value hakukohde-oid})
           (assoc-in [:application :answers :hakukohteet :valid]
                     (or (nil? max-hakukohteet)
-                        (< (count selected-hakukohteet) max-hakukohteet)))))))
+                        (< (count selected-hakukohteet) max-hakukohteet)))
+          (toggle-hakukohde-field-visibility hakukohde-oid true)))))
 
 (reg-event-db
   :application/hakukohde-remove-selection
@@ -646,7 +650,8 @@
           (update-in [:application :answers :hakukohteet :values]
                      (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))
           (assoc-in [:application :answers :hakukohteet :valid]
-                    (< 1 (count selected-hakukohteet)))))))
+                    (< 1 (count selected-hakukohteet)))
+          (toggle-hakukohde-field-visibility hakukohde-oid false)))))
 
 (reg-event-db
   :application/hide-answers-belonging-to-hakukohteet

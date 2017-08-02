@@ -164,6 +164,15 @@
         (assoc-in [:application :ui :home-town :visible?] is-finland?)
         (assoc-in [:application :ui :city :visible?] (not is-finland?)))))
 
+(defn- set-visibility-based-on-hakukohde
+  [db [hakukohde-oid visible?]]
+  (reduce-kv (fn [db answer-key answer]
+               (cond-> db
+                 (some #{hakukohde-oid} (:belongs-to-hakukohteet answer))
+                 (assoc-in [:application :ui answer-key :visible?] visible?)))
+             db
+             (get-in db [:application :answers])))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -180,6 +189,8 @@
     toggle-ssn-based-fields-for-existing-application
     :change-country-of-residence
     change-country-of-residence
+    :set-visibility-based-on-hakukohde
+    set-visibility-based-on-hakukohde
     nil))
 
 (defn extract-rules [content]
