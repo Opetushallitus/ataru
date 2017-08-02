@@ -102,5 +102,5 @@
            :en ""}
    :params {}
    :options []
-   :validators [:required]
+   :validators [:hakukohteet]
    :exclude-from-answers-if-hidden true})

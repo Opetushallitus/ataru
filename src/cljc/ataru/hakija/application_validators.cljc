@@ -113,8 +113,10 @@
 
 (defn- hakukohteet?
   [value _ field-descriptor]
-  (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
-    (< 0 (count value) (inc max-hakukohteet))
+  (if (pos? (count (:options field-descriptor)))
+    (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
+      (< 0 (count value) (inc max-hakukohteet))
+      (pos? (count value)))
     true))
 
 (def validators {:required        required?
