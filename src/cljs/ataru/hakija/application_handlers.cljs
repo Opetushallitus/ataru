@@ -427,18 +427,14 @@
 (reg-event-db
   :application/add-adjacent-fields
   (fn [db [_ field-descriptor]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (let [required? (required? child-descriptor)]
-                  (-> db
-                      (update-in [:application :answers id :values]
-                        (fn [values]
-                          (conj (or values [{:value nil :valid (not required?)}])
-                                {:value nil :valid (not required?)})))
-                      (update-in [:application :answers id]
-                        (partial set-adjacent-field-validity child-descriptor)))))
-              db
-              children))))
+    (reduce (fn [db child]
+              (let [id (keyword (:id child))
+                    new-idx (count (get-in db [:application :answers id :values]))]
+                (-> db
+                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-value child))))
+            db
+            (:children field-descriptor))))
 
 (reg-event-db
   :application/remove-adjacent-field
