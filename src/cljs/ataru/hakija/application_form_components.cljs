@@ -145,8 +145,9 @@
         on-blur    (fn [evt]
                      (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
                        (dispatch [:application/remove-repeatable-application-field-value id idx])))
-        on-change  (fn [idx answers-by-key evt]
-                     (let [value (some-> evt .-target .-value)]
+        on-change  (fn [evt]
+                     (let [value (some-> evt .-target .-value)
+                           idx (int (.getAttribute (.-target evt) "data-idx"))]
                        (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
@@ -164,7 +165,7 @@
                                              " application__form-text-input--normal"))
                 :value     value
                 :data-idx  0
-                :on-change (partial on-change 0 answers-by-key)}
+                :on-change on-change}
                (when (empty? value)
                  {:on-blur on-blur}))]])
           (map-indexed
@@ -182,7 +183,7 @@
                                (when-not value " application__form-text-input--disabled"))
                    :value     value
                    :data-idx  (inc idx)
-                   :on-change (partial on-change (inc idx) answers-by-key)}
+                   :on-change on-change}
                   (when (and (not last?) (empty? value))
                     {:on-blur on-blur})
                   (when last?
