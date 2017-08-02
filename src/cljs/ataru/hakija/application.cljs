@@ -29,7 +29,7 @@
                                               :valid true}]}]
 
                      [_ _ _]
-                     [id {:valid     (not (some #(contains? #{"required" "home-town" "hakukohde"} %) (:validators field)))
+                     [id {:valid     (not (some #(contains? #{"required" "home-town" "hakukohteet"} %) (:validators field)))
                           :label     (:label field)
                           :order-idx idx}])))
           flattened-form-fields)))

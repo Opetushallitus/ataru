@@ -628,7 +628,6 @@
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde-oid]]
     (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
-          hakukohteet-field    (hakukohteet-field db)
           new-hakukohde-values (conj selected-hakukohteet {:valid true :value hakukohde-oid})]
       (-> db
           (assoc-in [:application :answers :hakukohteet :values]
