@@ -518,18 +518,20 @@
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
-        lang       @(subscribe [:application/form-language])]
-    [:div
-     [:div.application__form-filename-container.application__form-file-error.animated.shake
-      [:span.application__form-attachment-text
-       (-> attachment :value :filename)
-       [:a.application__form-upload-remove-attachment-link
-        {:href     "#"
-         :on-click (fn remove-attachment [event]
+        lang       @(subscribe [:application/form-language])
+        on-click   (fn remove-attachment [event]
                      (.preventDefault event)
-                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx]))}
-        [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
-     [:span.application__form-attachment-error (-> attachment :error lang)]]))
+                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx]))]
+    (fn [field-descriptor component-id attachment-idx]
+      [:div
+       [:div.application__form-filename-container.application__form-file-error.animated.shake
+        [:span.application__form-attachment-text
+         (-> attachment :value :filename)
+         [:a.application__form-upload-remove-attachment-link
+          {:href     "#"
+           :on-click on-click}
+          [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
+       [:span.application__form-attachment-error (-> attachment :error lang)]])))
 
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-filename-container
