@@ -712,8 +712,15 @@
            :on-change (partial on-change @answers-by-key)}])})))
 
 (defn adjacent-text-fields [field-descriptor]
-  (let [language   (subscribe [:application/form-language])
-        row-amount (subscribe [:application/adjacent-field-row-amount field-descriptor])]
+  (let [language        (subscribe [:application/form-language])
+        row-amount      (subscribe [:application/adjacent-field-row-amount field-descriptor])
+        remove-on-click (fn remove-adjacent-text-field [event]
+                          (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
+                            (.preventDefault event)
+                            (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
+        add-on-click    (fn add-adjacent-text-field [event]
+                          (.preventDefault event)
+                          (dispatch [:application/add-adjacent-fields field-descriptor]))]
     (fn [field-descriptor]
       (let [row-amount   @row-amount
             child-ids    (map (comp keyword :id) (:children field-descriptor))
@@ -737,16 +744,13 @@
                                          [adjacent-field-input child row-idx]]))
                                     (:children field-descriptor))
                        (when (pos? row-idx)
-                         [:a {:on-click (fn remove-adjacent-text-field [event]
-                                          (.preventDefault event)
-                                          (dispatch [:application/remove-adjacent-field field-descriptor row-idx]))}
+                         [:a {:data-row-idx row-idx
+                              :on-click remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])
            [:a.application__form-add-new-row
-            {:on-click (fn add-adjacent-text-field [event]
-                         (.preventDefault event)
-                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
+            {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
 
 (defn- feature-enabled? [{:keys [fieldType]}]
