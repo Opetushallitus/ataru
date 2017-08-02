@@ -413,24 +413,12 @@
           not-empty
           (every? true?)))))
 
-(defn- set-adjacent-field-values
-  [db field-descriptor idx value]
-  (let [id (keyword (:id field-descriptor))]
-    (update-in db [:application :answers id :values]
-               (fn [answers]
-                 (let [[init last] (split-at
-                                    idx
-                                    (or
-                                     (not-empty answers)
-                                     []))]
-                   (vec (concat init [value] (rest last))))))))
-
 (reg-event-db
   :application/set-adjacent-field-answer
   (fn [db [_ field-descriptor id idx value]]
     (-> db
-        (set-adjacent-field-values field-descriptor idx value)
-        (update-in [:application :answers id] (partial set-adjacent-field-validity field-descriptor)))))
+        (set-repeatable-field-values field-descriptor idx (:value value))
+        (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
