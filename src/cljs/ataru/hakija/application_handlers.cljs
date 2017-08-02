@@ -325,23 +325,27 @@
         (set-repeatable-field-values field-descriptor idx value)
         (set-repeatable-field-value field-descriptor))))
 
+(defn- remove-repeatable-field-value
+  [db field-descriptor idx]
+  (let [id (keyword (:id field-descriptor))]
+    (cond-> db
+      (seq (get-in db [:application :answers id :values]))
+      (update-in [:application :answers id :values]
+                 #(autil/remove-nth % idx))
+
+      ;; when creating application, we have the value below (and it's important). when editing, we do not.
+      ;; consider this a temporary, terrible bandaid solution
+      (seq (get-in db [:application :answers id :value]))
+      (update-in [:application :answers id :value]
+                 #(autil/remove-nth (vec %) idx))
+
+      true
+      (set-repeatable-field-value field-descriptor))))
+
 (reg-event-db
   :application/remove-repeatable-application-field-value
   (fn [db [_ field-descriptor idx]]
-    (let [id (keyword (:id field-descriptor))]
-      (cond-> db
-        (seq (get-in db [:application :answers id :values]))
-        (update-in [:application :answers id :values]
-                   #(autil/remove-nth % idx))
-
-        ;; when creating application, we have the value below (and it's important). when editing, we do not.
-        ;; consider this a temporary, terrible bandaid solution
-        (seq (get-in db [:application :answers id :value]))
-        (update-in [:application :answers id :value]
-                   #(autil/remove-nth (vec %) idx))
-
-        true
-        (set-repeatable-field-value field-descriptor)))))
+    (remove-repeatable-field-value db field-descriptor idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
