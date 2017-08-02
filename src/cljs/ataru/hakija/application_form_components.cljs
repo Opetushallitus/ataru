@@ -698,10 +698,7 @@
         on-change (partial adjacent-field-input-change child row-idx)
         value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
     (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (when-not value (partial on-change nil @answers-by-key)))
-       :reagent-render
+      {:reagent-render
        (fn [{:keys [id]} row-idx]
          [:input.application__form-text-input.application__form-text-input--normal
           {:id        (str id "-" row-idx)
