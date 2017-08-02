@@ -300,12 +300,7 @@
     (let [path                      [:application :answers key :values]
           required?                 (some (partial = "required")
                                           (:validators field-descriptor))
-          with-answer               (if (and
-                                          (zero? idx)
-                                          (empty? value)
-                                          (= 1 (count (get-in db path))))
-                                      (assoc-in db path [])
-                                      (update-in db path (fnil assoc []) idx values))
+          with-answer               (update-in db path (fnil assoc []) idx values)
           all-values                (get-in with-answer path)
           validity-for-validation   (boolean
                                       (some->>
@@ -317,7 +312,7 @@
                                                       (butlast all-values)))
                                         not-empty
                                         (every? true?)))
-          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
+          value-for-readonly-fields-and-db (mapv :value all-values)]
       (update-in
         with-answer
         (butlast path)
