@@ -63,10 +63,15 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
+(def ^:private form-fields-to-hide (comp not-empty
+                                         (partial clojure.set/intersection #{:exclude-from-answers-if-hidden :belongs-to-hakukohteet})
+                                         set
+                                         keys))
+
 (defn- remove-invisible-answers
   [answers flat-form ui]
   (let [fields-to-remove-if-hidden (->> flat-form
-                                        (filter-vals :exclude-from-answers-if-hidden)
+                                        (filter-vals form-fields-to-hide)
                                         (keys)
                                         (map keyword)
                                         (set))
