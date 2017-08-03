@@ -52,7 +52,7 @@
                      (s/optional-key :label)                  LocalizedString
                      (s/optional-key :params)                 s/Any
                      :fieldType                               s/Keyword
-                     (s/optional-key :belongs-to-hakukohteet) (s/maybe [s/Str])})
+                     (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
@@ -83,7 +83,7 @@
                                                                                         "koodistoField"
                                                                                         "attachment"
                                                                                         "hakukohteet"])
-                        (s/optional-key :belongs-to-hakukohteet)         (s/maybe [s/Str])})
+                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
 
 (s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
                           :id                                      s/Str
@@ -97,7 +97,7 @@
                           (s/optional-key :params)                 s/Any
                           (s/optional-key :label)                  LocalizedString
                           (s/optional-key :text)                   LocalizedString
-                          (s/optional-key :belongs-to-hakukohteet) (s/maybe [s/Str])})
+                          (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema BasicElement (s/conditional
                             #(= "formField" (:fieldClass %)) FormField
@@ -116,7 +116,7 @@
                              (s/optional-key :label)                  LocalizedString
                              (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)                 Module
-                             (s/optional-key :belongs-to-hakukohteet) (s/maybe [s/Str])})
+                             (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema FormWithContent
   (merge Form
