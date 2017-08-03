@@ -9,21 +9,22 @@
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
         (map-indexed
-          (fn [idx field]
-            (let [id      (keyword (:id field))
-                  options (:options field)]
+          (fn [idx {:keys [belongs-to-hakukohteet label options id validators]}]
+            (let [id      (keyword id)
+                  options options]
               (if (and (= id :hakukohteet)
                        (= 1 (count options)))
                 ; if only one hakukohde is available, use it as the default (uneditable) answer
                 [:hakukohteet {:valid     true
                                :order-idx idx
-                               :label     (:label field)
+                               :label     label
                                :values    [{:value (:value (first options))
                                             :valid true}]}]
-                [id {:valid                  (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
-                     :label                  (:label field)
-                     :order-idx              idx
-                     :belongs-to-hakukohteet (:belongs-to-hakukohteet field)}])))
+                [id (cond-> {:valid     (not (some #(contains? #{"required" "home-town"} %) validators))
+                             :label     label
+                             :order-idx idx}
+                      (not-empty belongs-to-hakukohteet)
+                      (assoc :belongs-to-hakukohteet belongs-to-hakukohteet))])))
           flattened-form-fields)))
 
 (defn create-initial-answers
