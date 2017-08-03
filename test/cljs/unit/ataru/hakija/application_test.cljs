@@ -133,7 +133,7 @@
   (let [initial-answers (create-initial-answers form1)]
     (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""} :order-idx 0}
             :G__14 {:valid true, :label {:fi "kenttä2", :sv ""} :order-idx 1}
-            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""} :order-idx 2 :belongs-to-hakukohteet nil}}
+            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""} :order-idx 2}}
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
