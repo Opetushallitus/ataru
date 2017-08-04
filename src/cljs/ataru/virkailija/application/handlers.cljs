@@ -200,10 +200,14 @@
                           (url/items->query-part "key")
                           (clojure.string/join))
           path       (str "/lomake-editori/api/files/metadata" query-part)]
-      {:db       db
-       :http     {:method              :get
-                  :path                path
-                  :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}})))
+      (if (clojure.string/blank? query-part)
+        ; sanity check to ensure autosave start in cases of (broken) applications with no values in attachment answer
+        {:db       db
+         :dispatch [:application/start-autosave]}
+        {:db   db
+         :http {:method              :get
+                :path                path
+                :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
 
 (defn- application-has-attachments? [db]
   (some (comp (partial = "attachment") :fieldType second)

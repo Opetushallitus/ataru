@@ -56,7 +56,7 @@
             :handler [:application/handle-form answers]}}))
 
 (defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
-  {:db   db
+  {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
           :handler [:application/handle-form answers]}})
@@ -228,7 +228,7 @@
                                                (cond-> form
                                                        (some? selected-language)
                                                        (assoc :selected-language selected-language))))
-                               (assoc-in [:application :answers] (create-initial-answers form))
+                               (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
                                (assoc-in [:application :show-hakukohde-search] true)
                                (assoc :wrapper-sections (extract-wrapper-sections form)))]
     {:db             db
@@ -631,26 +631,25 @@
 (reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde-oid]]
-    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values])
-          max-hakukohteet (get-in (hakukohteet-field db) [:params :max-hakukohteet])]
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+          new-hakukohde-values (conj selected-hakukohteet {:valid true :value hakukohde-oid})]
       (-> db
-          (update-in [:application :answers :hakukohteet :values]
-                     conj {:valid true
-                           :value hakukohde-oid})
+          (assoc-in [:application :answers :hakukohteet :values]
+                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
-                    (or (nil? max-hakukohteet)
-                        (< (count selected-hakukohteet) max-hakukohteet)))
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
           (toggle-hakukohde-field-visibility hakukohde-oid true)))))
 
 (reg-event-db
   :application/hakukohde-remove-selection
   (fn [db [_ hakukohde-oid]]
-    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values])]
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+          new-hakukohde-values (remove #(= hakukohde-oid (:value %)) selected-hakukohteet)]
       (-> db
-          (update-in [:application :answers :hakukohteet :values]
-                     (fn [oids] (remove #(= hakukohde-oid (:value %)) oids)))
+          (assoc-in [:application :answers :hakukohteet :values]
+                    new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
-                    (< 1 (count selected-hakukohteet)))
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
           (toggle-hakukohde-field-visibility hakukohde-oid false)))))
 
 (reg-event-db

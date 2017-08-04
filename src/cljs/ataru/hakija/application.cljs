@@ -4,33 +4,42 @@
             [ataru.cljs-util :refer [console-log]]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.application.review-states :refer [complete-states]]))
+            [ataru.application.review-states :refer [complete-states]]
+            [clojure.core.match :refer [match]]))
 
-(defn- initial-valid-status [flattened-form-fields]
+(defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
         (map-indexed
-          (fn [idx {:keys [belongs-to-hakukohteet label options id validators]}]
-            (let [id      (keyword id)
-                  options options]
-              (if (and (= id :hakukohteet)
-                       (= 1 (count options)))
-                ; if only one hakukohde is available, use it as the default (uneditable) answer
-                [:hakukohteet {:valid     true
-                               :order-idx idx
-                               :label     label
-                               :values    [{:value (:value (first options))
-                                            :valid true}]}]
-                [id (cond-> {:valid     (not (some #(contains? #{"required" "home-town"} %) validators))
-                             :label     label
-                             :order-idx idx}
-                      (not-empty belongs-to-hakukohteet)
-                      (assoc :belongs-to-hakukohteet belongs-to-hakukohteet))])))
+          (fn [idx {:keys [belongs-to-hakukohteet] :as field}]
+            (let [id      (keyword (:id field))
+                  options (:options field)]
+              (match [id (count options) preselected-hakukohde]
+                     [:hakukohteet 1 _]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
+                                    :label (:label field)
+                                    :values [{:value (:value (first options))
+                                              :valid true}]}]
+
+                     [:hakukohteet _ (default-hakukohde :guard some?)]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
+                                    :label (:label field)
+                                    :values [{:value default-hakukohde
+                                              :valid true}]}]
+
+                     [_ _ _]
+                     [id (cond-> {:valid     (not (some #(contains? #{"required" "home-town" "hakukohteet"} %) (:validators field)))
+                                  :label     (:label field)
+                                  :order-idx idx}
+                           (not-empty belongs-to-hakukohteet)
+                           (assoc :belongs-to-hakukohteet belongs-to-hakukohteet))])))
           flattened-form-fields)))
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure. Only validity + default hakukohde for now."
-  [form]
-  (initial-valid-status (util/flatten-form-fields (:content form))))
+  [form preselected-hakukohde]
+  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
 
 (defn answers->valid-status [all-answers ui]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))

@@ -18,14 +18,15 @@
       before(
         wait.until(function() { return formSections().length == 3 }, 10000)
       )
-      it('with complete form and no hakukohde selected', function() {
+      it('with complete form and default hakukohde selected', function() {
         expect(formFields().length).to.equal(14)
         expect(submitButton().prop('disabled')).to.equal(true)
-        expect(invalidFieldsStatus().text()).to.equal('Tarkista 11 tietoa')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(formHeader().text()).to.equal('testing2')
-        expect(selectedHakukohteet().length).to.equal(0)
+        expect(selectedHakukohteet().length).to.equal(1)
         expect(hakukohdeSearchHits().length).to.equal(0)
         expect(hakukohdeSearchInput().is(':visible')).to.equal(true)
+        expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1Tarkenne APoista')
       })
     })
 
@@ -44,14 +45,15 @@
 
     describe('narrowing down search results and adding hakukohde', function() {
       before(
-        setTextFieldValue(hakukohdeSearchInput, 'hakukohde 1'),
+        setTextFieldValue(hakukohdeSearchInput, 'hakukohde 2'),
         wait.until(function() { return hakukohdeSearchHits().length === 1}),
         clickElement(function() { return nthHakukohdeSearchResultButton(0) }),
-        wait.until(function() { return selectedHakukohteet().length === 1})
+        wait.until(function() { return selectedHakukohteet().length === 2})
       )
       it('adds hakukohde to selected list', function() {
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
-        expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1Tarkenne APoista')
+        expect(selectedHakukohteet().eq(0).text()).to.equal('Testihakukohde 1Tarkenne APoista')
+        expect(selectedHakukohteet().eq(1).text()).to.equal('Testihakukohde 2Tarkenne BPoista')
       })
     })
   })
