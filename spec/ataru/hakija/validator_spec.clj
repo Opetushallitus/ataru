@@ -12,6 +12,43 @@
 (def extra-answers (update a :answers conj {:key "foo" :value "barbara"}))
 (def answers-by-key (util/answers-by-key (:answers a)))
 
+(def hakukohde-specific-question {:id "d2a26771-de96-4f34-867e-d112c09cbd6b"
+                                  :label {:fi "Kerro lyhyesti masennuksestasi"
+                                          :sv ""}
+                                  :params {:repeatable false}
+                                  :fieldType "textField"
+                                  :fieldClass "formField"
+                                  :validators ["required"]
+                                  :belongs-to-hakukohteet ["1.2.246.562.20.352373851710"]})
+
+(def hakukohde-specific-question-another-hakukohde (assoc hakukohde-specific-question :belongs-to-hakukohteet ["1.2.246.562.20.352373851711"]))
+
+(def hakukohde-specific-question-answer {:key "d2a26771-de96-4f34-867e-d112c09cbd6b"
+                                         :value "tsers"
+                                         :fieldType "textField"})
+
+(def hakukohde-specific-question-answer-nil-value (assoc hakukohde-specific-question-answer :value nil))
+
+
+(def hakukohde-answer {:key "hakukohteet"
+                       :label {:en ""
+                               :fi "Hakukohteet"
+                               :sv ""}
+                       :value ["1.2.246.562.20.352373851710"]
+                       :fieldType "hakukohteet"})
+
+
+(def hakukohde-question {:id "hakukohteet"
+                         :label {:en ""
+                                 :fi "Hakukohteet"
+                                 :sv ""}
+                         :params {}
+                         :options []
+                         :fieldType "hakukohteet"
+                         :fieldClass "formField"
+                         :validators ["required"]
+                         :exclude-from-answers-if-hidden true})
+
 (describe "application validation"
   (tags :unit)
   (it "fails answers with extraneous keys"
@@ -212,4 +249,43 @@
                          :else form-field))
                 (:content f)))
             :a3199cdf-fba3-4be1-8ab1-760f75f16d54
-            :passed?))))
+            :passed?)))
+
+  (it "passes validation when no hakukohde selected (and no answers are specified to a hakukohde)"
+      (should= true
+               (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
+
+  (it "passes validation when no hakukohde is selected, a question belongs to a question a but has no value"
+      (should= true
+               (:passed? (validator/valid-application?
+                           (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value)
+                           (update-in f [:content] conj hakukohde-specific-question)))))
+
+  (it "fails when no hakukohde is selected, a question belongs to a question and has a value"
+      (should= false
+               (:passed? (validator/valid-application?
+                           (update-in a [:answers] conj hakukohde-specific-question-answer)
+                           (update-in f [:content] conj hakukohde-specific-question)))))
+
+
+  (it "passes validation when hakukohde is selected and no answers are specified to a hakukohde"
+      (should= true
+               (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
+
+  (it "passes validation when hakukohde is selected and an answer belongs to it"
+      (should= true
+               (:passed? (validator/valid-application?
+                           (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
+                           (update-in f [:content] conj hakukohde-question hakukohde-specific-question)))))
+
+  (it "passes validation when hakukohde is selected, a question belongs to different hakukohde but has no value"
+      (should= true
+               (:passed? (validator/valid-application?
+                           (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value hakukohde-answer)
+                           (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
+
+  (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
+      (should= false
+               (:passed? (validator/valid-application?
+                          (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
+                          (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde))))))

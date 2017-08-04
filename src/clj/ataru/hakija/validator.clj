@@ -63,17 +63,6 @@
                     (when (empty? answers) [nil])
                     answers))))
 
-;(defn- belongs-to-correcthakukohde? [hakukohteet field answer])
-
-    ;{:id "d2a26771-de96-4f34-867e-d112c09cbd6b",
-    ; :label {:fi "Kerro lyhyesti masennuksestasi", :sv ""},
-    ; :params {:repeatable false},
-    ; :fieldType "textField",
-    ; :fieldClass "formField",
-    ; :validators ["required"],
-    ; :belongs-to-hakukohteet ["1.2.246.562.20.352373851710"]}
-    ;nil
-
 (defn- belongs-to-correct-hakukohde? [field hakukohteet]
   (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
 
@@ -94,7 +83,7 @@
           rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn eka [_] (and (not-empty hakukohteet)
+                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
                                                                    (empty? (:belongs-to-hakukohteet field)))))
                  (build-results
                   answers-by-key
@@ -104,7 +93,7 @@
 
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn toka [_] (and (not-empty hakukohteet)
+                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
                                                         (not-empty (:belongs-to-hakukohteet field))
                                                         (belongs-to-correct-hakukohde? field hakukohteet))))
                  (build-results
@@ -114,17 +103,17 @@
                   rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn kolmas [_] (and (not-empty hakukohteet)
+                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
                                                         (not-empty (:belongs-to-hakukohteet field))
-                                                        (not (belongs-to-correct-hakukohde? field hakukohteet))
-                                                        (every? nil? answers))))
+                                                        (not (belongs-to-correct-hakukohde? field hakukohteet)))))
                  (build-results
                   answers-by-key
-                  results
+                  (concat results
+                          {id {:passed? (every? nil? answers)}})
                   rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn neljäs [_] (and (empty? hakukohteet)
+                   :validators validators} :guard (fn [_] (and (empty? hakukohteet)
                                                          (empty? (:belongs-to-hakukohteet field))
                                                          (some #(not (= (:fieldType %))) ["dropdown" "multipleChoice"]))))
                  (build-results
@@ -134,12 +123,12 @@
                   rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn viides [_] (and (empty? hakukohteet)
-                                                        (not-empty (:belongs-to-hakukohteet field))
-                                                        (every? nil? answers))))
+                   :validators validators} :guard (fn [_] (and (empty? hakukohteet)
+                                                        (not-empty (:belongs-to-hakukohteet field)))))
                  (build-results
                   answers-by-key
-                  results
+                  (concat results
+                          {id {:passed? (every? nil? answers)}})
                   rest-form-fields)
 
          {:fieldClass "wrapperElement"
