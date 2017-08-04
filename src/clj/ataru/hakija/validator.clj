@@ -159,31 +159,29 @@
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
-  ([application]
-   (valid-application? application (form-store/fetch-by-id (:form application))))
-  ([application form]
-   {:pre [(not-empty form)]}
-   (let [answers-by-key (util/answers-by-key (:answers application))
-         extra-answers (extra-answers-not-in-original-form
-                         (map (comp keyword :id) (util/flatten-form-fields (:content form)))
-                         (keys answers-by-key))
-         results (build-results answers-by-key [] (:content form))
-         failed-results (some->>
-                          (into {} (filter #(not (:passed? (second %))) results))
-                          (build-failed-results answers-by-key))
-         failed-meta-fields (validate-meta-fields application)]
-     (when (not (empty? extra-answers))
-       (warn "Extra answers in application" (apply str extra-answers)))
-     (when (not (empty? failed-results))
-       (warn "Validation failed in application fields" failed-results))
-     (when (not (empty? failed-meta-fields))
-       (warn "Validation failed in application meta fields " (str failed-meta-fields)))
-     {:passed?
-      (and
-        (empty? extra-answers)
-        (empty? failed-results)
-        (empty? failed-meta-fields))
-      :failures
-      (merge
-        failed-results
-        failed-meta-fields)})))
+  [application form]
+  {:pre [(not-empty form)]}
+  (let [answers-by-key     (util/answers-by-key (:answers application))
+        extra-answers      (extra-answers-not-in-original-form
+                             (map (comp keyword :id) (util/flatten-form-fields (:content form)))
+                             (keys answers-by-key))
+        results            (build-results answers-by-key [] (:content form))
+        failed-results     (some->>
+                             (into {} (filter #(not (:passed? (second %))) results))
+                             (build-failed-results answers-by-key))
+        failed-meta-fields (validate-meta-fields application)]
+    (when (not (empty? extra-answers))
+      (warn "Extra answers in application" (apply str extra-answers)))
+    (when (not (empty? failed-results))
+      (warn "Validation failed in application fields" failed-results))
+    (when (not (empty? failed-meta-fields))
+      (warn "Validation failed in application meta fields " (str failed-meta-fields)))
+    {:passed?
+     (and
+       (empty? extra-answers)
+       (empty? failed-results)
+       (empty? failed-meta-fields))
+     :failures
+     (merge
+       failed-results
+       failed-meta-fields)}))
