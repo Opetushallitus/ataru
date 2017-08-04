@@ -115,7 +115,7 @@
                  ({:fieldClass "formField"
                    :validators validators} :guard (fn [_] (and (empty? hakukohteet)
                                                          (empty? (:belongs-to-hakukohteet field))
-                                                         (some #(not (= (:fieldType %))) ["dropdown" "multipleChoice"]))))
+                                                         (every? #(not (= (:fieldType %))) ["dropdown" "multipleChoice"]))))
                  (build-results
                   answers-by-key
                   (concat results
