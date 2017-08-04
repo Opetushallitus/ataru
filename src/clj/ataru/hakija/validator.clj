@@ -66,10 +66,14 @@
 (defn- belongs-to-correct-hakukohde? [field hakukohteet]
   (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
 
+(defn- field-belongs-to-hakukohde? [field]
+  (not-empty (:belongs-to-hakukohteet field)))
+
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
   (let [id          (keyword id)
         answers     (wrap-coll (:value (get answers-by-key id)))
+        ; Hakukohdes selected by user
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
           (match (merge {:validators []
@@ -83,53 +87,100 @@
                    rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
-                                                               (empty? (:belongs-to-hakukohteet field)))))
+                   :validators validators} :guard (fn [field] (and (field-belongs-to-hakukohde? field)
+                                                                   (empty? hakukohteet))))
+
                  (build-results
                    answers-by-key
-                   (concat results
-                           {id {:passed? (passes-all? validators answers answers-by-key field)}})
-                   rest-form-fields)
-
-
-                 ({:fieldClass "formField"
-                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
-                                                               (not-empty (:belongs-to-hakukohteet field))
-                                                               (belongs-to-correct-hakukohde? field hakukohteet))))
-                 (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                   (concat results {id {:passed? (every? nil? answers)}})
                    rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
-                                                               (not-empty (:belongs-to-hakukohteet field))
-                                                               (not (belongs-to-correct-hakukohde? field hakukohteet)))))
+                   :validators validators} :guard (fn [field] (and (field-belongs-to-hakukohde? field)
+                                                                   (not-empty hakukohteet))))
                  (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed? (every? nil? answers)}})
-                   rest-form-fields)
+                  answers-by-key
+                  (if (belongs-to-correct-hakukohde? field hakukohteet)
+                    (concat results
+                            {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                    (concat results {id {:passed? (every? nil? answers)}}))
+                  rest-form-fields)
 
-                 ({:fieldClass "formField"
-                   :validators validators} :guard (fn [_] (and (empty? hakukohteet)
-                                                               (empty? (:belongs-to-hakukohteet field))
-                                                               (every? #(not (= (:fieldType %))) ["dropdown" "multipleChoice"]))))
-                 (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed? (passes-all? validators answers answers-by-key field)}})
-                   rest-form-fields)
 
-                 ({:fieldClass "formField"
-                   :validators validators} :guard (fn [_] (and (empty? hakukohteet)
-                                                               (not-empty (:belongs-to-hakukohteet field)))))
-                 (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed? (every? nil? answers)}})
-                   rest-form-fields)
+
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [field] (and (field-belongs-to-hakukohde? field)
+                 ;                                                  (not-empty hakukohteet)
+                 ;                                                  (belongs-to-correct-hakukohde? field hakukohteet))))
+                 ;
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                 ;  rest-form-fields)
+                 ;
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [field] (and (field-belongs-to-hakukohde? field)
+                 ;                                                  (not-empty hakukohteet)
+                 ;                                                  (not (belongs-to-correct-hakukohde? field hakukohteet)))))
+                 ;
+                 ;(build-results
+                 ; answers-by-key
+                 ; (concat results {id {:passed? (every? nil? answers)}})
+                 ; rest-form-fields)
+
+
+
+
+
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
+                 ;                                              (empty? (:belongs-to-hakukohteet field)))))
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                 ;  rest-form-fields)
+                 ;
+                 ;
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
+                 ;                                              (not-empty (:belongs-to-hakukohteet field))
+                 ;                                              (belongs-to-correct-hakukohde? field hakukohteet))))
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                 ;  rest-form-fields)
+                 ;
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [_] (and (not-empty hakukohteet)
+                 ;                                              (not-empty (:belongs-to-hakukohteet field))
+                 ;                                              (not (belongs-to-correct-hakukohde? field hakukohteet)))))
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (every? nil? answers)}})
+                 ;  rest-form-fields)
+                 ;
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [_] (and (empty? hakukohteet)
+                 ;                                              (empty? (:belongs-to-hakukohteet field))
+                 ;                                              (every? #(not (= (:fieldType %))) ["dropdown" "multipleChoice"]))))
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                 ;  rest-form-fields)
+                 ;
+                 ;({:fieldClass "formField"
+                 ;  :validators validators} :guard (fn [_] (and (empty? hakukohteet)
+                 ;                                              (not-empty (:belongs-to-hakukohteet field)))))
+                 ;(build-results
+                 ;  answers-by-key
+                 ;  (concat results
+                 ;          {id {:passed? (every? nil? answers)}})
+                 ;  rest-form-fields)
 
                  {:fieldClass      "wrapperElement"
                   :children        children
