@@ -252,40 +252,33 @@
             :passed?)))
 
   (it "passes validation when no hakukohde selected (and no answers are specified to a hakukohde)"
-      (should= true
-               (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
 
-  (it "passes validation when no hakukohde is selected, a question belongs to a question a but has no value"
-      (should= true
-               (:passed? (validator/valid-application?
-                           (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value)
-                           (update-in f [:content] conj hakukohde-specific-question)))))
+  (it "passes validation when no hakukohde is selected, a question belongs to a hakukohde a but has no value"
+      (should (:passed? (validator/valid-application?
+                         (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value)
+                         (update-in f [:content] conj hakukohde-specific-question)))))
 
-  (it "fails when no hakukohde is selected, a question belongs to a question and has a value"
-      (should= false
-               (:passed? (validator/valid-application?
-                           (update-in a [:answers] conj hakukohde-specific-question-answer)
-                           (update-in f [:content] conj hakukohde-specific-question)))))
+  (it "fails when no hakukohde is selected, a question belongs to a hakukohde and has a value"
+      (should-not (:passed? (validator/valid-application?
+                             (update-in a [:answers] conj hakukohde-specific-question-answer)
+                             (update-in f [:content] conj hakukohde-specific-question)))))
 
 
   (it "passes validation when hakukohde is selected and no answers are specified to a hakukohde"
-      (should= true
-               (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? a (update-in f [:content] conj hakukohde-specific-question)))))
 
   (it "passes validation when hakukohde is selected and an answer belongs to it"
-      (should= true
-               (:passed? (validator/valid-application?
-                           (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
-                           (update-in f [:content] conj hakukohde-question hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application?
+                         (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
+                         (update-in f [:content] conj hakukohde-question hakukohde-specific-question)))))
 
   (it "passes validation when hakukohde is selected, a question belongs to different hakukohde but has no value"
-      (should= true
-               (:passed? (validator/valid-application?
-                           (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value hakukohde-answer)
-                           (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
+      (should (:passed? (validator/valid-application?
+                         (update-in a [:answers] conj hakukohde-specific-question-answer-nil-value hakukohde-answer)
+                         (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
 
   (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
-      (should= false
-               (:passed? (validator/valid-application?
-                          (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
-                          (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde))))))
+      (should-not (:passed? (validator/valid-application?
+                             (update-in a [:answers] conj hakukohde-specific-question-answer hakukohde-answer)
+                             (update-in f [:content] conj hakukohde-question hakukohde-specific-question-another-hakukohde))))))
