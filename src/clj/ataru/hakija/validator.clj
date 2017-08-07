@@ -142,8 +142,8 @@
                    answers-by-key
                    (concat results
                            {id {:passed?
-                                ((partial (validator-keyword->fn validation-keyword) answers-by-key)
-                                 (build-results answers-by-key [] children))}})
+                                ((validator-keyword->fn validation-keyword) answers-by-key
+                                  (build-results answers-by-key [] children))}})
                    rest-form-fields)
 
                  {:fieldClass "wrapperElement"
