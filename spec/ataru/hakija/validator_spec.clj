@@ -315,8 +315,8 @@
 
   (it "passes validation when a dropdown question is hakukohde specific, no answers"
       (should (:passed? (validator/valid-application?
-                          a
-                          (update f :content conj hakukohde-specific-dropdown-with-followups)))))
+                         a
+                         (update f :content conj hakukohde-specific-dropdown-with-followups)))))
 
   (it "passes validation when a dropdown question is hakukohde specific and has answers",
       (should (:passed? (validator/valid-application?
@@ -325,5 +325,19 @@
 
   (it "fails validation when a dropdown question is hakukohde specific and has no required followup answers",
       (should-not (:passed? (validator/valid-application?
-                         (update a :answers conj hakukohde-answer dropdown-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups))))))
+                             (update a :answers conj hakukohde-answer dropdown-answer)
+                             (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
+
+  (it "passes validation when a dropdown question is hakukohde specific to wrong hakukohde and has no answers",
+      (should (:passed? (validator/valid-application?
+                         (update a :answers conj hakukohde-answer)
+                         (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
+                                                                          :belongs-to-hakukohteet
+                                                                          ["1.2.246.562.20.352373851711"]))))))
+
+  (it "fails validation when a dropdown question is hakukohde specific to wrong hakukohde and has answers",
+      (should-not (:passed? (validator/valid-application?
+                             (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
+                             (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
+                                                                               :belongs-to-hakukohteet
+                                                                               ["1.2.246.562.20.352373851711"])))))))
