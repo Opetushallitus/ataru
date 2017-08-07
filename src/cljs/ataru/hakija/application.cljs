@@ -33,7 +33,9 @@
                                   :label     (:label field)
                                   :order-idx idx}
                            (not-empty belongs-to-hakukohteet)
-                           (assoc :belongs-to-hakukohteet belongs-to-hakukohteet))])))
+                           (assoc :belongs-to-hakukohteet (distinct (cond-> belongs-to-hakukohteet
+                                                                      (some? preselected-hakukohde)
+                                                                      (conj preselected-hakukohde)))))])))
           flattened-form-fields)))
 
 (defn create-initial-answers

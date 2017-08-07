@@ -221,16 +221,18 @@
   merge-submitted-answers)
 
 (defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form               (-> (languages->kwd form)
-                               (set-form-language))
-        db                 (-> db
-                               (update :form (fn [{:keys [selected-language]}]
-                                               (cond-> form
-                                                       (some? selected-language)
-                                                       (assoc :selected-language selected-language))))
-                               (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
-                               (assoc-in [:application :show-hakukohde-search] true)
-                               (assoc :wrapper-sections (extract-wrapper-sections form)))]
+  (let [form                  (-> (languages->kwd form)
+                                  (set-form-language))
+        db                    (-> db
+                                  (update :form (fn [{:keys [selected-language]}]
+                                                  (cond-> form
+                                                    (some? selected-language)
+                                                    (assoc :selected-language selected-language))))
+                                  (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+                                  (assoc-in [:application :show-hakukohde-search] true)
+                                  (assoc :wrapper-sections (extract-wrapper-sections form)))
+        selected-hakukohteet  (map :value (-> db :application :answers :hakukohteet :values))
+        preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db             db
      ;; Previously submitted answers must currently be merged to the app db
      ;; after a delay or rules will ruin them and the application will not
@@ -239,7 +241,7 @@
      :dispatch-n     (list
                        [:application/set-followup-visibility-to-false]
                        [:application/hide-hakukohteet-if-no-tarjonta]
-                       [:application/hide-answers-belonging-to-hakukohteet])}))
+                       [:application/hide-answers-belonging-to-hakukohteet (distinct (conj selected-hakukohteet preselected-hakukohde))])}))
 
 (reg-event-db
   :flasher
@@ -654,10 +656,13 @@
 
 (reg-event-db
   :application/hide-answers-belonging-to-hakukohteet
-  (fn [db _]
+  (fn [db [_ hakukohteet]]
     (reduce-kv (fn [db answer-key {:keys [belongs-to-hakukohteet]}]
                  (cond-> db
                    (not-empty belongs-to-hakukohteet)
-                   (assoc-in [:application :ui answer-key :visible?] false)))
+                   (assoc-in [:application :ui answer-key :visible?] (-> (clojure.set/intersection (set hakukohteet)
+                                                                                                   (set belongs-to-hakukohteet))
+                                                                         (empty?)
+                                                                         (not)))))
                db
                (get-in db [:application :answers]))))
