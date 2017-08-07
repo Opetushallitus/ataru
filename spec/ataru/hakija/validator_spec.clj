@@ -21,22 +21,13 @@
                                   :validators ["required"]
                                   :belongs-to-hakukohteet ["1.2.246.562.20.352373851710"]})
 
-(def hakukohde-specific-question-another-hakukohde (assoc hakukohde-specific-question :belongs-to-hakukohteet ["1.2.246.562.20.352373851711"]))
-
 (def hakukohde-specific-question-answer {:key "d2a26771-de96-4f34-867e-d112c09cbd6b"
                                          :value "tsers"
                                          :fieldType "textField"})
 
 (def hakukohde-specific-question-answer-nil-value (assoc hakukohde-specific-question-answer :value nil))
 
-
-(def hakukohde-answer {:key "hakukohteet"
-                       :label {:en ""
-                               :fi "Hakukohteet"
-                               :sv ""}
-                       :value ["1.2.246.562.20.352373851710"]
-                       :fieldType "hakukohteet"})
-
+(def hakukohde-specific-question-another-hakukohde (assoc hakukohde-specific-question :belongs-to-hakukohteet ["1.2.246.562.20.352373851711"]))
 
 (def hakukohde-question {:id "hakukohteet"
                          :label {:en ""
@@ -48,6 +39,45 @@
                          :fieldClass "formField"
                          :validators ["required"]
                          :exclude-from-answers-if-hidden true})
+
+(def hakukohde-answer {:key "hakukohteet"
+                       :label {:en ""
+                               :fi "Hakukohteet"
+                               :sv ""}
+                       :value ["1.2.246.562.20.352373851710"]
+                       :fieldType "hakukohteet"})
+
+(def hakukohde-specific-dropdown-with-followups {:id "ce1864c0-ce3f-4c1d-8405-5c0adff7ca2b"
+                                                 :label {:fi "Miksi masennuit?"
+                                                         :sv ""}
+                                                 :options [{:label {:fi "En osaa sanoa"
+                                                                    :sv ""}
+                                                             :value "En osaa sanoa"
+                                                             :followups [{:id "cc150f67-8a7e-4502-b17f-34f43d4198b1"
+                                                                          :label {:fi "etkö?"
+                                                                                  :sv ""}
+                                                                          :params {}
+                                                                          :fieldType "textField"
+                                                                          :fieldClass "formField"
+                                                                          :validators ["required"]}]}
+                                                           {:label {:fi "Faija skitsoo"
+                                                                    :sv ""}
+                                                            :value "Faija skitsoo"}]
+                                                 :fieldType "dropdown"
+                                                 :fieldClass "formField"
+                                                 :belongs-to-hakukohteet ["1.2.246.562.20.352373851710"]})
+
+(def dropdown-answer {:key "ce1864c0-ce3f-4c1d-8405-5c0adff7ca2b",
+                      :label {:fi "Miksi masennuit?"
+                              :sv ""}
+                      :value "En osaa sanoa"
+                      :fieldType "dropdown"})
+
+(def dropdown-followup-answer {:key "cc150f67-8a7e-4502-b17f-34f43d4198b1",
+                               :label {:fi "etkö?"
+                                       :sv ""}
+                               :value "en.."
+                               :fieldType "textField"})
 
 (describe "application validation"
   (tags :unit)
@@ -281,4 +311,19 @@
   (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
       (should-not (:passed? (validator/valid-application?
                              (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
-                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde))))))
+                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
+
+  (it "passes validation when a dropdown question is hakukohde specific, no answers"
+      (should (:passed? (validator/valid-application?
+                          a
+                          (update f :content conj hakukohde-specific-dropdown-with-followups)))))
+
+  (it "passes validation when a dropdown question is hakukohde specific and has answers",
+      (should (:passed? (validator/valid-application?
+                         (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
+                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
+
+  (it "fails validation when a dropdown question is hakukohde specific and has no required followup answers",
+      (should-not (:passed? (validator/valid-application?
+                         (update a :answers conj hakukohde-answer dropdown-answer)
+                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups))))))

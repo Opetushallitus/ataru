@@ -69,6 +69,12 @@
 (defn- field-belongs-to-hakukohde? [field]
   (not-empty (:belongs-to-hakukohteet field)))
 
+(defn- not-dropdown-or-multiple-choice [field]
+  (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
+
+(defn every-followup-nil? [answers-by-key followups]
+  (every? clojure.string/blank? (map #(-> answers-by-key (keyword (:id %)) :value) followups)))
+
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
   (let [id          (keyword id)
@@ -87,7 +93,8 @@
                    rest-form-fields)
 
                  ({:fieldClass "formField"
-                   :validators validators} :guard field-belongs-to-hakukohde?)
+                   :validators validators} :guard #(and (field-belongs-to-hakukohde? %)
+                                                        (not-dropdown-or-multiple-choice %)))
                  (build-results
                    answers-by-key
                    (if (and (belongs-to-correct-hakukohde? field hakukohteet)
@@ -127,21 +134,26 @@
                                         (->> (if (= "multipleChoice" (:fieldType field))
                                                (filter not-empty answers)
                                                answers)
-                                             (filter (comp not clojure.string/blank?))))]
-                   (build-results
-                     answers-by-key
+                                             (filter (comp not clojure.string/blank?))))
+                       followups       (not-empty (eduction (comp
+                                                             (filter (fn [option]
+                                                                       (and (not-empty (:followups option))
+                                                                            (= (seq answers) (wrap-coll (:value option))))))
+                                                             (mapcat :followups))
+                                                            options))]
+
+                   (build-results answers-by-key
                      (concat results
-                             {id {:passed? (and
-                                            (or
-                                             (nil? allowed-values)
-                                             (clojure.set/subset? answers allowed-values))
-                                            (passes-all? validators answers answers-by-key field))}}
-                             (when-let [followups (not-empty (eduction (comp
-                                                                        (filter (fn [option]
-                                                                                  (and (not-empty (:followups option))
-                                                                                       (= (seq answers) (wrap-coll (:value option))))))
-                                                                        (mapcat :followups))
-                                                                       options))]
+                             {id {:passed? (and (if (field-belongs-to-hakukohde? field)
+                                                  (or (and (belongs-to-correct-hakukohde? field hakukohteet)
+                                                           (not-empty hakukohteet))
+                                                      (and (every? nil? answers)
+                                                           (every-followup-nil? answers-by-key followups)))
+                                                  true)
+                                                (or (nil? allowed-values)
+                                                    (clojure.set/subset? answers allowed-values))
+                                                (passes-all? validators answers answers-by-key field))}}
+                             (when followups
                                (build-results
                                  answers-by-key
                                  results
