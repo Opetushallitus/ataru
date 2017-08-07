@@ -145,10 +145,11 @@
                    (build-results answers-by-key
                      (concat results
                              {id {:passed? (and (if (field-belongs-to-hakukohde? field)
-                                                  (or (and (belongs-to-correct-hakukohde? field hakukohteet)
+                                                  (if (and (belongs-to-correct-hakukohde? field hakukohteet)
                                                            (not-empty hakukohteet))
-                                                      (and (every? nil? answers)
-                                                           (every-followup-nil? answers-by-key followups)))
+                                                    true
+                                                    (and (every? nil? answers)
+                                                         (every-followup-nil? answers-by-key followups)))
                                                   true)
                                                 (or (nil? allowed-values)
                                                     (clojure.set/subset? answers allowed-values))
