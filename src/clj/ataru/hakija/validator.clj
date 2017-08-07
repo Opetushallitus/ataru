@@ -63,17 +63,49 @@
                     (when (empty? answers) [nil])
                     answers))))
 
-(defn- belongs-to-correct-hakukohde? [field hakukohteet]
-  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
-
 (defn- field-belongs-to-hakukohde? [field]
   (not-empty (:belongs-to-hakukohteet field)))
 
 (defn- not-dropdown-or-multiple-choice [field]
   (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
 
-(defn every-followup-nil? [answers-by-key followups]
+(defn- get-followup-questions [options answers]
+  (not-empty (eduction (comp
+                        (filter (fn [option]
+                                  (and (not-empty (:followups option))
+                                       (= (seq answers) (wrap-coll (:value option))))))
+                        (mapcat :followups))
+                       options)))
+
+(defn- get-non-empty-answers [field answers]
+  (set
+   (->> (if (= "multipleChoice" (:fieldType field))
+          (filter not-empty answers)
+          answers)
+        (filter (comp not clojure.string/blank?)))))
+
+(defn- get-allowed-values [koodisto-source options]
+  (if koodisto-source
+    (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
+    (allowed-values options)))
+
+(defn- all-answers-allowed? [all-answers allowed-values]
+  (or (nil? allowed-values)
+      (clojure.set/subset? all-answers allowed-values)))
+
+(defn- belongs-to-correct-hakukohde? [field hakukohteet]
+  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
+
+(defn- belongs-to-existing-hakukohde? [field hakukohteet]
+  (and (belongs-to-correct-hakukohde? field hakukohteet)
+       (not-empty hakukohteet)))
+
+(defn- every-followup-nil? [answers-by-key followups]
   (every? clojure.string/blank? (map #(-> answers-by-key (keyword (:id %)) :value) followups)))
+
+(defn- all-answers-nil? [non-empty-answers answers-by-key followups]
+  (and (empty? non-empty-answers)
+       (every-followup-nil? answers-by-key followups)))
 
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
@@ -97,8 +129,7 @@
                                                         (not-dropdown-or-multiple-choice %)))
                  (build-results
                    answers-by-key
-                   (if (and (belongs-to-correct-hakukohde? field hakukohteet)
-                            (not-empty hakukohteet))
+                   (if (belongs-to-existing-hakukohde? field hakukohteet)
                      (concat results
                              {id {:passed? (passes-all? validators answers answers-by-key field)}})
                      (concat results {id {:passed? (every? nil? answers)}}))
@@ -126,34 +157,17 @@
                   :fieldType  (:or "dropdown" "multipleChoice")
                   :validators validators
                   :options    options}
-                 (let [koodisto-source (:koodisto-source field)
-                       allowed-values  (if koodisto-source
-                                         (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
-                                         (allowed-values options))
-                       answers         (set
-                                        (->> (if (= "multipleChoice" (:fieldType field))
-                                               (filter not-empty answers)
-                                               answers)
-                                             (filter (comp not clojure.string/blank?))))
-                       followups       (not-empty (eduction (comp
-                                                             (filter (fn [option]
-                                                                       (and (not-empty (:followups option))
-                                                                            (= (seq answers) (wrap-coll (:value option))))))
-                                                             (mapcat :followups))
-                                                            options))]
-
+                 (let [koodisto-source   (:koodisto-source field)
+                       allowed-values    (get-allowed-values koodisto-source options)
+                       non-empty-answers (get-non-empty-answers field answers)
+                       followups         (get-followup-questions options non-empty-answers)]
                    (build-results answers-by-key
                      (concat results
-                             {id {:passed? (and (if (field-belongs-to-hakukohde? field)
-                                                  (if (and (belongs-to-correct-hakukohde? field hakukohteet)
-                                                           (not-empty hakukohteet))
-                                                    true
-                                                    (and (every? nil? answers)
-                                                         (every-followup-nil? answers-by-key followups)))
-                                                  true)
-                                                (or (nil? allowed-values)
-                                                    (clojure.set/subset? answers allowed-values))
-                                                (passes-all? validators answers answers-by-key field))}}
+                             {id {:passed? (and (or (not (field-belongs-to-hakukohde? field))
+                                                    (belongs-to-existing-hakukohde? field hakukohteet)
+                                                    (all-answers-nil? non-empty-answers answers-by-key followups))
+                                                (all-answers-allowed? non-empty-answers allowed-values)
+                                                (passes-all? validators non-empty-answers answers-by-key field))}}
                              (when followups
                                (build-results
                                  answers-by-key
