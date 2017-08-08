@@ -200,12 +200,15 @@
     (fn [form]
       (when-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__in_use_notification.animated.flash
-          [:span.editor-form__used-in-haku-heading "Tämä lomake on haun käytössä"]
-          [:ul.editor-form__used-in-haku-list
-           (for [haku (vals form-used-in-hakus)]
-             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
-              [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
-                   :target "_blank"} (:haku-name haku)]])]]))))
+         [:span.editor-form__used-in-haku-heading "Tämä lomake on haun käytössä"]
+         [:ul.editor-form__used-in-haku-list
+          (for [haku (vals form-used-in-hakus)]
+            [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
+             [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
+                  :target "_blank"} (:haku-name haku)]
+             [:span " – "]
+             [:a {:href   (str "/hakemus/haku/" (:haku-oid haku))
+                  :target "_blank"} "Lomake"]])]]))))
 
 (defn- close-form []
   [:a {:on-click (fn [event]
