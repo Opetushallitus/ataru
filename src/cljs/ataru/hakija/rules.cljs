@@ -117,10 +117,12 @@
         is-finland? (or (= country finland-country-code)
                         (clojure.string/blank? country))
         postal-code (-> answers :postal-code)]
-    (when (and is-finland? (:valid postal-code))
+    (when (and is-finland?
+               (not (clojure.string/blank? (:value postal-code)))
+               (:valid postal-code))
       (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
-                      :application/handle-postal-code-input
-                      :application/handle-postal-code-error))
+                :application/handle-postal-code-input
+                :application/handle-postal-code-error))
     (-> db
         (update-in [:application :answers :postal-office]
                    merge {:valid (not is-finland?) :value ""})
