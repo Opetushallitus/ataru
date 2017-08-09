@@ -272,17 +272,17 @@
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))]
-    {:db (-> db
-             (update :form (fn [{:keys [selected-language]}]
-                             (cond-> form
-                               (some? selected-language)
-                               (assoc :selected-language selected-language))))
-             (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
-             (assoc-in [:application :show-hakukohde-search] true)
-             (assoc :wrapper-sections (extract-wrapper-sections form))
-             (merge-submitted-answers answers)
-             (original-values->answers)
-             (set-followup-visibility-to-false))
+    {:db       (-> db
+                   (update :form (fn [{:keys [selected-language]}]
+                                   (cond-> form
+                                           (some? selected-language)
+                                           (assoc :selected-language selected-language))))
+                   (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+                   (assoc-in [:application :show-hakukohde-search] true)
+                   (assoc :wrapper-sections (extract-wrapper-sections form))
+                   (merge-submitted-answers answers)
+                   (original-values->answers)
+                   (set-followup-visibility-to-false))
      :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
 
 (reg-event-db
@@ -670,26 +670,29 @@
 
 (reg-event-db
   :application/hakukohde-query-process
-  (fn [db [_ hakukohde-query]]
-    (if (and (= hakukohde-query (get-in db [:application :hakukohde-query]))
-             (< 1 (count hakukohde-query)))
+  (fn [db [_ hakukohde-query max-results-displayed]]
+    (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [hakukohde-options (:options (hakukohteet-field db))
-            pattern (re-pattern (str "(?i)" hakukohde-query))]
-        (assoc-in db [:application :hakukohde-hits]
-                  (->> hakukohde-options
-                       (filter #(re-find pattern (get-in % [:label :fi] "")))
-                       (map :value))))
+            lang              (-> db :form :selected-language)
+            results           (if (clojure.string/blank? hakukohde-query)
+                                (map :value (take max-results-displayed hakukohde-options))
+                                (->> hakukohde-options
+                                     (filter #(re-find (re-pattern (str "(?i)" hakukohde-query))
+                                                       (get-in % [:label lang] "")))
+                                     (map :value)))]
+        (assoc-in db [:application :hakukohde-hits] results))
       db)))
 
 (reg-event-fx
   :application/hakukohde-query-change
-  (fn [{db :db} [_ hakukohde-query]]
-    {:db (-> db
-             (assoc-in [:application :hakukohde-query] hakukohde-query)
-             (assoc-in [:application :hakukohde-hits] []))
-     :dispatch-later [{:ms 1000
-                       :dispatch [:application/hakukohde-query-process
-                                  hakukohde-query]}]}))
+  (fn [{db :db} [_ hakukohde-query max-results-displayed timeout]]
+    {:db                 (-> db
+                             (assoc-in [:application :hakukohde-query] hakukohde-query)
+                             ;(assoc-in [:application :hakukohde-hits] [])
+                             )
+     :dispatch-debounced {:timeout  (or timeout 500)
+                          :id       :hakukohde-query
+                          :dispatch [:application/hakukohde-query-process hakukohde-query max-results-displayed]}}))
 
 (reg-event-db
   :application/hakukohde-query-clear
