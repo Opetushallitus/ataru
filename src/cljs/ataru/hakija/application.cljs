@@ -4,13 +4,14 @@
             [ataru.cljs-util :refer [console-log]]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.application.review-states :refer [complete-states]]))
+            [ataru.application.review-states :refer [complete-states]]
+            [ataru.application-common.application-field-common :refer [required-validators]]))
 
 (defn- initial-valid-status [flattened-form-fields]
   (into {}
         (map-indexed
           (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(contains? #{"required" "home-town"} %) (:validators field)))
+            [(keyword (:id field)) {:valid (not (some #(contains? required-validators %) (:validators field)))
                                     :label (:label field)
                                     :order-idx idx}]) flattened-form-fields)))
 
