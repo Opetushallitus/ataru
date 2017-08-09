@@ -272,18 +272,19 @@
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))]
-    {:db       (-> db
-                   (update :form (fn [{:keys [selected-language]}]
-                                   (cond-> form
-                                           (some? selected-language)
-                                           (assoc :selected-language selected-language))))
-                   (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
-                   (assoc-in [:application :show-hakukohde-search] true)
-                   (assoc :wrapper-sections (extract-wrapper-sections form))
-                   (merge-submitted-answers answers)
-                   (original-values->answers)
-                   (set-followup-visibility-to-false))
-     :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
+    {:db         (-> db
+                     (update :form (fn [{:keys [selected-language]}]
+                                     (cond-> form
+                                             (some? selected-language)
+                                             (assoc :selected-language selected-language))))
+                     (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+                     (assoc-in [:application :show-hakukohde-search] true)
+                     (assoc :wrapper-sections (extract-wrapper-sections form))
+                     (merge-submitted-answers answers)
+                     (original-values->answers)
+                     (set-followup-visibility-to-false))
+     :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                  [:application/hakukohde-query-change "" 10 0]]}))
 
 (reg-event-db
   :flasher
@@ -686,10 +687,7 @@
 (reg-event-fx
   :application/hakukohde-query-change
   (fn [{db :db} [_ hakukohde-query max-results-displayed timeout]]
-    {:db                 (-> db
-                             (assoc-in [:application :hakukohde-query] hakukohde-query)
-                             ;(assoc-in [:application :hakukohde-hits] [])
-                             )
+    {:db                 (assoc-in db [:application :hakukohde-query] hakukohde-query)
      :dispatch-debounced {:timeout  (or timeout 500)
                           :id       :hakukohde-query
                           :dispatch [:application/hakukohde-query-process hakukohde-query max-results-displayed]}}))
