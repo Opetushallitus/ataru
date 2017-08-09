@@ -241,18 +241,21 @@
                  (reduce merge))))
 
 (defn handle-form [{:keys [db]} [_ answers form]]
-  (let [form (-> (languages->kwd form)
-                 (set-form-language))]
-    {:db (-> db
-             (update :form (fn [{:keys [selected-language]}]
-                             (cond-> form
-                               (some? selected-language)
-                               (assoc :selected-language selected-language))))
-             (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
-             (assoc-in [:application :show-hakukohde-search] true)
-             (assoc :wrapper-sections (extract-wrapper-sections form))
-             (merge-submitted-answers answers)
-             set-followup-visibility-to-false)
+  (let [form                  (-> (languages->kwd form)
+                                  (set-form-language))
+        db                    (-> db
+                                  (update :form (fn [{:keys [selected-language]}]
+                                                  (cond-> form
+                                                    (some? selected-language)
+                                                    (assoc :selected-language selected-language))))
+                                  (assoc-in [:application :answers] (create-initial-answers form (-> db :application :preselected-hakukohde)))
+                                  (assoc-in [:application :show-hakukohde-search] true)
+                                  (assoc :wrapper-sections (extract-wrapper-sections form))
+                                  (merge-submitted-answers answers)
+                                  (set-followup-visibility-to-false))
+        selected-hakukohteet  (map :value (-> db :application :answers :hakukohteet :values))
+        preselected-hakukohde (-> db :application :preselected-hakukohde)]
+    {:db         db
      :dispatch-n (list [:application/hide-hakukohteet-if-no-tarjonta]
                        [:application/hide-answers-belonging-to-hakukohteet (distinct (conj selected-hakukohteet preselected-hakukohde))])}))
 (reg-event-db
