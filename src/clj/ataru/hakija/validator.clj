@@ -106,76 +106,61 @@
         ; Hakukohdes selected by user
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
-          (match (merge {:validators []
-                         :params     []}
-                        field)
+          (if-let [ret (match (merge {:validators []
+                                      :params     []}
+                                     field)
 
-                 {:exclude-from-answers true}
-                 (build-results
-                   answers-by-key
-                   results
-                   rest-form-fields)
+                              {:exclude-from-answers true}
+                              results
 
-                 ({:fieldClass "formField"
-                   :validators validators} :guard #(and (field-belongs-to-hakukohde? %)
-                                                        (not-dropdown-or-multiple-choice %)))
-                 (build-results
-                   answers-by-key
-                   (if (belongs-to-existing-hakukohde? field hakukohteet)
-                     (concat results
-                             {id {:passed? (passes-all? validators answers answers-by-key field)}})
-                     (concat results {id {:passed? (every? nil? answers)}}))
-                   rest-form-fields)
+                              ({:fieldClass "formField"
+                                :validators validators} :guard #(and (field-belongs-to-hakukohde? %)
+                                                                     (not-dropdown-or-multiple-choice %)))
+                              (if (belongs-to-existing-hakukohde? field hakukohteet)
+                                (concat results
+                                        {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                                (concat results {id {:passed? (every? nil? answers)}}))
 
-                 {:fieldClass      "wrapperElement"
-                  :children        children
-                  :child-validator validation-keyword}
-                 (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed?
-                                ((validator-keyword->fn validation-keyword) answers-by-key
-                                  (build-results answers-by-key [] children))}})
-                   rest-form-fields)
+                              {:fieldClass      "wrapperElement"
+                               :children        children
+                               :child-validator validation-keyword}
+                              (concat results
+                                      {id {:passed?
+                                           ((validator-keyword->fn validation-keyword) answers-by-key
+                                             (build-results answers-by-key [] children))}})
 
-                 {:fieldClass "wrapperElement"
-                  :children   children}
-                 (build-results
-                   answers-by-key
-                   (concat results (build-results answers-by-key [] children))
-                   rest-form-fields)
+                              {:fieldClass "wrapperElement"
+                               :children   children}
+                              (concat results (build-results answers-by-key [] children))
 
-                 {:fieldClass "formField"
-                  :fieldType  (:or "dropdown" "multipleChoice")
-                  :validators validators
-                  :options    options}
-                 (let [koodisto-source   (:koodisto-source field)
-                       allowed-values    (get-allowed-values koodisto-source options)
-                       non-empty-answers (get-non-empty-answers field answers)
-                       followups         (get-followup-questions options non-empty-answers)]
-                   (build-results answers-by-key
-                     (concat results
-                             {id {:passed? (and (or (not (field-belongs-to-hakukohde? field))
-                                                    (belongs-to-existing-hakukohde? field hakukohteet)
-                                                    (all-answers-nil? non-empty-answers answers-by-key followups))
-                                                (all-answers-allowed? non-empty-answers allowed-values)
-                                                (passes-all? validators non-empty-answers answers-by-key field))}}
-                             (when followups
-                               (build-results
-                                 answers-by-key
-                                 results
-                                 followups)))
-                     rest-form-fields))
+                              {:fieldClass "formField"
+                               :fieldType  (:or "dropdown" "multipleChoice")
+                               :validators validators
+                               :options    options}
+                              (let [koodisto-source   (:koodisto-source field)
+                                    allowed-values    (get-allowed-values koodisto-source options)
+                                    non-empty-answers (get-non-empty-answers field answers)
+                                    followups         (get-followup-questions options non-empty-answers)]
+                                (concat results
+                                        {id {:passed? (and (or (not (field-belongs-to-hakukohde? field))
+                                                               (belongs-to-existing-hakukohde? field hakukohteet)
+                                                               (all-answers-nil? non-empty-answers answers-by-key followups))
+                                                           (all-answers-allowed? non-empty-answers allowed-values)
+                                                           (passes-all? validators non-empty-answers answers-by-key field))}}
+                                        (when followups
+                                          (build-results
+                                            answers-by-key
+                                            results
+                                            followups))))
 
-                 {:fieldClass "formField"
-                  :validators validators}
-                 (build-results
-                   answers-by-key
-                   (concat results
-                           {id {:passed? (passes-all? validators answers answers-by-key field)}})
-                   rest-form-fields)
+                              {:fieldClass "formField"
+                               :validators validators}
+                              (concat results
+                                      {id {:passed? (passes-all? validators answers answers-by-key field)}})
 
-                 :else results))))
+                              :else nil)]
+            (build-results answers-by-key ret rest-form-fields)
+            results))))
 
 (defn build-failed-results [answers-by-key failed-results]
   (merge-with merge
