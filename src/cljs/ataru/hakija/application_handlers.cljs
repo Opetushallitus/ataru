@@ -257,7 +257,7 @@
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         db
      :dispatch-n (list [:application/hide-hakukohteet-if-no-tarjonta]
-                       [:application/hide-answers-belonging-to-hakukohteet (distinct (conj selected-hakukohteet preselected-hakukohde))])}))
+                       [:application/show-answers-belonging-to-hakukohteet (distinct (conj selected-hakukohteet preselected-hakukohde))])}))
 (reg-event-db
   :flasher
   (fn [db [_ flash]]
@@ -661,7 +661,7 @@
           (toggle-hakukohde-field-visibility hakukohde-oid false)))))
 
 (reg-event-db
-  :application/hide-answers-belonging-to-hakukohteet
+  :application/show-answers-belonging-to-hakukohteet
   (fn [db [_ hakukohteet]]
     (reduce-kv (fn [db answer-key {:keys [belongs-to-hakukohteet]}]
                  (cond-> db
