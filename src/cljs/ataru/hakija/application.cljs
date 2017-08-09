@@ -5,6 +5,7 @@
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.application.review-states :refer [complete-states]]
+            [ataru.application-common.application-field-common :refer [required-validators]]
             [clojure.core.match :refer [match]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
@@ -29,7 +30,7 @@
                                               :valid true}]}]
 
                      [_ _ _]
-                     [id {:valid     (not (some #(contains? #{"required" "home-town" "hakukohteet"} %) (:validators field)))
+                     [id {:valid     (not (some #(contains? required-validators %) (:validators field)))
                           :label     (:label field)
                           :order-idx idx}])))
           flattened-form-fields)))
