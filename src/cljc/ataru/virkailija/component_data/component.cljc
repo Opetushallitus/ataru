@@ -99,7 +99,8 @@
   {:fieldClass "formField"
    :fieldType "hakukohteet"
    :id :hakukohteet
-   :label {:fi "Hakukohteet"
+   ; TODO localizations
+   :label {:fi "Hakemasi koulutukset"
            :sv ""
            :en ""}
    :params {}

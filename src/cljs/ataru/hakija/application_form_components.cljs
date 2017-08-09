@@ -585,6 +585,7 @@
     {:on-click hakukohde-remove-event-handler
      :data-hakukohde-oid hakukohde-oid}
     @(subscribe [:application/get-i18n-text
+                 ; TODO localization
                  {:fi "Poista"
                   :sv ""
                   :en ""}])]])
@@ -618,6 +619,7 @@
          {:on-click hakukohde-select-event-handler
           :data-hakukohde-oid hakukohde-oid}
          @(subscribe [:application/get-i18n-text
+                      ; TODO localization
                       {:fi "Lisää"
                        :sv ""
                        :en ""}])]))]])
@@ -659,6 +661,7 @@
    [:div.application__hakukohde-selected-list
     (if (empty? @(subscribe [:application/selected-hakukohteet]))
       [:div @(subscribe [:application/get-i18n-text
+                         ; TODO localization
                          {:fi "Ei valittuja hakukohteita"
                           :sv ""
                           :en ""}])]
@@ -670,7 +673,8 @@
        [:a.application__hakukohde-selection-open-search
         {:on-click hakukohde-search-toggle-event-handler}
         @(subscribe [:application/get-i18n-text
-                     {:fi "Lisää hakukohde"
+                     ; TODO localization
+                     {:fi "Lisää haettava koulutus"
                       :sv ""
                       :en ""}])]
        (when @(subscribe [:application/show-hakukohde-search])
