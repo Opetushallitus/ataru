@@ -57,12 +57,12 @@
 (defn- fade-out-effect
   [path]
   (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-              :fade-out "animated fadeOutUp"
+              :fade-out "animated fadeOutUp fade-out"
               :fade-in  "animated fadeInUp"
               nil)))
 
 (defn- text-header
-  [label path & {:keys [form-section? draggable] :or {draggable true}}]
+  [label path & {:keys [component-wrapped? draggable] :or {draggable true}}]
   [:div.editor-form__header-wrapper
    {:draggable (and draggable (nil? ((set path) :followup)))
     :on-drag-start (on-drag-start path)
@@ -71,7 +71,7 @@
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
                  (dispatch [:remove-component path
-                            (if form-section?
+                            (if component-wrapped?
                               (-> event .-target .-parentNode .-parentNode .-parentNode)
                               (-> event .-target .-parentNode .-parentNode))]))}
     "Poista"]])
@@ -170,9 +170,9 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
+      {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
-        {:class @animation-effect}
-        [text-header header-label path]
+        [text-header header-label path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
@@ -386,7 +386,7 @@
         [:div.editor-form__section_wrapper
          {:class @animation-effect}
          [:div.editor-form__component-wrapper
-          [text-header "Lomakeosio" path :form-section? true]
+          [text-header "Lomakeosio" path :component-wrapped? true]
           [:div.editor-form__text-field-wrapper.editor-form__text-field--section
            [:header.editor-form__component-item-header "Osion nimi"]
            (input-fields-with-lang
@@ -452,9 +452,9 @@
         animation-effect (fade-out-effect path)]
     (fn [content path children]
       [:div.editor-form__component-wrapper
+      {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
-        {:class @animation-effect}
-        [text-header "Vierekkäiset tekstikentät" path]
+        [text-header "Vierekkäiset tekstikentät" path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
          (input-fields-with-lang
@@ -481,9 +481,9 @@
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
+      {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
-        {:class @animation-effect}
-        [text-header "Tekstikenttä" path :draggable false]
+        [text-header "Tekstikenttä" path :draggable false :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
@@ -527,9 +527,9 @@
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
+      {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
-        {:class @animation-effect}
-        [text-header "Liitepyyntö" path]
+        [text-header "Liitepyyntö" path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"]
          (input-fields-with-lang

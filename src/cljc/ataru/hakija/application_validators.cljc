@@ -111,13 +111,23 @@
     true
     (not (clojure.string/blank? value))))
 
+(defn- parse-value
+  [value]
+  "Values in answers are a flat string collection when submitted, but a collection of maps beforehand (in front-end db) :("
+  (cond
+    (every? string? value) value
+    (every? map? value) (map :value value)))
+
 (defn- hakukohteet?
   [value _ field-descriptor]
-  (if (pos? (count (:options field-descriptor)))
-    (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
-      (< 0 (count value) (inc max-hakukohteet))
-      (pos? (count value)))
-    true))
+  (let [hakukohde-options          (:options field-descriptor)
+        num-answers                (count value)
+        answers-subset-of-options? (clojure.set/subset? (set (parse-value value)) (set (map :value hakukohde-options)))]
+    (if (pos? (count hakukohde-options))
+      (if-let [max-hakukohteet (-> field-descriptor :params :max-hakukohteet)]
+        (and (< 0 num-answers (inc max-hakukohteet)) answers-subset-of-options?)
+        (and (pos? num-answers) answers-subset-of-options?))
+      true)))
 
 (def validators {:required        required?
                  :ssn             ssn?

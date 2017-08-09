@@ -1,20 +1,22 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-   [taoensso.timbre :as log]
-   [ataru.background-job.job :as job]
-   [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-   [ataru.hakija.application-email-confirmation :as application-email]
-   [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-   [ataru.person-service.person-integration :as person-integration]
-   [ataru.tarjonta-service.hakuaika :as hakuaika]
-   [ataru.forms.form-store :as form-store]
-   [ataru.hakija.validator :as validator]
-   [ataru.application.review-states :refer [complete-states]]
-   [ataru.applications.application-store :as application-store]
-   [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
-                                                  editing-forbidden-person-info-field-ids]]
-   [ataru.util :as util]
-   [ataru.files.file-store :as file-store]))
+    [taoensso.timbre :as log]
+    [ataru.background-job.job :as job]
+    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+    [ataru.hakija.application-email-confirmation :as application-email]
+    [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+    [ataru.person-service.person-integration :as person-integration]
+    [ataru.tarjonta-service.hakuaika :as hakuaika]
+    [ataru.tarjonta-service.hakukohde :as hakukohde]
+    [ataru.forms.form-store :as form-store]
+    [ataru.hakija.validator :as validator]
+    [ataru.application.review-states :refer [complete-states]]
+    [ataru.applications.application-store :as application-store]
+    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                   editing-forbidden-person-info-field-ids]]
+    [ataru.util :as util]
+    [ataru.files.file-store :as file-store]
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -87,12 +89,15 @@
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [form               (form-store/fetch-by-id (:form application))
+        tarjonta-info      (when (:haku application)
+                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
+        form-with-tarjonta (hakukohde/populate-hakukohde-answer-options form tarjonta-info)
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-application-by-secret (:secret application))
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
-        validation-result  (validator/valid-application? final-application form)]
+        validation-result  (validator/valid-application? final-application form-with-tarjonta)]
     (cond
       (and (:haku application)
            (empty? (:hakukohde application)))
