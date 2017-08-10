@@ -268,60 +268,84 @@
   :application/initialize-db
   initialize-db)
 
-(defn set-application-field [db [_ key values]]
-  (let [path                [:application :answers key]
-        current-answer-data (get-in db path)]
-    (assoc-in db path
-      (when values
-        (merge current-answer-data values)))))
+(reg-event-fx
+  :application/textual-field-blur
+  (fn [{db :db} [_ field]]
+    (let [id (keyword (:id field))
+          answer (get-in db [:application :answers id])]
+      {:dispatch-n (if (or (empty? (:blur-rules field))
+                           (not (:valid answer)))
+                     []
+                     [[:application/run-rule (:blur-rules field)]])})))
 
-(reg-event-db
+(reg-event-fx
   :application/set-application-field
-  set-application-field)
+  (fn [{db :db} [_ field value]]
+    (let [id (keyword (:id field))
+          answers (get-in db [:application :answers])
+          answer (get answers id)
+          valid? (or (:cannot-view answer)
+                     (:cannot-edit answer)
+                     (every? #(validator/validate % value answers)
+                             (:validators field)))]
+      {:db (update-in db [:application :answers id]
+                      merge {:valid valid? :value value})
+       :dispatch-n (if (empty? (:rules field))
+                     []
+                     [[:application/run-rule (:rules field)]])})))
+
+(defn- set-repeatable-field-values
+  [db field-descriptor idx value]
+  (let [id (keyword (:id field-descriptor))
+        answers (get-in db [:application :answers])
+        answer (get answers id)
+        valid? (or (:cannot-view answer)
+                   (:cannot-edit answer)
+                   (every? #(validator/validate % value answers)
+                           (:validators field-descriptor)))]
+    (update-in db [:application :answers id :values]
+               (fnil assoc []) idx {:valid valid? :value value})))
+
+(defn- set-repeatable-field-value
+  [db field-descriptor]
+  (let [id (keyword (:id field-descriptor))
+        values (get-in db [:application :answers id :values])
+        required? (some (partial = "required")
+                        (:validators field-descriptor))
+        valid? (if (empty? values)
+                 (not required?)
+                 (every? :valid values))]
+    (update-in db [:application :answers id]
+               merge {:valid valid? :value (mapv :value values)})))
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
-    (let [path                      [:application :answers key :values]
-          required?                 (some? ((set (:validators field-descriptor)) "required"))
-          with-answer               (if (and
-                                          (zero? idx)
-                                          (empty? value)
-                                          (= 1 (count (get-in db path))))
-                                      (assoc-in db path [])
-                                      (update-in db path (fnil assoc []) idx values))
-          all-values                (get-in with-answer path)
-          validity-for-validation   (boolean
-                                      (some->>
-                                        (map :valid (or
-                                                      (when (= 1 (count all-values))
-                                                        [values])
-                                                      (when (and (not required?) (empty? all-values))
-                                                        [{:valid true}])
-                                                      (butlast all-values)))
-                                        not-empty
-                                        (every? true?)))
-          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
-      (update-in
-        with-answer
-        (butlast path)
-        assoc
-        :valid validity-for-validation
-        :value value-for-readonly-fields-and-db))))
+  (fn [db [_ field-descriptor idx value]]
+    (-> db
+        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-value field-descriptor))))
+
+(defn- remove-repeatable-field-value
+  [db field-descriptor idx]
+  (let [id (keyword (:id field-descriptor))]
+    (cond-> db
+      (seq (get-in db [:application :answers id :values]))
+      (update-in [:application :answers id :values]
+                 #(autil/remove-nth % idx))
+
+      ;; when creating application, we have the value below (and it's important). when editing, we do not.
+      ;; consider this a temporary, terrible bandaid solution
+      (seq (get-in db [:application :answers id :value]))
+      (update-in [:application :answers id :value]
+                 #(autil/remove-nth (vec %) idx))
+
+      true
+      (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ key idx]]
-    (cond-> db
-            (get-in db [:application :answers key :values])
-            (update-in [:application :answers key :values]
-                       #(autil/remove-nth % idx))
-
-            ; when creating application, we have the value below (and it's important). when editing, we do not.
-            ; consider this a temporary, terrible bandaid solution
-            (get-in db [:application :answers key :value])
-            (update-in [:application :answers key :value]
-                       #(autil/remove-nth (vec %) idx)))))
+  (fn [db [_ field-descriptor idx]]
+    (remove-repeatable-field-value db field-descriptor idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
@@ -367,76 +391,64 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
+(defn- set-field-visibility
+  [db field-descriptor visible?]
+  (let [id (keyword (:id field-descriptor))
+        db (assoc-in db [:application :ui id :visible?] visible?)]
+    (if (= "adjacentfieldset" (:fieldType field-descriptor))
+      (reduce #(set-field-visibility %1 %2 visible?)
+              db
+              (:children field-descriptor))
+      db)))
+
+(defn- set-multiple-choice-followup-visibility
+  [db field-descriptor option]
+  (let [id (keyword (:id field-descriptor))
+        selected? (get-in db [:application :answers id :options (:value option)])]
+    (reduce #(set-field-visibility %1 %2 selected?)
+            db
+            (:followups option))))
+
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id option-value validators]]
-    (update-in db [:application :answers multiple-choice-id]
-      (fn [answer]
-        (toggle-multiple-choice-option answer option-value validators (-> db :application :answers))))))
+  (fn [db [_ field-descriptor option]]
+    (let [id (keyword (:id field-descriptor))
+          validators (:validators field-descriptor)]
+      (-> db
+          (update-in [:application :answers id]
+                     (fn [answer]
+                       (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
+          (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
   :application/select-single-choice-button
   select-single-choice-button)
 
-(defn- required? [field-descriptor]
-  (some? ((set (:validators field-descriptor)) "required")))
-
-(defn- set-adjacent-field-validity
-  [field-descriptor {:keys [values] :as answer}]
-    (assoc answer
-      :valid
-      (boolean
-        (some->>
-          (map :valid (or
-                        (not-empty values)
-                        [{:valid (not (required? field-descriptor))}]))
-          not-empty
-          (every? true?)))))
-
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor id idx value]]
-    (-> (update-in db [:application :answers id :values]
-                   (fn [answers]
-                     (let [[init last] (split-at
-                                         idx
-                                         (or
-                                           (not-empty answers)
-                                           []))]
-                       (vec (concat init [value] (rest last))))))
-        (update-in [:application :answers id] (partial set-adjacent-field-validity field-descriptor)))))
+  (fn [db [_ field-descriptor idx value]]
+    (-> db
+        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
   (fn [db [_ field-descriptor]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (let [required? (required? child-descriptor)]
-                  (-> db
-                      (update-in [:application :answers id :values]
-                        (fn [values]
-                          (conj (or values [{:value nil :valid (not required?)}])
-                                {:value nil :valid (not required?)})))
-                      (update-in [:application :answers id]
-                        (partial set-adjacent-field-validity child-descriptor)))))
-              db
-              children))))
+    (reduce (fn [db child]
+              (let [id (keyword (:id child))
+                    new-idx (count (get-in db [:application :answers id :values]))]
+                (-> db
+                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-value child))))
+            db
+            (:children field-descriptor))))
 
 (reg-event-db
   :application/remove-adjacent-field
   (fn [db [_ field-descriptor index]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (-> db
-                    (update-in [:application :answers id :values]
-                      (fn [answers]
-                        (vec (concat
-                               (subvec answers 0 index)
-                               (subvec answers (inc index))))))
-                    (update-in [:application :answers id]
-                      (partial set-adjacent-field-validity child-descriptor))))
-              db
-              children))))
+    (reduce #(remove-repeatable-field-value %1 %2 index)
+            db
+            (:children field-descriptor))))
 
 (reg-event-fx
   :application/add-single-attachment

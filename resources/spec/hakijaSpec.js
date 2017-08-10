@@ -145,7 +145,7 @@
                               "Jyväskylä",
                               "suomi",
                               "Tekstikentän vastaus",
-                              "Toistuva vastaus 1Toistuva vastaus 3",
+                              "Toistuva vastaus 1Toistuva vastaus 2Toistuva vastaus 3",
                               "Pakollisen tekstialueen vastaus",
                               "Kolmas vaihtoehto",
                               "Jatkokysymyksen vastaus",
