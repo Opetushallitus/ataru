@@ -276,9 +276,9 @@
          (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application))))
 
 (defn set-column-widths [workbook]
-  (dotimes [n (.getNumberOfSheets workbook)]
-    (dotimes [y (.getLastCellNum (.getRow (.getSheetAt workbook n) 0))]
-      (.autoSizeColumn (.getSheetAt workbook n) (short y)))))
+  (doseq [n (range (.getNumberOfSheets workbook))
+          y (range (.getLastCellNum (.getRow (.getSheetAt workbook n) 0)))]
+    (.autoSizeColumn (.getSheetAt workbook n) (short y))))
 
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
