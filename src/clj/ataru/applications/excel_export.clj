@@ -34,16 +34,6 @@
 (defn state-formatter [state]
   (or (get application-review-states state) "Tuntematon"))
 
-(defn- tarjonta-formatter
-  [tarjonta-info]
-  (->> (:hakukohteet tarjonta-info)
-       (map (fn [{:keys [name oid]}]
-              (str
-                (or (:fi name) (:sv name) (:en name))
-                " (" oid ") ")))
-       (interpose "\n")
-       (apply str)))
-
 (def ^:private form-meta-fields
   [{:label "Nimi"
     :field :name}
@@ -66,9 +56,6 @@
    {:label     "Tila"
     :field     :state
     :format-fn state-formatter}
-   {:label     "Hakukohteet"
-    :field     :tarjonta
-    :format-fn tarjonta-formatter}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
     :format-fn str}])
