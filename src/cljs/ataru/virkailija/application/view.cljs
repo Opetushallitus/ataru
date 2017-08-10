@@ -280,11 +280,18 @@
           :value (review-field->str review :score)
           :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
+(defn- application-modify-link []
+  (let [application-key (subscribe [:state-query [:application :selected-key]])]
+    [:a {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
+         :target "_blank"}
+     "Muokkaa hakemusta"]))
+
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating animated fadeIn")}
+     [application-modify-link]
      [application-review-state]
      [application-review-inputs]
      [application-review-events]]))
