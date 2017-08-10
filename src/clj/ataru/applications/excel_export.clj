@@ -1,7 +1,7 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel Row]
+  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment]
            [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook])
+           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
             [ataru.application.review-states :refer [application-review-states]]
@@ -66,21 +66,29 @@
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- update-row-cell! [sheet row column value]
+(defn- set-cell-style [cell workbook]
+  (let [cell-style (.createCellStyle workbook)]
+    (.setWrapText cell-style true)
+    (.setVerticalAlignment cell-style VerticalAlignment/TOP)
+    (.setCellStyle cell cell-style)
+    cell))
+
+(defn- update-row-cell! [sheet row column value workbook]
   (when-let [v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet row)
             (.createRow sheet row))
         (.getCell column Row/CREATE_NULL_AS_BLANK)
+        (set-cell-style workbook)
         (.setCellValue v)))
   sheet)
 
-(defn- make-writer [sheet row-offset]
+(defn- make-writer [sheet row-offset workbook]
   (fn [row column value]
     (update-row-cell!
       sheet
       (+ row-offset row)
       column
-      value)
+      value workbook)
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
@@ -115,7 +123,7 @@
             koodi-uri->label (partial get-label koodisto lang)]
         (->> (clojure.string/split value #"\s*,\s*")
              (mapv koodi-uri->label)
-             (interpose "\n")
+             (interpose ",\n")
              (apply str)))
       (if (= (:fieldType field-descriptor) "attachment")
         (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
@@ -133,7 +141,7 @@
           value           (if (or (seq? value-or-values) (vector? value-or-values))
                             (->> value-or-values
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
-                                 (interpose "\n")
+                                 (interpose ",\n")
                                  (apply str))
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (when (and value column)
@@ -245,7 +253,7 @@
 
 (defn- create-form-meta-sheet [workbook meta-fields]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
-        writer (make-writer sheet 0)]
+        writer (make-writer sheet 0 workbook)]
     (doseq [meta-field meta-fields
             :let [column (:column meta-field)
                   label  (:label meta-field)]]
@@ -266,6 +274,11 @@
   [tarjonta-service application]
   (merge application
          (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application))))
+
+(defn set-column-widths [workbook]
+  (dotimes [n (.getNumberOfSheets workbook)]
+    (dotimes [y (.getLastCellNum (.getRow (.getSheetAt workbook n) 0))]
+      (.autoSizeColumn (.getSheetAt workbook n) (short y)))))
 
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
@@ -289,8 +302,8 @@
          (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form)
-                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
-                              header-writer      (make-writer applications-sheet 0)]
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx) workbook)
+                              header-writer      (make-writer applications-sheet 0 workbook)]
                           (write-form-meta! meta-writer form applications form-meta-fields)
                           (write-headers! header-writer headers application-meta-fields)
                           (->> applications
@@ -298,11 +311,12 @@
                                (reverse)
                                (map (partial inject-haku-info tarjonta-service))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx))]
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
                                                 (write-application! row-writer application headers application-meta-fields form))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
+    (set-column-widths workbook)
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
