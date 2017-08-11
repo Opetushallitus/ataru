@@ -36,7 +36,7 @@
   :application/handle-get-application
   handle-get-application)
 
-(defn- get-application-by-secret
+(defn- get-application-by-hakija-secret
   [{:keys [db]} [_ secret]]
   {:db   db
    :http {:method  :get
@@ -44,8 +44,8 @@
           :handler [:application/handle-get-application secret]}})
 
 (reg-event-fx
-  :application/get-application-by-secret
-  get-application-by-secret)
+  :application/get-application-by-hakija-secret
+  get-application-by-hakija-secret)
 
 (reg-event-fx
   :application/get-latest-form-by-key

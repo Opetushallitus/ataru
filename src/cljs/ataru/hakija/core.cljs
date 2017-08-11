@@ -44,7 +44,7 @@
       (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
 
       (not-blank? hakija-secret)
-      (re-frame/dispatch [:application/get-application-by-secret hakija-secret])
+      (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
 
       (and (not-blank? virkailija-secret)
            (not-blank? application-key))
