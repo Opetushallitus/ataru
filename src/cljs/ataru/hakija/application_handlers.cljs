@@ -286,7 +286,7 @@
           answer (get answers id)
           valid? (or (:cannot-view answer)
                      (:cannot-edit answer)
-                     (every? #(validator/validate % value answers)
+                     (every? #(validator/validate % value answers field)
                              (:validators field)))]
       {:db (update-in db [:application :answers id]
                       merge {:valid valid? :value value})
@@ -301,7 +301,7 @@
         answer (get answers id)
         valid? (or (:cannot-view answer)
                    (:cannot-edit answer)
-                   (every? #(validator/validate % value answers)
+                   (every? #(validator/validate % value answers field-descriptor)
                            (:validators field-descriptor)))]
     (update-in db [:application :answers id :values]
                (fnil assoc []) idx {:valid valid? :value value})))
