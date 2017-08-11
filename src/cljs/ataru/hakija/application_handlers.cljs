@@ -15,22 +15,27 @@
    :application {:answers {}}})
 
 (defn- handle-get-application [{:keys [db]}
-                               [_ secret {:keys [answers
-                                                 form-key
-                                                 lang
-                                                 haku
-                                                 hakukohde
-                                                 hakukohde-name
-                                                 state]}]]
-  {:db       (-> db
-                 (assoc-in [:application :editing?] true)
-                 (assoc-in [:application :secret] secret)
-                 (assoc-in [:application :state] state)
-                 (assoc-in [:form :selected-language] (or (keyword lang) :fi))
-                 (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch (if haku
-               [:application/get-latest-form-by-haku haku answers]
-               [:application/get-latest-form-by-key form-key answers])})
+                               [_
+                                {:keys [secret virkailija-secret]}
+                                {:keys [answers
+                                        form-key
+                                        lang
+                                        haku
+                                        hakukohde
+                                        hakukohde-name
+                                        state]}]]
+  (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
+                                  [:secret secret]
+                                  [:virkailija-secret virkailija-secret])]
+    {:db       (-> db
+                   (assoc-in [:application :editing?] true)
+                   (assoc-in [:application secret-kwd] secret-val)
+                   (assoc-in [:application :state] state)
+                   (assoc-in [:form :selected-language] (or (keyword lang) :fi))
+                   (assoc-in [:form :hakukohde-name] hakukohde-name))
+     :dispatch (if haku
+                 [:application/get-latest-form-by-haku haku answers]
+                 [:application/get-latest-form-by-key form-key answers])}))
 
 (reg-event-fx
   :application/handle-get-application
@@ -41,7 +46,7 @@
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/application?secret=" secret)
-          :handler [:application/handle-get-application secret]}})
+          :handler [:application/handle-get-application {:secret secret}]}})
 
 (reg-event-fx
   :application/get-application-by-hakija-secret
@@ -52,7 +57,7 @@
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/application?virkailija-secret=" virkailija-secret)
-          :handler [:application/handle-get-application]}})
+          :handler [:application/handle-get-application {:virkailija-secret virkailija-secret}]}})
 
 (reg-event-fx
   :application/get-application-by-virkailija-secret
