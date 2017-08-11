@@ -26,10 +26,10 @@
 
 (defn- dispatch-form-load
   []
-  (let [path            (cljs-util/get-path)
-        hakukohde-oid   (path-match path #"/hakemus/hakukohde/(.+)/?")
-        haku-oid        (path-match path #"/hakemus/haku/(.+)/?")
-        secret          (:modify (cljs-util/extract-query-params))]
+  (let [path          (cljs-util/get-path)
+        hakukohde-oid (path-match path #"/hakemus/hakukohde/(.+)/?")
+        haku-oid      (path-match path #"/hakemus/haku/(.+)/?")
+        hakija-secret (:modify (cljs-util/extract-query-params))]
     (cond
       (some? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
@@ -37,8 +37,8 @@
       (some? haku-oid)
       (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
 
-      (some? secret)
-      (re-frame/dispatch [:application/get-application-by-secret secret])
+      (some? hakija-secret)
+      (re-frame/dispatch [:application/get-application-by-secret hakija-secret])
 
       :else
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
