@@ -277,8 +277,9 @@
 
 (defn set-column-widths [workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          y (range (.getLastCellNum (.getRow (.getSheetAt workbook n) 0)))]
-    (.autoSizeColumn (.getSheetAt workbook n) (short y))))
+          :let [sheet (.getSheetAt workbook n)]
+          y (range (.getLastCellNum (.getRow sheet 0)))]
+    (.autoSizeColumn sheet (short y))))
 
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
