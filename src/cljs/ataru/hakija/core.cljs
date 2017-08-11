@@ -24,12 +24,18 @@
   (when-let [re-match (re-matches re path)]
     (nth re-match 1)))
 
+(defn- not-blank? [x]
+  (not (clojure.string/blank? x)))
+
 (defn- dispatch-form-load
   []
-  (let [path          (cljs-util/get-path)
-        hakukohde-oid (path-match path #"/hakemus/hakukohde/(.+)/?")
-        haku-oid      (path-match path #"/hakemus/haku/(.+)/?")
-        hakija-secret (:modify (cljs-util/extract-query-params))]
+  (let [path              (cljs-util/get-path)
+        hakukohde-oid     (path-match path #"/hakemus/hakukohde/(.+)/?")
+        haku-oid          (path-match path #"/hakemus/haku/(.+)/?")
+        query-params      (cljs-util/extract-query-params)
+        hakija-secret     (:modify query-params)
+        virkailija-secret (:virkailija-secret query-params)
+        application-key   (:application-key query-params)]
     (cond
       (some? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
@@ -39,6 +45,10 @@
 
       (some? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-secret hakija-secret])
+
+      (and (not-blank? virkailija-secret)
+           (not-blank? application-key))
+      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret application-key])
 
       :else
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
