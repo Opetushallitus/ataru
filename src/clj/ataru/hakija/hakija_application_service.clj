@@ -93,12 +93,16 @@
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
         form-with-tarjonta (hakukohde/populate-hakukohde-answer-options form tarjonta-info)
         allowed            (allowed-to-apply? tarjonta-service application)
-        latest-application (application-store/get-latest-application-by-secret (:secret application))
+        latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
         validation-result  (validator/valid-application? final-application form-with-tarjonta)]
     (cond
+      (and (:secret application)
+           (:virkailija-secret application))
+      {:passed? false :failures ["Tried to edit hakemus with both virkailija and hakija secret."]}
+
       (and (:haku application)
            (empty? (:hakukohde application)))
       {:passed? false :failures ["Hakukohde must be specified"]}
@@ -168,7 +172,9 @@
         (validate-and-store tarjonta-service application application-store/update-application true)]
     (if passed?
       (do
-        (application-email/start-email-edit-confirmation-job application-id)
+        (if (:virkailija-secret application)
+          (println "Virkailija edit!")
+          (application-email/start-email-edit-confirmation-job application-id))
         {:passed? true :id application-id})
       validation-result)))
 

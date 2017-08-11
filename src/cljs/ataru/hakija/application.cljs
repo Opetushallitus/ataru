@@ -124,14 +124,16 @@
               cannot-view (assoc :cannot-view true)))))
 
 (defn create-application-to-submit [application form lang]
-  (let [secret (:secret application)]
+  (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
              :lang      lang
              :haku      (-> form :tarjonta :haku-oid)
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
              :answers   (create-answers-to-submit (:answers application) form (:ui application))}
-            (some? secret)
-            (assoc :secret secret))))
+
+            (some? secret) (assoc :secret secret)
+
+            (some? virkailija-secret) (assoc :virkailija-secret virkailija-secret))))
 
 (defn extract-wrapper-sections [form]
   (map #(select-keys % [:id :label :children])

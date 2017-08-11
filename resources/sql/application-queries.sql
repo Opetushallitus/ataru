@@ -297,11 +297,55 @@ FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time
   JOIN forms f ON a.form_id = f.id;
 
+-- name: yesql-get-latest-application-by-virkailija-secret
+WITH latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM applications a
+    JOIN virkailija_credentials AS vc
+    ON a.key = vc.application_key
+    WHERE vc.secret = :virkailija_secret
+)
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.hakukohde,
+  f.key     AS form_key
+FROM applications a
+  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN forms f ON a.form_id = f.id;
+
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH latest_version AS (
     SELECT max(created_time) AS latest_time
     FROM applications a
     WHERE a.secret = :secret
+)
+SELECT
+  id,
+  key,
+  lang,
+  form_id AS form,
+  created_time,
+  content,
+  haku,
+  hakukohde,
+  person_oid
+FROM applications a
+  JOIN latest_version lv ON a.created_time = lv.latest_time
+FOR UPDATE;
+
+-- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
+WITH latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM applications a
+    JOIN virkailija_credentials AS vc
+      ON a.key = vc.application_key
+    WHERE vc.secret = :virkailija_secret
 )
 SELECT
   id,

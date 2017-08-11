@@ -71,6 +71,11 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
+  (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
+    (unwrap-application application)
+    (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
+
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
@@ -102,7 +107,10 @@
 
 (defn update-application [{:keys [lang secret] :as new-application}]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
+    (let [old-application
+          (if secret
+            (get-latest-version-and-lock-for-update secret lang conn)
+            (get-latest-version-for-virkailija-edit-and-lock-for-update (:virkailija-secret new-application) lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
                                                 (merge-applications new-application old-application) conn)]
       (info (str "Updating application with key "
@@ -261,6 +269,20 @@
                               (first)
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))
+
+(defn- get-latest-application-for-virkailija-edit [virkailija-secret]
+  (println "virkailija secret " virkailija-secret)
+  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
+                              (first)
+                              (unwrap-application))]
+    (assoc application :state (-> (:key application) get-application-review :state))))
+
+(defn get-latest-version-of-application-for-edit
+  [{secret :secret
+    virkailija-sercret :virkailija-secret :as application}]
+  (if secret
+    (get-latest-application-by-secret secret)
+    (get-latest-application-for-virkailija-edit virkailija-sercret)))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
