@@ -47,6 +47,17 @@
   :application/get-application-by-hakija-secret
   get-application-by-hakija-secret)
 
+(defn- get-application-by-virkailija-secret
+  [{:keys [db]} [_ virkailija-secret]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/application?virkailija-secret=" virkailija-secret)
+          :handler [:application/handle-get-application]}})
+
+(reg-event-fx
+  :application/get-application-by-virkailija-secret
+  get-application-by-virkailija-secret)
+
 (reg-event-fx
   :application/get-latest-form-by-key
   (fn [{:keys [db]} [_ form-key answers]]
