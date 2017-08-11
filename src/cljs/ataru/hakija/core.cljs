@@ -37,13 +37,13 @@
         virkailija-secret (:virkailija-secret query-params)
         application-key   (:application-key query-params)]
     (cond
-      (some? hakukohde-oid)
+      (not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
 
-      (some? haku-oid)
+      (not-blank? haku-oid)
       (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
 
-      (some? hakija-secret)
+      (not-blank? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-secret hakija-secret])
 
       (and (not-blank? virkailija-secret)
