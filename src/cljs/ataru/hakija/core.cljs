@@ -34,8 +34,7 @@
         haku-oid          (path-match path #"/hakemus/haku/(.+)/?")
         query-params      (cljs-util/extract-query-params)
         hakija-secret     (:modify query-params)
-        virkailija-secret (:virkailija-secret query-params)
-        application-key   (:application-key query-params)]
+        virkailija-secret (:virkailija-secret query-params)]
     (cond
       (not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
@@ -46,9 +45,8 @@
       (not-blank? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
 
-      (and (not-blank? virkailija-secret)
-           (not-blank? application-key))
-      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret application-key])
+      (not-blank? virkailija-secret)
+      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret])
 
       :else
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
