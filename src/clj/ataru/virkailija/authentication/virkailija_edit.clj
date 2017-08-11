@@ -6,7 +6,7 @@
 
 (defqueries "sql/virkailija-edit-queries.sql")
 
-(defn create-hakija-credentials [session application-key]
+(defn create-virkailija-credentials [session application-key]
   (let [secret         (str (UUID/randomUUID))
         user-name      (-> session :identity :username)
         virkailija-oid (get-virkailija-oid-by-username user-name)]
