@@ -54,6 +54,10 @@
         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
         (response/not-found {})))))
 
+(defn- get-application-by-virkailija-secret [virkailija-secret]
+  (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
+    (get-application hakija-secret)))
+
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
   (response/ok {}))
@@ -79,6 +83,9 @@
   (api/undocumented
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
+
+(defn- not-blank? [x]
+  (not (clojure.string/blank? x)))
 
 (defn api-routes [tarjonta-service]
   (api/context "/api" []
@@ -138,10 +145,18 @@
         {:passed? true :id application-id}
         (response/ok {:id application-id})))
     (api/GET "/application" []
-      :summary "Get submitted application"
-      :query-params [secret :- s/Str]
+      :summary "Get submitted application by secret"
+      :query-params [{secret :- s/Str nil}
+                     {virkailija-secret :- s/Str nil}]
       :return ataru-schema/Application
-      (get-application secret))
+      (cond (not-blank? secret)
+            (get-application secret)
+
+            (not-blank? virkailija-secret)
+            (get-application-by-virkailija-secret virkailija-secret)
+
+            :else
+            (response/bad-request)))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"

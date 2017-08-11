@@ -435,3 +435,9 @@ GROUP BY f.name, f.key;
 INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
 VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
+
+-- name: yesql-get-hakija-secret-by-virkailija-secret
+SELECT a.secret FROM applications a
+INNER JOIN virkailija_credentials c ON a.key = c.application_key
+WHERE c.secret = :virkailija_secret
+ORDER BY a.created_time DESC LIMIT 1;
