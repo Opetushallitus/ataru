@@ -56,8 +56,10 @@
         (response/not-found {})))))
 
 (defn- get-application-by-virkailija-secret [virkailija-secret]
-  (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
-    (get-application hakija-secret)))
+  (if (virkailija-secret-valid? virkailija-secret)
+    (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
+      (get-application hakija-secret))
+    (response/bad-request {:error "Attempted to edit hakemus with invalid virkailija secret."})))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
@@ -153,12 +155,11 @@
       (cond (not-blank? secret)
             (get-application secret)
 
-            (and (not-blank? virkailija-secret)
-                 (virkailija-secret-valid? virkailija-secret))
+            (not-blank? virkailija-secret)
             (get-application-by-virkailija-secret virkailija-secret)
 
             :else
-            (response/bad-request {:error "Invalid secret."})))
+            (response/bad-request)))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"
