@@ -17,3 +17,6 @@
                                                     :first_name      (:givenName virkailija)
                                                     :last_name       (:sn virkailija)})
     {:secret secret}))
+
+(defn invalidate-virkailija-credentials [virkailija-secret]
+  (exec :db yesql-invalidate-virkailija-credentials! {:virkailija_secret virkailija-secret}))

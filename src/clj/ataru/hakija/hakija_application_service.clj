@@ -16,7 +16,8 @@
                                                    editing-forbidden-person-info-field-ids]]
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]))
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -169,11 +170,12 @@
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application true)]
+        (validate-and-store tarjonta-service application application-store/update-application true)
+        virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
-        (if (:virkailija-secret application)
-          (println "Virkailija edit!")
+        (if virkailija-secret
+          (invalidate-virkailija-credentials virkailija-secret)
           (application-email/start-email-edit-confirmation-job application-id))
         {:passed? true :id application-id})
       validation-result)))
