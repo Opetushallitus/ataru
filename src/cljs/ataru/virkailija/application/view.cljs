@@ -282,18 +282,19 @@
 
 (defn- application-modify-link []
   (let [application-key (subscribe [:state-query [:application :selected-key]])]
-    [:a {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
+    [:div.application-handling__edit-link
+     [:a {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
          :target "_blank"}
-     "Muokkaa hakemusta"]))
+     "Muokkaa hakemusta"]]))
 
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating animated fadeIn")}
-     [application-modify-link]
      [application-review-state]
      [application-review-inputs]
+     [application-modify-link]
      [application-review-events]]))
 
 (defn floating-application-review-placeholder
