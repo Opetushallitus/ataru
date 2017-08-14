@@ -53,17 +53,20 @@
                        (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang              (subscribe [:application/form-language])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
     (fn [submit-status]
-      (match submit-status
-             :submitting [:div.application__sent-indicator (case @lang
-                                                             :fi "Hakemusta lähetetään"
-                                                             :sv "Ansökan skickas"
-                                                             :en "The application is being sent")]
-             :submitted [:div.application__sent-indicator.animated.fadeIn (case @lang
-                                                                            :fi "Saat vahvistuksen sähköpostiisi"
-                                                                            :sv "Du får en bekräftelse till din e-post"
-                                                                            :en "Confirmation email will be sent to the email address you've provided")]
+      (println @virkailija-secret)
+      (match [submit-status @virkailija-secret]
+             [:submitting _] [:div.application__sent-indicator (case @lang
+                                                                 :fi "Hakemusta lähetetään"
+                                                                 :sv "Ansökan skickas"
+                                                                 :en "The application is being sent")]
+             [:submitted (_ :guard #(nil? %))]
+             [:div.application__sent-indicator.animated.fadeIn (case @lang
+                                                                 :fi "Saat vahvistuksen sähköpostiisi"
+                                                                 :sv "Du får en bekräftelse till din e-post"
+                                                                 :en "Confirmation email will be sent to the email address you've provided")]
              :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
