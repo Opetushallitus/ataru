@@ -3,7 +3,13 @@
 (defn answer-key [field-data]
   (keyword (:id field-data)))
 
-(def required-validators #{"required" "postal-code" "postal-office" "home-town" "city"})
+(def required-validators
+  #{"required"
+    "postal-code"
+    "postal-office"
+    "home-town"
+    "city"
+    "hakukohteet"})
 (def contains-required-validators? (partial contains? required-validators))
 
 (defn is-required-field?

@@ -116,17 +116,19 @@
         country (-> answers :country-of-residence :value)
         is-finland? (or (= country finland-country-code)
                         (clojure.string/blank? country))
-        postal-code (-> answers :postal-code)]
-    (when (and is-finland? (:valid postal-code))
+        postal-code (-> answers :postal-code)
+        auto-input? (and is-finland?
+                         (not (clojure.string/blank? (:value postal-code)))
+                         (:valid postal-code))]
+    (when auto-input?
       (ajax/get (str "/hakemus/api/postal-codes/" (:value postal-code))
-                      :application/handle-postal-code-input
-                      :application/handle-postal-code-error))
+                :application/handle-postal-code-input
+                :application/handle-postal-code-error))
     (-> db
         (update-in [:application :answers :postal-office]
                    merge {:valid (not is-finland?) :value ""})
         (assoc-in [:application :ui :postal-office :visible?] is-finland?)
-        (assoc-in [:application :ui :postal-office :disabled?]
-                  (and is-finland? (:valid postal-code))))))
+        (assoc-in [:application :ui :postal-office :disabled?] auto-input?))))
 
 (defn- home-town-and-city
   ^{:dependencies [:country-of-residence]}
