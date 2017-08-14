@@ -9,9 +9,11 @@
 (defn create-virkailija-credentials [session application-key]
   (let [secret         (str (UUID/randomUUID))
         user-name      (-> session :identity :username)
-        virkailija-oid (:employeeNumber (ldap/get-virkailija-by-username user-name))]
+        virkailija          (ldap/get-virkailija-by-username user-name)]
     (exec :db yesql-upsert-virkailija-credentials! {:secret          secret
                                                     :username        user-name
-                                                    :oid             virkailija-oid
-                                                    :application_key application-key})
+                                                    :oid             (:employeeNumber virkailija)
+                                                    :application_key application-key
+                                                    :first_name      (:givenName virkailija)
+                                                    :last_name       (:sn virkailija)})
     {:secret secret}))
