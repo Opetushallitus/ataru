@@ -3,7 +3,18 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
-            [taoensso.timbre :refer [warn]]))
+            [taoensso.timbre :refer [warn]]
+            [ataru.virkailija.component-data.component :as component]))
+
+(defn- inject-hakukohde-component-if-missing
+  "Add hakukohde component to legacy forms (new ones have one added on creation)"
+  [form]
+  (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (:content form))
+                                     (first)
+                                     (not-empty))]
+    (if has-hakukohde-component?
+      form
+      (update-in form [:content] #(into [(component/hakukohteet)] %)))))
 
 (defn fetch-form-by-key
   [key]
@@ -25,10 +36,11 @@
     (when (not tarjonta-info)
       (throw (Exception. (str "No haku found for haku" haku-oid "and keys" (pr-str form-keys)))))
     (if form
-      (populate-hakukohde-answer-options
-        ; remove hakukohteet from form tarjonta for deduplication
-        (merge form (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
-        tarjonta-info)
+      (-> form
+          ; remove hakukohteet from form tarjonta for deduplication
+          (merge (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
+          (populate-hakukohde-answer-options tarjonta-info)
+          (inject-hakukohde-component-if-missing))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid
@@ -36,7 +48,6 @@
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
         form      (fetch-form-by-haku-oid tarjonta-service (:hakuOid hakukohde))]
     (when form
-      (assoc-in
-        form
-        [:tarjonta :default-hakukohde]
-        (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde)))))
+      (-> form
+          (assoc-in [:tarjonta :default-hakukohde] (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde))
+          (inject-hakukohde-component-if-missing)))))
