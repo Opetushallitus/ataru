@@ -98,13 +98,15 @@
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
-        validation-result  (validator/valid-application? final-application form-with-tarjonta)]
+        validation-result  (validator/valid-application? final-application form-with-tarjonta)
+        virkailija-secret (:virkailija-secret application)]
     (cond
-      (not (virkailija-secret-valid? (:virkailija-secret application)))
+      (and (not (nil? virkailija-secret))
+           (not (virkailija-secret-valid? virkailija-secret)))
       {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
 
       (and (:secret application)
-           (:virkailija-secret application))
+           virkailija-secret)
       {:passed? false :failures ["Tried to edit hakemus with both virkailija and hakija secret."]}
 
       (and (:haku application)
