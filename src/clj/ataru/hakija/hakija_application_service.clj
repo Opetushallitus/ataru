@@ -17,7 +17,7 @@
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials]]))
+    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -100,6 +100,9 @@
                              application)
         validation-result  (validator/valid-application? final-application form-with-tarjonta)]
     (cond
+      (not (virkailija-secret-valid? (:virkailija-secret application)))
+      {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
+
       (and (:secret application)
            (:virkailija-secret application))
       {:passed? false :failures ["Tried to edit hakemus with both virkailija and hakija secret."]}
