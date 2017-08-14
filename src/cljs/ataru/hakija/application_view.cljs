@@ -111,6 +111,7 @@
         stars          (subscribe [:state-query [:application :feedback :stars]])
         hidden?        (subscribe [:state-query [:application :feedback :hidden?]])
         rating-status  (subscribe [:state-query [:application :feedback :status]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         show-feedback? (reaction (and (= :submitted @submit-status)
                                       (not @hidden?)))]
     (fn []
@@ -119,7 +120,7 @@
                            translations/application-view-translations)
             rated?       (= :rating-given @rating-status)
             submitted?   (= :feedback-submitted @rating-status)]
-        (when @show-feedback?
+        (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
             {:on-click #(dispatch [:application/rating-form-toggle])}
