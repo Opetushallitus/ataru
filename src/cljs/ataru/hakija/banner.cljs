@@ -67,9 +67,10 @@
              :else nil))))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [lang    (subscribe [:application/form-language])
-        secret  (subscribe [:state-query [:application :secret]])
-        editing (reaction (some? @secret))]
+  (let [lang              (subscribe [:application/form-language])
+        secret            (subscribe [:state-query [:application :secret]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
+        editing           (reaction (or (some? @secret) (some? @virkailija-secret)))]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
