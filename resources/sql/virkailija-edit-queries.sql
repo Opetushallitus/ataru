@@ -12,3 +12,8 @@ SELECT valid
 FROM virkailija_credentials
 WHERE secret = :virkailija_secret
 AND created_time > now() - INTERVAL '1 hour';
+
+-- name: yesql-get-virkailija-oid
+SELECT oid
+FROM virkailija_credentials
+WHERE secret = :virkailija_secret AND application_key = :application_key;
