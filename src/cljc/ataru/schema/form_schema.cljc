@@ -210,6 +210,7 @@
   (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
+                         "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"))
 

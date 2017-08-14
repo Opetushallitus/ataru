@@ -221,6 +221,7 @@
   (case (:event-type event)
     "review-state-change"     (get application-review-states (:new-review-state event))
     "updated-by-applicant"    "Hakija muokannut hakemusta"
+    "updated-by-virkailija"   "Virkailija muokannut hakemusta"
     "received-from-applicant" "Hakemus vastaanotettu"
     "Tuntematon"))
 
