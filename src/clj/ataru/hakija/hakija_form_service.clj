@@ -6,7 +6,7 @@
             [taoensso.timbre :refer [warn]]
             [ataru.virkailija.component-data.component :as component]))
 
-(defn- inject-hakukohde-component-if-missing
+(defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
   [form]
   (let [has-hakukohde-component? (-> (filter #(= (keyword (:id %)) :hakukohteet) (:content form))
