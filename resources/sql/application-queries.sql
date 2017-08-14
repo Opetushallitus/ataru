@@ -299,7 +299,7 @@ FROM applications a
 
 -- name: yesql-get-latest-application-by-virkailija-secret
 WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
+    SELECT max(a.created_time) AS latest_time
     FROM applications a
     JOIN virkailija_credentials AS vc
     ON a.key = vc.application_key
@@ -341,7 +341,7 @@ FOR UPDATE;
 
 -- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
 WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
+    SELECT max(a.created_time) AS latest_time
     FROM applications a
     JOIN virkailija_credentials AS vc
       ON a.key = vc.application_key
