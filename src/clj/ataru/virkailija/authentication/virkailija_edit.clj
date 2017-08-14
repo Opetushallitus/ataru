@@ -20,3 +20,8 @@
 
 (defn invalidate-virkailija-credentials [virkailija-secret]
   (exec :db yesql-invalidate-virkailija-credentials! {:virkailija_secret virkailija-secret}))
+
+(defn virkailija-secret-valid? [virkailija-secret]
+  (-> (exec :db yesql-get-virkailija-secret-valid {:virkailija_secret virkailija-secret})
+      first
+      :valid))

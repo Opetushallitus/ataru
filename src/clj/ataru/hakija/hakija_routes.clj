@@ -24,7 +24,8 @@
             [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
-            [ataru.flowdock.flowdock-client :as flowdock-client])
+            [ataru.flowdock.flowdock-client :as flowdock-client]
+            [ataru.virkailija.authentication.virkailija-edit :refer [virkailija-secret-valid?]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -152,11 +153,12 @@
       (cond (not-blank? secret)
             (get-application secret)
 
-            (not-blank? virkailija-secret)
+            (and (not-blank? virkailija-secret)
+                 (virkailija-secret-valid? virkailija-secret))
             (get-application-by-virkailija-secret virkailija-secret)
 
             :else
-            (response/bad-request)))
+            (response/bad-request {:error "Invalid secret."})))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"
