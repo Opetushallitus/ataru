@@ -48,6 +48,6 @@
 (defn get-right-organization-oids [connection user-name rights]
   (user->right-organization-oids (get-user connection user-name) rights))
 
-(defn get-virkailija-oid-by-username [user-name]
-  (:employeeNumber (get-user (create-ldap-connection) user-name)))
+(defn get-virkailija-by-username [user-name]
+  (get-user (create-ldap-connection) user-name))
 
