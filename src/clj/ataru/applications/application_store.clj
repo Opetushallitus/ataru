@@ -126,7 +126,8 @@
                                   (get-latest-version-and-lock-for-update secret lang conn)
                                   (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
-                                                 (merge-applications new-application old-application) conn)]
+                                                 (merge-applications new-application old-application) conn)
+          virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
@@ -134,14 +135,15 @@
                                      :event_type       (if updated-by-applicant?
                                                          "updated-by-applicant"
                                                          "updated-by-virkailija")
-                                     :new_review_state nil}
+                                     :new_review_state nil
+                                     :virkailija_oid   virkailija-oid}
                                     {:connection conn})
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
                       :id        (if updated-by-applicant?
                                    (extract-email new-application)
-                                   (get-virkailija-oid virkailija-secret key conn))})
+                                   virkailija-oid)})
       id)))
 
 (defn- older?

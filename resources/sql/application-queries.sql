@@ -385,8 +385,8 @@ FROM application_reviews ar
 
 -- name: yesql-add-application-event!
 -- Add application event
-INSERT INTO application_events (application_key, event_type, new_review_state)
-VALUES (:application_key, :event_type, :new_review_state);
+INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid)
+VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid);
 
 -- name: yesql-add-application-review!
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
