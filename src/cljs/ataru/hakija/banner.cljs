@@ -56,7 +56,6 @@
   (let [lang              (subscribe [:application/form-language])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
     (fn [submit-status]
-      (println @virkailija-secret)
       (match [submit-status @virkailija-secret]
              [:submitting _] [:div.application__sent-indicator (case @lang
                                                                  :fi "Hakemusta lähetetään"
