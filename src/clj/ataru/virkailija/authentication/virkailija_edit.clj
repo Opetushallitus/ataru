@@ -5,7 +5,7 @@
   (:import (java.util UUID)))
 
 (defqueries "sql/virkailija-queries.sql")
-(defqueries "sql/virkailija-edit-queries.sql")
+(defqueries "sql/virkailija-credentials-queries.sql")
 
 (defn- upsert-virkailija [session]
   (when-let [virkailija (ldap/get-virkailija-by-username (-> session :identity :username))]

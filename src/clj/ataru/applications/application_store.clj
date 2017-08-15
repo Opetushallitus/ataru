@@ -16,7 +16,7 @@
             [taoensso.timbre :refer [info]]))
 
 (defqueries "sql/application-queries.sql")
-(defqueries "sql/virkailija-edit-queries.sql")
+(defqueries "sql/virkailija-credentials-queries.sql")
 
 (defn- exec-db
   [ds-key query params]
