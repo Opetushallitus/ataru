@@ -158,14 +158,17 @@ ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
 SELECT
-  event_type,
-  time,
-  new_review_state,
-  application_key,
-  id
-FROM application_events
-WHERE application_key = :application_key
-ORDER BY time ASC;
+  ae.event_type,
+  ae.time,
+  ae.new_review_state,
+  ae.application_key,
+  ae.id,
+  v.first_name,
+  v.last_name
+FROM application_events ae
+LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
+WHERE ae.application_key = :application_key
+ORDER BY ae.time ASC;
 
 -- name: yesql-get-application-review
 SELECT

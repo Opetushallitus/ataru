@@ -14,7 +14,9 @@
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
-    [ataru.virkailija.application.application-search-control :refer [application-search-control]]))
+    [ataru.virkailija.application.application-search-control :refer [application-search-control]]
+    [goog.string :as gstring]
+    [goog.string.format]))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
@@ -221,18 +223,26 @@
   (case (:event-type event)
     "review-state-change"     (get application-review-states (:new-review-state event))
     "updated-by-applicant"    "Hakija muokannut hakemusta"
-    "updated-by-virkailija"   "Virkailija muokannut hakemusta"
+    "updated-by-virkailija"   "Virkailija (%s) muokannut hakemusta"
     "received-from-applicant" "Hakemus vastaanotettu"
     "Tuntematon"))
 
+(defn- initials [{:keys [event-type first-name last-name]}]
+  (when (= event-type "updated-by-virkailija")
+    (str (subs first-name 0 1)
+         (subs last-name 0 1))))
+
 (defn event-row [event]
-  (let [time-str     (t/time->short-str (:time event))
-        to-event-row (fn [caption] [:div
-                                    [:span.application-handling__event-timestamp time-str]
-                                    [:span.application-handling__event-caption caption]])
-        event-type   (:event-type event)
-        event-caption (event-caption event)]
-    (to-event-row event-caption)))
+  (let [time-str      (t/time->short-str (:time event))
+        to-event-row  (fn [caption & args]
+                        [:div
+                         [:span.application-handling__event-timestamp time-str]
+                         [:span.application-handling__event-caption (apply gstring/format caption args)]])
+        event-caption (event-caption event)
+        args          (initials event)]
+    (if args
+      (to-event-row event-caption args)
+      (to-event-row event-caption))))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]

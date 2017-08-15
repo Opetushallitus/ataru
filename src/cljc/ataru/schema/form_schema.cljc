@@ -219,7 +219,9 @@
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-states)})
+   (s/optional-key :new-review-state) (s/maybe application-states)
+   :first-name                        (s/maybe s/Str)
+   :last-name                         (s/maybe s/Str)})
 
 (s/defschema Review
   {:id                             s/Int
