@@ -21,6 +21,11 @@
   (= (str finland-country-code)
      (str (-> answers-by-key :country-of-residence :value))))
 
+(defn- have-finnish-ssn?
+  [answers-by-key]
+  (or (= "true" (get-in answers-by-key [:have-finnish-ssn :value]))
+      (ssn/ssn? (get-in answers-by-key [:ssn :value]))))
+
 (defn- ssn?
   [value _ _]
   (ssn/ssn? value))
@@ -99,6 +104,12 @@
                             (clojure.string/join " " (subvec first-names start-idx (+ start-idx sub-length)))))]
     (contains? possible-names (clojure.string/replace value "-" " "))))
 
+(defn- birthplace?
+  [value answers-by-key _]
+  (if (have-finnish-ssn? answers-by-key)
+    (clojure.string/blank? value)
+    (not (clojure.string/blank? value))))
+
 (defn- home-town?
   [value answers-by-key _]
   (if (residence-in-finland? answers-by-key)
@@ -137,6 +148,7 @@
                  :phone           phone?
                  :past-date       past-date?
                  :main-first-name main-first-name?
+                 :birthplace      birthplace?
                  :home-town       home-town?
                  :city            city?
                  :hakukohteet     hakukohteet?})
