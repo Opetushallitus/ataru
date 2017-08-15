@@ -293,10 +293,10 @@
 
 (defn- application-modify-link []
   (let [application-key (subscribe [:state-query [:application :selected-key]])]
-    [:div.application-handling__edit-link
-     [:a {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
-         :target "_blank"}
-     "Muokkaa hakemusta"]]))
+    [:a.application-handling__edit-link
+     {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
+      :target "_blank"}
+     "Muokkaa hakemusta"]))
 
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
