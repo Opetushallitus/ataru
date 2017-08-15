@@ -330,7 +330,8 @@
       (when (not= (:state old-review) (:state review-to-store))
         (let [application-event {:application_key  app-key
                                  :event_type       "review-state-change"
-                                 :new_review_state (:state review-to-store)}]
+                                 :new_review_state (:state review-to-store)
+                                 :virkailija_oid   nil}]
           (yesql-add-application-event!
             application-event
             connection)
