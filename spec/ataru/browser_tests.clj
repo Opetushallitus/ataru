@@ -58,7 +58,17 @@
                               "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
                 (println (:out results))
                 (.println System/err (:err results))
-                (should= 0 (:exit results)))))
+                (should= 0 (:exit results))))
+
+          (it "allows virkailija editing"
+            (let [login-cookie-value (last (split (login) #"="))
+                  results (sh-timeout 120
+                                      "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                      "--web-security" "false"
+                                      "bin/phantomjs-runner.js" "virkailija-edit" login-cookie-value)]
+              (println (:out results))
+              (.println System/err (:err results))
+              (should= 0 (:exit results)))))
 
 (defn- get-latest-form
   []

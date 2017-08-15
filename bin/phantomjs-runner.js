@@ -6,14 +6,21 @@ var app = args[1];
 var cookieOrFormIdOrSecret = args.length > 2 ? args[2] : ''
 
 var url
+function addPhantomCookie() {
+  phantom.addCookie({
+    'name': 'ring-session',
+    'value': cookieOrFormIdOrSecret,
+    'domain': 'localhost'
+  });
+}
 switch (app) {
   case 'virkailija':
-    phantom.addCookie({
-      'name': 'ring-session',
-      'value': cookieOrFormIdOrSecret,
-      'domain': 'localhost'
-    });
+    addPhantomCookie();
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
+    break;
+  case 'virkailija-edit':
+    addPhantomCookie();
+    url = 'http://localhost:8350/lomake-editori/virkailija-edit-test.html'
     break;
   case 'hakija-form':
     url = 'http://localhost:8351/hakemus/hakija-form-test.html?formId=' + cookieOrFormIdOrSecret
