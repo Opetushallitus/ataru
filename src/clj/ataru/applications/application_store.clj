@@ -88,7 +88,8 @@
                       :id        (extract-email new-application)})
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
-                                     :new_review_state nil}
+                                     :new_review_state nil
+                                     :virkailija_oid   nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
                                       :state           "unprocessed"}
