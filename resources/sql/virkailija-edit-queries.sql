@@ -1,6 +1,5 @@
--- name: yesql-upsert-virkailija-credentials!
-INSERT INTO virkailija_credentials
-VALUES (:secret, :username, :oid, :application_key, :first_name, :last_name);
+-- name: yesql-upsert-virkailija-credentials<!
+INSERT INTO virkailija_credentials (oid, application_key, secret) VALUES (:oid, :application_key, :secret);
 
 -- name: yesql-invalidate-virkailija-credentials!
 UPDATE virkailija_credentials
