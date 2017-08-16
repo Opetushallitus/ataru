@@ -95,8 +95,6 @@
   (api/undocumented
     (api/GET "/virkailija-test.html" []
       (render-file-in-dev "templates/virkailija-test.html"))
-    (api/GET "/virkailija-edit-link-test.html" []
-      (render-file-in-dev "templates/virkailija-edit-link-test.html"))
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 

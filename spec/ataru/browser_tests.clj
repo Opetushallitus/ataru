@@ -146,20 +146,4 @@
                   (should= 0 (:exit results)))
                 (throw (Exception. "No test application found.")))))
 
-(describe "Virkailija edit tests /"
-          (tags :ui)
-          (around-all [specs]
-                      (db/clear-db! :db (-> config :db :schema))
-                      (run-specs-in-virkailija-system specs))
-
-          (it "allows virkailija editing"
-              (let [login-cookie-value (last (split (utils/login) #"="))
-                    results (sh-timeout 120
-                                        "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                        "--web-security" "false"
-                                        "bin/phantomjs-runner.js" "virkailija-edit-link" login-cookie-value)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results)))))
-
 (run-specs)
