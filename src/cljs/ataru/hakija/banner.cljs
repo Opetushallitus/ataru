@@ -68,6 +68,20 @@
                                                                  :en "Confirmation email will be sent to the email address you've provided")]
              :else nil))))
 
+(defn- edit-text [hakija-secret
+                  virkailija-secret
+                  hakija-edit-text
+                  virkailija-edit-text
+                  hakija-new-text]
+  (cond (some? hakija-secret)
+        hakija-edit-text
+
+        (some? virkailija-secret)
+        virkailija-edit-text
+
+        :else
+        hakija-new-text))
+
 (defn send-button-or-placeholder [valid-status submit-status]
   (let [lang              (subscribe [:application/form-language])
         secret            (subscribe [:state-query [:application :secret]])
@@ -78,18 +92,18 @@
              :submitted [:div.application__sent-placeholder.animated.fadeIn
                          [:i.zmdi.zmdi-check]
                          [:span.application__sent-placeholder-text (case @lang
-                                                                     :fi "Hakemus lähetetty"
-                                                                     :sv "Ansökan har skickats"
-                                                                     :en "The application has been sent")]]
+                                                                     :fi (if @virkailija-secret "Muutokset tallennettu" "Hakemus lähetetty")
+                                                                     :sv (if @virkailija-secret "Ändringarna har sparats" "Ansökan har skickats")
+                                                                     :en (if @virkailija-secret "The modifications have been saved" "The application has been sent"))]]
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}
                     (case @lang
-                      :fi (if @editing "LÄHETÄ MUUTOKSET" "LÄHETÄ HAKEMUS")
-                      :sv (if @editing "SCICKA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
-                      :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
+                      :fi (edit-text @secret @virkailija-secret "LÄHETÄ MUUTOKSET" "TALLENNA MUUTOKSET" "LÄHETÄ HAKEMUS")
+                      :sv (edit-text @secret @virkailija-secret "SCICKA FÖRÄNDRINGAR" "SPARA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
+                      :en (edit-text @secret @virkailija-secret "SEND MODIFICATIONS" "SAVE MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
   (let [valid-status         (subscribe [:application/valid-status])
