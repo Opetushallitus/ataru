@@ -167,7 +167,8 @@
 
 (defn applying-possible? [form application]
   (cond
-    (application-in-complete-state? application)
+    (and (application-in-complete-state? application)
+         (nil? (-> application :virkailija-secret)))
     false
 
     ;; When applying to hakukohde, hakuaika must be on
