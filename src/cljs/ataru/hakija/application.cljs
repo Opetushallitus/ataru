@@ -167,14 +167,15 @@
 
 (defn applying-possible? [form application]
   (cond
-    (and (application-in-complete-state? application)
-         (nil? (-> application :virkailija-secret)))
+    (:virkailija-secret application)
+    true
+
+    (application-in-complete-state? application)
     false
 
     ;; When applying to hakukohde, hakuaika must be on
     (-> form :tarjonta)
-    (or (-> application :virkailija-secret)
-        (-> form :tarjonta :hakuaika-dates :on))
+    (-> form :tarjonta :hakuaika-dates :on)
 
     ;; Applying to direct form haku
     :else
