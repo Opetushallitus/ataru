@@ -143,4 +143,3 @@
     (application-store/add-application application1)
     (application-store/add-application application2)
     (application-store/add-application application3)))
-

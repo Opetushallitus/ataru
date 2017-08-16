@@ -7,7 +7,7 @@
             [ataru.config.core :refer [config]]
             [com.stuartsierra.component :as component]
             [ataru.db.migrations :as migrations]
-            [ataru.test-utils :refer [login]]
+            [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
@@ -56,7 +56,7 @@
                       (db/clear-db! :db (-> config :db :schema))
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (let [login-cookie-value (last (split (login) #"="))
+              (let [login-cookie-value (last (split (utils/login) #"="))
                     results (sh-timeout
                               120
                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -130,6 +130,20 @@
                   (println (:out results))
                   (.println System/err (:err results))
                   (should= 0 (:exit results)))
+                (throw (Exception. "No test application found."))))
+
+          (it "can edit an application successfully as virkailija"
+              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
+                (let [virkailija-secret (:secret (utils/create-fake-virkailija-credentials (:key latest-application)))
+                      _                 (println "Using application" (:id latest-application) "with virkailija-secret" virkailija-secret)
+                      results           (sh-timeout
+                                         120
+                                         "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                         "--web-security" "false"
+                                         "bin/phantomjs-runner.js" "virkailija-hakemus-edit" virkailija-secret)]
+                  (println (:out results))
+                  (.println System/err (:err results))
+                  (should= 0 (:exit results)))
                 (throw (Exception. "No test application found.")))))
 
 (describe "Virkailija edit tests /"
@@ -139,11 +153,11 @@
                       (run-specs-in-virkailija-system specs))
 
           (it "allows virkailija editing"
-              (let [login-cookie-value (last (split (login) #"="))
+              (let [login-cookie-value (last (split (utils/login) #"="))
                     results (sh-timeout 120
                                         "node_modules/phantomjs-prebuilt/bin/phantomjs"
                                         "--web-security" "false"
-                                        "bin/phantomjs-runner.js" "virkailija-edit" login-cookie-value)]
+                                        "bin/phantomjs-runner.js" "virkailija-edit-link" login-cookie-value)]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))

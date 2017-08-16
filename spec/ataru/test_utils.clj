@@ -33,3 +33,7 @@
   (let [headers (:headers resp)]
     (should-not-be-nil headers)
     (should-not-contain header headers)))
+
+(defn create-fake-virkailija-credentials [application-key]
+  (with-redefs [ataru.virkailija.user.ldap-client/get-virkailija-by-username (fn [username] {:employeeNumber "1213" :givenName "testi" :sn "tunkki"})]
+    (ataru.virkailija.authentication.virkailija-edit/create-virkailija-credentials {:identity {:username "tsers"}} application-key)))

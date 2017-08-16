@@ -79,6 +79,8 @@
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
       (render-file-in-dev (str "templates/hakija-" testname "-test.html")))
+    (api/GET "/virkailija-hakemus-edit-test.html" []
+      (render-file-in-dev "templates/virkailija-hakemus-edit-test.html"))
     (api/GET "/spec/:filename.js" [filename]
       (render-file-in-dev (str "spec/" filename ".js")))))
 

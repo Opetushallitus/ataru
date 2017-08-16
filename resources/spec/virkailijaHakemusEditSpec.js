@@ -1,61 +1,95 @@
 (function () {
-  afterEach(function () {
-    expect(window.uiError || null).to.be.null
-  });
+  var secret;
+  before(function () {
+    secret = getQueryParam('virkailija-secret')
+
+    console.log("secret", secret || 'UNDEFINED')
+    loadInFrame('/hakemus?virkailija-secret=' + secret)
+  })
 
   describe('Virkailija hakemus edit', function () {
-    describe('shows correct link', function () {
+    describe('shows application with secret', function () {
       before(
-        navigateToApplicationHandling,
-        wait.until(directFormHakuListExists),
-        function () {
-          //clickElement doesn't work for a href here:
-          form1OnList()[0].click()
-        },
         wait.until(function () {
-          return applicationHeader().text() === 'Selaintestilomake1'
-        }),
-        clickElement(applicationRow),
-        wait.until(function () {
-          return reviewHeader().length > 0
+          return formSections().length == 2
         })
-      );
-
-      it('shows virkailija edit link', function() {
-        expect(editLink().attr('href')).to.equal('/lomake-editori/api/applications/application-key2/modify');
+      )
+      it('with complete form', function () {
+        expect(formFields().length).to.equal(30)
+        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(formHeader().text()).to.equal('Testilomake')
+        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
     });
+
+    describe('change values and save', function () {
+      before(
+        setNthFieldInputValue(6, '12345'),
+        clickElement(function () {
+          return submitButton()
+        }),
+        wait.until(function () {
+          return testFrame().find('.application__sent-placeholder-text').length == 1
+        })
+      )
+
+      it('shows submitted form', function () {
+        var displayedValues = _.map(testFrame().find('.application__form-field div'), function (e) {
+          return $(e).text()
+        })
+        var expectedValues = [
+          "Etunimi Tokanimi",
+          "Tokanimi",
+          "Sukunimi",
+          "Suomi",
+          "***********",
+          "test@example.com",
+          "12345",
+          "Suomi",
+          "Katutie 12 B",
+          "40100",
+          "JYVÄSKYLÄ",
+          "Jyväskylä",
+          "suomi",
+          "Tekstikentän vastaus",
+          "Toistuva vastaus 1Toistuva vastaus 3",
+          "Pakollisen tekstialueen vastaus",
+          "Kolmas vaihtoehto",
+          "Jatkokysymyksen vastaus",
+          "Lisensiaatin tutkinto",
+          "Toinen vaihtoehto",
+          "En",
+          "Arkkitehti",
+          "Muokattu vastaus",
+          "",
+          "",
+          "Toinen vaihtoehto",
+          "Pudotusvalikon 1. kysymys"
+        ]
+
+        var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {
+          return $(e).text()
+        })
+        var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
+
+        expect(displayedValues).to.eql(expectedValues)
+        expect(tabularValues).to.eql(expectedTabularValues)
+      })
+    })
+
+    describe('edit with invalid key', function() {
+      before(
+        function() {return loadInFrame('/hakemus?virkailija-secret=' + secret)},
+        wait.until(function () {
+          return testFrame().find('.application__error-display').length == 1;
+        })
+      )
+
+      it('shows error', function() {
+        expect(testFrame().find('.application__error-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Attempted to edit hakemus with invalid virkailija secret."}}')
+      })
+    })
   });
-
-  function editLink() {
-    return testFrame().find('.application-handling__edit-link > a')
-  }
-
-  function directFormHakuList() {
-    return testFrame().find('.application__search-control-direct-form-haku')
-  }
-
-  function applicationHeader() {
-    return testFrame().find('.application-handling__header-haku-name')
-  }
-
-  function form1OnList() {
-    return testFrame().find(".application__search-control-direct-form-haku a:contains(Selaintestilomake1)")
-  }
-
-  function directFormHakuListExists() {
-    return elementExists(directFormHakuList())
-  }
-
-  function navigateToApplicationHandling() {
-    loadInFrame('http://localhost:8350/lomake-editori/applications/')
-  }
-
-  function applicationRow() {
-    return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) > .application-handling__list-row--applicant:contains(Vatanen)')
-  }
-
-  function reviewHeader() {
-    return testFrame().find('.application-handling__review-header')
-  }
 })();
