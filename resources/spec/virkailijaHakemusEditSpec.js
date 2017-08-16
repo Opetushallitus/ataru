@@ -3,8 +3,8 @@
     expect(window.uiError || null).to.be.null
   });
 
-  describe('Application handling', function () {
-    describe('virkailija hakemus edit', function () {
+  describe('Virkailija hakemus edit', function () {
+    describe('shows correct link', function () {
       before(
         navigateToApplicationHandling,
         wait.until(directFormHakuListExists),
@@ -19,13 +19,12 @@
         wait.until(function () {
           return reviewHeader().length > 0
         })
-      )
+      );
 
       it('shows virkailija edit link', function() {
         expect(editLink().attr('href')).to.equal('/lomake-editori/api/applications/application-key2/modify');
       })
-    })
-
+    });
   });
 
   function editLink() {
