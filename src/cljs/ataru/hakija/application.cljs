@@ -172,7 +172,8 @@
 
     ;; When applying to hakukohde, hakuaika must be on
     (-> form :tarjonta)
-    (-> form :tarjonta :hakuaika-dates :on)
+    (or (-> application :virkailija-secret)
+        (-> form :tarjonta :hakuaika-dates :on))
 
     ;; Applying to direct form haku
     :else
