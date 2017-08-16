@@ -191,7 +191,6 @@
                        (let [modify-url (str (-> config :public-config :applicant :service_url)
                                              "/hakemus?virkailija-secret="
                                              (:secret virkailija-credentials))]
-                         (println modify-url)
                          (response/temporary-redirect modify-url))
                        (response/bad-request)))
 
