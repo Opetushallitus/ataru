@@ -313,7 +313,7 @@
     });
 
     function editLink() {
-      return testFrame().find('.application-handling__edit-link > a')
+      return testFrame().find('.application-handling__edit-link')
     }
 
     function directFormHakuList() {
