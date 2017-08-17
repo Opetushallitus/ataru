@@ -154,7 +154,7 @@
     (toggle-values answer value answers-by-key)))
 
 (defn- set-ssn-field-visibility [db]
-  (rules/run-rule {:toggle-ssn-based-fields-for-existing-application "ssn"} db))
+  (rules/run-rule {:toggle-ssn-based-fields "ssn"} db))
 
 (defn- set-country-specific-fields-visibility
   [db]
@@ -165,7 +165,16 @@
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
 
-(defn- merge-submitted-answers [db [_ submitted-answers]]
+(defn- set-have-finnish-ssn
+  [db]
+  (let [ssn (get-in db [:application :answers :ssn])]
+    (update-in db [:application :answers :have-finnish-ssn]
+               merge {:valid true
+                      :value (str (or (and (clojure.string/blank? (:value ssn))
+                                           (:cannot-view ssn))
+                                      (not (clojure.string/blank? (:value ssn)))))})))
+
+(defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
         (fn [answers]
@@ -199,12 +208,23 @@
                         answers)))
                   answers
                   submitted-answers)))
+      set-have-finnish-ssn
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
-(reg-event-db
-  :application/merge-submitted-answers
-  merge-submitted-answers)
+(defn- set-followup-visibility-to-false
+  [db]
+  (assoc-in db [:application :ui]
+            (->> (autil/flatten-form-fields (:content (:form db)))
+                 (filter :followup?)
+                 (map (fn [field]
+                        (let [id (keyword (:id field))
+                              has-value? (or (some? (get-in db [:application :answers id :value]))
+                                             (some #(some? (:value %))
+                                                   (get-in db [:application :answers id :values] [])))
+                              has-children? (not (empty? (:children field)))]
+                          {id {:visible? (or has-value? has-children?)}})))
+                 (reduce merge))))
 
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
@@ -218,13 +238,10 @@
                                    (some? hakukohde-name)
                                    (assoc :hakukohde-name hakukohde-name))))
                  (assoc-in [:application :answers] (create-initial-answers form))
-                 (assoc :wrapper-sections (extract-wrapper-sections form)))]
-    {:db               db
-     ;; Previously submitted answers must currently be merged to the app db
-     ;; after a delay or rules will ruin them and the application will not
-     ;; look completely as valid (eg. SSN field will be blank)
-     :dispatch-later [{:ms 200 :dispatch [:application/merge-submitted-answers answers]}]
-     :dispatch [:application/set-followup-visibility-to-false]}))
+                 (assoc :wrapper-sections (extract-wrapper-sections form))
+                 (merge-submitted-answers answers)
+                 set-followup-visibility-to-false)]
+    {:db db}))
 
 (reg-event-db
   :flasher
@@ -332,15 +349,16 @@
 (reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
-    (-> db
-        (update-in [:application :ui :postal-office] assoc :disabled? true)
-        (update-in [:application :answers :postal-office] merge {:value (:fi postal-office-name) :valid true}))))
+    (update-in db [:application :answers :postal-office]
+               merge {:value (:fi postal-office-name) :valid true})))
 
 (reg-event-db
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
-        (update-in [:application :answers :postal-office] merge {:value "" :valid false}))))
+        (assoc-in [:application :answers :postal-code :valid] false)
+        (update-in [:application :answers :postal-office]
+                   merge {:value "" :valid false}))))
 
 (reg-event-db
   :application/toggle-multiple-choice-option
@@ -352,17 +370,6 @@
 (reg-event-db
   :application/select-single-choice-button
   select-single-choice-button)
-
-(reg-event-db
-  :application/set-followup-visibility-to-false
-  (fn [db _]
-    (assoc-in db [:application :ui]
-      (->> (autil/flatten-form-fields (:content (:form db)))
-        (filter :followup?)
-        (map (fn [field] {(keyword (:id field))
-                          ; prevent hiding followups with children
-                          {:visible? (not (empty? (:children field)))}}))
-        (reduce merge)))))
 
 (defn- required? [field-descriptor]
   (some? ((set (:validators field-descriptor)) "required")))
