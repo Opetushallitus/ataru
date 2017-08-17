@@ -75,23 +75,10 @@
       (into [:div] (child-fields children application lang @ui)))))
 
 (defn- extract-values [children answers]
-  (let [child-answers  (->> (map answer-key children)
-                            (select-keys answers))
-        ; applicant side stores values as hashmaps
-        applicant-side (map (comp
-                              (fn [values]
-                                (map :value values))
-                              :values
-                              second))
-        ; editor side loads values as vectors of strings
-        editor-side    (map (comp :value second))]
-    (when-let [concatenated-answers (->>
-                                      (concat
-                                        (eduction applicant-side child-answers)
-                                        (eduction editor-side child-answers))
-                                      (filter not-empty)
-                                      not-empty)]
-      (apply map vector concatenated-answers))))
+  (->> children
+       (map answer-key)
+       (map #(map :value (:values (get answers %))))
+       (apply map vector)))
 
 (defn fieldset [field-descriptor application lang children]
   (let [fieldset-answers (extract-values children (:answers application))]

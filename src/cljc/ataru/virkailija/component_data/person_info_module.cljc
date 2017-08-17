@@ -108,6 +108,21 @@
        (birthdate-and-gender-component)])
     :child-validator :birthdate-and-gender-component))
 
+(defn- passport-number
+  []
+  (text-field {:fi "Passin numero" :sv "Passnummer" :en "Passport number"}
+              :size "M" :id :passport-number  :validators []))
+
+(defn- national-id-number
+  []
+  (text-field {:fi "Kansallinen ID-tunnus" :sv "Nationellt ID-signum" :en "National ID number"}
+              :size "M" :id :national-id-number :validators []))
+
+(defn- birthplace
+  []
+  (text-field {:fi "Syntymäpaikka ja -maa" :sv "Födelseort och -land" :en "Place and country of birth"}
+              :size "M" :id :birthplace :validators [:birthplace]))
+
 (defn ^:private email-component
   []
   (text-field {:fi "Sähköpostiosoite" :sv "E-postadress" :en "E-mail address"} :id :email :validators [:required :email]))
@@ -177,6 +192,9 @@
                        (nationality-component)
                        (have-finnish-ssn-component)
                        (ssn-birthdate-gender-wrapper)
+                       (birthplace)
+                       (passport-number)
+                       (national-id-number)
                        (email-component)
                        (phone-component)
                        (country-of-residence-component)

@@ -50,21 +50,9 @@
                     (:validators field-data)))
     true))
 
-(defn- textual-field-blur [text-field-data answers-by-key evt]
-  (let [value  (-> evt .-target .-value)
-        blur-rules (:blur-rules text-field-data)]
-    (when (and (not-empty blur-rules)
-               (field-value-valid? text-field-data value answers-by-key))
-      (dispatch [:application/run-rule blur-rules]))))
-
-(defn- textual-field-change [text-field-data answers-by-key evt]
-  (let [value  (-> evt .-target .-value)
-        valid? (field-value-valid? text-field-data value answers-by-key)]
-    (do
-      ; dispatch-sync because we really really want the value to change NOW. Is a minor UI speed boost.
-      (dispatch-sync [:application/set-application-field (answer-key text-field-data) {:value value :valid valid?}])
-      (when-let [rules (not-empty (:rules text-field-data))]
-        (dispatch [:application/run-rule rules])))))
+(defn- textual-field-change [field-descriptor evt]
+  (let [value  (-> evt .-target .-value)]
+    (dispatch [:application/set-application-field field-descriptor value])))
 
 (defn- init-dropdown-value
   [dropdown-data lang secret this]
@@ -74,10 +62,9 @@
                        (comp (filter :default-value)
                          (map :value))
                        (:options dropdown-data)))
-                 (-> select .-value))
-        valid? (field-value-valid? dropdown-data value {})]
+                 (-> select .-value))]
     (if-not (some? secret)
-      (dispatch [:application/set-application-field (answer-key dropdown-data) {:value value :valid valid?}]))
+      (dispatch [:application/set-application-field dropdown-data value]))
     (when-let [rules (not-empty (:rules dropdown-data))]
       (dispatch [:application/run-rule rules]))))
 
@@ -95,11 +82,11 @@
          [scroll-to-anchor field-descriptor]]))))
 
 (defn- show-text-field-error-class?
-  [field-descriptor value valid? answers-by-key]
+  [field-descriptor value valid?]
   (and
     (not valid?)
     (is-required-field? field-descriptor)
-    (validator/validate "required" value answers-by-key field-descriptor)))
+    (validator/validate "required" value nil field-descriptor)))
 
 (defn- add-link-target-prop
   [text state]
@@ -120,42 +107,47 @@
         [markdown-paragraph info]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
-  (let [id                   (keyword (:id field-descriptor))
-        answers              (subscribe [:state-query [:application :answers]])
-        answer               (subscribe [:state-query [:application :answers id]])
-        lang                 (subscribe [:application/form-language])
-        default-lang         (subscribe [:application/default-language])
-        size-class           (text-field-size->class (get-in field-descriptor [:params :size]))]
+  (let [id           (keyword (:id field-descriptor))
+        answer       (subscribe [:state-query [:application :answers id]])
+        lang         (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])
+        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
+        on-change    (partial textual-field-change field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-        [div-kwd
-         [label field-descriptor]
-         [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
-         (let [cannot-view? (and editing (:cannot-view @answer))]
-           [:input.application__form-text-input
-            (merge {:id          id
-                    :type        "text"
-                    :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                   (non-blank-val (get input-hint @lang)
-                                                  (get input-hint @default-lang)))
-                    :class       (str size-class (if (show-text-field-error-class? field-descriptor (:value @answer) (:valid @answer) @answers)
-                                                   " application__form-field-error"
-                                                   " application__form-text-input--normal"))
-                    :value       (if cannot-view? "***********" (:value @answer))
-                    :on-blur     (partial textual-field-blur field-descriptor @answers)
-                    :on-change   (partial textual-field-change field-descriptor @answers)}
-                   (when (or disabled cannot-view?) {:disabled true}))])])))
+      [div-kwd
+       [label field-descriptor]
+       [:div.application__form-text-input-info-text
+        [info-text field-descriptor]]
+       (let [cannot-view? (and editing (:cannot-view @answer))]
+         [:input.application__form-text-input
+          (merge {:id          id
+                  :type        "text"
+                  :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                 (non-blank-val (get input-hint @lang)
+                                                (get input-hint @default-lang)))
+                  :class       (str size-class (if (show-text-field-error-class? field-descriptor
+                                                                                 (:value @answer)
+                                                                                 (:valid @answer))
+                                                 " application__form-field-error"
+                                                 " application__form-text-input--normal"))
+                  :value       (if cannot-view? "***********" (:value @answer))
+                  :on-blur     on-blur
+                  :on-change   on-change}
+                 (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
-        answers-by-key (subscribe [:state-query [:application :answers]])
         lang       (subscribe [:application/form-language])
-        on-change  (fn [idx answers-by-key evt]
+        on-blur    (fn [evt]
+                     (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
+                       (dispatch [:application/remove-repeatable-application-field-value field-descriptor idx])))
+        on-change  (fn [evt]
                      (let [value (some-> evt .-target .-value)
-                           valid (field-value-valid? field-descriptor value answers-by-key)]
-                       (dispatch [:application/set-repeatable-application-field field-descriptor id idx {:value value :valid valid}])))]
+                           idx (int (.getAttribute (.-target evt) "data-idx"))]
+                       (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (into  [div-kwd
               [label field-descriptor]
@@ -165,41 +157,42 @@
          (let [{:keys [value valid]} (first @values)]
             [:div
              [:input.application__form-text-input
-              {:type      "text"
-               :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid @answers-by-key)
-                                            " application__form-field-error"
-                                            " application__form-text-input--normal"))
-               :value     value
-               :on-blur   #(when (empty? (-> % .-target .-value))
-                             (dispatch [:application/remove-repeatable-application-field-value id 0]))
-               :on-change (partial on-change 0 answers-by-key)}]])
+              (merge
+               {:type      "text"
+                :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                             " application__form-field-error"
+                                             " application__form-text-input--normal"))
+                :value     value
+                :data-idx  0
+                :on-change on-change}
+               (when (empty? value)
+                 {:on-blur on-blur}))]])
           (map-indexed
            (let [first-is-empty? (empty? (first (map :value @values)))
                  translations    (get-translations (keyword @lang) application-view-translations)]
              (fn [idx {:keys [value last?]}]
-               (let [clicky #(dispatch [:application/remove-repeatable-application-field-value id (inc idx)])]
-                  [:div.application__form-repeatable-text-wrap
-                   [:input.application__form-text-input
-                    (merge
-                     {:type      "text"
+               [:div.application__form-repeatable-text-wrap
+                [:input.application__form-text-input
+                 (merge
+                  {:type      "text"
                                         ; prevent adding second answer when first is empty
-                      :disabled  (and last? first-is-empty?)
-                      :class     (str
-                                  size-class " application__form-text-input--normal"
-                                  (when-not value " application__form-text-input--disabled"))
-                      :value     value
-                      :on-blur   #(when (and
-                                         (not last?)
-                                         (empty? (-> % .-target .-value)))
-                                    (clicky))
-                      :on-change (partial on-change (inc idx) answers-by-key)}
-                      (when last?
-                        {:placeholder
-                         (:add-more translations)}))]
-                   (when value
-                     [:a.application__form-repeatable-text--addremove
-                      {:on-click clicky}
-                      [:i.zmdi.zmdi-close.zmdi-hc-lg]])])))
+                   :disabled  (and last? first-is-empty?)
+                   :class     (str
+                               size-class " application__form-text-input--normal"
+                               (when-not value " application__form-text-input--disabled"))
+                   :value     value
+                   :data-idx  (inc idx)
+                   :on-change on-change}
+                  (when (and (not last?) (empty? value))
+                    {:on-blur on-blur})
+                  (when last?
+                    {:placeholder
+                     (:add-more translations)}))]
+                (when value
+                  [:a.application__form-repeatable-text--addremove
+                   [:i.zmdi.zmdi-close.zmdi-hc-lg
+                    {:data-idx (inc idx)
+                     :on-click on-blur}]])]))
             (concat (rest @values)
                     [{:value nil :valid true :last? true}])))))))
 
@@ -212,18 +205,20 @@
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
-        answers     (subscribe [:state-query [:application :answers]])]
+        answers     (subscribe [:state-query [:application :answers]])
+        on-change   (partial textual-field-change field-descriptor)]
     (fn [field-descriptor]
       [div-kwd
        [label field-descriptor]
        [:div.application__form-text-area-info-text
         [info-text field-descriptor]]
        [:textarea.application__form-text-input.application__form-text-area
-        {:class (text-area-size->class (-> field-descriptor :params :size))
+        {:id (:id field-descriptor)
+         :class (text-area-size->class (-> field-descriptor :params :size))
          ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
          ; dynamically made changes to the text-field value.
          :default-value (textual-field-value field-descriptor @application)
-         :on-change (partial textual-field-change field-descriptor @answers)
+         :on-change on-change
          :value (textual-field-value field-descriptor @application)}]])))
 
 (declare render-field)
@@ -299,7 +294,8 @@
                              (:answers @application)
                              (get (answer-key field-descriptor))
                              :value)
-                           ""))]
+                           ""))
+        on-change    (partial textual-field-change field-descriptor)]
     (r/create-class
       {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
        :reagent-render      (fn [field-descriptor]
@@ -314,8 +310,9 @@
                                    (when (not @disabled?)
                                      [:span.application__form-select-arrow])
                                    [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
-                                    {:value     @value
-                                     :on-change (partial textual-field-change field-descriptor @answers)
+                                    {:id (:id field-descriptor)
+                                     :value     @value
+                                     :on-change on-change
                                      :disabled  @disabled?}
                                     (concat
                                       (when
@@ -335,45 +332,38 @@
 
                                  [dropdown-followups lang value field-descriptor]]))})))
 
-(defn- multi-choice-followups [followups parent-checked?]
-  (r/create-class
-    {:component-did-mount (fn []
-                            (dispatch [:state-update
-                                       (fn [db]
-                                         (reduce #(toggle-followup-visibility %1 %2 parent-checked?)
-                                                 db
-                                                 followups))]))
-     :reagent-render      (fn [followups parent-checked?]
-                            (when (and parent-checked? (not-empty followups))
-                              [:div.application__form-multi-choice-followups-outer-container
-                               [:div.application__form-multi-choice-followups-indicator]
-                               [:div.application__form-multi-choice-followups-container.animated.fadeIn
-                                (map (fn [followup]
-                                       ^{:key (:id followup)}
-                                       [render-field followup])
-                                     followups)]]))}))
+(defn- multi-choice-followups [followups]
+  [:div.application__form-multi-choice-followups-outer-container
+   [:div.application__form-multi-choice-followups-indicator]
+   [:div.application__form-multi-choice-followups-container.animated.fadeIn
+    (map (fn [followup]
+           ^{:key (:id followup)}
+           [render-field followup])
+         followups)]])
 
-(defn- multiple-choice-option [option parent-id validators]
+(defn- multiple-choice-option [field-descriptor option parent-id]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
                                     (get-in option [:label @default-lang]))
         value        (:value option)
         option-id    (util/component-id)
-        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])]
-    [:div {:key option-id}
-     [:input.application__form-checkbox
-      {:id        option-id
-       :type      "checkbox"
-       :checked   @checked?
-       :value     value
-       :on-change (fn [event]
-                    (let [value (.. event -target -value)]
-                      (dispatch [:application/toggle-multiple-choice-option parent-id value validators])))}]
-     [:label
-      {:for option-id}
-      label]
-     [multi-choice-followups (:followups option) @checked?]]))
+        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])
+        on-change    (fn [_]
+                       (dispatch [:application/toggle-multiple-choice-option field-descriptor option]))]
+    (fn [field-descriptor option parent-id]
+      [:div {:key option-id}
+       [:input.application__form-checkbox
+        {:id        option-id
+         :type      "checkbox"
+         :checked   @checked?
+         :value     value
+         :on-change on-change}]
+       [:label
+        {:for option-id}
+        label]
+       (when (and @checked? (not-empty (:followups option)))
+         [multi-choice-followups (:followups option)])])))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
@@ -386,7 +376,7 @@
       [:div.application__form-outer-checkbox-container
        (map-indexed (fn [idx option]
                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                      [multiple-choice-option option parent-id validators])
+                      [multiple-choice-option field-descriptor option parent-id])
                     (:options field-descriptor))]]))
 
 (defn- single-choice-option [option parent-id validators]
@@ -396,21 +386,23 @@
                                     (get-in option [:label @default-lang]))
         option-value (:value option)
         option-id    (util/component-id)
-        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
-    [:div.application__form-single-choice-button-inner-container {:key option-id}
-     [:input.application__form-single-choice-button
-      {:id        option-id
-       :type      "checkbox"
-       :checked   @checked?
-       :value     option-value
-       :on-change (fn [event]
-                    (let [value (.. event -target -value)]
-                      (dispatch [:application/select-single-choice-button parent-id value validators])))}]
-     [:label
-      {:for option-id}
-      label]
-     (when (and @checked? (not-empty (:followups option)))
-       [:div.application__form-single-choice-followups-indicator])]))
+        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])
+        on-change    (fn [event]
+                       (let [value (.. event -target -value)]
+                         (dispatch [:application/select-single-choice-button parent-id value validators])))]
+    (fn [option parent-id validators]
+      [:div.application__form-single-choice-button-inner-container {:key option-id}
+       [:input.application__form-single-choice-button
+        {:id        option-id
+         :type      "checkbox"
+         :checked   @checked?
+         :value     option-value
+         :on-change on-change}]
+       [:label
+        {:for option-id}
+        label]
+       (when (and @checked? (not-empty (:followups option)))
+         [:div.application__form-single-choice-followups-indicator])])))
 
 (defn- hide-followups [db {:keys [followups]}]
   (reduce #(toggle-followup-visibility %1 %2 false)
@@ -463,15 +455,9 @@
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
 (defn attachment-upload [field-descriptor component-id attachment-count]
-  (let [id       (str component-id "-upload-button")
-        language @(subscribe [:application/form-language])]
-    [:div.application__form-upload-attachment-container
-     [:input.application__form-upload-input
-      {:id        id
-       :type      "file"
-       :multiple  "multiple"
-       :key       (str "upload-button-" component-id "-" attachment-count)
-       :on-change (fn [event]
+  (let [id        (str component-id "-upload-button")
+        language  @(subscribe [:application/form-language])
+        on-change (fn [event]
                     (.preventDefault event)
                     (let [file-list  (or (some-> event .-dataTransfer .-files)
                                          (.. event -target -files))
@@ -481,50 +467,62 @@
                           file-sizes (map #(.-size %) files)]
                       (if (some #(> % max-attachment-size-bytes) file-sizes)
                         (dispatch [:application/show-attachment-too-big-error component-id])
-                        (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))}]
-     [:label.application__form-upload-label
-      {:for id}
-      [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text (case language
-                                                        :fi "Lisää liite..."
-                                                        :en "Upload attachment..."
-                                                        :sv "Ladda upp bilagan...")]]
-     (let [file-size-info-text (case language
-                                 :fi "Tiedoston maksimikoko on 10 MB"
-                                 :en "Maximum file size is 10 MB"
-                                 :sv "Den maximala filstorleken är 10 MB")]
-       (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
-         [:span.application__form-upload-button-error.animated.shake file-size-info-text]
-         [:span.application__form-upload-button-info file-size-info-text]))]))
+                        (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))]
+    (fn [field-descriptor component-id attachment-count]
+      [:div.application__form-upload-attachment-container
+       [:input.application__form-upload-input
+        {:id        id
+         :type      "file"
+         :multiple  "multiple"
+         :key       (str "upload-button-" component-id "-" attachment-count)
+         :on-change on-change}]
+       [:label.application__form-upload-label
+        {:for id}
+        [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
+        [:span.application__form-upload-button-add-text (case language
+                                                          :fi "Lisää liite..."
+                                                          :en "Upload attachment..."
+                                                          :sv "Ladda upp bilagan...")]]
+       (let [file-size-info-text (case language
+                                   :fi "Tiedoston maksimikoko on 10 MB"
+                                   :en "Maximum file size is 10 MB"
+                                   :sv "Den maximala filstorleken är 10 MB")]
+         (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
+           [:span.application__form-upload-button-error.animated.shake file-size-info-text]
+           [:span.application__form-upload-button-info file-size-info-text]))])))
 
 (defn- filename->label [{:keys [filename size]}]
   (str filename " (" (util/size-bytes->str size) ")"))
 
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
-  [:div.application__form-filename-container
-   [:span.application__form-attachment-text
-    (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
-    [:a.application__form-upload-remove-attachment-link
-     {:href     "#"
-      :on-click (fn remove-attachment [event]
+  (let [on-click (fn remove-attachment [event]
                   (.preventDefault event)
-                  (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))}
-     [:i.zmdi.zmdi-close]]]])
+                   (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))]
+    (fn [field-descriptor component-id attachment-idx]
+      [:div.application__form-filename-container
+       [:span.application__form-attachment-text
+        (filename->label @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx :value]]))
+        [:a.application__form-upload-remove-attachment-link
+         {:href     "#"
+          :on-click on-click}
+         [:i.zmdi.zmdi-close]]]])))
 
 (defn attachment-view-file-error [field-descriptor component-id attachment-idx]
   (let [attachment @(subscribe [:state-query [:application :answers (keyword component-id) :values attachment-idx]])
-        lang       @(subscribe [:application/form-language])]
-    [:div
-     [:div.application__form-filename-container.application__form-file-error.animated.shake
-      [:span.application__form-attachment-text
-       (-> attachment :value :filename)
-       [:a.application__form-upload-remove-attachment-link
-        {:href     "#"
-         :on-click (fn remove-attachment [event]
+        lang       @(subscribe [:application/form-language])
+        on-click   (fn remove-attachment [event]
                      (.preventDefault event)
-                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx]))}
-        [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
-     [:span.application__form-attachment-error (-> attachment :error lang)]]))
+                     (dispatch [:application/remove-attachment-error field-descriptor component-id attachment-idx]))]
+    (fn [field-descriptor component-id attachment-idx]
+      [:div
+       [:div.application__form-filename-container.application__form-file-error.animated.shake
+        [:span.application__form-attachment-text
+         (-> attachment :value :filename)
+         [:a.application__form-upload-remove-attachment-link
+          {:href     "#"
+           :on-click on-click}
+          [:i.zmdi.zmdi-close.zmdi-hc-inverse]]]]
+       [:span.application__form-attachment-error (-> attachment :error lang)]])))
 
 (defn attachment-deleting-file [component-id attachment-idx]
   [:div.application__form-filename-container
@@ -682,31 +680,28 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text]]))
 
-(defn- adjacent-field-input-change [field-descriptor row-idx answers-by-key event]
-  (let [value  (some-> event .-target .-value)
-        valid? (field-value-valid? field-descriptor value answers-by-key)
-        id     (keyword (:id field-descriptor))]
-    (dispatch [:application/set-adjacent-field-answer field-descriptor id row-idx {:value value :valid valid?}])))
-
 (defn- adjacent-field-input [{:keys [id] :as child} row-idx]
-  (let [answers-by-key (subscribe [:state-query [:application :answers]])
-        on-change (partial adjacent-field-input-change child row-idx)
+  (let [on-change (fn [evt]
+                    (let [value (-> evt .-target .-value)]
+                      (dispatch [:application/set-adjacent-field-answer child row-idx value])))
         value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
-    (r/create-class
-      {:component-did-mount
-       (fn [this]
-         (when-not value (partial on-change nil @answers-by-key)))
-       :reagent-render
-       (fn [{:keys [id]} row-idx]
-         [:input.application__form-text-input.application__form-text-input--normal
-          {:id        (str id "-" row-idx)
-           :type      "text"
-           :value     @value
-           :on-change (partial on-change @answers-by-key)}])})))
+    (fn [{:keys [id]} row-idx]
+      [:input.application__form-text-input.application__form-text-input--normal
+       {:id        (str id "-" row-idx)
+        :type      "text"
+        :value     @value
+        :on-change on-change}])))
 
 (defn adjacent-text-fields [field-descriptor]
-  (let [language   (subscribe [:application/form-language])
-        row-amount (subscribe [:application/adjacent-field-row-amount field-descriptor])]
+  (let [language        (subscribe [:application/form-language])
+        row-amount      (subscribe [:application/adjacent-field-row-amount field-descriptor])
+        remove-on-click (fn remove-adjacent-text-field [event]
+                          (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
+                            (.preventDefault event)
+                            (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
+        add-on-click    (fn add-adjacent-text-field [event]
+                          (.preventDefault event)
+                          (dispatch [:application/add-adjacent-fields field-descriptor]))]
     (fn [field-descriptor]
       (let [row-amount   @row-amount
             child-ids    (map (comp keyword :id) (:children field-descriptor))
@@ -730,16 +725,13 @@
                                          [adjacent-field-input child row-idx]]))
                                     (:children field-descriptor))
                        (when (pos? row-idx)
-                         [:a {:on-click (fn remove-adjacent-text-field [event]
-                                          (.preventDefault event)
-                                          (dispatch [:application/remove-adjacent-field field-descriptor row-idx]))}
+                         [:a {:data-row-idx row-idx
+                              :on-click remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])
            [:a.application__form-add-new-row
-            {:on-click (fn add-adjacent-text-field [event]
-                         (.preventDefault event)
-                         (dispatch [:application/add-adjacent-fields field-descriptor]))}
+            {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
 
 (defn- feature-enabled? [{:keys [fieldType]}]

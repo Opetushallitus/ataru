@@ -45,10 +45,11 @@
     (TimeUnit/SECONDS)))
 
 (defn- get-latest-form
-  []
+  [form-name]
   (->> (form-store/get-all-forms)
-       (filter #(= (:name %) "Testilomake"))
+       (filter #(= (:name %) form-name))
        (first)))
+
 
 (describe "Virkailija UI tests /"
           (tags :ui)
@@ -71,7 +72,7 @@
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
           (it "can fill a form successfully"
-              (if-let [latest-form (get-latest-form)]
+              (if-let [latest-form (get-latest-form "Testilomake")]
                 (let [results (sh-timeout
                                 120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -115,8 +116,20 @@
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
 
+          (it "can fill a form successfully with non-finnish ssn"
+              (if-let [latest-form (get-latest-form "SSN_testilomake")]
+                (let [results (sh-timeout
+                               120
+                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                               "--web-security" "false"
+                               "bin/phantomjs-runner.js" "hakija-ssn" (:key latest-form))]
+                  (println (:out results))
+                  (.println System/err (:err results))
+                  (should= 0 (:exit results)))
+                (throw (Exception. "No test form found."))))
+
           (it "can edit an application successfully"
-              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
+              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form "Testilomake"))))]
                 (let [secret  (-> latest-application
                                   :id
                                   (application-store/get-application)
@@ -133,7 +146,7 @@
                 (throw (Exception. "No test application found."))))
 
           (it "can edit an application successfully as virkailija"
-              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
+              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form "Testilomake"))))]
                 (let [virkailija-secret (:secret (utils/create-fake-virkailija-credentials (:key latest-application)))
                       _                 (println "Using application" (:id latest-application) "with virkailija-secret" virkailija-secret)
                       results           (sh-timeout
