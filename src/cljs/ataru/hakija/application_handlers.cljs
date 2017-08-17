@@ -356,8 +356,7 @@
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
-        (update-in [:application :answers :postal-code]
-                   merge {:valid false})
+        (assoc-in [:application :answers :postal-code :valid] false)
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
