@@ -191,37 +191,39 @@
       (dissoc prev :created-time :id)
       (dissoc current :created-time :id))))
 
-(defn- handle-fetch-form [db {:keys [key deleted] :as response} _]
-  (if deleted
-    db
-    (-> db
-        (update :editor dissoc :ui)
-        (assoc-in [:editor :forms key] (languages->kwd response))
-        (assoc-in [:editor :autosave]
-                  (autosave/interval-loop {:subscribe-path    [:editor :forms key]
-                                           :changed-predicate editor-autosave-predicate
-                                           :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                                (dispatch [:editor/save-form]))})))))
-
-(defn fetch-form-content! [form-id]
-  (http :get
-        (str "/lomake-editori/api/forms/" form-id)
-        handle-fetch-form))
-
 (reg-event-db
+  :editor/handle-fetch-form
+  (fn [db [_ {:keys [key deleted] :as response} _]]
+    (if deleted
+      db
+      (-> db
+          (update :editor dissoc :ui)
+          (assoc-in [:editor :forms key] (languages->kwd response))
+          (assoc-in [:editor :autosave]
+                    (autosave/interval-loop {:subscribe-path    [:editor :forms key]
+                                             :changed-predicate editor-autosave-predicate
+                                             :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
+                                                                  (dispatch [:editor/save-form]))}))))))
+
+(defn- fetch-form-content-fx
+  [form-id]
+  {:http {:method :get
+          :path (str "/lomake-editori/api/forms/" form-id)
+          :handler-or-dispatch :editor/handle-fetch-form}})
+
+(reg-event-fx
   :editor/select-form
-  (fn [db [_ form-key]]
+  (fn [{db :db} [_ form-key]]
     (with-form-key [db previous-form-key]
-      (do
-        (when (and
-                (some? previous-form-key)
-                (not= previous-form-key form-key))
-          (autosave/stop-autosave! (-> db :editor :autosave)))
-        (when-let [id (get-in db [:editor :forms form-key :id])]
-          (fetch-form-content! id))
-        (cond-> db
-                (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
-                true (assoc-in [:editor :selected-form-key] form-key))))))
+      (merge
+       {:db (cond-> db
+              (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
+              true (assoc-in [:editor :selected-form-key] form-key))}
+       (when (and (some? previous-form-key)
+                  (not= previous-form-key form-key))
+         {:stop-autosave (get-in db [:editor :autosave])})
+       (when-let [id (get-in db [:editor :forms form-key :id])]
+         (fetch-form-content-fx id))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
