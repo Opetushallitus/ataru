@@ -2,7 +2,11 @@
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.virkailija.user.organization-service :as org-service]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [ataru.db.db :as db]
+            [ataru.db.migrations :as migrations]
+            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]]
+            [ataru.config.core :refer [config]]))
 
 (def virkailija-routes (->
                         (v/new-handler)
@@ -33,3 +37,8 @@
   (let [headers (:headers resp)]
     (should-not-be-nil headers)
     (should-not-contain header headers)))
+
+(defn reset-test-db [insert-initial-fixtures?]
+  (db/clear-db! :db (-> config :db :schema))
+  (migrations/migrate)
+  (when insert-initial-fixtures? (init-db-fixture)))

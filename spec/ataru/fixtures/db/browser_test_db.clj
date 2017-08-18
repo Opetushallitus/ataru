@@ -6,7 +6,8 @@
             [ataru.applications.application-store :as application-store]
             [ataru.db.db :as db]
             [ataru.virkailija.component-data.component :as component]
-            [ataru.virkailija.component-data.person-info-module :as person-info-module]))
+            [ataru.virkailija.component-data.person-info-module :as person-info-module]
+            [ataru.fixtures.db.test-form :refer [test-form]]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -64,9 +65,9 @@
                                               :fieldType  "textField"}],
                                 :label      {:fi "Pää", :sv "Avsnitt namn"}}]})
 
-(def form4 {:id               4,
-            :key              "41101b4f-1762-49af-9db0-e3603adae3ae",
-            :name             "Selaintestilomake 4",
+(def ssn-testform {:id               4,
+            :key              "41101b4f-1762-49af-9db0-e3603adae656",
+            :name             "SSN_testilomake",
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
             :languages        ["fi"]
@@ -138,9 +139,18 @@
   (form-store/create-new-form! form1 (:key form1))
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
-  (form-store/create-new-form! form3 (:key form4))
+  (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)
     (application-store/add-application application3)))
 
+(defn- insert-form-and-return [form]
+  (form-store/create-new-form! form (:key form))
+  form)
+
+(defn insert-test-form [form-name]
+  (condp = form-name
+  "Testilomake" (insert-form-and-return test-form)
+  "SSN_testilomake" (insert-form-and-return ssn-testform)
+  nil))

@@ -7,20 +7,19 @@
             [ataru.config.core :refer [config]]
             [com.stuartsierra.component :as component]
             [ataru.db.migrations :as migrations]
-            [ataru.test-utils :refer [login]]
+            [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
-            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]])
+            [ataru.fixtures.db.browser-test-db :refer [insert-test-form]])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-in-virkailija-system
   [specs]
   (let [system (atom (virkailija-system/new-system))]
     (try
-      (migrations/migrate)
-      (init-db-fixture)
+      (utils/reset-test-db true)
       (reset! system (component/start-system @system))
       (specs)
       (finally
@@ -30,13 +29,12 @@
   [specs]
   (let [system (atom (hakija-system/new-system))]
     (try
-      (migrations/migrate)
       (reset! system (component/start-system @system))
       (specs)
       (finally
         (component/stop-system @system)))))
 
-(defn sh-timeout
+(defn- sh-timeout
   [timeout-secs & args]
   (println "run" timeout-secs args)
   (.get
@@ -44,13 +42,20 @@
     timeout-secs
     (TimeUnit/SECONDS)))
 
+(defn- get-latest-form
+  [form-name]
+  (if-let [form (->> (form-store/get-all-forms)
+                  (filter #(= (:name %) form-name))
+                  (first))]
+    form
+    (insert-test-form form-name)))
+
 (describe "Virkailija UI tests /"
-          (tags :ui)
+          (tags :ui :ui-virkailija)
           (around-all [specs]
-                      (db/clear-db! :db (-> config :db :schema))
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (let [login-cookie-value (last (split (login) #"="))
+              (let [login-cookie-value (last (split (utils/login) #"="))
                     results (sh-timeout
                               120
                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -60,16 +65,13 @@
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
 
-(defn- get-latest-form
-  [form-name]
-  (->> (form-store/get-all-forms)
-       (filter #(= (:name %) form-name))
-       (first)))
-
 (describe "Hakija UI tests /"
-          (tags :ui)
+          (tags :ui :ui-hakija)
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
+
+          (before-all (utils/reset-test-db true))
+
           (it "can fill a form successfully"
               (if-let [latest-form (get-latest-form "Testilomake")]
                 (let [results (sh-timeout
@@ -128,6 +130,7 @@
                 (throw (Exception. "No test form found."))))
 
           (it "can edit an application successfully"
+              (println (:key (get-latest-form "Testilomake")))
               (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form "Testilomake"))))]
                 (let [secret  (-> latest-application
                                   :id
