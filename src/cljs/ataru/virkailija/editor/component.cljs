@@ -45,6 +45,96 @@
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
+(defn- hakukohde-visibility-hakukohde
+  [path hakukohde]
+  (let [on-click (fn [e] (dispatch [:editor/select-hakukohde-for-visibility
+                                    path
+                                    (:oid hakukohde)]))]
+    (fn [path hakukohde]
+      [:li.editor-form__hakukohde-visibility-hakukohde-list-item
+       {:on-click on-click}
+       [:span.editor-form__hakukohde-visibility-hakukohde-label
+        (:fi (:nimi hakukohde))]])))
+
+(defn- hakukohde-visibility-haku
+  [path haku]
+  [:li.editor-form__hakukohde-visibility-haku-list-item
+   [:span.editor-form__hakukohde-visibility-haku-label
+    (:fi (:nimi haku))]
+   [:ul.editor-form__hakukohde-visibility-hakukohde-list
+    (for [hakukohde (:hakukohteet haku)]
+      ^{:key (:oid hakukohde)}
+      [hakukohde-visibility-hakukohde path hakukohde])]])
+
+(defn- hakukohde-visibility-modal
+  [path id]
+  (let [search-term (subscribe [:editor/hakukohde-visibility-modal-search-term id])
+        fetching?   (subscribe [:editor/fetching-active-haut])
+        active-haut (subscribe [:editor/filtered-active-haut id])
+        on-click (fn [_] (dispatch [:editor/hide-hakukohde-visibility-modal id]))
+        on-change (fn [e] (dispatch [:editor/on-hakukohde-visibility-modal-search-term-change
+                                     id (.-value (.-target e))]))]
+    (fn [path id]
+      [:div
+       [:div.editor-form__hakukohde-visibility-modal-arrow-up]
+       [:div.editor-form__hakukohde-visibility-modal
+        [:div.editor-form__hakukohde-visibility-modal-input-row
+         [:div.editor-form__hakukohde-visibility-search-container
+          [:input.editor-form__hakukohde-visibility-search
+           {:value @search-term
+            :on-change on-change}]]
+         [:i.zmdi.zmdi-close.zmdi-hc-lg.editor-form__hakukohde-visibility-modal-hide
+          {:on-click on-click}]]
+        (if @fetching?
+          [:div.editor-form__active-haut-spinner-container
+           [:i.zmdi.zmdi-spinner.editor-form__active-haut-spinner]]
+          [:ul.editor-form__hakukohde-visibility-haku-list
+           (for [[_ haku] @active-haut]
+             ^{:key (:oid haku)}
+             [hakukohde-visibility-haku path haku])])]])))
+
+(defn- hakukohde-visibility-selected
+  [path oid]
+  (let [name (subscribe [:editor/hakukohde-visibility-selected-name oid])
+        fetching? (subscribe [:editor/fetching-active-haut])
+        on-click (fn [_] (dispatch [:editor/remove-hakukohde-for-visibility
+                                    path oid]))]
+    (fn [_ _]
+      [:li.editor-form__hakukohde-visibility-selected-list-item
+       [:span.editor-form__hakukohde-visibility-selected-label
+        (if @fetching?
+          [:i.zmdi.zmdi-spinner.editor-form__active-haut-spinner]
+          @name)]
+       [:i.zmdi.zmdi-close.zmdi-hc-lg.editor-form__hakukohde-visibility-unselect
+        {:on-click on-click}]])))
+
+(defn- hakukohde-visibility
+  [path initial-content]
+  (let [on-click-show (fn [_]
+                        (dispatch [:editor/show-hakukohde-visibility-modal
+                                   (:id initial-content)]))
+        on-click-hide (fn [_]
+                        (dispatch [:editor/hide-hakukohde-visibility-modal
+                                   (:id initial-content)]))
+        show-modal? (subscribe [:editor/show-hakukohde-visibility-modal
+                                (:id initial-content)])]
+    (fn [path initial-content]
+      (let [visible-to (:belongs-to-hakukohteet initial-content)]
+        [:div.editor-form__hakukohde-visibility-container
+         [:span.editor-form__hakukohde-visibility-label
+          "Näkyvyys lomakkeella: "]
+         [:span.editor-form__hakukohde-visible-to-label
+          {:on-click (if @show-modal? on-click-hide on-click-show)}
+          (if (empty? visible-to)
+            "näkyy kaikille"
+            "vain valituille hakukohteille")]
+         (when @show-modal?
+           [hakukohde-visibility-modal path (:id initial-content)])
+         [:ul.editor-form__hakukohde-visibility-selected-list
+          (for [oid (:belongs-to-hakukohteet initial-content)]
+            ^{:key oid}
+            [hakukohde-visibility-selected path oid])]]))))
+
 (defn- on-drag-start
   [path]
   (fn [event]
@@ -207,7 +297,8 @@
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not (= "Tekstialue" header-label)
-           [repeater-checkbox path initial-content])]]
+           [repeater-checkbox path initial-content])
+         [hakukohde-visibility path initial-content]]]
 
        [info-addon path]])))
 

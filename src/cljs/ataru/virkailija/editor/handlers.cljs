@@ -141,7 +141,9 @@
 (reg-event-fx
   :editor/refresh-active-haut
   (fn [{db :db} _]
-    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+    (let [organization-oids ["1.2.246.562.10.82388989657"
+                             "1.2.246.562.10.53814745062"];;(map :oid (get-in db [:editor :user-info :organizations] []))
+          ]
       {:db (assoc-in db [:editor :active-haut :fetching?] true)
        :refresh-active-haut [organization-oids
                              #(dispatch [:editor/set-active-haut %])
@@ -460,3 +462,36 @@
             ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)
+
+(reg-event-fx
+  :editor/show-hakukohde-visibility-modal
+  (fn [{db :db} [_ id]]
+    (cond-> {:db (assoc-in db [:editor :ui id :hakukohde-visibility-modal :show] true)}
+      (and (not (get-in db [:editor :active-haut :fetching?]))
+           (not (contains? (get-in db [:editor :active-haut]) :haut)))
+      (assoc :dispatch [:editor/refresh-active-haut]))))
+
+(reg-event-db
+  :editor/hide-hakukohde-visibility-modal
+  (fn [db [_ id]]
+    (assoc-in db [:editor :ui id :hakukohde-visibility-modal :show] false)))
+
+(reg-event-db
+  :editor/on-hakukohde-visibility-modal-search-term-change
+  (fn [db [_ id search-term]]
+    (assoc-in db [:editor :ui id :hakukohde-visibility-modal :search-term]
+              search-term)))
+
+(reg-event-db
+  :editor/select-hakukohde-for-visibility
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                     :belongs-to-hakukohteet)]
+      (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
+
+(reg-event-db
+  :editor/remove-hakukohde-for-visibility
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                     :belongs-to-hakukohteet)]
+      (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
