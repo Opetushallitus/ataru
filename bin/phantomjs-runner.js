@@ -22,7 +22,7 @@ switch (app) {
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html'
     break;
   case 'hakija-hakukohde':
-    url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html?hakukohdeOid=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html'
     break;
   case 'hakija-ssn':
     url = 'http://localhost:8351/hakemus/hakija-ssn-test.html?formId=' + cookieOrFormIdOrSecret

@@ -95,8 +95,7 @@
                 (should= 0 (:exit results))))
 
           (it "can fill a form for hakukohde successfully"
-              (let [hakukohde-oid "1.2.246.562.20.49028196523"
-                    results (sh-timeout
+              (let [results (sh-timeout
                               120
                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
                               "--web-security" "false"
