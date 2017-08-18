@@ -11,8 +11,7 @@
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
-            [ataru.fixtures.db.browser-test-db :refer [insert-test-form]])
+            [ataru.applications.application-store :as application-store])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-in-virkailija-system
@@ -42,14 +41,6 @@
     timeout-secs
     (TimeUnit/SECONDS)))
 
-(defn- get-latest-form
-  [form-name]
-  (if-let [form (->> (form-store/get-all-forms)
-                  (filter #(= (:name %) form-name))
-                  (first))]
-    form
-    (insert-test-form form-name)))
-
 (describe "Virkailija UI tests /"
           (tags :ui :ui-virkailija)
           (around-all [specs]
@@ -73,7 +64,7 @@
           (before-all (utils/reset-test-db true))
 
           (it "can fill a form successfully"
-              (if-let [latest-form (get-latest-form "Testilomake")]
+              (if-let [latest-form (utils/get-latest-form "Testilomake")]
                 (let [results (sh-timeout
                                 120
                                 "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -105,7 +96,7 @@
                 (should= 0 (:exit results))))
 
           (it "can fill a form successfully with non-finnish ssn"
-              (if-let [latest-form (get-latest-form "SSN_testilomake")]
+              (if-let [latest-form (utils/get-latest-form "SSN_testilomake")]
                 (let [results (sh-timeout
                                120
                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -117,8 +108,7 @@
                 (throw (Exception. "No test form found."))))
 
           (it "can edit an application successfully"
-              (println (:key (get-latest-form "Testilomake")))
-              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form "Testilomake"))))]
+              (if-let [latest-application (utils/get-latest-application-for-form "Testilomake")]
                 (let [secret  (-> latest-application
                                   :id
                                   (application-store/get-application)

@@ -5,8 +5,10 @@
             [speclj.core :refer :all]
             [ataru.db.db :as db]
             [ataru.db.migrations :as migrations]
-            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]]
-            [ataru.config.core :refer [config]]))
+            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture insert-test-form]]
+            [ataru.config.core :refer [config]]
+            [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]))
 
 (def virkailija-routes (->
                         (v/new-handler)
@@ -42,3 +44,17 @@
   (db/clear-db! :db (-> config :db :schema))
   (migrations/migrate)
   (when insert-initial-fixtures? (init-db-fixture)))
+
+(defn get-latest-form
+  [form-name]
+  (if-let [form (->> (form-store/get-all-forms)
+                     (filter #(= (:name %) form-name))
+                     (first))]
+    form
+    (insert-test-form form-name)))
+
+(defn get-latest-application-for-form [form-name]
+  (-> (get-latest-form form-name)
+      :key
+      application-store/get-application-list-by-form
+      first))
