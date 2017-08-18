@@ -138,10 +138,21 @@
                         {:db (remove-component forms-meta-db path)}))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
-(reg-event-db
+(reg-event-fx
+  :editor/refresh-active-haut
+  (fn [{db :db} _]
+    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+      {:db (assoc-in db [:editor :active-haut :fetching?] true)
+       :refresh-active-haut [organization-oids
+                             #(dispatch [:editor/set-active-haut %])
+                             #(do (dispatch [:editor/clear-active-haut])
+                                  (.log js/console %))]})))
+
+(reg-event-fx
   :editor/handle-user-info
-  (fn [db [_ user-info-response]]
-    (assoc-in db [:editor :user-info] user-info-response)))
+  (fn [{db :db} [_ user-info-response]]
+    {:db (assoc-in db [:editor :user-info] user-info-response)
+     :dispatch [:editor/refresh-active-haut]}))
 
 (defn- languages->kwd [form]
   (update form :languages
@@ -190,6 +201,20 @@
       ; :key remains the same across versions
       (dissoc prev :created-time :id)
       (dissoc current :created-time :id))))
+
+(reg-event-db
+  :editor/set-active-haut
+  (fn [db [_ haut]]
+    (-> db
+        (assoc-in [:editor :active-haut :fetching?] false)
+        (assoc-in [:editor :active-haut :haut] haut))))
+
+(reg-event-db
+  :editor/clear-active-haut
+  (fn [db [_ haut]]
+    (-> db
+        (assoc-in [:editor :active-haut :fetching?] false)
+        (update-in [:editor :active-haut] dissoc :haut))))
 
 (reg-event-db
   :editor/handle-fetch-form
