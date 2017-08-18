@@ -85,23 +85,11 @@
                 (throw (Exception. "No test form found."))))
 
           (it "can fill a form for haku with single hakukohde successfully"
-              (let [haku-oid "1.2.246.562.29.65950024185"
-                    results (sh-timeout
+              (let [results (sh-timeout
                              120
                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
                              "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
-
-          (it "can fill a form for haku with multiple hakukohde successfully"
-              (let [haku-oid "1.2.246.562.29.65950024186"
-                    results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
+                             "bin/phantomjs-runner.js" "hakija-haku")]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
@@ -112,7 +100,7 @@
                               120
                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
                               "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija-hakukohde" hakukohde-oid)]
+                              "bin/phantomjs-runner.js" "hakija-hakukohde")]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
