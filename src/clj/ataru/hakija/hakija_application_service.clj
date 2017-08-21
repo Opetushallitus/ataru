@@ -94,8 +94,8 @@
         form               (-> application
                                (:form)
                                (form-store/fetch-by-id)
-                               (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                               (hakija-form-service/inject-hakukohde-component-if-missing))
+                               (hakija-form-service/inject-hakukohde-component-if-missing)
+                               (hakukohde/populate-hakukohde-answer-options tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-application-by-secret (:secret application))
         final-application  (if is-modify?
