@@ -293,15 +293,17 @@
 (reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value]]
-    (let [id (keyword (:id field))
-          answers (get-in db [:application :answers])
-          answer (get answers id)
-          valid? (or (:cannot-view answer)
-                     (:cannot-edit answer)
-                     (every? #(validator/validate % value answers field)
-                             (:validators field)))]
-      {:db (update-in db [:application :answers id]
-                      merge {:valid valid? :value value})
+    (let [id       (keyword (:id field))
+          answers  (get-in db [:application :answers])
+          answer   (get answers id)
+          valid?   (or (:cannot-view answer)
+                       (:cannot-edit answer)
+                       (every? #(validator/validate % value answers field)
+                               (:validators field)))
+          changed? (not= value (:original-value answer))]
+      {:db         (-> db
+                       (update-in [:application :answers id] merge {:valid valid? :value value})
+                       (assoc-in [:application :values-changed?] changed?))
        :dispatch-n (if (empty? (:rules field))
                      []
                      [[:application/run-rule (:rules field)]])})))
