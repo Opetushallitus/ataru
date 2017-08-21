@@ -595,7 +595,9 @@
 (defn- selected-hakukohde-row
   [hakukohde-oid]
   [:div.application__hakukohde-row.application__hakukohde-row--selected
-   [:div.application__hakukohde-row-text-container
+   [:div.application__hakukohde-row-icon-container
+    [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
+   [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
     [:div.application__hakukohde-selected-row-header
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:div.application__hakukohde-selected-row-description
@@ -632,21 +634,20 @@
     [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
-      (when (< max-hakukohde-results-displayed (count @(subscribe [:application/hakukohde-options])))
-        [:div.application__hakukohde-selection-search-input.application__form-text-input-box
-         [:input.application__form-text-input-in-box
-          {:on-change   hakukohde-query-change-event-handler
-           :placeholder @(subscribe [:application/get-i18n-text
-                                     ; TODO localization
-                                     {:fi "Etsi tämän haun koulutuksia"
-                                      :sv ""
-                                      :en ""}])
-           :value       hakukohde-query}]
-         (when (not (empty? hakukohde-query))
-           [:div.application__form-clear-text-input-in-box
-            [:a
-             {:on-click hakukohde-query-clear-event-handler}
-             [:i.zmdi.zmdi-close]]])])
+      [:div.application__hakukohde-selection-search-input.application__form-text-input-box
+       [:input.application__form-text-input-in-box
+        {:on-change   hakukohde-query-change-event-handler
+         :placeholder @(subscribe [:application/get-i18n-text
+                                   ; TODO localization
+                                   {:fi "Etsi tämän haun koulutuksia"
+                                    :sv ""
+                                    :en ""}])
+         :value       hakukohde-query}]
+       (when (not (empty? hakukohde-query))
+         [:div.application__form-clear-text-input-in-box
+          [:a
+           {:on-click hakukohde-query-clear-event-handler}
+           [:i.zmdi.zmdi-close]]])]
       [:div.application__hakukohde-selection-search-results
        (for [hakukohde-oid @(subscribe [:application/hakukohde-hits])]
          ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
