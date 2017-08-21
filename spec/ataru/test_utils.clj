@@ -40,6 +40,7 @@
     (should-not-contain header headers)))
 
 (defn prepare-ui-tests []
+  "Used in hakija routes."
   (reset-test-db true)
   (ataru.koodisto.koodisto-db-cache/get-cached-koodi-options :db "posti" 1)) ;; Warm up koodisto cache or getting city by postal code will fail)
 
@@ -51,13 +52,8 @@
     form
     (insert-test-form form-name)))
 
-(defn get-latest-application-for-form [form-name]
-  (-> (get-latest-form form-name)
-      :key
-      application-store/get-application-list-by-form
-      first))
-
 (defn get-test-vars-params
+  "Used in hakija routes to get required test params instead of writing them to test url."
   []
   (let [test-form (get-latest-form "Testilomake")]
     {:test-form-key                (:key test-form)
