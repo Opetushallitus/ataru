@@ -252,7 +252,7 @@
              (assoc-in [:application :show-hakukohde-search] true)
              (assoc :wrapper-sections (extract-wrapper-sections form))
              (merge-submitted-answers answers)
-             set-followup-visibility-to-false)
+             (set-followup-visibility-to-false))
      :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
 
 (reg-event-db
