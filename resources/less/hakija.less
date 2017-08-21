@@ -897,6 +897,7 @@ and (max-width: @desktop-content-width) {
   border: 1px solid @separator-color;
   box-shadow: @modal-shadow;
   padding: 20px;
+  position: relative;
 }
 
 .application__hakukohde-selection-search-input {
@@ -913,6 +914,16 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row:last-child {
   border-bottom: 0;
   padding-bottom: 0;
+}
+
+.application__hakukohde-selection-search-close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.application__hakukohde-selection-search-close-button a {
+  color: @gray-of-the-beast;
 }
 
 .application__hakukohde-row-icon-container {

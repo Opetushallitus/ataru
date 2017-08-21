@@ -634,6 +634,9 @@
     [:div
      [:div.application__hakukohde-selection-search-arrow-up]
      [:div.application__hakukohde-selection-search-container
+      [:div.application__hakukohde-selection-search-close-button
+       [:a {:on-click hakukohde-search-toggle-event-handler}
+        [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
         {:on-change   hakukohde-query-change-event-handler
