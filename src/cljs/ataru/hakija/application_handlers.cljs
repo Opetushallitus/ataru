@@ -240,6 +240,17 @@
                           {id {:visible? (or has-value? has-children?)}})))
                  (reduce merge))))
 
+(defn- original-values->answers [db]
+  (cond-> db
+    (or (-> db :application :secret)
+        (-> db :application :virkailija-secret))
+    (update-in [:application :answers]
+               (partial reduce-kv
+                        (fn [answers answer-key {:keys [value] :as answer}]
+                          (let [answer (assoc answer :original-value value)]
+                            (assoc answers answer-key answer)))
+                        {}))))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))]
@@ -252,6 +263,7 @@
              (assoc-in [:application :show-hakukohde-search] true)
              (assoc :wrapper-sections (extract-wrapper-sections form))
              (merge-submitted-answers answers)
+             (original-values->answers)
              (set-followup-visibility-to-false))
      :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
 
