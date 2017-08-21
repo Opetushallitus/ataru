@@ -903,10 +903,16 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-selection-search-input {
   width: 400px;
   padding: 0;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    max-width: 400px;
+    width: 90%;
+  }
 }
 
 .application__hakukohde-row {
   padding: 20px 0;
+  margin-left: 10px;
   position: relative;
   border-bottom: 1px solid @separator-color;
 }
