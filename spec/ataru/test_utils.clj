@@ -5,8 +5,7 @@
             [speclj.core :refer :all]
             [ataru.db.db :as db]
             [ataru.db.migrations :as migrations]
-            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture insert-test-form insert-test-application]]
-            [ataru.config.core :refer [config]]
+            [ataru.fixtures.db.browser-test-db :refer [insert-test-form insert-test-application reset-test-db]]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]))
 
@@ -40,10 +39,9 @@
     (should-not-be-nil headers)
     (should-not-contain header headers)))
 
-(defn reset-test-db [insert-initial-fixtures?]
-  (db/clear-db! :db (-> config :db :schema))
-  (migrations/migrate)
-  (when insert-initial-fixtures? (init-db-fixture)))
+(defn prepare-ui-tests []
+  (reset-test-db true)
+  (ataru.koodisto.koodisto-db-cache/get-cached-koodi-options :db "posti" 1)) ;; Warm up koodisto cache or getting city by postal code will fail)
 
 (defn get-latest-form
   [form-name]

@@ -25,7 +25,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.test-utils :refer [get-test-vars-params reset-test-db]])
+            [ataru.test-utils :refer [get-test-vars-params prepare-ui-tests]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -74,8 +74,7 @@
 (api/defroutes test-routes
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
-      (reset-test-db true)
-      (ataru.koodisto.koodisto-db-cache/get-cached-koodi-options :db "posti" 1) ;; Warm up koodisto cache or getting city by postal code will fail
+      (prepare-ui-tests)
       (render-file-in-dev (str "templates/hakija-" testname "-test.html")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file

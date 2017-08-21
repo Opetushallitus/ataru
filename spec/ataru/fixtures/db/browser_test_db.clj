@@ -8,7 +8,9 @@
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as person-info-module]
             [ataru.fixtures.db.test-form :refer [test-form]]
-            [ataru.fixtures.db.test-form-application :refer [test-form-application]]))
+            [ataru.fixtures.db.test-form-application :refer [test-form-application]]
+            [ataru.config.core :refer [config]]
+            [ataru.db.migrations :as migrations]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -145,6 +147,11 @@
     (application-store/add-application application1)
     (application-store/add-application application2)
     (application-store/add-application application3)))
+
+(defn reset-test-db [insert-initial-fixtures?]
+  (db/clear-db! :db (-> config :db :schema))
+  (migrations/migrate)
+  (when insert-initial-fixtures? (init-db-fixture)))
 
 (defn- insert-form-and-return [form]
   (form-store/create-new-form! form (:key form))

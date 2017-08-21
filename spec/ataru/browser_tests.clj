@@ -18,7 +18,8 @@
   [specs]
   (let [system (atom (virkailija-system/new-system))]
     (try
-      (utils/reset-test-db true)
+      ;; Reset here in order to keep login cookie from fake login
+      (ataru.fixtures.db.browser-test-db/reset-test-db true)
       (reset! system (component/start-system @system))
       (specs)
       (finally
@@ -37,9 +38,9 @@
   [timeout-secs & args]
   (println "run" timeout-secs args)
   (.get
-    (future-call #(apply sh args))
-    timeout-secs
-    (TimeUnit/SECONDS)))
+   (future-call #(apply sh args))
+   timeout-secs
+   (TimeUnit/SECONDS)))
 
 (describe "Virkailija UI tests /"
           (tags :ui :ui-virkailija)
@@ -47,11 +48,11 @@
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
               (let [login-cookie-value (last (split (utils/login) #"="))
-                    results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
+                    results            (sh-timeout
+                                        120
+                                        "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                                        "--web-security" "false"
+                                        "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results)))))
@@ -61,19 +62,15 @@
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
 
-          (before-all (utils/reset-test-db true))
-
           (it "can fill a form successfully"
-              (if-let [latest-form (utils/get-latest-form "Testilomake")]
-                (let [results (sh-timeout
-                                120
-                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija-form" (:key latest-form))]
-                  (println (:out results))
-                  (.println System/err (:err results))
-                  (should= 0 (:exit results)))
-                (throw (Exception. "No test form found."))))
+              (let [results (sh-timeout
+                             120
+                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                             "--web-security" "false"
+                             "bin/phantomjs-runner.js" "hakija-form")]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
 
           (it "can fill a form for haku with single hakukohde successfully"
               (let [results (sh-timeout
@@ -87,41 +84,32 @@
 
           (it "can fill a form for hakukohde successfully"
               (let [results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija-hakukohde")]
+                             120
+                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                             "--web-security" "false"
+                             "bin/phantomjs-runner.js" "hakija-hakukohde")]
                 (println (:out results))
                 (.println System/err (:err results))
                 (should= 0 (:exit results))))
 
           (it "can fill a form successfully with non-finnish ssn"
-              (if-let [latest-form (utils/get-latest-form "SSN_testilomake")]
-                (let [results (sh-timeout
-                               120
-                               "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                               "--web-security" "false"
-                               "bin/phantomjs-runner.js" "hakija-ssn" (:key latest-form))]
-                  (println (:out results))
-                  (.println System/err (:err results))
-                  (should= 0 (:exit results)))
-                (throw (Exception. "No test form found."))))
+              (let [results (sh-timeout
+                             120
+                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                             "--web-security" "false"
+                             "bin/phantomjs-runner.js" "hakija-ssn")]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results))))
 
           (it "can edit an application successfully"
-              (if-let [latest-application (utils/get-latest-application-for-form "Testilomake")]
-                (let [secret  (-> latest-application
-                                  :id
-                                  (application-store/get-application)
-                                  :secret)
-                      _       (println "Using application" (:id latest-application) "with secret" secret)
-                      results (sh-timeout
-                                120
-                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija-edit" secret)]
-                  (println (:out results))
-                  (.println System/err (:err results))
-                  (should= 0 (:exit results)))
-                (throw (Exception. "No test application found.")))))
+              (let [results (sh-timeout
+                             120
+                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                             "--web-security" "false"
+                             "bin/phantomjs-runner.js" "hakija-edit")]
+                (println (:out results))
+                (.println System/err (:err results))
+                (should= 0 (:exit results)))))
 
 (run-specs)
