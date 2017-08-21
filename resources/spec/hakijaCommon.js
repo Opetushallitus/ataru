@@ -1,16 +1,22 @@
-function newForm() {
-  var query = location.search.substring(1).split('&')
-  var formId = ''
+var testFormApplicationSecret = '{{test-form-application-secret}}'
 
-  for (var i = 0; i < query.length; i++) {
-    var param = query[i].split('=')
-    if (param[0] == 'formId') {
-      formId = param[1]
-    }
+function newForm(formName) {
+  var testFormKey = '{{test-form-key}}';
+  var ssnFormKey = '{{ssn-form-key}}';
+  var formKey;
+
+  switch (formName) {
+    case 'testForm':
+      formKey = testFormKey;
+      break;
+    case 'ssnTestForm':
+      formKey = ssnFormKey;
+      break;
+    default: console.log('No valid test form key found! Test will fail.. :(');
   }
 
-  console.log("form id", formId || 'UNDEFINED')
-  loadInFrame('/hakemus/' + formId)
+  console.log("form key", formKey || 'UNDEFINED')
+  return function() {loadInFrame('/hakemus/' + formKey)};
 }
 
 function formHeader() {

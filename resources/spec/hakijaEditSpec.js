@@ -1,9 +1,7 @@
 (function () {
   before(function () {
-    var secret = getQueryParam('modify')
-
-    console.log("secret", secret || 'UNDEFINED')
-    loadInFrame('/hakemus?modify=' + secret)
+    console.log("secret", testFormApplicationSecret || 'UNDEFINED')
+    loadInFrame('/hakemus?modify=' + testFormApplicationSecret)
   })
 
   describe('hakemus edit', function () {

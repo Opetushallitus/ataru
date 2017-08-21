@@ -16,7 +16,7 @@ switch (app) {
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
     break;
   case 'hakija-form':
-    url = 'http://localhost:8351/hakemus/hakija-form-test.html?formId=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;
   case 'hakija-haku':
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html'
@@ -25,7 +25,7 @@ switch (app) {
     url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html'
     break;
   case 'hakija-ssn':
-    url = 'http://localhost:8351/hakemus/hakija-ssn-test.html?formId=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-ssn-test.html'
     break;
   case 'hakija-edit':
     url = 'http://localhost:8351/hakemus/hakija-edit-test.html?modify=' + cookieOrFormIdOrSecret

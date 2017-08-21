@@ -5,7 +5,7 @@
             [speclj.core :refer :all]
             [ataru.db.db :as db]
             [ataru.db.migrations :as migrations]
-            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture insert-test-form]]
+            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture insert-test-form insert-test-application]]
             [ataru.config.core :refer [config]]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]))
@@ -58,3 +58,12 @@
       :key
       application-store/get-application-list-by-form
       first))
+
+(defn get-test-vars-params
+  []
+  (let [test-form (get-latest-form "Testilomake")]
+    {:test-form-key                (:key test-form)
+     :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
+     :test-form-application-secret (-> (insert-test-application (:id test-form))
+                                       (application-store/get-application)
+                                       :secret)}))

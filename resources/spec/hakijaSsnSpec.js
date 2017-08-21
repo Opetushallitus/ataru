@@ -5,7 +5,7 @@
 
   describe('SSN tests', function() {
     before(
-      newForm,
+      newForm('ssnTestForm'),
       wait.until(function () {
         return formSections().length === 1
       })

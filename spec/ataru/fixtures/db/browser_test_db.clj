@@ -7,7 +7,8 @@
             [ataru.db.db :as db]
             [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.component-data.person-info-module :as person-info-module]
-            [ataru.fixtures.db.test-form :refer [test-form]]))
+            [ataru.fixtures.db.test-form :refer [test-form]]
+            [ataru.fixtures.db.test-form-application :refer [test-form-application]]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -147,10 +148,16 @@
 
 (defn- insert-form-and-return [form]
   (form-store/create-new-form! form (:key form))
-  form)
+  (->> (form-store/get-all-forms)
+       (filter #(= (:name %) (:name form)))
+       (first)))
 
 (defn insert-test-form [form-name]
   (condp = form-name
   "Testilomake" (insert-form-and-return test-form)
   "SSN_testilomake" (insert-form-and-return ssn-testform)
   nil))
+
+(defn insert-test-application [form-id]
+  (application-store/add-application (merge test-form-application
+                                            {:form form-id})))
