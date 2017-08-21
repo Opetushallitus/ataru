@@ -42,20 +42,22 @@
    timeout-secs
    (TimeUnit/SECONDS)))
 
+(defn run-phantom-test [test-name & args]
+  (let [results (apply sh-timeout
+                       120
+                       "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                       "--web-security" "false"
+                       "bin/phantomjs-runner.js" test-name args)]
+    (println (:out results))
+    (.println System/err (:err results))
+    (should= 0 (:exit results))))
+
 (describe "Virkailija UI tests /"
           (tags :ui :ui-virkailija)
           (around-all [specs]
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (let [login-cookie-value (last (split (utils/login) #"="))
-                    results            (sh-timeout
-                                        120
-                                        "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                        "--web-security" "false"
-                                        "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results)))))
+              (run-phantom-test "virkailija"   (last (split (utils/login) #"=")))))
 
 (describe "Hakija UI tests /"
           (tags :ui :ui-hakija)
@@ -63,53 +65,18 @@
                       (run-specs-in-hakija-system specs))
 
           (it "can fill a form successfully"
-              (let [results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-form")]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-form"))
 
           (it "can fill a form for haku with single hakukohde successfully"
-              (let [results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-haku")]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-haku"))
 
           (it "can fill a form for hakukohde successfully"
-              (let [results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-hakukohde")]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-hakukohde"))
 
           (it "can fill a form successfully with non-finnish ssn"
-              (let [results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-ssn")]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-ssn"))
 
           (it "can edit an application successfully"
-              (let [results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-edit")]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results)))))
+              (run-phantom-test "hakija-edit")))
 
 (run-specs)
