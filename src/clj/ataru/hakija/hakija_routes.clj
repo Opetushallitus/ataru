@@ -214,7 +214,7 @@
                               (when (is-dev-env?) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
-                                  test-routes
+                                  (when (is-dev-env?) test-routes)
                                   (api-routes (:tarjonta-service this))
                                   (route/resources "/")
                                   (api/undocumented
