@@ -301,12 +301,11 @@
                        (every? #(validator/validate % value answers field)
                                (:validators field)))
           changed? (not= value (:original-value answer))]
-      {:db         (-> db
+      (cond-> {:db (-> db
                        (update-in [:application :answers id] merge {:valid valid? :value value})
-                       (assoc-in [:application :values-changed?] changed?))
-       :dispatch-n (if (empty? (:rules field))
-                     []
-                     [[:application/run-rule (:rules field)]])})))
+                       (assoc-in [:application :values-changed?] changed?))}
+        (empty? (:rules field))
+        (assoc :dispatch-n [[:application/run-rule (:rules field)]])))))
 
 (defn- set-repeatable-field-values
   [db field-descriptor idx value]
