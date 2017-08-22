@@ -1,11 +1,6 @@
 (function() {
   before(function () {
-    var hakukohdeOid = getQueryParam('hakukohdeOid')
-
-    if (hakukohdeOid !== '') {
-      console.log("hakukohde oid", hakukohdeOid)
-      loadInFrame('/hakemus/hakukohde/' + hakukohdeOid)
-    }
+    loadInFrame('/hakemus/hakukohde/1.2.246.562.20.49028196523')
   })
 
   afterEach(function() {

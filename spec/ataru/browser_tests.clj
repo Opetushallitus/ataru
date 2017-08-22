@@ -7,20 +7,18 @@
             [ataru.config.core :refer [config]]
             [com.stuartsierra.component :as component]
             [ataru.db.migrations :as migrations]
-            [ataru.test-utils :refer [login]]
+            [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
-            [ataru.fixtures.db.browser-test-db :refer [init-db-fixture]])
+            [ataru.applications.application-store :as application-store])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-in-virkailija-system
   [specs]
   (let [system (atom (virkailija-system/new-system))]
     (try
-      (migrations/migrate)
-      (init-db-fixture)
+      (ataru.fixtures.db.browser-test-db/reset-test-db true)
       (reset! system (component/start-system @system))
       (specs)
       (finally
@@ -30,106 +28,55 @@
   [specs]
   (let [system (atom (hakija-system/new-system))]
     (try
-      (migrations/migrate)
       (reset! system (component/start-system @system))
       (specs)
       (finally
         (component/stop-system @system)))))
 
-(defn sh-timeout
+(defn- sh-timeout
   [timeout-secs & args]
   (println "run" timeout-secs args)
   (.get
-    (future-call #(apply sh args))
-    timeout-secs
-    (TimeUnit/SECONDS)))
+   (future-call #(apply sh args))
+   timeout-secs
+   (TimeUnit/SECONDS)))
+
+(defn run-phantom-test
+  [test-name & args]
+  (let [results (apply sh-timeout
+                       120
+                       "node_modules/phantomjs-prebuilt/bin/phantomjs"
+                       "--web-security" "false"
+                       "bin/phantomjs-runner.js" test-name args)]
+    (println (:out results))
+    (.println System/err (:err results))
+    (should= 0 (:exit results))))
 
 (describe "Virkailija UI tests /"
-          (tags :ui)
+          (tags :ui :ui-virkailija)
           (around-all [specs]
-                      (db/clear-db! :db (-> config :db :schema))
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (let [login-cookie-value (last (split (login) #"="))
-                    results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "virkailija" login-cookie-value)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results)))))
-
-(defn- get-latest-form
-  []
-  (->> (form-store/get-all-forms)
-       (filter #(= (:name %) "Testilomake"))
-       (first)))
+              (run-phantom-test "virkailija" (last (split (utils/login) #"=")))))
 
 (describe "Hakija UI tests /"
-          (tags :ui)
+          (tags :ui :ui-hakija)
           (around-all [specs]
                       (run-specs-in-hakija-system specs))
+
           (it "can fill a form successfully"
-              (if-let [latest-form (get-latest-form)]
-                (let [results (sh-timeout
-                                120
-                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija-form" (:key latest-form))]
-                  (println (:out results))
-                  (.println System/err (:err results))
-                  (should= 0 (:exit results)))
-                (throw (Exception. "No test form found."))))
+              (run-phantom-test "hakija-form"))
 
           (it "can fill a form for haku with single hakukohde successfully"
-              (let [haku-oid "1.2.246.562.29.65950024185"
-                    results (sh-timeout
-                             120
-                             "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                             "--web-security" "false"
-                             "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
-
-          (it "can fill a form for haku with multiple hakukohde successfully"
-              (let [haku-oid "1.2.246.562.29.65950024186"
-                    results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija-haku" haku-oid)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-haku"))
 
           (it "can fill a form for hakukohde successfully"
-              (let [hakukohde-oid "1.2.246.562.20.49028196523"
-                    results (sh-timeout
-                              120
-                              "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                              "--web-security" "false"
-                              "bin/phantomjs-runner.js" "hakija-hakukohde" hakukohde-oid)]
-                (println (:out results))
-                (.println System/err (:err results))
-                (should= 0 (:exit results))))
+              (run-phantom-test "hakija-hakukohde"))
+
+          (it "can fill a form successfully with non-finnish ssn"
+              (run-phantom-test "hakija-ssn"))
 
           (it "can edit an application successfully"
-              (if-let [latest-application (first (application-store/get-application-list-by-form (:key (get-latest-form))))]
-                (let [secret  (-> latest-application
-                                  :id
-                                  (application-store/get-application)
-                                  :secret)
-                      _       (println "Using application" (:id latest-application) "with secret" secret)
-                      results (sh-timeout
-                                120
-                                "node_modules/phantomjs-prebuilt/bin/phantomjs"
-                                "--web-security" "false"
-                                "bin/phantomjs-runner.js" "hakija-edit" secret)]
-                  (println (:out results))
-                  (.println System/err (:err results))
-                  (should= 0 (:exit results)))
-                (throw (Exception. "No test application found.")))))
+              (run-phantom-test "hakija-edit")))
 
 (run-specs)

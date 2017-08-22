@@ -1,11 +1,4 @@
 (function() {
-  before(function () {
-    var formId = getQueryParam('formId')
-
-    console.log("form id", formId || 'UNDEFINED')
-    loadInFrame('/hakemus/' + formId)
-  })
-
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -14,6 +7,7 @@
 
     describe('form loads', function () {
       before(
+        newForm('testForm'),
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {

@@ -3,36 +3,39 @@ var system = require('system');
 var args = system.args;
 
 var app = args[1];
-var cookieOrFormIdOrSecret = args.length > 2 ? args[2] : ''
+var cookie = args.length > 2 ? args[2] : ''
 
 var url
 switch (app) {
   case 'virkailija':
     phantom.addCookie({
       'name': 'ring-session',
-      'value': cookieOrFormIdOrSecret,
+      'value': cookie,
       'domain': 'localhost'
     });
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
     break;
   case 'hakija-form':
-    url = 'http://localhost:8351/hakemus/hakija-form-test.html?formId=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;
   case 'hakija-haku':
-    url = 'http://localhost:8351/hakemus/hakija-haku-test.html?hakuOid=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-haku-test.html'
     break;
   case 'hakija-hakukohde':
-    url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html?hakukohdeOid=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-hakukohde-test.html'
+    break;
+  case 'hakija-ssn':
+    url = 'http://localhost:8351/hakemus/hakija-ssn-test.html'
     break;
   case 'hakija-edit':
-    url = 'http://localhost:8351/hakemus/hakija-edit-test.html?modify=' + cookieOrFormIdOrSecret
+    url = 'http://localhost:8351/hakemus/hakija-edit-test.html'
     break;
   default:
     console.log('invalid app: ' + app)
     phantom.exit(1)
 }
 
-console.log("running browser tests for", app, url, cookieOrFormIdOrSecret);
+console.log("running browser tests for", app, url, cookie);
 
 global.testsSuccessful = undefined;
 var resultPrefix = '*** TEST';

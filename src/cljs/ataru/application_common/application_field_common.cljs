@@ -9,7 +9,8 @@
     "postal-office"
     "home-town"
     "city"
-    "hakukohteet"})
+    "hakukohteet"
+    "birthplace"})
 (def contains-required-validators? (partial contains? required-validators))
 
 (defn is-required-field?

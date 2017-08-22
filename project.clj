@@ -202,7 +202,7 @@
                               :plugins        [[refactor-nrepl "2.3.0"]
                                                [lein-cljfmt "0.5.6"]
                                                [lein-kibit "0.1.3"]]
-                              :source-paths   ["dev/clj" "test/cljc/unit"]
+                              :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 
