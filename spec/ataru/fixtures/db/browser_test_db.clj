@@ -151,11 +151,7 @@
   (migrations/migrate)
   (when insert-initial-fixtures? (init-db-fixture)))
 
-(defn- insert-form-and-return [form]
-  (form-store/create-new-form! form (:key form))
-  form)
-
 (defn insert-test-form [form-name]
   (if (= form-name "SSN_testilomake")
-    (insert-form-and-return ssn-testform)
+    (form-store/create-new-form! ssn-testform (:key ssn-testform))
     (println "No test form found. Run virkailija test first!")))
