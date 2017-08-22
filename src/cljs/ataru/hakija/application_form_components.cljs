@@ -667,15 +667,9 @@
   [:div.application__wrapper-element.application__wrapper-element-border
    [hakukohde-selection-header field-descriptor]
    [:div.application__hakukohde-selected-list
-    (if (empty? @(subscribe [:application/selected-hakukohteet]))
-      [:div @(subscribe [:application/get-i18n-text
-                         ; TODO localization
-                         {:fi "Ei valittuja hakukohteita"
-                          :sv ""
-                          :en ""}])]
-      (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-        ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-        [selected-hakukohde-row hakukohde-oid]))
+    (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+      ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+      [selected-hakukohde-row hakukohde-oid])
     (when @(subscribe [:application/hakukohteet-editable?])
       [:div.application__hakukohde-row.application__hakukohde-row--search-toggle
        [:a.application__hakukohde-selection-open-search
