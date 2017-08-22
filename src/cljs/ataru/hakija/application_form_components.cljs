@@ -605,30 +605,32 @@
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row.application__hakukohde-row--search-hit
-   [:div.application__hakukohde-row-text-container
-    [:div.application__hakukohde-selected-row-header
-     @(subscribe [:application/hakukohde-label hakukohde-oid])]
-    [:div.application__hakukohde-selected-row-description
-     @(subscribe [:application/hakukohde-description hakukohde-oid])]]
-   [:div.application__hakukohde-row-button-container
-    (if @(subscribe [:application/hakukohde-selected? hakukohde-oid])
-      [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
-      (if @(subscribe [:application/hakukohteet-full?])
-        [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-         @(subscribe [:application/get-i18n-text
-                      ; TODO localization
-                      {:fi "Lisää"
-                       :sv ""
-                       :en ""}])]
-        [:a.application__hakukohde-select-button
-         {:on-click hakukohde-select-event-handler
-          :data-hakukohde-oid hakukohde-oid}
-         @(subscribe [:application/get-i18n-text
-                      ; TODO localization
-                      {:fi "Lisää"
-                       :sv ""
-                       :en ""}])]))]])
+  (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])]
+    [:div.application__hakukohde-row.application__hakukohde-row--search-hit
+     {:class (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")}
+     [:div.application__hakukohde-row-text-container
+      [:div.application__hakukohde-selected-row-header
+       @(subscribe [:application/hakukohde-label hakukohde-oid])]
+      [:div.application__hakukohde-selected-row-description
+       @(subscribe [:application/hakukohde-description hakukohde-oid])]]
+     [:div.application__hakukohde-row-button-container
+      (if hakukohde-selected?
+        [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
+        (if @(subscribe [:application/hakukohteet-full?])
+          [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
+           @(subscribe [:application/get-i18n-text
+                        ; TODO localization
+                        {:fi "Lisää"
+                         :sv ""
+                         :en ""}])]
+          [:a.application__hakukohde-select-button
+           {:on-click           hakukohde-select-event-handler
+            :data-hakukohde-oid hakukohde-oid}
+           @(subscribe [:application/get-i18n-text
+                        ; TODO localization
+                        {:fi "Lisää"
+                         :sv ""
+                         :en ""}])]))]]))
 
 (defn- hakukohde-selection-search
   []
