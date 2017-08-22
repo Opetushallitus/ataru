@@ -15,8 +15,13 @@ function newForm(formName) {
     default: console.log('No valid test form key found! Test will fail.. :(');
   }
 
-  console.log("form key", formKey || 'UNDEFINED')
-  return function() {loadInFrame('/hakemus/' + formKey)};
+  if (!formKey) {
+    console.log("Test form key undefined (no form found). Did you run virkailija test first?");
+  } else {
+    console.log("form key", formKey);
+    return function() {loadInFrame('/hakemus/' + formKey)};
+  }
+
 }
 
 function formHeader() {

@@ -18,7 +18,6 @@
   [specs]
   (let [system (atom (virkailija-system/new-system))]
     (try
-      ;; Reset here in order to keep login cookie from fake login
       (ataru.fixtures.db.browser-test-db/reset-test-db true)
       (reset! system (component/start-system @system))
       (specs)
@@ -42,7 +41,8 @@
    timeout-secs
    (TimeUnit/SECONDS)))
 
-(defn run-phantom-test [test-name & args]
+(defn run-phantom-test
+  [test-name & args]
   (let [results (apply sh-timeout
                        120
                        "node_modules/phantomjs-prebuilt/bin/phantomjs"
@@ -57,7 +57,7 @@
           (around-all [specs]
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (run-phantom-test "virkailija"   (last (split (utils/login) #"=")))))
+              (run-phantom-test "virkailija" (last (split (utils/login) #"=")))))
 
 (describe "Hakija UI tests /"
           (tags :ui :ui-hakija)

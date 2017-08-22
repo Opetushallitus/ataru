@@ -1,7 +1,11 @@
 (function () {
   before(function () {
-    console.log("secret", testFormApplicationSecret || 'UNDEFINED')
-    loadInFrame('/hakemus?modify=' + testFormApplicationSecret)
+    if (!testFormApplicationSecret) {
+      console.log("Test application secret undefined (no application found). Did you run virkailija and hakija-form tests first?");
+    } else {
+      console.log("secret", testFormApplicationSecret);
+      loadInFrame('/hakemus?modify=' + testFormApplicationSecret)
+    }
   })
 
   describe('hakemus edit', function () {

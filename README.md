@@ -161,6 +161,9 @@ Hakija has the following tests (no login required):
 * [http://localhost:8351/hakemus/hakija-ssn-test.html](http://localhost:8351/hakemus/hakija-ssn-test.html)
 * [http://localhost:8351/hakemus/hakija-edit-test.html](http://localhost:8351/hakemus/hakija-edit-test.html)
 
+Tests assume some fixtures in db. To clear test db, run migrations and insert the required fixtures run:
+`./bin/ci-build reset-test-database-with-fixture`
+
 ### ClojureScript unit tests
 
 ```

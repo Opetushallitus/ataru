@@ -25,7 +25,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.test-utils :refer [get-test-vars-params prepare-ui-tests]])
+            [ataru.test-utils :refer [get-test-vars-params]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -74,7 +74,6 @@
 (api/defroutes test-routes
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
-      (prepare-ui-tests)
       (render-file-in-dev (str "templates/hakija-" testname "-test.html")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
