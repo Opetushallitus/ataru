@@ -15,9 +15,8 @@
       )
       it('with complete form', function () {
         expect(formFields().length).to.equal(32)
-        expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(submitButton().prop('disabled')).to.equal(true)
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
