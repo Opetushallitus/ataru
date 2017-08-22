@@ -88,7 +88,7 @@
         var followupCheckboxInputValues = _.map(testFrame().find('.application__form-multi-choice-followups-container input.application__form-checkbox:checked'), function (e) {
           return $(e).val()
         })
-        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A']
+        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A', 'Jatkokysymys B']
 
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
