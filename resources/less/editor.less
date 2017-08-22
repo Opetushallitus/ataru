@@ -958,11 +958,11 @@ form > div > .editor-form__component-wrapper {
 .editor-form__hakukohde-visibility-modal-wrapper {
   position: absolute;
   z-index: 9;
-  margin-left: 50px;
+  margin-left: 100px;
 }
 
 .editor-form__hakukohde-visibility-modal-arrow-up {
-  left: 128px;
+  left: 78px;
   width: 30px;
   height: 16px;
   position: relative;
@@ -1031,11 +1031,12 @@ form > div > .editor-form__component-wrapper {
   list-style: none;
   margin: 0px;
   padding-left: 24px;
+  padding-right: 24px;
 }
 
 .editor-form__hakukohde-visibility-hakukohde-list {
   list-style: none;
-  padding-left: 24px;
+  padding-left: 0px;
   padding-top: 14px;
 }
 
@@ -1048,15 +1049,21 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__hakukohde-visibility-hakukohde-list-item {
-  padding-bottom: 14px;
-}
-
-.editor-form__hakukohde-visibility-hakukohde-list-item:last-child {
-  padding-bottom: 0px;
+  padding-left: 16px;
+  padding-bottom: 12px;
+  &.selected {
+    padding-left: 0px;
+  }
+  &.selected:before {
+    content: url('/lomake-editori/images/icon_check.png');
+    padding-right: 6px;
+  }
+  &:last-child {
+    padding-bottom: 0px;
+  }
 }
 
 .editor-form__hakukohde-visibility-haku-label {
-  color: @blue-text-color;
   font-size: 14px;
 }
 
@@ -1064,11 +1071,10 @@ form > div > .editor-form__component-wrapper {
   color: @pale-blue;
   font-size: 14px;
   cursor: pointer;
-}
-
-.editor-form__hakukohde-visibility-hakukohde-label-highlight {
-  background: #cccccc;
-  color: @pale-blue;
-  font-size: 14px;
-  cursor: pointer;
+  &.selected {
+    color: black;
+  }
+  &.highlight {
+    background: #cccccc;
+  }
 }

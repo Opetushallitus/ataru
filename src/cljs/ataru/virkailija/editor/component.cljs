@@ -46,43 +46,48 @@
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- hakukohde-visibility-hakukohde
-  [path id hakukohde]
-  (let [on-click (fn [e] (dispatch [:editor/select-hakukohde-for-visibility
-                                    path
-                                    (:oid hakukohde)]))
+  [path id hakukohde selected-hakukohteet]
+  (let [on-click-add (fn [e] (dispatch [:editor/select-hakukohde-for-visibility
+                                        path
+                                        (:oid hakukohde)]))
+        on-click-remove (fn [_] (dispatch [:editor/remove-hakukohde-for-visibility
+                                           path (:oid hakukohde)]))
         name (subscribe [:editor/hakukohde-name-parts id hakukohde])]
-    (fn [path id hakukohde]
-      [:li.editor-form__hakukohde-visibility-hakukohde-list-item
-       {:on-click on-click}
-       (map-indexed (fn [i [part highlight?]]
-                      (if highlight?
+    (fn [path id hakukohde selected-hakukohteet]
+      (let [selected? (contains? (set selected-hakukohteet) (:oid hakukohde))]
+        [(if selected?
+           :li.editor-form__hakukohde-visibility-hakukohde-list-item.selected
+           :li.editor-form__hakukohde-visibility-hakukohde-list-item)
+         {:on-click (if selected? on-click-remove on-click-add)}
+         (map-indexed (fn [i [part highlight?]]
                         ^{:key (str i)}
-                        [:span.editor-form__hakukohde-visibility-hakukohde-label-highlight
-                         part]
-                        ^{:key (str i)}
-                        [:span.editor-form__hakukohde-visibility-hakukohde-label
-                         part]))
-                    @name)])))
+                        [(keyword
+                          (str "span"
+                               ".editor-form__hakukohde-visibility-hakukohde-label"
+                               (when selected? ".selected")
+                               (when highlight? ".highlight")))
+                         part])
+                      @name)]))))
 
 (defn- hakukohde-visibility-haku
-  [path id haku]
+  [path id haku selected-hakukohteet]
   [:li.editor-form__hakukohde-visibility-haku-list-item
    [:span.editor-form__hakukohde-visibility-haku-label
     (:fi (:nimi haku))]
    [:ul.editor-form__hakukohde-visibility-hakukohde-list
     (for [hakukohde (:hakukohteet haku)]
       ^{:key (:oid hakukohde)}
-      [hakukohde-visibility-hakukohde path id hakukohde])]])
+      [hakukohde-visibility-hakukohde path id hakukohde selected-hakukohteet])]])
 
 (defn- hakukohde-visibility-modal
-  [path id]
+  [path id selected-hakukohteet]
   (let [search-term (subscribe [:editor/hakukohde-visibility-modal-search-term id])
         fetching?   (subscribe [:editor/fetching-active-haut])
         active-haut (subscribe [:editor/filtered-active-haut id])
         on-click (fn [_] (dispatch [:editor/hide-hakukohde-visibility-modal id]))
         on-change (fn [e] (dispatch [:editor/on-hakukohde-visibility-modal-search-term-change
                                      id (.-value (.-target e))]))]
-    (fn [path id]
+    (fn [path id selected-hakukohteet]
       [:div.editor-form__hakukohde-visibility-modal-wrapper
        [:div.editor-form__hakukohde-visibility-modal-arrow-up]
        [:div.editor-form__hakukohde-visibility-modal
@@ -99,7 +104,7 @@
           [:ul.editor-form__hakukohde-visibility-haku-list
            (for [[_ haku] @active-haut]
              ^{:key (:oid haku)}
-             [hakukohde-visibility-haku path id haku])])]])))
+             [hakukohde-visibility-haku path id haku selected-hakukohteet])])]])))
 
 (defn- hakukohde-visibility-selected
   [path oid]
@@ -135,9 +140,9 @@
             "näkyy kaikille"
             "vain valituille hakukohteille")]
          (when @show-modal?
-           [hakukohde-visibility-modal path (:id initial-content)])
+           [hakukohde-visibility-modal path (:id initial-content) visible-to])
          [:ul.editor-form__hakukohde-visibility-selected-list
-          (for [oid (:belongs-to-hakukohteet initial-content)]
+          (for [oid visible-to]
             ^{:key oid}
             [hakukohde-visibility-selected path oid])]]))))
 
