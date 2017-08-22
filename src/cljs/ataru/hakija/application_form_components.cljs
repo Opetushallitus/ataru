@@ -616,7 +616,11 @@
       [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
       (if @(subscribe [:application/hakukohteet-full?])
         [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-         @(subscribe [:application/max-hakukohteet-reached-label])]
+         @(subscribe [:application/get-i18n-text
+                      ; TODO localization
+                      {:fi "Lisää"
+                       :sv ""
+                       :en ""}])]
         [:a.application__hakukohde-select-button
          {:on-click hakukohde-select-event-handler
           :data-hakukohde-oid hakukohde-oid}
@@ -674,9 +678,11 @@
         {:on-click hakukohde-search-toggle-event-handler}
         @(subscribe [:application/get-i18n-text
                      ; TODO localization
-                     {:fi "Lisää haettava koulutus"
+                     {:fi "Lisää hakukohde"
                       :sv ""
                       :en ""}])]
+       (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
+         [:span.application__hakukohde-selection-max-label (str "(max. " max-hakukohteet ")")])
        (when @(subscribe [:application/show-hakukohde-search])
          [hakukohde-selection-search])])]])
 
