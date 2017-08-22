@@ -284,7 +284,7 @@
                      (original-values->answers)
                      (set-followup-visibility-to-false))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/hakukohde-query-change "" 10 0]]}))
+                  [:application/hakukohde-query-change "" 0]]}))
 
 (reg-event-db
   :flasher
@@ -671,14 +671,15 @@
 
 (reg-event-db
   :application/hakukohde-query-process
-  (fn [db [_ hakukohde-query max-results-displayed]]
+  (fn [db [_ hakukohde-query]]
     (if (= hakukohde-query (get-in db [:application :hakukohde-query]))
       (let [hakukohde-options (:options (hakukohteet-field db))
             lang              (-> db :form :selected-language)
+            query-pattern     (re-pattern (str "(?i)" hakukohde-query))
             results           (if (clojure.string/blank? hakukohde-query)
-                                (map :value (take max-results-displayed hakukohde-options))
+                                (map :value hakukohde-options)
                                 (->> hakukohde-options
-                                     (filter #(re-find (re-pattern (str "(?i)" hakukohde-query))
+                                     (filter #(re-find query-pattern
                                                        (get-in % [:label lang] "")))
                                      (map :value)))]
         (assoc-in db [:application :hakukohde-hits] results))
@@ -686,11 +687,11 @@
 
 (reg-event-fx
   :application/hakukohde-query-change
-  (fn [{db :db} [_ hakukohde-query max-results-displayed timeout]]
+  (fn [{db :db} [_ hakukohde-query timeout]]
     {:db                 (assoc-in db [:application :hakukohde-query] hakukohde-query)
      :dispatch-debounced {:timeout  (or timeout 500)
                           :id       :hakukohde-query
-                          :dispatch [:application/hakukohde-query-process hakukohde-query max-results-displayed]}}))
+                          :dispatch [:application/hakukohde-query-process hakukohde-query]}}))
 
 (reg-event-db
   :application/hakukohde-query-clear

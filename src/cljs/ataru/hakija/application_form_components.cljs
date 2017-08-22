@@ -28,8 +28,6 @@
 
 (declare render-field)
 
-(defonce max-hakukohde-results-displayed 10)
-
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -572,7 +570,7 @@
              (.getAttribute (.-target e) "data-hakukohde-oid")]))
 
 (defn- hakukohde-query-change-event-handler [e]
-  (dispatch [:application/hakukohde-query-change (.-value (.-target e)) max-hakukohde-results-displayed]))
+  (dispatch [:application/hakukohde-query-change (.-value (.-target e))]))
 
 (defn- hakukohde-query-clear-event-handler [_]
   (dispatch [:application/hakukohde-query-clear]))
