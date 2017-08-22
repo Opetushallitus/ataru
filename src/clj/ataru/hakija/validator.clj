@@ -46,12 +46,17 @@
     xs
     [xs]))
 
+(def answers-to-validate-as-vector
+  "Do not validate these answers a collection of individual items, but pass the whole list instead"
+  #{:hakukohteet})
+
 (defn- passes-all?
   [validators answers answers-by-key field-descriptor]
   (every? true? (map
                   #(passed? % validators answers-by-key field-descriptor)
                   (or
                     (when (empty? answers) [nil])
+                    (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
                     answers))))
 
 (defn build-results
