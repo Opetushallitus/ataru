@@ -145,33 +145,24 @@ Remeber to compile all changed UI code before running UI-tests. To clean and rec
 
 Also remember to restart applications after re-compiling code!
 
-Tests assume a blank database on which to run and create new
-data to. We assume the DB has been started as instructed in _Backend &
-browser tests_. We also need to run migrations and insert fixtures. 
-This can all be done with:
-
-```
-./bin/cibuild reset-test-database-with-fixture
-```
-
-Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
-Navigate to [Virkailija tests](http://localhost:8350/lomake-editori/virkailija-test.html)
+To run virkailija tests:
+* Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
+* Navigate to [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
 That will run the tests for virkailija.
 
-Hakija tests [are here](http://localhost:8351/hakemus/hakija-test.html) and [here](http://localhost:8351/hakemus/hakija-ssn-test.html)
-
-Hakija tests require `formId=$KEY` query parameter for the `hakija-test.html`. Use key of the latest form created by
-virkailija tests. Hakija tests and hakija ssn tests have different forms, so select the correct one from the result of this query:
-
-`select secret as hakemus_secret, name as form_name, forms.key as form_key from applications left join forms on applications.form_id = forms.id;`
-
-Hakija edit tests are [here](http://localhost:8351/hakemus/hakija-edit-test.html), and require `modify?=$SERCRET` path param.
-Can also be found with the sql above.
-
 You can run only some of the tests with Mocha's grep feature, for example:
-
 ```http://localhost:8350/lomake-editori/virkailija-test.html?grep=Application```
+
+Hakija has the following tests (no login required): 
+* [http://localhost:8351/hakemus/hakija-form-test.html](http://localhost:8351/hakemus/hakija-form-test.html)
+* [http://localhost:8351/hakemus/hakija-haku-test.html](http://localhost:8351/hakemus/hakija-haku-test.html)
+* [http://localhost:8351/hakemus/hakija-hakukohde-test.html](http://localhost:8351/hakemus/hakija-hakukohde-test.html)
+* [http://localhost:8351/hakemus/hakija-ssn-test.html](http://localhost:8351/hakemus/hakija-ssn-test.html)
+* [http://localhost:8351/hakemus/hakija-edit-test.html](http://localhost:8351/hakemus/hakija-edit-test.html)
+
+Tests assume some fixtures in db. To clear test db, run migrations and insert the required fixtures run:
+`./bin/ci-build reset-test-database-with-fixture`
 
 ### ClojureScript unit tests
 

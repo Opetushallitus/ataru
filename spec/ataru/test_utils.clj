@@ -2,7 +2,12 @@
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.virkailija.user.organization-service :as org-service]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [ataru.db.db :as db]
+            [ataru.db.migrations :as migrations]
+            [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
+            [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]))
 
 (def virkailija-routes (->
                         (v/new-handler)
@@ -33,3 +38,35 @@
   (let [headers (:headers resp)]
     (should-not-be-nil headers)
     (should-not-contain header headers)))
+
+(defn get-latest-form
+  [form-name]
+  (if-let [form (->> (form-store/get-all-forms)
+                     (filter #(= (:name %) form-name))
+                     (first))]
+    form
+    (insert-test-form form-name)))
+
+(defn get-latest-application-id-for-form [form-name]
+  (-> (get-latest-form form-name)
+      :key
+      application-store/get-application-list-by-form
+      first
+      :id))
+
+(defn get-latest-application-secret-by-form-name [form-name]
+  (if-let [latest-application-id (get-latest-application-id-for-form form-name)]
+    (let [secret (-> latest-application-id
+                     (application-store/get-application)
+                     :secret)]
+      (println "Using application" latest-application-id "with secret" secret)
+      secret)
+    (println "No test application found. Run hakija form test first!")))
+
+(defn get-test-vars-params
+  "Used in hakija routes to get required test params instead of writing them to test url."
+  []
+  (let [test-form (get-latest-form "Testilomake")]
+    {:test-form-key                (:key test-form)
+     :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
+     :test-form-application-secret (get-latest-application-secret-by-form-name "Testilomake")}))
