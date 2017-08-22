@@ -134,6 +134,7 @@
    :haku-oid                           s/Str
    :haku-name                          s/Str
    :max-hakukohteet                    (s/maybe s/Int)
+   :is-jatkuva-haku?                   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde
    (s/optional-key :hakuaika-dates)    {:start                s/Int
                                         (s/optional-key :end) (s/maybe s/Int)

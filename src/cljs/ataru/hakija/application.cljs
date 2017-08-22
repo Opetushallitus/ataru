@@ -155,9 +155,14 @@
 (defn application-in-complete-state? [application]
   (boolean (some #{(:state application)} complete-states)))
 
+(defn application-processing-jatkuva-haku? [application haku]
+  (and (= (:state application) "processing")
+       (:is-jatkuva-haku? haku)))
+
 (defn applying-possible? [form application]
   (cond
-    (application-in-complete-state? application)
+    (or (application-in-complete-state? application)
+        (application-processing-jatkuva-haku? application (:tarjonta form)))
     false
 
     ;; When applying to hakukohde, hakuaika must be on

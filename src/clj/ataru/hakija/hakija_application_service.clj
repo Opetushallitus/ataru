@@ -44,6 +44,11 @@
   (let [state (:state (application-store/get-application-review application-key))]
     (boolean (some #{state} complete-states))))
 
+(defn processing-in-jatkuva-haku? [application-key tarjonta-info]
+  (let [state (:state (application-store/get-application-review application-key))]
+    (and (= state "processing")
+         (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
+
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
   ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
@@ -107,7 +112,8 @@
       not-allowed-reply
 
       (and is-modify?
-           (in-complete-state? (:key latest-application)))
+           (or (in-complete-state? (:key latest-application))
+               (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
       not-allowed-reply
 
       (not (:passed? validation-result))
