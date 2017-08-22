@@ -82,7 +82,7 @@
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status))
                                    (contains? #{:submitting :submitted} submit-status)
-                                   (and @editing (not @values-changed?)))
+                                   (and @editing (empty? @values-changed?)))
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}

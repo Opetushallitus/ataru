@@ -303,7 +303,11 @@
           changed? (not= value (:original-value answer))]
       (cond-> {:db (-> db
                        (update-in [:application :answers id] merge {:valid valid? :value value})
-                       (assoc-in [:application :values-changed?] changed?))}
+                       (update-in [:application :values-changed?] (fn [values]
+                                                                    (let [values (or values #{})]
+                                                                      (if changed?
+                                                                        (conj values id)
+                                                                        (disj values id))))))}
         (empty? (:rules field))
         (assoc :dispatch-n [[:application/run-rule (:rules field)]])))))
 
