@@ -100,7 +100,7 @@
    :fieldType "hakukohteet"
    :id :hakukohteet
    ; TODO localizations
-   :label {:fi "Hakemasi koulutukset"
+   :label {:fi "Hakukohteet"
            :sv ""
            :en ""}
    :params {}
