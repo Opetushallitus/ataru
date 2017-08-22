@@ -46,25 +46,33 @@
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
 (defn- hakukohde-visibility-hakukohde
-  [path hakukohde]
+  [path id hakukohde]
   (let [on-click (fn [e] (dispatch [:editor/select-hakukohde-for-visibility
                                     path
-                                    (:oid hakukohde)]))]
-    (fn [path hakukohde]
+                                    (:oid hakukohde)]))
+        name (subscribe [:editor/hakukohde-name-parts id hakukohde])]
+    (fn [path id hakukohde]
       [:li.editor-form__hakukohde-visibility-hakukohde-list-item
        {:on-click on-click}
-       [:span.editor-form__hakukohde-visibility-hakukohde-label
-        (:fi (:nimi hakukohde))]])))
+       (map-indexed (fn [i [part highlight?]]
+                      (if highlight?
+                        ^{:key (str i)}
+                        [:span.editor-form__hakukohde-visibility-hakukohde-label-highlight
+                         part]
+                        ^{:key (str i)}
+                        [:span.editor-form__hakukohde-visibility-hakukohde-label
+                         part]))
+                    @name)])))
 
 (defn- hakukohde-visibility-haku
-  [path haku]
+  [path id haku]
   [:li.editor-form__hakukohde-visibility-haku-list-item
    [:span.editor-form__hakukohde-visibility-haku-label
     (:fi (:nimi haku))]
    [:ul.editor-form__hakukohde-visibility-hakukohde-list
     (for [hakukohde (:hakukohteet haku)]
       ^{:key (:oid hakukohde)}
-      [hakukohde-visibility-hakukohde path hakukohde])]])
+      [hakukohde-visibility-hakukohde path id hakukohde])]])
 
 (defn- hakukohde-visibility-modal
   [path id]
@@ -91,7 +99,7 @@
           [:ul.editor-form__hakukohde-visibility-haku-list
            (for [[_ haku] @active-haut]
              ^{:key (:oid haku)}
-             [hakukohde-visibility-haku path haku])])]])))
+             [hakukohde-visibility-haku path id haku])])]])))
 
 (defn- hakukohde-visibility-selected
   [path oid]

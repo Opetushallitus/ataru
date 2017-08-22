@@ -60,6 +60,16 @@
         haut))
 
 (re-frame/reg-sub
+  :editor/hakukohde-name-parts
+  (fn [db [_ id hakukohde]]
+    (let [search-term (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term] "")
+          pattern (re-pattern (str "(?i)(" search-term ")"))]
+      (if (clojure.string/blank? search-term)
+        [[(:fi (:nimi hakukohde)) false]]
+        (map-indexed (fn [i part] [part (= 1 (mod i 2))])
+                     (clojure.string/split (:fi (:nimi hakukohde)) pattern))))))
+
+(re-frame/reg-sub
   :editor/hakukohde-visibility-selected-name
   (fn [db [_ oid]]
     (let [[haku hakukohde] (find-haku-and-hakukohde
