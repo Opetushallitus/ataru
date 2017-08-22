@@ -100,7 +100,7 @@
         on-click (fn [_] (dispatch [:editor/remove-hakukohde-for-visibility
                                     path oid]))]
     (fn [_ _]
-      [:li.editor-form__hakukohde-visibility-selected-list-item
+      [:li.editor-form__hakukohde-visibility-selected-list-item.animated.fadeIn
        [:span.editor-form__hakukohde-visibility-selected-label
         (if @fetching?
           [:i.zmdi.zmdi-spinner.editor-form__active-haut-spinner]
@@ -110,14 +110,12 @@
 
 (defn- hakukohde-visibility
   [path initial-content]
-  (let [on-click-show (fn [_]
-                        (dispatch [:editor/show-hakukohde-visibility-modal
-                                   (:id initial-content)]))
+  (let [id (:id initial-content)
+        on-click-show (fn [_]
+                        (dispatch [:editor/show-hakukohde-visibility-modal id]))
         on-click-hide (fn [_]
-                        (dispatch [:editor/hide-hakukohde-visibility-modal
-                                   (:id initial-content)]))
-        show-modal? (subscribe [:editor/show-hakukohde-visibility-modal
-                                (:id initial-content)])]
+                        (dispatch [:editor/hide-hakukohde-visibility-modal id]))
+        show-modal? (subscribe [:editor/show-hakukohde-visibility-modal id])]
     (fn [path initial-content]
       (let [visible-to (:belongs-to-hakukohteet initial-content)]
         [:div.editor-form__hakukohde-visibility-container

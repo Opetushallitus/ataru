@@ -36,7 +36,7 @@
 (re-frame/reg-sub
   :editor/filtered-active-haut
   (fn [db [_ id]]
-    (let [search-term (get-in db [:editor :ui id :hakukohde-visibility-modal :search-term] "")]
+    (let [search-term (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term] "")]
       (if (clojure.string/blank? search-term)
         (get-in db [:editor :active-haut :haut] {})
         (filter-hakukohteet
@@ -72,9 +72,9 @@
 (re-frame/reg-sub
   :editor/show-hakukohde-visibility-modal
   (fn [db [_ id]]
-    (get-in db [:editor :ui id :hakukohde-visibility-modal :show] false)))
+    (get-in db [:editor :ui id :hakukohde-visibility :modal :show] false)))
 
 (re-frame/reg-sub
   :editor/hakukohde-visibility-modal-search-term
   (fn [db [_ id]]
-    (get-in db [:editor :ui id :hakukohde-visibility-modal :search-term] "")))
+    (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term] "")))

@@ -466,7 +466,7 @@
 (reg-event-fx
   :editor/show-hakukohde-visibility-modal
   (fn [{db :db} [_ id]]
-    (cond-> {:db (assoc-in db [:editor :ui id :hakukohde-visibility-modal :show] true)}
+    (cond-> {:db (assoc-in db [:editor :ui id :hakukohde-visibility :modal :show] true)}
       (and (not (get-in db [:editor :active-haut :fetching?]))
            (not (contains? (get-in db [:editor :active-haut]) :haut)))
       (assoc :dispatch [:editor/refresh-active-haut]))))
@@ -474,12 +474,12 @@
 (reg-event-db
   :editor/hide-hakukohde-visibility-modal
   (fn [db [_ id]]
-    (assoc-in db [:editor :ui id :hakukohde-visibility-modal :show] false)))
+    (assoc-in db [:editor :ui id :hakukohde-visibility :modal :show] false)))
 
 (reg-event-db
   :editor/on-hakukohde-visibility-modal-search-term-change
   (fn [db [_ id search-term]]
-    (assoc-in db [:editor :ui id :hakukohde-visibility-modal :search-term]
+    (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term]
               search-term)))
 
 (reg-event-db
