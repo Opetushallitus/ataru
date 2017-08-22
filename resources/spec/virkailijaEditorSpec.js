@@ -7,12 +7,12 @@
     return testFrame().find('.editor-form__form-name-input')
   }
 
-  function editorPageIsLoaded() {
-    return elementExists(addNewFormLink())
-  }
-
   function formList() {
     return testFrame().find('.editor-form__list')
+  }
+
+  function editorPageIsLoaded() {
+    return elementExists(formList().find('a'))
   }
 
   function formListItems(n) {
@@ -80,12 +80,12 @@
 
   describe('Editor', function() {
 
-    describe('with no forms', function() {
+    describe('with fixture forms', function() {
       before(
         wait.until(editorPageIsLoaded)
       )
-      it('has empty form listing', function() {
-        expect(formListItems()).to.have.length(0)
+      it('has 4 fixture forms', function() {
+        expect(formListItems()).to.have.length(4)
       })
     })
 
