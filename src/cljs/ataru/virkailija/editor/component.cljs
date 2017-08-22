@@ -75,7 +75,7 @@
         on-change (fn [e] (dispatch [:editor/on-hakukohde-visibility-modal-search-term-change
                                      id (.-value (.-target e))]))]
     (fn [path id]
-      [:div
+      [:div.editor-form__hakukohde-visibility-modal-wrapper
        [:div.editor-form__hakukohde-visibility-modal-arrow-up]
        [:div.editor-form__hakukohde-visibility-modal
         [:div.editor-form__hakukohde-visibility-modal-input-row
