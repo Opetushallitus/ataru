@@ -281,8 +281,7 @@
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
            @languages
-           :header? true)
-         [info-addon path]]
+           :header? true)]
         [:div.editor-form__button-wrapper
          [:header.editor-form__component-item-header size-label]
          [:div.editor-form__button-group
@@ -311,7 +310,8 @@
          [required-checkbox path initial-content]
          (when-not (= "Tekstialue" header-label)
            [repeater-checkbox path initial-content])]
-        [hakukohde-visibility path initial-content]]])))
+        [hakukohde-visibility path initial-content]]
+       [info-addon path]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
@@ -425,11 +425,11 @@
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
              languages
-             :header? true)
-            [info-addon path initial-content]]
+             :header? true)]
            [:div.editor-form__checkbox-wrapper
             [required-checkbox path initial-content]]
            [hakukohde-visibility path initial-content]]]
+         [info-addon path initial-content]
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-options_wrapper
            [:div.editor-form--padded
@@ -568,11 +568,11 @@
           (fn [lang]
             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
           @languages
-          :header? true)
-         [info-addon path]]
+          :header? true)]
         [:div.editor-form__checkbox-wrapper
          [repeater-checkbox path content]]
         [hakukohde-visibility path content]]
+       [info-addon path]
        [:div.editor-form__adjacent-fieldset-container
         children
         (when (-> (count children) (< 3))
