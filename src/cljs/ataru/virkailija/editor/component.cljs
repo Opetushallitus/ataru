@@ -531,15 +531,14 @@
        {:class @animation-effect}
        [text-header "Infoteksti" path]
        [:div.editor-form__component-row-wrapper
-        [:div
-         [:div.editor-form__text-field-wrapper
-          [:header.editor-form__component-item-header "Otsikko"]
-          (input-fields-with-lang
-           (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
-         [:div.editor-form__text-field-wrapper.infoelement
+        [:div.editor-form__text-field-wrapper
+         [:header.editor-form__component-item-header "Otsikko"]
+         (input-fields-with-lang
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)
+         [:div.infoelement
           [:header.editor-form__component-item-header "Teksti"]
           (->> (input-fields-with-lang
                 (fn [lang]
@@ -551,8 +550,8 @@
                (map (fn [field]
                       (into field [[:div.editor-form__markdown-anchor
                                     (markdown-help)]]))))]]
-        [:div.editor-form__info-element-right-column
-         [hakukohde-visibility path initial-content]]]])))
+        [:div.editor-form__checkbox-wrapper]
+        [hakukohde-visibility path initial-content]]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
