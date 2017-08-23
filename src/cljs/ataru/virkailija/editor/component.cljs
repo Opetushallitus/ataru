@@ -541,11 +541,3 @@
         [:div.editor-form__single-checkbox-wrapper
          [required-checkbox path content]]]
        [attachment-textarea path]])))
-
-(defn hakukohteet [content path]
-  (fn [content path]
-    [:div.editor-form__module-wrapper
-     [:header.editor-form__module-header
-      [:span.editor-form__module-header-label (get-in content [:label :fi])]
-      " "
-      [:span (get-in content [:label-amendment :fi])]]]))
