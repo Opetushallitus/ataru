@@ -520,8 +520,8 @@
                                                 :valid  false
                                                 :status :uploading}))
                                            db'))
-                              (assoc-in db' [:application :answers (keyword component-id) :valid] false)
-                              (assoc-in db' [:application :answers (keyword component-id) :too-big] false))]
+                              (update-in db' [:application :answers (keyword component-id)] merge {:valid   false
+                                                                                                   :too-big false}))]
       {:db         db
        :dispatch-n dispatch-list})))
 
