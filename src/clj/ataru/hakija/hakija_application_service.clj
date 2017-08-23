@@ -5,6 +5,7 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.application-email-confirmation :as application-email]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+    [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.tarjonta-service.hakukohde :as hakukohde]
@@ -88,16 +89,19 @@
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
-  (let [form               (form-store/fetch-by-id (:form application))
-        tarjonta-info      (when (:haku application)
+  (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
-        form-with-tarjonta (hakukohde/populate-hakukohde-answer-options form tarjonta-info)
+        form               (-> application
+                               (:form)
+                               (form-store/fetch-by-id)
+                               (hakija-form-service/inject-hakukohde-component-if-missing)
+                               (hakukohde/populate-hakukohde-answer-options tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-application-by-secret (:secret application))
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
-        validation-result  (validator/valid-application? final-application form-with-tarjonta)]
+        validation-result  (validator/valid-application? final-application form)]
     (cond
       (and (:haku application)
            (empty? (:hakukohde application)))

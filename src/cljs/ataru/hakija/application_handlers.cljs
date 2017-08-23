@@ -26,6 +26,7 @@
                  (assoc-in [:application :editing?] true)
                  (assoc-in [:application :secret] secret)
                  (assoc-in [:application :state] state)
+                 (assoc-in [:application :hakukohde] hakukohde)
                  (assoc-in [:form :selected-language] (or (keyword lang) :fi))
                  (assoc-in [:form :hakukohde-name] hakukohde-name))
    :dispatch (if haku
@@ -188,6 +189,18 @@
                                            (:cannot-view ssn))
                                       (not (clojure.string/blank? (:value ssn)))))})))
 
+(defn- populate-hakukohde-answers-if-necessary
+  "Populate hakukohde answers for legacy applications where only top-level hakukohde array exists"
+  [db]
+  (let [hakukohteet (-> db :application :hakukohde)
+        hakukohde-answers (-> db :application :answers :hakukohteet :value)]
+    (if (and (not-empty hakukohteet)
+             (empty? hakukohde-answers))
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values] (map (fn [oid] {:valid true :value oid}) hakukohteet))
+          (assoc-in [:application :answers :hakukohteet :valid] true))
+      db)))
+
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
@@ -222,7 +235,8 @@
                         answers)))
                   answers
                   submitted-answers)))
-      set-have-finnish-ssn
+      (populate-hakukohde-answers-if-necessary)
+      (set-have-finnish-ssn)
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
