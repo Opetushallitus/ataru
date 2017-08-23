@@ -8,7 +8,8 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [clojure.data :as d]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -427,6 +428,16 @@
             db
             (:followups option))))
 
+(defn- set-multiple-choice-modified [db id]
+  (let [{original-value :original-value new-value :value} (-> db :application :answers id)
+        [new-diff original-diff _] (d/diff new-value original-value)]
+    (update-in db [:application :values-changed?] (fn [values]
+                                                    (let [values (or values #{})]
+                                                      (if (and (empty? new-diff)
+                                                               (empty? original-diff))
+                                                        (disj values id)
+                                                        (conj values id)))))))
+
 (reg-event-db
   :application/toggle-multiple-choice-option
   (fn [db [_ field-descriptor option]]
@@ -436,6 +447,7 @@
           (update-in [:application :answers id]
                      (fn [answer]
                        (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
+          (set-multiple-choice-modified id)
           (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
