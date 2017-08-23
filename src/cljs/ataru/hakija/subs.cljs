@@ -3,8 +3,7 @@
   (:require [re-frame.core :as re-frame]
             [ataru.hakija.application :refer [answers->valid-status
                                               wrapper-sections-with-validity
-                                              applying-possible?]]
-            [ataru.util :refer [flatten-form-fields]]))
+                                              applying-possible?]]))
 
 (re-frame/reg-sub
   :state-query
@@ -16,7 +15,7 @@
   (fn [db]
     (answers->valid-status (-> db :application :answers)
                            (-> db :application :ui)
-                           (flatten-form-fields (-> db :form :content)))))
+                           (-> db :form :content))))
 
 (re-frame/reg-sub
   :application/wrapper-sections

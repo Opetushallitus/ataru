@@ -148,9 +148,9 @@
     (is (= {:valid true :invalid-fields '()} result))))
 
 (deftest answers->valid-status-gives-true-for-all-valid-and-some-extra-questions
-  (let [answers {:one {:valid true} :two {:valid true} :three {:valid true} :four {:valid false}}
-        flattened-form [{:id "one"} {:id "two"} {:id "three"}]
-        result (answers->valid-status answers nil flattened-form)]
+  (let [answers      {:one {:valid true} :two {:valid true} :three {:valid true} :four {:valid false}}
+        form-content [{:id "one"} {:id "two"} {:id "three"}]
+        result       (answers->valid-status answers nil form-content)]
     (is (= {:valid true :invalid-fields '()} result))))
 
 (def application-data-to-submit {:answers
