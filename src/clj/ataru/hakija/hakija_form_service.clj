@@ -34,7 +34,7 @@
         form          (when (= 1 (count form-keys))
                         (fetch-form-by-key (first form-keys)))]
     (when (not tarjonta-info)
-      (throw (Exception. (str "No haku found for haku" haku-oid "and keys" (pr-str form-keys)))))
+      (throw (Exception. (str "No haku found for haku " haku-oid " and keys " (pr-str form-keys)))))
     (if form
       (-> form
           ; remove hakukohteet from form tarjonta for deduplication
