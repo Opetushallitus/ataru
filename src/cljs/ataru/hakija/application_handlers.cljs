@@ -328,7 +328,7 @@
     (update-in db [:application :answers id :values]
                (fnil assoc []) idx {:valid valid? :value value})))
 
-(defn- set-multiple-choice-modified [db id]
+(defn- set-multi-value-changed [db id]
   (let [{original-value :original-value new-value :value} (-> db :application :answers id)
         [new-diff original-diff _] (d/diff new-value original-value)]
     (update-in db [:application :values-changed?] (fn [values]
@@ -351,7 +351,7 @@
         (update-in [:application :answers id]
                    merge
                    {:valid valid? :value (mapv :value values)})
-        (set-multiple-choice-modified id))))
+        (set-multi-value-changed id))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -453,7 +453,7 @@
           (update-in [:application :answers id]
                      (fn [answer]
                        (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
-          (set-multiple-choice-modified id)
+          (set-multi-value-changed id)
           (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
