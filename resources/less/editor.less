@@ -855,12 +855,25 @@ form > div > .editor-form__component-wrapper {
   margin-left: 20px;
 }
 
+.editor-form__text-field:focus ~ .editor-form__markdown-anchor {
+  display: block;
+}
+
+textarea.editor-form__text-field ~ .editor-form__markdown-anchor {
+  height: 115px;
+  display: none;
+}
+
+input.editor-form__text-field ~ .editor-form__markdown-anchor {
+  height: 42px;
+  display: none;
+}
+
 .editor-form__markdown-help {
   font-size: 14px;
   text-align: center;
   width: 210px;
-  position: relative;
-  display: none;
+  position: absolute;
   align-self: flex-start;
 }
 

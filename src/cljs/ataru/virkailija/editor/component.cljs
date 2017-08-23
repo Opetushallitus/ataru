@@ -259,7 +259,8 @@
                    [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
                  @languages)
                (map (fn [field]
-                      (into field [(markdown-help)]))))])])))
+                      (into field [[:div.editor-form__markdown-anchor
+                                    (markdown-help)]]))))])])))
 
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
@@ -547,7 +548,8 @@
                @languages
                :header? true)
              (map (fn [field]
-                    (into field [(markdown-help)]))))]])))
+                    (into field [[:div.editor-form__markdown-anchor
+                                  (markdown-help)]]))))]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
@@ -622,7 +624,8 @@
                 @languages
                 :header? true)
               (map (fn [field]
-                     (into field [(markdown-help)])))))])))
+                     (into field [[:div.editor-form__markdown-anchor
+                                   (markdown-help)]])))))])))
 
 (defn attachment [content path]
   (let [languages        (subscribe [:editor/languages])
