@@ -13,7 +13,9 @@
 (re-frame/reg-sub
   :application/valid-status
   (fn [db]
-    (answers->valid-status (-> db :application :answers) (-> db :application :ui))))
+    (answers->valid-status (-> db :application :answers)
+                           (-> db :application :ui)
+                           (-> db :form :content))))
 
 (re-frame/reg-sub
   :application/wrapper-sections
