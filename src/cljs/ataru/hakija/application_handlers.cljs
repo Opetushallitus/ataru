@@ -8,7 +8,8 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [clojure.data :as d]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -175,7 +176,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"textField" "attachment" "hakukohteet"})
+(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -254,6 +255,20 @@
                           {id {:visible? (or has-value? has-children?)}})))
                  (reduce merge))))
 
+(defn- original-values->answers [db]
+  (cond-> db
+    (or (-> db :application :secret)
+        (-> db :application :virkailija-secret))
+    (update-in [:application :answers]
+               (partial reduce-kv
+                        (fn [answers answer-key {:keys [value values] :as answer}]
+                          (let [value  (if values
+                                         (map :value values)
+                                         value)
+                                answer (assoc answer :original-value value)]
+                            (assoc answers answer-key answer)))
+                        {}))))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))]
@@ -266,7 +281,8 @@
              (assoc-in [:application :show-hakukohde-search] true)
              (assoc :wrapper-sections (extract-wrapper-sections form))
              (merge-submitted-answers answers)
-             set-followup-visibility-to-false)
+             (original-values->answers)
+             (set-followup-visibility-to-false))
      :dispatch [:application/hide-hakukohteet-if-no-tarjonta]}))
 
 (reg-event-db
@@ -295,15 +311,21 @@
 (reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value]]
-    (let [id (keyword (:id field))
-          answers (get-in db [:application :answers])
-          answer (get answers id)
-          valid? (or (:cannot-view answer)
-                     (:cannot-edit answer)
-                     (every? #(validator/validate % value answers field)
-                             (:validators field)))]
-      {:db (update-in db [:application :answers id]
-                      merge {:valid valid? :value value})
+    (let [id       (keyword (:id field))
+          answers  (get-in db [:application :answers])
+          answer   (get answers id)
+          valid?   (or (:cannot-view answer)
+                       (:cannot-edit answer)
+                       (every? #(validator/validate % value answers field)
+                               (:validators field)))
+          changed? (not= value (:original-value answer))]
+      {:db         (-> db
+                       (update-in [:application :answers id] merge {:valid valid? :value value})
+                       (update-in [:application :values-changed?] (fn [values]
+                                                                    (let [values (or values #{})]
+                                                                      (if changed?
+                                                                        (conj values id)
+                                                                        (disj values id))))))
        :dispatch-n (if (empty? (:rules field))
                      []
                      [[:application/run-rule (:rules field)]])})))
@@ -320,17 +342,34 @@
     (update-in db [:application :answers id :values]
                (fnil assoc []) idx {:valid valid? :value value})))
 
+(defn- set-multi-value-changed [db id & [subpath]]
+  (let [{:keys [original-value value values]} (-> db :application :answers id)
+        new-value (cond->> (or values value)
+                    (vector? subpath)
+                    (map #(get-in % subpath)))
+        [new-diff original-diff _] (d/diff new-value
+                                           original-value)]
+    (update-in db [:application :values-changed?] (fn [values]
+                                                    (let [values (or values #{})]
+                                                      (if (and (empty? new-diff)
+                                                               (empty? original-diff))
+                                                        (disj values id)
+                                                        (conj values id)))))))
+
 (defn- set-repeatable-field-value
   [db field-descriptor]
-  (let [id (keyword (:id field-descriptor))
-        values (get-in db [:application :answers id :values])
+  (let [id        (keyword (:id field-descriptor))
+        values    (get-in db [:application :answers id :values])
         required? (some (partial = "required")
                         (:validators field-descriptor))
-        valid? (if (empty? values)
-                 (not required?)
-                 (every? :valid values))]
-    (update-in db [:application :answers id]
-               merge {:valid valid? :value (mapv :value values)})))
+        valid?    (if (empty? values)
+                    (not required?)
+                    (every? :valid values))]
+    (-> db
+        (update-in [:application :answers id]
+                   merge
+                   {:valid valid? :value (mapv :value values)})
+        (set-multi-value-changed id [:value]))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -432,6 +471,7 @@
           (update-in [:application :answers id]
                      (fn [answer]
                        (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
+          (set-multi-value-changed id)
           (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
@@ -498,8 +538,8 @@
                                                 :valid  false
                                                 :status :uploading}))
                                            db'))
-                              (assoc-in db' [:application :answers (keyword component-id) :valid] false)
-                              (assoc-in db' [:application :answers (keyword component-id) :too-big] false))]
+                              (update-in db' [:application :answers (keyword component-id)] merge {:valid   false
+                                                                                                   :too-big false}))]
       {:db         db
        :dispatch-n dispatch-list})))
 
@@ -519,7 +559,8 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                    {:value response :valid true :status :ready})
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
@@ -551,7 +592,8 @@
         (update-in [:application :answers (keyword component-id) :values]
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (reg-event-fx
   :application/remove-attachment
