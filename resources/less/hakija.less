@@ -361,13 +361,13 @@
 .application__form-text-input-box {
   height: 43px;
   padding: 0;
-  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border: 1px solid #C1C1C1;
   border-radius: 2px;
   position: relative;
 }
 
 .application__form-text-input-in-box {
+  background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   font-size: 16px;
   border: 0;
   padding: 8px;
@@ -865,6 +865,7 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-selected-list {
   margin-right: 30px;
+  margin-top: -15px;
 }
 
 .application__hakukohde-selection-open-search {
@@ -900,6 +901,7 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-selection-search-container {
   border: 1px solid @separator-color;
+  border-radius: 4px;
   box-shadow: @modal-shadow;
   padding: 20px;
   position: relative;
@@ -967,6 +969,7 @@ and (max-width: @desktop-content-width) {
   position: absolute;
   right: 20px;
   top: 25px;
+  color: @pale-blue;
 }
 
 .application__hakukohde-row--search-hit-selected {
@@ -979,7 +982,7 @@ and (max-width: @desktop-content-width) {
 
 .application__hakukohde-select-button {
   border-radius: 3px;
-  padding: 5px 20px;
+  padding: 8px 20px;
   color: @white;
   background-color: @pale-blue;
 }
