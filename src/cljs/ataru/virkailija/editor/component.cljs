@@ -405,7 +405,7 @@
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
-        value            (subscribe [:editor/get-component-value path]) 
+        value            (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
       (let [languages  @languages
@@ -417,38 +417,39 @@
                         "singleChoice"   "Painikkeet, yksi valittavissa"
                         "multipleChoice" "Lista, monta valittavissa")]
            [text-header header path])
-         [:div.editor-form__multi-question-wrapper
-          [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header "Kysymys"]
-           (input-fields-with-lang
+         [:div.editor-form__component-row-wrapper
+          [:div.editor-form__multi-question-wrapper
+           [:div.editor-form__text-field-wrapper
+            [:header.editor-form__component-item-header "Kysymys"]
+            (input-fields-with-lang
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
              languages
-             :header? true)]
-          [:div.editor-form__checkbox-wrapper
-           [required-checkbox path initial-content]]]
+             :header? true)
+            [info-addon path initial-content]]
+           [:div.editor-form__checkbox-wrapper
+            [required-checkbox path initial-content]]
+           [hakukohde-visibility path initial-content]]]
+         [:div.editor-form__component-row-wrapper
+          [:div.editor-form__multi-options_wrapper
+           [:div.editor-form--padded
+            [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
+            (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
 
-         [info-addon path initial-content]
-
-         [:div.editor-form__multi-options_wrapper
-          [:div.editor-form--padded
-           [:header.editor-form__component-item-header "Vastausvaihtoehdot"]
-           (when-not (= field-type "singleChoice") [dropdown-multi-options path options-koodisto])]
-
-          (when (nil? @options-koodisto)
-            (seq [
-                  ^{:key "options-input"}
-                  [:div.editor-form__multi-options-container
-                   (map-indexed (fn [idx _]
-                                  (dropdown-option idx path languages :include-followup? (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"])))
-                     (:options @value))]
-                  ^{:key "options-input-add"}
-                  [:div.editor-form__add-dropdown-item
-                   [:a
-                    {:on-click (fn [evt]
-                                 (.preventDefault evt)
-                                 (dispatch [:editor/add-dropdown-option path]))}
-                    [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]))))
+           (when (nil? @options-koodisto)
+             (seq [
+                   ^{:key "options-input"}
+                   [:div.editor-form__multi-options-container
+                    (map-indexed (fn [idx _]
+                                   (dropdown-option idx path languages :include-followup? (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"])))
+                                 (:options @value))]
+                   ^{:key "options-input-add"}
+                   [:div.editor-form__add-dropdown-item
+                    [:a
+                     {:on-click (fn [evt]
+                                  (.preventDefault evt)
+                                  (dispatch [:editor/add-dropdown-option path]))}
+                     [:i.zmdi.zmdi-plus-square] " Lisää"]]]))]]]))))
 
 (defn drag-n-drop-spacer [path content]
   (let [expanded? (r/atom false)]
