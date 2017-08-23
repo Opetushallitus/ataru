@@ -24,7 +24,9 @@
                                 (map :value hakukohde-options)
                                 (->> hakukohde-options
                                      (filter #(re-find query-pattern
-                                                       (get-in % [:label lang] "")))
+                                                       (str
+                                                         (get-in % [:label lang] "")
+                                                         (get-in % [:description lang] ""))))
                                      (map :value)))]
         (assoc-in db [:application :hakukohde-hits] results))
       db)))

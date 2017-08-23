@@ -3,6 +3,51 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]))
 
+(defn index-of [s val from-index]
+  (clojure.string/index-of (clojure.string/lower-case s)
+                           (clojure.string/lower-case val)
+                           from-index))
+
+(defn- should-search? [search-term]
+  (> (count search-term) 1))
+
+(defn match-text [text search-term]
+  (if-not (should-search? search-term)
+    [{:text text :hilight false}]
+    (loop [res           []
+           current-index 0]
+      (let [match-index (index-of text search-term current-index)]
+        (cond
+          (nil? match-index)
+          (conj res {:text    (subs text current-index)
+                     :hilight false})
+
+          (< current-index match-index)
+          (recur (conj res
+                       {:text    (subs text current-index match-index)
+                        :hilight false}
+                       {:text    (subs text match-index (+ (count search-term) match-index))
+                        :hilight true})
+                 (+ match-index (count search-term)))
+
+          :else
+          (recur (conj res {:text    (subs text current-index (+ (count search-term) current-index))
+                            :hilight true})
+                 (+ current-index (count search-term))))))))
+
+(defn hilighted-text->span [idx {:keys [text hilight]}]
+  (let [key (str "hilight-" idx)]
+    [:span
+     (cond-> {:key key}
+             (true? hilight)
+             (assoc :class "application__hakukohde-row--search-hit-highlight"))
+     text]))
+
+(defn hilight-text [text hilight-text]
+  (if (pos? (count hilight-text))
+    (map-indexed hilighted-text->span (match-text text hilight-text))
+    text))
+
 (defn- hakukohde-remove-event-handler [e]
   (dispatch [:application/hakukohde-remove-selection
              (.getAttribute (.-target e) "data-hakukohde-oid")]))
@@ -47,14 +92,15 @@
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
-  (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])]
+  (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])
+        search-term @(subscribe [:application/hakukohde-query])]
     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
      {:class (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")}
      [:div.application__hakukohde-row-text-container
       [:div.application__hakukohde-selected-row-header
-       @(subscribe [:application/hakukohde-label hakukohde-oid])]
+       (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
       [:div.application__hakukohde-selected-row-description
-       @(subscribe [:application/hakukohde-description hakukohde-oid])]]
+       (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
      [:div.application__hakukohde-row-button-container
       (if hakukohde-selected?
         [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
