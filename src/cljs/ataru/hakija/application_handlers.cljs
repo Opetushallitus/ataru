@@ -247,8 +247,11 @@
         (-> db :application :virkailija-secret))
     (update-in [:application :answers]
                (partial reduce-kv
-                        (fn [answers answer-key {:keys [value] :as answer}]
-                          (let [answer (assoc answer :original-value value)]
+                        (fn [answers answer-key {:keys [value values] :as answer}]
+                          (let [value  (if values
+                                         (map :value values)
+                                         value)
+                                answer (assoc answer :original-value value)]
                             (assoc answers answer-key answer)))
                         {}))))
 
