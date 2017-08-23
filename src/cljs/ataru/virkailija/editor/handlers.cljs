@@ -141,9 +141,7 @@
 (reg-event-fx
   :editor/refresh-active-haut
   (fn [{db :db} _]
-    (let [organization-oids ["1.2.246.562.10.82388989657"
-                             "1.2.246.562.10.53814745062"];;(map :oid (get-in db [:editor :user-info :organizations] []))
-          ]
+    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
       {:db (assoc-in db [:editor :active-haut :fetching?] true)
        :refresh-active-haut [organization-oids
                              #(dispatch [:editor/set-active-haut %])
