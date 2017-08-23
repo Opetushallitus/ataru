@@ -60,7 +60,7 @@
   (dispatch [:application/hakukohde-query-change (.-value (.-target e))]))
 
 (defn- hakukohde-query-clear-event-handler [_]
-  (dispatch [:application/hakukohde-query-clear]))
+  (dispatch [:application/hakukohde-query-change ""]))
 
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))

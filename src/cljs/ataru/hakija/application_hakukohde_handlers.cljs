@@ -40,13 +40,6 @@
                           :dispatch [:application/hakukohde-query-process hakukohde-query]}}))
 
 (reg-event-db
-  :application/hakukohde-query-clear
-  (fn [db _]
-    (-> db
-        (assoc-in [:application :hakukohde-query] "")
-        (assoc-in [:application :hakukohde-hits] []))))
-
-(reg-event-db
   :application/hakukohde-add-selection
   (fn [db [_ hakukohde-oid]]
     (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
