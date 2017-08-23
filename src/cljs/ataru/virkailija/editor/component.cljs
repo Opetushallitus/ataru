@@ -634,18 +634,19 @@
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
-      {:class @animation-effect}
+       {:class @animation-effect}
+       [text-header "Liitepyyntö" path :component-wrapped? true]
        [:div.editor-form__component-row-wrapper
-        [text-header "Liitepyyntö" path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"]
          (input-fields-with-lang
-           (fn attachment-file-name-input [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
+          (fn attachment-file-name-input [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)]
         [:div.editor-form__single-checkbox-wrapper
-         [required-checkbox path content]]]
+         [required-checkbox path content]]
+        [hakukohde-visibility path content]]
        [attachment-textarea path]])))
 
 (defn hakukohteet [content path]
