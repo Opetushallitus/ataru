@@ -413,7 +413,7 @@ section.editor-form > div > .editor-form__component-wrapper {
   margin-right: 31px;
   display: flex;
   flex-flow: column nowrap;
-  flex-basis: 390px;
+  flex: initial;
 }
 
 .editor-form__text-field {
@@ -513,6 +513,7 @@ form > div > .editor-form__component-wrapper {
 .editor-form__button-wrapper {
   display: flex;
   flex-flow: column nowrap;
+  flex: initial;
   padding: 10px 14px 20px;
   margin-right: 31px;
 }
@@ -572,7 +573,7 @@ form > div > .editor-form__component-wrapper {
 
 .editor-form__checkbox-wrapper {
   display: flex;
-  flex: 1;
+  flex: auto;
   flex-flow: column nowrap;
   padding: 10px 14px 20px;
   justify-content: flex-start;
@@ -933,8 +934,10 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
 }
 
-.editor-form__hakukohde-visibility-container {
-  width: 80%;
+.editor-form__hakukohde-visibility-wrapper {
+  flex: initial;
+  width: 700px;
+  padding: 10px 14px 20px;
 }
 
 .editor-form__hakukohde-visibility-selected-list {

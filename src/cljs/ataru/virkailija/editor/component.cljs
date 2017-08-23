@@ -131,7 +131,7 @@
         show-modal? (subscribe [:editor/show-hakukohde-visibility-modal id])]
     (fn [path initial-content]
       (let [visible-to (:belongs-to-hakukohteet initial-content)]
-        [:div.editor-form__hakukohde-visibility-container
+        [:div.editor-form__hakukohde-visibility-wrapper
          [:span.editor-form__hakukohde-visibility-label
           "Näkyvyys lomakkeella: "]
          [:span.editor-form__hakukohde-visible-to-label
@@ -272,16 +272,17 @@
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-      {:class @animation-effect}
+       {:class @animation-effect}
+       [text-header header-label path :component-wrapped? true]
        [:div.editor-form__component-row-wrapper
-        [text-header header-label path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
            (fn [lang]
              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
            @languages
-           :header? true)]
+           :header? true)
+         [info-addon path]]
         [:div.editor-form__button-wrapper
          [:header.editor-form__component-item-header size-label]
          [:div.editor-form__button-group
@@ -309,10 +310,8 @@
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not (= "Tekstialue" header-label)
-           [repeater-checkbox path initial-content])
-         [hakukohde-visibility path initial-content]]]
-
-       [info-addon path]])))
+           [repeater-checkbox path initial-content])]
+        [hakukohde-visibility path initial-content]]])))
 
 (defn text-field [initial-content path]
   [text-component initial-content path :header-label "Tekstikenttä" :size-label "Tekstikentän koko"])
