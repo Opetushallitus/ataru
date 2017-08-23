@@ -1058,7 +1058,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 
 .editor-form__hakukohde-visibility-hakukohde-list {
   list-style: none;
-  padding-left: 0px;
+  padding-left: 24px;
   padding-top: 14px;
 }
 
@@ -1071,14 +1071,10 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 }
 
 .editor-form__hakukohde-visibility-hakukohde-list-item {
-  padding-left: 16px;
   padding-bottom: 12px;
+  list-style: none;
   &.selected {
-    padding-left: 0px;
-  }
-  &.selected:before {
-    content: url('/lomake-editori/images/icon_check.png');
-    padding-right: 6px;
+    list-style-image: url('/lomake-editori/images/icon_check.png');
   }
   &:last-child {
     padding-bottom: 0px;
