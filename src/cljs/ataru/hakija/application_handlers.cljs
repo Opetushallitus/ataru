@@ -328,9 +328,13 @@
     (update-in db [:application :answers id :values]
                (fnil assoc []) idx {:valid valid? :value value})))
 
-(defn- set-multi-value-changed [db id]
-  (let [{original-value :original-value new-value :value} (-> db :application :answers id)
-        [new-diff original-diff _] (d/diff new-value original-value)]
+(defn- set-multi-value-changed [db id & [subpath]]
+  (let [{:keys [original-value value values]} (-> db :application :answers id)
+        new-value (cond->> (or values value)
+                    (vector? subpath)
+                    (map #(get-in % subpath)))
+        [new-diff original-diff _] (d/diff new-value
+                                           original-value)]
     (update-in db [:application :values-changed?] (fn [values]
                                                     (let [values (or values #{})]
                                                       (if (and (empty? new-diff)
@@ -351,7 +355,7 @@
         (update-in [:application :answers id]
                    merge
                    {:valid valid? :value (mapv :value values)})
-        (set-multi-value-changed id))))
+        (set-multi-value-changed id [:value]))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -541,7 +545,8 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                    {:value response :valid true :status :ready})
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
@@ -573,7 +578,8 @@
         (update-in [:application :answers (keyword component-id) :values]
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (reg-event-fx
   :application/remove-attachment
