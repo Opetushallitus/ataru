@@ -559,24 +559,22 @@
         animation-effect (fade-out-effect path)]
     (fn [content path children]
       [:div.editor-form__component-wrapper
-      {:class @animation-effect}
+       {:class @animation-effect}
+       [text-header "Vierekkäiset tekstikentät" path :component-wrapped? true]
        [:div.editor-form__component-row-wrapper
-        [text-header "Vierekkäiset tekstikentät" path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
          (input-fields-with-lang
-           (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)
+         [info-addon path]]
         [:div.editor-form__checkbox-wrapper
-         [repeater-checkbox path content]]]
-
-       [info-addon path]
-
+         [repeater-checkbox path content]]
+        [hakukohde-visibility path content]]
        [:div.editor-form__adjacent-fieldset-container
         children
-
         (when (-> (count children) (< 3))
           [toolbar/adjacent-fieldset-toolbar
            (concat path [:children])
@@ -588,18 +586,19 @@
         animation-effect (fade-out-effect path)]
     (fn [content path]
       [:div.editor-form__component-wrapper
-      {:class @animation-effect}
+       {:class @animation-effect}
+       [text-header "Tekstikenttä" path :draggable false :component-wrapped? true]
        [:div.editor-form__component-row-wrapper
-        [text-header "Tekstikenttä" path :draggable false :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
-           (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+          @languages
+          :header? true)]
         [:div.editor-form__checkbox-wrapper
-         [required-checkbox path content]]]])))
+         [required-checkbox path content]]
+        [hakukohde-visibility path content]]])))
 
 (defn attachment-textarea [path]
   (let [id        (util/new-uuid)
