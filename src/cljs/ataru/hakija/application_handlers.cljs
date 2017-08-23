@@ -328,17 +328,30 @@
     (update-in db [:application :answers id :values]
                (fnil assoc []) idx {:valid valid? :value value})))
 
+(defn- set-multiple-choice-modified [db id]
+  (let [{original-value :original-value new-value :value} (-> db :application :answers id)
+        [new-diff original-diff _] (d/diff new-value original-value)]
+    (update-in db [:application :values-changed?] (fn [values]
+                                                    (let [values (or values #{})]
+                                                      (if (and (empty? new-diff)
+                                                               (empty? original-diff))
+                                                        (disj values id)
+                                                        (conj values id)))))))
+
 (defn- set-repeatable-field-value
   [db field-descriptor]
-  (let [id (keyword (:id field-descriptor))
-        values (get-in db [:application :answers id :values])
+  (let [id        (keyword (:id field-descriptor))
+        values    (get-in db [:application :answers id :values])
         required? (some (partial = "required")
                         (:validators field-descriptor))
-        valid? (if (empty? values)
-                 (not required?)
-                 (every? :valid values))]
-    (update-in db [:application :answers id]
-               merge {:valid valid? :value (mapv :value values)})))
+        valid?    (if (empty? values)
+                    (not required?)
+                    (every? :valid values))]
+    (-> db
+        (update-in [:application :answers id]
+                   merge
+                   {:valid valid? :value (mapv :value values)})
+        (set-multiple-choice-modified id))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -430,16 +443,6 @@
     (reduce #(set-field-visibility %1 %2 selected?)
             db
             (:followups option))))
-
-(defn- set-multiple-choice-modified [db id]
-  (let [{original-value :original-value new-value :value} (-> db :application :answers id)
-        [new-diff original-diff _] (d/diff new-value original-value)]
-    (update-in db [:application :values-changed?] (fn [values]
-                                                    (let [values (or values #{})]
-                                                      (if (and (empty? new-diff)
-                                                               (empty? original-diff))
-                                                        (disj values id)
-                                                        (conj values id)))))))
 
 (reg-event-db
   :application/toggle-multiple-choice-option
