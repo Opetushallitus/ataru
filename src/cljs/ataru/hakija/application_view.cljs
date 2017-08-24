@@ -41,7 +41,7 @@
         apply-dates      (when haku-name
                            (if (and apply-start-date apply-end-date)
                              (str (:application-period translations)
-                                  ": "
+                                  " "
                                   (unparse date-format (from-long apply-start-date))
                                   " - "
                                   (unparse date-format (from-long apply-end-date))

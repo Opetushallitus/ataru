@@ -22,10 +22,11 @@
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(selectedHakukohteet().length).to.equal(1)
         expect(hakukohdeSearchInput().is(':visible')).to.equal(false)
-        expect(selectedHakukohdeName(selectedHakukohteet()[0])).to.equal('Ajoneuvonosturinkuljettajan ammattitutkinto')
+        // \xa0 == &nbsp;
+        expect(selectedHakukohdeName(selectedHakukohteet()[0])).to.equal('Ajoneuvonosturinkuljettajan ammattitutkinto –\xa0Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie')
       })
     })
-  });
+  })
 
   describe('hakemus by haku with multiple hakukohde', function() {
     describe('form loads', function () {
@@ -119,7 +120,7 @@
       )
       it('shows readonly application with selected data', function() {
         var hakukohdeValues = testFrame().find('.application__hakukohde-selected-list').text()
-        expect(hakukohdeValues).to.equal('Testihakukohde 2Tarkenne BTestihakukohde 1Tarkenne A')
+        expect(hakukohdeValues).to.equal('Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne BTestihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A')
 
         var otherValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
         var expectedOtherValues = ["Etunimi Tokanimi",

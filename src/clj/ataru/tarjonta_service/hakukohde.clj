@@ -32,9 +32,9 @@
   (assoc m :fi (or (:fi m) (:en m) (:sv m))))
 
 (defn- hakukohde->option
-  [{:keys [oid name koulutukset]}]
-  {:value oid
-   :label (ensure-finnish name)
+  [{:keys [oid name koulutukset tarjoaja-name]}]
+  {:value       oid
+   :label       (merge-with #(str %1 " – " %2) (ensure-finnish name) (ensure-finnish tarjoaja-name))
    :description (ensure-finnish (koulutukset->str koulutukset))})
 
 (defn- populate-hakukohteet-field

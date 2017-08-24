@@ -61,7 +61,7 @@ function personInfoModule() {
 }
 
 function selectedHakukohdeName(hakukohdeRow) {
-  return $(hakukohdeRow).find('.application__hakukohde-selected-row-header')[0].textContent
+  return $(hakukohdeRow).find('.application__hakukohde-selected-row-header').first().text()
 }
 
 function hasFormField(fieldId) {
