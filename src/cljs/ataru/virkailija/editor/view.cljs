@@ -196,7 +196,8 @@
 
 (defn form-in-use-warning
   [form]
-  (let [forms-in-use (subscribe [:state-query [:editor :forms-in-use]])]
+  (let [forms-in-use         (subscribe [:state-query [:editor :forms-in-use]])
+        hakija-haku-base-url (str js/config.applicant.service_url "/hakemus/haku/")]
     (fn [form]
       (when-let [form-used-in-hakus (get @forms-in-use (keyword (:key form)))]
         [:div.editor-form__in_use_notification.animated.flash
@@ -207,7 +208,7 @@
              [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
                   :target "_blank"} (:haku-name haku)]
              [:span " – "]
-             [:a {:href   (str "/hakemus/haku/" (:haku-oid haku))
+             [:a {:href   (str hakija-haku-base-url (:haku-oid haku))
                   :target "_blank"} "Lomake"]])]]))))
 
 (defn- close-form []
