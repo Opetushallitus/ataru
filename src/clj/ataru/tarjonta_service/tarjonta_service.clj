@@ -79,12 +79,9 @@
         :kieli_fi))
 
   (hakukohteet-by-organization [this organization-oid]
-    (concat (->> (client/hakukohteet-by-organization organization-oid)
-                 parse-search-result
-                 (map parse-hakukohde))
-            (->> (client/hakukohteet-by-organization-group organization-oid)
-                 parse-search-result
-                 (map parse-hakukohde))))
+    (->> (client/hakukohteet-by-organization organization-oid)
+         parse-search-result
+         (map parse-hakukohde)))
 
   (all-haut [_]
     (map parse-haku (client/all-haut)))

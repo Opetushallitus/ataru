@@ -27,11 +27,6 @@
                            {"defaultTarjoaja" organization-oid
                             "organisationOid" organization-oid})))
 
-(defn hakukohteet-by-organization-group
-  [organization-oid]
-  (do-request (resolve-url :tarjonta-service.hakukohde.search
-                           {"organisaatioRyhmaOid" organization-oid})))
-
 (defn all-haut
   []
   (do-request (resolve-url :tarjonta-service.all-haut)))
