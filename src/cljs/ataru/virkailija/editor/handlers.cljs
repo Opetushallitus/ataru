@@ -475,10 +475,21 @@
     (assoc-in db [:editor :ui id :hakukohde-visibility :modal :show] false)))
 
 (reg-event-db
-  :editor/on-hakukohde-visibility-modal-search-term-change
+  :editor/set-hakukohde-visibility-modal-search-term
   (fn [db [_ id search-term]]
-    (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term]
-              search-term)))
+    (if (< (count search-term) 3)
+      (update-in db [:editor :ui id :hakukohde-visibility :modal] dissoc :search-term)
+      (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term] search-term))))
+
+(reg-event-fx
+  :editor/on-hakukohde-visibility-modal-search-term-change
+  (fn [{db :db} [_ id search-term]]
+    {:db (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term-value]
+                   search-term)
+     :dispatch-debounced {:timeout 200
+                          :id [:hakukohde-visibility-search id]
+                          :dispatch [:editor/set-hakukohde-visibility-modal-search-term
+                                     id search-term]}}))
 
 (reg-event-db
   :editor/select-hakukohde-for-visibility

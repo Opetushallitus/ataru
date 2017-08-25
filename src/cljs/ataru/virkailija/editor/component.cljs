@@ -81,7 +81,7 @@
 
 (defn- hakukohde-visibility-modal
   [path id selected-hakukohteet]
-  (let [search-term (subscribe [:editor/hakukohde-visibility-modal-search-term id])
+  (let [search-term (subscribe [:editor/hakukohde-visibility-modal-search-term-value id])
         fetching?   (subscribe [:editor/fetching-active-haut])
         active-haut (subscribe [:editor/filtered-active-haut id])
         on-click (fn [_] (dispatch [:editor/hide-hakukohde-visibility-modal id]))
