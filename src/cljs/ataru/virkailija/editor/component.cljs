@@ -47,10 +47,10 @@
 
 (defn- hakukohde-visibility-hakukohde
   [path id hakukohde selected-hakukohteet]
-  (let [on-click-add (fn [e] (dispatch [:editor/select-hakukohde-for-visibility
+  (let [on-click-add (fn [_] (dispatch [:editor/add-to-belongs-to-hakukohteet
                                         path
                                         (:oid hakukohde)]))
-        on-click-remove (fn [_] (dispatch [:editor/remove-hakukohde-for-visibility
+        on-click-remove (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
                                            path (:oid hakukohde)]))
         name (subscribe [:editor/hakukohde-name-parts id hakukohde])]
     (fn [path id hakukohde selected-hakukohteet]
@@ -81,11 +81,11 @@
 
 (defn- hakukohde-visibility-modal
   [path id selected-hakukohteet]
-  (let [search-term (subscribe [:editor/hakukohde-visibility-modal-search-term-value id])
+  (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
         fetching?   (subscribe [:editor/fetching-active-haut])
         active-haut (subscribe [:editor/filtered-active-haut id])
-        on-click (fn [_] (dispatch [:editor/hide-hakukohde-visibility-modal id]))
-        on-change (fn [e] (dispatch [:editor/on-hakukohde-visibility-modal-search-term-change
+        on-click (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        on-change (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
                                      id (.-value (.-target e))]))]
     (fn [path id selected-hakukohteet]
       [:div.editor-form__hakukohde-visibility-modal-wrapper
@@ -108,9 +108,9 @@
 
 (defn- hakukohde-visibility-selected
   [path oid]
-  (let [name (subscribe [:editor/hakukohde-visibility-selected-name oid])
+  (let [name (subscribe [:editor/belongs-to-hakukohde-name oid])
         fetching? (subscribe [:editor/fetching-active-haut])
-        on-click (fn [_] (dispatch [:editor/remove-hakukohde-for-visibility
+        on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
                                     path oid]))]
     (fn [_ _]
       [:li.editor-form__hakukohde-visibility-selected-list-item.animated.fadeIn
@@ -125,10 +125,10 @@
   [path initial-content]
   (let [id (:id initial-content)
         on-click-show (fn [_]
-                        (dispatch [:editor/show-hakukohde-visibility-modal id]))
+                        (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
         on-click-hide (fn [_]
-                        (dispatch [:editor/hide-hakukohde-visibility-modal id]))
-        show-modal? (subscribe [:editor/show-hakukohde-visibility-modal id])]
+                        (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
+        show-modal? (subscribe [:editor/show-belongs-to-hakukohteet-modal id])]
     (fn [path initial-content]
       (let [visible-to (:belongs-to-hakukohteet initial-content)]
         [:div.editor-form__hakukohde-visibility-wrapper

@@ -462,44 +462,44 @@
 (reg-event-db :editor/toggle-language toggle-language)
 
 (reg-event-fx
-  :editor/show-hakukohde-visibility-modal
+  :editor/show-belongs-to-hakukohteet-modal
   (fn [{db :db} [_ id]]
-    (cond-> {:db (assoc-in db [:editor :ui id :hakukohde-visibility :modal :show] true)}
+    (cond-> {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] true)}
       (and (not (get-in db [:editor :active-haut :fetching?]))
            (not (contains? (get-in db [:editor :active-haut]) :haut)))
       (assoc :dispatch [:editor/refresh-active-haut]))))
 
 (reg-event-db
-  :editor/hide-hakukohde-visibility-modal
+  :editor/hide-belongs-to-hakukohteet-modal
   (fn [db [_ id]]
-    (assoc-in db [:editor :ui id :hakukohde-visibility :modal :show] false)))
+    (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
 
 (reg-event-db
-  :editor/set-hakukohde-visibility-modal-search-term
+  :editor/set-belongs-to-hakukohteet-modal-search-term
   (fn [db [_ id search-term]]
     (if (< (count search-term) 3)
-      (update-in db [:editor :ui id :hakukohde-visibility :modal] dissoc :search-term)
-      (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term] search-term))))
+      (update-in db [:editor :ui id :belongs-to-hakukohteet :modal] dissoc :search-term)
+      (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term] search-term))))
 
 (reg-event-fx
-  :editor/on-hakukohde-visibility-modal-search-term-change
+  :editor/on-belongs-to-hakukohteet-modal-search-term-change
   (fn [{db :db} [_ id search-term]]
-    {:db (assoc-in db [:editor :ui id :hakukohde-visibility :modal :search-term-value]
+    {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value]
                    search-term)
      :dispatch-debounced {:timeout 200
-                          :id [:hakukohde-visibility-search id]
-                          :dispatch [:editor/set-hakukohde-visibility-modal-search-term
+                          :id [:belongs-to-hakukohteet-search id]
+                          :dispatch [:editor/set-belongs-to-hakukohteet-modal-search-term
                                      id search-term]}}))
 
 (reg-event-db
-  :editor/select-hakukohde-for-visibility
+  :editor/add-to-belongs-to-hakukohteet
   (fn [db [_ path oid]]
     (let [path (conj (vec (current-form-content-path db path))
                      :belongs-to-hakukohteet)]
       (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
 
 (reg-event-db
-  :editor/remove-hakukohde-for-visibility
+  :editor/remove-from-belongs-to-hakukohteet
   (fn [db [_ path oid]]
     (let [path (conj (vec (current-form-content-path db path))
                      :belongs-to-hakukohteet)]

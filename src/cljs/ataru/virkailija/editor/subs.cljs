@@ -36,7 +36,7 @@
 (re-frame/reg-sub
   :editor/filtered-active-haut
   (fn [db [_ id]]
-    (if-let [search-term (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term])]
+    (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (filter-hakukohteet
          (get-in db [:editor :active-haut :haut] {})
          search-term)
@@ -61,14 +61,14 @@
 (re-frame/reg-sub
   :editor/hakukohde-name-parts
   (fn [db [_ id hakukohde]]
-    (if-let [search-term (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term])]
+    (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (map-indexed (fn [i part] [part (= 1 (mod i 2))])
                    (clojure.string/split (:fi (:name hakukohde))
                                          (re-pattern (str "(?i)(" search-term ")"))))
       [[(:fi (:name hakukohde)) false]])))
 
 (re-frame/reg-sub
-  :editor/hakukohde-visibility-selected-name
+  :editor/belongs-to-hakukohde-name
   (fn [db [_ oid]]
     (let [[haku hakukohde] (find-haku-and-hakukohde
                             (map second (get-in db [:editor :active-haut :haut]))
@@ -78,11 +78,11 @@
            (get-in haku [:name :fi])))))
 
 (re-frame/reg-sub
-  :editor/show-hakukohde-visibility-modal
+  :editor/show-belongs-to-hakukohteet-modal
   (fn [db [_ id]]
-    (get-in db [:editor :ui id :hakukohde-visibility :modal :show] false)))
+    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
 
 (re-frame/reg-sub
-  :editor/hakukohde-visibility-modal-search-term-value
+  :editor/belongs-to-hakukohteet-modal-search-term-value
   (fn [db [_ id]]
-    (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term-value] "")))
+    (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value] "")))
