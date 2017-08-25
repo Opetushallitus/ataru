@@ -38,7 +38,7 @@
           :timeout 10000})
     c))
 
-(defn hakukohteet-of-organization
+(defn- hakukohteet-by-organization
   [organization-oid]
   (let [c (async/chan 1)]
     (GET (str "/lomake-editori/api/tarjonta/hakukohde?organizationOid="
@@ -51,6 +51,17 @@
           :keywords? true
           :timeout 60000})
     c))
+
+(defn- hakukohteet-by-organizations
+  [organization-oids]
+  (asyncm/go-try
+   (loop [cs (map hakukohteet-by-organization organization-oids)
+          hakukohteet #{}]
+     (if (empty? cs)
+       hakukohteet
+       (recur (rest cs)
+              (clojure.set/union hakukohteet
+                                 (set (asyncm/<? (first cs)))))))))
 
 (defn- add-hakukohde
   [haut hakukohde]
@@ -74,15 +85,7 @@
 (defn active-haut
   [organization-oids]
   (let [haut-c (fetch-active-haut)
-        hakukohteet-c (async/reduce
-                       (fn [acc r]
-                         (cond (instance? js/Error acc) acc
-                               (instance? js/Error r) r
-                               :else (concat acc r)))
-                       []
-                       (async/merge (map hakukohteet-of-organization
-                                         organization-oids)
-                                    (count organization-oids)))]
+        hakukohteet-c (hakukohteet-by-organizations organization-oids)]
     (asyncm/go-try
       (->> (asyncm/<? hakukohteet-c)
            (reduce add-hakukohde (haut-by-oid (asyncm/<? haut-c)))
