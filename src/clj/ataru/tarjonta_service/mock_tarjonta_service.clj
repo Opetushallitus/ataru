@@ -160,6 +160,41 @@
                                 :koulutusohjelma {:nimi "Koulutusohjelma C"}
                                 :tarkenne        "Tarkenne C"}})
 
+(defn- parse-multi-lang-text
+  [text]
+  (reduce-kv (fn [m lang s]
+               (if (or (nil? s) (clojure.string/blank? s))
+                 m
+                 (assoc m lang s)))
+             {}
+             (clojure.set/rename-keys text {:kieli_fi :fi
+                                            :kieli_sv :sv
+                                            :kieli_en :en})))
+
+(defn- epoch-millis->zoned-date-time
+  [millis]
+  (java.time.ZonedDateTime/ofInstant
+   (.truncatedTo (java.time.Instant/ofEpochMilli millis)
+                 (java.time.temporal.ChronoUnit/SECONDS))
+   (java.time.ZoneId/of "Europe/Helsinki")))
+
+(defn- parse-hakuaika
+  [hakuaika]
+  (cond-> {:start (epoch-millis->zoned-date-time (:alkuPvm hakuaika))}
+    (contains? hakuaika :loppuPvm)
+    (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
+
+(defn- parse-haku
+  [haku]
+  {:oid (:oid haku)
+   :name (parse-multi-lang-text (:nimi haku))
+   :hakuajat (map parse-hakuaika (:hakuaikas haku))})
+
+(defn- parse-hakukohde
+  [hakukohde]
+  {:oid (:oid hakukohde)
+   :haku-oid (:hakuOid hakukohde)
+   :name (parse-multi-lang-text (:nimi hakukohde))})
 
 (defrecord MockTarjontaService []
   component/Lifecycle
@@ -176,10 +211,15 @@
       "Ajoneuvonosturinkuljettajan ammattitutkinto"))
 
   (hakukohteet-by-organization [_ _]
-    [])
+    (->> [(:1.2.246.562.20.49028196523 hakukohde)
+          (:1.2.246.562.20.49028196524 hakukohde)
+          (:1.2.246.562.20.49028196525 hakukohde)]
+         (map #(assoc % :nimi (:hakukohteenNimet %)))
+         (map parse-hakukohde)))
 
   (all-haut [_]
-    [])
+    (map parse-haku
+         [(:1.2.246.562.29.65950024186 haku)]))
 
   (get-haku [this haku-oid]
     ((keyword haku-oid) haku))
