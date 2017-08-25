@@ -1,10 +1,7 @@
 (function () {
-  var secret;
   before(function () {
-    secret = getQueryParam('virkailija-secret')
-
-    console.log("secret", secret || 'UNDEFINED')
-    loadInFrame('/hakemus?virkailija-secret=' + secret)
+    console.log("virkailijaSecret", virkailijaSecret || 'UNDEFINED')
+    loadInFrame('/hakemus?virkailija-secret=' + virkailijaSecret)
   })
 
   describe('Virkailija hakemus edit', function () {
@@ -16,9 +13,8 @@
       )
       it('with complete form', function () {
         expect(formFields().length).to.equal(30)
-        expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(submitButton().prop('disabled')).to.equal(true)
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
@@ -81,7 +77,7 @@
 
     describe('edit with invalid key', function() {
       before(
-        function() {return loadInFrame('/hakemus?virkailija-secret=' + secret)},
+        function() {return loadInFrame('/hakemus?virkailija-secret=' + virkailijaSecret)},
         wait.until(function () {
           return testFrame().find('.application__error-display').length == 1;
         })

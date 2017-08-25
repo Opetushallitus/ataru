@@ -7,7 +7,7 @@
 
     describe('form loads', function () {
       before(
-        newForm,
+        newForm('testForm'),
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {

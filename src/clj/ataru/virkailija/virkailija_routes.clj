@@ -385,7 +385,7 @@
                               (when (:dev? env) local-raami-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
-                                test-routes
+                                (when (:dev? env) test-routes)
                                 dashboard-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session

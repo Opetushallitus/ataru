@@ -1,11 +1,6 @@
 (function() {
   before(function () {
-    var hakukohdeOid = getQueryParam('hakukohdeOid')
-
-    if (hakukohdeOid !== '') {
-      console.log("hakukohde oid", hakukohdeOid)
-      loadInFrame('/hakemus/hakukohde/' + hakukohdeOid)
-    }
+    loadInFrame('/hakemus/hakukohde/1.2.246.562.20.49028196523')
   })
 
   afterEach(function() {
@@ -24,9 +19,9 @@
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(formHeader().text()).to.equal('testing2')
         expect(selectedHakukohteet().length).to.equal(1)
-        expect(hakukohdeSearchHits().length).to.equal(0)
+        expect(hakukohdeSearchHits().length).to.equal(3)
         expect(hakukohdeSearchInput().is(':visible')).to.equal(true)
-        expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1Tarkenne APoista')
+        expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne APoista')
       })
     })
 
@@ -39,7 +34,11 @@
         var results = _.map(hakukohdeSearchHits(), function(e) {
           return $(e).find('.application__hakukohde-row-text-container').text()
         })
-        expect(results).to.eql(["Testihakukohde 1Tarkenne A", "Testihakukohde 2Tarkenne B", "Testihakukohde 3Tarkenne C"])
+        expect(results).to.eql([
+          "Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A",
+          "Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B",
+          "Testihakukohde 3 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne C"
+        ])
       })
     })
 
@@ -52,8 +51,8 @@
       )
       it('adds hakukohde to selected list', function() {
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
-        expect(selectedHakukohteet().eq(0).text()).to.equal('Testihakukohde 1Tarkenne APoista')
-        expect(selectedHakukohteet().eq(1).text()).to.equal('Testihakukohde 2Tarkenne BPoista')
+        expect(selectedHakukohteet().eq(0).text()).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne APoista')
+        expect(selectedHakukohteet().eq(1).text()).to.equal('Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne BPoista')
       })
     })
   })

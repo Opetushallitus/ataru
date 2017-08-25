@@ -7,12 +7,12 @@
     return testFrame().find('.editor-form__form-name-input')
   }
 
-  function editorPageIsLoaded() {
-    return elementExists(addNewFormLink())
-  }
-
   function formList() {
     return testFrame().find('.editor-form__list')
+  }
+
+  function editorPageIsLoaded() {
+    return elementExists(formList().find('a'))
   }
 
   function formListItems(n) {
@@ -80,12 +80,12 @@
 
   describe('Editor', function() {
 
-    describe('with no forms', function() {
+    describe('with fixture forms', function() {
       before(
         wait.until(editorPageIsLoaded)
       )
-      it('has empty form listing', function() {
-        expect(formListItems()).to.have.length(0)
+      it('has 4 fixture forms', function() {
+        expect(formListItems()).to.have.length(4)
       })
     })
 
@@ -414,39 +414,6 @@
         it('notification shows success', function() {
           expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
         })
-      })
-    })
-  })
-
-  describe('create another for ssn tests', function() {
-    describe('form creation', function() {
-      before(
-        clickElement(addNewFormLink),
-        wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
-        setTextFieldValue(formTitleField, 'SSN_testilomake'),
-        wait.until(function() {
-          return formListItems(0).find('span:eq(0)').text() === 'SSN_testilomake'
-        })
-      )
-      it('creates blank form', function () {
-        expect(formTitleField().val()).to.equal('SSN_testilomake')
-        expect(formComponents()).to.have.length(0)
-      })
-
-      it('has person info module', function() {
-        expect(personInfoModule()).to.have.length(1)
-      })
-    })
-
-    describe('autosave', function () {
-      before(
-        wait.until(function() {
-          var flasher = testFrame().find('.top-banner .flasher')
-          return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
-        }, 5000)
-      )
-      it('notification shows success', function() {
-        expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
       })
     })
   })

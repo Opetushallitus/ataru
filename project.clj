@@ -71,7 +71,9 @@
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.hazelcast/hazelcast "3.8.1"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]]
+                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]
+                 [ring/ring-mock "0.3.0"]
+                 [speclj "3.3.2"]]
 
   :min-lein-version "2.5.3"
 
@@ -195,14 +197,12 @@
                                                [refactor-nrepl "2.3.0"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.3"]
-                                               [ring/ring-mock "0.3.0"]
-                                               [speclj "3.3.2"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.4"]]
                               :plugins        [[refactor-nrepl "2.3.0"]
                                                [lein-cljfmt "0.5.6"]
                                                [lein-kibit "0.1.3"]]
-                              :source-paths   ["dev/clj" "test/cljc/unit"]
+                              :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}
 

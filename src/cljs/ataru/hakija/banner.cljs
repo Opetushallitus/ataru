@@ -86,7 +86,8 @@
   (let [lang              (subscribe [:application/form-language])
         secret            (subscribe [:state-query [:application :secret]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        editing           (reaction (or (some? @secret) (some? @virkailija-secret)))]
+        editing           (reaction (or (some? @secret) (some? @virkailija-secret)))
+        values-changed?   (subscribe [:state-query [:application :values-changed?]])]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
@@ -96,7 +97,9 @@
                                                                      :sv (if @virkailija-secret "Ändringarna har sparats" "Ansökan har skickats")
                                                                      :en (if @virkailija-secret "The modifications have been saved" "The application has been sent"))]]
              :else [:button.application__send-application-button
-                    {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
+                    {:disabled (or (not (:valid valid-status))
+                                   (contains? #{:submitting :submitted} submit-status)
+                                   (and @editing (empty? @values-changed?)))
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}

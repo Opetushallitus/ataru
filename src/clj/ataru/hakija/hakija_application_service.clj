@@ -5,6 +5,7 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.application-email-confirmation :as application-email]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+    [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.tarjonta-service.hakukohde :as hakukohde]
@@ -44,6 +45,11 @@
 (defn- in-complete-state? [application-key]
   (let [state (:state (application-store/get-application-review application-key))]
     (boolean (some #{state} complete-states))))
+
+(defn processing-in-jatkuva-haku? [application-key tarjonta-info]
+  (let [state (:state (application-store/get-application-review application-key))]
+    (and (= state "processing")
+         (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
@@ -89,17 +95,20 @@
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
-  (let [form               (form-store/fetch-by-id (:form application))
-        tarjonta-info      (when (:haku application)
+  (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
-        form-with-tarjonta (hakukohde/populate-hakukohde-answer-options form tarjonta-info)
+        form               (-> application
+                               (:form)
+                               (form-store/fetch-by-id)
+                               (hakija-form-service/inject-hakukohde-component-if-missing)
+                               (hakukohde/populate-hakukohde-answer-options tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
-        validation-result  (validator/valid-application? final-application form-with-tarjonta)
-        virkailija-secret (:virkailija-secret application)]
+        validation-result  (validator/valid-application? final-application form)
+        virkailija-secret  (:virkailija-secret application)]
     (cond
       (and (not (nil? virkailija-secret))
            (not (virkailija-secret-valid? virkailija-secret)))
@@ -117,7 +126,8 @@
       not-allowed-reply
 
       (and is-modify?
-           (in-complete-state? (:key latest-application)))
+           (or (in-complete-state? (:key latest-application))
+               (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
       not-allowed-reply
 
       (not (:passed? validation-result))

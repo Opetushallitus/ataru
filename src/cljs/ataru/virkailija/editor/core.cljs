@@ -77,7 +77,7 @@
 
          {:fieldClass "formField"
           :fieldType  "hakukohteet"}
-         [ec/hakukohteet content path]
+         nil
 
          :else (do
                  (error content)

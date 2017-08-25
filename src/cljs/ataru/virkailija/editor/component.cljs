@@ -57,23 +57,24 @@
 (defn- fade-out-effect
   [path]
   (reaction (case @(subscribe [:state-query [:editor :forms-meta path]])
-              :fade-out "animated fadeOutUp fade-out"
+              :fade-out "fade-out"
               :fade-in  "animated fadeInUp"
               nil)))
 
 (defn- text-header
   [label path & {:keys [component-wrapped? draggable] :or {draggable true}}]
   [:div.editor-form__header-wrapper
-   {:draggable (and draggable (nil? ((set path) :followup)))
+   {:draggable     (and draggable (nil? ((set path) :followup)))
     :on-drag-start (on-drag-start path)
-    :on-drag-over prevent-default}
+    :on-drag-over  prevent-default}
    [:header.editor-form__component-header label]
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
-                 (dispatch [:remove-component path
-                            (if component-wrapped?
-                              (-> event .-target .-parentNode .-parentNode .-parentNode)
-                              (-> event .-target .-parentNode .-parentNode))]))}
+                 (let [target (if component-wrapped?
+                                (-> event .-target .-parentNode .-parentNode .-parentNode)
+                                (-> event .-target .-parentNode .-parentNode))]
+                   (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
+                   (dispatch [:remove-component path target])))}
     "Poista"]])
 
 (defn markdown-help []
@@ -540,11 +541,3 @@
         [:div.editor-form__single-checkbox-wrapper
          [required-checkbox path content]]]
        [attachment-textarea path]])))
-
-(defn hakukohteet [content path]
-  (fn [content path]
-    [:div.editor-form__module-wrapper
-     [:header.editor-form__module-header
-      [:span.editor-form__module-header-label (get-in content [:label :fi])]
-      " "
-      [:span (get-in content [:label-amendment :fi])]]]))

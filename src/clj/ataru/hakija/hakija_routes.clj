@@ -25,7 +25,8 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.virkailija.authentication.virkailija-edit :refer [virkailija-secret-valid?]])
+            [ataru.virkailija.authentication.virkailija-edit :refer [virkailija-secret-valid?]]
+            [ataru.test-utils :refer [get-test-vars-params]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
 
@@ -70,10 +71,12 @@
   (boolean (:dev? env)))
 
 (defn- render-file-in-dev
-  [filename]
-  (if (is-dev-env?)
-    (selmer/render-file filename {})
-    (response/not-found "Not found")))
+  ([filename]
+   (render-file-in-dev filename {}))
+  ([filename opts]
+   (if (is-dev-env?)
+     (selmer/render-file filename opts)
+     (response/not-found "Not found"))))
 
 (api/defroutes test-routes
   (api/undocumented
@@ -82,7 +85,10 @@
     (api/GET "/virkailija-hakemus-edit-test.html" []
       (render-file-in-dev "templates/virkailija-hakemus-edit-test.html"))
     (api/GET "/spec/:filename.js" [filename]
-      (render-file-in-dev (str "spec/" filename ".js")))))
+      ;; Test vars params is a hack to get form ids from fixtures to the test file
+      ;; without having to pass them as url params. Also enables tests to be run
+      ;; individually when navigationg to any test file.
+      (render-file-in-dev (str "spec/" filename ".js") (when (= "hakijaCommon" filename) (get-test-vars-params))))))
 
 (api/defroutes james-routes
   (api/undocumented
@@ -227,7 +233,7 @@
                               (when (is-dev-env?) james-routes)
                               (api/routes
                                 (api/context "/hakemus" []
-                                  test-routes
+                                  (when (is-dev-env?) test-routes)
                                   (api-routes (:tarjonta-service this))
                                   (route/resources "/")
                                   (api/undocumented

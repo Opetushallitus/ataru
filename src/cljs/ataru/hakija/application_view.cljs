@@ -6,7 +6,7 @@
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
-            [ataru.hakija.application :refer [application-in-complete-state?]]
+            [ataru.hakija.application :refer [application-in-complete-state? application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
@@ -67,7 +67,8 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (application-in-complete-state? @application)
+       (when (or (application-in-complete-state? @application)
+                 (application-processing-jatkuva-haku? @application (:tarjonta form)))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
