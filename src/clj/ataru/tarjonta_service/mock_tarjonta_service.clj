@@ -175,6 +175,12 @@
     (when (= hakukohde-oid "hakukohde.oid")
       "Ajoneuvonosturinkuljettajan ammattitutkinto"))
 
+  (hakukohteet-by-organization [_ _]
+    [])
+
+  (all-haut [_]
+    [])
+
   (get-haku [this haku-oid]
     ((keyword haku-oid) haku))
 

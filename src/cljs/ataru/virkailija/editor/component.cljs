@@ -73,7 +73,7 @@
   [path id haku selected-hakukohteet]
   [:li.editor-form__hakukohde-visibility-haku-list-item
    [:span.editor-form__hakukohde-visibility-haku-label
-    (:fi (:nimi haku))]
+    (:fi (:name haku))]
    [:ul.editor-form__hakukohde-visibility-hakukohde-list
     (for [hakukohde (:hakukohteet haku)]
       ^{:key (:oid hakukohde)}

@@ -3,66 +3,34 @@
   (:require [cljs.core.async :as async]
             [ajax.core :refer [GET]]
             [cljs-time.core :refer [now after?]]
-            [cljs-time.coerce :refer [from-long]]))
-
-(defn- parse-nimi
-  [nimi]
-  (reduce-kv (fn [names lang s]
-               (if (clojure.string/blank? s)
-                 names
-                 (assoc names lang s)))
-             {}
-             (clojure.set/rename-keys
-              nimi
-              {:kieli_fi :fi
-               :kieli_sv :sv
-               :kieli_en :en})))
+            [cljs-time.coerce :refer [from-date]]))
 
 (defn- parse-hakuaika
   [hakuaika]
   (cond-> {}
-    (contains? hakuaika :alkuPvm)
-    (assoc :alku (from-long (:alkuPvm hakuaika)))
-    (contains? hakuaika :loppuPvm)
-    (assoc :loppu (from-long (:loppuPvm hakuaika)))))
+    (contains? hakuaika :start)
+    (assoc :alku (from-date (new js/Date (:start hakuaika))))
+    (contains? hakuaika :end)
+    (assoc :loppu (from-date (new js/Date (:end hakuaika))))))
 
 (defn- parse-haku
   [haku]
-  {:oid (:oid haku)
-   :tila (:tila haku)
-   :nimi (parse-nimi (:nimi haku))
-   :hakuajat (map parse-hakuaika (:hakuaikas haku))})
-
-(defn- parse-hakukohde
-  [hakukohde]
-  {:oid (:oid hakukohde)
-   :nimi (parse-nimi (:nimi hakukohde))
-   :haku-oid (:hakuOid hakukohde)})
-
-(defn- parse-search-response
-  [search-response]
-  (mapcat :tulokset (:tulokset search-response)))
-
-(defn- parse-response
-  [response]
-  (:result response))
+  (update haku :hakuajat (partial map parse-hakuaika)))
 
 (defn- active?
-  [haku]
-  (let [now (now)]
-    (some #(or (not (contains? % :loppu))
-               (after? (:loppu %) now))
-          (:hakuajat haku))))
+  [now haku]
+  (some #(or (not (contains? % :loppu))
+             (after? (:loppu %) now))
+        (:hakuajat haku)))
 
 (defn- fetch-active-haut
   []
   (let [c (async/chan 1)]
-    (GET "https://itest-virkailija.oph.ware.fi/tarjonta-service/rest/v1/haku/findAll"
+    (GET "/lomake-editori/api/tarjonta/haku"
          {:handler (comp #(async/put! c %
                                       (fn [_] (async/close! c)))
-                         (partial filter active?)
-                         (partial map parse-haku)
-                         parse-response)
+                         (partial filter (partial active? (now)))
+                         (partial map parse-haku))
           :error-handler #(async/put! c (new js/Error %)
                                       (fn [_] (async/close! c)))
           :response-format :json
@@ -70,37 +38,19 @@
           :timeout 10000})
     c))
 
-(defn- hakukohde-search
-  [query-params]
-  (let [c (async/chan 1)
-        query-str (->> query-params
-                       (map #(str (first %) "=" (second %)))
-                       (clojure.string/join "&"))]
-    (GET (str "https://itest-virkailija.oph.ware.fi"
-              "/tarjonta-service/rest/v1/hakukohde/search?"
-              query-str)
-         {:handler (comp #(async/put! c %
-                                      (fn [_] (async/close! c)))
-                         (partial map parse-hakukohde)
-                         parse-search-response
-                         parse-response)
+(defn hakukohteet-of-organization
+  [organization-oid]
+  (let [c (async/chan 1)]
+    (GET (str "/lomake-editori/api/tarjonta/hakukohde?organizationOid="
+              organization-oid)
+         {:handler #(async/put! c %
+                                (fn [_] (async/close! c)))
           :error-handler #(async/put! c (new js/Error %)
                                       (fn [_] (async/close! c)))
           :response-format :json
           :keywords? true
           :timeout 60000})
     c))
-
-(defn hakukohteet-of-organization
-  [organization-oid]
-  (let [by-org (hakukohde-search
-                {"defaultTarjoaja" organization-oid
-                 "organisationOid" organization-oid})
-        by-org-group (hakukohde-search
-                      {"organisaatioRyhmaOid" organization-oid})]
-    (asyncm/go-try
-     (concat (asyncm/<? by-org)
-             (asyncm/<? by-org-group)))))
 
 (defn- add-hakukohde
   [haut hakukohde]

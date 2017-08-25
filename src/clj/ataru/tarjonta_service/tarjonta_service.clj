@@ -22,6 +22,46 @@
             {}
             (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
+(defn- parse-multi-lang-text
+  [text]
+  (reduce-kv (fn [m lang s]
+               (if (or (nil? s) (clojure.string/blank? s))
+                 m
+                 (assoc m lang s)))
+             {}
+             (clojure.set/rename-keys text {:kieli_fi :fi
+                                            :kieli_sv :sv
+                                            :kieli_en :en})))
+
+(defn- epoch-millis->zoned-date-time
+  [millis]
+  (java.time.ZonedDateTime/ofInstant
+   (.truncatedTo (java.time.Instant/ofEpochMilli millis)
+                 (java.time.temporal.ChronoUnit/SECONDS))
+   (java.time.ZoneId/of "Europe/Helsinki")))
+
+(defn- parse-hakuaika
+  [hakuaika]
+  (cond-> {:start (epoch-millis->zoned-date-time (:alkuPvm hakuaika))}
+    (contains? hakuaika :loppuPvm)
+    (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
+
+(defn- parse-haku
+  [haku]
+  {:oid (:oid haku)
+   :name (parse-multi-lang-text (:nimi haku))
+   :hakuajat (map parse-hakuaika (:hakuaikas haku))})
+
+(defn- parse-hakukohde
+  [hakukohde]
+  {:oid (:oid hakukohde)
+   :haku-oid (:hakuOid hakukohde)
+   :name (parse-multi-lang-text (:nimi hakukohde))})
+
+(defn- parse-search-result
+  [search-result]
+  (mapcat :tulokset (:tulokset search-result)))
+
 (defrecord CachedTarjontaService []
   component/Lifecycle
   TarjontaService
@@ -37,6 +77,17 @@
         (.get-hakukohde hakukohde-oid)
         :hakukohteenNimet
         :kieli_fi))
+
+  (hakukohteet-by-organization [this organization-oid]
+    (concat (->> (client/hakukohteet-by-organization organization-oid)
+                 parse-search-result
+                 (map parse-hakukohde))
+            (->> (client/hakukohteet-by-organization-group organization-oid)
+                 parse-search-result
+                 (map parse-hakukohde))))
+
+  (all-haut [_]
+    (map parse-haku (client/all-haut)))
 
   (get-haku [this haku-oid]
     (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))

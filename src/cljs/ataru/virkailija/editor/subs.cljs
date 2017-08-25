@@ -19,7 +19,7 @@
 (defn- hakukohde-matches?
   [pattern hakukohde]
   (some (partial re-find pattern)
-        (map second (:nimi hakukohde))))
+        (map second (:name hakukohde))))
 
 (defn- filter-hakukohteet
   [haut search-term]
@@ -65,9 +65,9 @@
     (let [search-term (get-in db [:editor :ui id :hakukohde-visibility :modal :search-term] "")
           pattern (re-pattern (str "(?i)(" search-term ")"))]
       (if (clojure.string/blank? search-term)
-        [[(:fi (:nimi hakukohde)) false]]
+        [[(:fi (:name hakukohde)) false]]
         (map-indexed (fn [i part] [part (= 1 (mod i 2))])
-                     (clojure.string/split (:fi (:nimi hakukohde)) pattern))))))
+                     (clojure.string/split (:fi (:name hakukohde)) pattern))))))
 
 (re-frame/reg-sub
   :editor/hakukohde-visibility-selected-name
@@ -75,9 +75,9 @@
     (let [[haku hakukohde] (find-haku-and-hakukohde
                             (map second (get-in db [:editor :active-haut :haut]))
                             oid)]
-      (str (get-in hakukohde [:nimi :fi])
+      (str (get-in hakukohde [:name :fi])
            " - "
-           (get-in haku [:nimi :fi])))))
+           (get-in haku [:name :fi])))))
 
 (re-frame/reg-sub
   :editor/show-hakukohde-visibility-modal

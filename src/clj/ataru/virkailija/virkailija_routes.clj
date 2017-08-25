@@ -16,11 +16,13 @@
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [ataru.statistics.statistics-service :as statistics-service]
             [cheshire.core :as json]
+            [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
@@ -43,7 +45,9 @@
             [clout.core :as clout]
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
-            [medley.core :refer [map-kv]]))
+            [medley.core :refer [map-kv]])
+  (:import java.time.ZonedDateTime
+           java.time.format.DateTimeFormatter))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -62,6 +66,12 @@
 
 (def client-sub-routes
   (clout/route-compile "/:page/*" {:page client-page-patterns}))
+
+(add-encoder ZonedDateTime
+             (fn [d json-generator]
+               (.writeString
+                json-generator
+                (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
 
 (defn render-virkailija-page
   []
@@ -267,6 +277,20 @@
                                        :return s/Any
                                        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
                                          (ok koodi-options))))
+
+                 (api/context "/tarjonta" []
+                              :tags ["tarjonta-api"]
+                              (api/GET "/haku" []
+                                       :return [ataru-schema/Haku]
+                                       (-> (tarjonta/all-haut tarjonta-service)
+                                           ok
+                                           (header "Cache-Control" "public, max-age=300")))
+                              (api/GET "/hakukohde" []
+                                       :query-params [organizationOid :- (api/describe [s/Str] "Organization OID")]
+                                       :return [ataru-schema/Hakukohde]
+                                       (-> (tarjonta/hakukohteet-by-organization tarjonta-service organizationOid)
+                                           ok
+                                           (header "Cache-Control" "public, max-age=300"))))
 
                  (api/context "/files" []
                    :tags ["files-api"]
