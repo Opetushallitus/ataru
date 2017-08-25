@@ -45,7 +45,7 @@
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
      [:label.editor-form__checkbox-label {:for id} "Vastaaja voi lisätä useita vastauksia"]]))
 
-(defn- hakukohde-visibility-hakukohde
+(defn- hakukohde-list-item
   [path id hakukohde selected-hakukohteet]
   (let [on-click-add (fn [_] (dispatch [:editor/add-to-belongs-to-hakukohteet
                                         path
@@ -69,7 +69,7 @@
                          part])
                       @name)]))))
 
-(defn- hakukohde-visibility-haku
+(defn- haku-list-item
   [path id haku selected-hakukohteet]
   [:li.editor-form__hakukohde-visibility-haku-list-item
    [:span.editor-form__hakukohde-visibility-haku-label
@@ -77,9 +77,9 @@
    [:ul.editor-form__hakukohde-visibility-hakukohde-list
     (for [hakukohde (:hakukohteet haku)]
       ^{:key (:oid hakukohde)}
-      [hakukohde-visibility-hakukohde path id hakukohde selected-hakukohteet])]])
+      [hakukohde-list-item path id hakukohde selected-hakukohteet])]])
 
-(defn- hakukohde-visibility-modal
+(defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet]
   (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
         fetching?   (subscribe [:editor/fetching-active-haut])
@@ -104,9 +104,9 @@
           [:ul.editor-form__hakukohde-visibility-haku-list
            (for [[_ haku] @active-haut]
              ^{:key (:oid haku)}
-             [hakukohde-visibility-haku path id haku selected-hakukohteet])])]])))
+             [haku-list-item path id haku selected-hakukohteet])])]])))
 
-(defn- hakukohde-visibility-selected
+(defn- belongs-to-hakukohde
   [path oid]
   (let [name (subscribe [:editor/belongs-to-hakukohde-name oid])
         fetching? (subscribe [:editor/fetching-active-haut])
@@ -121,7 +121,7 @@
        [:i.zmdi.zmdi-close.zmdi-hc-lg.editor-form__hakukohde-visibility-unselect
         {:on-click on-click}]])))
 
-(defn- hakukohde-visibility
+(defn- belongs-to-hakukohteet
   [path initial-content]
   (let [id (:id initial-content)
         on-click-show (fn [_]
@@ -140,11 +140,11 @@
             "näkyy kaikille"
             "vain valituille hakukohteille")]
          (when @show-modal?
-           [hakukohde-visibility-modal path (:id initial-content) visible-to])
+           [belongs-to-hakukohteet-modal path (:id initial-content) visible-to])
          [:ul.editor-form__hakukohde-visibility-selected-list
           (for [oid visible-to]
             ^{:key oid}
-            [hakukohde-visibility-selected path oid])]]))))
+            [belongs-to-hakukohde path oid])]]))))
 
 (defn- on-drag-start
   [path]
@@ -311,7 +311,7 @@
          [required-checkbox path initial-content]
          (when-not (= "Tekstialue" header-label)
            [repeater-checkbox path initial-content])]
-        [hakukohde-visibility path initial-content]]
+        [belongs-to-hakukohteet path initial-content]]
        [info-addon path]])))
 
 (defn text-field [initial-content path]
@@ -429,7 +429,7 @@
              :header? true)]
            [:div.editor-form__checkbox-wrapper
             [required-checkbox path initial-content]]
-           [hakukohde-visibility path initial-content]]]
+           [belongs-to-hakukohteet path initial-content]]]
          [info-addon path initial-content]
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__multi-options_wrapper
@@ -553,7 +553,7 @@
                       (into field [[:div.editor-form__markdown-anchor
                                     (markdown-help)]]))))]]
         [:div.editor-form__checkbox-wrapper]
-        [hakukohde-visibility path initial-content]]])))
+        [belongs-to-hakukohteet path initial-content]]])))
 
 (defn adjacent-fieldset [content path children]
   (let [languages        (subscribe [:editor/languages])
@@ -572,7 +572,7 @@
           :header? true)]
         [:div.editor-form__checkbox-wrapper
          [repeater-checkbox path content]]
-        [hakukohde-visibility path content]]
+        [belongs-to-hakukohteet path content]]
        [info-addon path]
        [:div.editor-form__adjacent-fieldset-container
         children
@@ -599,7 +599,7 @@
           :header? true)]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path content]]
-        [hakukohde-visibility path content]]])))
+        [belongs-to-hakukohteet path content]]])))
 
 (defn attachment-textarea [path]
   (let [id        (util/new-uuid)
@@ -647,5 +647,5 @@
           :header? true)]
         [:div.editor-form__single-checkbox-wrapper
          [required-checkbox path content]]
-        [hakukohde-visibility path content]]
+        [belongs-to-hakukohteet path content]]
        [attachment-textarea path]])))
