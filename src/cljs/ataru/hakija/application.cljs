@@ -44,11 +44,22 @@
   [form preselected-hakukohde]
   (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
 
-(defn answers->valid-status [all-answers ui]
+(defn not-extra-answer? [answer-key question-ids]
+  "Check that the answer (key) has a corresponding quesiton in the form.
+   This in necessary to allow older forms that might not have all newest questions
+   to be used with latest rules. (e.g. birthplace component)"
+  (or (empty? question-ids)
+      (some #{answer-key} question-ids)))
+
+(defn answers->valid-status [all-answers ui form-content]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
+        question-ids    (map #(-> % :id keyword) (util/flatten-form-fields form-content))
         invalid-fields  (for [[key answers]
                               (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
-                              :when (and key (not (:valid answers)) (get-in ui [key :visible?] true))]
+                              :when (and key
+                                         (not (:valid answers))
+                                         (get-in ui [key :visible?] true)
+                                         (not-extra-answer? key question-ids))]
                           (assoc (select-keys answers [:label]) :key key))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
@@ -164,9 +175,14 @@
 (defn application-in-complete-state? [application]
   (boolean (some #{(:state application)} complete-states)))
 
+(defn application-processing-jatkuva-haku? [application haku]
+  (and (= (:state application) "processing")
+       (:is-jatkuva-haku? haku)))
+
 (defn applying-possible? [form application]
   (cond
-    (application-in-complete-state? application)
+    (or (application-in-complete-state? application)
+        (application-processing-jatkuva-haku? application (:tarjonta form)))
     false
 
     ;; When applying to hakukohde, hakuaika must be on

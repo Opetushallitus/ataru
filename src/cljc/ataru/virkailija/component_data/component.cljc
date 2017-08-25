@@ -93,10 +93,13 @@
    :params     {}
    :options    []})
 
+; NB: when altering this, take into account that the hakukohteet component is
+;     dynamically injected to legacy forms without one already present:
 (defn hakukohteet []
   {:fieldClass "formField"
    :fieldType "hakukohteet"
    :id :hakukohteet
+   ; TODO localizations
    :label {:fi "Hakukohteet"
            :sv ""
            :en ""}

@@ -13,7 +13,9 @@
 (re-frame/reg-sub
   :application/valid-status
   (fn [db]
-    (answers->valid-status (-> db :application :answers) (-> db :application :ui))))
+    (answers->valid-status (-> db :application :answers)
+                           (-> db :application :ui)
+                           (-> db :form :content))))
 
 (re-frame/reg-sub
   :application/wrapper-sections
@@ -145,24 +147,7 @@
 (re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
-    (let [label-translations (:label (hakukohteet-field db))
-          selected-hakukohteet @(re-frame/subscribe [:application/selected-hakukohteet])
-          max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])
-          counter (str "(" (count selected-hakukohteet) "/" max-hakukohteet ")")]
-      @(re-frame/subscribe [:application/get-i18n-text
-                            (if max-hakukohteet
-                              (into {} (for [[k label] label-translations]
-                                         [k (str label " " counter)]))
-                              label-translations)]))))
-
-(re-frame/reg-sub
-  :application/max-hakukohteet-reached-label
-  (fn [db _]
-    (let [max-hakukohteet @(re-frame/subscribe [:application/max-hakukohteet])]
-      @(re-frame/subscribe [:application/get-i18n-text
-                   {:fi (str "Lisätty " max-hakukohteet "/" max-hakukohteet)
-                    :sv ""
-                    :en ""}]))))
+    @(re-frame/subscribe [:application/get-i18n-text (:label (hakukohteet-field db))])))
 
 (re-frame/reg-sub
   :application/show-hakukohde-search

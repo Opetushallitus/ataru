@@ -17,9 +17,8 @@
       )
       it('with complete form', function () {
         expect(formFields().length).to.equal(32)
-        expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(submitButton().prop('disabled')).to.equal(true)
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
@@ -91,7 +90,7 @@
         var followupCheckboxInputValues = _.map(testFrame().find('.application__form-multi-choice-followups-container input.application__form-checkbox:checked'), function (e) {
           return $(e).val()
         })
-        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A']
+        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A', 'Jatkokysymys B']
 
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)

@@ -129,9 +129,9 @@
   (fn [db [_ path dom-node]]
     (.addEventListener
       dom-node
-      "animationend"
+      "transitionend"
       #(do
-         (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
+         (.removeEventListener (.-target %) "transitionend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update-fx
                     (fn [{:keys [db]}]
                       (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
