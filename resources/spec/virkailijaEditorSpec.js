@@ -415,14 +415,14 @@
             'Hakukohdekohtainen kysymys'
           ),
           clickElement(function() {
-            return component().find('.editor-form__hakukohde-visible-to-label')
+            return component().find('.belongs-to-hakukohteet__modal-toggle')
           }),
           clickElement(function() {
-            return component().find('.editor-form__hakukohde-visibility-hakukohde-label')
+            return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
           })
         )
         it('shows the selected hakukohde', function() {
-          expect(component().find('.editor-form__hakukohde-visibility-selected-list-item').length).to.equal(1)
+          expect(component().find('.belongs-to-hakukohteet__hakukohde-label').length).to.equal(1)
         })
       })
 

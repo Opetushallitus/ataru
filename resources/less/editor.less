@@ -927,172 +927,182 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
 }
 
-.editor-form__hakukohde-visibility-wrapper {
+.belongs-to-hakukohteet {
   flex: initial;
   width: 700px;
   padding: 10px 14px 20px;
+
+  &__modal-toggle-label {
+    color: @blue-text-color;
+    font-size: 14px;
+  }
+
+  &__modal-toggle {
+    background: none;
+    color: @pale-blue;
+    font-family: Open Sans, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+  }
+
+  &__hakukohde-list {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+    margin-top: 10px;
+  }
+
+  &__hakukohde-list-item {
+    display: flex;
+    background: @element-header-background;
+    margin-bottom: 6px;
+    border: 0px;
+    border-radius: 4px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__hakukohde-label {
+    color: #4a4a4a;
+    font-size: 14px;
+    flex: 1;
+    padding: 12px;
+  }
+
+  &__hakukohde-remove {
+    background: none;
+    color: #cccccc;
+    cursor: pointer;
+    border: none;
+    width: 42px;
+    padding: 0px;
+  }
 }
 
-.editor-form__hakukohde-visibility-selected-list {
-  list-style: none;
-  padding: 0px;
-  margin: 0px;
-  margin-top: 10px;
-}
-
-.editor-form__hakukohde-visibility-selected-list-item {
-  display: flex;
-  background: @element-header-background;
-  margin-bottom: 6px;
-  padding: 12px;
-  border: 0px;
-  border-radius: 4px;
-}
-
-.editor-form__hakukohde-visibility-selected-list-item:last-child {
-  margin-bottom: 0;
-}
-
-.editor-form__hakukohde-visibility-selected-label {
-  color: #4a4a4a;
-  font-size: 14px;
-  flex: 1;
-}
-
-.editor-form__hakukohde-visibility-unselect {
-  color: #cccccc;
-  padding-top: 1px;
-  padding-left: 12px;
-}
-
-.editor-form__active-haut-spinner-container {
-  margin-left: 24px;
-  padding-bottom: 14px;
-}
-
-.editor-form__active-haut-spinner {
-  .spin;
-  font-size: 24px;
-}
-
-.editor-form__hakukohde-visibility-modal-wrapper {
+.belongs-to-hakukohteet-modal {
   position: absolute;
   z-index: 9;
   margin-left: 100px;
   width: 650px;
-}
 
-.editor-form__hakukohde-visibility-modal-arrow-up {
-  left: 78px;
-  width: 30px;
-  height: 16px;
-  position: relative;
-  overflow: hidden;
-  z-index: 9;
-}
+  &__arrow-up {
+    left: 78px;
+    width: 30px;
+    height: 16px;
+    position: relative;
+    overflow: hidden;
+    z-index: 9;
+    &:after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: @element-header-background;
+      transform: rotate(135deg);
+      top: 6px;
+      left: 5px;
+      box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
+    }
+  }
 
-.editor-form__hakukohde-visibility-modal-arrow-up:after {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background: @element-header-background;
-  transform: rotate(135deg);
-  top: 6px;
-  left: 5px;
-  box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
-}
+  &__box {
+    background: @element-header-background;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    box-shadow: @modal-shadow;
+  }
 
-.editor-form__hakukohde-visibility-modal {
-  background: @element-header-background;
-  margin-bottom: 6px;
-  border-radius: 4px;
-  box-shadow: @modal-shadow;
-}
+  &__input-row {
+    display: flex;
+  }
 
-.editor-form__hakukohde-visibility-modal-input-row {
-  display: flex;
-}
+  &__search-container {
+    flex: 1;
+  }
 
-.editor-form__hakukohde-visibility-modal-hide {
-  color: #cccccc;
-  margin-top: 14px;
-  margin-right: 14px;
-}
+  &__search {
+    width: 434px;
+    margin-top: 24px;
+    margin-bottom: 14px;
+    margin-left: 24px;
+    padding: 6px;
+    border: 1px solid #c1c1c1;
+    border-radius: 2px;
+    font-size: 14px;
+  }
 
-.editor-form__hakukohde-visibility-label {
-  color: @blue-text-color;
-  font-size: 14px;
-}
+  &__hide {
+    background: none;
+    height: 48px;
+    width: 48px;
+    color: #cccccc;
+    cursor: pointer;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+  }
 
-.editor-form__hakukohde-visible-to-label {
-  color: @pale-blue;
-  font-size: 14px;
-  cursor: pointer;
-}
+  &__spinner {
+    color: #4a4a4a;
+    font-size: 14px;
+    padding-left: 24px;
+    padding-bottom: 14px;
+  }
 
-.editor-form__hakukohde-visibility-search-container {
-  flex: 1;
-}
+  &__haku-list {
+    height: 500px;
+    overflow-y: scroll;
+    list-style: none;
+    margin: 0px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
 
-.editor-form__hakukohde-visibility-search {
-  width: 50%;
-  margin-top: 24px;
-  margin-bottom: 14px;
-  margin-left: 24px;
-  padding: 6px;
-  border: 1px solid #c1c1c1;
-  border-radius: 2px;
-  font-size: 14px;
-}
+  &__haku-list-item {
+    padding-bottom: 14px;
+    &:last-child {
+      padding-bottom: 0px;
+    }
+  }
 
-.editor-form__hakukohde-visibility-haku-list {
-  height: 500px;
-  overflow-y: scroll;
-  list-style: none;
-  margin: 0px;
-  padding-left: 24px;
-  padding-right: 24px;
-}
+  &__hakukohde-list {
+    list-style: none;
+    padding-left: 24px;
+    padding-top: 14px;
+  }
 
-.editor-form__hakukohde-visibility-hakukohde-list {
-  list-style: none;
-  padding-left: 24px;
-  padding-top: 14px;
-}
+  &__hakukohde-list-item {
+    padding-bottom: 12px;
+    list-style: none;
+    &:last-child {
+      padding-bottom: 0px;
+    }
+  }
 
-.editor-form__hakukohde-visibility-haku-list-item {
-  padding-bottom: 14px;
-}
-
-.editor-form__hakukohde-visibility-haku-list-item:last-child {
-  padding-bottom: 0px;
-}
-
-.editor-form__hakukohde-visibility-hakukohde-list-item {
-  padding-bottom: 12px;
-  list-style: none;
-  &.selected {
+  &__hakukohde-list-item--selected {
     list-style-image: url('/lomake-editori/images/icon_check.png');
   }
-  &:last-child {
-    padding-bottom: 0px;
+
+  &__haku-label {
+    color: #4a4a4a;
+    font-size: 14px;
   }
-}
 
-.editor-form__hakukohde-visibility-haku-label {
-  color: #4a4a4a;
-  font-size: 14px;
-}
+  &__hakukohde-label {
+    color: @pale-blue;
+    font-size: 14px;
+    cursor: pointer;
+  }
 
-.editor-form__hakukohde-visibility-hakukohde-label {
-  color: @pale-blue;
-  font-size: 14px;
-  cursor: pointer;
-  &.selected {
+  &__hakukohde-label--selected {
     color: #4a4a4a;
   }
-  &.highlight {
+
+  &__hakukohde-label--highlighted {
     background: #B7E3F1;
   }
 }
