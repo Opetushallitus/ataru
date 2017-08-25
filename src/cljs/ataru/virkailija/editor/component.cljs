@@ -161,26 +161,41 @@
                (map (fn [field]
                       (into field [(markdown-help)]))))])])))
 
+(defn- text-area-max-chars [text-area-size]
+  (condp = text-area-size
+    "S" "500"
+    "L" "1500"
+    "1000"))
+
+(defn- get-val [event]
+  (-> event .-target .-value))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         size             (subscribe [:editor/get-component-value path :params :size])
+        max-chars        (subscribe [:editor/get-component-value path :params :max-chars])
         radio-group-id   (util/new-uuid)
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch-sync [:editor/set-component-value new-size path :params :size]))
+        max-chars-change (fn [new-val]
+                           (dispatch-sync [:editor/set-component-value new-val path :params :max-chars]))
+        size-change      (fn [new-size]
+                           (dispatch-sync [:editor/set-component-value new-size path :params :size])
+                           (max-chars-change (text-area-max-chars new-size)))
+        text-area?       (= "Tekstialue" header-label)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
-      {:class @animation-effect}
+       {:class @animation-effect}
        [:div.editor-form__component-row-wrapper
         [text-header header-label path :component-wrapped? true]
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
-           (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
+          @languages
+          :header? true)]
         [:div.editor-form__button-wrapper
          [:header.editor-form__component-item-header size-label]
          [:div.editor-form__button-group
@@ -191,25 +206,30 @@
                      {:type      "radio"
                       :value     btn-name
                       :checked   (or
-                                   (= @size btn-name)
-                                   (and
-                                     (nil? @size)
-                                     (= "M" btn-name)))
+                                  (= @size btn-name)
+                                  (and
+                                   (nil? @size)
+                                   (= "M" btn-name)))
                       :name      radio-group-id
                       :id        btn-id
                       :on-change (fn [] (size-change btn-name))}]
                     [:label
                      {:for   btn-id
                       :class (match btn-name
-                               "S" "editor-form__button--left-edge"
-                               "L" "editor-form__button--right-edge"
-                               :else nil)}
-                     btn-name]]))]]
+                                    "S" "editor-form__button--left-edge"
+                                    "L" "editor-form__button--right-edge"
+                                    :else nil)}
+                     btn-name]]))]
+         (when text-area?
+           [:div.editor-form__max-chars-container
+             [:header.editor-form__component-item-header "Tesktikentän maksimikoko"]
+             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-chars (text-area-max-chars @size))
+                                                                                 :defaultValue (text-area-max-chars @size)
+                                                                                 :on-change    #(max-chars-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
-         (when-not (= "Tekstialue" header-label)
+         (when-not text-area?
            [repeater-checkbox path initial-content])]]
-
        [info-addon path]])))
 
 (defn text-field [initial-content path]
@@ -304,7 +324,7 @@
 (defn dropdown [initial-content path]
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
-        value            (subscribe [:editor/get-component-value path]) 
+        value            (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
     (fn [initial-content path]
       (let [languages  @languages

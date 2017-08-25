@@ -154,6 +154,7 @@
           expect(formComponents().eq(2).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
           expect(formComponents().eq(2).find('.editor-form__info-addon-inputs input').val()).to.equal('Toisen kysymyksen ohjeteksti')
           expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
+          expect(formComponents().eq(2).find('.editor-form__max-chars-container input').val()).to.equal('1500')
           expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
