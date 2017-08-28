@@ -18,7 +18,8 @@
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]))
+    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -94,6 +95,10 @@
       (file-store/delete-file (name attachment-key)))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
+(defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
+    virkailija-secret))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
@@ -108,7 +113,7 @@
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
         validation-result  (validator/valid-application? final-application form)
-        virkailija-secret  (:virkailija-secret application)]
+        virkailija-secret  (valid-virkailija-secret application)]
     (cond
       (and (not (nil? virkailija-secret))
            (not (virkailija-secret-valid? virkailija-secret)))
@@ -126,6 +131,7 @@
       not-allowed-reply
 
       (and is-modify?
+           (not virkailija-secret)
            (or (in-complete-state? (:key latest-application))
                (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
       not-allowed-reply
