@@ -211,7 +211,6 @@
         size        (-> field-descriptor :params :size)
         max-length  (-> field-descriptor :params :max-length (or 1000))]
     (fn [field-descriptor]
-      (println max-length)
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
          [label field-descriptor]
@@ -226,8 +225,7 @@
            :default-value value
            :on-change     on-change
            :value         value}]
-         [:span.application__form-textarea-max-length
-          {:dangerouslySetInnerHTML {:__html (str (count value) " / " max-length)}}]]))))
+         [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
 
 (declare render-field)
 
