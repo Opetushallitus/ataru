@@ -161,7 +161,7 @@
                (map (fn [field]
                       (into field [(markdown-help)]))))])])))
 
-(defn- text-area-max-chars [text-area-size]
+(defn- text-area-max-length [text-area-size]
   (condp = text-area-size
     "S" "500"
     "L" "1500"
@@ -173,15 +173,15 @@
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         size             (subscribe [:editor/get-component-value path :params :size])
-        max-chars        (subscribe [:editor/get-component-value path :params :max-chars])
+        max-length        (subscribe [:editor/get-component-value path :params :max-length])
         radio-group-id   (util/new-uuid)
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        max-chars-change (fn [new-val]
-                           (dispatch-sync [:editor/set-component-value new-val path :params :max-chars]))
+        max-length-change (fn [new-val]
+                           (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
         size-change      (fn [new-size]
                            (dispatch-sync [:editor/set-component-value new-size path :params :size])
-                           (max-chars-change (text-area-max-chars new-size)))
+                           (max-length-change (text-area-max-length new-size)))
         text-area?       (= "Tekstialue" header-label)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
@@ -221,11 +221,11 @@
                                     :else nil)}
                      btn-name]]))]
          (when text-area?
-           [:div.editor-form__max-chars-container
+           [:div.editor-form__max-length-container
              [:header.editor-form__component-item-header "Tesktikentän maksimikoko"]
-             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-chars (text-area-max-chars @size))
-                                                                                 :defaultValue (text-area-max-chars @size)
-                                                                                 :on-change    #(max-chars-change (get-val %))}]])]
+             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-length (text-area-max-length @size))
+                                                                                 :defaultValue (text-area-max-length @size)
+                                                                                 :on-change    #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?
