@@ -158,14 +158,17 @@ ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
 SELECT
-  event_type,
-  time,
-  new_review_state,
-  application_key,
-  id
-FROM application_events
-WHERE application_key = :application_key
-ORDER BY time ASC;
+  ae.event_type,
+  ae.time,
+  ae.new_review_state,
+  ae.application_key,
+  ae.id,
+  v.first_name,
+  v.last_name
+FROM application_events ae
+LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
+WHERE ae.application_key = :application_key
+ORDER BY ae.time ASC;
 
 -- name: yesql-get-application-review
 SELECT
@@ -297,11 +300,55 @@ FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time
   JOIN forms f ON a.form_id = f.id;
 
+-- name: yesql-get-latest-application-by-virkailija-secret
+WITH latest_version AS (
+    SELECT max(a.created_time) AS latest_time
+    FROM applications a
+    JOIN virkailija_credentials AS vc
+    ON a.key = vc.application_key
+    WHERE vc.secret = :virkailija_secret
+)
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id AS form,
+  a.created_time,
+  a.content,
+  a.haku,
+  a.hakukohde,
+  f.key     AS form_key
+FROM applications a
+  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN forms f ON a.form_id = f.id;
+
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH latest_version AS (
     SELECT max(created_time) AS latest_time
     FROM applications a
     WHERE a.secret = :secret
+)
+SELECT
+  id,
+  key,
+  lang,
+  form_id AS form,
+  created_time,
+  content,
+  haku,
+  hakukohde,
+  person_oid
+FROM applications a
+  JOIN latest_version lv ON a.created_time = lv.latest_time
+FOR UPDATE;
+
+-- name: yesql-get-latest-version-by-virkailija-secret-lock-for-update
+WITH latest_version AS (
+    SELECT max(a.created_time) AS latest_time
+    FROM applications a
+    JOIN virkailija_credentials AS vc
+      ON a.key = vc.application_key
+    WHERE vc.secret = :virkailija_secret
 )
 SELECT
   id,
@@ -341,8 +388,8 @@ FROM application_reviews ar
 
 -- name: yesql-add-application-event!
 -- Add application event
-INSERT INTO application_events (application_key, event_type, new_review_state)
-VALUES (:application_key, :event_type, :new_review_state);
+INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid)
+VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid);
 
 -- name: yesql-add-application-review!
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
@@ -435,3 +482,9 @@ GROUP BY f.name, f.key;
 INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
 VALUES
   (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
+
+-- name: yesql-get-hakija-secret-by-virkailija-secret
+SELECT a.secret FROM applications a
+INNER JOIN virkailija_credentials c ON a.key = c.application_key
+WHERE c.secret = :virkailija_secret
+ORDER BY a.created_time DESC LIMIT 1;

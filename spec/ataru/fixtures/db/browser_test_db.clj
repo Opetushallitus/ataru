@@ -142,9 +142,9 @@
   (form-store/create-new-form! form3 (:key form3))
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (application-store/add-application application1)
-                            (application-store/add-application application2)
-                            (application-store/add-application application3)))
+    (application-store/add-application application1)
+    (application-store/add-application application2)
+    (application-store/add-application application3)))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))

@@ -1,0 +1,1 @@
+ALTER TABLE virkailija_credentials DROP CONSTRAINT virkailija_credentials_pkey;

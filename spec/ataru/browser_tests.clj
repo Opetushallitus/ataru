@@ -52,6 +52,13 @@
     (.println System/err (:err results))
     (should= 0 (:exit results))))
 
+(defn- get-latest-form
+  [form-name]
+  (->> (form-store/get-all-forms)
+       (filter #(= (:name %) form-name))
+       (first)))
+
+
 (describe "Virkailija UI tests /"
           (tags :ui :ui-virkailija)
           (around-all [specs]
@@ -77,6 +84,9 @@
               (run-phantom-test "hakija-ssn"))
 
           (it "can edit an application successfully"
-              (run-phantom-test "hakija-edit")))
+              (run-phantom-test "hakija-edit"))
+
+          (it "can edit an application successfully as virkailija"
+              (run-phantom-test "virkailija-hakemus-edit")))
 
 (run-specs)

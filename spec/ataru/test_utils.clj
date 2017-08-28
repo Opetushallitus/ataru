@@ -39,6 +39,10 @@
     (should-not-be-nil headers)
     (should-not-contain header headers)))
 
+(defn create-fake-virkailija-credentials [application-key]
+  (with-redefs [ataru.virkailija.user.ldap-client/get-virkailija-by-username (fn [username] {:employeeNumber "1213" :givenName "testi" :sn "tunkki"})]
+    (ataru.virkailija.authentication.virkailija-edit/create-virkailija-credentials {:identity {:username "tsers"}} application-key)))
+
 (defn get-latest-form
   [form-name]
   (if-let [form (->> (form-store/get-all-forms)
@@ -54,19 +58,21 @@
       first
       :id))
 
-(defn get-latest-application-secret-by-form-name [form-name]
+(defn get-latest-application-by-form-name [form-name]
   (if-let [latest-application-id (get-latest-application-id-for-form form-name)]
-    (let [secret (-> latest-application-id
-                     (application-store/get-application)
-                     :secret)]
-      (println "Using application" latest-application-id "with secret" secret)
-      secret)
+    (application-store/get-application latest-application-id)
     (println "No test application found. Run hakija form test first!")))
 
 (defn get-test-vars-params
   "Used in hakija routes to get required test params instead of writing them to test url."
   []
-  (let [test-form (get-latest-form "Testilomake")]
-    {:test-form-key                (:key test-form)
-     :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
-     :test-form-application-secret (get-latest-application-secret-by-form-name "Testilomake")}))
+  (let [test-form   (get-latest-form "Testilomake")
+        application (get-latest-application-by-form-name "Testilomake")]
+    (println (str "application: " application))
+    (cond->
+      {:test-form-key                (:key test-form)
+       :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
+       :test-form-application-secret (:secret application)}
+
+      (some? application)
+      (assoc :virkailija-secret (:secret (create-fake-virkailija-credentials (:key application)))))))

@@ -1,5 +1,5 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :as url-helper]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
@@ -30,7 +30,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
+            [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [ataru.config.core :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -45,7 +45,8 @@
             [clout.core :as clout]
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
-            [medley.core :refer [map-kv]])
+            [medley.core :refer [map-kv]]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
 
@@ -194,6 +195,16 @@
                              :review      ataru-schema/Review
                              :form        ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
+
+                   (api/GET "/:application-key/modify" {session :session}
+                     :path-params [application-key :- String]
+                     :summary "Get HTTP redirect response for modifying a single application in Hakija side"
+                     (if-let [virkailija-credentials (virkailija-edit/create-virkailija-credentials session application-key)]
+                       (let [modify-url (str (-> config :public-config :applicant :service_url)
+                                             "/hakemus?virkailija-secret="
+                                             (:secret virkailija-credentials))]
+                         (response/temporary-redirect modify-url))
+                       (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"

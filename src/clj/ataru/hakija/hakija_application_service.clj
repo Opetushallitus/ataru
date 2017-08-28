@@ -17,7 +17,9 @@
                                                    editing-forbidden-person-info-field-ids]]
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]))
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -93,6 +95,10 @@
       (file-store/delete-file (name attachment-key)))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
+(defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
+  (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
+    virkailija-secret))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
@@ -102,12 +108,21 @@
                                (hakija-form-service/inject-hakukohde-component-if-missing)
                                (hakukohde/populate-hakukohde-answer-options tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
-        latest-application (application-store/get-latest-application-by-secret (:secret application))
+        latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application)
                              application)
-        validation-result  (validator/valid-application? final-application form)]
+        validation-result  (validator/valid-application? final-application form)
+        virkailija-secret  (valid-virkailija-secret application)]
     (cond
+      (and (not (nil? virkailija-secret))
+           (not (virkailija-secret-valid? virkailija-secret)))
+      {:passed? false :failures ["Tried to edit application with invalid virkailija secret."]}
+
+      (and (:secret application)
+           virkailija-secret)
+      {:passed? false :failures ["Tried to edit hakemus with both virkailija and hakija secret."]}
+
       (and (:haku application)
            (empty? (:hakukohde application)))
       {:passed? false :failures ["Hakukohde must be specified"]}
@@ -116,6 +131,7 @@
       not-allowed-reply
 
       (and is-modify?
+           (not virkailija-secret)
            (or (in-complete-state? (:key latest-application))
                (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
       not-allowed-reply
@@ -175,10 +191,13 @@
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application true)]
+        (validate-and-store tarjonta-service application application-store/update-application true)
+        virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
-        (application-email/start-email-edit-confirmation-job application-id)
+        (if virkailija-secret
+          (invalidate-virkailija-credentials virkailija-secret)
+          (application-email/start-email-edit-confirmation-job application-id))
         {:passed? true :id application-id})
       validation-result)))
 

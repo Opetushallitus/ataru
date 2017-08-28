@@ -25,6 +25,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
+            [ataru.virkailija.authentication.virkailija-edit :refer [virkailija-secret-valid?]]
             [ataru.test-utils :refer [get-test-vars-params]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
@@ -55,6 +56,12 @@
         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
         (response/not-found {})))))
 
+(defn- get-application-by-virkailija-secret [virkailija-secret]
+  (if (virkailija-secret-valid? virkailija-secret)
+    (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
+      (get-application hakija-secret))
+    (response/bad-request {:error "Attempted to edit hakemus with invalid virkailija secret."})))
+
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
   (response/ok {}))
@@ -77,20 +84,27 @@
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
+    (api/GET "/virkailija-hakemus-edit-test.html" []
+      (if (is-dev-env?)
+        (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
+        (response/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
       ;; individually when navigationg to any test file.
       (if (is-dev-env?)
         (render-file-in-dev (str "spec/" filename ".js")
-                             (when (= "hakijaCommon" filename)
-                               (get-test-vars-params)))
-         (response/not-found "Not found")))))
+                            (when (= "hakijaCommon" filename)
+                              (get-test-vars-params)))
+        (response/not-found "Not found")))))
 
 (api/defroutes james-routes
   (api/undocumented
     (api/GET "/favicon.ico" []
       (-> "public/images/james.jpg" io/resource))))
+
+(defn- not-blank? [x]
+  (not (clojure.string/blank? x)))
 
 (defn api-routes [tarjonta-service]
   (api/context "/api" []
@@ -150,10 +164,18 @@
         {:passed? true :id application-id}
         (response/ok {:id application-id})))
     (api/GET "/application" []
-      :summary "Get submitted application"
-      :query-params [secret :- s/Str]
+      :summary "Get submitted application by secret"
+      :query-params [{secret :- s/Str nil}
+                     {virkailija-secret :- s/Str nil}]
       :return ataru-schema/Application
-      (get-application secret))
+      (cond (not-blank? secret)
+            (get-application secret)
+
+            (not-blank? virkailija-secret)
+            (get-application-by-virkailija-secret virkailija-secret)
+
+            :else
+            (response/bad-request)))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"

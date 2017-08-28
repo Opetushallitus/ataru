@@ -6,13 +6,17 @@ var app = args[1];
 var cookie = args.length > 2 ? args[2] : ''
 
 var url
+function addPhantomCookie() {
+  phantom.addCookie({
+    'name': 'ring-session',
+    'value': cookie,
+    'domain': 'localhost'
+  });
+}
+
 switch (app) {
   case 'virkailija':
-    phantom.addCookie({
-      'name': 'ring-session',
-      'value': cookie,
-      'domain': 'localhost'
-    });
+    addPhantomCookie();
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
     break;
   case 'hakija-form':
@@ -29,6 +33,13 @@ switch (app) {
     break;
   case 'hakija-edit':
     url = 'http://localhost:8351/hakemus/hakija-edit-test.html'
+    break;
+  case 'virkailija-hakemus-edit':
+    /* To run this test individually, run hakija edit-test, create a fake virkailija with virkailija_credentials
+     *  to the same application as hakija-edit-test uses and use the fake secret in the url. Easiest way to do it
+     *  is to add the credentials directly in to the db
+     * */
+    url = 'http://localhost:8351/hakemus/virkailija-hakemus-edit-test.html'
     break;
   default:
     console.log('invalid app: ' + app)

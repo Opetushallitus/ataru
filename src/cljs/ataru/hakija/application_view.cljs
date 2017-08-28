@@ -22,32 +22,33 @@
 (def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
-  (let [selected-lang    (:selected-language form)
-        languages        (filter
-                           (partial not= selected-lang)
-                           (:languages form))
-        submit-status    (subscribe [:state-query [:application :submit-status]])
-        application      (subscribe [:state-query [:application]])
-        secret           (:modify (util/extract-query-params))
+  (let [selected-lang     (:selected-language form)
+        languages         (filter
+                            (partial not= selected-lang)
+                            (:languages form))
+        submit-status     (subscribe [:state-query [:application :submit-status]])
+        application       (subscribe [:state-query [:application]])
+        secret            (:modify (util/extract-query-params))
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
 
-        haku-name        (-> form :tarjonta :haku-name)
-        apply-start-date (-> form :tarjonta :hakuaika-dates :start)
-        apply-end-date   (-> form :tarjonta :hakuaika-dates :end)
-        hakuaika-on      (-> form :tarjonta :hakuaika-dates :on)
+        haku-name         (-> form :tarjonta :haku-name)
+        apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
+        apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
+        hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
 
-        translations     (get-translations
-                           (keyword selected-lang)
-                           translations/application-view-translations)
-        apply-dates      (when haku-name
-                           (if (and apply-start-date apply-end-date)
-                             (str (:application-period translations)
-                                  " "
-                                  (unparse date-format (from-long apply-start-date))
-                                  " - "
-                                  (unparse date-format (from-long apply-end-date))
-                                  (when-not hakuaika-on
-                                    (str " (" (:not-within-application-period translations) ")")))
-                             (:continuous-period translations)))]
+        translations      (get-translations
+                            (keyword selected-lang)
+                            translations/application-view-translations)
+        apply-dates       (when haku-name
+                            (if (and apply-start-date apply-end-date)
+                              (str (:application-period translations)
+                                   ": "
+                                   (unparse date-format (from-long apply-start-date))
+                                   " - "
+                                   (unparse date-format (from-long apply-end-date))
+                                   (when (and (not hakuaika-on) (nil? virkailija-secret))
+                                     (str " (" (:not-within-application-period translations) ")")))
+                              (:continuous-period translations)))]
     (fn [form]
       [:div
        [:div.application__header-container
@@ -66,8 +67,9 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (or (application-in-complete-state? @application)
-                 (application-processing-jatkuva-haku? @application (:tarjonta form)))
+       (when (and (or (application-in-complete-state? @application)
+                      (application-processing-jatkuva-haku? @application (:tarjonta form)))
+                  (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
@@ -112,6 +114,7 @@
         stars          (subscribe [:state-query [:application :feedback :stars]])
         hidden?        (subscribe [:state-query [:application :feedback :hidden?]])
         rating-status  (subscribe [:state-query [:application :feedback :status]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         show-feedback? (reaction (and (= :submitted @submit-status)
                                       (not @hidden?)))]
     (fn []
@@ -120,7 +123,7 @@
                            translations/application-view-translations)
             rated?       (= :rating-given @rating-status)
             submitted?   (= :feedback-submitted @rating-status)]
-        (when @show-feedback?
+        (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
             {:on-click #(dispatch [:application/rating-form-toggle])}

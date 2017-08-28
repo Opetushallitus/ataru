@@ -213,6 +213,7 @@
    (s/optional-key :id)                 s/Int
    (s/optional-key :created-time)       org.joda.time.DateTime
    (s/optional-key :secret)             s/Str
+   (s/optional-key :virkailija-secret)  s/Str
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
@@ -221,6 +222,7 @@
   (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
+                         "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"))
 
@@ -229,7 +231,9 @@
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-states)})
+   (s/optional-key :new-review-state) (s/maybe application-states)
+   :first-name                        (s/maybe s/Str)
+   :last-name                         (s/maybe s/Str)})
 
 (s/defschema Review
   {:id                             s/Int

@@ -1,4 +1,5 @@
 var testFormApplicationSecret = '{{test-form-application-secret}}'
+var virkailijaSecret = '{{virkailija-secret}}'
 
 function newForm(formName) {
   var testFormKey = '{{test-form-key}}';
