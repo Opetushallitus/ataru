@@ -30,13 +30,9 @@
                                               :valid true}]}]
 
                      [_ _ _]
-                     [id (cond-> {:valid     (not (some #(contains? required-validators %) (:validators field)))
-                                  :label     (:label field)
-                                  :order-idx idx}
-                           (not-empty belongs-to-hakukohteet)
-                           (assoc :belongs-to-hakukohteet (distinct (cond-> belongs-to-hakukohteet
-                                                                      (some? preselected-hakukohde)
-                                                                      (conj preselected-hakukohde)))))])))
+                     [id {:valid     (not (some #(contains? required-validators %) (:validators field)))
+                          :label     (:label field)
+                          :order-idx idx}])))
           flattened-form-fields)))
 
 (defn create-initial-answers

@@ -288,7 +288,6 @@
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))
-        selected-hakukohteet (map :value (-> db :application :answers :hakukohteet :values))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         (-> db
                      (update :form (fn [{:keys [selected-language]}]
@@ -302,8 +301,7 @@
                      (original-values->answers)
                      (set-followup-visibility-to-false))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                  [:application/show-answers-belonging-to-hakukohteet
-                   (distinct (conj selected-hakukohteet preselected-hakukohde))]
+                  [:application/show-answers-belonging-to-hakukohteet]
                   [:application/hakukohde-query-change "" 0]]}))
 
 (reg-event-db
