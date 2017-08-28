@@ -92,10 +92,14 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/virkailija-test.html" []
-      (render-file-in-dev "templates/virkailija-test.html"))
-    (api/GET "/spec/:filename.js" [filename]
-      (render-file-in-dev (str "spec/" filename ".js")))))
+   (api/GET "/virkailija-test.html" []
+            (if (:dev? env)
+              (render-file-in-dev "templates/virkailija-test.html")
+              (route/not-found "Not found")))
+   (api/GET "/spec/:filename.js" [filename]
+            (if (:dev? env)
+              (render-file-in-dev (str "spec/" filename ".js"))
+              (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
     (api/context "/api" []
@@ -374,7 +378,7 @@
                               (when (:dev? env) local-raami-routes)
                               resource-routes
                               (api/context "/lomake-editori" []
-                                (when (:dev? env) test-routes)
+                                test-routes
                                 dashboard-routes
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
