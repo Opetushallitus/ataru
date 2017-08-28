@@ -144,6 +144,7 @@
           clickComponentMenuItem('Tekstialue'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__button-group div:eq(2) label')}),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__checkbox-wrapper label')}),
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field-auto-width')}, '2000'),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__info-addon-checkbox label') }),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__info-addon-inputs input') }, 'Toisen kysymyksen ohjeteksti')
@@ -154,6 +155,7 @@
           expect(formComponents().eq(2).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
           expect(formComponents().eq(2).find('.editor-form__info-addon-inputs input').val()).to.equal('Toisen kysymyksen ohjeteksti')
           expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
+          expect(formComponents().eq(2).find('.editor-form__max-length-container input').val()).to.equal('2000')
           expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })

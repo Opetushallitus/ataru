@@ -207,20 +207,25 @@
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         answers     (subscribe [:state-query [:application :answers]])
-        on-change   (partial textual-field-change field-descriptor)]
+        on-change   (partial textual-field-change field-descriptor)
+        size        (-> field-descriptor :params :size)
+        max-length  (-> field-descriptor :params :max-length (or 1000))]
     (fn [field-descriptor]
-      [div-kwd
-       [label field-descriptor]
-       [:div.application__form-text-area-info-text
-        [info-text field-descriptor]]
-       [:textarea.application__form-text-input.application__form-text-area
-        {:id (:id field-descriptor)
-         :class (text-area-size->class (-> field-descriptor :params :size))
-         ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
-         ; dynamically made changes to the text-field value.
-         :default-value (textual-field-value field-descriptor @application)
-         :on-change on-change
-         :value (textual-field-value field-descriptor @application)}]])))
+      (let [value (textual-field-value field-descriptor @application)]
+        [div-kwd
+         [label field-descriptor]
+         [:div.application__form-text-area-info-text
+          [info-text field-descriptor]]
+         [:textarea.application__form-text-input.application__form-text-area
+          {:id            (:id field-descriptor)
+           :class         (text-area-size->class size)
+           :maxLength     max-length
+           ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
+           ; dynamically made changes to the text-field value.
+           :default-value value
+           :on-change     on-change
+           :value         value}]
+         [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
 
 (declare render-field)
 

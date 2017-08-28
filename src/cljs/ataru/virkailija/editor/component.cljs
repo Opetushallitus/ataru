@@ -272,13 +272,28 @@
                       (into field [[:div.editor-form__markdown-anchor
                                     (markdown-help)]]))))])])))
 
+(defn- text-area-max-length [text-area-size]
+  (condp = text-area-size
+    "S" "500"
+    "L" "1500"
+    "1000"))
+
+(defn- get-val [event]
+  (-> event .-target .-value))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages        (subscribe [:editor/languages])
         size             (subscribe [:editor/get-component-value path :params :size])
+        max-length        (subscribe [:editor/get-component-value path :params :max-length])
         radio-group-id   (util/new-uuid)
         radio-buttons    ["S" "M" "L"]
         radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        size-change      (fn [new-size] (dispatch-sync [:editor/set-component-value new-size path :params :size]))
+        max-length-change (fn [new-val]
+                           (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
+        size-change      (fn [new-size]
+                           (dispatch-sync [:editor/set-component-value new-size path :params :size])
+                           (max-length-change (text-area-max-length new-size)))
+        text-area?       (= "Tekstialue" header-label)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
@@ -288,10 +303,10 @@
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
          (input-fields-with-lang
-           (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-           @languages
-           :header? true)]
+          (fn [lang]
+            [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
+          @languages
+          :header? true)]
         [:div.editor-form__button-wrapper
          [:header.editor-form__component-item-header size-label]
          [:div.editor-form__button-group
@@ -302,23 +317,29 @@
                      {:type      "radio"
                       :value     btn-name
                       :checked   (or
-                                   (= @size btn-name)
-                                   (and
-                                     (nil? @size)
-                                     (= "M" btn-name)))
+                                  (= @size btn-name)
+                                  (and
+                                   (nil? @size)
+                                   (= "M" btn-name)))
                       :name      radio-group-id
                       :id        btn-id
                       :on-change (fn [] (size-change btn-name))}]
                     [:label
                      {:for   btn-id
                       :class (match btn-name
-                               "S" "editor-form__button--left-edge"
-                               "L" "editor-form__button--right-edge"
-                               :else nil)}
-                     btn-name]]))]]
+                                    "S" "editor-form__button--left-edge"
+                                    "L" "editor-form__button--right-edge"
+                                    :else nil)}
+                     btn-name]]))]
+         (when text-area?
+           [:div.editor-form__max-length-container
+             [:header.editor-form__component-item-header "Max. merkkimäärä"]
+             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-length (text-area-max-length @size))
+                                                                                 :defaultValue (text-area-max-length @size)
+                                                                                 :on-change    #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
-         (when-not (= "Tekstialue" header-label)
+         (when-not text-area?
            [repeater-checkbox path initial-content])]
         [belongs-to-hakukohteet path initial-content]]
        [info-addon path]])))
