@@ -222,7 +222,7 @@
                      btn-name]]))]
          (when text-area?
            [:div.editor-form__max-length-container
-             [:header.editor-form__component-item-header "Tesktikentän maksimikoko"]
+             [:header.editor-form__component-item-header "Max. merkkimäärä"]
              [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-length (text-area-max-length @size))
                                                                                  :defaultValue (text-area-max-length @size)
                                                                                  :on-change    #(max-length-change (get-val %))}]])]

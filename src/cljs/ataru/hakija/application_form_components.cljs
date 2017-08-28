@@ -209,8 +209,9 @@
         answers     (subscribe [:state-query [:application :answers]])
         on-change   (partial textual-field-change field-descriptor)
         size        (-> field-descriptor :params :size)
-        max-length  (-> field-descriptor :params :max-length)]
+        max-length  (-> field-descriptor :params :max-length (or 1000))]
     (fn [field-descriptor]
+      (println max-length)
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
          [label field-descriptor]
