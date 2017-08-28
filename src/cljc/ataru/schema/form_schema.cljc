@@ -144,6 +144,17 @@
                                         (s/optional-key :end) (s/maybe s/Int)
                                         :on                   s/Bool}})
 
+(s/defschema Haku
+  {:oid s/Str
+   :name LocalizedStringOptional
+   :hakuajat [{:start java.time.ZonedDateTime
+               (s/optional-key :end) java.time.ZonedDateTime}]})
+
+(s/defschema Hakukohde
+  {:oid s/Str
+   :haku-oid s/Str
+   :name LocalizedStringOptional})
+
 (s/defschema File
   {:key                      s/Str
    :content-type             s/Str
@@ -232,18 +243,18 @@
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
 
-(s/defschema Hakukohde {:oid               s/Str
-                        :name              s/Str
-                        :application-count s/Int
-                        :unprocessed       s/Int
-                        :incomplete        s/Int})
+(s/defschema ApplicationCountsHakukohde {:oid               s/Str
+                                         :name              s/Str
+                                         :application-count s/Int
+                                         :unprocessed       s/Int
+                                         :incomplete        s/Int})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              s/Str
                            :application-count s/Int
                            :unprocessed       s/Int
                            :incomplete        s/Int
-                           :hakukohteet       [Hakukohde]})
+                           :hakukohteet       [ApplicationCountsHakukohde]})
 
 (s/defschema DirectFormHaku {:name              s/Str
                              :key               s/Str

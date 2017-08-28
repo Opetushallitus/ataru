@@ -21,6 +21,16 @@
   [hakukohde-oid]
   (do-request (resolve-url :tarjonta-service.hakukohde hakukohde-oid)))
 
+(defn hakukohteet-by-organization
+  [organization-oid]
+  (do-request (resolve-url :tarjonta-service.hakukohde.search
+                           {"defaultTarjoaja" organization-oid
+                            "organisationOid" organization-oid})))
+
+(defn all-haut
+  []
+  (do-request (resolve-url :tarjonta-service.all-haut)))
+
 (defn get-haku
   [haku-oid]
   (do-request (resolve-url :tarjonta-service.haku haku-oid)))

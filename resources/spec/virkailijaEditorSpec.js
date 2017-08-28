@@ -404,6 +404,28 @@
         })
       })
 
+      describe('hakukohde specific question', function() {
+        var component = function() { return formComponents().eq(16) }
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          setTextFieldValue(
+            function() {
+              return component().find('.editor-form__text-field')
+            },
+            'Hakukohdekohtainen kysymys'
+          ),
+          clickElement(function() {
+            return component().find('.belongs-to-hakukohteet__modal-toggle')
+          }),
+          clickElement(function() {
+            return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
+          })
+        )
+        it('shows the selected hakukohde', function() {
+          expect(component().find('.belongs-to-hakukohteet__hakukohde-label').length).to.equal(1)
+        })
+      })
+
       describe('autosave', function () {
         before(
           wait.until(function() {

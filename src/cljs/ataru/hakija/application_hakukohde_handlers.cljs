@@ -1,12 +1,16 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+    [ataru.hakija.rules :as rules]
     [ataru.hakija.application-validators :as validator]))
 
 (defn- hakukohteet-field [db]
   (->> (get-in db [:form :content] [])
        (filter #(= "hakukohteet" (:id %)))
        first))
+
+(defn- toggle-hakukohde-field-visibility [db hakukohde-oid visible]
+  (rules/run-rule {:set-visibility-based-on-hakukohde [hakukohde-oid visible]} db))
 
 (reg-event-db
   :application/hakukohde-search-toggle
@@ -48,7 +52,8 @@
           (assoc-in [:application :answers :hakukohteet :values]
                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
-                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))))))
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
+          (toggle-hakukohde-field-visibility hakukohde-oid true)))))
 
 (reg-event-db
   :application/hakukohde-remove-selection
@@ -59,7 +64,8 @@
           (assoc-in [:application :answers :hakukohteet :values]
                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
-                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))))))
+                    (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
+          (toggle-hakukohde-field-visibility hakukohde-oid false)))))
 
 (reg-event-db
   :application/show-answers-belonging-to-hakukohteet
@@ -67,9 +73,10 @@
     (reduce-kv (fn [db answer-key {:keys [belongs-to-hakukohteet]}]
                  (cond-> db
                    (not-empty belongs-to-hakukohteet)
-                   (assoc-in [:application :ui answer-key :visible?] (-> (clojure.set/intersection (set hakukohteet)
-                                                                                                   (set belongs-to-hakukohteet))
-                                                                         (empty?)
-                                                                         (not)))))
+                   (assoc-in [:application :ui answer-key :visible?]
+                             (-> (clojure.set/intersection (set hakukohteet)
+                                                           (set belongs-to-hakukohteet))
+                                 (empty?)
+                                 (not)))))
                db
                (get-in db [:application :answers]))))
