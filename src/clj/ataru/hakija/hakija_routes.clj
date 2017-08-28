@@ -74,12 +74,18 @@
 (api/defroutes test-routes
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
-      (render-file-in-dev (str "templates/hakija-" testname "-test.html")))
+      (if (is-dev-env?)
+        (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
+        (response/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
       ;; Test vars params is a hack to get form ids from fixtures to the test file
       ;; without having to pass them as url params. Also enables tests to be run
       ;; individually when navigationg to any test file.
-      (render-file-in-dev (str "spec/" filename ".js") (when (= "hakijaCommon" filename) (get-test-vars-params))))))
+      (if (is-dev-env?)
+        (render-file-in-dev (str "spec/" filename ".js")
+                             (when (= "hakijaCommon" filename)
+                               (get-test-vars-params)))
+         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
   (api/undocumented
@@ -212,8 +218,8 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               (when (is-dev-env?) james-routes)
                               (api/routes
-                                (api/context "/hakemus" []
-                                  (when (is-dev-env?) test-routes)
+                               (api/context "/hakemus" []
+                                  test-routes
                                   (api-routes (:tarjonta-service this))
                                   (route/resources "/")
                                   (api/undocumented
