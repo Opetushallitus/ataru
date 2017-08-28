@@ -23,6 +23,14 @@
      db
      (get-in db [:form :content]))))
 
+(defn- set-values-changed
+  [db]
+  (let [values (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+        original-values (set (get-in db [:application :answers :hakukohteet :original-value] []))]
+    (update-in db [:application :values-changed?]
+               (fnil (if (= original-values values) disj conj) #{})
+               :hakukohteet)))
+
 (reg-event-db
   :application/hakukohde-search-toggle
   (fn [db _]
@@ -64,6 +72,7 @@
                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
                     (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
+          set-values-changed
           set-visibility-of-belongs-to-hakukohteet-questions))))
 
 (reg-event-db
@@ -76,6 +85,7 @@
                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
                     (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
+          set-values-changed
           set-visibility-of-belongs-to-hakukohteet-questions))))
 
 (reg-event-db
