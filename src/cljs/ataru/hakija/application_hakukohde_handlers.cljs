@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
+    [ataru.hakija.rules :as rules]
     [ataru.hakija.application-validators :as validator]))
 
 (defn- hakukohteet-field [db]
