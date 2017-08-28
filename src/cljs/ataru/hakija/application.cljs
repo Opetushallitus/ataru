@@ -11,7 +11,7 @@
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
         (map-indexed
-          (fn [idx field]
+          (fn [idx {:keys [belongs-to-hakukohteet] :as field}]
             (let [id      (keyword (:id field))
                   options (:options field)]
               (match [id (count options) preselected-hakukohde]
@@ -30,9 +30,13 @@
                                               :valid true}]}]
 
                      [_ _ _]
-                     [id {:valid     (not (some #(contains? required-validators %) (:validators field)))
-                          :label     (:label field)
-                          :order-idx idx}])))
+                     [id (cond-> {:valid     (not (some #(contains? required-validators %) (:validators field)))
+                                  :label     (:label field)
+                                  :order-idx idx}
+                           (not-empty belongs-to-hakukohteet)
+                           (assoc :belongs-to-hakukohteet (distinct (cond-> belongs-to-hakukohteet
+                                                                      (some? preselected-hakukohde)
+                                                                      (conj preselected-hakukohde)))))])))
           flattened-form-fields)))
 
 (defn create-initial-answers
@@ -82,10 +86,15 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
+(def ^:private form-fields-to-hide (comp not-empty
+                                         (partial clojure.set/intersection #{:exclude-from-answers-if-hidden :belongs-to-hakukohteet})
+                                         set
+                                         keys))
+
 (defn- remove-invisible-answers
   [answers flat-form ui]
   (let [fields-to-remove-if-hidden (->> flat-form
-                                        (filter-vals :exclude-from-answers-if-hidden)
+                                        (filter-vals form-fields-to-hide)
                                         (keys)
                                         (map keyword)
                                         (set))

@@ -410,10 +410,9 @@ section.editor-form > div > .editor-form__component-wrapper {
 
 .editor-form__text-field-wrapper {
   padding: 10px 14px 0px;
-  margin-right: 31px;
   display: flex;
   flex-flow: column nowrap;
-  flex-basis: 390px;
+  flex: initial;
 }
 
 .editor-form__text-field {
@@ -513,8 +512,8 @@ form > div > .editor-form__component-wrapper {
 .editor-form__button-wrapper {
   display: flex;
   flex-flow: column nowrap;
+  flex: initial;
   padding: 10px 14px 20px;
-  margin-right: 31px;
 }
 
 .editor-form__button-group {
@@ -566,26 +565,32 @@ form > div > .editor-form__component-wrapper {
 .editor-form__single-checkbox-wrapper {
   display: flex;
   flex-flow: column nowrap;
+  flex: auto;
   justify-content: flex-start;
   margin-top: 52px;
 }
 
 .editor-form__checkbox-wrapper {
   display: flex;
+  flex: auto;
   flex-flow: column nowrap;
   padding: 10px 14px 20px;
   justify-content: flex-start;
-  margin-right: 61px;
 }
 
 .editor-form__checkbox-container {
   display: flex;
   align-items: baseline;
-  margin: 5px 0px;
+  margin: 0px;
+  margin-bottom: 10px;
 }
 
 .editor-form__checkbox-container:last-child {
   margin: 0;
+}
+
+.editor-form__checkbox {
+  margin-left: 0px;
 }
 
 .editor-form__component-item-header {
@@ -854,12 +859,25 @@ form > div > .editor-form__component-wrapper {
   margin-left: 20px;
 }
 
+.editor-form__text-field:focus ~ .editor-form__markdown-anchor {
+  display: block;
+}
+
+textarea.editor-form__text-field ~ .editor-form__markdown-anchor {
+  height: 115px;
+  display: none;
+}
+
+input.editor-form__text-field ~ .editor-form__markdown-anchor {
+  height: 42px;
+  display: none;
+}
+
 .editor-form__markdown-help {
   font-size: 14px;
   text-align: center;
   width: 210px;
-  position: relative;
-  display: none;
+  position: absolute;
   align-self: flex-start;
 }
 
@@ -907,4 +925,184 @@ form > div > .editor-form__component-wrapper {
   top: 2px;
   left: 16px;
   box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
+}
+
+.belongs-to-hakukohteet {
+  flex: initial;
+  width: 700px;
+  padding: 10px 14px 20px;
+
+  &__modal-toggle-label {
+    color: @blue-text-color;
+    font-size: 14px;
+  }
+
+  &__modal-toggle {
+    background: none;
+    color: @pale-blue;
+    font-family: Open Sans, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+  }
+
+  &__hakukohde-list {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+    margin-top: 10px;
+  }
+
+  &__hakukohde-list-item {
+    display: flex;
+    background: @element-header-background;
+    margin-bottom: 6px;
+    border: 0px;
+    border-radius: 4px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__hakukohde-label {
+    color: #4a4a4a;
+    font-size: 14px;
+    flex: 1;
+    padding: 12px;
+  }
+
+  &__hakukohde-remove {
+    background: none;
+    color: #cccccc;
+    cursor: pointer;
+    border: none;
+    width: 42px;
+    padding: 0px;
+  }
+}
+
+.belongs-to-hakukohteet-modal {
+  position: absolute;
+  z-index: 9;
+  margin-left: 100px;
+  width: 650px;
+
+  &__arrow-up {
+    left: 78px;
+    width: 30px;
+    height: 16px;
+    position: relative;
+    overflow: hidden;
+    z-index: 9;
+    &:after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: @element-header-background;
+      transform: rotate(135deg);
+      top: 6px;
+      left: 5px;
+      box-shadow: 0px -1px 3px rgba(0,0,0,0.30);
+    }
+  }
+
+  &__box {
+    background: @element-header-background;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    box-shadow: @modal-shadow;
+  }
+
+  &__input-row {
+    display: flex;
+  }
+
+  &__search-container {
+    flex: 1;
+  }
+
+  &__search {
+    width: 434px;
+    margin-top: 24px;
+    margin-bottom: 14px;
+    margin-left: 24px;
+    padding: 6px;
+    border: 1px solid #c1c1c1;
+    border-radius: 2px;
+    font-size: 14px;
+  }
+
+  &__hide {
+    background: none;
+    height: 48px;
+    width: 48px;
+    color: #cccccc;
+    cursor: pointer;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+  }
+
+  &__spinner {
+    color: #4a4a4a;
+    font-size: 14px;
+    padding-left: 24px;
+    padding-bottom: 14px;
+  }
+
+  &__haku-list {
+    height: 500px;
+    overflow-y: scroll;
+    list-style: none;
+    margin: 0px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  &__haku-list-item {
+    padding-bottom: 14px;
+    &:last-child {
+      padding-bottom: 0px;
+    }
+  }
+
+  &__hakukohde-list {
+    list-style: none;
+    padding-left: 24px;
+    padding-top: 14px;
+  }
+
+  &__hakukohde-list-item {
+    padding-bottom: 12px;
+    list-style: none;
+    &:last-child {
+      padding-bottom: 0px;
+    }
+  }
+
+  &__hakukohde-list-item--selected {
+    list-style-image: url('/lomake-editori/images/icon_check.png');
+  }
+
+  &__haku-label {
+    color: #4a4a4a;
+    font-size: 14px;
+  }
+
+  &__hakukohde-label {
+    color: @pale-blue;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  &__hakukohde-label--selected {
+    color: #4a4a4a;
+  }
+
+  &__hakukohde-label--highlighted {
+    background: #B7E3F1;
+  }
 }

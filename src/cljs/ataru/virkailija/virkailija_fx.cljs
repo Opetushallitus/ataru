@@ -2,6 +2,8 @@
   (:require [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.virkailija-ajax :as http]
+            [ataru.virkailija.tarjonta :as tarjonta]
+            [cljs.core.async :as async]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-fx :http
@@ -17,3 +19,12 @@
 (re-frame/reg-fx :navigate
   (fn navigate [path]
     (routes/navigate-to-click-handler path)))
+
+(re-frame/reg-fx
+ :refresh-active-haut
+ (fn refresh-active-haut [[organization-oids on-succes on-error]]
+   (async/take! (tarjonta/active-haut organization-oids)
+                (fn [r]
+                  (if (instance? js/Error r)
+                    (on-error r)
+                    (on-succes r))))))

@@ -6,7 +6,9 @@
 (def default-db
   {:editor       {:forms             nil
                   :autosave          nil ; autosave stop function, see autosave.cljs
-                  :selected-form-key nil}
+                  :selected-form-key nil
+                  :active-haut       {:fetching? true
+                                      :haut {}}}
                                         ; Initial active panel on page load.
    :active-panel :editor
    :application  {:review              {}

@@ -5,7 +5,8 @@
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
             [taoensso.timbre :refer [spy debug warn]]
-            [ataru.koodisto.koodisto :as koodisto]))
+            [ataru.koodisto.koodisto :as koodisto]
+            [clojure.pprint :as pprint]))
 
 (defn allowed-values [options]
   (set
@@ -59,81 +60,112 @@
                     (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
                     answers))))
 
+(defn- field-belongs-to-hakukohde? [field]
+  (not-empty (:belongs-to-hakukohteet field)))
+
+(defn- not-dropdown-or-multiple-choice [field]
+  (empty? (some #{(:fieldType field)} '("dropdown" "multipleChoice"))))
+
+(defn- get-followup-questions [options answers]
+  (not-empty (eduction (comp
+                        (filter (fn [option]
+                                  (and (not-empty (:followups option))
+                                       (= (seq answers) (wrap-coll (:value option))))))
+                        (mapcat :followups))
+                       options)))
+
+(defn- get-non-empty-answers [field answers]
+  (set
+   (->> (if (= "multipleChoice" (:fieldType field))
+          (filter not-empty answers)
+          answers)
+        (filter (comp not clojure.string/blank?)))))
+
+(defn- get-allowed-values [koodisto-source options]
+  (if koodisto-source
+    (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
+    (allowed-values options)))
+
+(defn- all-answers-allowed? [all-answers allowed-values]
+  (or (nil? allowed-values)
+      (clojure.set/subset? all-answers allowed-values)))
+
+(defn- belongs-to-correct-hakukohde? [field hakukohteet]
+  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
+
+(defn- belongs-to-existing-hakukohde? [field hakukohteet]
+  (and (belongs-to-correct-hakukohde? field hakukohteet)
+       (not-empty hakukohteet)))
+
+(defn- every-followup-nil? [answers-by-key followups]
+  (every? clojure.string/blank? (map #(-> answers-by-key (keyword (:id %)) :value) followups)))
+
+(defn- all-answers-nil? [non-empty-answers answers-by-key followups]
+  (and (empty? non-empty-answers)
+       (every-followup-nil? answers-by-key followups)))
+
 (defn build-results
   [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
-  (let [id      (keyword id)
-        answers (wrap-coll (:value (get answers-by-key id)))]
+  (let [id          (keyword id)
+        answers     (wrap-coll (:value (get answers-by-key id)))
+        ; Hakukohdes selected by user
+        hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
-      (match (merge {:validators []
-                     :params     []}
-               field)
+          (if-let [ret (match (merge {:validators []
+                                      :params     []}
+                                     field)
 
-        {:exclude-from-answers true}
-        (build-results
-          answers-by-key
-          results
-          rest-form-fields)
+                              {:exclude-from-answers true}
+                              results
 
-        {:fieldClass      "wrapperElement"
-         :children        children
-         :child-validator validation-keyword}
-        (build-results
-          answers-by-key
-          (concat results
-                  {id {:passed?
-                       ((partial (validator-keyword->fn validation-keyword) answers-by-key)
-                         (build-results answers-by-key [] children))}})
-          rest-form-fields)
+                              ({:fieldClass "formField"
+                                :validators validators} :guard #(and (field-belongs-to-hakukohde? %)
+                                                                     (not-dropdown-or-multiple-choice %)))
+                              (if (belongs-to-existing-hakukohde? field hakukohteet)
+                                (concat results
+                                        {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                                (concat results {id {:passed? (every? nil? answers)}}))
 
-        {:fieldClass "wrapperElement"
-         :children   children}
-        (build-results
-          answers-by-key
-          (concat results (build-results answers-by-key [] children))
-          rest-form-fields)
+                              {:fieldClass      "wrapperElement"
+                               :children        children
+                               :child-validator validation-keyword}
+                              (concat results
+                                      {id {:passed?
+                                           ((validator-keyword->fn validation-keyword) answers-by-key
+                                             (build-results answers-by-key [] children))}})
 
-        {:fieldClass "formField"
-         :fieldType  (:or "dropdown" "multipleChoice")
-         :validators validators
-         :options    options}
-        (let [koodisto-source  (:koodisto-source field)
-              allowed-values   (if koodisto-source
-                                 (koodisto/all-koodisto-values (:uri koodisto-source) (:version koodisto-source))
-                                 (allowed-values options))
-              answers          (set
-                                 (->> (if (= "multipleChoice" (:fieldType field))
-                                        (filter not-empty answers)
-                                        answers)
-                                      (filter (comp not clojure.string/blank?))))]
-          (build-results
-            answers-by-key
-            (concat results
-              {id {:passed? (and
-                              (or
-                                (nil? allowed-values)
-                                (clojure.set/subset? answers allowed-values))
-                              (passes-all? validators answers answers-by-key field))}}
-              (when-let [followups (not-empty (eduction (comp
-                                                          (filter (fn [option]
-                                                                    (and (not-empty (:followups option))
-                                                                      (= (seq answers) (wrap-coll (:value option))))))
-                                                          (mapcat :followups))
-                                                options))]
-                (build-results
-                  answers-by-key
-                  results
-                  followups)))
-            rest-form-fields))
+                              {:fieldClass "wrapperElement"
+                               :children   children}
+                              (concat results (build-results answers-by-key [] children))
 
-        {:fieldClass "formField"
-         :validators validators}
-        (build-results
-          answers-by-key
-          (concat results
-            {id {:passed? (passes-all? validators answers answers-by-key field)}})
-          rest-form-fields)
+                              {:fieldClass "formField"
+                               :fieldType  (:or "dropdown" "multipleChoice")
+                               :validators validators
+                               :options    options}
+                              (let [koodisto-source   (:koodisto-source field)
+                                    allowed-values    (get-allowed-values koodisto-source options)
+                                    non-empty-answers (get-non-empty-answers field answers)
+                                    followups         (get-followup-questions options non-empty-answers)]
+                                (concat results
+                                        {id {:passed? (and (or (not (field-belongs-to-hakukohde? field))
+                                                               (belongs-to-existing-hakukohde? field hakukohteet)
+                                                               (all-answers-nil? non-empty-answers answers-by-key followups))
+                                                           (all-answers-allowed? non-empty-answers allowed-values)
+                                                           (passes-all? validators non-empty-answers answers-by-key field))}}
+                                        (when followups
+                                          (build-results
+                                            answers-by-key
+                                            results
+                                            followups))))
 
-        :else results))))
+                              {:fieldClass "formField"
+                               :validators validators}
+                              (concat results
+                                      {id {:passed? (passes-all? validators answers answers-by-key field)}})
+
+                              :else nil)]
+            (build-results answers-by-key ret rest-form-fields)
+            results))))
 
 (defn build-failed-results [answers-by-key failed-results]
   (merge-with merge

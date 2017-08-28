@@ -629,14 +629,21 @@
   (or (not= fieldType "attachment")
       (fc/feature-enabled? :attachment)))
 
+(defn- hakukohde-allows-visibility? [{:keys [belongs-to-hakukohteet]} selected-hakukohteet]
+  (or (empty? belongs-to-hakukohteet)
+      (not-empty (clojure.set/intersection (set selected-hakukohteet)
+                                           (set belongs-to-hakukohteet)))))
+
 (defn render-field
   [field-descriptor & args]
-  (let [ui       (subscribe [:state-query [:application :ui]])
-        editing? (subscribe [:state-query [:application :editing?]])
-        visible? (fn [id]
-                   (get-in @ui [(keyword id) :visible?] true))]
+  (let [ui                   (subscribe [:state-query [:application :ui]])
+        editing?             (subscribe [:state-query [:application :editing?]])
+        visible?             (fn [id]
+                               (get-in @ui [(keyword id) :visible?] true))
+        selected-hakukohteet (subscribe [:state-query [:application :answers :hakukohteet :values]])]
     (fn [field-descriptor & args]
-      (if (feature-enabled? field-descriptor)
+      (if (and (feature-enabled? field-descriptor)
+               (hakukohde-allows-visibility? field-descriptor (map :value @selected-hakukohteet)))
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
           (cond-> (match field-descriptor
                          {:fieldClass "wrapperElement"
