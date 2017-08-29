@@ -298,7 +298,7 @@
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header header-label path :component-wrapped? true]
+       [text-header header-label path]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
@@ -591,7 +591,7 @@
     (fn [content path children]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Vierekkäiset tekstikentät" path :component-wrapped? true]
+       [text-header "Vierekkäiset tekstikentät" path]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Otsikko"]
@@ -618,7 +618,7 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Tekstikenttä" path :draggable false :component-wrapped? true]
+       [text-header "Tekstikenttä" path :draggable false]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Kysymys"]
@@ -666,7 +666,7 @@
     (fn [content path]
       [:div.editor-form__component-wrapper
        {:class @animation-effect}
-       [text-header "Liitepyyntö" path :component-wrapped? true]
+       [text-header "Liitepyyntö" path]
        [:div.editor-form__component-row-wrapper
         [:div.editor-form__text-field-wrapper
          [:header.editor-form__component-item-header "Liitteen nimi"]
