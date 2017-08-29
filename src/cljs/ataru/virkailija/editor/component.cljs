@@ -2,7 +2,7 @@
   (:require [ataru.virkailija.component-data.component :as component]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
-            [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
+            [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid text-area-size->max-length]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
@@ -272,12 +272,6 @@
                       (into field [[:div.editor-form__markdown-anchor
                                     (markdown-help)]]))))])])))
 
-(defn- text-area-max-length [text-area-size]
-  (condp = text-area-size
-    "S" "500"
-    "L" "1500"
-    "1000"))
-
 (defn- get-val [event]
   (-> event .-target .-value))
 
@@ -292,7 +286,7 @@
                            (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
         size-change      (fn [new-size]
                            (dispatch-sync [:editor/set-component-value new-size path :params :size])
-                           (max-length-change (text-area-max-length new-size)))
+                           (max-length-change (text-area-size->max-length new-size)))
         text-area?       (= "Tekstialue" header-label)
         animation-effect (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
@@ -334,8 +328,7 @@
          (when text-area?
            [:div.editor-form__max-length-container
              [:header.editor-form__component-item-header "Max. merkkimäärä"]
-             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-length (text-area-max-length @size))
-                                                                                 :defaultValue (text-area-max-length @size)
+             [:input.editor-form__text-field.editor-form__text-field-auto-width {:value        (or @max-length (text-area-size->max-length @size))
                                                                                  :on-change    #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]

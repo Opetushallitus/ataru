@@ -21,7 +21,8 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
+            [ataru.cljs-util :refer [text-area-size->max-length]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -209,7 +210,7 @@
         answers     (subscribe [:state-query [:application :answers]])
         on-change   (partial textual-field-change field-descriptor)
         size        (-> field-descriptor :params :size)
-        max-length  (-> field-descriptor :params :max-length (or 1000))]
+        max-length  (-> field-descriptor :params :max-length (or (text-area-size->max-length size)))]
     (fn [field-descriptor]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
