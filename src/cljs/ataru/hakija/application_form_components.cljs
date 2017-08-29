@@ -80,6 +80,7 @@
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
         [:label.application__form-field-label
+         {:for (:id field-descriptor)}
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
 
