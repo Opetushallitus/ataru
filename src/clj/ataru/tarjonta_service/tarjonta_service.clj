@@ -50,7 +50,7 @@
   [haku]
   {:oid (:oid haku)
    :name (parse-multi-lang-text (:nimi haku))
-   :hakuajat (map parse-hakuaika (:hakuaikas haku))})
+   :hakuajat (mapv parse-hakuaika (:hakuaikas haku))})
 
 (defn- parse-hakukohde
   [hakukohde]
@@ -60,7 +60,7 @@
 
 (defn- parse-search-result
   [search-result]
-  (mapcat :tulokset (:tulokset search-result)))
+  (doall (mapcat :tulokset (:tulokset search-result))))
 
 (defrecord CachedTarjontaService []
   component/Lifecycle
@@ -79,12 +79,21 @@
         :kieli_fi))
 
   (hakukohteet-by-organization [this organization-oid]
-    (->> (client/hakukohteet-by-organization organization-oid)
-         parse-search-result
-         (map parse-hakukohde)))
+    (let [fetch #(->> (client/hakukohteet-by-organization organization-oid)
+                      parse-search-result
+                      (mapv parse-hakukohde))]
+      (if (= oph-organization organization-oid)
+        (.cache-get-or-fetch (:cache-service this)
+                             :all-hakukohteet
+                             :all
+                             fetch)
+        (fetch))))
 
-  (all-haut [_]
-    (map parse-haku (client/all-haut)))
+  (all-haut [this]
+    (.cache-get-or-fetch (:cache-service this)
+                         :all-haut
+                         :all
+                         #(mapv parse-haku (client/all-haut))))
 
   (get-haku [this haku-oid]
     (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))

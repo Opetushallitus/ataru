@@ -10,6 +10,8 @@
                          :max-size 500})
 
 (def cached-map-config {:hakukohde        {:config {:max-size 10000 :ttl 3600}}
+                        :all-haut         {:config {:max-size 1 :ttl 300}}
+                        :all-hakukohteet  {:config {:max-size 1 :ttl 300}}
                         :haku             {:config {:max-size 10000 :ttl 3600}}
                         :koulutus         {:config {:max-size 10000 :ttl 3600}}
                         :statistics-month {:config {:max-size 500 :ttl 36000}}
