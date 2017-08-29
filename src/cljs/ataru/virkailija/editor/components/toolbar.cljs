@@ -2,39 +2,42 @@
   (:require
    [ataru.virkailija.component-data.component :as component]
    [ataru.feature-config :as fc]
-   [re-frame.core :as c :refer [dispatch]]
-   [reagent.core :as r]
+   [re-frame.core :refer [dispatch]]
    [taoensso.timbre :refer-macros [spy debug]]))
 
 (def ^:private toolbar-elements
-  (cond-> {"Lomakeosio"                    component/form-section
-           "Tekstikenttä"                  component/text-field
-           "Tekstialue"                    component/text-area
-           "Pudotusvalikko"                component/dropdown
-           "Painikkeet, yksi valittavissa" component/single-choice-button
-           "Lista, monta valittavissa"     component/multiple-choice
-           "Infoteksti"                    component/info-element
-           "Vierekkäiset tekstikentät"     component/adjacent-fieldset}
-    (fc/feature-enabled? :attachment) (assoc "Liitepyyntö" component/attachment)))
+  (cond->
+    [["Lomakeosio" component/form-section]
+     ["Pudotusvalikko" component/dropdown]
+     ["Painikkeet, yksi valittavissa" component/single-choice-button]
+     ["Lista, monta valittavissa" component/multiple-choice]
+     ["Tekstikenttä" component/text-field]
+     ["Tekstialue" component/text-area]
+     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
+    (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
+    true (conj ["Infoteksti" component/info-element])))
+
+(def followup-toolbar-element-names #{"Tekstikenttä"
+                                      "Tekstialue"
+                                      "Pudotusvalikko"
+                                      "Painikkeet, yksi valittavissa"
+                                      "Lista, monta valittavissa"
+                                      "Infoteksti"
+                                      "Liitepyyntö"
+                                      "Vierekkäiset tekstikentät"})
 
 (def ^:private followup-toolbar-elements
-  (select-keys toolbar-elements
-               (cond-> ["Tekstikenttä"
-                        "Tekstialue"
-                        "Pudotusvalikko"
-                        "Painikkeet, yksi valittavissa"
-                        "Lista, monta valittavissa"
-                        "Infoteksti"
-                        "Vierekkäiset tekstikentät"]
-                 (fc/feature-enabled? :attachment) (conj "Liitepyyntö"))))
+  (filter
+    (fn [[el-name _]] (contains? followup-toolbar-element-names el-name))
+    toolbar-elements))
 
 (def ^:private adjacent-fieldset-toolbar-elements
   {"Tekstikenttä" (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
                     component/text-field)})
 
-(defn- component-toolbar [path toolbar generator]
+(defn- component-toolbar [path elements generator]
   (into [:ul.form__add-component-toolbar--list]
-    (for [[component-name generate-fn] toolbar
+    (for [[component-name generate-fn] elements
           :when                        (not (and
                                               (vector? path)
                                               (= :children (second path))
