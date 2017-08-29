@@ -35,7 +35,7 @@
                                       (fn [_] (async/close! c)))
           :response-format :json
           :keywords? true
-          :timeout 10000})
+          :timeout 15000})
     c))
 
 (defn- hakukohteet-by-organization
@@ -49,7 +49,7 @@
                                       (fn [_] (async/close! c)))
           :response-format :json
           :keywords? true
-          :timeout 60000})
+          :timeout 15000})
     c))
 
 (defn- hakukohteet-by-organizations
