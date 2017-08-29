@@ -6,11 +6,13 @@
 (def ^:private lang-key-renames {:kieli_fi :fi :kieli_en :en :kieli_sv :sv})
 
 (defn- localized-names
-  [names]
+  ([names]
+   (localized-names names identity))
+  ([names key-fn]
   (into {}
         (for [lang [:fi :sv :en]
               :when (contains? names lang)]
-          [lang (get-in names [lang :nimi])])))
+          [lang (-> names lang key-fn)]))))
 
 (defn- parse-koulutuskoodi
   [koulutus]
@@ -18,7 +20,7 @@
       :koulutuskoodi
       :meta
       (clojure.set/rename-keys lang-key-renames)
-      localized-names))
+      (localized-names :nimi)))
 
 (defn- parse-tutkintonimike
   [koulutus]
@@ -31,7 +33,7 @@
             val
             :meta
             (clojure.set/rename-keys lang-key-renames)
-            localized-names))
+            (localized-names :nimi)))
     {}))
 
 (defn- parse-koulutus
@@ -78,7 +80,7 @@
          {:tarjonta
           {:hakukohteet      hakukohteet
            :haku-oid         haku-oid
-           :haku-name        (-> haku :nimi :kieli_fi)
+           :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
            :hakuaika-dates   (hakuaika/get-hakuaika-info
