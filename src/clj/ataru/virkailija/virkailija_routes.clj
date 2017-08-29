@@ -301,7 +301,7 @@
                                            ok
                                            (header "Cache-Control" "public, max-age=300")))
                               (api/GET "/hakukohde" []
-                                       :query-params [organizationOid :- (api/describe [s/Str] "Organization OID")]
+                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
                                        :return [ataru-schema/Hakukohde]
                                        (-> (tarjonta/hakukohteet-by-organization tarjonta-service organizationOid)
                                            ok
