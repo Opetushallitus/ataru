@@ -93,19 +93,27 @@
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
   (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])
-        search-term @(subscribe [:application/hakukohde-query])]
+        search-term         @(subscribe [:application/hakukohde-query])
+        aria-header-id      (str "hakukohde-search-hit-header-" hakukohde-oid)
+        aria-description-id (str "hakukohde-search-hit-description-" hakukohde-oid)]
     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
-     {:class (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")}
+     {:class         (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")
+      :aria-selected hakukohde-selected?}
      [:div.application__hakukohde-row-text-container
       [:div.application__hakukohde-selected-row-header
+       {:id aria-header-id}
        (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
       [:div.application__hakukohde-selected-row-description
+       {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
      [:div.application__hakukohde-row-button-container
       (if hakukohde-selected?
         [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
         (if @(subscribe [:application/hakukohteet-full?])
           [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
+           {:aria-labelledby  aria-header-id
+            :aria-describedby aria-description-id
+            :aria-disabled    true}
            @(subscribe [:application/get-i18n-text
                         ; TODO localization
                         {:fi "Lisää"
@@ -113,7 +121,9 @@
                          :en ""}])]
           [:a.application__hakukohde-select-button
            {:on-click           hakukohde-select-event-handler
-            :data-hakukohde-oid hakukohde-oid}
+            :data-hakukohde-oid hakukohde-oid
+            :aria-labelledby  aria-header-id
+            :aria-describedby aria-description-id}
            @(subscribe [:application/get-i18n-text
                         ; TODO localization
                         {:fi "Lisää"
@@ -132,6 +142,11 @@
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
         {:on-change   hakukohde-query-change-event-handler
+         :title @(subscribe [:application/get-i18n-text
+                             ; TODO localization
+                             {:fi "Etsi tämän haun koulutuksia"
+                              :sv ""
+                              :en ""}])
          :placeholder @(subscribe [:application/get-i18n-text
                                    ; TODO localization
                                    {:fi "Etsi tämän haun koulutuksia"
