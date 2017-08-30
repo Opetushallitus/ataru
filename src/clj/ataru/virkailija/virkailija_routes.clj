@@ -297,15 +297,21 @@
                               :tags ["tarjonta-api"]
                               (api/GET "/haku" []
                                        :return [ataru-schema/Haku]
-                                       (-> (tarjonta/all-haut tarjonta-service)
-                                           ok
-                                           (header "Cache-Control" "public, max-age=300")))
+                                       (if-let [haut (tarjonta/all-haut tarjonta-service)]
+                                         (-> haut
+                                             ok
+                                             (header "Cache-Control" "public, max-age=300"))
+                                         (internal-server-error {:error "Internal server error"})))
                               (api/GET "/hakukohde" []
                                        :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
                                        :return [ataru-schema/Hakukohde]
-                                       (-> (tarjonta/hakukohteet-by-organization tarjonta-service organizationOid)
-                                           ok
-                                           (header "Cache-Control" "public, max-age=300"))))
+                                       (if-let [hakukohteet (tarjonta/hakukohteet-by-organization
+                                                             tarjonta-service
+                                                             organizationOid)]
+                                         (-> hakukohteet
+                                             ok
+                                             (header "Cache-Control" "public, max-age=300"))
+                                         (internal-server-error {:error "Internal server error"}))))
 
                  (api/context "/files" []
                    :tags ["files-api"]
