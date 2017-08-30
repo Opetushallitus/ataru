@@ -136,7 +136,7 @@
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
    :haku-oid                           s/Str
-   :haku-name                          s/Str
+   :haku-name                          LocalizedStringOptional
    :max-hakukohteet                    (s/maybe s/Int)
    :is-jatkuva-haku?                   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde

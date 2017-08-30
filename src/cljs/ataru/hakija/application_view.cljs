@@ -22,7 +22,7 @@
 (def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
-  (let [selected-lang     (:selected-language form)
+  (let [selected-lang     (or (:selected-language form) :fi)
         languages         (filter
                             (partial not= selected-lang)
                             (:languages form))
@@ -30,8 +30,7 @@
         application       (subscribe [:state-query [:application]])
         secret            (:modify (util/extract-query-params))
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-
-        haku-name         (-> form :tarjonta :haku-name)
+        haku-name         (-> form :tarjonta :haku-name selected-lang)
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
