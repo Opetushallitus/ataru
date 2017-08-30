@@ -39,8 +39,8 @@
       (-> form
           ; remove hakukohteet from form tarjonta for deduplication
           (merge (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
-          (populate-hakukohde-answer-options tarjonta-info)
-          (inject-hakukohde-component-if-missing))
+          (inject-hakukohde-component-if-missing)
+          (populate-hakukohde-answer-options tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid
@@ -49,5 +49,4 @@
         form      (fetch-form-by-haku-oid tarjonta-service (:hakuOid hakukohde))]
     (when form
       (-> form
-          (assoc-in [:tarjonta :default-hakukohde] (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde))
-          (inject-hakukohde-component-if-missing)))))
+          (assoc-in [:tarjonta :default-hakukohde] (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde))))))
