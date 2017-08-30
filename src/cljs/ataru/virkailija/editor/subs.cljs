@@ -59,6 +59,11 @@
         haut))
 
 (re-frame/reg-sub
+  :editor/haku-name
+  (fn [db [_ haku]]
+    (some #(get (:name haku) %) [:fi :sv :en])))
+
+(re-frame/reg-sub
   :editor/hakukohde-name-parts
   (fn [db [_ id hakukohde]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]

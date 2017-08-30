@@ -75,13 +75,15 @@
 
 (defn- haku-list-item
   [path id haku selected-hakukohteet]
-  [:li.belongs-to-hakukohteet-modal__haku-list-item
-   [:span.belongs-to-hakukohteet-modal__haku-label
-    (:fi (:name haku))]
-   [:ul.belongs-to-hakukohteet-modal__hakukohde-list
-    (for [hakukohde (:hakukohteet haku)]
-      ^{:key (:oid hakukohde)}
-      [hakukohde-list-item path id hakukohde selected-hakukohteet])]])
+  (let [name (subscribe [:editor/haku-name haku])]
+    (fn [path id haku selected-hakukohteet]
+      [:li.belongs-to-hakukohteet-modal__haku-list-item
+       [:span.belongs-to-hakukohteet-modal__haku-label
+        @name]
+       [:ul.belongs-to-hakukohteet-modal__hakukohde-list
+        (for [hakukohde (:hakukohteet haku)]
+          ^{:key (:oid hakukohde)}
+          [hakukohde-list-item path id hakukohde selected-hakukohteet])]])))
 
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet]
