@@ -66,11 +66,12 @@
 (re-frame/reg-sub
   :editor/hakukohde-name-parts
   (fn [db [_ id hakukohde]]
-    (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
-      (map-indexed (fn [i part] [part (= 1 (mod i 2))])
-                   (clojure.string/split (:fi (:name hakukohde))
-                                         (re-pattern (str "(?i)(" search-term ")"))))
-      [[(:fi (:name hakukohde)) false]])))
+    (let [name (some #(get (:name hakukohde) %) [:fi :sv :en])]
+      (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
+        (map-indexed (fn [i part] [part (= 1 (mod i 2))])
+                     (clojure.string/split name
+                                           (re-pattern (str "(?i)(" search-term ")"))))
+        [[name false]]))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohde-name
