@@ -79,9 +79,9 @@
         :kieli_fi))
 
   (hakukohteet-by-organization [this organization-oid]
-    (let [fetch #(->> (client/hakukohteet-by-organization organization-oid)
-                      parse-search-result
-                      (mapv parse-hakukohde))]
+    (let [fetch #(some->> (client/hakukohteet-by-organization organization-oid)
+                          parse-search-result
+                          (mapv parse-hakukohde))]
       (if (= oph-organization organization-oid)
         (.cache-get-or-fetch (:cache-service this)
                              :all-hakukohteet
@@ -93,7 +93,8 @@
     (.cache-get-or-fetch (:cache-service this)
                          :all-haut
                          :all
-                         #(mapv parse-haku (client/all-haut))))
+                         #(some->> (client/all-haut)
+                                   (mapv parse-haku))))
 
   (get-haku [this haku-oid]
     (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))
