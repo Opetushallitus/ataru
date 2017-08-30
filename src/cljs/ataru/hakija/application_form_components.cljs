@@ -73,14 +73,26 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
+(def field-types-supporting-label-for
+  "These field types can use the <label for=..> syntax, others will use aria-labelled-by"
+  #{"textField" "textArea" "dropdown"})
+
+(defn- id-for-label
+  [field-descriptor]
+  (when-not (contains? field-types-supporting-label-for (:fieldType field-descriptor))
+    (str "application-form-field-label-" (:id field-descriptor))))
+
 (defn- label [field-descriptor]
   (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        label-meta   (if-let [label-id (id-for-label field-descriptor)]
+                       {:id label-id}
+                       {:for (:id field-descriptor)})]
     (fn [field-descriptor]
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
         [:label.application__form-field-label
-         {:for (:id field-descriptor)}
+         label-meta
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
 
@@ -382,6 +394,7 @@
       [:div.application__form-text-input-info-text
        [info-text field-descriptor]]
       [:div.application__form-outer-checkbox-container
+       {:aria-labelledby (id-for-label field-descriptor)}
        (map-indexed (fn [idx option]
                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
                       [multiple-choice-option field-descriptor option parent-id])
@@ -454,6 +467,7 @@
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
+        {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
                        [single-choice-option option button-id validators])
