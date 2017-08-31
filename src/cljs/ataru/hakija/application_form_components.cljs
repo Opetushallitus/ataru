@@ -461,20 +461,21 @@
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
+(defn- upload-attachment [field-descriptor component-id attachment-count event]
+  (.preventDefault event)
+  (let [file-list  (or (some-> event .-dataTransfer .-files)
+                       (.. event -target -files))
+        files      (->> (.-length file-list)
+                        (range)
+                        (map #(.item file-list %)))
+        file-sizes (map #(.-size %) files)]
+    (if (some #(> % max-attachment-size-bytes) file-sizes)
+      (dispatch [:application/show-attachment-too-big-error component-id])
+      (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))
+
 (defn attachment-upload [field-descriptor component-id attachment-count]
   (let [id        (str component-id "-upload-button")
-        language  @(subscribe [:application/form-language])
-        on-change (fn [event]
-                    (.preventDefault event)
-                    (let [file-list  (or (some-> event .-dataTransfer .-files)
-                                         (.. event -target -files))
-                          files      (->> (.-length file-list)
-                                          (range)
-                                          (map #(.item file-list %)))
-                          file-sizes (map #(.-size %) files)]
-                      (if (some #(> % max-attachment-size-bytes) file-sizes)
-                        (dispatch [:application/show-attachment-too-big-error component-id])
-                        (dispatch [:application/add-attachments field-descriptor component-id attachment-count files]))))]
+        language  @(subscribe [:application/form-language])]
     (fn [field-descriptor component-id attachment-count]
       [:div.application__form-upload-attachment-container
        [:input.application__form-upload-input
@@ -482,7 +483,7 @@
          :type      "file"
          :multiple  "multiple"
          :key       (str "upload-button-" component-id "-" attachment-count)
-         :on-change on-change}]
+         :on-change (partial upload-attachment field-descriptor component-id attachment-count)}]
        [:label.application__form-upload-label
         {:for id}
         [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
