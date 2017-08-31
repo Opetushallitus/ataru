@@ -539,26 +539,37 @@
 (reg-event-fx
   :application/add-attachments
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files]]
-    (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
+    (let [files         (filter (fn [file]
+                                  (let [prev-files (get-in db [:application :answers (keyword component-id) :values])
+                                        new-file   {:filename (.-name file)
+                                                    :size     (.-size file)}]
+                                    (not (some (partial = new-file)
+                                               (eduction (map :value)
+                                                         (map #(select-keys % [:filename :size]))
+                                                         prev-files)))))
+                                files)
+          dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
                                        [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file 0])
                                      files)
-          db            (as-> db db'
-                              (update-in db' [:application :answers (keyword component-id) :values]
-                                (fn [values]
-                                  (or values [])))
-                              (->> files
-                                   (map-indexed (fn attachment-idx->file [idx file]
-                                                  {:idx (+ attachment-count idx) :file file}))
-                                   (reduce (fn attachment-spec->db [db {:keys [idx file]}]
-                                             (assoc-in db [:application :answers (keyword component-id) :values idx]
-                                               {:value  {:filename     (.-name file)
-                                                         :content-type (.-type file)
-                                                         :size         (.-size file)}
-                                                :valid  false
-                                                :status :uploading}))
-                                           db'))
-                              (update-in db' [:application :answers (keyword component-id)] merge {:valid   false
-                                                                                                   :too-big false}))]
+          db            (if (not-empty files)
+                          (as-> db db'
+                                (update-in db' [:application :answers (keyword component-id) :values]
+                                           (fn [values]
+                                             (or values [])))
+                                (->> files
+                                     (map-indexed (fn attachment-idx->file [idx file]
+                                                    {:idx (+ attachment-count idx) :file file}))
+                                     (reduce (fn attachment-spec->db [db {:keys [idx file]}]
+                                               (assoc-in db [:application :answers (keyword component-id) :values idx]
+                                                 {:value  {:filename     (.-name file)
+                                                           :content-type (.-type file)
+                                                           :size         (.-size file)}
+                                                  :valid  false
+                                                  :status :uploading}))
+                                             db'))
+                                (update-in db' [:application :answers (keyword component-id)] merge {:valid   false
+                                                                                                     :too-big false}))
+                          db)]
       {:db         db
        :dispatch-n dispatch-list})))
 
