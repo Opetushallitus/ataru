@@ -19,3 +19,8 @@
                                   (re-frame/dispatch dispatch)
                                   (swap! debounces dissoc id))
                                 timeout))))
+
+(re-frame/reg-fx
+  :set-page-title
+  (fn [title]
+    (aset js/document "title" title)))
