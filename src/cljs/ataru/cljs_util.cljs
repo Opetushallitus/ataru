@@ -141,6 +141,27 @@
       (:query)
       (->kebab-case-kw)))
 
+(defn remove-empty-query-params
+  [params]
+  (into {} (remove #(-> % second empty?)) params))
+
+(defn- update-query-params
+  [url params]
+  (let [params (-> (:query url)
+                   (merge params)
+                   (remove-empty-query-params))]
+    (assoc url :query params)))
+
+(defn update-url-with-query-params
+  [params]
+  (let [url (-> (.. js/window -location -pathname)
+                (url/url)
+                (update-query-params params)
+                (str)
+                (clojure.string/split #"/")
+                (last))]
+    (.replaceState js/history nil nil url)))
+
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))
 

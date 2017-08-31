@@ -13,7 +13,7 @@
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-    [ataru.cljs-util :refer [wrap-scroll-to]]
+    [ataru.cljs-util :refer [wrap-scroll-to update-url-with-query-params]]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
     [goog.string :as gstring]
     [goog.string.format]))
@@ -90,11 +90,16 @@
   [:img.application-handling__review-state-selected-icon
    {:src "/lomake-editori/images/icon_check.png"}])
 
+(defn- get-unselected-states
+  [selected-states]
+  (clojure.set/difference (set (keys application-review-states)) (set selected-states)))
+
 (defn toggle-filter [application-filters review-state-id selected all-filters-selected]
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
                                  (conj application-filters review-state-id))
         all-filters-selected?  (= (count (keys application-review-states)) (count new-application-filter))]
+    (update-url-with-query-params {:unselected-states (clojure.string/join "," (get-unselected-states new-application-filter))})
     (reset! all-filters-selected all-filters-selected?)
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
