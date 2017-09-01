@@ -69,8 +69,9 @@
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
    [:a.application__hakukohde-remove-link
-    {:on-click hakukohde-remove-event-handler
-     :data-hakukohde-oid hakukohde-oid}
+    {:on-click           hakukohde-remove-event-handler
+     :data-hakukohde-oid hakukohde-oid
+     :role               "button"}
     @(subscribe [:application/get-i18n-text
                  ; TODO localization
                  {:fi "Poista"
@@ -111,7 +112,8 @@
         [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
         (if @(subscribe [:application/hakukohteet-full?])
           [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
-           {:aria-labelledby  aria-header-id
+           {:role             "button"
+            :aria-labelledby  aria-header-id
             :aria-describedby aria-description-id
             :aria-disabled    true}
            @(subscribe [:application/get-i18n-text
@@ -121,9 +123,10 @@
                          :en ""}])]
           [:a.application__hakukohde-select-button
            {:on-click           hakukohde-select-event-handler
+            :role               "button"
             :data-hakukohde-oid hakukohde-oid
-            :aria-labelledby  aria-header-id
-            :aria-describedby aria-description-id}
+            :aria-labelledby    aria-header-id
+            :aria-describedby   aria-description-id}
            @(subscribe [:application/get-i18n-text
                         ; TODO localization
                         {:fi "Lisää"

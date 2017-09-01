@@ -148,7 +148,8 @@
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
                   :on-blur     on-blur
-                  :on-change   on-change}
+                  :on-change   on-change
+                  :required    (is-required-field? field-descriptor)}
                  (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -173,13 +174,14 @@
             [:div
              [:input.application__form-text-input
               (merge
-               {:type      "text"
-                :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                             " application__form-field-error"
-                                             " application__form-text-input--normal"))
-                :value     value
-                :data-idx  0
-                :on-change on-change}
+                {:type      "text"
+                 :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                              " application__form-field-error"
+                                              " application__form-text-input--normal"))
+                 :value     value
+                 :data-idx  0
+                 :on-change on-change
+                 :required  (is-required-field? field-descriptor)}
                (when (empty? value)
                  {:on-blur on-blur}))]])
           (map-indexed
@@ -238,7 +240,8 @@
            ; dynamically made changes to the text-field value.
            :default-value value
            :on-change     on-change
-           :value         value}]
+           :value         value
+           :required      (is-required-field? field-descriptor)}]
          [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
 
 (declare render-field)
@@ -333,7 +336,8 @@
                                     {:id (:id field-descriptor)
                                      :value     @value
                                      :on-change on-change
-                                     :disabled  @disabled?}
+                                     :disabled  @disabled?
+                                     :required  (is-required-field? field-descriptor)}
                                     (concat
                                       (when
                                         (and
@@ -497,7 +501,8 @@
        :type      "file"
        :multiple  "multiple"
        :key       (str "upload-button-" component-id "-" attachment-count)
-       :on-change (partial upload-attachment field-descriptor component-id attachment-count)}]
+       :on-change (partial upload-attachment field-descriptor component-id attachment-count)
+       :required  (is-required-field? field-descriptor)}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
