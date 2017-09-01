@@ -153,14 +153,15 @@
 
 (defn- update-query-params
   [url params]
-  (let [params (-> (:query url)
-                   (merge params)
-                   (remove-empty-query-params))]
-    (assoc url :query params)))
+  (let [new-params (-> (:query url)
+                       (clojure.walk/keywordize-keys)
+                       (merge params)
+                       (remove-empty-query-params))]
+    (assoc url :query new-params)))
 
 (defn update-url-with-query-params
   [params]
-  (let [url (-> (.. js/window -location -pathname)
+  (let [url (-> (.. js/window -location -href)
                 (url/url)
                 (update-query-params params)
                 (str)
