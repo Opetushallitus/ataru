@@ -119,10 +119,10 @@
   (fn [{:keys [db]} [_ haku-oid]]
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
 
-(reg-event-fx
+(reg-event-db
   :application/set-application-filters-from-query-params
-  (fn [{:keys [db]} [_ unselected-review-states]]
-    (dispatch [:state-update #(assoc-in % [:application :filter] (cljs-util/get-unselected-review-states unselected-review-states))])))
+  (fn [db [_ unselected-review-states]]
+    (assoc-in db [:application :filter] (cljs-util/get-unselected-review-states unselected-review-states))))
 
 (reg-event-fx
   :application/fetch-applications-by-term
