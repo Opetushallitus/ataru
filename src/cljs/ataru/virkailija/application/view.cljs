@@ -56,11 +56,16 @@
      (when @belongs-to-haku
        [excel-download-link filtered-applications application-filter])]))
 
+(defn- select-application
+  [application-key]
+  (util/update-url-with-query-params {:application-key application-key})
+  (dispatch [:application/select-application application-key]))
+
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
         applicant (str (:preferred-name application) " " (:last-name application))]
     [:div.application-handling__list-row
-     {:on-click #(dispatch [:application/select-application (:key application)])
+     {:on-click #(select-application (:key application))
       :class    (when selected?
                   "application-handling__list-row--selected")}
      [:span.application-handling__list-row--applicant

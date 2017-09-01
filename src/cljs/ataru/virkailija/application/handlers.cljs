@@ -24,6 +24,7 @@
                       [:application/fetch-application application-key]]}))))
 
 (defn close-application [db]
+  (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
