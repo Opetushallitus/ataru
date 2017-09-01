@@ -9,7 +9,8 @@
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [goog.string.format])
+            [goog.string.format]
+            [ataru.application.review-states :refer [application-review-states]])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -78,6 +79,11 @@
         #(dispatch [:state-update dispatcher])
         200))))
 
+(defn map-vals
+  [m f]
+  (into {}
+        (for [[k v] m]
+          [k (f v)])))
 
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
@@ -161,6 +167,10 @@
                 (clojure.string/split #"/")
                 (last))]
     (.replaceState js/history nil nil url)))
+
+(defn get-unselected-review-states
+  [selected-states]
+  (clojure.set/difference (-> application-review-states keys set) (set selected-states)))
 
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))

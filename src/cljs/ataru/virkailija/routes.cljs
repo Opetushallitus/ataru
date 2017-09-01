@@ -1,7 +1,7 @@
 (ns ataru.virkailija.routes
   (:require-macros [secretary.core :refer [defroute]])
   (:import [goog Uri])
-  (:require [ataru.cljs-util :refer [dispatch-after-state]]
+  (:require [ataru.cljs-util :refer [dispatch-after-state map-vals]]
             [secretary.core :as secretary]
             [re-frame.core :refer [dispatch]]
             [accountant.core :as accountant]))
@@ -82,18 +82,23 @@
        (dispatch [:application/select-hakukohde hakukohde])
        (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))))
 
-  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
+  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch-after-state
-     :predicate
-     (fn [db]
-       (some #(when (= haku-oid (:oid %)) %)
-             (get-in db [:application :haut :tarjonta-haut])))
-     :handler
-     (fn [haku]
-       (dispatch [:application/select-haku haku])
-       (dispatch [:application/fetch-applications-by-haku haku-oid]))))
+      :predicate
+      (fn [db]
+        (some #(when (= haku-oid (:oid %)) %)
+          (get-in db [:application :haut :tarjonta-haut])))
+      :handler
+      (fn [haku]
+        (dispatch [:application/select-haku haku])
+        (dispatch [:application/fetch-applications-by-haku haku-oid])
+        (when query-params
+          (dispatch [:application/set-application-filters-from-query-params (-> query-params
+                                                                                :query-params
+                                                                                (map-vals #(clojure.string/split % #","))
+                                                                                :unselected-states)])))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)

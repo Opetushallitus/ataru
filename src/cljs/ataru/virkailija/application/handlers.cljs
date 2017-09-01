@@ -5,6 +5,7 @@
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.util :as util]
+            [ataru.cljs-util :as cljs-util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
@@ -116,6 +117,11 @@
   :application/fetch-applications-by-haku
   (fn [{:keys [db]} [_ haku-oid]]
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
+
+(reg-event-fx
+  :application/set-application-filters-from-query-params
+  (fn [{:keys [db]} [_ unselected-review-states]]
+    (dispatch [:state-update #(assoc-in % [:application :filter] (cljs-util/get-unselected-review-states unselected-review-states))])))
 
 (reg-event-fx
   :application/fetch-applications-by-term
