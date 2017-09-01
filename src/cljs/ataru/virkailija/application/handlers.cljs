@@ -92,10 +92,16 @@
                  (assoc-in [:application :applications] applications)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
-                 (assoc-in [:application :sort] application-sorting/initial-sort))]
+                 (assoc-in [:application :sort] application-sorting/initial-sort))
+          application-key (cond
+                            (= (count applications) 1)
+                            (-> applications first :key)
+
+                            (not (nil? (:application-key (cljs-util/extract-query-params))))
+                            (:application-key (cljs-util/extract-query-params)))]
       {:db       db
-       :dispatch (if (= (count applications) 1)
-                   [:application/select-application (-> applications first :key)]
+       :dispatch (if application-key
+                   [:application/select-application application-key]
                    [:application/close-application])})))
 
 (defn fetch-applications-fx [db path]
@@ -282,8 +288,7 @@
   (fn [db [_ haku]]
     (-> db
         (update :application dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:application :selected-haku] haku)
-        (close-application))))
+        (assoc-in [:application :selected-haku] haku))))
 
 (defn get-hakukohteet-from-haut [haut]
   (flatten (map :hakukohteet (:tarjonta-haut haut))))
