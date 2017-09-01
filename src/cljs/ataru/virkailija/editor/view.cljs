@@ -207,7 +207,7 @@
             [:li {:key (str "form-used-in-haku_" (:haku-oid haku))}
              [:a {:href   (str "/tarjonta-app/index.html#/haku/" (:haku-oid haku))
                   :target "_blank"} (:haku-name haku)]
-             [:span " – "]
+             [:span " | "]
              [:a {:href   (str hakija-haku-base-url (:haku-oid haku))
                   :target "_blank"} "Lomake"]])]]))))
 
