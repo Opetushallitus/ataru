@@ -85,7 +85,7 @@
         wait.until(editorPageIsLoaded)
       )
       it('has 4 fixture forms', function() {
-        expect(formListItems()).to.have.length(4)
+        expect(formListItems().find('.editor-form__list-form-name:contains(Selaintestilomake)')).to.have.length(4)
       })
     })
 
