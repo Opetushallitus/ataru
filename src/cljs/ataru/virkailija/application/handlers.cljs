@@ -102,7 +102,9 @@
                    [:application/close-application])})))
 
 (defn fetch-applications-fx [db path]
-  {:db   (assoc-in db [:application :fetching-applications] true)
+  {:db   (-> db
+             (assoc-in [:application :fetching-applications] true)
+             (assoc-in [:application :filter] (cljs-util/get-unselected-review-states (list (:unselected-states (cljs-util/extract-query-params))))))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
@@ -121,11 +123,6 @@
   :application/fetch-applications-by-haku
   (fn [{:keys [db]} [_ haku-oid]]
     (fetch-applications-fx db (str "/lomake-editori/api/applications/list?hakuOid=" haku-oid))))
-
-(reg-event-db
-  :application/set-application-filters-from-query-params
-  (fn [db [_ unselected-review-states]]
-    (assoc-in db [:application :filter] (cljs-util/get-unselected-review-states unselected-review-states))))
 
 (reg-event-fx
   :application/fetch-applications-by-term
@@ -269,16 +266,14 @@
  :application/select-form
  (fn [db [_ form-key]]
    (-> db
-       (assoc-in [:application :selected-form-key] form-key)
-       (close-application))))
+       (assoc-in [:application :selected-form-key] form-key))))
 
 (reg-event-db
   :application/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
         (update-in [:application] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:application :selected-hakukohde] hakukohde)
-        (close-application))))
+        (assoc-in [:application :selected-hakukohde] hakukohde))))
 
 (reg-event-db
   :application/select-haku

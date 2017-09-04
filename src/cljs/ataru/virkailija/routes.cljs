@@ -93,13 +93,7 @@
       :handler
       (fn [haku]
         (dispatch [:application/select-haku haku])
-        (dispatch [:application/fetch-applications-by-haku haku-oid])
-        (let [query-params (-> query-params
-                               :query-params
-                               (map-vals #(clojure.string/split % #",")))
-              unselected-states (:unselected-states query-params)]
-          (when-not (empty? unselected-states))
-            (dispatch [:application/set-application-filters-from-query-params unselected-states])))))
+        (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
