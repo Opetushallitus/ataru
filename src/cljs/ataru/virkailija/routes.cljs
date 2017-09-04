@@ -1,7 +1,7 @@
 (ns ataru.virkailija.routes
   (:require-macros [secretary.core :refer [defroute]])
   (:import [goog Uri])
-  (:require [ataru.cljs-util :refer [dispatch-after-state map-vals]]
+  (:require [ataru.cljs-util :refer [dispatch-after-state]]
             [secretary.core :as secretary]
             [re-frame.core :refer [dispatch]]
             [accountant.core :as accountant]))

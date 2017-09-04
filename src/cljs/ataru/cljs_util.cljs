@@ -79,12 +79,6 @@
         #(dispatch [:state-update dispatcher])
         200))))
 
-(defn map-vals
-  [m f]
-  (into {}
-        (for [[k v] m]
-          [k (f v)])))
-
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
    error"
