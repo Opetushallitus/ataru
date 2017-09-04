@@ -97,9 +97,9 @@
         (let [query-params (-> query-params
                                :query-params
                                (map-vals #(clojure.string/split % #",")))
-              {:keys [unselected-states application-key]} query-params]
-          (when (not (empty? unselected-states))
-            (dispatch [:application/set-application-filters-from-query-params unselected-states]))))))
+              unselected-states (:unselected-states query-params)]
+          (when-not (empty? unselected-states))
+            (dispatch [:application/set-application-filters-from-query-params unselected-states])))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)

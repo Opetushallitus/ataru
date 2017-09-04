@@ -93,11 +93,8 @@
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
                  (assoc-in [:application :sort] application-sorting/initial-sort))
-          application-key (cond
-                            (= (count applications) 1)
+          application-key (if (= 1 (count applications))
                             (-> applications first :key)
-
-                            (not (nil? (:application-key (cljs-util/extract-query-params))))
                             (:application-key (cljs-util/extract-query-params)))]
       {:db       db
        :dispatch (if application-key
