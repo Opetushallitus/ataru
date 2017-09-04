@@ -95,14 +95,13 @@
   [:img.application-handling__review-state-selected-icon
    {:src "/lomake-editori/images/icon_check.png"}])
 
-(defn toggle-filter [application-filters review-state-id selected all-filters-selected]
+(defn toggle-filter [application-filters review-state-id selected]
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
                                  (conj application-filters review-state-id))
         all-filters-selected?  (= (count (keys application-review-states)) (count new-application-filter))]
     (util/update-url-with-query-params
      {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
-    (reset! all-filters-selected all-filters-selected?)
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
 (defn- toggle-all-filters [all-filters-selected?]
@@ -115,42 +114,40 @@
   (let [application-filters    (subscribe [:state-query [:application :filter]])
         review-state-counts    (subscribe [:state-query [:application :review-state-counts]])
         filter-opened          (r/atom false)
-        all-filters-selected   (r/atom true)
         toggle-filter-opened   (fn [_] (swap! filter-opened not))
         get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
-      [:span.application-handling__filter-state
-       [:a
-        {:on-click toggle-filter-opened}
-        (str "Tila"
-             (when-not (= (count @application-filters)
-                          (count (keys application-review-states)))
-               " *"))]
-       (when @filter-opened
-         (into [:div.application-handling__filter-state-selection
-                [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
-                 {:class (when @all-filters-selected "application-handling__filter-state-selected-row")}
-                 [:label
-                  [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                           :type      "checkbox"
-                           :checked   @all-filters-selected
-                           :on-change #(toggle-all-filters (swap! all-filters-selected not))}]
-                  [:span "Kaikki"]]]]
-               (mapv
-                 (fn [review-state]
-                   (let [review-state-id (first review-state)
-                         filter-selected (some #{review-state-id} @application-filters)]
-                     [:div.application-handling__filter-state-selection-row
-                      {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
-                      [:label
-                       [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                                :type      "checkbox"
-                                :checked   (boolean filter-selected)
-                                :on-change #(toggle-filter @application-filters review-state-id filter-selected all-filters-selected)}]
-                       [:span (str (second review-state)
-                                   " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
-                 application-review-states)))
-       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])])))
+      (let [all-filters-selected? (= (count @application-filters)
+                                     (count (keys application-review-states)))]
+        [:span.application-handling__filter-state
+         [:a
+          {:on-click toggle-filter-opened}
+          (str "Tila" (when-not all-filters-selected? " *"))]
+         (when @filter-opened
+           (into [:div.application-handling__filter-state-selection
+                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
+                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
+                   [:label
+                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                             :type      "checkbox"
+                             :checked   all-filters-selected?
+                             :on-change #(toggle-all-filters (not all-filters-selected?))}]
+                    [:span "Kaikki"]]]]
+                 (mapv
+                   (fn [review-state]
+                     (let [review-state-id (first review-state)
+                           filter-selected (some #{review-state-id} @application-filters)]
+                       [:div.application-handling__filter-state-selection-row
+                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
+                        [:label
+                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                  :type      "checkbox"
+                                  :checked   (boolean filter-selected)
+                                  :on-change #(toggle-filter @application-filters review-state-id filter-selected)}]
+                         [:span (str (second review-state)
+                                  " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
+                   application-review-states)))
+         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
