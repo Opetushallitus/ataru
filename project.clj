@@ -64,7 +64,7 @@
                  [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
                  [ring.middleware.logger "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
-                 [org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.16"]
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
                  [org.clojure/core.cache "0.6.5"]
