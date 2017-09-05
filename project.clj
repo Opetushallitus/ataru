@@ -28,7 +28,7 @@
                  [crypto-random "1.2.0"]
                  [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.2"]
-                 [metosin/compojure-api "1.1.10"]
+                 [metosin/compojure-api "1.1.11"]
                  [aleph "0.4.3"]
                  [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
