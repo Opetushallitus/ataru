@@ -103,9 +103,11 @@
     [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn info-text [field-descriptor]
-  (let [language (subscribe [:application/form-language])]
+  (let [language     (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor]
-      (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+      (when-let [info (non-blank-val (@language (-> field-descriptor :params :info-text :label))
+                                     (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
