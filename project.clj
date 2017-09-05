@@ -2,7 +2,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.9.521"]
+                 [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.6.1"]                          ; react in clojure
                  [re-frame "0.9.2"]                         ; flux for re-agent
                  [secretary "1.2.3"]                        ; routing
@@ -150,6 +150,7 @@
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler     {:output-to     "resources/public/js/test/test.js"
                                        :main          "ataru.unit-runner"
+                                       :process-shim  false
                                        :optimizations :none}}
 
                        {:id           "virkailija-min"
