@@ -3,7 +3,7 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.908"]
-                 [reagent "0.6.1"]                          ; react in clojure
+                 [reagent "0.7.0"]                          ; react in clojure
                  [re-frame "0.9.2"]                         ; flux for re-agent
                  [secretary "1.2.3"]                        ; routing
                  [com.andrewmcveigh/cljs-time "0.4.0"]
