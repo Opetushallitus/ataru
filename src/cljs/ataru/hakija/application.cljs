@@ -16,17 +16,18 @@
              [{:id "hakukohteet"
                :label label
                :options options}]
-             [:hakukohteet {:valid true
-                            :order-idx idx
-                            :label label
-                            :values (cond (= 1 (count options))
-                                          [{:value (:value (first options))
-                                            :valid true}]
-                                          (some? preselected-hakukohde)
-                                          [{:value preselected-hakukohde
-                                            :valid true}]
-                                          :else
-                                          [])}]
+             (let [values (cond (= 1 (count options))
+                                [{:value (:value (first options))
+                                  :valid true}]
+                                (some? preselected-hakukohde)
+                                [{:value preselected-hakukohde
+                                  :valid true}]
+                                :else
+                                [])]
+               [:hakukohteet {:valid (not (empty? values))
+                              :order-idx idx
+                              :label label
+                              :values values}])
              [{:id id
                :fieldClass "formField"
                :fieldType "dropdown"
