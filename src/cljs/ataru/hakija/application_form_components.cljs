@@ -73,13 +73,26 @@
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
 
+(def field-types-supporting-label-for
+  "These field types can use the <label for=..> syntax, others will use aria-labelled-by"
+  #{"textField" "textArea" "dropdown"})
+
+(defn- id-for-label
+  [field-descriptor]
+  (when-not (contains? field-types-supporting-label-for (:fieldType field-descriptor))
+    (str "application-form-field-label-" (:id field-descriptor))))
+
 (defn- label [field-descriptor]
   (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
+        default-lang (subscribe [:application/default-language])
+        label-meta   (if-let [label-id (id-for-label field-descriptor)]
+                       {:id label-id}
+                       {:for (:id field-descriptor)})]
     (fn [field-descriptor]
       (let [label (non-blank-val (get-in field-descriptor [:label @lang])
                                  (get-in field-descriptor [:label @default-lang]))]
         [:label.application__form-field-label
+         label-meta
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
 
@@ -135,7 +148,8 @@
                                                  " application__form-text-input--normal"))
                   :value       (if cannot-view? "***********" (:value @answer))
                   :on-blur     on-blur
-                  :on-change   on-change}
+                  :on-change   on-change
+                  :required    (is-required-field? field-descriptor)}
                  (when (or disabled cannot-view?) {:disabled true}))])])))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
@@ -160,13 +174,14 @@
             [:div
              [:input.application__form-text-input
               (merge
-               {:type      "text"
-                :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                             " application__form-field-error"
-                                             " application__form-text-input--normal"))
-                :value     value
-                :data-idx  0
-                :on-change on-change}
+                {:type      "text"
+                 :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                              " application__form-field-error"
+                                              " application__form-text-input--normal"))
+                 :value     value
+                 :data-idx  0
+                 :on-change on-change
+                 :required  (is-required-field? field-descriptor)}
                (when (empty? value)
                  {:on-blur on-blur}))]])
           (map-indexed
@@ -225,7 +240,8 @@
            ; dynamically made changes to the text-field value.
            :default-value value
            :on-change     on-change
-           :value         value}]
+           :value         value
+           :required      (is-required-field? field-descriptor)}]
          [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
 
 (declare render-field)
@@ -320,7 +336,8 @@
                                     {:id (:id field-descriptor)
                                      :value     @value
                                      :on-change on-change
-                                     :disabled  @disabled?}
+                                     :disabled  @disabled?
+                                     :required  (is-required-field? field-descriptor)}
                                     (concat
                                       (when
                                         (and
@@ -381,6 +398,7 @@
       [:div.application__form-text-input-info-text
        [info-text field-descriptor]]
       [:div.application__form-outer-checkbox-container
+       {:aria-labelledby (id-for-label field-descriptor)}
        (map-indexed (fn [idx option]
                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
                       [multiple-choice-option field-descriptor option parent-id])
@@ -453,6 +471,7 @@
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
+        {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
                        [single-choice-option option button-id validators])
@@ -482,7 +501,8 @@
        :type      "file"
        :multiple  "multiple"
        :key       (str "upload-button-" component-id "-" attachment-count)
-       :on-change (partial upload-attachment field-descriptor component-id attachment-count)}]
+       :on-change (partial upload-attachment field-descriptor component-id attachment-count)
+       :required  (is-required-field? field-descriptor)}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]

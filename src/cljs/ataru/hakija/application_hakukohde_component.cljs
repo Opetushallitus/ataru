@@ -69,13 +69,13 @@
   [hakukohde-oid]
   [:div.application__hakukohde-row-button-container
    [:a.application__hakukohde-remove-link
-    {:on-click hakukohde-remove-event-handler
-     :data-hakukohde-oid hakukohde-oid}
+    {:on-click           hakukohde-remove-event-handler
+     :data-hakukohde-oid hakukohde-oid
+     :role               "button"}
     @(subscribe [:application/get-i18n-text
-                 ; TODO localization
                  {:fi "Poista"
-                  :sv ""
-                  :en ""}])]])
+                  :sv "Ta bort"
+                  :en "Remove"}])]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -93,32 +93,42 @@
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
   (let [hakukohde-selected? @(subscribe [:application/hakukohde-selected? hakukohde-oid])
-        search-term @(subscribe [:application/hakukohde-query])]
+        search-term         @(subscribe [:application/hakukohde-query])
+        aria-header-id      (str "hakukohde-search-hit-header-" hakukohde-oid)
+        aria-description-id (str "hakukohde-search-hit-description-" hakukohde-oid)]
     [:div.application__hakukohde-row.application__hakukohde-row--search-hit
-     {:class (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")}
+     {:class         (when hakukohde-selected? "application__hakukohde-row--search-hit-selected")
+      :aria-selected hakukohde-selected?}
      [:div.application__hakukohde-row-text-container
       [:div.application__hakukohde-selected-row-header
+       {:id aria-header-id}
        (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
       [:div.application__hakukohde-selected-row-description
+       {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]]
      [:div.application__hakukohde-row-button-container
       (if hakukohde-selected?
         [:i.application__hakukohde-selected-check.zmdi.zmdi-check.zmdi-hc-2x]
         (if @(subscribe [:application/hakukohteet-full?])
           [:a.application__hakukohde-select-button.application__hakukohde-select-button--disabled
+           {:role             "button"
+            :aria-labelledby  aria-header-id
+            :aria-describedby aria-description-id
+            :aria-disabled    true}
            @(subscribe [:application/get-i18n-text
-                        ; TODO localization
                         {:fi "Lisää"
-                         :sv ""
-                         :en ""}])]
+                         :sv "Lägg till"
+                         :en "Add"}])]
           [:a.application__hakukohde-select-button
            {:on-click           hakukohde-select-event-handler
-            :data-hakukohde-oid hakukohde-oid}
+            :role               "button"
+            :data-hakukohde-oid hakukohde-oid
+            :aria-labelledby    aria-header-id
+            :aria-describedby   aria-description-id}
            @(subscribe [:application/get-i18n-text
-                        ; TODO localization
                         {:fi "Lisää"
-                         :sv ""
-                         :en ""}])]))]]))
+                         :sv "Lägg till"
+                         :en "Add"}])]))]]))
 
 (defn- hakukohde-selection-search
   []
@@ -132,11 +142,14 @@
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
         {:on-change   hakukohde-query-change-event-handler
+         :title @(subscribe [:application/get-i18n-text
+                             {:fi "Etsi tämän haun koulutuksia"
+                              :sv "Sök ansökningsmål i denna ansökan"
+                              :en "Search for application options"}])
          :placeholder @(subscribe [:application/get-i18n-text
-                                   ; TODO localization
                                    {:fi "Etsi tämän haun koulutuksia"
-                                    :sv ""
-                                    :en ""}])
+                                    :sv "Sök ansökningsmål i denna ansökan"
+                                    :en "Search for application options"}])
          :value       hakukohde-query}]
        (when (not (empty? hakukohde-query))
          [:div.application__form-clear-text-input-in-box
@@ -167,10 +180,9 @@
        [:a.application__hakukohde-selection-open-search
         {:on-click hakukohde-search-toggle-event-handler}
         @(subscribe [:application/get-i18n-text
-                     ; TODO localization
                      {:fi "Lisää hakukohde"
-                      :sv ""
-                      :en ""}])]
+                      :sv "Lägg till ansökningsmål"
+                      :en "Add application option"}])]
        (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
          [:span.application__hakukohde-selection-max-label (str "(max. " max-hakukohteet ")")])
        (when @(subscribe [:application/show-hakukohde-search])

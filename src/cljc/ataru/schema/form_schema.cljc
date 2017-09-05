@@ -80,7 +80,6 @@
                                                                                         "dropdown"
                                                                                         "singleChoice"
                                                                                         "multipleChoice"
-                                                                                        "koodistoField"
                                                                                         "attachment"
                                                                                         "hakukohteet"])
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
