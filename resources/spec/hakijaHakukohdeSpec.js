@@ -19,14 +19,15 @@
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         expect(formHeader().text()).to.equal('testing2')
         expect(selectedHakukohteet().length).to.equal(1)
-        expect(hakukohdeSearchHits().length).to.equal(3)
-        expect(hakukohdeSearchInput().is(':visible')).to.equal(true)
+        expect(hakukohdeSearchHits().is(':visible')).to.equal(false)
+        expect(hakukohdeSearchInput().is(':visible')).to.equal(false)
         expect(selectedHakukohteet().first().text()).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne APoista')
       })
     })
 
     describe('inputting hakukohde search terms', function() {
       before(
+        clickElement(addHakukohdeLink),
         setTextFieldValue(hakukohdeSearchInput, 'haku'),
         wait.until(function() { return hakukohdeSearchHits().length === 3})
       )

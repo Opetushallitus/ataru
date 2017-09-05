@@ -98,6 +98,10 @@ function clickNthFieldRadio(n, value) {
   }
 }
 
+function addHakukohdeLink() {
+  return testFrame().find('.application__hakukohde-selection-open-search')
+}
+
 function hakukohdeSearchHits() {
   return testFrame().find('.application__hakukohde-row--search-hit')
 }
