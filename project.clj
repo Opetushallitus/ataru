@@ -195,7 +195,7 @@
 
   :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
                                                [figwheel-sidecar "0.5.13"]
-                                               [refactor-nrepl "2.3.0"]
+                                               [refactor-nrepl "2.3.1"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.3"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
