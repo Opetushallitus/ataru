@@ -26,7 +26,11 @@
   (result-set-read-column [v _ _] (c/from-sql-date v))
 
   java.sql.Timestamp
-  (result-set-read-column [v _ _] (c/from-sql-time v)))
+  (result-set-read-column [v _ _] (c/from-sql-time v))
+
+  org.postgresql.jdbc.PgArray
+  (result-set-read-column [v _ _]
+    (vec (.getArray v))))
 
 (extend-type org.joda.time.DateTime
   jdbc/ISQLParameter

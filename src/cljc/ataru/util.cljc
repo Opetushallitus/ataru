@@ -40,6 +40,15 @@
 
         :else field))))
 
+(defn reduce-form-fields [f init [field & fs :as fields]]
+  (if (empty? fields)
+    init
+    (recur f
+           (f init field)
+           (concat fs
+                   (:children field)
+                   (mapcat :followups (:options field))))))
+
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))
 

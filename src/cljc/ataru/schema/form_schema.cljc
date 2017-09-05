@@ -41,13 +41,18 @@
                               (s/optional-key :sv) s/Str
                               (s/optional-key :en) s/Str})
 
+(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
+                                      (s/optional-key :sv) s/Str
+                                      (s/optional-key :en) s/Str})
+
 (s/defschema Module (s/enum :person-info))
 
-(s/defschema Button {:fieldClass              (s/eq "button")
-                     :id                      s/Str
-                     (s/optional-key :label)  LocalizedString
-                     (s/optional-key :params) s/Any
-                     :fieldType               s/Keyword})
+(s/defschema Button {:fieldClass                              (s/eq "button")
+                     :id                                      s/Str
+                     (s/optional-key :label)                  LocalizedString
+                     (s/optional-key :params)                 s/Any
+                     :fieldType                               s/Keyword
+                     (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
@@ -55,6 +60,7 @@
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
+                        (s/optional-key :label-amendment)                LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
                         (s/optional-key :params)                         s/Any
                         (s/optional-key :no-blank-option)                s/Bool
@@ -66,6 +72,7 @@
                                                                           (s/optional-key :title)          s/Str}
                         (s/optional-key :options)                        [{:value                          s/Str
                                                                            (s/optional-key :label)         LocalizedString
+                                                                           (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         :fieldType                                       (apply s/enum ["textField"
@@ -73,59 +80,79 @@
                                                                                         "dropdown"
                                                                                         "singleChoice"
                                                                                         "multipleChoice"
-                                                                                        "koodistoField"
-                                                                                        "attachment"])})
+                                                                                        "attachment"
+                                                                                        "hakukohteet"])
+                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
 
-(s/defschema InfoElement {:fieldClass              (s/eq "infoElement")
-                          :id                      s/Str
-                          :fieldType               (apply s/enum ["h1"
-                                                                  "h3"
-                                                                  "link"
-                                                                  "p"
-                                                                  "bulletList"
-                                                                  "dateRange"
-                                                                  "endOfDateRange"])
-                          (s/optional-key :params) s/Any
-                          (s/optional-key :label)  LocalizedString
-                          (s/optional-key :text)   LocalizedString})
+(s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
+                          :id                                      s/Str
+                          :fieldType                               (apply s/enum ["h1"
+                                                                                  "h3"
+                                                                                  "link"
+                                                                                  "p"
+                                                                                  "bulletList"
+                                                                                  "dateRange"
+                                                                                  "endOfDateRange"])
+                          (s/optional-key :params)                 s/Any
+                          (s/optional-key :label)                  LocalizedString
+                          (s/optional-key :text)                   LocalizedString
+                          (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema BasicElement (s/conditional
                             #(= "formField" (:fieldClass %)) FormField
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                       (apply s/enum ["wrapperElement"])
-                             :id                               s/Str
-                             :fieldType                        (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                         [(s/conditional #(= "wrapperElement" (:fieldClass %))
-                                                                               (s/recursive #'WrapperElement)
-                                                                               :else
-                                                                               BasicElement)]
-                             (s/optional-key :child-validator) (s/enum :one-of :birthdate-and-gender-component)
-                             (s/optional-key :params)          s/Any
-                             (s/optional-key :label)           LocalizedString
-                             (s/optional-key :label-amendment) LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module)          Module})
+(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement"])
+                             :id                                      s/Str
+                             :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
+                             :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                                                                                      (s/recursive #'WrapperElement)
+                                                                                      :else
+                                                                                      BasicElement)]
+                             (s/optional-key :child-validator)        (s/enum :one-of :birthdate-and-gender-component)
+                             (s/optional-key :params)                 s/Any
+                             (s/optional-key :label)                  LocalizedString
+                             (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
+                             (s/optional-key :module)                 Module
+                             (s/optional-key :belongs-to-hakukohteet) [s/Str]})
 
 (s/defschema FormWithContent
   (merge Form
          {:content                           [(s/if (comp some? :children) WrapperElement BasicElement)]
           (s/optional-key :organization-oid) (s/maybe s/Str)}))
 
+(s/defschema FormTarjontaHakukohde
+  {:oid                          s/Str
+   :name                         LocalizedStringOptional
+   :tarjoaja-name                LocalizedStringOptional
+   (s/optional-key :form-key)    (s/maybe s/Str)
+   (s/optional-key :koulutukset) [{:oid                  s/Str
+                                   :koulutuskoodi-name   LocalizedStringOptional
+                                   :tutkintonimike-name  LocalizedStringOptional
+                                   :tarkenne             (s/maybe s/Str)}]})
+
 (s/defschema FormTarjontaMetadata
-  {:hakukohde-oid                       s/Str
-   :hakukohde-name                      s/Str
-   :haku-oid                            s/Str
-   :haku-name                           s/Str
-   (s/optional-key :koulutukset)        [{:oid                  s/Str
-                                          :koulutuskoodi-name   (s/maybe s/Str)
-                                          :tutkintonimike-name  (s/maybe s/Str)
-                                          :koulutusohjelma-name (s/maybe s/Str)
-                                          :tarkenne             (s/maybe s/Str)}]
-   (s/optional-key :haku-tarjoaja-name) (s/maybe s/Str)
-   (s/optional-key :hakuaika-dates)     {:start                s/Int
-                                         (s/optional-key :end) (s/maybe s/Int)
-                                         :on                   s/Bool}})
+  {:hakukohteet                        [FormTarjontaHakukohde]
+   :haku-oid                           s/Str
+   :haku-name                          LocalizedStringOptional
+   :max-hakukohteet                    (s/maybe s/Int)
+   :is-jatkuva-haku?                   s/Bool
+   (s/optional-key :default-hakukohde) FormTarjontaHakukohde
+   (s/optional-key :hakuaika-dates)    {:start                s/Int
+                                        (s/optional-key :end) (s/maybe s/Int)
+                                        :on                   s/Bool}})
+
+(s/defschema Haku
+  {:oid s/Str
+   :name LocalizedStringOptional
+   :hakuajat [{:start java.time.ZonedDateTime
+               (s/optional-key :end) java.time.ZonedDateTime}]})
+
+(s/defschema Hakukohde
+  {:oid s/Str
+   :haku-oid s/Str
+   :name LocalizedStringOptional})
 
 (s/defschema File
   {:key                      s/Str
@@ -151,7 +178,8 @@
                                                                   "dropdown"
                                                                   "multipleChoice"
                                                                   "singleChoice"
-                                                                  "attachment"])
+                                                                  "attachment"
+                                                                  "hakukohteet"])
                      (s/optional-key :cannot-edit) s/Bool
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
@@ -179,11 +207,12 @@
    :answers                             [Answer]
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
-   (s/optional-key :hakukohde)          (s/maybe s/Str)
+   (s/optional-key :hakukohde)          (s/maybe [s/Str])
    (s/optional-key :haku)               (s/maybe s/Str)
    (s/optional-key :id)                 s/Int
    (s/optional-key :created-time)       org.joda.time.DateTime
    (s/optional-key :secret)             s/Str
+   (s/optional-key :virkailija-secret)  s/Str
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
@@ -192,6 +221,7 @@
   (apply s/enum (keys review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
+                         "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"))
 
@@ -200,7 +230,9 @@
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-states)})
+   (s/optional-key :new-review-state) (s/maybe application-states)
+   :first-name                        (s/maybe s/Str)
+   :last-name                         (s/maybe s/Str)})
 
 (s/defschema Review
   {:id                             s/Int
@@ -210,18 +242,18 @@
    (s/optional-key :score)         (s/maybe s/Int)
    :notes                          (s/maybe s/Str)})
 
-(s/defschema Hakukohde {:oid               s/Str
-                        :name              s/Str
-                        :application-count s/Int
-                        :unprocessed       s/Int
-                        :incomplete        s/Int})
+(s/defschema ApplicationCountsHakukohde {:oid               s/Str
+                                         :name              s/Str
+                                         :application-count s/Int
+                                         :unprocessed       s/Int
+                                         :incomplete        s/Int})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              s/Str
                            :application-count s/Int
                            :unprocessed       s/Int
                            :incomplete        s/Int
-                           :hakukohteet       [Hakukohde]})
+                           :hakukohteet       [ApplicationCountsHakukohde]})
 
 (s/defschema DirectFormHaku {:name              s/Str
                              :key               s/Str

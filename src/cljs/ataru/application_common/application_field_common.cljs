@@ -8,11 +8,16 @@
     "postal-code"
     "postal-office"
     "home-town"
-    "city"})
+    "city"
+    "hakukohteet"
+    "birthplace"})
+(def contains-required-validators? (partial contains? required-validators))
 
 (defn is-required-field?
   [field-descriptor]
-  (some #(contains? required-validators %) (:validators field-descriptor)))
+  (if (contains? field-descriptor :children)
+    (some is-required-field? (:children field-descriptor))
+    (some contains-required-validators? (:validators field-descriptor))))
 
 (defn required-hint
   [field-descriptor]

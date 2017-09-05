@@ -5,26 +5,57 @@
             [medley.core :refer [remove-vals filter-vals remove-keys]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.application.review-states :refer [complete-states]]
-            [ataru.application-common.application-field-common :refer [required-validators]]))
+            [ataru.application-common.application-field-common :refer [required-validators]]
+            [clojure.core.match :refer [match]]))
 
-(defn- initial-valid-status [flattened-form-fields]
+(defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
         (map-indexed
-          (fn [idx field]
-            [(keyword (:id field)) {:valid (not (some #(contains? required-validators %) (:validators field)))
+          (fn [idx {:keys [belongs-to-hakukohteet] :as field}]
+            (let [id      (keyword (:id field))
+                  options (:options field)]
+              (match [id (count options) preselected-hakukohde]
+                     [:hakukohteet 1 _]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
                                     :label (:label field)
-                                    :order-idx idx}]) flattened-form-fields)))
+                                    :values [{:value (:value (first options))
+                                              :valid true}]}]
+
+                     [:hakukohteet _ (default-hakukohde :guard some?)]
+                     [:hakukohteet {:valid true
+                                    :order-idx idx
+                                    :label (:label field)
+                                    :values [{:value default-hakukohde
+                                              :valid true}]}]
+
+                     [_ _ _]
+                     [id {:valid     (not (some #(contains? required-validators %) (:validators field)))
+                          :label     (:label field)
+                          :order-idx idx}])))
+          flattened-form-fields)))
 
 (defn create-initial-answers
-  "Create initial answer structure based on form structure. Mainly validity for now."
-  [form]
-  (initial-valid-status (util/flatten-form-fields (:content form))))
+  "Create initial answer structure based on form structure. Only validity + default hakukohde for now."
+  [form preselected-hakukohde]
+  (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
 
-(defn answers->valid-status [all-answers ui]
+(defn not-extra-answer? [answer-key question-ids]
+  "Check that the answer (key) has a corresponding quesiton in the form.
+   This in necessary to allow older forms that might not have all newest questions
+   to be used with latest rules. (e.g. birthplace component)"
+  (or (empty? question-ids)
+      (some #{answer-key} question-ids)))
+
+(defn answers->valid-status [all-answers ui form-content]
   (let [answer-validity (for [[_ answers] all-answers] (:valid answers))
+        question-ids    (map #(-> % :id keyword) (util/flatten-form-fields form-content))
         invalid-fields  (for [[key answers]
                               (sort-by (fn [[_ answers]] (:order-idx answers)) all-answers)
-                              :when (and key (not (:valid answers)) (get-in ui [key :visible?] true))]
+                              :when (and key
+                                         (not (:valid answers))
+                                         (get-in ui [key :visible?] true)
+                                         (not-extra-answer? key question-ids))]
                           (assoc (select-keys answers [:label]) :key key))]
     {:invalid-fields invalid-fields
      :valid          (if (empty? answer-validity)
@@ -51,10 +82,15 @@
         hidden-followup-ids (clojure.set/intersection followup-field-ids hidden-field-ids)]
     (remove-keys #(contains? hidden-followup-ids %) answers)))
 
+(def ^:private form-fields-to-hide (comp not-empty
+                                         (partial clojure.set/intersection #{:exclude-from-answers-if-hidden :belongs-to-hakukohteet})
+                                         set
+                                         keys))
+
 (defn- remove-invisible-answers
   [answers flat-form ui]
   (let [fields-to-remove-if-hidden (->> flat-form
-                                        (filter-vals :exclude-from-answers-if-hidden)
+                                        (filter-vals form-fields-to-hide)
                                         (keys)
                                         (map keyword)
                                         (set))
@@ -96,14 +132,16 @@
               cannot-view (assoc :cannot-view true)))))
 
 (defn create-application-to-submit [application form lang]
-  (let [secret (:secret application)]
-    (cond-> {:form           (:id form)
-             :lang           lang
-             :hakukohde      (-> form :tarjonta :hakukohde-oid)
-             :haku           (-> form :tarjonta :haku-oid)
-             :answers        (create-answers-to-submit (:answers application) form (:ui application))}
-      (some? secret)
-      (assoc :secret secret))))
+  (let [{secret :secret virkailija-secret :virkailija-secret} application]
+    (cond-> {:form      (:id form)
+             :lang      lang
+             :haku      (-> form :tarjonta :haku-oid)
+             :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
+             :answers   (create-answers-to-submit (:answers application) form (:ui application))}
+
+            (some? secret) (assoc :secret secret)
+
+            (some? virkailija-secret) (assoc :virkailija-secret virkailija-secret))))
 
 (defn extract-wrapper-sections [form]
   (map #(select-keys % [:id :label :children])
@@ -135,9 +173,17 @@
 (defn application-in-complete-state? [application]
   (boolean (some #{(:state application)} complete-states)))
 
+(defn application-processing-jatkuva-haku? [application haku]
+  (and (= (:state application) "processing")
+       (:is-jatkuva-haku? haku)))
+
 (defn applying-possible? [form application]
   (cond
-    (application-in-complete-state? application)
+    (:virkailija-secret application)
+    true
+
+    (or (application-in-complete-state? application)
+        (application-processing-jatkuva-haku? application (:tarjonta form)))
     false
 
     ;; When applying to hakukohde, hakuaika must be on

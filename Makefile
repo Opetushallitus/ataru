@@ -1,2 +1,2 @@
 source-to-image:
-	./bin/cibuild.sh create-uberjar
+	LEIN_ROOT=true ./bin/cibuild.sh create-uberjar

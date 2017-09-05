@@ -1,5 +1,5 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :as url-helper]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.middleware.session-store :refer [create-store]]
@@ -16,11 +16,13 @@
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [ataru.statistics.statistics-service :as statistics-service]
             [cheshire.core :as json]
+            [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [compojure.api.sweet :as api]
@@ -28,7 +30,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
+            [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [ataru.config.core :refer [config]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -43,7 +45,10 @@
             [clout.core :as clout]
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
-            [medley.core :refer [map-kv]]))
+            [medley.core :refer [map-kv]]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
+  (:import java.time.ZonedDateTime
+           java.time.format.DateTimeFormatter))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -62,6 +67,12 @@
 
 (def client-sub-routes
   (clout/route-compile "/:page/*" {:page client-page-patterns}))
+
+(add-encoder ZonedDateTime
+             (fn [d json-generator]
+               (.writeString
+                json-generator
+                (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
 
 (defn render-virkailija-page
   []
@@ -92,10 +103,14 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/virkailija-test.html" []
-      (render-file-in-dev "templates/virkailija-test.html"))
-    (api/GET "/spec/:filename.js" [filename]
-      (render-file-in-dev (str "spec/" filename ".js")))))
+   (api/GET "/virkailija-test.html" []
+            (if (:dev? env)
+              (render-file-in-dev "templates/virkailija-test.html")
+              (route/not-found "Not found")))
+   (api/GET "/spec/:filename.js" [filename]
+            (if (:dev? env)
+              (render-file-in-dev (str "spec/" filename ".js"))
+              (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
     (api/context "/api" []
@@ -180,6 +195,16 @@
                              :review      ataru-schema/Review
                              :form        ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
+
+                   (api/GET "/:application-key/modify" {session :session}
+                     :path-params [application-key :- String]
+                     :summary "Get HTTP redirect response for modifying a single application in Hakija side"
+                     (if-let [virkailija-credentials (virkailija-edit/create-virkailija-credentials session application-key)]
+                       (let [modify-url (str (-> config :public-config :applicant :service_url)
+                                             "/hakemus?virkailija-secret="
+                                             (:secret virkailija-credentials))]
+                         (response/temporary-redirect modify-url))
+                       (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
                             :summary "Update existing application review"
@@ -267,6 +292,26 @@
                                        :return s/Any
                                        (let [koodi-options (koodisto/get-koodisto-options koodisto-uri version)]
                                          (ok koodi-options))))
+
+                 (api/context "/tarjonta" []
+                              :tags ["tarjonta-api"]
+                              (api/GET "/haku" []
+                                       :return [ataru-schema/Haku]
+                                       (if-let [haut (tarjonta/all-haut tarjonta-service)]
+                                         (-> haut
+                                             ok
+                                             (header "Cache-Control" "public, max-age=300"))
+                                         (internal-server-error {:error "Internal server error"})))
+                              (api/GET "/hakukohde" []
+                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
+                                       :return [ataru-schema/Hakukohde]
+                                       (if-let [hakukohteet (tarjonta/hakukohteet-by-organization
+                                                             tarjonta-service
+                                                             organizationOid)]
+                                         (-> hakukohteet
+                                             ok
+                                             (header "Cache-Control" "public, max-age=300"))
+                                         (internal-server-error {:error "Internal server error"}))))
 
                  (api/context "/files" []
                    :tags ["files-api"]

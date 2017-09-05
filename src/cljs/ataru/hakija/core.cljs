@@ -7,6 +7,7 @@
             [ataru.hakija.hakija-ajax :refer [post]]
             [ataru.hakija.application-view :refer [form-view]]
             [ataru.hakija.application-handlers] ;; required although no explicit dependency
+            [ataru.hakija.application-hakukohde-handlers] ;; required although no explicit dependency
             [ataru.hakija.subs] ;; required although no explicit dependency
             [ataru.application-common.fx] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.cljs-util :as cljs-util]
@@ -19,18 +20,34 @@
       (clojure.string/split #"/")
       (nth 2)))
 
+(defn- path-match
+  [path re]
+  (when-let [re-match (re-matches re path)]
+    (nth re-match 1)))
+
+(defn- not-blank? [x]
+  (not (clojure.string/blank? x)))
+
 (defn- dispatch-form-load
   []
-  (let [path            (cljs-util/get-path)
-        hakukohde-match (re-matches #"/hakemus/hakukohde/(.+)/?" path)
-        hakukohde-oid   (when hakukohde-match (nth hakukohde-match 1))
-        secret          (:modify (cljs-util/extract-query-params))]
+  (let [path              (cljs-util/get-path)
+        hakukohde-oid     (path-match path #"/hakemus/hakukohde/(.+)/?")
+        haku-oid          (path-match path #"/hakemus/haku/(.+)/?")
+        query-params      (cljs-util/extract-query-params)
+        hakija-secret     (:modify query-params)
+        virkailija-secret (:virkailija-secret query-params)]
     (cond
-      (some? hakukohde-oid)
+      (not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
 
-      (some? secret)
-      (re-frame/dispatch [:application/get-application-by-secret secret])
+      (not-blank? haku-oid)
+      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
+
+      (not-blank? hakija-secret)
+      (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
+
+      (not-blank? virkailija-secret)
+      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret])
 
       :else
       (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))

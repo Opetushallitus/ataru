@@ -5,6 +5,8 @@ set -e
 VIRKAILIJA_CONFIG="../ataru-secrets/virkailija-dev.edn"
 HAKIJA_CONFIG="../ataru-secrets/hakija-dev.edn"
 
+type -p rlwrap > /dev/null && RLWRAP="rlwrap" || RLWRAP=""
+
 while getopts ":v::h:i" opt; do
   case $opt in
     i)
@@ -55,12 +57,12 @@ tmux select-pane -t 2
 tmux send-keys "./bin/lein less auto" C-m
 
 tmux select-pane -t 3
-tmux send-keys "./bin/lein figwheel-virkailija" C-m
+tmux send-keys "$RLWRAP ./bin/lein figwheel-virkailija" C-m
 
 tmux split-window -v
 
 tmux select-pane -t 4
-tmux send-keys "./bin/lein figwheel-hakija" C-m
+tmux send-keys "$RLWRAP ./bin/lein figwheel-hakija" C-m
 
 if [ -n $ITERM_FLAG ]
 then

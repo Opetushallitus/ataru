@@ -137,14 +137,20 @@
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
-  (let [result (answers->valid-status {:one {:valid false :label {:fi "invaliidi"}}, :two {:valid true}, :three {:valid true}} nil)]
+  (let [result (answers->valid-status {:one {:valid false :label {:fi "invaliidi"}}, :two {:valid true}, :three {:valid true}} nil nil)]
     (is (= {:valid false :invalid-fields '({:key :one :label {:fi "invaliidi"}})} result))))
 
 (deftest answers->valid-status-gives-false-for-empty-map
-  (is (= {:valid false  :invalid-fields '()} (answers->valid-status {} nil))))
+  (is (= {:valid false  :invalid-fields '()} (answers->valid-status {} nil nil))))
 
 (deftest answers->valid-status-gives-true-for-all-valid
-  (let [result (answers->valid-status {:one {:valid true}, :two {:valid true}, :three {:valid true}} nil)]
+  (let [result (answers->valid-status {:one {:valid true}, :two {:valid true}, :three {:valid true}} nil nil)]
+    (is (= {:valid true :invalid-fields '()} result))))
+
+(deftest answers->valid-status-gives-true-for-all-valid-and-some-extra-questions
+  (let [answers      {:one {:valid true} :two {:valid true} :three {:valid true} :four {:valid false}}
+        form-content [{:id "one"} {:id "two"} {:id "three"}]
+        result       (answers->valid-status answers nil form-content)]
     (is (= {:valid true :invalid-fields '()} result))))
 
 (def application-data-to-submit {:answers
@@ -155,7 +161,7 @@
 
 (def expected-application {:form 37,
                            :lang "fi",
-                           :hakukohde nil,
+                           :hakukohde '(),
                            :haku nil,
                            :answers '({:key "G__14",
                                        :value "Jorma",

@@ -6,13 +6,11 @@
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
-            [ataru.hakija.application :refer [application-in-complete-state?]]
-            [ataru.application-common.koulutus :as koulutus]
+            [ataru.hakija.application :refer [application-in-complete-state? application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
             [cljs-time.coerce :refer [from-long]]
-            [clojure.string :as string]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]))
 
@@ -24,36 +22,36 @@
 (def date-format (formatter "d.M.yyyy"))
 
 (defn application-header [form]
-  (let [selected-lang     (:selected-language form)
+  (let [selected-lang     (or (:selected-language form) :fi)
         languages         (filter
                             (partial not= selected-lang)
                             (:languages form))
         submit-status     (subscribe [:state-query [:application :submit-status]])
         application       (subscribe [:state-query [:application]])
         secret            (:modify (util/extract-query-params))
-        hakukohde-name    (-> form :tarjonta :hakukohde-name)
-        haku-tarjoja-name (-> form :tarjonta :haku-tarjoaja-name)
-        koulutukset-str   (koulutus/koulutukset->str (-> form :tarjonta :koulutukset))
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
+        haku-name         (-> form :tarjonta :haku-name selected-lang)
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
+
         translations      (get-translations
-                           (keyword selected-lang)
-                           translations/application-view-translations)
-        apply-dates       (when hakukohde-name
+                            (keyword selected-lang)
+                            translations/application-view-translations)
+        apply-dates       (when haku-name
                             (if (and apply-start-date apply-end-date)
                               (str (:application-period translations)
                                    ": "
                                    (unparse date-format (from-long apply-start-date))
                                    " - "
                                    (unparse date-format (from-long apply-end-date))
-                                   (when-not hakuaika-on
+                                   (when (and (not hakuaika-on) (nil? virkailija-secret))
                                      (str " (" (:not-within-application-period translations) ")")))
                               (:continuous-period translations)))]
     (fn [form]
       [:div
        [:div.application__header-container
-        [:span.application__header (or hakukohde-name (:name form))]
+        [:span.application__header (or haku-name (:name form))]
         (when (and (not= :submitted @submit-status)
                    (> (count languages) 0)
                    (nil? secret))
@@ -65,12 +63,12 @@
                                   (> (dec (count languages)) idx)
                                   (conj [:span.application__header-language-link-separator " | "])))
                         languages)])]
-       (when (and haku-tarjoja-name apply-dates)
+       (when apply-dates
          [:div.application__sub-header-container
-          (when-not (string/blank? koulutukset-str) [:div.application__sub-header-koulutus koulutukset-str])
-          [:span.application__sub-header-organization haku-tarjoja-name]
           [:span.application__sub-header-dates apply-dates]])
-       (when (application-in-complete-state? @application)
+       (when (and (or (application-in-complete-state? @application)
+                      (application-processing-jatkuva-haku? @application (:tarjonta form)))
+                  (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
            (:application-processed-cant-modify translations)]])])))
@@ -86,17 +84,19 @@
       (if (= :submitted @submit-status)
         [readonly-fields form]
         (do
-          (dispatch [:application/run-rule])
+          (dispatch [:application/run-rule])                ; wtf
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form       (subscribe [:state-query [:form]])
-        can-apply? (subscribe [:application/can-apply?])]
+  (let [form                  (subscribe [:state-query [:form]])
+        can-apply?            (subscribe [:application/can-apply?])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
+
        (when @can-apply?
+         ^{:key "form-fields"}
          [render-fields @form])])))
 
 (defn- star-number-from-event
@@ -113,6 +113,7 @@
         stars          (subscribe [:state-query [:application :feedback :stars]])
         hidden?        (subscribe [:state-query [:application :feedback :hidden?]])
         rating-status  (subscribe [:state-query [:application :feedback :status]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         show-feedback? (reaction (and (= :submitted @submit-status)
                                       (not @hidden?)))]
     (fn []
@@ -121,7 +122,7 @@
                            translations/application-view-translations)
             rated?       (= :rating-given @rating-status)
             submitted?   (= :feedback-submitted @rating-status)]
-        (when @show-feedback?
+        (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
             {:on-click #(dispatch [:application/rating-form-toggle])}

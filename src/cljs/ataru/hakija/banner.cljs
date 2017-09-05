@@ -19,7 +19,7 @@
        (map :fieldType)
        (first)))
 
-(defn invalid-field-status [valid-status]
+(defn invalid-field-status []
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
@@ -46,58 +46,77 @@
                    [:span.application__close-invalid-fields
                     {:on-click toggle-show-details}
                     "x"]]
-                  (mapv (fn [field]
-                          (let [label (or (get-in field [:label @lang])
-                                          (get-in field [:label @default-lang]))]
-                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
-                        (:invalid-fields valid-status)))])]))))
+                  (map (fn [field]
+                         (let [label (or (get-in field [:label @lang])
+                                         (get-in field [:label @default-lang]))]
+                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label]]))
+                       (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (let [lang (subscribe [:application/form-language])]
+  (let [lang              (subscribe [:application/form-language])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
     (fn [submit-status]
-      (match submit-status
-             :submitting [:div.application__sent-indicator (case @lang
-                                                             :fi "Hakemusta lähetetään"
-                                                             :sv "Ansökan skickas"
-                                                             :en "The application is being sent")]
-             :submitted [:div.application__sent-indicator.animated.fadeIn (case @lang
-                                                                            :fi "Saat vahvistuksen sähköpostiisi"
-                                                                            :sv "Du får en bekräftelse till din e-post"
-                                                                            :en "Confirmation email will be sent to the email address you've provided")]
+      (match [submit-status @virkailija-secret]
+             [:submitting _] [:div.application__sent-indicator (case @lang
+                                                                 :fi "Hakemusta lähetetään"
+                                                                 :sv "Ansökan skickas"
+                                                                 :en "The application is being sent")]
+             [:submitted (_ :guard #(nil? %))]
+             [:div.application__sent-indicator.animated.fadeIn (case @lang
+                                                                 :fi "Saat vahvistuksen sähköpostiisi"
+                                                                 :sv "Du får en bekräftelse till din e-post"
+                                                                 :en "Confirmation email will be sent to the email address you've provided")]
              :else nil))))
 
+(defn- edit-text [hakija-secret
+                  virkailija-secret
+                  hakija-edit-text
+                  virkailija-edit-text
+                  hakija-new-text]
+  (cond (some? hakija-secret)
+        hakija-edit-text
+
+        (some? virkailija-secret)
+        virkailija-edit-text
+
+        :else
+        hakija-new-text))
+
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [lang    (subscribe [:application/form-language])
-        secret  (subscribe [:state-query [:application :secret]])
-        editing (reaction (some? @secret))]
+  (let [lang              (subscribe [:application/form-language])
+        secret            (subscribe [:state-query [:application :secret]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
+        editing           (reaction (or (some? @secret) (some? @virkailija-secret)))
+        values-changed?   (subscribe [:state-query [:application :values-changed?]])]
     (fn [valid-status submit-status]
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
                          [:i.zmdi.zmdi-check]
                          [:span.application__sent-placeholder-text (case @lang
-                                                                     :fi "Hakemus lähetetty"
-                                                                     :sv "Ansökan har skickats"
-                                                                     :en "The application has been sent")]]
+                                                                     :fi (if @virkailija-secret "Muutokset tallennettu" "Hakemus lähetetty")
+                                                                     :sv (if @virkailija-secret "Ändringarna har sparats" "Ansökan har skickats")
+                                                                     :en (if @virkailija-secret "The modifications have been saved" "The application has been sent"))]]
              :else [:button.application__send-application-button
-                    {:disabled (or (not (:valid valid-status)) (contains? #{:submitting :submitted} submit-status))
+                    {:disabled (or (not (:valid valid-status))
+                                   (contains? #{:submitting :submitted} submit-status)
+                                   (and @editing (empty? @values-changed?)))
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}
                     (case @lang
-                      :fi (if @editing "LÄHETÄ MUUTOKSET" "LÄHETÄ HAKEMUS")
-                      :sv (if @editing "SCICKA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
-                      :en (if @editing "SEND MODIFICATIONS" "SEND APPLICATION"))]))))
+                      :fi (edit-text @secret @virkailija-secret "LÄHETÄ MUUTOKSET" "TALLENNA MUUTOKSET" "LÄHETÄ HAKEMUS")
+                      :sv (edit-text @secret @virkailija-secret "SCICKA FÖRÄNDRINGAR" "SPARA FÖRÄNDRINGAR" "SKICKA ANSÖKAN")
+                      :en (edit-text @secret @virkailija-secret "SEND MODIFICATIONS" "SAVE MODIFICATIONS" "SEND APPLICATION"))]))))
 
 (defn status-controls []
-  (let [valid-status  (subscribe [:application/valid-status])
-        submit-status (subscribe [:state-query [:application :submit-status]])
-        can-apply?    (subscribe [:application/can-apply?])]
-    (fn []
-      (when @can-apply?
-        [:div.application__status-controls
-         [send-button-or-placeholder @valid-status @submit-status]
-         [invalid-field-status @valid-status]
-         [sent-indicator @submit-status]]))))
+  (let [valid-status         (subscribe [:application/valid-status])
+        submit-status        (subscribe [:state-query [:application :submit-status]])
+        can-apply?           (subscribe [:application/can-apply?])]
+    (when @can-apply?
+      [:div.application__status-controls
+       [send-button-or-placeholder @valid-status @submit-status]
+       [invalid-field-status @valid-status]
+       [sent-indicator @submit-status]])))
 
 (defn wrapper-section-link [ws]
   (let [lang         (subscribe [:application/form-language])

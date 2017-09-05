@@ -152,3 +152,9 @@
 
 (defn flatten-path [db & parts]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
+
+(defn- text-area-size->max-length [text-area-size]
+  (condp = text-area-size
+    "S" "500"
+    "L" "1500"
+    "1000"))

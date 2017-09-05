@@ -17,4 +17,6 @@
     (let [resp  (handler req)
           uri   (:uri req)
           cache (if (is-resource uri) cache-for-a-long-time do-not-cache-at-all)]
-      (response/header resp "Cache-Control" cache))))
+      (if (some? (response/get-header resp "Cache-Control"))
+        resp
+        (response/header resp "Cache-Control" cache)))))

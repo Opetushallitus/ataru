@@ -7,12 +7,12 @@
     return testFrame().find('.editor-form__form-name-input')
   }
 
-  function editorPageIsLoaded() {
-    return elementExists(addNewFormLink())
-  }
-
   function formList() {
     return testFrame().find('.editor-form__list')
+  }
+
+  function editorPageIsLoaded() {
+    return elementExists(formList().find('a'))
   }
 
   function formListItems(n) {
@@ -80,12 +80,12 @@
 
   describe('Editor', function() {
 
-    describe('with no forms', function() {
+    describe('with fixture forms', function() {
       before(
         wait.until(editorPageIsLoaded)
       )
-      it('has empty form listing', function() {
-        expect(formListItems()).to.have.length(0)
+      it('has 4 fixture forms', function() {
+        expect(formListItems().find('.editor-form__list-form-name:contains(Selaintestilomake)')).to.have.length(4)
       })
     })
 
@@ -144,6 +144,7 @@
           clickComponentMenuItem('Tekstialue'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__button-group div:eq(2) label')}),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__checkbox-wrapper label')}),
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field-auto-width')}, '2000'),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__info-addon-checkbox label') }),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__info-addon-inputs input') }, 'Toisen kysymyksen ohjeteksti')
@@ -154,6 +155,7 @@
           expect(formComponents().eq(2).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
           expect(formComponents().eq(2).find('.editor-form__info-addon-inputs input').val()).to.equal('Toisen kysymyksen ohjeteksti')
           expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
+          expect(formComponents().eq(2).find('.editor-form__max-length-container input').val()).to.equal('2000')
           expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
         })
       })
@@ -401,6 +403,28 @@
           expect(formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(0).val()).to.equal('Jatkokysymys A')
           expect(formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(1).val()).to.equal('Jatkokysymys B')
           expect(formComponents().eq(15).find('.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field').eq(2).val()).to.equal('Jatkokysymys C')
+        })
+      })
+
+      describe('hakukohde specific question', function() {
+        var component = function() { return formComponents().eq(16) }
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          setTextFieldValue(
+            function() {
+              return component().find('.editor-form__text-field')
+            },
+            'Hakukohdekohtainen kysymys'
+          ),
+          clickElement(function() {
+            return component().find('.belongs-to-hakukohteet__modal-toggle')
+          }),
+          clickElement(function() {
+            return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
+          })
+        )
+        it('shows the selected hakukohde', function() {
+          expect(component().find('.belongs-to-hakukohteet__hakukohde-label').length).to.equal(1)
         })
       })
 

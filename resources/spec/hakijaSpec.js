@@ -1,19 +1,4 @@
 (function() {
-  before(function () {
-    var query = location.search.substring(1).split('&')
-    var formId = ''
-
-    for (var i = 0; i < query.length; i++) {
-      var param = query[i].split('=')
-      if (param[0] == 'formId') {
-        formId = param[1]
-      }
-    }
-
-    console.log("form id", formId || 'UNDEFINED')
-    loadInFrame('/hakemus/' + formId)
-  })
-
   afterEach(function() {
     expect(window.uiError || null).to.be.null
   })
@@ -22,6 +7,7 @@
 
     describe('form loads', function () {
       before(
+        newForm('testForm'),
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
@@ -31,6 +17,7 @@
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
+        expect(formFields().eq(15).find('.application__form-textarea-max-length').text()).to.equal('0 / 2000');
       })
     })
 
@@ -153,7 +140,7 @@
                               "Jyväskylä",
                               "suomi",
                               "Tekstikentän vastaus",
-                              "Toistuva vastaus 1Toistuva vastaus 3",
+                              "Toistuva vastaus 1Toistuva vastaus 2Toistuva vastaus 3",
                               "Pakollisen tekstialueen vastaus",
                               "Kolmas vaihtoehto",
                               "Jatkokysymyksen vastaus",

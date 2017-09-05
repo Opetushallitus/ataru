@@ -1,0 +1,1 @@
+ALTER TABLE virkailija_credentials ADD COLUMN created_time TIMESTAMP WITH TIME ZONE DEFAULT now()

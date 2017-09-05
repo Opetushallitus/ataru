@@ -8,43 +8,64 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [taoensso.timbre :refer-macros [spy debug]]
+            [ataru.translations.translation-util :refer [get-translations]]
+            [ataru.translations.application-view :refer [application-view-translations]]
+            [clojure.data :as d]))
 
 (defn initialize-db [_ _]
   {:form        nil
    :application {:answers {}}})
 
 (defn- handle-get-application [{:keys [db]}
-                               [_ secret {:keys [answers
-                                                 form-key
-                                                 lang
-                                                 hakukohde
-                                                 hakukohde-name
-                                                 state]}]]
-  {:db       (-> db
-                 (assoc-in [:application :editing?] true)
-                 (assoc-in [:application :secret] secret)
-                 (assoc-in [:application :state] state)
-                 (assoc-in [:form :selected-language] (keyword lang))
-                 (assoc-in [:form :hakukohde-name] hakukohde-name))
-   :dispatch (if hakukohde
-               [:application/get-latest-form-by-hakukohde hakukohde answers]
-               [:application/get-latest-form-by-key form-key answers])})
+                               [_
+                                {:keys [secret virkailija-secret]}
+                                {:keys [answers
+                                        form-key
+                                        lang
+                                        haku
+                                        hakukohde
+                                        hakukohde-name
+                                        state]}]]
+  (let [[secret-kwd secret-val] (if-not (clojure.string/blank? secret)
+                                  [:secret secret]
+                                  [:virkailija-secret virkailija-secret])]
+    {:db       (-> db
+                   (assoc-in [:application :editing?] true)
+                   (assoc-in [:application secret-kwd] secret-val)
+                   (assoc-in [:application :state] state)
+                   (assoc-in [:application :hakukohde] hakukohde)
+                   (assoc-in [:form :selected-language] (or (keyword lang) :fi))
+                   (assoc-in [:form :hakukohde-name] hakukohde-name))
+     :dispatch (if haku
+                 [:application/get-latest-form-by-haku haku answers]
+                 [:application/get-latest-form-by-key form-key answers])}))
 
 (reg-event-fx
   :application/handle-get-application
   handle-get-application)
 
-(defn- get-application-by-secret
+(defn- get-application-by-hakija-secret
   [{:keys [db]} [_ secret]]
   {:db   db
    :http {:method  :get
           :url     (str "/hakemus/api/application?secret=" secret)
-          :handler [:application/handle-get-application secret]}})
+          :handler [:application/handle-get-application {:secret secret}]}})
 
 (reg-event-fx
-  :application/get-application-by-secret
-  get-application-by-secret)
+  :application/get-application-by-hakija-secret
+  get-application-by-hakija-secret)
+
+(defn- get-application-by-virkailija-secret
+  [{:keys [db]} [_ virkailija-secret]]
+  {:db   db
+   :http {:method  :get
+          :url     (str "/hakemus/api/application?virkailija-secret=" virkailija-secret)
+          :handler [:application/handle-get-application {:virkailija-secret virkailija-secret}]}})
+
+(reg-event-fx
+  :application/get-application-by-virkailija-secret
+  get-application-by-virkailija-secret)
 
 (reg-event-fx
   :application/get-latest-form-by-key
@@ -55,7 +76,7 @@
             :handler [:application/handle-form answers]}}))
 
 (defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
-  {:db   db
+  {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
           :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
           :handler [:application/handle-form answers]}})
@@ -63,6 +84,14 @@
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
   get-latest-form-by-hakukohde)
+
+(reg-event-fx
+  :application/get-latest-form-by-haku
+  (fn [{:keys [db]} [_ haku-oid answers]]
+    {:db db
+     :http {:method  :get
+            :url     (str "/hakemus/api/haku/" haku-oid)
+            :handler [:application/handle-form answers]}}))
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
@@ -100,6 +129,11 @@
   (fn [{:keys [db]} _]
     (send-application db :put)))
 
+(reg-event-db
+  :application/hide-hakukohteet-if-no-tarjonta
+  (fn [db _]
+    (assoc-in db [:application :ui :hakukohteet :visible?] (boolean (-> db :form :tarjonta)))))
+
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
                       :lang
@@ -125,7 +159,7 @@
                     (filter (comp true? second))
                     (map first))
         valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value answers-by-key) validators))
+                 (every? true? (map #(validator/validate % value answers-by-key nil) validators))
                  true)]
     (merge answer {:value value :valid valid})))
 
@@ -136,7 +170,7 @@
     (update-in db button-path
                (fn [answer]
                  (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers)) validators))
+                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
                                 true)]
                    (merge answer {:value new-value
                                   :valid valid?}))))))
@@ -160,7 +194,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"textField" "attachment"})
+(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -173,6 +207,18 @@
                       :value (str (or (and (clojure.string/blank? (:value ssn))
                                            (:cannot-view ssn))
                                       (not (clojure.string/blank? (:value ssn)))))})))
+
+(defn- populate-hakukohde-answers-if-necessary
+  "Populate hakukohde answers for legacy applications where only top-level hakukohde array exists"
+  [db]
+  (let [hakukohteet (-> db :application :hakukohde)
+        hakukohde-answers (-> db :application :answers :hakukohteet :value)]
+    (if (and (not-empty hakukohteet)
+             (empty? hakukohde-answers))
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values] (map (fn [oid] {:valid true :value oid}) hakukohteet))
+          (assoc-in [:application :answers :hakukohteet :valid] true))
+      db)))
 
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
@@ -208,7 +254,8 @@
                         answers)))
                   answers
                   submitted-answers)))
-      set-have-finnish-ssn
+      (populate-hakukohde-answers-if-necessary)
+      (set-have-finnish-ssn)
       (set-ssn-field-visibility)
       (set-country-specific-fields-visibility)))
 
@@ -226,22 +273,39 @@
                           {id {:visible? (or has-value? has-children?)}})))
                  (reduce merge))))
 
+(defn- original-values->answers [db]
+  (cond-> db
+    (or (-> db :application :secret)
+        (-> db :application :virkailija-secret))
+    (update-in [:application :answers]
+               (partial reduce-kv
+                        (fn [answers answer-key {:keys [value values] :as answer}]
+                          (let [value  (if values
+                                         (map :value values)
+                                         value)
+                                answer (assoc answer :original-value value)]
+                            (assoc answers answer-key answer)))
+                        {}))))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language))
-        db   (-> db
-                 (update :form (fn [{:keys [selected-language hakukohde-name]}]
-                                 (cond-> form
-                                   (some? selected-language)
-                                   (assoc :selected-language selected-language)
-
-                                   (some? hakukohde-name)
-                                   (assoc :hakukohde-name hakukohde-name))))
-                 (assoc-in [:application :answers] (create-initial-answers form))
-                 (assoc :wrapper-sections (extract-wrapper-sections form))
-                 (merge-submitted-answers answers)
-                 set-followup-visibility-to-false)]
-    {:db db}))
+        preselected-hakukohde (-> db :application :preselected-hakukohde)]
+    {:db         (-> db
+                     (update :form (fn [{:keys [selected-language]}]
+                                     (cond-> form
+                                             (some? selected-language)
+                                             (assoc :selected-language selected-language))))
+                     (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
+                     (assoc-in [:application :show-hakukohde-search] true)
+                     (assoc :wrapper-sections (extract-wrapper-sections form))
+                     (merge-submitted-answers answers)
+                     (original-values->answers)
+                     (set-followup-visibility-to-false))
+     :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
+                  [:application/show-answers-belonging-to-hakukohteet]
+                  [:application/hakukohde-query-change "" 0]
+                  [:application/set-page-title]]}))
 
 (reg-event-db
   :flasher
@@ -256,60 +320,107 @@
   :application/initialize-db
   initialize-db)
 
-(defn set-application-field [db [_ key values]]
-  (let [path                [:application :answers key]
-        current-answer-data (get-in db path)]
-    (assoc-in db path
-      (when values
-        (merge current-answer-data values)))))
+(reg-event-fx
+  :application/textual-field-blur
+  (fn [{db :db} [_ field]]
+    (let [id (keyword (:id field))
+          answer (get-in db [:application :answers id])]
+      {:dispatch-n (if (or (empty? (:blur-rules field))
+                           (not (:valid answer)))
+                     []
+                     [[:application/run-rule (:blur-rules field)]])})))
 
-(reg-event-db
+(reg-event-fx
   :application/set-application-field
-  set-application-field)
+  (fn [{db :db} [_ field value]]
+    (let [id       (keyword (:id field))
+          answers  (get-in db [:application :answers])
+          answer   (get answers id)
+          valid?   (or (:cannot-view answer)
+                       (:cannot-edit answer)
+                       (every? #(validator/validate % value answers field)
+                               (:validators field)))
+          changed? (not= value (:original-value answer))]
+      {:db         (-> db
+                       (update-in [:application :answers id] merge {:valid valid? :value value})
+                       (update-in [:application :values-changed?] (fn [values]
+                                                                    (let [values (or values #{})]
+                                                                      (if changed?
+                                                                        (conj values id)
+                                                                        (disj values id))))))
+       :dispatch-n (if (empty? (:rules field))
+                     []
+                     [[:application/run-rule (:rules field)]])})))
+
+(defn- set-repeatable-field-values
+  [db field-descriptor idx value]
+  (let [id (keyword (:id field-descriptor))
+        answers (get-in db [:application :answers])
+        answer (get answers id)
+        valid? (or (:cannot-view answer)
+                   (:cannot-edit answer)
+                   (every? #(validator/validate % value answers field-descriptor)
+                           (:validators field-descriptor)))]
+    (update-in db [:application :answers id :values]
+               (fnil assoc []) idx {:valid valid? :value value})))
+
+(defn- set-multi-value-changed [db id & [subpath]]
+  (let [{:keys [original-value value values]} (-> db :application :answers id)
+        new-value (cond->> (or values value)
+                    (vector? subpath)
+                    (map #(get-in % subpath)))
+        [new-diff original-diff _] (d/diff new-value
+                                           original-value)]
+    (update-in db [:application :values-changed?] (fn [values]
+                                                    (let [values (or values #{})]
+                                                      (if (and (empty? new-diff)
+                                                               (empty? original-diff))
+                                                        (disj values id)
+                                                        (conj values id)))))))
+
+(defn- set-repeatable-field-value
+  [db field-descriptor]
+  (let [id        (keyword (:id field-descriptor))
+        values    (get-in db [:application :answers id :values])
+        required? (some (partial = "required")
+                        (:validators field-descriptor))
+        valid?    (if (empty? values)
+                    (not required?)
+                    (every? :valid values))]
+    (-> db
+        (update-in [:application :answers id]
+                   merge
+                   {:valid valid? :value (mapv :value values)})
+        (set-multi-value-changed id [:value]))))
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor key idx {:keys [value valid] :as values}]]
-    (let [path                      [:application :answers key :values]
-          required?                 (some? ((set (:validators field-descriptor)) "required"))
-          with-answer               (if (and
-                                          (zero? idx)
-                                          (empty? value)
-                                          (= 1 (count (get-in db path))))
-                                      (assoc-in db path [])
-                                      (update-in db path (fnil assoc []) idx values))
-          all-values                (get-in with-answer path)
-          validity-for-validation   (boolean
-                                      (some->>
-                                        (map :valid (or
-                                                      (when (= 1 (count all-values))
-                                                        [values])
-                                                      (when (and (not required?) (empty? all-values))
-                                                        [{:valid true}])
-                                                      (butlast all-values)))
-                                        not-empty
-                                        (every? true?)))
-          value-for-readonly-fields-and-db (filter not-empty (mapv :value all-values))]
-      (update-in
-        with-answer
-        (butlast path)
-        assoc
-        :valid validity-for-validation
-        :value value-for-readonly-fields-and-db))))
+  (fn [db [_ field-descriptor idx value]]
+    (-> db
+        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-value field-descriptor))))
+
+(defn- remove-repeatable-field-value
+  [db field-descriptor idx]
+  (let [id (keyword (:id field-descriptor))]
+    (cond-> db
+      (seq (get-in db [:application :answers id :values]))
+      (update-in [:application :answers id :values]
+                 #(autil/remove-nth % idx))
+
+      ;; when creating application, we have the value below (and it's important). when editing, we do not.
+      ;; consider this a temporary, terrible bandaid solution
+      (seq (get-in db [:application :answers id :value]))
+      (update-in [:application :answers id :value]
+                 #(autil/remove-nth (vec %) idx))
+
+      true
+      (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ key idx]]
-    (cond-> db
-            (get-in db [:application :answers key :values])
-            (update-in [:application :answers key :values]
-                       #(autil/remove-nth % idx))
-
-            ; when creating application, we have the value below (and it's important). when editing, we do not.
-            ; consider this a temporary, terrible bandaid solution
-            (get-in db [:application :answers key :value])
-            (update-in [:application :answers key :value]
-                       #(autil/remove-nth (vec %) idx)))))
+  (fn [db [_ field-descriptor idx]]
+    (remove-repeatable-field-value db field-descriptor idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
@@ -340,12 +451,6 @@
     (or (f db)
         db)))
 
-(reg-event-fx
-  :state-update-fx
-  (fn [cofx [_ f]]
-    (or (f cofx)
-        (dissoc cofx :event))))
-
 (reg-event-db
   :application/handle-postal-code-input
   (fn [db [_ postal-office-name]]
@@ -356,80 +461,70 @@
   :application/handle-postal-code-error
   (fn [db _]
     (-> db
-        (assoc-in [:application :answers :postal-code :valid] false)
+        (update-in [:application :answers :postal-code]
+                   merge {:valid false})
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
+(defn- set-field-visibility
+  [db field-descriptor visible?]
+  (let [id (keyword (:id field-descriptor))
+        db (assoc-in db [:application :ui id :visible?] visible?)]
+    (if (= "adjacentfieldset" (:fieldType field-descriptor))
+      (reduce #(set-field-visibility %1 %2 visible?)
+              db
+              (:children field-descriptor))
+      db)))
+
+(defn- set-multiple-choice-followup-visibility
+  [db field-descriptor option]
+  (let [id (keyword (:id field-descriptor))
+        selected? (get-in db [:application :answers id :options (:value option)])]
+    (reduce #(set-field-visibility %1 %2 selected?)
+            db
+            (:followups option))))
+
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ multiple-choice-id option-value validators]]
-    (update-in db [:application :answers multiple-choice-id]
-      (fn [answer]
-        (toggle-multiple-choice-option answer option-value validators (-> db :application :answers))))))
+  (fn [db [_ field-descriptor option]]
+    (let [id (keyword (:id field-descriptor))
+          validators (:validators field-descriptor)]
+      (-> db
+          (update-in [:application :answers id]
+                     (fn [answer]
+                       (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
+          (set-multi-value-changed id)
+          (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
   :application/select-single-choice-button
   select-single-choice-button)
 
-(defn- required? [field-descriptor]
-  (some? ((set (:validators field-descriptor)) "required")))
-
-(defn- set-adjacent-field-validity
-  [field-descriptor {:keys [values] :as answer}]
-    (assoc answer
-      :valid
-      (boolean
-        (some->>
-          (map :valid (or
-                        (not-empty values)
-                        [{:valid (not (required? field-descriptor))}]))
-          not-empty
-          (every? true?)))))
-
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor id idx value]]
-    (-> (update-in db [:application :answers id :values]
-                   (fn [answers]
-                     (let [[init last] (split-at
-                                         idx
-                                         (or
-                                           (not-empty answers)
-                                           []))]
-                       (vec (concat init [value] (rest last))))))
-        (update-in [:application :answers id] (partial set-adjacent-field-validity field-descriptor)))))
+  (fn [db [_ field-descriptor idx value]]
+    (-> db
+        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
   (fn [db [_ field-descriptor]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (let [required? (required? child-descriptor)]
-                  (-> db
-                      (update-in [:application :answers id :values]
-                        (fn [values]
-                          (conj (or values [{:value nil :valid (not required?)}])
-                                {:value nil :valid (not required?)})))
-                      (update-in [:application :answers id]
-                        (partial set-adjacent-field-validity child-descriptor)))))
-              db
-              children))))
+    (reduce (fn [db child]
+              (let [id (keyword (:id child))
+                    new-idx (count (get-in db [:application :answers id :values]))]
+                (-> db
+                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-value child))))
+            db
+            (:children field-descriptor))))
 
 (reg-event-db
   :application/remove-adjacent-field
   (fn [db [_ field-descriptor index]]
-    (let [children (map #(update % :id keyword) (:children field-descriptor))]
-      (reduce (fn [db {:keys [id] :as child-descriptor}]
-                (-> db
-                    (update-in [:application :answers id :values]
-                      (fn [answers]
-                        (vec (concat
-                               (subvec answers 0 index)
-                               (subvec answers (inc index))))))
-                    (update-in [:application :answers id]
-                      (partial set-adjacent-field-validity child-descriptor))))
-              db
-              children))))
+    (reduce #(remove-repeatable-field-value %1 %2 index)
+            db
+            (:children field-descriptor))))
 
 (reg-event-fx
   :application/add-single-attachment
@@ -447,26 +542,37 @@
 (reg-event-fx
   :application/add-attachments
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files]]
-    (let [dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
+    (let [files         (filter (fn [file]
+                                  (let [prev-files (get-in db [:application :answers (keyword component-id) :values])
+                                        new-file   {:filename (.-name file)
+                                                    :size     (.-size file)}]
+                                    (not (some (partial = new-file)
+                                               (eduction (map :value)
+                                                         (map #(select-keys % [:filename :size]))
+                                                         prev-files)))))
+                                files)
+          dispatch-list (map-indexed (fn file->dispatch-vec [idx file]
                                        [:application/add-single-attachment field-descriptor component-id (+ attachment-count idx) file 0])
                                      files)
-          db            (as-> db db'
-                              (update-in db' [:application :answers (keyword component-id) :values]
-                                (fn [values]
-                                  (or values [])))
-                              (->> files
-                                   (map-indexed (fn attachment-idx->file [idx file]
-                                                  {:idx (+ attachment-count idx) :file file}))
-                                   (reduce (fn attachment-spec->db [db {:keys [idx file]}]
-                                             (assoc-in db [:application :answers (keyword component-id) :values idx]
-                                               {:value  {:filename     (.-name file)
-                                                         :content-type (.-type file)
-                                                         :size         (.-size file)}
-                                                :valid  false
-                                                :status :uploading}))
-                                           db'))
-                              (assoc-in db' [:application :answers (keyword component-id) :valid] false)
-                              (assoc-in db' [:application :answers (keyword component-id) :too-big] false))]
+          db            (if (not-empty files)
+                          (as-> db db'
+                                (update-in db' [:application :answers (keyword component-id) :values]
+                                           (fn [values]
+                                             (or values [])))
+                                (->> files
+                                     (map-indexed (fn attachment-idx->file [idx file]
+                                                    {:idx (+ attachment-count idx) :file file}))
+                                     (reduce (fn attachment-spec->db [db {:keys [idx file]}]
+                                               (assoc-in db [:application :answers (keyword component-id) :values idx]
+                                                 {:value  {:filename     (.-name file)
+                                                           :content-type (.-type file)
+                                                           :size         (.-size file)}
+                                                  :valid  false
+                                                  :status :uploading}))
+                                             db'))
+                                (update-in db' [:application :answers (keyword component-id)] merge {:valid   false
+                                                                                                     :too-big false}))
+                          db)]
       {:db         db
        :dispatch-n dispatch-list})))
 
@@ -474,7 +580,7 @@
   (update-in db [:application :answers (keyword component-id)]
              (fn [{:keys [values] :as component}]
                (let [validators (:validators field-descriptor)
-                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers)) validators))]
+                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers) nil) validators))]
                  (assoc component
                    :valid
                    (and validated?
@@ -486,7 +592,8 @@
     (-> db
         (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
                    {:value response :valid true :status :ready})
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
@@ -518,7 +625,8 @@
         (update-in [:application :answers (keyword component-id) :values]
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
-        (update-attachment-answer-validity field-descriptor component-id))))
+        (update-attachment-answer-validity field-descriptor component-id)
+        (set-multi-value-changed (keyword component-id) [:value]))))
 
 (reg-event-fx
   :application/remove-attachment
@@ -582,3 +690,15 @@
   :application/rating-form-toggle
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(reg-event-fx
+  :application/set-page-title
+  (fn [{:keys [db]}]
+    (let [lang-kw       (keyword (-> db :form :selected-language))
+          translations  (get-translations lang-kw application-view-translations)
+          title-prefix  (:page-title translations)
+          title-suffix  (or
+                          (lang-kw (-> db :form :tarjonta :haku-name))
+                          (-> db :form :name))]
+      {:db db
+       :set-page-title (str title-prefix " – " title-suffix)})))

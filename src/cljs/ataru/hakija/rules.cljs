@@ -6,12 +6,28 @@
 
 (def ^:private no-required-answer {:valid false :value ""})
 
-(defn- set-empty-invalid
-  [a]
+(defn- set-empty-validity
+  [a valid?]
   (if (and (clojure.string/blank? (:value a))
            (not (:cannot-view a)))
-    (assoc a :valid false)
+    (assoc a :valid valid?)
     a))
+
+(defn- hide-field
+  ([db id]
+   (hide-field db id ""))
+  ([db id value]
+   (-> db
+       (update-in [:application :answers id] merge {:valid true :value value})
+       (assoc-in [:application :ui id :visible?] false))))
+
+(defn- show-field
+  ([db id]
+   (show-field db id false))
+  ([db id valid?]
+   (-> db
+       (update-in [:application :answers id] set-empty-validity valid?)
+       (assoc-in [:application :ui id :visible?] true))))
 
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
@@ -25,22 +41,15 @@
                              (merge a {:valid true :value "true"})
                              a)))
               (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
-          (-> db
-              (update-in [:application :answers :have-finnish-ssn]
-                         merge {:valid true :value "true"})
-              (assoc-in [:application :ui :have-finnish-ssn :visible?] false)))))
+          (hide-field db :have-finnish-ssn "true"))))
 
 (defn- ssn
   ^{:dependencies [:have-finnish-ssn]}
   [db]
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
     (if (= "true" have-finnish-ssn)
-      (-> db
-          (update-in [:application :answers :ssn] set-empty-invalid)
-          (assoc-in [:application :ui :ssn :visible?] true))
-      (-> db
-          (update-in [:application :answers :ssn] merge {:valid true :value ""})
-          (assoc-in [:application :ui :ssn :visible?] false)))))
+      (show-field db :ssn)
+      (hide-field db :ssn))))
 
 (defn- parse-birth-date-from-ssn
   [ssn]
@@ -76,23 +85,44 @@
                                       :else
                                       ["" ""])]
         (-> db
-            (update-in [:application :answers :birth-date]
-                       merge {:valid true :value birth-date})
-            (update-in [:application :answers :gender]
-                       merge {:valid true :value gender})
-            (assoc-in [:application :ui :birth-date :visible?] false)
-            (assoc-in [:application :ui :gender :visible?] false)))
+            (hide-field :birth-date birth-date)
+            (hide-field :gender gender)))
       (-> db
-          (update-in [:application :answers :birth-date] set-empty-invalid)
-          (update-in [:application :answers :gender] set-empty-invalid)
-          (assoc-in [:application :ui :birth-date :visible?] true)
-          (assoc-in [:application :ui :gender :visible?] true)))))
+          (show-field :birth-date)
+          (show-field :gender)))))
+
+(defn- passport-number
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (hide-field db :passport-number)
+      (show-field db :passport-number true))))
+
+(defn- national-id-number
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (hide-field db :national-id-number)
+      (show-field db :national-id-number true))))
+
+(defn- birthplace
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
+    (if (= "true" have-finnish-ssn)
+      (hide-field db :birthplace)
+      (show-field db :birthplace))))
 
 (defn swap-ssn-birthdate-based-on-nationality
   [db _]
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- update-gender-and-birth-date-based-on-ssn
@@ -100,6 +130,9 @@
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- toggle-ssn-based-fields
@@ -107,6 +140,9 @@
   (-> db
       have-finnish-ssn
       ssn
+      passport-number
+      national-id-number
+      birthplace
       birth-date-and-gender))
 
 (defn- postal-office
@@ -138,17 +174,11 @@
                         (clojure.string/blank? country))]
     (if is-finland?
       (-> db
-          (update-in [:application :answers :home-town] set-empty-invalid)
-          (update-in [:application :answers :city]
-                     merge {:valid true :value ""})
-          (assoc-in [:application :ui :home-town :visible?] true)
-          (assoc-in [:application :ui :city :visible?] false))
+          (show-field :home-town)
+          (hide-field :city))
       (-> db
-          (update-in [:application :answers :home-town]
-                     merge {:valid true :value ""})
-          (update-in [:application :answers :city] set-empty-invalid)
-          (assoc-in [:application :ui :home-town :visible?] false)
-          (assoc-in [:application :ui :city :visible?] true)))))
+          (hide-field :home-town)
+          (show-field :city)))))
 
 (defn- select-postal-office-based-on-postal-code
   [db _]

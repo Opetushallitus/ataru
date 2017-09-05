@@ -129,19 +129,30 @@
   (fn [db [_ path dom-node]]
     (.addEventListener
       dom-node
-      "animationend"
+      "transitionend"
       #(do
-         (.removeEventListener (.-target %) "animationend" (-> (cljs.core/js-arguments) .-callee))
+         (.removeEventListener (.-target %) "transitionend" (-> (cljs.core/js-arguments) .-callee))
          (dispatch [:state-update-fx
                     (fn [{:keys [db]}]
                       (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
                         {:db (remove-component forms-meta-db path)}))])))
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
-(reg-event-db
+(reg-event-fx
+  :editor/refresh-active-haut
+  (fn [{db :db} _]
+    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+      {:db (assoc-in db [:editor :active-haut :fetching?] true)
+       :refresh-active-haut [organization-oids
+                             #(dispatch [:editor/set-active-haut %])
+                             #(do (dispatch [:editor/clear-active-haut])
+                                  (.log js/console %))]})))
+
+(reg-event-fx
   :editor/handle-user-info
-  (fn [db [_ user-info-response]]
-    (assoc-in db [:editor :user-info] user-info-response)))
+  (fn [{db :db} [_ user-info-response]]
+    {:db (assoc-in db [:editor :user-info] user-info-response)
+     :dispatch [:editor/refresh-active-haut]}))
 
 (defn- languages->kwd [form]
   (update form :languages
@@ -191,37 +202,53 @@
       (dissoc prev :created-time :id)
       (dissoc current :created-time :id))))
 
-(defn- handle-fetch-form [db {:keys [key deleted] :as response} _]
-  (if deleted
-    db
+(reg-event-db
+  :editor/set-active-haut
+  (fn [db [_ haut]]
     (-> db
-        (update :editor dissoc :ui)
-        (assoc-in [:editor :forms key] (languages->kwd response))
-        (assoc-in [:editor :autosave]
-                  (autosave/interval-loop {:subscribe-path    [:editor :forms key]
-                                           :changed-predicate editor-autosave-predicate
-                                           :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
-                                                                (dispatch [:editor/save-form]))})))))
-
-(defn fetch-form-content! [form-id]
-  (http :get
-        (str "/lomake-editori/api/forms/" form-id)
-        handle-fetch-form))
+        (assoc-in [:editor :active-haut :fetching?] false)
+        (assoc-in [:editor :active-haut :haut] haut))))
 
 (reg-event-db
+  :editor/clear-active-haut
+  (fn [db [_ haut]]
+    (-> db
+        (assoc-in [:editor :active-haut :fetching?] false)
+        (update-in [:editor :active-haut] dissoc :haut))))
+
+(reg-event-db
+  :editor/handle-fetch-form
+  (fn [db [_ {:keys [key deleted] :as response} _]]
+    (if deleted
+      db
+      (-> db
+          (update :editor dissoc :ui)
+          (assoc-in [:editor :forms key] (languages->kwd response))
+          (assoc-in [:editor :autosave]
+                    (autosave/interval-loop {:subscribe-path    [:editor :forms key]
+                                             :changed-predicate editor-autosave-predicate
+                                             :handler           (fn [form previous-autosave-form-at-time-of-dispatch]
+                                                                  (dispatch [:editor/save-form]))}))))))
+
+(defn- fetch-form-content-fx
+  [form-id]
+  {:http {:method :get
+          :path (str "/lomake-editori/api/forms/" form-id)
+          :handler-or-dispatch :editor/handle-fetch-form}})
+
+(reg-event-fx
   :editor/select-form
-  (fn [db [_ form-key]]
+  (fn [{db :db} [_ form-key]]
     (with-form-key [db previous-form-key]
-      (do
-        (when (and
-                (some? previous-form-key)
-                (not= previous-form-key form-key))
-          (autosave/stop-autosave! (-> db :editor :autosave)))
-        (when-let [id (get-in db [:editor :forms form-key :id])]
-          (fetch-form-content! id))
-        (cond-> db
-                (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
-                true (assoc-in [:editor :selected-form-key] form-key))))))
+      (merge
+       {:db (cond-> db
+              (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
+              true (assoc-in [:editor :selected-form-key] form-key))}
+       (when (and (some? previous-form-key)
+                  (not= previous-form-key form-key))
+         {:stop-autosave (get-in db [:editor :autosave])})
+       (when-let [id (get-in db [:editor :forms form-key :id])]
+         (fetch-form-content-fx id))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
@@ -277,7 +304,7 @@
   (fn [db _]
     (post-new-form
      {:name             "Uusi lomake"
-      :content          [(pm/person-info-module)]
+      :content          [(component/hakukohteet) (pm/person-info-module)]
       :languages        [:fi]})
     db))
 
@@ -433,3 +460,47 @@
             ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)
+
+(reg-event-fx
+  :editor/show-belongs-to-hakukohteet-modal
+  (fn [{db :db} [_ id]]
+    (cond-> {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] true)}
+      (and (not (get-in db [:editor :active-haut :fetching?]))
+           (not (contains? (get-in db [:editor :active-haut]) :haut)))
+      (assoc :dispatch [:editor/refresh-active-haut]))))
+
+(reg-event-db
+  :editor/hide-belongs-to-hakukohteet-modal
+  (fn [db [_ id]]
+    (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] false)))
+
+(reg-event-db
+  :editor/set-belongs-to-hakukohteet-modal-search-term
+  (fn [db [_ id search-term]]
+    (if (< (count search-term) 3)
+      (update-in db [:editor :ui id :belongs-to-hakukohteet :modal] dissoc :search-term)
+      (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term] search-term))))
+
+(reg-event-fx
+  :editor/on-belongs-to-hakukohteet-modal-search-term-change
+  (fn [{db :db} [_ id search-term]]
+    {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value]
+                   search-term)
+     :dispatch-debounced {:timeout 200
+                          :id [:belongs-to-hakukohteet-search id]
+                          :dispatch [:editor/set-belongs-to-hakukohteet-modal-search-term
+                                     id search-term]}}))
+
+(reg-event-db
+  :editor/add-to-belongs-to-hakukohteet
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                     :belongs-to-hakukohteet)]
+      (update-in db path (fnil (comp vec #(conj % oid) set) [])))))
+
+(reg-event-db
+  :editor/remove-from-belongs-to-hakukohteet
+  (fn [db [_ path oid]]
+    (let [path (conj (vec (current-form-content-path db path))
+                     :belongs-to-hakukohteet)]
+      (update-in db path (fnil (comp vec #(disj % oid) set) [])))))

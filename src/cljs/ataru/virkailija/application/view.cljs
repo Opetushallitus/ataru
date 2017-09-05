@@ -14,8 +14,9 @@
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :refer [wrap-scroll-to]]
-    [ataru.application-common.koulutus :as koulutus]
-    [ataru.virkailija.application.application-search-control :refer [application-search-control]]))
+    [ataru.virkailija.application.application-search-control :refer [application-search-control]]
+    [goog.string :as gstring]
+    [goog.string.format]))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
@@ -222,17 +223,26 @@
   (case (:event-type event)
     "review-state-change"     (get application-review-states (:new-review-state event))
     "updated-by-applicant"    "Hakija muokannut hakemusta"
+    "updated-by-virkailija"   "Virkailija (%s) muokannut hakemusta"
     "received-from-applicant" "Hakemus vastaanotettu"
     "Tuntematon"))
 
+(defn- initials [{:keys [event-type first-name last-name]}]
+  (when (= event-type "updated-by-virkailija")
+    (str (subs first-name 0 1)
+         (subs last-name 0 1))))
+
 (defn event-row [event]
-  (let [time-str     (t/time->short-str (:time event))
-        to-event-row (fn [caption] [:div
-                                    [:span.application-handling__event-timestamp time-str]
-                                    [:span.application-handling__event-caption caption]])
-        event-type   (:event-type event)
-        event-caption (event-caption event)]
-    (to-event-row event-caption)))
+  (let [time-str      (t/time->short-str (:time event))
+        to-event-row  (fn [caption & args]
+                        [:div
+                         [:span.application-handling__event-timestamp time-str]
+                         [:span.application-handling__event-caption (apply gstring/format caption args)]])
+        event-caption (event-caption event)
+        args          (initials event)]
+    (if args
+      (to-event-row event-caption args)
+      (to-event-row event-caption))))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]
@@ -281,6 +291,13 @@
           :value (review-field->str review :score)
           :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
 
+(defn- application-modify-link []
+  (let [application-key (subscribe [:state-query [:application :selected-key]])]
+    [:a.application-handling__edit-link
+     {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
+      :target "_blank"}
+     "Muokkaa hakemusta"]))
+
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
@@ -288,6 +305,7 @@
                "application-handling__review-floating animated fadeIn")}
      [application-review-state]
      [application-review-inputs]
+     [application-modify-link]
      [application-review-events]]))
 
 (defn floating-application-review-placeholder
@@ -302,10 +320,8 @@
         ssn                (get-in answers [:ssn :value])
         email              (get-in answers [:email :value])
         birth-date         (get-in answers [:birth-date :value])
-        hakukohde-name     (-> application :tarjonta :hakukohde-name)
         applications-count (:applications-count application)
-        person-oid         (:person-oid application)
-        koulutus-info      (koulutus/koulutukset->str (-> application :tarjonta :koulutukset))]
+        person-oid         (:person-oid application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", "
@@ -317,13 +333,7 @@
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search/"
                                  [:application/search-by-term (or ssn email)]]))}
-         (str applications-count " hakemusta")])]
-     (when-not (string/blank? hakukohde-name)
-       [:div.application-handling__review-area-hakukohde-heading hakukohde-name])
-     (when-not (or
-                 (= hakukohde-name koulutus-info)
-                 (string/blank? koulutus-info))
-       [:div.application-handling__review-area-koulutus-heading koulutus-info])]))
+         (str applications-count " hakemusta")])]]))
 
 (defn close-application []
   [:a {:href     "#"
@@ -343,17 +353,19 @@
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])]
     (fn [applications]
-      (when (and (included-in-filter @review-state @application-filter)
-                 (belongs-to-current-form @selected-key applications)
-                 (not @expanded?))
-        [:div.application-handling__detail-container
-         [close-application]
-         [application-heading (:application @selected-application-and-form)]
-         [:div.application-handling__review-area
-          [application-contents @selected-application-and-form]
-          [:span.application-handling__review-position-canary]
-          (when (= :fixed @review-positioning) [floating-application-review-placeholder])
-          [application-review]]]))))
+      (let [application        (:application @selected-application-and-form)]
+        (when (and (included-in-filter @review-state @application-filter)
+                   (belongs-to-current-form @selected-key applications)
+                   (not @expanded?))
+          [:div.application-handling__detail-container
+           [close-application]
+           [application-heading application]
+           [:div.application-handling__review-area
+            [:div.application-handling__application-contents
+             [application-contents @selected-application-and-form]]
+            [:span.application-handling__review-position-canary]
+            (when (= :fixed @review-positioning) [floating-application-review-placeholder])
+            [application-review]]])))))
 
 (defn application []
   (let [applications            (subscribe [:state-query [:application :applications]])

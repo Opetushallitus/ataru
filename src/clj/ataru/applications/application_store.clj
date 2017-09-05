@@ -3,6 +3,7 @@
             [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
             [ataru.application.review-states :refer [incomplete-states]]
+            [ataru.virkailija.authentication.virkailija-edit]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -15,6 +16,7 @@
             [taoensso.timbre :refer [info]]))
 
 (defqueries "sql/application-queries.sql")
+(defqueries "sql/virkailija-credentials-queries.sql")
 
 (defn- exec-db
   [ds-key query params]
@@ -50,7 +52,7 @@
                               :ssn            (find-value-from-answers "ssn" answers)
                               :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
                               :email          (find-value-from-answers "email" answers)
-                              :hakukohde      (:hakukohde application)
+                              :hakukohde      (or (:hakukohde application) [])
                               :haku           (:haku application)
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))
@@ -71,6 +73,11 @@
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
+  (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
+    (unwrap-application application)
+    (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
+
 (defn add-application [new-application]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (info (str "Inserting new application"))
@@ -81,7 +88,8 @@
                       :id        (extract-email new-application)})
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
-                                     :new_review_state nil}
+                                     :new_review_state nil
+                                     :virkailija_oid   nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
                                       :state           "unprocessed"}
@@ -98,24 +106,45 @@
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
-         (select-keys old-application [:key :secret :haku :hakukohde :person-oid])))
+         (select-keys old-application [:key :secret :haku :person-oid])))
 
-(defn update-application [{:keys [lang secret] :as new-application}]
+(defn- not-blank? [x]
+  (not (clojure.string/blank? x)))
+
+(defn- get-virkailija-oid [virkailija-secret application-key conn]
+  (->> (yesql-get-virkailija-oid {:virkailija_secret virkailija-secret
+                                  :application_key   application-key}
+                                 {:connection conn})
+       (map :oid)
+       (first)))
+
+(defn update-application [{:keys [lang secret virkailija-secret] :as new-application}]
+  {:pre [(or (not-blank? secret)
+             (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [old-application           (get-latest-version-and-lock-for-update secret lang conn)
+    (let [updated-by-applicant? (not-blank? secret)
+          old-application       (if updated-by-applicant?
+                                  (get-latest-version-and-lock-for-update secret lang conn)
+                                  (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
           {:keys [id key] :as new-application} (add-new-application-version
-                                                (merge-applications new-application old-application) conn)]
+                                                 (merge-applications new-application old-application) conn)
+          virkailija-oid        (when-not updated-by-applicant? (get-virkailija-oid virkailija-secret key conn))]
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
       (yesql-add-application-event! {:application_key  key
-                                     :event_type       "updated-by-applicant"
-                                     :new_review_state nil}
+                                     :event_type       (if updated-by-applicant?
+                                                         "updated-by-applicant"
+                                                         "updated-by-virkailija")
+                                     :new_review_state nil
+                                     :virkailija_oid   virkailija-oid}
                                     {:connection conn})
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
-                      :id        (extract-email new-application)})
+                      :id        (if updated-by-applicant?
+                                   (extract-email new-application)
+                                   virkailija-oid)})
       id)))
 
 (defn- older?
@@ -262,6 +291,19 @@
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))
 
+(defn- get-latest-application-for-virkailija-edit [virkailija-secret]
+  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
+                              (first)
+                              (unwrap-application))]
+    (assoc application :state (-> (:key application) get-application-review :state))))
+
+(defn get-latest-version-of-application-for-edit
+  [{secret :secret
+    virkailija-sercret :virkailija-secret :as application}]
+  (if secret
+    (get-latest-application-by-secret secret)
+    (get-latest-application-for-virkailija-edit virkailija-sercret)))
+
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
 
@@ -288,7 +330,8 @@
       (when (not= (:state old-review) (:state review-to-store))
         (let [application-event {:application_key  app-key
                                  :event_type       "review-state-change"
-                                 :new_review_state (:state review-to-store)}]
+                                 :new_review_state (:state review-to-store)
+                                 :virkailija_oid   nil}]
           (yesql-add-application-event!
             application-event
             connection)
@@ -358,3 +401,8 @@
   [feedback]
   (->kebab-case-kw
     (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
+
+(defn get-hakija-secret-by-virkailija-secret [virkailija-secret]
+  (-> (exec-db :db yesql-get-hakija-secret-by-virkailija-secret {:virkailija_secret virkailija-secret})
+      (first)
+      :secret))

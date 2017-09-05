@@ -304,12 +304,17 @@ and (max-width: 1000px) {
   margin-left: 10px;
 }
 
+.application-handling__hakukohde-wrapper {
+  margin-bottom: 5px;
+}
+
 .application-handling__review-area-hakukohde-heading {
-  font-size: 21px;
+  font-size: 14px;
+  .semibold;
 }
 
 .application-handling__review-area-koulutus-heading {
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .application-handling__review-header {
@@ -335,6 +340,18 @@ and (max-width: 1000px) {
   width: 120px;
   color: #000;
   padding-top: 6px;
+}
+
+.application-handling__edit-link {
+  background-color: @link-color;
+  border-radius: 3px;
+  color: @white;
+  width: 100%;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 .application-handling__review-state-container {
@@ -392,7 +409,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__event-list {
-  border-top: solid @review-separator-color 1px;
   padding-top: 9px;
   max-height: 275px;
   overflow: auto;
@@ -716,4 +732,8 @@ th.application__readonly-adjacent--header {
   cursor: pointer;
   margin-left: 7px;
   margin-right: 10px;
+}
+
+.application-handling__application-contents {
+  width: 100%;
 }

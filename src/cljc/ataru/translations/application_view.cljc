@@ -51,4 +51,7 @@
                                        :sv "Skicka respons"}
    :feedback-thanks                   {:fi "Kiitos palautteestasi!"
                                        :en "Thank you for your feedback!"
-                                       :sv "Tack för din respons!"}})
+                                       :sv "Tack för din respons!"}
+   :page-title                        {:fi "Opintopolku – hakulomake"
+                                       :en "Studyinfo – application form"
+                                       :sv "Studieinfo – ansökningsblankett"}})

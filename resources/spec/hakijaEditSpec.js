@@ -1,17 +1,11 @@
 (function () {
   before(function () {
-    var query = location.search.substring(1).split('&')
-    var secret = ''
-
-    for (var i = 0; i < query.length; i++) {
-      var param = query[i].split('=')
-      if (param[0] == 'modify') {
-        secret = param[1]
-      }
+    if (!testFormApplicationSecret) {
+      console.log("Test application secret undefined (no application found). Did you run virkailija and hakija-form tests first?");
+    } else {
+      console.log("secret", testFormApplicationSecret);
+      loadInFrame('/hakemus?modify=' + testFormApplicationSecret)
     }
-
-    console.log("secret", secret || 'UNDEFINED')
-    loadInFrame('/hakemus?modify=' + secret)
   })
 
   describe('hakemus edit', function () {
@@ -23,9 +17,8 @@
       )
       it('with complete form', function () {
         expect(formFields().length).to.equal(32)
-        expect(submitButton().prop('disabled')).to.equal(false)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(submitButton().prop('disabled')).to.equal(false)
+        expect(submitButton().prop('disabled')).to.equal(true)
         expect(invalidSections().find('a').length).to.equal(3)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
@@ -47,6 +40,7 @@
           "Jyväskylä",
           "Tekstikentän vastaus",
           "Toistuva vastaus 1",
+          "Toistuva vastaus 2",
           "Toistuva vastaus 3",
           "",
           "Pakollisen tekstialueen vastaus",
@@ -96,7 +90,7 @@
         var followupCheckboxInputValues = _.map(testFrame().find('.application__form-multi-choice-followups-container input.application__form-checkbox:checked'), function (e) {
           return $(e).val()
         })
-        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A']
+        var expectedFollowupCheckboxInputValues = ['Jatkokysymys A', 'Jatkokysymys B']
 
         expect(textInputValues).to.eql(expectedTestInputValues)
         expect(dropdownInputValues).to.eql(expectedDropdownInputValues)
@@ -152,7 +146,7 @@
           "Jyväskylä",
           "suomi",
           "Tekstikentän vastaus",
-          "Toistuva vastaus 1Toistuva vastaus 3",
+          "Toistuva vastaus 1Toistuva vastaus 2Toistuva vastaus 3",
           "Pakollisen tekstialueen vastaus",
           "Kolmas vaihtoehto",
           "Jatkokysymyksen vastaus",
