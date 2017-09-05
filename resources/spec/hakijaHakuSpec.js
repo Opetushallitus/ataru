@@ -42,12 +42,13 @@
         expect(formHeader().text()).to.equal('testing2')
         expect(selectedHakukohteet().length).to.equal(0)
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 11 tietoa')
-        expect(hakukohdeSearchInput().is(':visible')).to.equal(true)
+        expect(hakukohdeSearchInput().is(':visible')).to.equal(false)
       })
     })
 
     describe('adding hakukohde', function () {
       before(
+        clickElement(addHakukohdeLink),
         setTextFieldValue(hakukohdeSearchInput, 'haku'),
         wait.until(function () {
           return hakukohdeSearchHits().length === 3
