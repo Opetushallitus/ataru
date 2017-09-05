@@ -50,7 +50,7 @@
                  [clj-time "0.14.0"]
                  [cheshire/cheshire "5.8.0"]
                  [selmer "1.11.0"]
-                 [metosin/ring-http-response "0.8.2"]
+                 [metosin/ring-http-response "0.9.0"]
                  ;; These two explicit dependencies are required to force
                  ;; newer, fixed versions of those which come with Scala Cas Client
                  ;; Used by clj-util below. Without these, we would not be able to
