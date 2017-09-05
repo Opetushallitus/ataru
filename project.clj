@@ -47,7 +47,7 @@
                  [org.clojure/core.async "0.3.443"]
                  [org.clojure/java.jdbc "0.7.1"]
                  [org.postgresql/postgresql "42.1.4"]
-                 [clj-time "0.13.0"]
+                 [clj-time "0.14.0"]
                  [cheshire/cheshire "5.7.1"]
                  [selmer "1.10.7"]
                  [metosin/ring-http-response "0.8.2"]
