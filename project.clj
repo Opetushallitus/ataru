@@ -24,7 +24,7 @@
                  [markdown-clj "1.0.1"]
 
                  ;clojure
-                 [compojure "1.5.2"]
+                 [compojure "1.6.0"]
                  [crypto-random "1.2.0"]
                  [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.2"]
