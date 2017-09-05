@@ -104,7 +104,9 @@
      {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
+
 (defn- toggle-all-filters [all-filters-selected?]
+  (util/update-url-with-query-params {:unselected-states nil})
   (dispatch [:state-update #(assoc-in % [:application :filter]
                                       (if all-filters-selected?
                                         (keys application-review-states)

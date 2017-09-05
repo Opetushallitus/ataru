@@ -314,7 +314,7 @@
         );
 
         it('shows virkailija edit link', function() {
-          expect(includedFilters()).to.equal(9);
+          expect(includedFilters()).to.equal(8);
         })
       });
     });
@@ -344,7 +344,7 @@
     }
 
     function navigateToApplicationHandlingWithUrlParams() {
-      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&unselected-states=processing')
+      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&unselected-states=processing,invited-to-interview')
     }
 
     function includedFilters() {

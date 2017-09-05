@@ -104,7 +104,10 @@
 (defn fetch-applications-fx [db path]
   {:db   (-> db
              (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :filter] (cljs-util/get-unselected-review-states (list (:unselected-states (cljs-util/extract-query-params))))))
+             (assoc-in [:application :filter] (-> (cljs-util/extract-query-params)
+                                                  :unselected-states
+                                                  (clojure.string/split #",")
+                                                  cljs-util/get-unselected-review-states)))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
