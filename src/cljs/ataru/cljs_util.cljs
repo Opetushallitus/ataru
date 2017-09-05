@@ -164,8 +164,8 @@
     (.replaceState js/history nil nil url)))
 
 (defn get-unselected-review-states
-  [selected-states]
-  (clojure.set/difference (-> application-review-states keys set) (set selected-states)))
+  [unselected-states]
+  (clojure.set/difference (-> application-review-states keys set) (set unselected-states)))
 
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))
