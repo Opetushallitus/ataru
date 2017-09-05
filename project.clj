@@ -21,7 +21,7 @@
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.0"]
                  [medley "1.0.0"]
-                 [markdown-clj "0.9.99"]
+                 [markdown-clj "1.0.1"]
 
                  ;clojure
                  [compojure "1.5.2"]
