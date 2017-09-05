@@ -193,7 +193,7 @@
                               :githash   ~(System/getenv "githash")}
              :silent         false}
 
-  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.1"]
+  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
                                                [figwheel-sidecar "0.5.10"]
                                                [refactor-nrepl "2.3.0"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
