@@ -48,7 +48,7 @@
                  [org.clojure/java.jdbc "0.7.1"]
                  [org.postgresql/postgresql "42.1.4"]
                  [clj-time "0.14.0"]
-                 [cheshire/cheshire "5.7.1"]
+                 [cheshire/cheshire "5.8.0"]
                  [selmer "1.10.7"]
                  [metosin/ring-http-response "0.8.2"]
                  ;; These two explicit dependencies are required to force
