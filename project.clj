@@ -72,7 +72,7 @@
                  [com.hazelcast/hazelcast "3.8.4"]
                  [pandect "0.6.1"]
                  [hikari-cp "1.7.6" :exclusions [prismatic/schema]]
-                 [ring/ring-mock "0.3.0"]
+                 [ring/ring-mock "0.3.1"]
                  [speclj "3.3.2"]]
 
   :min-lein-version "2.5.3"
