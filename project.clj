@@ -6,7 +6,7 @@
                  [reagent "0.7.0"]                          ; react in clojure
                  [re-frame "0.10.1"]                         ; flux for re-agent
                  [secretary "1.2.3"]                        ; routing
-                 [com.andrewmcveigh/cljs-time "0.4.0"]
+                 [com.andrewmcveigh/cljs-time "0.5.1"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.5.9"]
                  [binaryage/devtools "0.9.4"]
