@@ -21,8 +21,7 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
-            [ataru.cljs-util :refer [text-area-size->max-length]])
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -208,12 +207,17 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
+(defn- parse-max-length [field]
+  (let [max-length (-> field :params :max-length)]
+    (when-not (or (empty? max-length) (= "0" max-length))
+      max-length)))
+
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         answers     (subscribe [:state-query [:application :answers]])
         on-change   (partial textual-field-change field-descriptor)
         size        (-> field-descriptor :params :size)
-        max-length  (-> field-descriptor :params :max-length (or (text-area-size->max-length size)))]
+        max-length  (parse-max-length field-descriptor)]
     (fn [field-descriptor]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
@@ -230,7 +234,8 @@
            :on-change     on-change
            :value         value
            :required      (is-required-field? field-descriptor)}]
-         [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
+         (when max-length
+           [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
 (declare render-field)
 
