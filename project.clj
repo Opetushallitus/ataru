@@ -8,7 +8,7 @@
                  [secretary "1.2.3"]                        ; routing
                  [com.andrewmcveigh/cljs-time "0.5.1"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
-                 [cljs-ajax "0.5.9"]
+                 [cljs-ajax "0.7.2"]
                  [binaryage/devtools "0.9.4"]
                  [re-frisk "0.4.4"]                         ; will only be used in development side
                  [venantius/accountant "0.1.9"]
