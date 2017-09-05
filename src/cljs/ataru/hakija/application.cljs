@@ -11,32 +11,46 @@
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
         (map-indexed
-          (fn [idx {:keys [belongs-to-hakukohteet] :as field}]
-            (let [id      (keyword (:id field))
-                  options (:options field)]
-              (match [id (count options) preselected-hakukohde]
-                     [:hakukohteet 1 _]
-                     [:hakukohteet {:valid true
-                                    :order-idx idx
-                                    :label (:label field)
-                                    :values [{:value (:value (first options))
-                                              :valid true}]}]
-
-                     [:hakukohteet _ (default-hakukohde :guard some?)]
-                     [:hakukohteet {:valid true
-                                    :order-idx idx
-                                    :label (:label field)
-                                    :values [{:value default-hakukohde
-                                              :valid true}]}]
-
-                     [_ _ _]
-                     [id {:valid     (not (some #(contains? required-validators %) (:validators field)))
-                          :label     (:label field)
-                          :order-idx idx}])))
-          flattened-form-fields)))
+         (fn [idx field]
+           (match [field]
+             [{:id "hakukohteet"
+               :label label
+               :options options}]
+             [:hakukohteet {:valid true
+                            :order-idx idx
+                            :label label
+                            :values (cond (= 1 (count options))
+                                          [{:value (:value (first options))
+                                            :valid true}]
+                                          (some? preselected-hakukohde)
+                                          [{:value preselected-hakukohde
+                                            :valid true}]
+                                          :else
+                                          [])}]
+             [{:id id
+               :fieldClass "formField"
+               :fieldType "dropdown"
+               :label label
+               :options options}]
+             (let [value (some #(when (:default-value %) (:value %)) options)
+                   required? (some #(contains? required-validators %)
+                                   (:validators field))]
+               [(keyword id) (cond-> {:valid (or (some? value) (not required?))
+                                      :order-idx idx
+                                      :label label}
+                               (some? value)
+                               (assoc :value value))])
+             [{:id id
+               :label label}]
+             [(keyword id) {:valid (not (some #(contains? required-validators %)
+                                              (:validators field)))
+                            :label label
+                            :order-idx idx}]))
+         flattened-form-fields)))
 
 (defn create-initial-answers
-  "Create initial answer structure based on form structure. Only validity + default hakukohde for now."
+  "Create initial answer structure based on form structure.
+  Validity, dropdown default value and default hakukohde for now."
   [form preselected-hakukohde]
   (initial-valid-status (util/flatten-form-fields (:content form)) preselected-hakukohde))
 
