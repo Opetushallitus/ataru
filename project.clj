@@ -71,7 +71,7 @@
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.hazelcast/hazelcast "3.8.4"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]
+                 [hikari-cp "1.7.6" :exclusions [prismatic/schema]]
                  [ring/ring-mock "0.3.0"]
                  [speclj "3.3.2"]]
 
