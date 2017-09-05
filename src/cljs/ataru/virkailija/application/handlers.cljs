@@ -5,6 +5,7 @@
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.util :as util]
+            [ataru.cljs-util :as cljs-util]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
@@ -23,6 +24,7 @@
                       [:application/fetch-application application-key]]}))))
 
 (defn close-application [db]
+  (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
@@ -90,14 +92,22 @@
                  (assoc-in [:application :applications] applications)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
-                 (assoc-in [:application :sort] application-sorting/initial-sort))]
+                 (assoc-in [:application :sort] application-sorting/initial-sort))
+          application-key (if (= 1 (count applications))
+                            (-> applications first :key)
+                            (:application-key (cljs-util/extract-query-params)))]
       {:db       db
-       :dispatch (if (= (count applications) 1)
-                   [:application/select-application (-> applications first :key)]
+       :dispatch (if application-key
+                   [:application/select-application application-key]
                    [:application/close-application])})))
 
 (defn fetch-applications-fx [db path]
-  {:db   (assoc-in db [:application :fetching-applications] true)
+  {:db   (-> db
+             (assoc-in [:application :fetching-applications] true)
+             (assoc-in [:application :filter] (-> (cljs-util/extract-query-params)
+                                                  :unselected-states
+                                                  (clojure.string/split #",")
+                                                  cljs-util/get-unselected-review-states)))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
@@ -259,24 +269,21 @@
  :application/select-form
  (fn [db [_ form-key]]
    (-> db
-       (assoc-in [:application :selected-form-key] form-key)
-       (close-application))))
+       (assoc-in [:application :selected-form-key] form-key))))
 
 (reg-event-db
   :application/select-hakukohde
   (fn [db [_ hakukohde]]
     (-> db
         (update-in [:application] dissoc :selected-form-key :selected-haku)
-        (assoc-in [:application :selected-hakukohde] hakukohde)
-        (close-application))))
+        (assoc-in [:application :selected-hakukohde] hakukohde))))
 
 (reg-event-db
   :application/select-haku
   (fn [db [_ haku]]
     (-> db
         (update :application dissoc :selected-form-key :selected-hakukohde)
-        (assoc-in [:application :selected-haku] haku)
-        (close-application))))
+        (assoc-in [:application :selected-haku] haku))))
 
 (defn get-hakukohteet-from-haut [haut]
   (flatten (map :hakukohteet (:tarjonta-haut haut))))
