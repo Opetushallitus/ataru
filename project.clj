@@ -3,14 +3,14 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.908"]
-                 [reagent "0.8.0-alpha1"]                   ; react in clojure
-                 [re-frame "0.10.1"]                         ; flux for re-agent
-                 [secretary "1.2.3"]                        ; routing
+                 [reagent "0.8.0-alpha1"]
+                 [re-frame "0.10.1"]
+                 [secretary "1.2.3"]
                  [com.andrewmcveigh/cljs-time "0.5.1"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.7.2"]
                  [binaryage/devtools "0.9.4"]
-                 [re-frisk "0.5.0"]                         ; will only be used in development side
+                 [re-frisk "0.5.0"]
                  [venantius/accountant "0.2.0"]
                  [com.cemerick/url "0.1.1"]
 
