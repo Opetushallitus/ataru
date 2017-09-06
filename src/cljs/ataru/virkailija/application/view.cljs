@@ -319,6 +319,18 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
+(defn- hakukohteet-list-row [hakukohde]
+  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
+  [:li.application-handling__hakukohteet-list-row
+   [:div.application-handling__review-area-hakukohde-heading
+    (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
+   [:div.application-handling__review-area-koulutus-heading
+    (map #(-> % :koulutuskoodi-name :fi) (:koulutukset hakukohde))]])
+
+(defn- hakukohteet-list [hakukohteet]
+  (into [:ul.application-handling__hakukohteet-list]
+        (map hakukohteet-list-row hakukohteet)))
+
 (defn application-heading [application]
   (let [answers            (:answers application)
         pref-name          (-> answers :preferred-name :value)
@@ -326,6 +338,7 @@
         ssn                (get-in answers [:ssn :value])
         email              (get-in answers [:email :value])
         birth-date         (get-in answers [:birth-date :value])
+        hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
         applications-count (:applications-count application)
         person-oid         (:person-oid application)]
     [:div.application__handling-heading
@@ -339,7 +352,10 @@
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search/"
                                  [:application/search-by-term (or ssn email)]]))}
-         (str applications-count " hakemusta")])]]))
+         (str applications-count " hakemusta")])
+      (when (and (not (contains? (:answers application) :hakukohteet))
+                 (not-empty hakukohteet-by-oid))
+        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
 
 (defn close-application []
   [:a {:href     "#"
