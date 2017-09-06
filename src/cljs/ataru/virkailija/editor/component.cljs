@@ -503,19 +503,27 @@
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
                   "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
 
+;{:children [], :label {:fi "Kysymysryhmä", :sv ""}, :fieldClass "questionGroup", :id "722d4388-8814-4f66-8b0b-7a860a70475e", :params {}, :fieldType "fieldset"}
+
 (defn component-group [content path children]
-  (let [languages        (subscribe [:editor/languages])
-        value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)]
+  (let [languages         (subscribe [:editor/languages])
+        value             (subscribe [:editor/get-component-value path])
+        animation-effect  (fade-out-effect path)
+        group-header-text (case (:fieldClass content)
+                            "wrapperElement" "Lomakeosio"
+                            "questionGroup" "Kysymysryhmä")
+        header-label-text (case (:fieldClass content)
+                            "wrapperElement" "Osion nimi"
+                            "questionGroup" "Kysymysryhmän otsikko")]
     (fn [content path children]
       (let [languages @languages
             value     @value]
         [:div.editor-form__section_wrapper
          {:class @animation-effect}
          [:div.editor-form__component-wrapper
-          [text-header "Lomakeosio" path :component-wrapped? true]
+          [text-header group-header-text path :component-wrapped? true]
           [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-           [:header.editor-form__component-item-header "Osion nimi"]
+           [:header.editor-form__component-item-header header-label-text]
            (input-fields-with-lang
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -523,7 +531,11 @@
              :header? true)]]
          children
          [drag-n-drop-spacer (conj path :children (count children))]
-         [toolbar/add-component (conj path :children (count children))]]))))
+         (case (:fieldClass content)
+           "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+           "questionGroup" [toolbar/followup-toolbar path
+                            (fn [generate-fn]
+                              (dispatch [:editor/generate-followup-component generate-fn path]))])]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]

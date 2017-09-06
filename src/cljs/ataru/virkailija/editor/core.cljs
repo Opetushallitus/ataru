@@ -46,6 +46,11 @@
                :children   children}
               [ec/component-group content path (render-children children path)]
 
+              {:fieldClass "questionGroup"
+               :fieldType  "fieldset"
+               :children   children}
+              [ec/component-group content path (render-children children path)]
+
               {:fieldClass "formField" :fieldType "textField"
                :params     {:adjacent true}}
               [ec/adjacent-text-field content path]

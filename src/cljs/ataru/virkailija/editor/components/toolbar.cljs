@@ -13,7 +13,8 @@
      ["Lista, monta valittavissa" component/multiple-choice]
      ["Tekstikenttä" component/text-field]
      ["Tekstialue" component/text-area]
-     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
+     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
+     ["Kysymysryhmä" component/question-group]]
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
     true (conj ["Infoteksti" component/info-element])))
 
