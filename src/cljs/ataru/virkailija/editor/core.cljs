@@ -34,54 +34,54 @@
          [ec/drag-n-drop-spacer path content])
 
        (match content
-         {:module module}
-         [ec/module path]
+              {:module module}
+              [ec/module path]
 
-         {:fieldClass "wrapperElement"
-          :fieldType  "adjacentfieldset"
-          :children   children}
-         [ec/adjacent-fieldset content path (render-children children)]
+              {:fieldClass "wrapperElement"
+               :fieldType  "adjacentfieldset"
+               :children   children}
+              [ec/adjacent-fieldset content path (render-children children)]
 
-         {:fieldClass "wrapperElement"
-          :children   children}
-         [ec/component-group content path (render-children children path)]
+              {:fieldClass "wrapperElement"
+               :children   children}
+              [ec/component-group content path (render-children children path)]
 
-         {:fieldClass "formField" :fieldType "textField"
-          :params {:adjacent true}}
-         [ec/adjacent-text-field content path]
+              {:fieldClass "formField" :fieldType "textField"
+               :params     {:adjacent true}}
+              [ec/adjacent-text-field content path]
 
-         {:fieldClass "formField" :fieldType "textField"}
-         [ec/text-field content path]
+              {:fieldClass "formField" :fieldType "textField"}
+              [ec/text-field content path]
 
-         {:fieldClass "formField" :fieldType "textArea"}
-         [ec/text-area content path]
+              {:fieldClass "formField" :fieldType "textArea"}
+              [ec/text-area content path]
 
-         {:fieldClass "formField" :fieldType "dropdown"}
-         [ec/dropdown content path]
+              {:fieldClass "formField" :fieldType "dropdown"}
+              [ec/dropdown content path]
 
-         {:fieldClass "formField" :fieldType "multipleChoice"}
-         [ec/dropdown content path]
+              {:fieldClass "formField" :fieldType "multipleChoice"}
+              [ec/dropdown content path]
 
-         {:fieldClass "infoElement"}
-         [ec/info-element content path]
+              {:fieldClass "infoElement"}
+              [ec/info-element content path]
 
-         {:fieldClass "formField"
-          :fieldType "singleChoice"}
-         [ec/dropdown content path]
+              {:fieldClass "formField"
+               :fieldType  "singleChoice"}
+              [ec/dropdown content path]
 
-         {:fieldClass "formField"
-          :fieldType  "attachment"}
-         (if attachments-enabled?
-           [ec/attachment content path]
-           [:div])
+              {:fieldClass "formField"
+               :fieldType  "attachment"}
+              (if attachments-enabled?
+                [ec/attachment content path]
+                [:div])
 
-         {:fieldClass "formField"
-          :fieldType  "hakukohteet"}
-         nil
+              {:fieldClass "formField"
+               :fieldType  "hakukohteet"}
+              nil
 
-         :else (do
-                 (error content)
-                 (throw "error" content)))])))
+              :else (do
+                      (error content)
+                      (throw "error" content)))])))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
