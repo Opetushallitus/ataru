@@ -535,7 +535,7 @@
            "wrapperElement" [toolbar/add-component (conj path :children (count children))]
            "questionGroup" [toolbar/followup-toolbar path
                             (fn [generate-fn]
-                              (dispatch [:editor/generate-followup-component generate-fn path]))])]))))
+                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
