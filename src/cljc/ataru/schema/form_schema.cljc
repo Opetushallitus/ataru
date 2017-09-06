@@ -103,7 +103,7 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement"])
+(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
