@@ -665,6 +665,9 @@
                          {:fieldClass "wrapperElement"
                           :fieldType  "fieldset"
                           :children   children} [wrapper-field field-descriptor children]
+                         {:fieldClass "questionGroup"
+                          :fieldType  "fieldset"
+                          :children   children} [wrapper-field field-descriptor children]
                          {:fieldClass "wrapperElement"
                           :fieldType  "rowcontainer"
                           :children   children} [row-wrapper children]
