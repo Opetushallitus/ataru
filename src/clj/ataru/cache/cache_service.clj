@@ -1,135 +1,36 @@
-(ns ataru.cache.cache-service
-  (:require [taoensso.timbre :refer [info warn]]
-            [com.stuartsierra.component :as component]
-            [ataru.config.core :refer [config]])
-  (:import (com.hazelcast.core Hazelcast HazelcastInstance)
-           (com.hazelcast.config Config MapConfig ClasspathXmlConfig)
-           (java.net InetAddress)))
+(ns ataru.cache.cache-service)
 
-(def default-map-config {:ttl      600
-                         :max-size 500})
+(defprotocol Cache
+  (get-from [this key] [this key get-fn])
+  (put-to [this key value])
+  (remove-from [this key])
+  (clear-all [this]))
 
-(def cached-map-config {:hakukohde        {:config {:max-size 10000 :ttl 3600}}
-                        :all-haut         {:config {:max-size 1 :ttl 300}}
-                        :all-hakukohteet  {:config {:max-size 1 :ttl 300}}
-                        :haku             {:config {:max-size 10000 :ttl 3600}}
-                        :koulutus         {:config {:max-size 10000 :ttl 3600}}
-                        :statistics-month {:config {:max-size 500 :ttl 36000}}
-                        :statistics-week  {:config {:max-size 500 :ttl 3600}}
-                        :statistics-day   {:config {:max-size 500 :ttl 300}}})
-
-(def local-cluster-cfg {:clustered? true
-                        :hosts      ["127.0.0.1"]})
-
-(def cluster-config {:default {:clustered? false}
-                     :dev     local-cluster-cfg
-                     :luokka  local-cluster-cfg
-                     :qa      local-cluster-cfg
-                     :prod    {:clustered? true :hosts ["10.27.54.12" "10.27.54.23" "10.27.54.24" "10.27.54.25"]}})
-
-(defn- build-cluster-config
-  []
-  (let [environment-name    (-> config :public-config :environment-name)
-        cluster-name-suffix (case environment-name
-                              nil nil
-                              "test" nil
-                              "dev" (str "dev-" (.getCanonicalHostName (InetAddress/getLocalHost)))
-                              ; else: "luokka", "qa", "prod"
-                              environment-name)]
-    (merge ((keyword environment-name) cluster-config)
-           (when cluster-name-suffix
-             {:cluster-name (str "ataru-hz-" cluster-name-suffix)}))))
-
-(defn- build-config
-  [{:keys [clustered? hosts cluster-name]}]
-  (let [configuration (ClasspathXmlConfig. "hazelcast-default.xml")]
-    (.setEnabled (-> configuration .getNetworkConfig .getJoin .getMulticastConfig) false)
-    (when (and clustered? cluster-name)
-      (-> configuration
-          (.getGroupConfig)
-          (.setName cluster-name))
-      (let [network-cfg (.getNetworkConfig configuration)
-            join-cfg    (.getJoin network-cfg)
-            tcp-config  (.getTcpIpConfig join-cfg)
-            interfaces  (.getInterfaces network-cfg)]
-        (.setEnabled (.getMulticastConfig join-cfg) false)
-        (doseq [host hosts]
-          (.addMember tcp-config host)
-          (.addInterface interfaces host))
-        (.setEnabled tcp-config true)
-        (.setEnabled interfaces true)))
-
-    (doseq [[name-kw {:keys [config]}] cached-map-config]
-      (let [mc (MapConfig.)]
-        (.setName mc (name name-kw))
-        (-> mc
-            (.getMaxSizeConfig)
-            (.setSize (or (:max-size config)
-                          (:max-size default-map-config))))
-        (.setTimeToLiveSeconds mc (or (:ttl config)
-                                      (:ttl default-map-config)))
-        (.addMapConfig configuration mc)))
-
-    configuration))
-
-(defprotocol CacheService
-  (cache-get [this cache key]
-    "Get cached item or return nil if not found.
-    e.g. (cache-get :hakukohde objectid-of-hakukohde")
-  (cache-put [this cache key value]
-    "Store item in cache
-    e.g. (cache-put :hakukohde objectid-of-hakukohde {...}")
-  (cache-get-or-fetch [this cache key get-fn]
-    "Get cached item or invoke get-fn to store & return
-    e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)")
-  (cache-remove [this cache key]
-    "Clears given entry in given cache")
-  (cache-clear [this cache]
-    "Clears all entries of given cache"))
-
-(defn- get-cached-map [component cache]
+(defn- get-cache [caches cache]
   "Only allow access to preconfigured maps"
-  (if (cache cached-map-config)
-    (.getMap (:hazelcast-instance component) (name cache))
+  (if-let [c (get caches cache)]
+    c
     (throw (RuntimeException. (str "Invalid cache: " cache)))))
 
-(defrecord HazelcastCacheService [hazelcast-instance]
-  component/Lifecycle
-  CacheService
+(defn cache-get [caches cache key]
+  "Get cached item or return nil if not found.
+    e.g. (cache-get :hakukohde objectid-of-hakukohde"
+  (get-from (get-cache caches cache) key))
 
-  (start [component]
-    (let [cluster-config (build-cluster-config)]
-      (info "Initializing Hazelcast caching, cluster" (-> config :public-config :environment-name) cluster-config)
-      (assoc component :hazelcast-instance (Hazelcast/newHazelcastInstance (build-config cluster-config)))))
+(defn cache-put [caches cache key value]
+  "Store item in cache, returns old value.
+    e.g. (cache-put :hakukohde objectid-of-hakukohde {...}"
+  (put-to (get-cache caches cache) key value))
 
-  (stop [component]
-    (when (some? hazelcast-instance)
-      (info "Shutting down Hazelcast")
-      (.shutdown hazelcast-instance)
-      (assoc component :hazelcast-instance nil)))
+(defn cache-get-or-fetch [caches cache key fetch-fn]
+  "Get cached item or invoke get-fn to store & return
+    e.g. (cache-get-or-fetch :hakukohde #(hakukohde-client/get-hakukohde objectid-of-hakukohde)"
+  (get-from (get-cache caches cache) key fetch-fn))
 
-  (cache-get [component cache key]
-    (.get (get-cached-map component cache) key))
+(defn cache-remove [caches cache key]
+  "Clears given entry in given cache"
+  (remove-from (get-cache caches cache) key))
 
-  (cache-put [component cache key value]
-    "Returns old value"
-    (.put (get-cached-map component cache) key value))
-
-  (cache-get-or-fetch [component cache key fetch-fn]
-    (if-let [value (cache-get component cache key)]
-      value
-      (if-let [new-value (fetch-fn)]
-        (do
-          (cache-put component cache key new-value)
-          new-value)
-        (warn "Could not fetch value for cache" cache key))))
-
-  (cache-remove [component cache key]
-    (.remove (get-cached-map component cache) key))
-
-  (cache-clear [component cache]
-    (.clear (get-cached-map component cache))))
-
-(defn new-cache-service
-  []
-  (map->HazelcastCacheService {}))
+(defn cache-clear [caches cache]
+  "Clears all entries of given cache"
+  (clear-all (get-cache caches cache)))

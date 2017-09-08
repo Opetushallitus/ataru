@@ -4,7 +4,8 @@
             [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
-            [ataru.cache.cache-service :as cache-service]
+            [ataru.cache.caches :refer [hazelcast-caches caches]]
+            [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [environ.core :refer [env]]))
 
 (defn new-system
@@ -13,11 +14,15 @@
      (Integer/parseInt (get env :ataru-http-port "8350"))
      (Integer/parseInt (get env :ataru-repl-port "3333"))))
   ([http-port repl-port]
-   (component/system-map
+   (apply component/system-map
 
      :organization-service (organization-service/new-organization-service)
 
-     :cache-service (cache-service/new-cache-service)
+     :hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})
+
+     :cache-service (component/using
+                     {}
+                     (mapv (comp keyword :name) caches))
 
      :virkailija-tarjonta-service (component/using
                                     (tarjonta-service/new-virkailija-tarjonta-service)
@@ -36,4 +41,8 @@
 
      :server (component/using
                (server/new-server)
-               [:server-setup :handler]))))
+               [:server-setup :handler])
+
+     (mapcat (fn [cache]
+               [(keyword (:name cache)) (component/using cache [:hazelcast])])
+             hazelcast-caches))))
