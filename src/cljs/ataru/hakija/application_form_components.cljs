@@ -317,8 +317,7 @@
                                      [:div.application__form-dropdown-followups.animated.fadeIn
                                       [render-field followup]]))))})))
 
-(defn dropdown
-  [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
+(defn dropdown [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -335,41 +334,40 @@
                              (get (answer-key field-descriptor))
                              :value)
                            ""))
-        on-change    (partial textual-field-change field-descriptor)]
-    (fn [field-descriptor]
-      (let [lang         @lang
-            default-lang @default-lang]
-        [:div
-         [div-kwd
-          [label field-descriptor]
-          [:div.application__form-text-input-info-text
-           [info-text field-descriptor]]
-          [:div.application__form-select-wrapper
-           (when (not @disabled?)
-             [:span.application__form-select-arrow])
-           [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
-            {:id (:id field-descriptor)
-             :value     @value
-             :on-change on-change
-             :disabled  @disabled?
-             :required  (is-required-field? field-descriptor)}
-            (concat
-             (when
-                 (and
-                  (nil? (:koodisto-source field-descriptor))
-                  (not (:no-blank-option field-descriptor))
-                  (not= "" (:value (first (:options field-descriptor)))))
-               [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-             (map-indexed
-              (fn [idx option]
-                (let [label        (non-blank-val (get-in option [:label lang])
-                                                  (get-in option [:label default-lang]))
-                      option-value (:value option)]
-                  ^{:key idx}
-                  [:option {:value option-value} label]))
-              (:options field-descriptor)))]]]
+        on-change    (partial textual-field-change field-descriptor)
+        lang         @lang
+        default-lang @default-lang]
+    [:div
+     [div-kwd
+      [label field-descriptor]
+      [:div.application__form-text-input-info-text
+       [info-text field-descriptor]]
+      [:div.application__form-select-wrapper
+       (when (not @disabled?)
+         [:span.application__form-select-arrow])
+       [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+        {:id        (:id field-descriptor)
+         :value     @value
+         :on-change on-change
+         :disabled  @disabled?
+         :required  (is-required-field? field-descriptor)}
+        (concat
+          (when
+            (and
+              (nil? (:koodisto-source field-descriptor))
+              (not (:no-blank-option field-descriptor))
+              (not= "" (:value (first (:options field-descriptor)))))
+            [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+          (map-indexed
+            (fn [idx option]
+              (let [label        (non-blank-val (get-in option [:label lang])
+                                                (get-in option [:label default-lang]))
+                    option-value (:value option)]
+                ^{:key idx}
+                [:option {:value option-value} label]))
+            (:options field-descriptor)))]]]
 
-         [dropdown-followups lang value field-descriptor]]))))
+     [dropdown-followups lang value field-descriptor]]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
