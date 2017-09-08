@@ -37,7 +37,6 @@
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
-  (println "hakukohteet" (filter #(= (:key %) "hakukohteet") (:answers application)))
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true ;; plain form, always allowed to apply
