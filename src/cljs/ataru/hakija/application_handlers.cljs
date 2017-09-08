@@ -702,3 +702,8 @@
                           (-> db :form :name))]
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
+
+(reg-event-db
+  :application/add-question-group-row
+  (fn add-question-group-row [db [_ field-descriptor-id]]
+    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1))))

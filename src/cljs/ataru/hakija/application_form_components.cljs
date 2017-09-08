@@ -253,6 +253,25 @@
            (for [child children]
              [render-field child lang]))]))))
 
+(defn question-group [field-descriptor children]
+  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
+    [:div.application__wrapper-element
+     [:div.application__wrapper-heading
+      [scroll-to-anchor field-descriptor]]
+     (-> [:div.application__wrapper-contents]
+         (into (map (fn [idx]
+                      (map (fn [child]
+                             ^{:key (str (:id child) "-" idx)}
+                             [render-field child])
+                           children))
+                    (range (or @row-count 1))))
+         (conj [:div.application__form-field
+                [:a {:href     "#"
+                     :on-click (fn add-question-group-row [event]
+                                 (.preventDefault event)
+                                 (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+                 "+ Lisää"]]))]))
+
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
         ; flatten fields here because 'rowcontainer' may
@@ -666,7 +685,7 @@
                           :children   children} [wrapper-field field-descriptor children]
                          {:fieldClass "questionGroup"
                           :fieldType  "fieldset"
-                          :children   children} [wrapper-field field-descriptor children]
+                          :children   children} [question-group field-descriptor children]
                          {:fieldClass "wrapperElement"
                           :fieldType  "rowcontainer"
                           :children   children} [row-wrapper children]
