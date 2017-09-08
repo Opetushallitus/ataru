@@ -173,7 +173,7 @@
             (not-empty (clojure.set/intersection (set field-hakukohteet)
                                                  (set application-hakukohteet))))
     (match content
-           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+           {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
            {:fieldClass "formField" :exclude-from-answers true} nil
