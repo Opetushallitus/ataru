@@ -281,7 +281,7 @@
           y (range (.getLastCellNum (.getRow sheet 0)))]
     (.autoSizeColumn sheet (short y))))
 
-(defn- update-hakukohteet [application]
+(defn- update-hakukohteet-for-legacy-applications [application]
   (let [hakukohteet (-> application :answers :hakukohteet)
         hakukohde   (:hakukohde application)]
     (if (or hakukohteet
@@ -298,7 +298,7 @@
         get-form-by-id          (memoize form-store/fetch-by-id)
         get-latest-form-by-key  (memoize form-store/fetch-by-key)]
     (->> applications
-         (map update-hakukohteet)
+         (map update-hakukohteet-for-legacy-applications)
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
