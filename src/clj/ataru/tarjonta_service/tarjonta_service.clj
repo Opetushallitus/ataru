@@ -4,6 +4,7 @@
     [ataru.virkailija.user.organization-client :refer [oph-organization]]
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
+    [ataru.cache.cache-service :as cache]
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
@@ -62,15 +63,10 @@
   [search-result]
   (doall (mapcat :tulokset (:tulokset search-result))))
 
-(defrecord CachedTarjontaService []
-  component/Lifecycle
+(defrecord CachedTarjontaService [cache-service]
   TarjontaService
-
-  (start [this] this)
-  (stop [this] this)
-
   (get-hakukohde [this hakukohde-oid]
-    (.cache-get-or-fetch (:cache-service this) :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
+    (cache/cache-get-or-fetch cache-service :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
 
   (get-hakukohde-name [this hakukohde-oid]
     (-> this
@@ -83,21 +79,21 @@
                           parse-search-result
                           (mapv parse-hakukohde))]
       (if (= oph-organization organization-oid)
-        (.cache-get-or-fetch (:cache-service this)
-                             :all-hakukohteet
-                             :all
-                             fetch)
+        (cache/cache-get-or-fetch cache-service
+                                  :all-hakukohteet
+                                  :all
+                                  fetch)
         (fetch))))
 
   (all-haut [this]
-    (.cache-get-or-fetch (:cache-service this)
-                         :all-haut
-                         :all
-                         #(some->> (client/all-haut)
-                                   (mapv parse-haku))))
+    (cache/cache-get-or-fetch cache-service
+                              :all-haut
+                              :all
+                              #(some->> (client/all-haut)
+                                        (mapv parse-haku))))
 
   (get-haku [this haku-oid]
-    (.cache-get-or-fetch (:cache-service this) :haku haku-oid #(client/get-haku haku-oid)))
+    (cache/cache-get-or-fetch cache-service :haku haku-oid #(client/get-haku haku-oid)))
 
   (get-haku-name [this haku-oid]
     (-> this
@@ -106,7 +102,7 @@
         :kieli_fi))
 
   (get-koulutus [this koulutus-oid]
-    (.cache-get-or-fetch (:cache-service this) :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
+    (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
 
 (defprotocol VirkailijaTarjontaService
   (get-forms-in-use [this username]))
@@ -125,7 +121,7 @@
   []
   (if (-> config :dev :fake-dependencies)
     (->MockTarjontaService)
-    (->CachedTarjontaService)))
+    (->CachedTarjontaService nil)))
 
 (defn new-virkailija-tarjonta-service
   []

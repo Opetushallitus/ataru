@@ -46,6 +46,7 @@
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
             [medley.core :refer [map-kv]]
+            [ataru.cache.cache-service :as cache]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
@@ -265,14 +266,14 @@
                      :path-params [cache :- s/Str]
                      :summary "Clear an entire cache map of its entries"
                      {:status 200
-                      :body   (do (.cache-clear cache-service (keyword cache))
+                      :body   (do (cache/cache-clear cache-service (keyword cache))
                                   {})})
                    (api/POST "/remove/:cache/:key" {session :session}
                      :path-params [cache :- s/Str
                                    key :- s/Str]
                      :summary "Remove an entry from cache map"
                      {:status 200
-                      :body   (do (.cache-remove cache-service (keyword cache) key)
+                      :body   (do (cache/cache-remove cache-service (keyword cache) key)
                                   {})}))
 
                  (api/GET "/haut" {session :session}
