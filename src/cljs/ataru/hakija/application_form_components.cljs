@@ -114,14 +114,19 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer       (subscribe [:state-query [:application :answers id]])
+        answer-path  (cond-> [:application :answers id]
+                       idx (concat [:values idx]))
+        answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
         on-change    (if idx
                        (partial multi-value-field-change field-descriptor idx)
-                       (partial textual-field-change field-descriptor))]
+                       (partial textual-field-change field-descriptor))
+        show-error?  (show-text-field-error-class? field-descriptor
+                                                   (:value @answer)
+                                                   (:valid @answer))]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
@@ -133,14 +138,10 @@
                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                (non-blank-val (get input-hint @lang)
                                               (get input-hint @default-lang)))
-                :class       (str size-class (if (show-text-field-error-class? field-descriptor
-                                                                               (:value @answer)
-                                                                               (:valid @answer))
+                :class       (str size-class (if show-error?
                                                " application__form-field-error"
                                                " application__form-text-input--normal"))
-                :value       (cond cannot-view? "***********"
-                                   idx (get-in @answer [:values idx :value])
-                                   :else (:value @answer))
+                :value       (if cannot-view? "***********" (:value @answer))
                 :on-blur     on-blur
                 :on-change   on-change
                 :required    (is-required-field? field-descriptor)}
