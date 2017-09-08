@@ -332,7 +332,7 @@
 
 (reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value]]
+  (fn [{db :db} [_ field value idx]]
     (let [id       (keyword (:id field))
           answers  (get-in db [:application :answers])
           answer   (get answers id)
