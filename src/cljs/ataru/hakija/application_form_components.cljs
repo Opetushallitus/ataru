@@ -320,7 +320,6 @@
 (defn dropdown
   [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
-        answers      (subscribe [:state-query [:application :answers]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         disabled?    (reaction (or
