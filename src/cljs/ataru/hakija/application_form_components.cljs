@@ -701,8 +701,9 @@
                          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
                          {:fieldClass "infoElement"} [info-element field-descriptor]
                          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-                  (and (empty? (:children field-descriptor))
-                       (visible? (:id field-descriptor))) (into args)))
+            (and (empty? (:children field-descriptor))
+                 (visible? (:id field-descriptor)))
+            (into args)))
         [:div]))))
 
 (defn editable-fields [form-data]
