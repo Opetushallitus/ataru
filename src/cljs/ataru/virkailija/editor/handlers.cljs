@@ -141,18 +141,19 @@
 (reg-event-fx
   :editor/refresh-active-haut
   (fn [{db :db} _]
-    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
-      {:db (assoc-in db [:editor :active-haut :fetching?] true)
-       :refresh-active-haut [organization-oids
-                             #(dispatch [:editor/set-active-haut %])
-                             #(do (dispatch [:editor/clear-active-haut])
-                                  (.log js/console %))]})))
+    (when-let [form-key (get-in db [:editor :selected-form-key])]
+      (let [haku-oids (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
+            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+        {:db (assoc-in db [:editor :active-haut :fetching?] true)
+         :refresh-active-haut [organization-oids haku-oids
+                               #(dispatch [:editor/set-active-haut %])
+                               #(do (dispatch [:editor/clear-active-haut])
+                                    (.log js/console %))]}))))
 
-(reg-event-fx
+(reg-event-db
   :editor/handle-user-info
-  (fn [{db :db} [_ user-info-response]]
-    {:db (assoc-in db [:editor :user-info] user-info-response)
-     :dispatch [:editor/refresh-active-haut]}))
+  (fn [db [_ user-info-response]]
+    (assoc-in db [:editor :user-info] user-info-response)))
 
 (defn- languages->kwd [form]
   (update form :languages
@@ -244,6 +245,7 @@
        {:db (cond-> db
               (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
               true (assoc-in [:editor :selected-form-key] form-key))}
+       {:dispatch [:editor/refresh-active-haut]}
        (when (and (some? previous-form-key)
                   (not= previous-form-key form-key))
          {:stop-autosave (get-in db [:editor :autosave])})
