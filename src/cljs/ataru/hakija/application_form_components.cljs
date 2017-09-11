@@ -151,62 +151,62 @@
   (let [id         (keyword (:id field-descriptor))
         values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
-        lang       (subscribe [:application/form-language])
-        on-blur    (fn [evt]
-                     (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
-                       (dispatch [:application/remove-repeatable-application-field-value field-descriptor idx])))
-        on-change  (fn [evt]
-                     (let [value (some-> evt .-target .-value)
-                           idx (int (.getAttribute (.-target evt) "data-idx"))]
-                       (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
+        lang       (subscribe [:application/form-language])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (into  [div-kwd
-              [label field-descriptor]
-              [:div.application__form-text-input-info-text
-               [info-text field-descriptor]]]
-        (cons
-         (let [{:keys [value valid]} (first @values)]
-            [:div
-             [:input.application__form-text-input
-              (merge
-                {:type      "text"
-                 :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                              " application__form-field-error"
-                                              " application__form-text-input--normal"))
-                 :value     value
-                 :data-idx  0
-                 :on-change on-change
-                 :required  (is-required-field? field-descriptor)}
-               (when (empty? value)
-                 {:on-blur on-blur}))]])
-          (map-indexed
-           (let [first-is-empty? (empty? (first (map :value @values)))
-                 translations    (get-translations (keyword @lang) application-view-translations)]
-             (fn [idx {:keys [value last?]}]
-               [:div.application__form-repeatable-text-wrap
-                [:input.application__form-text-input
-                 (merge
+      (let [on-blur   (fn [evt]
+                        (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
+                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor idx])))
+            on-change (fn [evt]
+                        (let [value (some-> evt .-target .-value)
+                              idx   (int (.getAttribute (.-target evt) "data-idx"))]
+                          (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
+        (into [div-kwd
+               [label field-descriptor]
+               [:div.application__form-text-input-info-text
+                [info-text field-descriptor]]]
+          (cons
+            (let [{:keys [value valid]} (first @values)]
+              [:div
+               [:input.application__form-text-input
+                (merge
                   {:type      "text"
-                                        ; prevent adding second answer when first is empty
-                   :disabled  (and last? first-is-empty?)
-                   :class     (str
-                               size-class " application__form-text-input--normal"
-                               (when-not value " application__form-text-input--disabled"))
+                   :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                                " application__form-field-error"
+                                                " application__form-text-input--normal"))
                    :value     value
-                   :data-idx  (inc idx)
-                   :on-change on-change}
-                  (when (and (not last?) (empty? value))
-                    {:on-blur on-blur})
-                  (when last?
-                    {:placeholder
-                     (:add-more translations)}))]
-                (when value
-                  [:a.application__form-repeatable-text--addremove
-                   [:i.zmdi.zmdi-close.zmdi-hc-lg
-                    {:data-idx (inc idx)
-                     :on-click on-blur}]])]))
-            (concat (rest @values)
-                    [{:value nil :valid true :last? true}])))))))
+                   :data-idx  0
+                   :on-change on-change
+                   :required  (is-required-field? field-descriptor)}
+                  (when (empty? value)
+                    {:on-blur on-blur}))]])
+            (map-indexed
+              (let [first-is-empty? (empty? (first (map :value @values)))
+                    translations    (get-translations (keyword @lang) application-view-translations)]
+                (fn [idx {:keys [value last?]}]
+                  [:div.application__form-repeatable-text-wrap
+                   [:input.application__form-text-input
+                    (merge
+                      {:type      "text"
+                       ; prevent adding second answer when first is empty
+                       :disabled  (and last? first-is-empty?)
+                       :class     (str
+                                    size-class " application__form-text-input--normal"
+                                    (when-not value " application__form-text-input--disabled"))
+                       :value     value
+                       :data-idx  (inc idx)
+                       :on-change on-change}
+                      (when (and (not last?) (empty? value))
+                        {:on-blur on-blur})
+                      (when last?
+                        {:placeholder
+                         (:add-more translations)}))]
+                   (when value
+                     [:a.application__form-repeatable-text--addremove
+                      [:i.zmdi.zmdi-close.zmdi-hc-lg
+                       {:data-idx (inc idx)
+                        :on-click on-blur}]])]))
+              (concat (rest @values)
+                      [{:value nil :valid true :last? true}]))))))))
 
 (defn- text-area-size->class [size]
   (match size
