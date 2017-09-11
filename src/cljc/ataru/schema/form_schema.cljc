@@ -209,30 +209,51 @@
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
-(def application-states
-  (apply s/enum (keys review-states/application-review-states)))
+(def application-review-states
+  (apply s/enum (map first review-states/application-review-states)))
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"))
 
-(s/defschema Event
-  {:event-type                        event-types
-   :time                              org.joda.time.DateTime
-   :id                                s/Int
-   :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-states)
-   :first-name                        (s/maybe s/Str)
-   :last-name                         (s/maybe s/Str)})
+(def application-hakukohde-selection-states
+  (apply s/enum (map first review-states/application-hakukohde-selection-states)))
+
+(def application-hakukohde-review-states
+  {:hakukohde   s/Str
+   :requirement (apply s/enum (distinct (into (map first review-states/application-hakukohde-review-states)
+                                              (map first review-states/application-hakukohde-eligibility-states))))
+   :value (apply s/enum (distinct (into (map second review-states/application-hakukohde-review-states)
+                                        (map second review-states/application-hakukohde-eligibility-states))))}
+
+  (s/defschema Event
+    {:event-type                        event-types
+     :time                              org.joda.time.DateTime
+     :id                                s/Int
+     :application-key                   s/Str
+     (s/optional-key :new-review-state) (s/maybe application-review-states)
+     (s/optional-key :hakukohde)        (s/maybe s/Str)
+     :first-name                        (s/maybe s/Str)
+     :last-name                         (s/maybe s/Str)}))
+
+(s/defschema HakukohdeSelectionState
+  {:hakukohde s/Str
+   :state     application-hakukohde-selection-states})
+
+(s/defschema HakukohdeReviewState
+  {:hakukohde s/Str
+   :state     application-hakukohde-review-states})
 
 (s/defschema Review
-  {:id                             s/Int
-   :application-key                s/Str
-   (s/optional-key :modified-time) org.joda.time.DateTime
-   :state                          application-states
-   (s/optional-key :score)         (s/maybe s/Int)
-   :notes                          (s/maybe s/Str)})
+  {:id                                   s/Int
+   :application-key                      s/Str
+   (s/optional-key :modified-time)       org.joda.time.DateTime
+   :state                                application-review-states
+   (s/optional-key :score)               (s/maybe s/Int)
+   (s/optional-key :hakukohde-selection) (s/maybe [HakukohdeSelectionState])
+   (s/optional-key :hakukohde-review)    (s/maybe [HakukohdeReviewState])
+   :notes                                (s/maybe s/Str)})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional
