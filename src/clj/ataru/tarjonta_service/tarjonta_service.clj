@@ -47,7 +47,7 @@
     (contains? hakuaika :loppuPvm)
     (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
 
-(defn- parse-haku
+(defn parse-haku
   [haku]
   {:oid (:oid haku)
    :name (parse-multi-lang-text (:nimi haku))
