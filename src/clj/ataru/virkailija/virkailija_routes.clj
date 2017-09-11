@@ -308,13 +308,6 @@
                                              ok
                                              (header "Cache-Control" "public, max-age=300"))
                                          (internal-server-error {:error "Internal server error"})))
-                              (api/GET "/haku" []
-                                       :return [ataru-schema/Haku]
-                                       (if-let [haut (tarjonta/all-haut tarjonta-service)]
-                                         (-> haut
-                                             ok
-                                             (header "Cache-Control" "public, max-age=300"))
-                                         (internal-server-error {:error "Internal server error"})))
                               (api/GET "/hakukohde" []
                                        :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
                                        :return [ataru-schema/Hakukohde]

@@ -27,10 +27,6 @@
                            {"defaultTarjoaja" organization-oid
                             "organisationOid" organization-oid})))
 
-(defn all-haut
-  []
-  (do-request (resolve-url :tarjonta-service.all-haut)))
-
 (defn get-haku
   [haku-oid]
   (do-request (resolve-url :tarjonta-service.haku haku-oid)))
