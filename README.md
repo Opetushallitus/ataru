@@ -37,8 +37,11 @@ This will also allow you to connect to the nREPL servers of the jvm processes in
 Virkailija has a certain amount of configurations containing private
 secrets like passwords etc. To run it in full development mode, first
 check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
-need privileges). Then you can run:
-
+need privileges). You also need to forward untuva ldap to a local port:
+```
+ssh -L31337:ldap.ldap.untuva.aws.opintopolku.fi:389 bastion.untuva.aws.opintopolku.fi
+```
+Then you can run:
 ```
 CONFIG=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
 (in another terminal)
