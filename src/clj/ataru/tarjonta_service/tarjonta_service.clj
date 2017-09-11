@@ -74,16 +74,10 @@
         :hakukohteenNimet
         :kieli_fi))
 
-  (hakukohteet-by-organization [this organization-oid]
-    (let [fetch #(some->> (client/hakukohteet-by-organization organization-oid)
-                          parse-search-result
-                          (mapv parse-hakukohde))]
-      (if (= oph-organization organization-oid)
-        (cache/cache-get-or-fetch cache-service
-                                  :all-hakukohteet
-                                  :all
-                                  fetch)
-        (fetch))))
+  (hakukohde-search [this haku-oid organization-oid]
+    (some->> (client/hakukohde-search haku-oid organization-oid)
+             parse-search-result
+             (mapv parse-hakukohde)))
 
   (get-haku [this haku-oid]
     (cache/cache-get-or-fetch cache-service :haku haku-oid #(client/get-haku haku-oid)))
