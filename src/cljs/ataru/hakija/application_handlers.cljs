@@ -353,7 +353,7 @@
                      [[:application/run-rule (:rules field)]])})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor idx value]
+  [db field-descriptor data-idx value]
   (let [id (keyword (:id field-descriptor))
         answers (get-in db [:application :answers])
         answer (get answers id)
@@ -362,7 +362,7 @@
                    (every? #(validator/validate % value answers field-descriptor)
                            (:validators field-descriptor)))]
     (update-in db [:application :answers id :values]
-               (fnil assoc []) idx {:valid valid? :value value})))
+               (fnil assoc []) data-idx {:valid valid? :value value})))
 
 (defn- set-multi-value-changed [db id & [subpath]]
   (let [{:keys [original-value value values]} (-> db :application :answers id)
@@ -395,32 +395,32 @@
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor data-idx value]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor data-idx value)
         (set-repeatable-field-value field-descriptor))))
 
 (defn- remove-repeatable-field-value
-  [db field-descriptor idx]
+  [db field-descriptor data-idx]
   (let [id (keyword (:id field-descriptor))]
     (cond-> db
       (seq (get-in db [:application :answers id :values]))
       (update-in [:application :answers id :values]
-                 #(autil/remove-nth % idx))
+                 #(autil/remove-nth % data-idx))
 
       ;; when creating application, we have the value below (and it's important). when editing, we do not.
       ;; consider this a temporary, terrible bandaid solution
       (seq (get-in db [:application :answers id :value]))
       (update-in [:application :answers id :value]
-                 #(autil/remove-nth (vec %) idx))
+                 #(autil/remove-nth (vec %) data-idx))
 
       true
       (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ field-descriptor idx]]
-    (remove-repeatable-field-value db field-descriptor idx)))
+  (fn [db [_ field-descriptor data-idx]]
+    (remove-repeatable-field-value db field-descriptor data-idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))

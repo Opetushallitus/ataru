@@ -154,12 +154,12 @@
         lang       (subscribe [:application/form-language])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (let [on-blur   (fn [evt]
-                        (let [idx (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor idx])))
+                        (let [data-idx (int (.getAttribute (.-target evt) "data-idx"))]
+                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx])))
             on-change (fn [evt]
                         (let [value (some-> evt .-target .-value)
-                              idx   (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))]
+                              data-idx   (int (.getAttribute (.-target evt) "data-idx"))]
+                          (dispatch [:application/set-repeatable-application-field field-descriptor data-idx value])))]
         (into [div-kwd
                [label field-descriptor]
                [:div.application__form-text-input-info-text
