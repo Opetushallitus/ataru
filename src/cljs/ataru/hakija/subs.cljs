@@ -8,7 +8,7 @@
 (re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
-    (get-in db path)))
+    (get-in db (remove nil? path))))
 
 (re-frame/reg-sub
   :application/valid-status
