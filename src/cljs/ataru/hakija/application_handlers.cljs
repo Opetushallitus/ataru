@@ -353,7 +353,7 @@
                      [[:application/run-rule (:rules field)]])})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor data-idx value]
+  [db field-descriptor value data-idx]
   (let [id (keyword (:id field-descriptor))
         answers (get-in db [:application :answers])
         answer (get answers id)
@@ -395,9 +395,9 @@
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor data-idx value]]
+  (fn [db [_ field-descriptor value data-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor data-idx value)
+        (set-repeatable-field-values field-descriptor value data-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (defn- remove-repeatable-field-value
@@ -504,7 +504,7 @@
   :application/set-adjacent-field-answer
   (fn [db [_ field-descriptor idx value]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor value idx)
         (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
@@ -514,7 +514,7 @@
               (let [id (keyword (:id child))
                     new-idx (count (get-in db [:application :answers id :values]))]
                 (-> db
-                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-values child "" new-idx)
                     (set-repeatable-field-value child))))
             db
             (:children field-descriptor))))

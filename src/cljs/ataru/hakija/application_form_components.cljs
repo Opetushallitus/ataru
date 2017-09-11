@@ -159,7 +159,7 @@
             on-change (fn [evt]
                         (let [value (some-> evt .-target .-value)
                               data-idx   (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/set-repeatable-application-field field-descriptor data-idx value])))]
+                          (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx])))]
         (into [div-kwd
                [label field-descriptor]
                [:div.application__form-text-input-info-text
