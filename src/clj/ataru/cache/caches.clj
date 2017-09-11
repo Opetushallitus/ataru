@@ -1,9 +1,14 @@
 (ns ataru.cache.caches
-  (:require [ataru.cache.hazelcast-cache :refer [map->BasicCache]]))
+  (:require [ataru.cache.hazelcast-cache :refer [map->BasicCache
+                                                 map->UpdatingCache]])
+  (:import java.util.concurrent.TimeUnit))
 
 (def hazelcast-caches
-  [(map->BasicCache
-    {:name "hakukohde" :max-size 10000 :ttl 3600})
+  [(map->UpdatingCache
+    {:name "hakukohde"
+     :max-size 10000
+     :ttl [3 TimeUnit/DAYS]
+     :period [5 TimeUnit/MINUTES]})
    (map->BasicCache
     {:name "haku" :max-size 10000 :ttl 3600})
    (map->BasicCache
