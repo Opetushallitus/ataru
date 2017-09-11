@@ -191,7 +191,7 @@
     (when (= hakukohde-oid "hakukohde.oid")
       "Ajoneuvonosturinkuljettajan ammattitutkinto"))
 
-  (hakukohteet-by-organization [_ _]
+  (hakukohde-search [_ _ _]
     (->> [(:1.2.246.562.20.49028196523 hakukohde)
           (:1.2.246.562.20.49028196524 hakukohde)
           (:1.2.246.562.20.49028196525 hakukohde)]

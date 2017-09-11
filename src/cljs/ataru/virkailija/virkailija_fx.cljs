@@ -23,7 +23,8 @@
 (re-frame/reg-fx
  :refresh-active-haut
  (fn refresh-active-haut [[organization-oids haku-oids on-succes on-error]]
-   (async/take! (tarjonta/active-haut organization-oids haku-oids)
+   (async/take! (tarjonta/fetch-haut-with-hakukohteet haku-oids
+                                                      organization-oids)
                 (fn [r]
                   (if (instance? js/Error r)
                     (on-error r)

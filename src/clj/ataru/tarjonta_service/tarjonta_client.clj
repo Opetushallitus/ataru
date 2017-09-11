@@ -21,10 +21,11 @@
   [hakukohde-oid]
   (do-request (resolve-url :tarjonta-service.hakukohde hakukohde-oid)))
 
-(defn hakukohteet-by-organization
-  [organization-oid]
+(defn hakukohde-search
+  [haku-oid organization-oid]
   (do-request (resolve-url :tarjonta-service.hakukohde.search
-                           {"defaultTarjoaja" organization-oid
+                           {"hakuOid" haku-oid
+                            "defaultTarjoaja" organization-oid
                             "organisationOid" organization-oid})))
 
 (defn get-haku

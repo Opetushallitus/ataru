@@ -5,8 +5,6 @@
   [(map->BasicCache
     {:name "hakukohde" :max-size 10000 :ttl 3600})
    (map->BasicCache
-    {:name "all-hakukohteet" :max-size 1 :ttl 300})
-   (map->BasicCache
     {:name "haku" :max-size 10000 :ttl 3600})
    (map->BasicCache
     {:name "koulutus" :max-size 10000 :ttl 3600})
