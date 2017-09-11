@@ -152,7 +152,8 @@
 (s/defschema Hakukohde
   {:oid s/Str
    :haku-oid s/Str
-   :name LocalizedStringOptional})
+   :name LocalizedStringOptional
+   :tarjoaja-name LocalizedStringOptional})
 
 (s/defschema File
   {:key                      s/Str
