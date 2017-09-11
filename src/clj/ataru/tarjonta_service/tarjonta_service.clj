@@ -85,13 +85,6 @@
                                   fetch)
         (fetch))))
 
-  (all-haut [this]
-    (cache/cache-get-or-fetch cache-service
-                              :all-haut
-                              :all
-                              #(some->> (client/all-haut)
-                                        (mapv parse-haku))))
-
   (get-haku [this haku-oid]
     (cache/cache-get-or-fetch cache-service :haku haku-oid #(client/get-haku haku-oid)))
 
