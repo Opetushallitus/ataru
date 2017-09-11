@@ -5,7 +5,7 @@
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
-    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]
+    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-hakukohde]]
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
 (defn forms-in-use
@@ -57,7 +57,8 @@
   [hakukohde]
   {:oid (:oid hakukohde)
    :haku-oid (:hakuOid hakukohde)
-   :name (parse-multi-lang-text (:nimi hakukohde))})
+   :name (parse-multi-lang-text (:hakukohteenNimet hakukohde))
+   :tarjoaja-name (parse-multi-lang-text (:tarjoajaNimet hakukohde))})
 
 (defn- parse-search-result
   [search-result]
@@ -77,6 +78,8 @@
   (hakukohde-search [this haku-oid organization-oid]
     (some->> (client/hakukohde-search haku-oid organization-oid)
              parse-search-result
+             (map :oid)
+             (map (partial get-hakukohde this))
              (mapv parse-hakukohde)))
 
   (get-haku [this haku-oid]
