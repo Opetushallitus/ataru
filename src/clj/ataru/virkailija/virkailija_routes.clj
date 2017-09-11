@@ -17,6 +17,8 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
@@ -296,6 +298,16 @@
 
                  (api/context "/tarjonta" []
                               :tags ["tarjonta-api"]
+                              (api/GET "/haku/:oid" []
+                                       :path-params [oid :- (api/describe s/Str "Haku OID")]
+                                       :return ataru-schema/Haku
+                                       (if-let [haku (tarjonta/get-haku
+                                                      tarjonta-service
+                                                      oid)]
+                                         (-> (tarjonta-service/parse-haku haku)
+                                             ok
+                                             (header "Cache-Control" "public, max-age=300"))
+                                         (internal-server-error {:error "Internal server error"})))
                               (api/GET "/haku" []
                                        :return [ataru-schema/Haku]
                                        (if-let [haut (tarjonta/all-haut tarjonta-service)]
