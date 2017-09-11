@@ -11,7 +11,7 @@
     [ataru.virkailija.application.application-subs]
     [ataru.virkailija.routes :as routes]
     [ataru.virkailija.temporal :as t]
-    [ataru.application.review-states :refer [application-review-states]]
+    [ataru.application.review-states :refer [application-review-states active-application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :as util]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -61,6 +61,10 @@
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
+(defn- get-review-state-label-by-name
+  [states name]
+  (->> states (filter #(= (first %) name)) first second))
+
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
         applicant (str (:preferred-name application) " " (:last-name application))]
@@ -75,8 +79,8 @@
       (or (:score application) "")]
      [:span.application-handling__list-row--state
       (or
-       (get application-review-states (:state application))
-       "Tuntematon")]]))
+        (get-review-state-label-by-name application-review-states (:state application))
+        "Tuntematon")]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -99,7 +103,7 @@
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
                                  (conj application-filters review-state-id))
-        all-filters-selected?  (= (count (keys application-review-states)) (count new-application-filter))]
+        all-filters-selected?  (= (count (first active-application-review-states)) (count new-application-filter))]
     (util/update-url-with-query-params
      {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
@@ -109,7 +113,7 @@
   (util/update-url-with-query-params {:unselected-states nil})
   (dispatch [:state-update #(assoc-in % [:application :filter]
                                       (if all-filters-selected?
-                                        (keys application-review-states)
+                                        (map first application-review-states)
                                         []))]))
 
 (defn state-filter-controls []
@@ -120,7 +124,7 @@
         get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
       (let [all-filters-selected? (= (count @application-filters)
-                                     (count (keys application-review-states)))]
+                                     (count (map first application-review-states)))]
         [:span.application-handling__filter-state
          [:a
           {:on-click toggle-filter-opened}
@@ -148,7 +152,7 @@
                                   :on-change #(toggle-filter @application-filters review-state-id filter-selected)}]
                          [:span (str (second review-state)
                                   " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
-                   application-review-states)))
+                   active-application-review-states)))
          (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
@@ -207,7 +211,7 @@
        review-state-label])))
 
 (defn opened-review-state-list [review-state]
-  (mapv (partial review-state-row @review-state) application-review-states))
+  (mapv (partial review-state-row @review-state) active-application-review-states))
 
 (defn application-review-state []
   (let [review-state (subscribe [:state-query [:application :review :state]])
@@ -223,7 +227,7 @@
                 (opened-review-state-list review-state))]
          [:div
           {:on-click list-click}
-          (review-state-selected-row (get application-review-states @review-state))])])))
+          (review-state-selected-row (get-review-state-label-by-name application-review-states @review-state))])])))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   [(str first-name " " last-name)
@@ -232,7 +236,7 @@
 
 (defn event-caption [event]
   (case (:event-type event)
-    "review-state-change" (get application-review-states (:new-review-state event))
+    "review-state-change" (get-review-state-label-by-name application-review-states (:new-review-state event))
     "updated-by-applicant" "Hakija muokannut hakemusta"
     "updated-by-virkailija" (let [[name initials] (name-and-initials event)]
                               [:span

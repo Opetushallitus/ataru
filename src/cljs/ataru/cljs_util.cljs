@@ -10,7 +10,7 @@
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [goog.string.format]
-            [ataru.application.review-states :refer [application-review-states]])
+            [ataru.application.review-states :refer [application-review-states active-application-review-states]])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -165,7 +165,7 @@
 
 (defn get-unselected-review-states
   [unselected-states]
-  (clojure.set/difference (-> application-review-states keys set) (set unselected-states)))
+  (clojure.set/difference (-> active-application-review-states first set) (set unselected-states)))
 
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))
