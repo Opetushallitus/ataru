@@ -1,42 +1,30 @@
 (ns ataru.virkailija.tarjonta
   (:require-macros [ataru.async-macros :as asyncm])
   (:require [cljs.core.async :as async]
-            [ajax.core :refer [GET]]
-            [cljs-time.core :refer [now after?]]
-            [cljs-time.coerce :refer [from-date]]))
+            [ajax.core :refer [GET]]))
 
-(defn- parse-hakuaika
-  [hakuaika]
-  (cond-> {}
-    (contains? hakuaika :start)
-    (assoc :alku (from-date (new js/Date (:start hakuaika))))
-    (contains? hakuaika :end)
-    (assoc :loppu (from-date (new js/Date (:end hakuaika))))))
-
-(defn- parse-haku
-  [haku]
-  (update haku :hakuajat (partial map parse-hakuaika)))
-
-(defn- active?
-  [now haku]
-  (some #(or (not (contains? % :loppu))
-             (after? (:loppu %) now))
-        (:hakuajat haku)))
-
-(defn- fetch-active-haut
-  []
+(defn- fetch-haku
+  [haku-oid]
   (let [c (async/chan 1)]
-    (GET "/lomake-editori/api/tarjonta/haku"
-         {:handler (comp #(async/put! c %
-                                      (fn [_] (async/close! c)))
-                         (partial filter (partial active? (now)))
-                         (partial map parse-haku))
+    (GET (str "/lomake-editori/api/tarjonta/haku/" haku-oid)
+         {:handler #(async/put! c %
+                                (fn [_] (async/close! c)))
           :error-handler #(async/put! c (new js/Error %)
                                       (fn [_] (async/close! c)))
           :response-format :json
           :keywords? true
           :timeout 15000})
     c))
+
+(defn- fetch-haut
+  [haku-oids]
+  (asyncm/go-try
+   (loop [cs (map fetch-haku haku-oids)
+          haut []]
+     (if (empty? cs)
+       haut
+       (recur (rest cs)
+              (conj haut (asyncm/<? (first cs))))))))
 
 (defn- hakukohteet-by-organization
   [organization-oid]
@@ -83,8 +71,8 @@
           haut))
 
 (defn active-haut
-  [organization-oids]
-  (let [haut-c (fetch-active-haut)
+  [organization-oids haku-oids]
+  (let [haut-c (fetch-haut haku-oids)
         hakukohteet-c (hakukohteet-by-organizations organization-oids)]
     (asyncm/go-try
       (->> (asyncm/<? hakukohteet-c)
