@@ -49,7 +49,7 @@ ataru repo. Figwheel will automatically push cljs changes to the browser.
 
 It is recommended to use figwheel with rlwrap to enable a better ux for the repl!
 
-Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
+Navigate to untuva virkailija.untuva.aws.opintopolku.fi and login with ataru-user to get cas session.
 Browse to [http://localhost:8350](http://localhost:8350).
 
 You can also run a "minimal" version of the virkailija system with
@@ -146,7 +146,7 @@ Remeber to compile all changed UI code before running UI-tests. To clean and rec
 Also remember to restart applications after re-compiling code!
 
 To run virkailija tests:
-* Navigate to itest itest-virkailija.oph.ware.fi and login with ataru-user to get cas session.
+* Navigate to untuva virkailija.untuva.aws.opintopolku.fi and login with ataru-user to get cas session.
 * Navigate to [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
 That will run the tests for virkailija.

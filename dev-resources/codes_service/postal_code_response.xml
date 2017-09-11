@@ -2,7 +2,7 @@
 <ns2:koodiCollection xmlns:ns2="http://service.koodisto.sade.vm.fi/types/common">
     <koodi>
         <koodiUri>posti_99400 baz</koodiUri>
-        <resourceUri>https://itest-virkailija.oph.ware.fi/koodisto-service/rest/codeelement/posti_99400</resourceUri>
+        <resourceUri>https://virkailija.untuva.aws.opintopolku.fi/koodisto-service/rest/codeelement/posti_99400</resourceUri>
         <koodisto>
             <koodistoUri>posti</koodistoUri>
             <organisaatioOid>1.2.246.562.10.00000000001</organisaatioOid>
@@ -29,7 +29,7 @@
     </koodi>
     <koodi>
         <koodiUri>posti_55120</koodiUri>
-        <resourceUri>https://itest-virkailija.oph.ware.fi/koodisto-service/rest/codeelement/posti_55120</resourceUri>
+        <resourceUri>https://virkailija.untuva.aws.opintopolku.fi/koodisto-service/rest/codeelement/posti_55120</resourceUri>
         <koodisto>
             <koodistoUri>posti</koodistoUri>
             <organisaatioOid>1.2.246.562.10.00000000001</organisaatioOid>
