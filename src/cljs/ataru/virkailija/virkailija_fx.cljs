@@ -21,8 +21,8 @@
     (routes/navigate-to-click-handler path)))
 
 (re-frame/reg-fx
- :refresh-active-haut
- (fn refresh-active-haut [[organization-oids haku-oids on-succes on-error]]
+ :fetch-haut-with-hakukohteet
+ (fn fetch-haut-with-hakukohteet [[organization-oids haku-oids on-succes on-error]]
    (async/take! (tarjonta/fetch-haut-with-hakukohteet haku-oids
                                                       organization-oids)
                 (fn [r]

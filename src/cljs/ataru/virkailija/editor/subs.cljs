@@ -34,25 +34,24 @@
                haut)))
 
 (re-frame/reg-sub
-  :editor/filtered-active-haut
+  :editor/filtered-haut
   (fn [db [_ id]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (filter-hakukohteet
-         (get-in db [:editor :active-haut :haut] {})
+         (get-in db [:editor :used-by-haut :haut] {})
          search-term)
-      (get-in db [:editor :active-haut :haut] {}))))
+      (get-in db [:editor :used-by-haut :haut] {}))))
 
 (re-frame/reg-sub
-  :editor/fetching-active-haut
+  :editor/fetching-haut?
   (fn [db]
-    (get-in db [:editor :active-haut :fetching?] false)))
+    (get-in db [:editor :used-by-haut :fetching?] false)))
 
 (re-frame/reg-sub
-  :editor/has-active-haut
+  :editor/used-by-haku?
   (fn [db]
-    (if-let [haut (get-in db [:editor :active-haut :haut])]
-      (not-empty haut)
-      true)))
+    (or (get-in db [:editor :used-by-haut :error?])
+        (not-empty (get-in db [:editor :used-by-haut :haut])))))
 
 (defn- find-hakukohde
   [haku hakukohde-oid]
@@ -84,7 +83,7 @@
   :editor/belongs-to-hakukohde-name
   (fn [db [_ oid]]
     (let [[haku hakukohde] (find-haku-and-hakukohde
-                            (map second (get-in db [:editor :active-haut :haut]))
+                            (map second (get-in db [:editor :used-by-haut :haut]))
                             oid)]
       (str (get-in hakukohde [:name :fi])
            " - "

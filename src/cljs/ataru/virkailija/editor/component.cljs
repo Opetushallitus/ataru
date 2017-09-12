@@ -88,16 +88,16 @@
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet]
   (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
-        fetching?   (subscribe [:editor/fetching-active-haut])
-        active-haut? (subscribe [:editor/has-active-haut])
-        active-haut (subscribe [:editor/filtered-active-haut id])
+        fetching?   (subscribe [:editor/fetching-haut?])
+        used-by-haku? (subscribe [:editor/used-by-haku?])
+        haut (subscribe [:editor/filtered-haut id])
         on-click (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
         on-change (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
                                      id (.-value (.-target e))]))]
     (fn [path id selected-hakukohteet]
       [:div.belongs-to-hakukohteet-modal
        [:div.belongs-to-hakukohteet-modal__arrow-up]
-       (if @active-haut?
+       (if @used-by-haku?
          [:div.belongs-to-hakukohteet-modal__box
           [:div.belongs-to-hakukohteet-modal__input-row
            [:div.belongs-to-hakukohteet-modal__search-container
@@ -111,7 +111,7 @@
             [:div.belongs-to-hakukohteet-modal__spinner
              [:i.zmdi.zmdi-spinner.spin]]
             [:ul.belongs-to-hakukohteet-modal__haku-list
-             (for [[_ haku] @active-haut]
+             (for [[_ haku] @haut]
                ^{:key (:oid haku)}
                [haku-list-item path id haku selected-hakukohteet])])]
          [:div.belongs-to-hakukohteet-modal__box
@@ -125,7 +125,7 @@
 (defn- belongs-to-hakukohde
   [path oid]
   (let [name (subscribe [:editor/belongs-to-hakukohde-name oid])
-        fetching? (subscribe [:editor/fetching-active-haut])
+        fetching? (subscribe [:editor/fetching-haut?])
         on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
                                     path oid]))]
     (fn [_ _]
