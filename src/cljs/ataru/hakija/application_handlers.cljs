@@ -384,20 +384,20 @@
 
 (defn- set-repeatable-field-value
   [db field-descriptor]
-  (let [id          (keyword (:id field-descriptor))
-        values      (get-in db [:application :answers id :values])
-        required?   (some (partial = "required")
-                          (:validators field-descriptor))
-        repeatable? (-> field-descriptor :params :repeatable)
-        is-empty?   (if repeatable?
-                      (partial every? empty?)
-                      (partial empty?))
-        valid?      (if (is-empty? values)
-                      (not required?)
-                      (every? :valid (flatten values)))
-        value-fn    (if repeatable?
-                      (partial map (partial map :value))
-                      (partial map :value))]
+  (let [id                   (keyword (:id field-descriptor))
+        values               (get-in db [:application :answers id :values])
+        required?            (some (partial = "required")
+                                   (:validators field-descriptor))
+        multi-value-answers? (every? #(or (vector? %) (list? %)) values)
+        is-empty?            (if multi-value-answers?
+                               (partial every? empty?)
+                               (partial empty?))
+        valid?               (if (is-empty? values)
+                               (not required?)
+                               (every? :valid (flatten values)))
+        value-fn             (if multi-value-answers?
+                               (partial map (partial map :value))
+                               (partial map :value))]
     (-> db
         (update-in [:application :answers id]
                    merge
