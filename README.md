@@ -39,7 +39,7 @@ secrets like passwords etc. To run it in full development mode, first
 check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
 need privileges). You also need to forward untuva ldap to a local port:
 ```
-ssh -L31337:ldap.ldap.untuva.aws.opintopolku.fi:389 bastion.untuva.aws.opintopolku.fi
+ssh -L31337:ldap.ldap.untuva.aws.opintopolku.fi:389 ubuntu@bastion.untuva.aws.opintopolku.fi
 ```
 Then you can run:
 ```
