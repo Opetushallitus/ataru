@@ -18,8 +18,10 @@
 
 (defn- hakukohde-matches?
   [pattern hakukohde]
-  (some (partial re-find pattern)
-        (map second (:name hakukohde))))
+  (or (some (partial re-find pattern)
+            (map second (:name hakukohde)))
+      (some (partial re-find pattern)
+            (map second (:tarjoaja-name hakukohde)))))
 
 (defn- filter-hakukohteet
   [haut search-term]
@@ -72,7 +74,9 @@
 (re-frame/reg-sub
   :editor/hakukohde-name-parts
   (fn [db [_ id hakukohde]]
-    (let [name (some #(get (:name hakukohde) %) [:fi :sv :en])]
+    (let [hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
+          tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
+          name (str hakukohde-name " - " tarjoaja-name)]
       (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
         (map-indexed (fn [i part] [part (= 1 (mod i 2))])
                      (clojure.string/split name
@@ -82,12 +86,18 @@
 (re-frame/reg-sub
   :editor/belongs-to-hakukohde-name
   (fn [db [_ oid]]
-    (let [[haku hakukohde] (find-haku-and-hakukohde
+    (let [multiple-haku? (< 1 (count (get-in db [:editor :used-by-haut :haut] {})))
+          [haku hakukohde] (find-haku-and-hakukohde
                             (map second (get-in db [:editor :used-by-haut :haut]))
-                            oid)]
-      (str (get-in hakukohde [:name :fi])
+                            oid)
+          hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
+          tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
+          haku-name (some #(get (:name haku) %) [:fi :sv :en])]
+      (str hakukohde-name
            " - "
-           (get-in haku [:name :fi])))))
+           tarjoaja-name
+           (when multiple-haku?
+             (str " - " haku-name))))))
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
