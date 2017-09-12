@@ -149,17 +149,17 @@
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id         (keyword (:id field-descriptor))
-        values     (subscribe [:state-query [:application :answers id :values]])
         size-class (text-field-size->class (get-in field-descriptor [:params :size]))
         lang       (subscribe [:application/form-language])]
-    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (let [on-blur   (fn [evt]
+    (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
+      (let [values    (subscribe [:state-query [:application :answers id :values question-group-idx]])
+            on-blur   (fn [evt]
                         (let [data-idx (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx])))
+                          (dispatch [:application/remove-repeatable-application-field-value field-descriptor data-idx question-group-idx])))
             on-change (fn [evt]
-                        (let [value (some-> evt .-target .-value)
-                              data-idx   (int (.getAttribute (.-target evt) "data-idx"))]
-                          (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx])))]
+                        (let [value    (some-> evt .-target .-value)
+                              data-idx (int (.getAttribute (.-target evt) "data-idx"))]
+                          (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
                [label field-descriptor]
                [:div.application__form-text-input-info-text
