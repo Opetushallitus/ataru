@@ -634,7 +634,6 @@
                           (dispatch [:application/add-adjacent-fields field-descriptor]))]
     (fn [field-descriptor]
       (let [row-amount   @row-amount
-            child-ids    (map (comp keyword :id) (:children field-descriptor))
             translations (get-translations (keyword @language) application-view-translations)]
         [:div.application__form-field
          [label field-descriptor]
