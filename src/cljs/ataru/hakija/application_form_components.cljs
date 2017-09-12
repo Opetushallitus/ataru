@@ -655,7 +655,7 @@
                                     (:children field-descriptor))
                        (when (pos? row-idx)
                          [:a {:data-row-idx row-idx
-                              :on-click remove-on-click}
+                              :on-click     remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (get-in field-descriptor [:params :repeatable])
