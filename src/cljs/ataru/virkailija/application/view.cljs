@@ -225,30 +225,33 @@
           {:on-click list-click}
           (review-state-selected-row (get application-review-states @review-state))])])))
 
+(defn- name-and-initials [{:keys [first-name last-name]}]
+  [(str first-name " " last-name)
+   (str (subs first-name 0 1)
+        (subs last-name 0 1))])
+
 (defn event-caption [event]
   (case (:event-type event)
-    "review-state-change"     (get application-review-states (:new-review-state event))
-    "updated-by-applicant"    "Hakija muokannut hakemusta"
-    "updated-by-virkailija"   "Virkailija (%s) muokannut hakemusta"
+    "review-state-change" (get application-review-states (:new-review-state event))
+    "updated-by-applicant" "Hakija muokannut hakemusta"
+    "updated-by-virkailija" (let [[name initials] (name-and-initials event)]
+                              [:span
+                               "Virkailija "
+                               [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")]
+                               " muokannut hakemusta"])
     "received-from-applicant" "Hakemus vastaanotettu"
     "Tuntematon"))
 
-(defn- initials [{:keys [event-type first-name last-name]}]
-  (when (= event-type "updated-by-virkailija")
-    (str (subs first-name 0 1)
-         (subs last-name 0 1))))
+(defn to-event-row
+  [time-str caption]
+  [:div
+   [:span.application-handling__event-timestamp time-str]
+   [:span.application-handling__event-caption caption]])
 
 (defn event-row [event]
   (let [time-str      (t/time->short-str (:time event))
-        to-event-row  (fn [caption & args]
-                        [:div
-                         [:span.application-handling__event-timestamp time-str]
-                         [:span.application-handling__event-caption (apply gstring/format caption args)]])
-        event-caption (event-caption event)
-        args          (initials event)]
-    (if args
-      (to-event-row event-caption args)
-      (to-event-row event-caption))))
+        caption       (event-caption event)]
+    (to-event-row time-str caption)))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]
