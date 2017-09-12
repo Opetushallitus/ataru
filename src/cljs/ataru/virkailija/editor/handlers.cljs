@@ -350,10 +350,11 @@
             :path                "/lomake-editori/api/forms-in-use"
             :handler-or-dispatch :editor/update-forms-in-use}}))
 
-(reg-event-db
+(reg-event-fx
   :editor/update-forms-in-use
-  (fn [db [_ result]]
-    (assoc-in db [:editor :forms-in-use] result)))
+  (fn [{db :db} [_ result]]
+    {:db (assoc-in db [:editor :forms-in-use] result)
+     :dispatch [:editor/refresh-used-by-haut]}))
 
 (reg-event-db
   :editor/change-form-name
