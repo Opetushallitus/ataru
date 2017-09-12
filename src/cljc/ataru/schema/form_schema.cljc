@@ -172,7 +172,9 @@
 (s/defschema Answer {:key                          s/Str,
                      :value                        (s/cond-pre s/Str
                                                                s/Int
-                                                               [(s/cond-pre s/Str File)])
+                                                               [(s/cond-pre s/Str
+                                                                            File
+                                                                            [(s/cond-pre s/Str s/Int File)])])
                      :fieldType                    (apply s/enum ["textField"
                                                                   "textArea"
                                                                   "dropdown"
