@@ -679,7 +679,7 @@
         visible?             (fn [id]
                                (get-in @ui [(keyword id) :visible?] true))
         selected-hakukohteet (subscribe [:state-query [:application :answers :hakukohteet :values]])]
-    (fn [field-descriptor & args]
+    (fn [field-descriptor & {:keys [idx] :as args}]
       (if (and (feature-enabled? field-descriptor)
                (hakukohde-allows-visibility? field-descriptor (map :value @selected-hakukohteet)))
         (let [disabled? (get-in @ui [(keyword (:id field-descriptor)) :disabled?] false)]
@@ -705,9 +705,10 @@
                          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor]
                          {:fieldClass "infoElement"} [info-element field-descriptor]
                          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor])
-            (and (empty? (:children field-descriptor))
+            (and (or (:idx args)
+                     (empty? (:children field-descriptor)))
                  (visible? (:id field-descriptor)))
-            (into args)))
+            (into (flatten (seq args)))))
         [:div]))))
 
 (defn editable-fields [form-data]
