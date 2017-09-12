@@ -89,6 +89,7 @@
   [path id selected-hakukohteet]
   (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
         fetching?   (subscribe [:editor/fetching-active-haut])
+        active-haut? (subscribe [:editor/has-active-haut])
         active-haut (subscribe [:editor/filtered-active-haut id])
         on-click (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
         on-change (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
@@ -96,22 +97,30 @@
     (fn [path id selected-hakukohteet]
       [:div.belongs-to-hakukohteet-modal
        [:div.belongs-to-hakukohteet-modal__arrow-up]
-       [:div.belongs-to-hakukohteet-modal__box
-        [:div.belongs-to-hakukohteet-modal__input-row
-         [:div.belongs-to-hakukohteet-modal__search-container
-          [:input.belongs-to-hakukohteet-modal__search
-           {:value @search-term
-            :on-change on-change}]]
-         [:button.belongs-to-hakukohteet-modal__hide
-          {:on-click on-click}
-          [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-        (if @fetching?
-          [:div.belongs-to-hakukohteet-modal__spinner
-           [:i.zmdi.zmdi-spinner.spin]]
-          [:ul.belongs-to-hakukohteet-modal__haku-list
-           (for [[_ haku] @active-haut]
-             ^{:key (:oid haku)}
-             [haku-list-item path id haku selected-hakukohteet])])]])))
+       (if @active-haut?
+         [:div.belongs-to-hakukohteet-modal__box
+          [:div.belongs-to-hakukohteet-modal__input-row
+           [:div.belongs-to-hakukohteet-modal__search-container
+            [:input.belongs-to-hakukohteet-modal__search
+             {:value @search-term
+              :on-change on-change}]]
+           [:button.belongs-to-hakukohteet-modal__hide
+            {:on-click on-click}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+          (if @fetching?
+            [:div.belongs-to-hakukohteet-modal__spinner
+             [:i.zmdi.zmdi-spinner.spin]]
+            [:ul.belongs-to-hakukohteet-modal__haku-list
+             (for [[_ haku] @active-haut]
+               ^{:key (:oid haku)}
+               [haku-list-item path id haku selected-hakukohteet])])]
+         [:div.belongs-to-hakukohteet-modal__box
+          [:div.belongs-to-hakukohteet-modal__no-haku-row
+           [:p.belongs-to-hakukohteet-modal__no-haku
+            "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."]
+           [:button.belongs-to-hakukohteet-modal__hide
+            {:on-click on-click}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])])))
 
 (defn- belongs-to-hakukohde
   [path oid]

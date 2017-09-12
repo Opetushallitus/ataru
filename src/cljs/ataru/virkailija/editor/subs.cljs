@@ -47,6 +47,13 @@
   (fn [db]
     (get-in db [:editor :active-haut :fetching?] false)))
 
+(re-frame/reg-sub
+  :editor/has-active-haut
+  (fn [db]
+    (if-let [haut (get-in db [:editor :active-haut :haut])]
+      (not-empty haut)
+      true)))
+
 (defn- find-hakukohde
   [haku hakukohde-oid]
   (some #(when (= hakukohde-oid (:oid %)) %)
