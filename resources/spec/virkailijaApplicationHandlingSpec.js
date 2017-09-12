@@ -67,12 +67,6 @@
         .fail(done)
       });
 
-      function applicationHeadingIs(expected) {
-        return function() {
-          return testFrame().find('.application-handling__review-area-main-heading').text() === expected
-        }
-      }
-
       function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)') }
 
       function secondApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)') }
@@ -226,14 +220,6 @@
         testFrame().find('.application-handling__filter-state-selection-row span:contains(' + stateOfFirstApplication + ')').click()
       }
 
-      function includedFilters() {
-        return testFrame().find('.application-handling__filter-state-selected-row').length
-      }
-
-      function filterLink() {
-        return testFrame().find('.application-handling__filter-state a')
-      }
-
       function applicationStates() {
         return testFrame().find('.application-handling__list .application-handling__list-row--state')
       }
@@ -316,6 +302,23 @@
       });
     });
 
+    describe('Virkailija link share', function () {
+      describe('Shows application and correct filters', function () {
+        before(
+          navigateToApplicationHandlingWithUrlParams,
+          wait.until(function () {
+            return applicationHeader().text() === 'Selaintestilomake1'
+          }),
+          wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')),
+          clickElement(filterLink)
+        );
+
+        it('shows virkailija edit link', function() {
+          expect(includedFilters()).to.equal(8);
+        })
+      });
+    });
+
     function editLink() {
       return testFrame().find('.application-handling__edit-link')
     }
@@ -338,6 +341,24 @@
 
     function navigateToApplicationHandling() {
       loadInFrame('http://localhost:8350/lomake-editori/applications/')
+    }
+
+    function navigateToApplicationHandlingWithUrlParams() {
+      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&unselected-states=processing,invited-to-interview')
+    }
+
+    function includedFilters() {
+      return testFrame().find('.application-handling__filter-state-selected-row').length
+    }
+
+    function applicationHeadingIs(expected) {
+      return function() {
+        return testFrame().find('.application-handling__review-area-main-heading').text() === expected
+      }
+    }
+
+    function filterLink() {
+      return testFrame().find('.application-handling__filter-state a')
     }
 
     function applicationRow() {

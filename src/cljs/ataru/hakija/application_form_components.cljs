@@ -21,8 +21,7 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
-            [ataru.cljs-util :refer [text-area-size->max-length]])
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -55,20 +54,6 @@
 (defn- textual-field-change [field-descriptor evt]
   (let [value  (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value])))
-
-(defn- init-dropdown-value
-  [dropdown-data lang secret this]
-  (let [select (-> (r/dom-node this) (.querySelector "select"))
-        value  (or (first
-                     (eduction
-                       (comp (filter :default-value)
-                         (map :value))
-                       (:options dropdown-data)))
-                 (-> select .-value))]
-    (if-not (some? secret)
-      (dispatch [:application/set-application-field dropdown-data value]))
-    (when-let [rules (not-empty (:rules dropdown-data))]
-      (dispatch [:application/run-rule rules]))))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -116,9 +101,11 @@
     [:div.application__form-info-text {:dangerouslySetInnerHTML {:__html sanitized-html}}]))
 
 (defn info-text [field-descriptor]
-  (let [language (subscribe [:application/form-language])]
+  (let [language     (subscribe [:application/form-language])
+        default-lang (subscribe [:application/default-language])]
     (fn [field-descriptor]
-      (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
+      (when-let [info (non-blank-val (@language (-> field-descriptor :params :info-text :label))
+                                     (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing] :or {div-kwd :div.application__form-field disabled false editing false}}]
@@ -220,12 +207,17 @@
          "L" "application__form-text-area__size-large"
          :else "application__form-text-area__size-medium"))
 
+(defn- parse-max-length [field]
+  (let [max-length (-> field :params :max-length)]
+    (when-not (or (empty? max-length) (= "0" max-length))
+      max-length)))
+
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application (subscribe [:state-query [:application]])
         answers     (subscribe [:state-query [:application :answers]])
         on-change   (partial textual-field-change field-descriptor)
         size        (-> field-descriptor :params :size)
-        max-length  (-> field-descriptor :params :max-length (or (text-area-size->max-length size)))]
+        max-length  (parse-max-length field-descriptor)]
     (fn [field-descriptor]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
@@ -242,7 +234,8 @@
            :on-change     on-change
            :value         value
            :required      (is-required-field? field-descriptor)}]
-         [:span.application__form-textarea-max-length (str (count value) " / " max-length)]]))))
+         (when max-length
+           [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
 (declare render-field)
 
@@ -304,7 +297,6 @@
         answers      (subscribe [:state-query [:application :answers]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        secret       (subscribe [:state-query [:application :secret]])
         disabled?    (reaction (or
                                  (and @editing
                                       (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor))))
@@ -319,42 +311,40 @@
                              :value)
                            ""))
         on-change    (partial textual-field-change field-descriptor)]
-    (r/create-class
-      {:component-did-mount (partial init-dropdown-value field-descriptor @lang @secret)
-       :reagent-render      (fn [field-descriptor]
-                              (let [lang         @lang
-                                    default-lang @default-lang]
-                                [:div
-                                 [div-kwd
-                                  [label field-descriptor]
-                                  [:div.application__form-text-input-info-text
-                                   [info-text field-descriptor]]
-                                  [:div.application__form-select-wrapper
-                                   (when (not @disabled?)
-                                     [:span.application__form-select-arrow])
-                                   [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
-                                    {:id (:id field-descriptor)
-                                     :value     @value
-                                     :on-change on-change
-                                     :disabled  @disabled?
-                                     :required  (is-required-field? field-descriptor)}
-                                    (concat
-                                      (when
-                                        (and
-                                          (nil? (:koodisto-source field-descriptor))
-                                          (not (:no-blank-option field-descriptor))
-                                          (not= "" (:value (first (:options field-descriptor)))))
-                                        [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-                                      (map-indexed
-                                        (fn [idx option]
-                                          (let [label        (non-blank-val (get-in option [:label lang])
-                                                                            (get-in option [:label default-lang]))
-                                                option-value (:value option)]
-                                            ^{:key idx}
-                                            [:option {:value option-value} label]))
-                                        (:options field-descriptor)))]]]
+    (fn [field-descriptor]
+      (let [lang         @lang
+            default-lang @default-lang]
+        [:div
+         [div-kwd
+          [label field-descriptor]
+          [:div.application__form-text-input-info-text
+           [info-text field-descriptor]]
+          [:div.application__form-select-wrapper
+           (when (not @disabled?)
+             [:span.application__form-select-arrow])
+           [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+            {:id (:id field-descriptor)
+             :value     @value
+             :on-change on-change
+             :disabled  @disabled?
+             :required  (is-required-field? field-descriptor)}
+            (concat
+             (when
+                 (and
+                  (nil? (:koodisto-source field-descriptor))
+                  (not (:no-blank-option field-descriptor))
+                  (not= "" (:value (first (:options field-descriptor)))))
+               [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+             (map-indexed
+              (fn [idx option]
+                (let [label        (non-blank-val (get-in option [:label lang])
+                                                  (get-in option [:label default-lang]))
+                      option-value (:value option)]
+                  ^{:key idx}
+                  [:option {:value option-value} label]))
+              (:options field-descriptor)))]]]
 
-                                 [dropdown-followups lang value field-descriptor]]))})))
+         [dropdown-followups lang value field-descriptor]]))))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container

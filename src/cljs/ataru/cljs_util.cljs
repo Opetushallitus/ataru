@@ -9,7 +9,8 @@
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [goog.string.format])
+            [goog.string.format]
+            [ataru.application.review-states :refer [application-review-states]])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -78,7 +79,6 @@
         #(dispatch [:state-update dispatcher])
         200))))
 
-
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
    error"
@@ -141,6 +141,32 @@
       (:query)
       (->kebab-case-kw)))
 
+(defn remove-empty-query-params
+  [params]
+  (into {} (remove #(-> % second empty?)) params))
+
+(defn- update-query-params
+  [url params]
+  (let [new-params (-> (:query url)
+                       (clojure.walk/keywordize-keys)
+                       (merge params)
+                       (remove-empty-query-params))]
+    (assoc url :query new-params)))
+
+(defn update-url-with-query-params
+  [params]
+  (let [url (-> (.. js/window -location -href)
+                (url/url)
+                (update-query-params params)
+                (str)
+                (clojure.string/split #"/")
+                (last))]
+    (.replaceState js/history nil nil url)))
+
+(defn get-unselected-review-states
+  [unselected-states]
+  (clojure.set/difference (-> application-review-states keys set) (set unselected-states)))
+
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))
 
@@ -152,9 +178,3 @@
 
 (defn flatten-path [db & parts]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
-
-(defn- text-area-size->max-length [text-area-size]
-  (condp = text-area-size
-    "S" "500"
-    "L" "1500"
-    "1000"))

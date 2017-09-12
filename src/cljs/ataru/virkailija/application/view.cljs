@@ -13,7 +13,7 @@
     [ataru.virkailija.temporal :as t]
     [ataru.application.review-states :refer [application-review-states]]
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-    [ataru.cljs-util :refer [wrap-scroll-to]]
+    [ataru.cljs-util :as util]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
     [goog.string :as gstring]
     [goog.string.format]))
@@ -56,11 +56,16 @@
      (when @belongs-to-haku
        [excel-download-link filtered-applications application-filter])]))
 
+(defn- select-application
+  [application-key]
+  (util/update-url-with-query-params {:application-key application-key})
+  (dispatch [:application/select-application application-key]))
+
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
         applicant (str (:preferred-name application) " " (:last-name application))]
     [:div.application-handling__list-row
-     {:on-click #(dispatch [:application/select-application (:key application)])
+     {:on-click #(select-application (:key application))
       :class    (when selected?
                   "application-handling__list-row--selected")}
      [:span.application-handling__list-row--applicant
@@ -83,22 +88,25 @@
             (for [application applications
                   :let        [selected? (= @selected-key (:key application))]]
               (if selected?
-                [wrap-scroll-to [application-list-row application selected?]]
+                [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
 
 (defn icon-check []
   [:img.application-handling__review-state-selected-icon
    {:src "/lomake-editori/images/icon_check.png"}])
 
-(defn toggle-filter [application-filters review-state-id selected all-filters-selected]
+(defn toggle-filter [application-filters review-state-id selected]
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
                                  (conj application-filters review-state-id))
         all-filters-selected?  (= (count (keys application-review-states)) (count new-application-filter))]
-    (reset! all-filters-selected all-filters-selected?)
+    (util/update-url-with-query-params
+     {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
+
 (defn- toggle-all-filters [all-filters-selected?]
+  (util/update-url-with-query-params {:unselected-states nil})
   (dispatch [:state-update #(assoc-in % [:application :filter]
                                       (if all-filters-selected?
                                         (keys application-review-states)
@@ -108,42 +116,40 @@
   (let [application-filters    (subscribe [:state-query [:application :filter]])
         review-state-counts    (subscribe [:state-query [:application :review-state-counts]])
         filter-opened          (r/atom false)
-        all-filters-selected   (r/atom true)
         toggle-filter-opened   (fn [_] (swap! filter-opened not))
         get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
-      [:span.application-handling__filter-state
-       [:a
-        {:on-click toggle-filter-opened}
-        (str "Tila"
-             (when-not (= (count @application-filters)
-                          (count (keys application-review-states)))
-               " *"))]
-       (when @filter-opened
-         (into [:div.application-handling__filter-state-selection
-                [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
-                 {:class (when @all-filters-selected "application-handling__filter-state-selected-row")}
-                 [:label
-                  [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                           :type      "checkbox"
-                           :checked   @all-filters-selected
-                           :on-change #(toggle-all-filters (swap! all-filters-selected not))}]
-                  [:span "Kaikki"]]]]
-               (mapv
-                 (fn [review-state]
-                   (let [review-state-id (first review-state)
-                         filter-selected (some #{review-state-id} @application-filters)]
-                     [:div.application-handling__filter-state-selection-row
-                      {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
-                      [:label
-                       [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                                :type      "checkbox"
-                                :checked   (boolean filter-selected)
-                                :on-change #(toggle-filter @application-filters review-state-id filter-selected all-filters-selected)}]
-                       [:span (str (second review-state)
-                                   " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
-                 application-review-states)))
-       (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])])))
+      (let [all-filters-selected? (= (count @application-filters)
+                                     (count (keys application-review-states)))]
+        [:span.application-handling__filter-state
+         [:a
+          {:on-click toggle-filter-opened}
+          (str "Tila" (when-not all-filters-selected? " *"))]
+         (when @filter-opened
+           (into [:div.application-handling__filter-state-selection
+                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
+                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
+                   [:label
+                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                             :type      "checkbox"
+                             :checked   all-filters-selected?
+                             :on-change #(toggle-all-filters (not all-filters-selected?))}]
+                    [:span "Kaikki"]]]]
+                 (mapv
+                   (fn [review-state]
+                     (let [review-state-id (first review-state)
+                           filter-selected (some #{review-state-id} @application-filters)]
+                       [:div.application-handling__filter-state-selection-row
+                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
+                        [:label
+                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                  :type      "checkbox"
+                                  :checked   (boolean filter-selected)
+                                  :on-change #(toggle-filter @application-filters review-state-id filter-selected)}]
+                         [:span (str (second review-state)
+                                  " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
+                   application-review-states)))
+         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
   (dispatch [:application/update-sort column-id]))
@@ -219,30 +225,33 @@
           {:on-click list-click}
           (review-state-selected-row (get application-review-states @review-state))])])))
 
+(defn- name-and-initials [{:keys [first-name last-name]}]
+  [(str first-name " " last-name)
+   (str (subs first-name 0 1)
+        (subs last-name 0 1))])
+
 (defn event-caption [event]
   (case (:event-type event)
-    "review-state-change"     (get application-review-states (:new-review-state event))
-    "updated-by-applicant"    "Hakija muokannut hakemusta"
-    "updated-by-virkailija"   "Virkailija (%s) muokannut hakemusta"
+    "review-state-change" (get application-review-states (:new-review-state event))
+    "updated-by-applicant" "Hakija muokannut hakemusta"
+    "updated-by-virkailija" (let [[name initials] (name-and-initials event)]
+                              [:span
+                               "Virkailija "
+                               [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")]
+                               " muokannut hakemusta"])
     "received-from-applicant" "Hakemus vastaanotettu"
     "Tuntematon"))
 
-(defn- initials [{:keys [event-type first-name last-name]}]
-  (when (= event-type "updated-by-virkailija")
-    (str (subs first-name 0 1)
-         (subs last-name 0 1))))
+(defn to-event-row
+  [time-str caption]
+  [:div
+   [:span.application-handling__event-timestamp time-str]
+   [:span.application-handling__event-caption caption]])
 
 (defn event-row [event]
   (let [time-str      (t/time->short-str (:time event))
-        to-event-row  (fn [caption & args]
-                        [:div
-                         [:span.application-handling__event-timestamp time-str]
-                         [:span.application-handling__event-caption (apply gstring/format caption args)]])
-        event-caption (event-caption event)
-        args          (initials event)]
-    (if args
-      (to-event-row event-caption args)
-      (to-event-row event-caption))))
+        caption       (event-caption event)]
+    (to-event-row time-str caption)))
 
 (defn application-review-events []
   (let [events (subscribe [:state-query [:application :events]])]
@@ -313,6 +322,18 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
+(defn- hakukohteet-list-row [hakukohde]
+  ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
+  [:li.application-handling__hakukohteet-list-row
+   [:div.application-handling__review-area-hakukohde-heading
+    (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
+   [:div.application-handling__review-area-koulutus-heading
+    (map #(-> % :koulutuskoodi-name :fi) (:koulutukset hakukohde))]])
+
+(defn- hakukohteet-list [hakukohteet]
+  (into [:ul.application-handling__hakukohteet-list]
+        (map hakukohteet-list-row hakukohteet)))
+
 (defn application-heading [application]
   (let [answers            (:answers application)
         pref-name          (-> answers :preferred-name :value)
@@ -320,6 +341,7 @@
         ssn                (get-in answers [:ssn :value])
         email              (get-in answers [:email :value])
         birth-date         (get-in answers [:birth-date :value])
+        hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
         applications-count (:applications-count application)
         person-oid         (:person-oid application)]
     [:div.application__handling-heading
@@ -333,7 +355,10 @@
                       (dispatch [:application/navigate-with-callback
                                  "/lomake-editori/applications/search/"
                                  [:application/search-by-term (or ssn email)]]))}
-         (str applications-count " hakemusta")])]]))
+         (str applications-count " hakemusta")])
+      (when (and (not (contains? (:answers application) :hakukohteet))
+                 (not-empty hakukohteet-by-oid))
+        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
 
 (defn close-application []
   [:a {:href     "#"

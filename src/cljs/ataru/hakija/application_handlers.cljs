@@ -297,7 +297,7 @@
                                              (some? selected-language)
                                              (assoc :selected-language selected-language))))
                      (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
-                     (assoc-in [:application :show-hakukohde-search] true)
+                     (assoc-in [:application :show-hakukohde-search] false)
                      (assoc :wrapper-sections (extract-wrapper-sections form))
                      (merge-submitted-answers answers)
                      (original-values->answers)

@@ -2,55 +2,55 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.9.521"]
-                 [reagent "0.6.1"]                          ; react in clojure
-                 [re-frame "0.9.2"]                         ; flux for re-agent
-                 [secretary "1.2.3"]                        ; routing
-                 [com.andrewmcveigh/cljs-time "0.4.0"]
+                 [org.clojure/clojurescript "1.9.908"]
+                 [reagent "0.8.0-alpha1"]
+                 [re-frame "0.10.1"]
+                 [secretary "1.2.3"]
+                 [com.andrewmcveigh/cljs-time "0.5.1"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
-                 [cljs-ajax "0.5.9"]
+                 [cljs-ajax "0.7.2"]
                  [binaryage/devtools "0.9.4"]
-                 [re-frisk "0.4.4"]                         ; will only be used in development side
-                 [venantius/accountant "0.1.9"]
+                 [re-frisk "0.5.0"]
+                 [venantius/accountant "0.2.0"]
                  [com.cemerick/url "0.1.1"]
 
                  ;clojure/clojurescript
-                 [prismatic/schema "1.1.5"]
+                 [prismatic/schema "1.1.6"]
                  [com.taoensso/timbre "4.10.0"]
                  [org.clojure/core.async "0.3.442"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.0"]
                  [medley "1.0.0"]
-                 [markdown-clj "0.9.99"]
+                 [markdown-clj "1.0.1"]
 
                  ;clojure
-                 [compojure "1.5.2"]
+                 [compojure "1.6.0"]
                  [crypto-random "1.2.0"]
                  [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "0.3.2"]
-                 [metosin/compojure-api "1.1.10"]
+                 [metosin/compojure-api "1.1.11"]
                  [aleph "0.4.3"]
                  [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
-                 [ring "1.5.1"]
-                 [ring/ring-defaults "0.2.3"]
+                 [ring "1.6.2"]
+                 [ring/ring-defaults "0.3.1"]
                  [ring/ring-json "0.4.0"]
                  [ring-ratelimit "0.2.2"]
                  [bk/ring-gzip "0.2.1"]
-                 [buddy/buddy-auth "1.4.1"]
+                 [buddy/buddy-auth "2.1.0"]
                  [yesql "0.5.3"]
                  ; Flyway 4 breaks our migrations
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
                  [camel-snake-kebab "0.4.0"]
                  [environ "1.1.0"]
-                 [org.clojure/core.async "0.3.442"]
-                 [org.clojure/java.jdbc "0.6.1"]
-                 [org.postgresql/postgresql "42.0.0"]
-                 [clj-time "0.13.0"]
-                 [cheshire/cheshire "5.7.1"]
-                 [selmer "1.10.7"]
-                 [metosin/ring-http-response "0.8.2"]
+                 [org.clojure/core.async "0.3.443"]
+                 [org.clojure/java.jdbc "0.7.1"]
+                 [org.postgresql/postgresql "42.1.4"]
+                 [clj-time "0.14.0"]
+                 [cheshire/cheshire "5.8.0"]
+                 [selmer "1.11.0"]
+                 [metosin/ring-http-response "0.9.0"]
                  ;; These two explicit dependencies are required to force
                  ;; newer, fixed versions of those which come with Scala Cas Client
                  ;; Used by clj-util below. Without these, we would not be able to
@@ -64,15 +64,15 @@
                  [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
                  [ring.middleware.logger "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
-                 [org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.16"]
                  [org.clojars.pntblnk/clj-ldap "0.0.12"]
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.13"]
-                 [com.hazelcast/hazelcast "3.8.1"]
+                 [com.hazelcast/hazelcast "3.8.4"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.7.5" :exclusions [prismatic/schema]]
-                 [ring/ring-mock "0.3.0"]
+                 [hikari-cp "1.7.6" :exclusions [prismatic/schema]]
+                 [ring/ring-mock "0.3.1"]
                  [speclj "3.3.2"]]
 
   :min-lein-version "2.5.3"
@@ -95,13 +95,13 @@
   :uberjar-name "ataru.jar"
   :jvm-opts ^:replace ["-Xmx2g"]
 
-  :plugins [[lein-cljsbuild "1.1.5"]
+  :plugins [[lein-cljsbuild "1.1.7"]
             [lein-doo "0.1.7"]
-            [lein-figwheel "0.5.10"]
+            [lein-figwheel "0.5.13"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-environ "1.1.0"]
-            [lein-resource "16.11.1"]
+            [lein-resource "17.06.1"]
             [speclj "3.3.2"]]
 
   :doo {:paths {:phantom "./node_modules/phantomjs-prebuilt/bin/phantomjs"}}
@@ -150,6 +150,7 @@
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler     {:output-to     "resources/public/js/test/test.js"
                                        :main          "ataru.unit-runner"
+                                       :process-shim  false
                                        :optimizations :none}}
 
                        {:id           "virkailija-min"
@@ -192,16 +193,16 @@
                               :githash   ~(System/getenv "githash")}
              :silent         false}
 
-  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.1"]
-                                               [figwheel-sidecar "0.5.10"]
-                                               [refactor-nrepl "2.3.0"]
+  :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
+                                               [figwheel-sidecar "0.5.13"]
+                                               [refactor-nrepl "2.3.1"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.3"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.4"]]
                               :plugins        [[refactor-nrepl "2.3.0"]
-                                               [lein-cljfmt "0.5.6"]
-                                               [lein-kibit "0.1.3"]]
+                                               [lein-cljfmt "0.5.7"]
+                                               [lein-kibit "0.1.5"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"}}

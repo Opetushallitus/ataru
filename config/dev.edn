@@ -13,8 +13,8 @@
                  :enable-re-frisk  true
                  :local-dev-logout  true}
  :dev           {:fake-dependencies true}
- :urls          {:virkailija-host "itest-virkailija.oph.ware.fi"
-                 :hakija-host     "itest-oppija.oph.ware.fi"
+ :urls          {:virkailija-host "virkailija.untuva.aws.opintopolku.fi"
+                 :hakija-host     "oppija.untuva.aws.opintopolku.fi"
                  :editor-url      "http://localhost:8350/lomake-editori"
                  :liiteri-url     ""}}
 

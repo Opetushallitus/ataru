@@ -360,7 +360,7 @@
 
 ;; All these paths are required to be proxied by raamit when running locally
 ;; in your dev-environment. They will get proxied to the correct test environment
-;; (e.g. itest/luokka or qa)
+;; (e.g. untuva or qa)
 (api/defroutes local-raami-routes
   (api/undocumented
    (api/GET "/virkailija-raamit/*" request

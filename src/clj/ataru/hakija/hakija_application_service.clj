@@ -27,14 +27,20 @@
     {:passed?        true
      :application-id application-id}))
 
+(defn- get-hakukohteet [application]
+  (->> application
+       :answers
+       (filter #(= (:key %) "hakukohteet"))
+       first
+       :value))
+
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
-  (let [hakukohteet (get-in application [:answers :hakukohteet :value] [])]
+  (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true ;; plain form, always allowed to apply
-                                        ; TODO check apply times for each hakukohde separately?
-      (let [hakukohde         (.get-hakukohde tarjonta-service (first hakukohteet))
+      (let [hakukohde         (.get-hakukohde tarjonta-service (first hakukohteet)) ; TODO check apply times for each hakukohde separately?
             haku-oid          (:hakuOid hakukohde)
             haku              (when haku-oid (.get-haku tarjonta-service haku-oid))
             {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]

@@ -82,18 +82,18 @@
        (dispatch [:application/select-hakukohde hakukohde])
        (dispatch [:application/fetch-applications-by-hakukohde hakukohde-oid]))))
 
-  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid]
+  (defroute #"^/lomake-editori/applications/haku/(.*)" [haku-oid query-params]
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
     (dispatch-after-state
-     :predicate
-     (fn [db]
-       (some #(when (= haku-oid (:oid %)) %)
-             (get-in db [:application :haut :tarjonta-haut])))
-     :handler
-     (fn [haku]
-       (dispatch [:application/select-haku haku])
-       (dispatch [:application/fetch-applications-by-haku haku-oid]))))
+      :predicate
+      (fn [db]
+        (some #(when (= haku-oid (:oid %)) %)
+          (get-in db [:application :haut :tarjonta-haut])))
+      :handler
+      (fn [haku]
+        (dispatch [:application/select-haku haku])
+        (dispatch [:application/fetch-applications-by-haku haku-oid]))))
 
   (defroute #"^/lomake-editori/applications/(.*)" [key]
     (common-actions-for-applications-route)
