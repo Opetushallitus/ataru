@@ -5,8 +5,8 @@
     [com.stuartsierra.component :as component]
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
-    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-hakukohde]]
-    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
+    [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
+    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
 
 (defn forms-in-use
   [organization-service username]
@@ -94,9 +94,6 @@
   (get-koulutus [this koulutus-oid]
     (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))
 
-(defprotocol VirkailijaTarjontaService
-  (get-forms-in-use [this username]))
-
 (defrecord VirkailijaTarjontaFormsService []
   component/Lifecycle
   VirkailijaTarjontaService
@@ -115,4 +112,6 @@
 
 (defn new-virkailija-tarjonta-service
   []
-  (->VirkailijaTarjontaFormsService))
+  (if (-> config :dev :fake-dependencies)
+    (->MockVirkailijaTarjontaService)
+    (->VirkailijaTarjontaFormsService)))
