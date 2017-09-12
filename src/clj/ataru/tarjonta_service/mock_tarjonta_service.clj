@@ -1,6 +1,6 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
   (:require [com.stuartsierra.component :as component]
-            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]))
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService]]))
 
 (def base-haku
   {:tila                                                 "LUONNOS",
@@ -175,7 +175,8 @@
   [hakukohde]
   {:oid (:oid hakukohde)
    :haku-oid (:hakuOid hakukohde)
-   :name (parse-multi-lang-text (:nimi hakukohde))})
+   :name (parse-multi-lang-text (:nimi hakukohde))
+   :tarjoaja-name (:tarjoajaNimet hakukohde)})
 
 (defrecord MockTarjontaService []
   component/Lifecycle
@@ -207,3 +208,11 @@
 
   (get-koulutus [this koulutus-id]
     ((keyword koulutus-id) koulutus)))
+
+(defrecord MockVirkailijaTarjontaService []
+  VirkailijaTarjontaService
+  (get-forms-in-use [_ _]
+    {"belongs-to-hakukohteet-test-form"
+     {(:oid base-haku)
+      {:haku-oid (:oid base-haku)
+       :haku-name (:kieli_fi (:nimi base-haku))}}}))

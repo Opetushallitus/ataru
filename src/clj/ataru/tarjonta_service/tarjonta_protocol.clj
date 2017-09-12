@@ -7,3 +7,6 @@
   (get-haku [this haku-oid])
   (get-haku-name [this haku-oid])
   (get-koulutus [this haku-oid]))
+
+(defprotocol VirkailijaTarjontaService
+  (get-forms-in-use [this username]))
