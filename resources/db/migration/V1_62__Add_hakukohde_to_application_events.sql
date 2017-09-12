@@ -1,2 +1,2 @@
-ALTER TABLE hakukohde
+ALTER TABLE application_events
   ADD COLUMN hakukohde VARCHAR(40);

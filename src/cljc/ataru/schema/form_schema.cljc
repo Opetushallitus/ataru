@@ -225,17 +225,17 @@
    :requirement (apply s/enum (distinct (into (map first review-states/application-hakukohde-review-states)
                                               (map first review-states/application-hakukohde-eligibility-states))))
    :value (apply s/enum (distinct (into (map second review-states/application-hakukohde-review-states)
-                                        (map second review-states/application-hakukohde-eligibility-states))))}
+                                        (map second review-states/application-hakukohde-eligibility-states))))})
 
-  (s/defschema Event
-    {:event-type                        event-types
-     :time                              org.joda.time.DateTime
-     :id                                s/Int
-     :application-key                   s/Str
-     (s/optional-key :new-review-state) (s/maybe application-review-states)
-     (s/optional-key :hakukohde)        (s/maybe s/Str)
-     :first-name                        (s/maybe s/Str)
-     :last-name                         (s/maybe s/Str)}))
+(s/defschema Event
+  {:event-type                        event-types
+   :time                              org.joda.time.DateTime
+   :id                                s/Int
+   :application-key                   s/Str
+   (s/optional-key :new-review-state) (s/maybe application-review-states)
+   (s/optional-key :hakukohde)        (s/maybe s/Str)
+   :first-name                        (s/maybe s/Str)
+   :last-name                         (s/maybe s/Str)})
 
 (s/defschema HakukohdeSelectionState
   {:hakukohde s/Str

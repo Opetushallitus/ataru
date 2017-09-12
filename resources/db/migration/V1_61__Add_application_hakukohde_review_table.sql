@@ -3,8 +3,10 @@ CREATE TABLE application_hakukohde_reviews (
   application   BIGINT REFERENCES applications (id) NOT NULL,
   requirement   VARCHAR(40)                         NOT NULL,
   value         VARCHAR(40)                         NOT NULL,
-  modified_time TIMESTAMP WITH TIME ZONE DEFAULT now()
-)
+  hakukohde     VARCHAR(40),
+  created_time  TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
-
+CREATE INDEX application_hakukohde_reviews_created_time_idx
+  ON application_hakukohde_reviews (created_time);
 
