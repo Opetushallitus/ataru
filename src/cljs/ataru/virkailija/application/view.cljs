@@ -124,7 +124,7 @@
         get-review-state-count (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
       (let [all-filters-selected? (= (count @application-filters)
-                                     (count (map first application-review-states)))]
+                                     (count active-application-review-states))]
         [:span.application-handling__filter-state
          [:a
           {:on-click toggle-filter-opened}
