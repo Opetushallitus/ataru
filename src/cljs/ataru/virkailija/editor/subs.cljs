@@ -53,6 +53,7 @@
   :editor/used-by-haku?
   (fn [db]
     (or (get-in db [:editor :used-by-haut :error?])
+        (get-in db [:editor :used-by-haut :fetching?])
         (not-empty (get-in db [:editor :used-by-haut :haut])))))
 
 (defn- find-hakukohde
