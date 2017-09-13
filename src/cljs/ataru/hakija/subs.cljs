@@ -55,9 +55,11 @@
 
 (re-frame/reg-sub
   :application/adjacent-field-row-amount
-  (fn [db [_ field-descriptor]]
+  (fn [db [_ field-descriptor question-group-idx]]
     (let [child-id   (-> (:children field-descriptor) first :id keyword)
-          row-amount (-> (get-in db [:application :answers child-id :values] [])
+          value-path (cond-> [:application :answers child-id :values]
+                       question-group-idx (conj question-group-idx))
+          row-amount (-> (get-in db value-path [])
                          count)]
       (if (= row-amount 0)
         1

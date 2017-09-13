@@ -610,11 +610,11 @@
        [:label.application__form-field-label [:span header]])
      [markdown-paragraph text]]))
 
-(defn- adjacent-field-input [{:keys [id] :as child} row-idx]
+(defn- adjacent-field-input [{:keys [id] :as child} row-idx question-group-idx]
   (let [on-change (fn [evt]
                     (let [value (-> evt .-target .-value)]
-                      (dispatch [:application/set-adjacent-field-answer child row-idx value])))
-        value     (subscribe [:state-query [:application :answers (keyword id) :values row-idx :value]])]
+                      (dispatch [:application/set-adjacent-field-answer child row-idx value question-group-idx])))
+        value     (subscribe [:state-query [:application :answers (keyword id) :values question-group-idx row-idx :value]])]
     (fn [{:keys [id]} row-idx]
       [:input.application__form-text-input.application__form-text-input--normal
        {:id        (str id "-" row-idx)
@@ -624,23 +624,22 @@
 
 (defn adjacent-text-fields [field-descriptor]
   (let [language        (subscribe [:application/form-language])
-        row-amount      (subscribe [:application/adjacent-field-row-amount field-descriptor])
         remove-on-click (fn remove-adjacent-text-field [event]
                           (let [row-idx (int (.getAttribute (.-currentTarget event) "data-row-idx"))]
                             (.preventDefault event)
-                            (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))
-        add-on-click    (fn add-adjacent-text-field [event]
-                          (.preventDefault event)
-                          (dispatch [:application/add-adjacent-fields field-descriptor]))]
-    (fn [field-descriptor]
-      (let [row-amount   @row-amount
-            translations (get-translations (keyword @language) application-view-translations)]
+                            (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))]
+    (fn [field-descriptor & {question-group-idx :idx}]
+      (let [row-amount   (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
+            translations (get-translations (keyword @language) application-view-translations)
+            add-on-click (fn add-adjacent-text-field [event]
+                           (.preventDefault event)
+                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
         [:div.application__form-field
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
            [:div.application__form-info-text [markdown-paragraph info]])
          [:div
-          (->> (range row-amount)
+          (->> (range @row-amount)
                (map (fn adjacent-text-fields-row [row-idx]
                       ^{:key (str "adjacent-fields-" row-idx)}
                       [:div.application__form-adjacent-text-fields-wrapper
@@ -651,7 +650,7 @@
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
                                           [label child]]
-                                         [adjacent-field-input child row-idx]]))
+                                         [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
                        (when (pos? row-idx)
                          [:a {:data-row-idx row-idx

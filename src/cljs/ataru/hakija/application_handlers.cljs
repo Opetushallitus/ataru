@@ -517,19 +517,21 @@
 
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor idx value question-group-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor value idx nil)
+        (set-repeatable-field-values field-descriptor value idx question-group-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
-  (fn [db [_ field-descriptor]]
+  (fn [db [_ field-descriptor question-group-idx]]
     (reduce (fn [db child]
               (let [id (keyword (:id child))
-                    new-idx (count (get-in db [:application :answers id :values]))]
+                    new-idx (count (if question-group-idx
+                                     (get-in db [:application :answers id :values question-group-idx])
+                                     (get-in db [:application :answers id :values])))]
                 (-> db
-                    (set-repeatable-field-values child "" new-idx nil)
+                    (set-repeatable-field-values child "" new-idx question-group-idx)
                     (set-repeatable-field-value child))))
             db
             (:children field-descriptor))))

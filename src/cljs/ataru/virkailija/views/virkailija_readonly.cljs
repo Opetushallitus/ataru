@@ -81,6 +81,13 @@
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
 
+(defn multi-value-answers? [answers]
+  (letfn [(l? [x]
+            (or (list? x)
+                (vector? x)))]
+    (and (every? l? answers)
+         (every? (partial every? l?) answers))))
+
 (defn- extract-values [children answers]
   (let [child-answers  (->> (map answer-key children)
                             (select-keys answers))
@@ -98,7 +105,40 @@
                                         (eduction editor-side child-answers))
                                       (filter not-empty)
                                       not-empty)]
-      (apply map vector concatenated-answers))))
+      (if (multi-value-answers? concatenated-answers)
+        ;; Let adjacent fieldset with repeatable answers in a question group:
+        ;; Group 1:
+        ;; a1 - b1 - c1
+        ;; a2 - b2 - c2
+        ;; Group 2:
+        ;; d1 - e1 - f1
+        ;; This reduce converts
+        ;; ([["a1" "a2"] ["d1"]] [["b1" "b2"] ["e1"]] [["c1" "c2"] ["f1"]])
+        ;; to
+        ;; [[["a1" "b1" "c1"] ["a2" "b2" "c2"]] [["d1" "e1" "f1"]]]
+        (reduce (fn [acc [col-idx answers]]
+                  (reduce (fn [acc [question-group-idx answers]]
+                            (reduce (fn [acc [row-idx answer]]
+                                      (-> acc
+                                          (update-in [question-group-idx row-idx] (fnil identity []))
+                                          (assoc-in [question-group-idx row-idx col-idx] answer)))
+                                    (update acc question-group-idx (fnil identity []))
+                                    (map vector (range) answers)))
+                          acc
+                          (map vector (range) answers)))
+                []
+                (map vector (range) concatenated-answers))
+        (apply map vector concatenated-answers)))))
+
+(defn- fieldset-answer-table [answers]
+  [:tbody
+   (doall
+     (for [[idx values] (map vector (range) answers)]
+       (into
+         [:tr {:key (str idx "-" (apply str values))}]
+         (for [value values]
+           [:td (str value)]))))])
+
 
 (defn fieldset [field-descriptor application lang children]
   (let [fieldset-answers (extract-values children (:answers application))]
@@ -110,13 +150,12 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      [:tbody
-       (doall
-         (for [[idx values] (map vector (range) fieldset-answers)]
-           (into
-             [:tr {:key (str idx "-" (apply str values))}]
-             (for [value values]
-               [:td value]))))]]]))
+      (if (multi-value-answers? fieldset-answers)
+        (map-indexed (fn [idx fieldset-answers]
+                       ^{:key (str (:id field-descriptor) "-" idx)}
+                       [fieldset-answer-table fieldset-answers])
+                     fieldset-answers)
+        [fieldset-answer-table fieldset-answers])]]))
 
 (defn- followup-has-answer?
   [followup application]
