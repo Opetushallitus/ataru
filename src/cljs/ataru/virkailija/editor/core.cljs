@@ -30,8 +30,7 @@
                             [soresu->reagent child (conj (vec path) :children index)]))]
     (fn [content path]
       [:div
-       (when-not ((set path) :followups)
-         [ec/drag-n-drop-spacer path content])
+       [ec/drag-n-drop-spacer path content]
 
        (match content
          {:module module}
