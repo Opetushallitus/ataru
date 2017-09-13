@@ -377,6 +377,19 @@ FROM applications a
   JOIN latest_version lv ON a.created_time = lv.latest_time
   JOIN forms f ON f.id = a.form_id;
 
+-- name: yesql-organization-oids-of-applications-of-persons
+-- Get the organization oids of the related forms
+
+WITH latest_version AS (
+    SELECT max(created_time) AS latest_time
+    FROM applications a
+    WHERE a.person_oid IN (:person_oids)
+)
+SELECT f.organization_oid
+FROM applications a
+  JOIN latest_version lv ON a.created_time = lv.latest_time
+  JOIN forms f ON f.id = a.form_id;
+
 -- name: yesql-get-application-review-organization-by-id
 -- Get the related form's organization oid for access checks
 

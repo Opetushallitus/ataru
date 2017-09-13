@@ -271,3 +271,10 @@
                                   :user-agent s/Str
                                   :rating     s/Int
                                   :feedback   (s/maybe s/Str)})
+
+(s/defschema PermissionCheckDto {:personOidsForSamePerson [s/Str]
+                                 :organisationOids [s/Str]
+                                 :loggedInUserRoles [s/Str]})
+
+(s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
+                                         (s/optional-key :errorMessage) s/Str})

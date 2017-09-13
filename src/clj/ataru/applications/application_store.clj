@@ -310,6 +310,14 @@
 (defn get-application-organization-oid [application-key]
   (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
 
+(defn get-organization-oids-of-applications-of-persons [person-oids]
+  (if (empty? person-oids)
+    #{}
+    (set (map :organization_oid
+              (exec-db :db
+                       yesql-organization-oids-of-applications-of-persons
+                       {:person_oids person-oids})))))
+
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
