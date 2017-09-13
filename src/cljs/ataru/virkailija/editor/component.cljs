@@ -176,7 +176,7 @@
 (defn- text-header
   [label path & {:keys [component-wrapped? draggable] :or {draggable true}}]
   [:div.editor-form__header-wrapper
-   {:draggable     (and draggable (nil? ((set path) :followup)))
+   {:draggable     draggable
     :on-drag-start (on-drag-start path)
     :on-drag-over  prevent-default}
    [:header.editor-form__component-header label]
