@@ -166,7 +166,7 @@
 (defn get-unselected-review-states
   [unselected-states]
   (clojure.set/difference
-    (->> active-application-review-states
+    (->> application-review-states
          (map first)
          set)
     (set unselected-states)))
