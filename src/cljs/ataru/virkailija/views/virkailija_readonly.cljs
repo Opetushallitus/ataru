@@ -116,18 +116,19 @@
         ;; ([["a1" "a2"] ["d1"]] [["b1" "b2"] ["e1"]] [["c1" "c2"] ["f1"]])
         ;; to
         ;; [[["a1" "b1" "c1"] ["a2" "b2" "c2"]] [["d1" "e1" "f1"]]]
-        (reduce (fn [acc [col-idx answers]]
-                  (reduce (fn [acc [question-group-idx answers]]
-                            (reduce (fn [acc [row-idx answer]]
-                                      (-> acc
-                                          (update-in [question-group-idx row-idx] (fnil identity []))
-                                          (assoc-in [question-group-idx row-idx col-idx] answer)))
-                                    (update acc question-group-idx (fnil identity []))
-                                    (map vector (range) answers)))
-                          acc
-                          (map vector (range) answers)))
-                []
-                (map vector (range) concatenated-answers))
+        (let [val-or-empty-vec (fnil identity [])]
+          (reduce (fn [acc [col-idx answers]]
+                    (reduce (fn [acc [question-group-idx answers]]
+                              (reduce (fn [acc [row-idx answer]]
+                                        (-> acc
+                                            (update-in [question-group-idx row-idx] val-or-empty-vec)
+                                            (assoc-in [question-group-idx row-idx col-idx] answer)))
+                                      (update acc question-group-idx val-or-empty-vec)
+                                      (map vector (range) answers)))
+                            acc
+                            (map vector (range) answers)))
+                  []
+                  (map vector (range) concatenated-answers)))
         (apply map vector concatenated-answers)))))
 
 (defn- fieldset-answer-table [answers]
