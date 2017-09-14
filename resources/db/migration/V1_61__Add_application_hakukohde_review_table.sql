@@ -1,12 +1,12 @@
 CREATE TABLE application_hakukohde_reviews (
-  id            BIGSERIAL PRIMARY KEY,
-  application   BIGINT REFERENCES applications (id) NOT NULL,
-  requirement   VARCHAR(40)                         NOT NULL,
-  value         VARCHAR(40)                         NOT NULL,
-  hakukohde     VARCHAR(40),
-  created_time  TIMESTAMP WITH TIME ZONE DEFAULT now()
+  id              BIGSERIAL PRIMARY KEY,
+  application_key VARCHAR(40) NOT NULL,
+  requirement     VARCHAR(40) NOT NULL,
+  state           VARCHAR(40) NOT NULL,
+  hakukohde       VARCHAR(40),
+  modified_time   TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  UNIQUE (application, hakukohde, requirement)
 );
 
-CREATE INDEX application_hakukohde_reviews_created_time_idx
-  ON application_hakukohde_reviews (created_time);
-
+CREATE INDEX application_hakukohde_reviews_application_key_idx
+  ON application_hakukohde_reviews (application_key);
