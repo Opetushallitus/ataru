@@ -17,6 +17,8 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
@@ -46,6 +48,7 @@
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
             [medley.core :refer [map-kv]]
+            [ataru.cache.cache-service :as cache]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
@@ -265,14 +268,14 @@
                      :path-params [cache :- s/Str]
                      :summary "Clear an entire cache map of its entries"
                      {:status 200
-                      :body   (do (.cache-clear cache-service (keyword cache))
+                      :body   (do (cache/cache-clear cache-service (keyword cache))
                                   {})})
                    (api/POST "/remove/:cache/:key" {session :session}
                      :path-params [cache :- s/Str
                                    key :- s/Str]
                      :summary "Remove an entry from cache map"
                      {:status 200
-                      :body   (do (.cache-remove cache-service (keyword cache) key)
+                      :body   (do (cache/cache-remove cache-service (keyword cache) key)
                                   {})}))
 
                  (api/GET "/haut" {session :session}
@@ -295,18 +298,23 @@
 
                  (api/context "/tarjonta" []
                               :tags ["tarjonta-api"]
-                              (api/GET "/haku" []
-                                       :return [ataru-schema/Haku]
-                                       (if-let [haut (tarjonta/all-haut tarjonta-service)]
-                                         (-> haut
+                              (api/GET "/haku/:oid" []
+                                       :path-params [oid :- (api/describe s/Str "Haku OID")]
+                                       :return ataru-schema/Haku
+                                       (if-let [haku (tarjonta/get-haku
+                                                      tarjonta-service
+                                                      oid)]
+                                         (-> (tarjonta-service/parse-haku haku)
                                              ok
                                              (header "Cache-Control" "public, max-age=300"))
                                          (internal-server-error {:error "Internal server error"})))
                               (api/GET "/hakukohde" []
-                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
+                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")
+                                                      hakuOid :- (api/describe s/Str "Haku OID")]
                                        :return [ataru-schema/Hakukohde]
-                                       (if-let [hakukohteet (tarjonta/hakukohteet-by-organization
+                                       (if-let [hakukohteet (tarjonta/hakukohde-search
                                                              tarjonta-service
+                                                             hakuOid
                                                              organizationOid)]
                                          (-> hakukohteet
                                              ok

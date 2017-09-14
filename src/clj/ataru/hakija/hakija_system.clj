@@ -6,7 +6,8 @@
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
             [environ.core :refer [env]]
-            [ataru.cache.cache-service :as cache-service]
+            [ataru.cache.caches :refer [hazelcast-caches caches]]
+            [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
 
 (defn new-system
@@ -15,8 +16,12 @@
      (Integer/parseInt (get env :ataru-http-port "8351"))
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
-   (component/system-map
-     :cache-service        (cache-service/new-cache-service)
+   (apply component/system-map
+     :hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})
+
+     :cache-service (component/using
+                     {}
+                     (mapv (comp keyword :name) caches))
 
      :tarjonta-service (component/using
                          (tarjonta-service/new-tarjonta-service)
@@ -37,4 +42,7 @@
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)
-                             [:person-service]))))
+                             [:person-service])
+     (mapcat (fn [cache]
+       [(keyword (:name cache)) (component/using cache [:hazelcast])])
+          hazelcast-caches))))

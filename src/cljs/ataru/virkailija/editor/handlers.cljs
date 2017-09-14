@@ -139,20 +139,23 @@
     (assoc-in db [:editor :forms-meta path] :fade-out)))
 
 (reg-event-fx
-  :editor/refresh-active-haut
+  :editor/refresh-used-by-haut
   (fn [{db :db} _]
-    (let [organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
-      {:db (assoc-in db [:editor :active-haut :fetching?] true)
-       :refresh-active-haut [organization-oids
-                             #(dispatch [:editor/set-active-haut %])
-                             #(do (dispatch [:editor/clear-active-haut])
-                                  (.log js/console %))]})))
+    (when-let [form-key (get-in db [:editor :selected-form-key])]
+      (let [haku-oids (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
+            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))]
+        {:db (-> db
+                 (assoc-in [:editor :used-by-haut :fetching?] true)
+                 (assoc-in [:editor :used-by-haut :error?] false))
+         :fetch-haut-with-hakukohteet [organization-oids haku-oids
+                                       #(dispatch [:editor/set-used-by-haut %])
+                                       #(do (dispatch [:editor/unset-used-by-haut])
+                                            (.log js/console %))]}))))
 
-(reg-event-fx
+(reg-event-db
   :editor/handle-user-info
-  (fn [{db :db} [_ user-info-response]]
-    {:db (assoc-in db [:editor :user-info] user-info-response)
-     :dispatch [:editor/refresh-active-haut]}))
+  (fn [db [_ user-info-response]]
+    (assoc-in db [:editor :user-info] user-info-response)))
 
 (defn- languages->kwd [form]
   (update form :languages
@@ -203,18 +206,20 @@
       (dissoc current :created-time :id))))
 
 (reg-event-db
-  :editor/set-active-haut
+  :editor/set-used-by-haut
   (fn [db [_ haut]]
     (-> db
-        (assoc-in [:editor :active-haut :fetching?] false)
-        (assoc-in [:editor :active-haut :haut] haut))))
+        (assoc-in [:editor :used-by-haut :fetching?] false)
+        (assoc-in [:editor :used-by-haut :error?] false)
+        (assoc-in [:editor :used-by-haut :haut] haut))))
 
 (reg-event-db
-  :editor/clear-active-haut
+  :editor/unset-used-by-haut
   (fn [db [_ haut]]
     (-> db
-        (assoc-in [:editor :active-haut :fetching?] false)
-        (update-in [:editor :active-haut] dissoc :haut))))
+        (assoc-in [:editor :used-by-haut :fetching?] false)
+        (assoc-in [:editor :used-by-haut :error?] true)
+        (update-in [:editor :used-by-haut] dissoc :haut))))
 
 (reg-event-db
   :editor/handle-fetch-form
@@ -244,6 +249,7 @@
        {:db (cond-> db
               (not (nil? previous-form-key)) (update-in [:editor :forms previous-form-key] assoc :content [])
               true (assoc-in [:editor :selected-form-key] form-key))}
+       {:dispatch [:editor/refresh-used-by-haut]}
        (when (and (some? previous-form-key)
                   (not= previous-form-key form-key))
          {:stop-autosave (get-in db [:editor :autosave])})
@@ -344,10 +350,11 @@
             :path                "/lomake-editori/api/forms-in-use"
             :handler-or-dispatch :editor/update-forms-in-use}}))
 
-(reg-event-db
+(reg-event-fx
   :editor/update-forms-in-use
-  (fn [db [_ result]]
-    (assoc-in db [:editor :forms-in-use] result)))
+  (fn [{db :db} [_ result]]
+    {:db (assoc-in db [:editor :forms-in-use] result)
+     :dispatch [:editor/refresh-used-by-haut]}))
 
 (reg-event-db
   :editor/change-form-name
@@ -465,9 +472,8 @@
   :editor/show-belongs-to-hakukohteet-modal
   (fn [{db :db} [_ id]]
     (cond-> {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] true)}
-      (and (not (get-in db [:editor :active-haut :fetching?]))
-           (not (contains? (get-in db [:editor :active-haut]) :haut)))
-      (assoc :dispatch [:editor/refresh-active-haut]))))
+      (get-in db [:editor :used-by-haut :error?])
+      (assoc :dispatch [:editor/refresh-used-by-haut]))))
 
 (reg-event-db
   :editor/hide-belongs-to-hakukohteet-modal

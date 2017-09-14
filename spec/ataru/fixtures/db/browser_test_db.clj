@@ -76,6 +76,21 @@
                                      [(component/hakukohteet)
                                       (person-info-module/person-info-module)]})
 
+(def belongs-to-hakukohteet-test-form {:id 5
+                                       :key "belongs-to-hakukohteet-test-form"
+                                       :name "belongs-to-hakukohteet-test-form"
+                                       :created-by "DEVELOPER"
+                                       :organization-oid "1.2.246.562.10.0439845"
+                                       :languages ["fi"]
+                                       :content
+                                       [(component/hakukohteet)
+                                        (person-info-module/person-info-module)
+                                        {:label      {:fi "Hakukohdekohtainen"},
+                                         :fieldClass "formField",
+                                         :id         "c2e4536c-1cdb-4450-b019-1b38856296ae",
+                                         :params     {},
+                                         :fieldType  "textField"}]})
+
 (def application1 {:form 1,
                    :lang "fi",
                    :key  "application-key1",
@@ -141,6 +156,8 @@
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
   (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
+  (form-store/create-new-form! belongs-to-hakukohteet-test-form
+                               (:key belongs-to-hakukohteet-test-form))
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (application-store/add-application application1)
     (application-store/add-application application2)

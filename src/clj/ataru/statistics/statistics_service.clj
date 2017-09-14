@@ -1,5 +1,6 @@
 (ns ataru.statistics.statistics-service
   (:require [ataru.statistics.statistics-store :as store]
+            [ataru.cache.cache-service :as cache]
             [clj-time.core :as time]
             [clj-time.format :as time-format]))
 
@@ -46,4 +47,4 @@
                      :month (earlier-at-midnight time/months 1 now)
                      :week (earlier-at-midnight time/weeks 1 now)
                      :day (earlier-at-midnight time/days 1 now))]
-    (.cache-get-or-fetch cache-service cache-key entry-key #(get-and-parse-application-stats start-time time-period))))
+    (cache/cache-get-or-fetch cache-service cache-key entry-key #(get-and-parse-application-stats start-time time-period))))

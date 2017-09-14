@@ -82,10 +82,10 @@
 
     describe('with fixture forms', function() {
       before(
-        wait.until(editorPageIsLoaded)
+        wait.until(editorPageIsLoaded, 10000)
       )
-      it('has 4 fixture forms', function() {
-        expect(formListItems().find('.editor-form__list-form-name:contains(Selaintestilomake)')).to.have.length(4)
+      it('has 5 fixture forms', function() {
+        expect(formListItems()).to.have.length(5)
       })
     })
 
@@ -406,28 +406,6 @@
         })
       })
 
-      describe('hakukohde specific question', function() {
-        var component = function() { return formComponents().eq(16) }
-        before(
-          clickComponentMenuItem('Tekstikenttä'),
-          setTextFieldValue(
-            function() {
-              return component().find('.editor-form__text-field')
-            },
-            'Hakukohdekohtainen kysymys'
-          ),
-          clickElement(function() {
-            return component().find('.belongs-to-hakukohteet__modal-toggle')
-          }),
-          clickElement(function() {
-            return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
-          })
-        )
-        it('shows the selected hakukohde', function() {
-          expect(component().find('.belongs-to-hakukohteet__hakukohde-label').length).to.equal(1)
-        })
-      })
-
       describe('autosave', function () {
         before(
           wait.until(function() {
@@ -438,6 +416,25 @@
         it('notification shows success', function() {
           expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
         })
+      })
+    })
+
+    describe('hakukohde specific question', function() {
+      var component = function() { return formComponents().eq(0) }
+      before(
+        clickElement(function() {
+          return formListItems().find('.editor-form__list-form-name:contains("belongs-to-hakukohteet-test-form")')
+        }),
+        wait.forMilliseconds(1000),
+        clickElement(function() {
+          return component().find('.belongs-to-hakukohteet__modal-toggle')
+        }),
+        clickElement(function() {
+          return component().find('.belongs-to-hakukohteet-modal__hakukohde-list-item')
+        })
+      )
+      it('shows the selected hakukohde', function() {
+        expect(component().find('.belongs-to-hakukohteet__hakukohde-label').length).to.equal(1)
       })
     })
   })
