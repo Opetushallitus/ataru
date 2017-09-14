@@ -29,9 +29,12 @@
    [:div
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))]
-      (if multi-value?
-        (into [:ul.application__form-field-list] (for [value values] [:li value]))
+          multi-value? #(or (seq? %) (vector? %))]
+      (if (multi-value? values)
+        (into [:ul.application__form-field-list] (for [value values]
+                                                   (if (multi-value? value)
+                                                     (map (fn [x] [:li x]) value)
+                                                     [:li value])))
         (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
