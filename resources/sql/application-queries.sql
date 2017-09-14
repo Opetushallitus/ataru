@@ -555,3 +555,20 @@ SELECT a.secret FROM applications a
 INNER JOIN virkailija_credentials c ON a.key = c.application_key
 WHERE c.secret = :virkailija_secret
 ORDER BY a.created_time DESC LIMIT 1;
+
+-- name: yesql-get-application-hakukohde-reviews
+SELECT
+  id,
+  modified_time,
+  requirement,
+  state,
+  hakukohde,
+  application_key
+FROM application_hakukohde_reviews
+WHERE application_key = :application_key;
+
+-- name: yesql-upsert-application-hakukohde-review!<
+-- Insert new hakukohde review row or update state if similar (hakukohde, application_key, requirement) row exists
+INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde)
+VALUES (:application_key, :requirement, :state, :hakukohde)
+ON CONFLICT DO UPDATE SET state = :state;

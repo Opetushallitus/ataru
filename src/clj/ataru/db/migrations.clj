@@ -2,6 +2,7 @@
   (:require
     [ataru.db.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
+    [ataru.applications.application-store :as application-store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
@@ -139,6 +140,52 @@
                 wrap-followups
               (update conn))))))))
 
+; oph organization
+(def fake-session {:identity
+                   {:username      "Admin"
+                    :organizations [{:oid "1.2.246.562.10.00000000001"}]}})
+
+(defn- create-new-review-state
+  [application]
+  (let [application-key (:key application)
+        old-review      (application-store/get-application-review application-key)
+        old-state       (:state old-review)
+        hakukohteet     (if (pos? (count (:hakukohde application)))
+                          (:hakukohde application)
+                          [nil])
+        [application-state selection-state] (case (keyword old-state)
+                                              :unprocessed ["unprocessed" "incomplete"]
+                                              :processing ["processing" "incomplete"]
+                                              :invited-to-interview ["invited-to-interview" "incomplete"]
+                                              :invited-to-exam ["invited-to-exam" "incomplete"]
+                                              :evaluating ["evaluating" "incomplete"]
+                                              :processed ["processed" "incomplete"]
+                                              :inactivated ["inactivated" "incomplete"]
+                                              :not-selected ["processed" "rejected"]
+                                              :selection-proposal ["processed" "selection-proposal"]
+                                              :selected ["processed" "selected"]
+                                              :applicant-has-accepted ["processed" "selected"]
+                                              :rejected ["processed" "rejected"]
+                                              :canceled ["inactivated" "incomplete"])]
+    (info "Creating new review state for application" application-key "in state" old-state)
+    (when (not= old-state application-state)
+      (info "Updating application state:" old-state "->" new-state)
+      (application-store/save-application-review (merge old-review (:state application-state)) fake-session))
+    (doseq [hakukohde hakukohteet]
+      (info "Updating hakukohde" hakukohde "to state" selection-state)
+      (application-store/save-application-hakukohde-review
+        {:application-key (:key application)
+         :requirement     :selection-state
+         :value           selection-state
+         :hakukohde       hakukohde}
+        fake-session))))
+
+(defn- application-reviews->new-model
+  []
+  (doseq [application (migration-app-store/get-all-applications)]
+    (create-new-review-state application)))
+
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -173,6 +220,11 @@
   migrate-followups-to-vectored-followups "1.39"
   "Wrap all existing followups with vector, like really all of them ever."
   (followups-to-vectored-followups-like-all-of-them))
+
+(migrations/defmigration
+  migrate-application-reviews "1.63"
+  "Migrate old per-application reviews to application + hakukohde specific ones"
+  (application-reviews->new-model))
 
 (defn migrate
   []
