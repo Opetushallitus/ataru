@@ -80,3 +80,10 @@
 (defn scroll-to-anchor
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])
+
+(defn multi-value-answers? [answers]
+  (letfn [(l? [x]
+            (or (list? x)
+                (vector? x)))]
+    (and (every? l? answers)
+         (every? (partial every? l?) answers))))

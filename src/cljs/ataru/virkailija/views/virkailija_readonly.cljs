@@ -16,7 +16,8 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]
+                                                                       scroll-to-anchor
+                                                                       multi-value-answers?]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
@@ -80,13 +81,6 @@
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
-
-(defn multi-value-answers? [answers]
-  (letfn [(l? [x]
-            (or (list? x)
-                (vector? x)))]
-    (and (every? l? answers)
-         (every? (partial every? l?) answers))))
 
 (defn- extract-values [children answers]
   (let [child-answers  (->> (map answer-key children)
