@@ -8,11 +8,14 @@
     {:name "hakukohde"
      :max-size 10000
      :ttl [3 TimeUnit/DAYS]
-     :period [5 TimeUnit/MINUTES]})
+     :period [15 TimeUnit/MINUTES]})
    (map->BasicCache
     {:name "haku" :max-size 10000 :ttl 3600})
-   (map->BasicCache
-    {:name "koulutus" :max-size 10000 :ttl 3600})
+   (map->UpdatingCache
+    {:name "koulutus"
+     :max-size 10000
+     :ttl [3 TimeUnit/DAYS]
+     :period [15 TimeUnit/MINUTES]})
    (map->BasicCache
     {:name "statistics-month" :max-size 500 :ttl 36000})
    (map->BasicCache
