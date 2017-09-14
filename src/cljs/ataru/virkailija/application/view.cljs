@@ -348,7 +348,13 @@
      [:div.application-handling__review-area-main-heading-container
       [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", "
                                                                (or ssn birth-date))]
-      (when person-oid [:p.application-handling__review-area-main-heading-person-oid person-oid])
+      (when person-oid
+        [:a.application-handling__review-area-main-heading-person-oid
+         {:href (str "/authentication-henkiloui/html/henkilo/"
+                     person-oid
+                     "/?permissionCheckService=ATARU")
+          :target "_blank"}
+         person-oid])
       (when (> applications-count 1)
         [:a.application-handling__review-area-main-heading-applications-link
          {:on-click (fn [_]
