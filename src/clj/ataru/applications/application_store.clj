@@ -340,7 +340,7 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection       {:connection conn}
                                   app-key          (:application-key review)
-                                  old-review       (first (yesql-get-application-hakukohde-review {:application_key app-key} connection))
+                                  old-review       (first (yesql-get-application-hakukohde-reviews {:application_key app-key} connection))
                                   review-to-store  (transform-keys ->snake_case review)
                                   username         (get-in session [:identity :username])
                                   organization-oid (get-in session [:identity :organizations 0 :oid])]
@@ -349,7 +349,7 @@
                                               :id               username
                                               :operation        audit-log/operation-modify
                                               :organization-oid organization-oid})
-                              (yesql-upsert-application-hakukohde-review!< review-to-store connection)
+                              (yesql-upsert-application-hakukohde-review! review-to-store connection)
                               (when (not= (:state old-review) (:state review-to-store))
                                 (let [hakukohde-event {:application_key  app-key
                                                        :event_type       "hakukohde-review-state-change"
@@ -359,7 +359,7 @@
                                   (yesql-add-application-event!
                                     hakukohde-event
                                     connection)
-                                  (audit-log/log {:new              application-event
+                                  (audit-log/log {:new              hakukohde-event
                                                   :id               username
                                                   :operation        audit-log/operation-new
                                                   :organization-oid organization-oid}))))))

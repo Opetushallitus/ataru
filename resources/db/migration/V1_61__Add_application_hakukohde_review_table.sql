@@ -5,7 +5,7 @@ CREATE TABLE application_hakukohde_reviews (
   state           VARCHAR(40) NOT NULL,
   hakukohde       VARCHAR(40),
   modified_time   TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  UNIQUE (application, hakukohde, requirement)
+  UNIQUE (application_key, hakukohde, requirement)
 );
 
 CREATE INDEX application_hakukohde_reviews_application_key_idx
