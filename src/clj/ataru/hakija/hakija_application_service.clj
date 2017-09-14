@@ -9,6 +9,7 @@
    [ataru.person-service.person-integration :as person-integration]
    [ataru.tarjonta-service.hakuaika :as hakuaika]
    [ataru.tarjonta-service.hakukohde :as hakukohde]
+   [ataru.tarjonta-service.tarjonta-protocol :refer [get-hakukohde get-haku]]
    [ataru.forms.form-store :as form-store]
    [ataru.hakija.validator :as validator]
    [ataru.application.review-states :refer [complete-states]]
@@ -42,9 +43,9 @@
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true ;; plain form, always allowed to apply
-      (let [hakukohde         (.get-hakukohde tarjonta-service (first hakukohteet)) ; TODO check apply times for each hakukohde separately?
+      (let [hakukohde         (get-hakukohde tarjonta-service (first hakukohteet)) ; TODO check apply times for each hakukohde separately?
             haku-oid          (:hakuOid hakukohde)
-            haku              (when haku-oid (.get-haku tarjonta-service haku-oid))
+            haku              (when haku-oid (get-haku tarjonta-service haku-oid))
             {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
         hakuaika-on))))
 
