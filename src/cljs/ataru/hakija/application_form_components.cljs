@@ -55,9 +55,9 @@
   (let [value (-> evt .-target .-value)]
     (dispatch [:application/set-application-field field-descriptor value])))
 
-(defn- multi-value-field-change [field-descriptor idx event]
+(defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
   (let [value (some-> event .-target .-value)]
-    (dispatch [:application/set-repeatable-application-field field-descriptor idx value])))
+    (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))
 
 (defn- field-id [field-descriptor]
   (str "field-" (:id field-descriptor)))
@@ -122,7 +122,7 @@
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
         on-change    (if idx
-                       (partial multi-value-field-change field-descriptor idx)
+                       (partial multi-value-field-change field-descriptor 0 idx)
                        (partial textual-field-change field-descriptor))
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
@@ -141,7 +141,9 @@
                 :class       (str size-class (if show-error?
                                                " application__form-field-error"
                                                " application__form-text-input--normal"))
-                :value       (if cannot-view? "***********" (:value @answer))
+                :value       (if cannot-view? "***********" (if idx
+                                                              (get-in @answer [0 :value])
+                                                              (:value @answer)))
                 :on-blur     on-blur
                 :on-change   on-change
                 :required    (is-required-field? field-descriptor)}
