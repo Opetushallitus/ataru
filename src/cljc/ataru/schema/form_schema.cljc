@@ -210,7 +210,10 @@
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
 (def application-review-states
-  (apply s/enum (map first review-states/application-review-states)))
+  (apply s/enum
+         (concat
+           (map first review-states/application-hakukohde-selection-states)
+           (map first review-states/application-review-states))))
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
@@ -241,10 +244,10 @@
    :application-key                       s/Str
    :modified-time                         org.joda.time.DateTime
    :hakukohde                             (s/maybe s/Str)
-   (s/optional-key :language-requirement) (map first review-states/application-hakukohde-review-states)
-   (s/optional-key :degree-requirement)   (map first review-states/application-hakukohde-review-states)
-   (s/optional-key :eligibility-state)    (map first review-states/application-hakukohde-eligibility-states)
-   (s/optional-key :selection-state)      (map first review-states/application-hakukohde-selection-states)})
+   (s/optional-key :language-requirement) (apply s/enum (map first review-states/application-hakukohde-review-states))
+   (s/optional-key :degree-requirement)   (apply s/enum (map first review-states/application-hakukohde-review-states))
+   (s/optional-key :eligibility-state)    (apply s/enum (map first review-states/application-hakukohde-eligibility-states))
+   (s/optional-key :selection-state)      (apply s/enum (map first review-states/application-hakukohde-selection-states))})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional

@@ -197,10 +197,11 @@
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application ataru-schema/Application
-                             :events      [ataru-schema/Event]
-                             :review      ataru-schema/Review
-                             :form        ataru-schema/FormWithContent}
+                    :return {:application       ataru-schema/Application
+                             :events            [ataru-schema/Event]
+                             :review            ataru-schema/Review
+                             :hakukohde-reviews [ataru-schema/HakukohdeReview]
+                             :form              ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 
                    (api/GET "/:application-key/modify" {session :session}

@@ -335,6 +335,16 @@
                           :operation        audit-log/operation-new
                           :organization-oid organization-oid}))))))
 
+(defn get-application-hakukohde-reviews
+  [application-key]
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-review {:application_key application-key})))
+
+(defn- upsert-hakukohde-review!
+  [hakukohde-review connection]
+  (if (:hakukohde hakukohde-review)
+    (yesql-upsert-application-hakukohde-review! hakukohde-review connection)
+    (yesql-upsert-application-hakukohdeless-review! (dissoc hakukohde-review :hakukohde) connection)))
+
 (defn save-application-hakukohde-review
   [review session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -349,7 +359,7 @@
                                               :id               username
                                               :operation        audit-log/operation-modify
                                               :organization-oid organization-oid})
-                              (yesql-upsert-application-hakukohde-review! review-to-store connection)
+                              (upsert-hakukohde-review! review-to-store connection)
                               (when (not= (:state old-review) (:state review-to-store))
                                 (let [hakukohde-event {:application_key  app-key
                                                        :event_type       "hakukohde-review-state-change"

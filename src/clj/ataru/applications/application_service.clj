@@ -70,24 +70,34 @@
                                      :else
                                      (map get-label koodi-value)))))))))))
 
+(defn- get-application-hakukohde-reviews
+  [application-key]
+  (let [reviews (application-store/get-application-hakukohde-reviews application-key)]
+    (map (fn [r]
+           (-> r
+               (assoc (keyword (:requirement r)) (:state r))
+               (dissoc :requirement :state)))
+         reviews)))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
   [application-key session organization-service tarjonta-service]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                          tarjonta-service
-                          (:haku bare-application)
-                          (:hakukohde bare-application))
+                           tarjonta-service
+                           (:haku bare-application)
+                           (:hakukohde bare-application))
         form             (populate-hakukohde-answer-options
-                          (form-store/fetch-by-id (:form bare-application))
-                          tarjonta-info)
+                           (form-store/fetch-by-id (:form bare-application))
+                           tarjonta-info)
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
-    {:application (merge application tarjonta-info)
-     :form        form
-     :events      (application-store/get-application-events application-key)
-     :review      (application-store/get-application-review application-key)}))
+    {:application       (merge application tarjonta-info)
+     :form              form
+     :hakukohde-reviews (get-application-hakukohde-reviews application-key)
+     :events            (application-store/get-application-events application-key)
+     :review            (application-store/get-application-review application-key)}))
 
 (defn get-excel-report-of-applications-by-form
   [form-key filtered-states session organization-service tarjonta-service]

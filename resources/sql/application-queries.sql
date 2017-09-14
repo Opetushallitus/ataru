@@ -567,8 +567,27 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-upsert-application-hakukohdeless-review!
+INSERT INTO application_hakukohde_reviews (application_key, requirement, state)
+VALUES (:application_key, :requirement, :state)
+ON CONFLICT (application_key, requirement)
+  WHERE hakukohde IS NULL
+  DO UPDATE SET state = :state;
+
 -- name: yesql-upsert-application-hakukohde-review!
--- Insert new hakukohde review row or update state if similar (hakukohde, application_key, requirement) row exists
 INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde)
 VALUES (:application_key, :requirement, :state, :hakukohde)
-ON CONFLICT (application_key, requirement, hakukohde) DO UPDATE SET state = :state;
+ON CONFLICT (application_key, requirement, hakukohde)
+  WHERE hakukohde IS NOT NULL
+  DO UPDATE SET state = :state;
+
+-- name: yesql-get-application-hakukohde-review
+SELECT
+  id,
+  modified_time,
+  application_key,
+  state,
+  requirement,
+  hakukohde
+FROM application_hakukohde_reviews
+WHERE application_key = :application_key;
