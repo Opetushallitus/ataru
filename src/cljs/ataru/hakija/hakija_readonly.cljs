@@ -16,7 +16,9 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]
+                                                                       scroll-to-anchor
+                                                                       question-group-answer?
+                                                                       answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- multiple-choice-with-koodisto [field-descriptor]
@@ -75,10 +77,30 @@
       (into [:div] (child-fields children application lang @ui)))))
 
 (defn- extract-values [children answers]
-  (->> children
-       (map answer-key)
-       (map #(map :value (:values (get answers %))))
-       (apply map vector)))
+  (let [l?      (fn [x]
+                  (or (list? x)
+                      (vector? x)))
+        answers (->> children
+                     (map answer-key)
+                     (map (comp (fn [values]
+                                  (if (and (l? values)
+                                           (every? l? values))
+                                    (map (partial map :value) values)
+                                    (map :value values)))
+                                :values
+                                (partial get answers))))]
+    (if (question-group-answer? answers)
+      (answers->read-only-format answers)
+      (apply map vector answers))))
+
+(defn- fieldset-answer-table [answers]
+  [:tbody
+   (doall
+     (for [[idx values] (map vector (range) answers)]
+       (into
+         [:tr {:key (str idx "-" (apply str values))}]
+         (for [value values]
+           [:td (str value)]))))])
 
 (defn fieldset [field-descriptor application lang children]
   (let [fieldset-answers (extract-values children (:answers application))]
@@ -90,13 +112,12 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      [:tbody
-       (doall
-         (for [[idx values] (map vector (range) fieldset-answers)]
-           (into
-             [:tr {:key (str idx "-" (apply str values))}]
-             (for [value values]
-               [:td value]))))]]]))
+      (if (question-group-answer? fieldset-answers)
+        (map-indexed (fn [idx fieldset-answers]
+                       ^{:key (str (:id field-descriptor) "-" idx)}
+                       [fieldset-answer-table fieldset-answers])
+                     fieldset-answers)
+        [fieldset-answer-table fieldset-answers])]]))
 
 (defn- followup-has-answer?
   [followup application]
