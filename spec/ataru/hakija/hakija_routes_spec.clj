@@ -42,6 +42,14 @@
                    parse-body)]
      ~@body))
 
+(defmacro with-get-response
+  [secret resp application & body]
+  `(let [~resp (-> (mock/request :get (str "/hakemus/api/application?secret=" ~secret))
+                   (mock/content-type "application/json")
+                   handler
+                   parse-body)]
+     ~@body))
+
 (defn- have-any-application-in-db
   []
   (let [app-count
@@ -70,35 +78,76 @@
   (when-let [actual (first (ataru-db/exec :db yesql-get-application-by-id {:application_id application-id}))]
     (= (:form application-fixtures/person-info-form-application-for-hakukohde) (:form actual))))
 
-(describe "POST /application"
+(defn- cannot-edit? [answer] (true? (:cannot-edit answer)))
+
+(defn- cannot-view? [answer] (true? (:cannot-view answer)))
+
+(defn- hakuaika-ended-within-10-days
+  [_ _]
+  {:on    false
+   :start (- (System/currentTimeMillis) (* 20 24 3600))     ;20 days
+   :end   (- (System/currentTimeMillis) (* 5 24 3600))})
+
+(describe "/application"
   (tags :unit :hakija-routes)
 
-  (around [spec]
-          (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                        hakuaika/get-hakuaika-info (fn [_ _] {:on true})]
-            (spec)))
+  (describe "POST application"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                    hakuaika/get-hakuaika-info                            (fn [_ _] {:on true})]
+        (spec)))
 
-  (before
-    (reset! form (db/init-db-fixture)))
+    (before
+      (reset! form (db/init-db-fixture)))
 
-  (it "should validate application"
-    (with-response resp application-fixtures/person-info-form-application
-      (should= 200  (:status resp))
-      (should (have-application-in-db (get-in resp [:body :id])))))
+    (it "should validate application"
+      (with-response resp application-fixtures/person-info-form-application
+        (should= 200 (:status resp))
+        (should (have-application-in-db (get-in resp [:body :id])))))
 
-  (it "should validate application for hakukohde"
+    (it "should validate application for hakukohde"
       (with-response resp application-fixtures/person-info-form-application-for-hakukohde
-                     (should= 200 (:status resp))
-                     (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
+        (should= 200 (:status resp))
+        (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
 
-  (add-spec "should not validate form with blank required field" form-blank-required-field)
+    (add-spec "should not validate form with blank required field" form-blank-required-field)
 
-  (add-spec "should not validate form with invalid email field" form-invalid-email-field)
+    (add-spec "should not validate form with invalid email field" form-invalid-email-field)
 
-  (add-spec "should not validate form with invalid phone field" form-invalid-phone-field)
+    (add-spec "should not validate form with invalid phone field" form-invalid-phone-field)
 
-  (add-spec "should not validate form with invalid ssn field" form-invalid-ssn-field)
+    (add-spec "should not validate form with invalid ssn field" form-invalid-ssn-field)
 
-  (add-spec "should not validate form with invalid postal code field" form-invalid-postal-code)
+    (add-spec "should not validate form with invalid postal code field" form-invalid-postal-code)
 
-  (add-spec "should not validate form with invalid dropdown field" form-invalid-dropdown-value))
+    (add-spec "should not validate form with invalid dropdown field" form-invalid-dropdown-value))
+
+  (describe "GET application"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])]
+        (spec)))
+
+    (it "should validate application"
+      (with-response resp application-fixtures/person-info-form-application
+        (should= 200 (:status resp))
+        (should (have-application-in-db (get-in resp [:body :id])))))
+
+    (it "should not get application with wrong secret"
+      (with-get-response "asdfasfas" resp
+        (should= 400 (:ststus resp))))
+
+    (it "should get application"
+      (with-get-response "asdfgh" resp
+        (should= 200 (:status resp))
+        (let [answers (-> resp :body :answers)]
+          (should= 1 (count (filter cannot-edit? answers)))
+          (should= 1 (count (filter cannot-view? answers))))))
+
+    (it "should get application with hakuaika ended"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-10-days]
+        (with-get-response "asdfgh" resp
+          (should= 200 (:status resp))
+          (let [answers (-> resp :body :answers)]
+            (should= (count answers)
+                     (count (filter cannot-edit? answers)))
+            (should= 1 (count (filter cannot-view? answers)))))))))

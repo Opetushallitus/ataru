@@ -1,25 +1,27 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-    [taoensso.timbre :as log]
-    [ataru.background-job.job :as job]
-    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.hakija.application-email-confirmation :as application-email]
-    [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-    [ataru.hakija.hakija-form-service :as hakija-form-service]
-    [ataru.person-service.person-integration :as person-integration]
-    [ataru.tarjonta-service.hakuaika :as hakuaika]
-    [ataru.tarjonta-service.hakukohde :as hakukohde]
-    [ataru.forms.form-store :as form-store]
-    [ataru.hakija.validator :as validator]
-    [ataru.application.review-states :refer [complete-states]]
-    [ataru.applications.application-store :as application-store]
-    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
-                                                   editing-forbidden-person-info-field-ids]]
-    [ataru.util :as util]
-    [ataru.files.file-store :as file-store]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
+   [taoensso.timbre :as log]
+   [ataru.background-job.job :as job]
+   [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+   [ataru.hakija.application-email-confirmation :as application-email]
+   [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+   [ataru.hakija.hakija-form-service :as hakija-form-service]
+   [ataru.person-service.person-integration :as person-integration]
+   [ataru.tarjonta-service.hakuaika :as hakuaika]
+   [ataru.tarjonta-service.hakukohde :as hakukohde]
+   [ataru.forms.form-store :as form-store]
+   [ataru.hakija.validator :as validator]
+   [ataru.application.review-states :refer [complete-states]]
+   [ataru.applications.application-store :as application-store]
+   [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                  editing-forbidden-person-info-field-ids]]
+   [ataru.util :as util]
+   [ataru.files.file-store :as file-store]
+   [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+   [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
+   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [clj-time.core :as time]
+   [clj-time.coerce :refer [from-long]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -162,23 +164,49 @@
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
 
-(defn- flag-uneditable-answers
-  [{:keys [answers] :as application} cannot-view-field-ids cannot-edit-field-ids]
-  (assoc application
-    :answers
-    (map
-      (fn [answer]
-        (let [answer-kw (keyword (:key answer))]
-          (cond
-            (contains? cannot-view-field-ids answer-kw) (merge answer {:cannot-view true :value nil})
-            (contains? cannot-edit-field-ids answer-kw) (merge answer {:cannot-edit true})
-            :else answer)))
-      answers)))
+(defn- get-hakuaikas
+  [tarjonta-service application]
+  (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
+        hakukohde             (when application-hakukohde (.get-hakukohde tarjonta-service application-hakukohde))
+        haku-oid              (:hakuOid hakukohde)
+        haku                  (when haku-oid (.get-haku tarjonta-service haku-oid))]
+    (hakuaika/get-hakuaika-info hakukohde haku)))
 
-(defn remove-person-info-module-from-application-answers
-  [application]
+(defn- after-apply-end-within-10-days?
+  [apply-end-long]
+  (when apply-end-long
+    (let [now            (time/now)
+          apply-end      (from-long apply-end-long)
+          days-after-end (time/plus apply-end (time/days 10))]
+      (and (time/after? now apply-end)
+           (time/after? days-after-end now)))))
+
+(defn- flag-uneditable-answers
+  [{:keys [answers] :as application} tarjonta-service cannot-view-field-ids cannot-edit-field-ids]
+  (let [hakuaika-end                    (when tarjonta-service
+                                          (:end (get-hakuaikas tarjonta-service application)))
+        after-apply-end-within-10-days? (when hakuaika-end
+                                          (after-apply-end-within-10-days? hakuaika-end))
+        only-attachments-editable?      (fn [answer]
+                                          (and after-apply-end-within-10-days?
+                                               (not= (:fieldType answer) "attachment")))]
+    (assoc application
+      :answers
+      (map
+        (fn [answer]
+          (let [answer-kw (keyword (:key answer))]
+            (cond-> answer
+              (contains? cannot-view-field-ids answer-kw)
+              (merge {:cannot-view true :value nil})
+
+              (or (contains? cannot-edit-field-ids answer-kw) (only-attachments-editable? answer))
+              (merge {:cannot-edit true}))))
+        answers))))
+
+(defn remove-uneditable-answers
+  [application tarjonta-service]
   (when application
-    (flag-uneditable-answers application viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
+    (flag-uneditable-answers application tarjonta-service viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
