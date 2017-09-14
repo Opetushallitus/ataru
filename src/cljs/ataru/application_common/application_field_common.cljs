@@ -84,6 +84,7 @@
 (defn question-group-answer? [answers]
   (letfn [(l? [x]
             (or (list? x)
-                (vector? x)))]
+                (vector? x)
+                (seq? x)))]
     (and (every? l? answers)
          (every? (partial every? l?) answers))))
