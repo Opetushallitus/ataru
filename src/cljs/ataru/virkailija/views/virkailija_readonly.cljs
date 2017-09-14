@@ -17,7 +17,8 @@
                                                                        required-hint
                                                                        textual-field-value
                                                                        scroll-to-anchor
-                                                                       question-group-answer?]]
+                                                                       question-group-answer?
+                                                                       answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
@@ -100,29 +101,7 @@
                                       (filter not-empty)
                                       not-empty)]
       (if (question-group-answer? concatenated-answers)
-        ;; Let adjacent fieldset with repeatable answers in a question group:
-        ;; Group 1:
-        ;; a1 - b1 - c1
-        ;; a2 - b2 - c2
-        ;; Group 2:
-        ;; d1 - e1 - f1
-        ;; This reduce converts
-        ;; ([["a1" "a2"] ["d1"]] [["b1" "b2"] ["e1"]] [["c1" "c2"] ["f1"]])
-        ;; to
-        ;; [[["a1" "b1" "c1"] ["a2" "b2" "c2"]] [["d1" "e1" "f1"]]]
-        (let [val-or-empty-vec (fnil identity [])]
-          (reduce (fn [acc [col-idx answers]]
-                    (reduce (fn [acc [question-group-idx answers]]
-                              (reduce (fn [acc [row-idx answer]]
-                                        (-> acc
-                                            (update-in [question-group-idx row-idx] val-or-empty-vec)
-                                            (assoc-in [question-group-idx row-idx col-idx] answer)))
-                                      (update acc question-group-idx val-or-empty-vec)
-                                      (map vector (range) answers)))
-                            acc
-                            (map vector (range) answers)))
-                  []
-                  (map vector (range) concatenated-answers)))
+        (answers->read-only-format concatenated-answers)
         (apply map vector concatenated-answers)))))
 
 (defn- fieldset-answer-table [answers]
