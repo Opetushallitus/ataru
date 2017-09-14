@@ -17,7 +17,7 @@
                                                                        required-hint
                                                                        textual-field-value
                                                                        scroll-to-anchor
-                                                                       multi-value-answers?]]
+                                                                       question-group-answer?]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
@@ -99,7 +99,7 @@
                                         (eduction editor-side child-answers))
                                       (filter not-empty)
                                       not-empty)]
-      (if (multi-value-answers? concatenated-answers)
+      (if (question-group-answer? concatenated-answers)
         ;; Let adjacent fieldset with repeatable answers in a question group:
         ;; Group 1:
         ;; a1 - b1 - c1
@@ -145,7 +145,7 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      (if (multi-value-answers? fieldset-answers)
+      (if (question-group-answer? fieldset-answers)
         (map-indexed (fn [idx fieldset-answers]
                        ^{:key (str (:id field-descriptor) "-" idx)}
                        [fieldset-answer-table fieldset-answers])
