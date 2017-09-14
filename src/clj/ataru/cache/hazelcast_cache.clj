@@ -62,6 +62,7 @@
                           name
                           max-size
                           ttl
+                          max-idle
                           period]
   component/Lifecycle
   (start [this]
@@ -100,11 +101,16 @@
   (configure [_ configuration]
     (let [umc (MapConfig.)
           smc (MapConfig.)
-          [duration timeunit] ttl]
+          [ttl-duration ttl-timeunit] ttl
+          [max-idle-duration max-idle-timeunit] max-idle]
       (.setName umc (str "updated-" name))
       (.setName smc (str "stable-" name))
-      (.setSize (.getMaxSizeConfig umc) max-size)
-      (.setTimeToLiveSeconds smc (.toSeconds timeunit duration))
+      (when (some? max-size)
+        (.setSize (.getMaxSizeConfig umc) max-size))
+      (when (some? ttl)
+        (.setTimeToLiveSeconds smc (.toSeconds ttl-timeunit ttl-duration)))
+      (when (some? max-idle)
+        (.setMaxIdleSeconds smc (.toSeconds max-idle-timeunit max-idle-duration)))
       (.addMapConfig configuration umc)
       (.addMapConfig configuration smc)))
 
