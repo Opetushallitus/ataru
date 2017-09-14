@@ -9,6 +9,7 @@
             [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
+            [ataru.applications.permission-check :as permission-check]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.files.file-store :as file-store]
@@ -344,7 +345,12 @@
                    (api/GET "/applications/:time-period" []
                             :path-params [time-period :- (api/describe (s/enum "month" "week" "day") "One of: month, week, day")]
                             :summary "Get info about number of submitted applications for past time period"
-                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))))
+                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))
+
+                 (api/POST "/checkpermission" []
+                           :body [dto ataru-schema/PermissionCheckDto]
+                           :return ataru-schema/PermissionCheckResponseDto
+                           (ok (permission-check/check organization-service dto)))))
 
 (api/defroutes resource-routes
   (api/undocumented
