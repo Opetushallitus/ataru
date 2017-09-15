@@ -319,7 +319,7 @@
                                      [:div.application__form-dropdown-followups.animated.fadeIn
                                       [render-field followup]]))))})))
 
-(defn dropdown [field-descriptor & {:keys [div-kwd editing] :or {div-kwd :div.application__form-field editing false}}]
+(defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -330,13 +330,12 @@
                                    (:answers @application)
                                    (get (answer-key field-descriptor))
                                    :cannot-edit)))
-        value        (reaction
-                       (or (->
-                             (:answers @application)
-                             (get (answer-key field-descriptor))
-                             :value)
-                           ""))
-        on-change    (partial textual-field-change field-descriptor)
+        value-path   (cond-> [:application :answers (answer-key field-descriptor)]
+                       idx (concat [:values idx 0 :value]))
+        value        (subscribe [:state-query value-path])
+        on-change    (if idx
+                       (partial multi-value-field-change field-descriptor 0 idx)
+                       (partial textual-field-change field-descriptor))
         lang         @lang
         default-lang @default-lang]
     [:div
@@ -349,7 +348,7 @@
          [:span.application__form-select-arrow])
        [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
         {:id        (:id field-descriptor)
-         :value     @value
+         :value     (or @value "")
          :on-change on-change
          :disabled  @disabled?
          :required  (is-required-field? field-descriptor)}
