@@ -615,7 +615,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-checkbox + label.disabled {
-  background-color: #E6E6E6;
+  background-color: @separator-color;
   cursor: default;
 }
 
@@ -625,7 +625,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-checkbox:checked + label.disabled {
-  background-color: rgba(7, 103, 135, 0.68);
+  background-color: @single-choice-disabled;
 }
 
 .application__form-multi-choice-followups-outer-container {
@@ -740,7 +740,7 @@ th.application__readonly-adjacent--header {
   background-color: @section-header-text;
 }
 .application__form-single-choice-button:checked + label.disabled {
-  background-color: rgba(7, 103, 135, 0.68);
+  background-color: @single-choice-disabled;
 }
 
 .application__form-adjacent-text-fields-wrapper {
