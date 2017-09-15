@@ -80,3 +80,44 @@
 (defn scroll-to-anchor
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])
+
+(defn question-group-answer? [answers]
+  (letfn [(l? [x]
+            (or (list? x)
+                (vector? x)
+                (seq? x)))]
+    (and (every? l? answers)
+         (every? (partial every? l?) answers))))
+
+(defn answers->read-only-format
+  "Converts format of repeatable answers in a question group from the one
+   stored by a form component into a format required by read-only views.
+
+   Let adjacent fieldset with repeatable answers in a question group:
+
+   Group 1:
+   a1 - b1 - c1
+   a2 - b2 - c2
+
+   Group 2:
+   d1 - e1 - f1
+
+   This reduce converts:
+   ([[\"a1\" \"a2\"] [\"d1\"]] [[\"b1\" \"b2\"] [\"e1\"]] [[\"c1\" \"c2\"] [\"f1\"]])
+
+   to:
+   [[[\"a1\" \"b1\" \"c1\"] [\"a2\" \"b2\" \"c2\"]] [[\"d1\" \"e1\" \"f1\"]]]"
+  [answers]
+  (let [val-or-empty-vec (fnil identity [])]
+    (reduce (fn [acc [col-idx answers]]
+              (reduce (fn [acc [question-group-idx answers]]
+                        (reduce (fn [acc [row-idx answer]]
+                                  (-> acc
+                                      (update-in [question-group-idx row-idx] val-or-empty-vec)
+                                      (assoc-in [question-group-idx row-idx col-idx] answer)))
+                                (update acc question-group-idx val-or-empty-vec)
+                                (map vector (range) answers)))
+                      acc
+                      (map vector (range) answers)))
+            []
+            (map vector (range) answers))))

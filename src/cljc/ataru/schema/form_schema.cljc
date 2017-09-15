@@ -103,7 +103,7 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement"])
+(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
@@ -173,7 +173,9 @@
 (s/defschema Answer {:key                          s/Str,
                      :value                        (s/cond-pre s/Str
                                                                s/Int
-                                                               [(s/cond-pre s/Str File)])
+                                                               [(s/cond-pre s/Str
+                                                                            File
+                                                                            [(s/cond-pre s/Str s/Int File)])])
                      :fieldType                    (apply s/enum ["textField"
                                                                   "textArea"
                                                                   "dropdown"

@@ -332,7 +332,7 @@
 
 (reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value]]
+  (fn [{db :db} [_ field value idx]]
     (let [id       (keyword (:id field))
           answers  (get-in db [:application :answers])
           answer   (get answers id)
@@ -353,16 +353,20 @@
                      [[:application/run-rule (:rules field)]])})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor idx value]
-  (let [id (keyword (:id field-descriptor))
-        answers (get-in db [:application :answers])
-        answer (get answers id)
-        valid? (or (:cannot-view answer)
-                   (:cannot-edit answer)
-                   (every? #(validator/validate % value answers field-descriptor)
-                           (:validators field-descriptor)))]
-    (update-in db [:application :answers id :values]
-               (fnil assoc []) idx {:valid valid? :value value})))
+  [db field-descriptor value data-idx question-group-idx]
+  (let [id         (keyword (:id field-descriptor))
+        answers    (get-in db [:application :answers])
+        answer     (get answers id)
+        valid?     (or (:cannot-view answer)
+                       (:cannot-edit answer)
+                       (every? #(validator/validate % value answers field-descriptor)
+                               (:validators field-descriptor)))
+        value-path (cond-> [:application :answers id :values]
+                     question-group-idx (conj question-group-idx))]
+    (-> db
+        (update-in [:application :answers id :values] (fnil identity []))
+        (update-in value-path
+                   (fnil assoc []) data-idx {:valid valid? :value value}))))
 
 (defn- set-multi-value-changed [db id & [subpath]]
   (let [{:keys [original-value value values]} (-> db :application :answers id)
@@ -380,47 +384,58 @@
 
 (defn- set-repeatable-field-value
   [db field-descriptor]
-  (let [id        (keyword (:id field-descriptor))
-        values    (get-in db [:application :answers id :values])
-        required? (some (partial = "required")
-                        (:validators field-descriptor))
-        valid?    (if (empty? values)
-                    (not required?)
-                    (every? :valid values))]
+  (let [id                   (keyword (:id field-descriptor))
+        values               (get-in db [:application :answers id :values])
+        required?            (some (partial = "required")
+                                   (:validators field-descriptor))
+        multi-value-answers? (every? #(or (vector? %) (list? %)) values)
+        is-empty?            (if multi-value-answers?
+                               (partial every? empty?)
+                               (partial empty?))
+        valid?               (if (is-empty? values)
+                               (not required?)
+                               (every? :valid (flatten values)))
+        value-fn             (if multi-value-answers?
+                               (partial map (partial map :value))
+                               (partial map :value))]
     (-> db
         (update-in [:application :answers id]
                    merge
-                   {:valid valid? :value (mapv :value values)})
+                   {:valid valid? :value (value-fn values)})
         (set-multi-value-changed id [:value]))))
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor value data-idx question-group-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (defn- remove-repeatable-field-value
-  [db field-descriptor idx]
-  (let [id (keyword (:id field-descriptor))]
+  [db field-descriptor data-idx question-group-idx]
+  (let [id              (keyword (:id field-descriptor))
+        raw-value-path  (cond-> [:application :answers id :values]
+                          question-group-idx (conj question-group-idx))
+        disp-value-path (cond-> [:application :answers id :value]
+                          question-group-idx (conj question-group-idx))]
     (cond-> db
-      (seq (get-in db [:application :answers id :values]))
-      (update-in [:application :answers id :values]
-                 #(autil/remove-nth % idx))
+      (seq (get-in db raw-value-path))
+      (update-in raw-value-path
+                 #(autil/remove-nth % data-idx))
 
       ;; when creating application, we have the value below (and it's important). when editing, we do not.
       ;; consider this a temporary, terrible bandaid solution
-      (seq (get-in db [:application :answers id :value]))
-      (update-in [:application :answers id :value]
-                 #(autil/remove-nth (vec %) idx))
+      (seq (get-in db disp-value-path))
+      (update-in disp-value-path
+                 #(autil/remove-nth (vec %) data-idx))
 
       true
       (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ field-descriptor idx]]
-    (remove-repeatable-field-value db field-descriptor idx)))
+  (fn [db [_ field-descriptor data-idx question-group-idx]]
+    (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
@@ -502,19 +517,21 @@
 
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor idx value question-group-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor value idx question-group-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
-  (fn [db [_ field-descriptor]]
+  (fn [db [_ field-descriptor question-group-idx]]
     (reduce (fn [db child]
               (let [id (keyword (:id child))
-                    new-idx (count (get-in db [:application :answers id :values]))]
+                    new-idx (count (if question-group-idx
+                                     (get-in db [:application :answers id :values question-group-idx])
+                                     (get-in db [:application :answers id :values])))]
                 (-> db
-                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-values child "" new-idx question-group-idx)
                     (set-repeatable-field-value child))))
             db
             (:children field-descriptor))))
@@ -522,7 +539,7 @@
 (reg-event-db
   :application/remove-adjacent-field
   (fn [db [_ field-descriptor index]]
-    (reduce #(remove-repeatable-field-value %1 %2 index)
+    (reduce #(remove-repeatable-field-value %1 %2 index nil)
             db
             (:children field-descriptor))))
 
@@ -702,3 +719,8 @@
                           (-> db :form :name))]
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
+
+(reg-event-db
+  :application/add-question-group-row
+  (fn add-question-group-row [db [_ field-descriptor-id]]
+    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1))))
