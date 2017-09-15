@@ -23,7 +23,9 @@
 (def form-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
 (def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
 (def form-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
-(def form-edited-email (assoc-in application-fixtures/person-info-form-application-for-hakukohde [:answers 2 :value] "edited@foo.com"))
+(def form-for-hakukohde-edited-email (assoc-in application-fixtures/person-info-form-application-for-hakukohde [:answers 2 :value] "edited@foo.com"))
+(def form-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
+(def form-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -180,6 +182,36 @@
     (describe "PUT application"
       (around [spec]
         (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                      application-email/start-email-edit-confirmation-job (fn [_])]
+          (spec)))
+
+      (before-all
+        (reset! form (db/init-db-fixture)))
+
+      (it "should create"
+        (with-response :post resp application-fixtures/person-info-form-application
+          (should= 200 (:status resp))
+          (should (have-application-in-db (get-in resp [:body :id])))))
+
+      (it "should edit application"
+        (with-response :put resp form-edited-email
+          (should= 200 (:status resp))
+          (let [id (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "edited@foo.com" (get-answer application "email"))))))
+
+      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff..
+      ;(it "should not allow editing ssn"
+      ;  (with-response :put resp form-edited-ssn
+      ;    (println resp)
+      ;    (should= 200 (:status resp))
+      ;    (let [id (-> resp :body :id)
+      ;          application (get-application-by-id id)]
+      ;      (should= "010101A123N" (get-answer application "ssn"))))))
+
+    (describe "PUT application after hakuaika ended"
+      (around [spec]
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
                       application-email/start-email-edit-confirmation-job (fn [_])
                       hakuaika/get-hakuaika-info hakuaika-ended-within-10-days]
           (spec)))
@@ -192,8 +224,10 @@
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id])))))
 
+
+      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff, email should remain unedited.
       (it "should allow application edit after hakuaika within 10 days"
-        (with-response :put resp form-edited-email
+        (with-response :put resp form-for-hakukohde-edited-email
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
