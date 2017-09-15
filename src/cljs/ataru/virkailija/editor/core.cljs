@@ -65,7 +65,7 @@
               [ec/dropdown content path args]
 
               {:fieldClass "formField" :fieldType "multipleChoice"}
-              [ec/dropdown content path]
+              [ec/dropdown content path args]
 
               {:fieldClass "infoElement"}
               [ec/info-element content path]
