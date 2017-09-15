@@ -49,7 +49,7 @@
   ([secret tarjonta-service]
    (let [application (-> secret
                          (application-store/get-latest-application-by-secret)
-                         (application-service/remove-uneditable-answers tarjonta-service)
+                         (application-service/flag-uneditable-answers tarjonta-service)
                          (attachments-metadata->answers))]
      (if application
        (do

@@ -198,16 +198,15 @@
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "edited@foo.com" (get-answer application "email"))))))
+            (should= "edited@foo.com" (get-answer application "email")))))
 
-      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff..
-      ;(it "should not allow editing ssn"
-      ;  (with-response :put resp form-edited-ssn
-      ;    (println resp)
-      ;    (should= 200 (:status resp))
-      ;    (let [id (-> resp :body :id)
-      ;          application (get-application-by-id id)]
-      ;      (should= "010101A123N" (get-answer application "ssn"))))))
+      (it "should not allow editing ssn"
+        (with-response :put resp form-edited-ssn
+          (println resp)
+          (should= 200 (:status resp))
+          (let [id (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "010101A123N" (get-answer application "ssn"))))))
 
     (describe "PUT application after hakuaika ended"
       (around [spec]
@@ -224,14 +223,12 @@
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id])))))
 
-
-      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff, email should remain unedited.
-      (it "should allow application edit after hakuaika within 10 days"
+      (it "should allow application edit after hakuaika within 10 days and only changes to attachments"
         (with-response :put resp form-for-hakukohde-edited-email
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "edited@foo.com" (get-answer application "email")))))
+            (should= "aku@ankkalinna.com" (get-answer application "email")))))
 
       (it "should not allow application edit after hakuaika"
         (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-20-days]

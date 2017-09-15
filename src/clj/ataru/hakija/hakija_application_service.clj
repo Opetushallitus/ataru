@@ -77,6 +77,29 @@
     (and (= state "processing")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
+
+(defn flag-uneditable-answers
+  [{:keys [answers] :as application} tarjonta-service]
+  (let [hakuaika-end                    (when tarjonta-service
+                                          (:end (get-hakuaikas tarjonta-service application)))
+        after-apply-end-within-10-days? (when hakuaika-end
+                                          (after-apply-end-within-10-days? hakuaika-end))
+        only-attachments-editable?      (fn [answer]
+                                          (and after-apply-end-within-10-days?
+                                               (not= (:fieldType answer) "attachment")))]
+    (assoc application
+      :answers
+      (map
+        (fn [answer]
+          (let [answer-kw (keyword (:key answer))]
+            (cond-> answer
+              (contains? viewing-forbidden-person-info-field-ids answer-kw)
+              (merge {:cannot-view true :value nil})
+
+              (or (contains? editing-forbidden-person-info-field-ids answer-kw) (only-attachments-editable? answer))
+              (merge {:cannot-edit true}))))
+        answers))))
+
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
   ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
@@ -94,8 +117,10 @@
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [old-application new-application]
-  (let [new-answers                 (:answers new-application)
+  [old-application new-application tarjonta-service]
+  (let [new-answers                 (-> new-application
+                                        (flag-uneditable-answers tarjonta-service)
+                                        :answers)
         uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
         uneditable-answers          (filter uneditable-or-unviewable new-answers)
         editable-answers            (remove uneditable-or-unviewable new-answers)
@@ -135,7 +160,7 @@
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
-                             (merge-uneditable-answers-from-previous latest-application application)
+                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
                              application)
         validation-result  (validator/valid-application? final-application form)
         virkailija-secret  (valid-virkailija-secret application)]
@@ -180,33 +205,6 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
-
-(defn- flag-uneditable-answers
-  [{:keys [answers] :as application} tarjonta-service cannot-view-field-ids cannot-edit-field-ids]
-  (let [hakuaika-end                    (when tarjonta-service
-                                          (:end (get-hakuaikas tarjonta-service application)))
-        after-apply-end-within-10-days? (when hakuaika-end
-                                          (after-apply-end-within-10-days? hakuaika-end))
-        only-attachments-editable?      (fn [answer]
-                                          (and after-apply-end-within-10-days?
-                                               (not= (:fieldType answer) "attachment")))]
-    (assoc application
-      :answers
-      (map
-        (fn [answer]
-          (let [answer-kw (keyword (:key answer))]
-            (cond-> answer
-              (contains? cannot-view-field-ids answer-kw)
-              (merge {:cannot-view true :value nil})
-
-              (or (contains? cannot-edit-field-ids answer-kw) (only-attachments-editable? answer))
-              (merge {:cannot-edit true}))))
-        answers))))
-
-(defn remove-uneditable-answers
-  [application tarjonta-service]
-  (when application
-    (flag-uneditable-answers application tarjonta-service viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
