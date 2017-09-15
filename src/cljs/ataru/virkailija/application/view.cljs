@@ -346,22 +346,27 @@
         person-oid         (:person-oid application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
-      [:h2.application-handling__review-area-main-heading (str pref-name " " last-name ", "
-                                                               (or ssn birth-date))]
-      (when person-oid
-        [:a.application-handling__review-area-main-heading-person-oid
-         {:href (str "/authentication-henkiloui/html/henkilo/"
-                     person-oid
-                     "/?permissionCheckService=ATARU")
-          :target "_blank"}
-         person-oid])
-      (when (> applications-count 1)
-        [:a.application-handling__review-area-main-heading-applications-link
-         {:on-click (fn [_]
-                      (dispatch [:application/navigate-with-callback
-                                 "/lomake-editori/applications/search/"
-                                 [:application/search-by-term (or ssn email)]]))}
-         (str applications-count " hakemusta")])
+      [:div.application-handling__review-area-main-heading-person-info
+       [:div.application-handling__review-area-main-heading-name-row
+        [:h2.application-handling__review-area-main-heading
+         (str pref-name " " last-name ", " (or ssn birth-date))]
+        (when (> applications-count 1)
+          [:a.application-handling__review-area-main-heading-applications-link
+           {:on-click (fn [_]
+                        (dispatch [:application/navigate-with-callback
+                                   "/lomake-editori/applications/search/"
+                                   [:application/search-by-term (or ssn email)]]))}
+           (str applications-count " hakemusta")])]
+       (when person-oid
+         [:div.application-handling__review-area-main-heading-person-oid-row
+          [:a
+           {:href (str "/authentication-henkiloui/html/henkilo/"
+                       person-oid
+                       "/?permissionCheckService=ATARU")
+            :target "_blank"}
+           [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]]
+          [:span.application-handling__review-area-main-heading-person-oid
+           (str "Oppija " person-oid)]])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
