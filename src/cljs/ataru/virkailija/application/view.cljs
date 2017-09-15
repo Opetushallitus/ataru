@@ -219,7 +219,7 @@
         list-click   (fn [evt] (swap! list-opened not))]
     (fn []
       [:div.application-handling__review-state-container
-       [:div.application-handling__review-header "Tila"]
+       [:div.application-handling__review-header "Hakemus"]
        (if @list-opened
          [:div.application-handling__review-state-list-opened-anchor
           (into [:div.application-handling__review-state-list-opened
@@ -228,6 +228,37 @@
          [:div
           {:on-click list-click}
           (review-state-selected-row (get-review-state-label-by-name application-review-states @review-state))])])))
+
+(defn- opened-hakukohde-list-row
+  [selected-hakukohde-oid hakukohde]
+  [:div.application-handling__review-state-row
+   {:on-click #(dispatch [:application/select-hakukohde selected-hakukohde-oid])}
+   (:name hakukohde)])
+
+(defn- selected-hakukohde-row
+  [hakukohde-oid hakukohde]
+  [:div.application-handling__review-state-row
+   (:name hakukohde)])
+
+(defn- application-hakukohde-selection
+  []
+  (let [selected-hakukohde-ratom (subscribe [:state-query [:application :selected-review-hakukohde]])
+        selected-hakukohde-oid   (-> @selected-hakukohde-ratom (first) (name))
+        selected-hakukohde       (second @selected-hakukohde-ratom)
+        application-hakukohteet  (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
+        list-open? (r/atom false)
+        select-list-item (fn [evt] (swap! list-open? not))]
+    (when (pos? (count @application-hakukohteet))
+      [:div.application-handling__review-state-container
+       [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohteet) ")")
+        (if @list-open?
+          [:div.application-handling__review-state-list-opened-anchor
+           (into
+             [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
+             (map (partial opened-hakukohde-list-row selected-hakukohde) @application-hakukohteet))]
+          [:div
+           {:on-click select-list-item}
+           (selected-hakukohde-row selected-hakukohde-oid selected-hakukohde)])]])))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   [(str first-name " " last-name)
@@ -317,6 +348,7 @@
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating animated fadeIn")}
      [application-review-state]
+     [application-hakukohde-selection]
      [application-review-inputs]
      [application-modify-link]
      [application-review-events]]))

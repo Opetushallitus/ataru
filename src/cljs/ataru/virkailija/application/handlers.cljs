@@ -160,7 +160,8 @@
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
-      (assoc-in [:application :hakukohde-reviews] hakukohde-reviews)))
+      (assoc-in [:application :hakukohde-reviews] hakukohde-reviews)
+      (assoc-in [:application :selected-review-hakukohde] (first hakukohde-reviews))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
