@@ -415,7 +415,6 @@
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (answer-key field-descriptor)
-        validators   (:validators field-descriptor)
         cannot-edit? @(subscribe [:application/cannot-edit-answer? id])]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
