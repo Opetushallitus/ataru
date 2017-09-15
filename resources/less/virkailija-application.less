@@ -289,6 +289,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-area-main-heading {
+  display: inline-block;
   color: @text-color;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -296,12 +297,29 @@ and (max-width: 1000px) {
   .semibold;
 }
 
+.application-handling__review-area-main-heading-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.application-handling__review-area-main-heading-person-oid-row {
+  margin-top: 5px;
+}
+
+.application-handling__review-area-main-heading-person-icon {
+  font-size: 22px;
+  vertical-align: bottom;
+}
+
 .application-handling__review-area-main-heading-person-oid {
-  margin-left: 20px;
+  margin-left: 5px;
 }
 
 .application-handling__review-area-main-heading-applications-link {
-  margin-left: 10px;
+  margin-left: 13px;
+  padding-left: 13px;
+  border-left: 1px solid @section-gray-border;
+  font-size: 15px;
 }
 
 .application-handling__hakukohde-wrapper {
