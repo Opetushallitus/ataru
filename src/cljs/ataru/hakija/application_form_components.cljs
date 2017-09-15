@@ -631,7 +631,9 @@
                       (dispatch [:application/set-adjacent-field-answer child row-idx value question-group-idx])))
         answer    (subscribe [:state-query [:application :answers (keyword id)]])]
     (fn [{:keys [id]} row-idx]
-      (let [value        (get-in @answer [:values question-group-idx row-idx :value])
+      (let [value        (get-in @answer (if question-group-idx
+                                           [:values question-group-idx row-idx :value]
+                                           [:values row-idx :value]))
             cannot-edit? (:cannot-edit @answer)]
         [:input.application__form-text-input.application__form-text-input--normal
          (merge {:id        (str id "-" row-idx)
