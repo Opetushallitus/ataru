@@ -42,6 +42,11 @@
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
 
 (re-frame/reg-sub
+  :application/cannot-edit-answer?
+  (fn [db [_ key]]
+    (-> db :application :answers key :cannot-edit)))
+
+(re-frame/reg-sub
   :application/default-language
   (fn [db]
     (-> db

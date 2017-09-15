@@ -144,7 +144,7 @@
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
         values       (subscribe [:state-query [:application :answers id :values]])
-        cannot-edit? (subscribe [:state-query [:application :answers id :cannot-edit]])
+        cannot-edit? (subscribe [:application/cannot-edit-answer? id])
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         lang         (subscribe [:application/form-language])
         on-blur      (fn [evt]
@@ -219,11 +219,11 @@
       max-length)))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        answer      (subscribe [:state-query [:application :answers (-> field-descriptor :id keyword)]])
-        on-change   (partial textual-field-change field-descriptor)
-        size        (-> field-descriptor :params :size)
-        max-length  (parse-max-length field-descriptor)]
+  (let [application  (subscribe [:state-query [:application]])
+        on-change    (partial textual-field-change field-descriptor)
+        size         (-> field-descriptor :params :size)
+        max-length   (parse-max-length field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? (-> field-descriptor :id keyword)])]
     (fn [field-descriptor]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
@@ -240,7 +240,7 @@
                   :on-change     on-change
                   :value         value
                   :required      (is-required-field? field-descriptor)}
-            (when (:cannot-edit @answer) {:disabled true}))]
+            (when @cannot-edit? {:disabled true}))]
          (when max-length
            [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
@@ -390,9 +390,9 @@
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-  (let [id         (answer-key field-descriptor)
-        validators (:validators field-descriptor)
-        answer     (subscribe [:state-query [:application :answers id]])]
+  (let [id           (answer-key field-descriptor)
+        validators   (:validators field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
@@ -402,7 +402,7 @@
         {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                       [multiple-choice-option field-descriptor option id (:cannot-edit @answer)])
+                       [multiple-choice-option field-descriptor option id @cannot-edit?])
           (:options field-descriptor))]])))
 
 (defn- single-choice-option [option parent-id validators cannot-edit?]
@@ -466,9 +466,9 @@
                                                           @followups)))]))})))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id  (answer-key field-descriptor)
-        validators (:validators field-descriptor)
-        answer     (subscribe [:state-query [:application :answers button-id]])]
+  (let [button-id    (answer-key field-descriptor)
+        validators   (:validators field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? button-id])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
@@ -478,7 +478,7 @@
         {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
-                       [single-choice-option option button-id validators (:cannot-edit @answer)])
+                       [single-choice-option option button-id validators @cannot-edit?])
                      (:options field-descriptor))]
        [single-choice-followups button-id (:options field-descriptor)]])))
 
