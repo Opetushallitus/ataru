@@ -200,7 +200,7 @@
                     :return {:application       ataru-schema/Application
                              :events            [ataru-schema/Event]
                              :review            ataru-schema/Review
-                             :hakukohde-reviews [ataru-schema/HakukohdeReview]
+                             :hakukohde-reviews ataru-schema/HakukohdeReviews
                              :form              ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 

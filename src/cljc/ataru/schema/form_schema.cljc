@@ -239,15 +239,12 @@
    (s/optional-key :score)               (s/maybe s/Int)
    :notes                                (s/maybe s/Str)})
 
-(s/defschema HakukohdeReview
-  {:id                                    s/Int
-   :application-key                       s/Str
-   :modified-time                         org.joda.time.DateTime
-   :hakukohde                             (s/maybe s/Str)
-   (s/optional-key :language-requirement) (apply s/enum (map first review-states/application-hakukohde-review-states))
-   (s/optional-key :degree-requirement)   (apply s/enum (map first review-states/application-hakukohde-review-states))
-   (s/optional-key :eligibility-state)    (apply s/enum (map first review-states/application-hakukohde-eligibility-states))
-   (s/optional-key :selection-state)      (apply s/enum (map first review-states/application-hakukohde-selection-states))})
+(s/defschema HakukohdeReviews
+  ; keyed by hakukohde-oid or "form"
+  {s/Str {(s/optional-key :language-requirement) (apply s/enum (map first review-states/application-hakukohde-review-states))
+          (s/optional-key :degree-requirement)   (apply s/enum (map first review-states/application-hakukohde-review-states))
+          (s/optional-key :eligibility-state)    (apply s/enum (map first review-states/application-hakukohde-eligibility-states))
+          (s/optional-key :selection-state)      (apply s/enum (map first review-states/application-hakukohde-selection-states))}})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional

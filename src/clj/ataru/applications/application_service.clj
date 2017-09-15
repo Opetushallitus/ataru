@@ -70,14 +70,13 @@
                                      :else
                                      (map get-label koodi-value)))))))))))
 
-(defn- get-application-hakukohde-reviews
+(defn- parse-application-hakukohde-reviews
   [application-key]
-  (let [reviews (application-store/get-application-hakukohde-reviews application-key)]
-    (map (fn [r]
-           (-> r
-               (assoc (keyword (:requirement r)) (:state r))
-               (dissoc :requirement :state)))
-         reviews)))
+  (reduce
+    (fn [acc {:keys [hakukohde requirement state]}]
+      (assoc-in acc [(name (or hakukohde "form"))] {(keyword requirement) state}))
+    {}
+    (application-store/get-application-hakukohde-reviews application-key)))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
@@ -95,7 +94,7 @@
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application       (merge application tarjonta-info)
      :form              form
-     :hakukohde-reviews (get-application-hakukohde-reviews application-key)
+     :hakukohde-reviews (parse-application-hakukohde-reviews application-key)
      :events            (application-store/get-application-events application-key)
      :review            (application-store/get-application-review application-key)}))
 
