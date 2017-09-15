@@ -430,8 +430,9 @@
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)]
-    (fn [initial-content path]
+        animation-effect (fade-out-effect path)
+        question-group-element? true]
+    (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
             field-type (:fieldType @value)]
         [:div.editor-form__component-wrapper
@@ -465,7 +466,8 @@
                    ^{:key "options-input"}
                    [:div.editor-form__multi-options-container
                     (map-indexed (fn [idx _]
-                                   (dropdown-option idx path languages :include-followup? (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"])))
+                                   (dropdown-option idx path languages :include-followup? (and (not question-group-element?)
+                                                                                               (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"]))))
                                  (:options @value))]
                    ^{:key "options-input-add"}
                    [:div.editor-form__add-dropdown-item

@@ -27,8 +27,8 @@
   (let [render-children (fn [children & [new-path]]
                           (for [[index child] (map vector (range) children)]
                             ^{:key index}
-                            [soresu->reagent child (conj (vec path) :children index)]))]
-    (fn [content path]
+                            [soresu->reagent child (conj (vec path) :children index) :question-group-element? (= (:fieldClass content) "questionGroup")]))]
+    (fn [content path & args]
       [:div
        (when-not ((set path) :followups)
          [ec/drag-n-drop-spacer path content])
@@ -62,7 +62,7 @@
               [ec/text-area content path]
 
               {:fieldClass "formField" :fieldType "dropdown"}
-              [ec/dropdown content path]
+              [ec/dropdown content path args]
 
               {:fieldClass "formField" :fieldType "multipleChoice"}
               [ec/dropdown content path]

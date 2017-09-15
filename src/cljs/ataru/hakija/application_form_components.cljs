@@ -367,8 +367,8 @@
                 ^{:key idx}
                 [:option {:value option-value} label]))
             (:options field-descriptor)))]]]
-
-     [dropdown-followups lang value field-descriptor]]))
+     (when-not idx
+       [dropdown-followups lang value field-descriptor])]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
