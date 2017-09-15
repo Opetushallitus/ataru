@@ -300,20 +300,20 @@
       db)))
 
 (defn dropdown-followups [lang value field-descriptor]
-  (let [prev (r/atom @value)
+  (let [prev (r/atom (:value @value))
         resolve-followups (partial util/resolve-followups (:options field-descriptor))]
     (r/create-class
       {:component-did-update (fn []
                                (let [previous @prev]
-                                 (when-not (= previous (reset! prev @value))
+                                 (when-not (= previous (reset! prev (:value @value)))
                                    (let [previous-followups (resolve-followups previous)
-                                         current-followups  (resolve-followups @value)]
+                                         current-followups  (resolve-followups (:value @value))]
                                      (dispatch [:state-update
                                                 (fn [db]
                                                   (let [reduced (reduce #(toggle-followup-visibility %1 %2 false) db previous-followups)]
                                                     (reduce #(toggle-followup-visibility %1 %2 true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followups (resolve-followups @value)]
+                               (when-let [followups (resolve-followups (:value @value))]
                                  (into [:div.application__form-dropdown-followups]
                                    (for [followup followups]
                                      [:div.application__form-dropdown-followups.animated.fadeIn
@@ -331,7 +331,7 @@
                                    (get (answer-key field-descriptor))
                                    :cannot-edit)))
         value-path   (cond-> [:application :answers (answer-key field-descriptor)]
-                       idx (concat [:values idx 0 :value]))
+                       idx (concat [:values idx 0]))
         value        (subscribe [:state-query value-path])
         on-change    (if idx
                        (partial multi-value-field-change field-descriptor 0 idx)
@@ -348,7 +348,7 @@
          [:span.application__form-select-arrow])
        [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
         {:id        (:id field-descriptor)
-         :value     (or @value "")
+         :value     (or (:value @value) "")
          :on-change on-change
          :disabled  @disabled?
          :required  (is-required-field? field-descriptor)}
