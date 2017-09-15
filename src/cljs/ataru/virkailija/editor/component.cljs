@@ -430,8 +430,7 @@
   (let [languages        (subscribe [:editor/languages])
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)
-        question-group-element? true]
+        animation-effect (fade-out-effect path)]
     (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
             field-type (:fieldType @value)]
