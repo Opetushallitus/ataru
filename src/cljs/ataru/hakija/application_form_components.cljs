@@ -7,6 +7,7 @@
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [ataru.cljs-util :as cljs-util :refer [console-log]]
+            [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
              [answer-key
@@ -131,7 +132,8 @@
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
-     (let [cannot-view? (and editing (:cannot-view @answer))]
+     (let [cannot-view? (and editing (:cannot-view @answer))
+           cannot-edit? (:cannot-edit @answer)]
        [:input.application__form-text-input
         (merge {:id          id
                 :type        "text"
@@ -147,12 +149,13 @@
                 :on-blur     on-blur
                 :on-change   on-change
                 :required    (is-required-field? field-descriptor)}
-               (when (or disabled cannot-view?) {:disabled true}))])]))
+               (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [id         (keyword (:id field-descriptor))
-        size-class (text-field-size->class (get-in field-descriptor [:params :size]))
-        lang       (subscribe [:application/form-language])]
+  (let [id           (keyword (:id field-descriptor))
+        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        lang         (subscribe [:application/form-language])
+        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
     (fn [field-descriptor & {div-kwd :div-kwd question-group-idx :idx :or {div-kwd :div.application__form-field}}]
       (let [values    (subscribe [:state-query [:application :answers id :values question-group-idx]])
             on-blur   (fn [evt]
@@ -180,7 +183,9 @@
                    :on-change on-change
                    :required  (is-required-field? field-descriptor)}
                   (when (empty? value)
-                    {:on-blur on-blur}))]])
+                    {:on-blur on-blur})
+                  (when @cannot-edit?
+                    {:disabled true}))]])
             (map-indexed
               (let [first-is-empty? (empty? (first (map :value @values)))
                     translations    (get-translations (keyword @lang) application-view-translations)]
@@ -189,8 +194,6 @@
                    [:input.application__form-text-input
                     (merge
                       {:type      "text"
-                       ; prevent adding second answer when first is empty
-                       :disabled  (and last? first-is-empty?)
                        :class     (str
                                     size-class " application__form-text-input--normal"
                                     (when-not value " application__form-text-input--disabled"))
@@ -201,7 +204,10 @@
                         {:on-blur on-blur})
                       (when last?
                         {:placeholder
-                         (:add-more translations)}))]
+                         (:add-more translations)})
+                      (when (or @cannot-edit?
+                                (and last? first-is-empty?))
+                        {:disabled true}))]
                    (when value
                      [:a.application__form-repeatable-text--addremove
                       [:i.zmdi.zmdi-close.zmdi-hc-lg
@@ -223,11 +229,11 @@
       max-length)))
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [application (subscribe [:state-query [:application]])
-        answers     (subscribe [:state-query [:application :answers]])
-        on-change   (partial textual-field-change field-descriptor)
-        size        (-> field-descriptor :params :size)
-        max-length  (parse-max-length field-descriptor)]
+  (let [application  (subscribe [:state-query [:application]])
+        on-change    (partial textual-field-change field-descriptor)
+        size         (-> field-descriptor :params :size)
+        max-length   (parse-max-length field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? (-> field-descriptor :id keyword)])]
     (fn [field-descriptor]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
@@ -235,15 +241,16 @@
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
          [:textarea.application__form-text-input.application__form-text-area
-          {:id            (:id field-descriptor)
-           :class         (text-area-size->class size)
-           :maxLength     max-length
-           ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
-           ; dynamically made changes to the text-field value.
-           :default-value value
-           :on-change     on-change
-           :value         value
-           :required      (is-required-field? field-descriptor)}]
+          (merge {:id            (:id field-descriptor)
+                  :class         (text-area-size->class size)
+                  :maxLength     max-length
+                  ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
+                  ; dynamically made changes to the text-field value.
+                  :default-value value
+                  :on-change     on-change
+                  :value         value
+                  :required      (is-required-field? field-descriptor)}
+            (when @cannot-edit? {:disabled true}))]
          (when max-length
            [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
@@ -379,7 +386,7 @@
            [render-field followup])
          followups)]])
 
-(defn- multiple-choice-option [field-descriptor option parent-id]
+(defn- multiple-choice-option [field-descriptor option parent-id cannot-edit?]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
@@ -392,33 +399,37 @@
     (fn [field-descriptor option parent-id]
       [:div {:key option-id}
        [:input.application__form-checkbox
-        {:id        option-id
-         :type      "checkbox"
-         :checked   @checked?
-         :value     value
-         :on-change on-change}]
+        (merge {:id        option-id
+                :type      "checkbox"
+                :checked   @checked?
+                :value     value
+                :on-change on-change}
+          (when cannot-edit? {:disabled true}))]
        [:label
-        {:for option-id}
+        (merge {:for option-id}
+          (when cannot-edit? {:class "disabled"}))
         label]
        (when (and @checked? (not-empty (:followups option)))
          [multi-choice-followups (:followups option)])])))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
-  (let [parent-id  (answer-key field-descriptor)
-        validators (:validators field-descriptor)]
-     [div-kwd
-      [label field-descriptor]
-      [:div.application__form-text-input-info-text
-       [info-text field-descriptor]]
-      [:div.application__form-outer-checkbox-container
-       {:aria-labelledby (id-for-label field-descriptor)}
-       (map-indexed (fn [idx option]
-                      ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                      [multiple-choice-option field-descriptor option parent-id])
-                    (:options field-descriptor))]]))
+  (let [id           (answer-key field-descriptor)
+        validators   (:validators field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
+    (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+      [div-kwd
+       [label field-descriptor]
+       [:div.application__form-text-input-info-text
+        [info-text field-descriptor]]
+       [:div.application__form-outer-checkbox-container
+        {:aria-labelledby (id-for-label field-descriptor)}
+        (map-indexed (fn [idx option]
+                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
+                       [multiple-choice-option field-descriptor option id @cannot-edit?])
+          (:options field-descriptor))]])))
 
-(defn- single-choice-option [option parent-id validators]
+(defn- single-choice-option [option parent-id validators cannot-edit?]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
@@ -432,13 +443,15 @@
     (fn [option parent-id validators]
       [:div.application__form-single-choice-button-inner-container {:key option-id}
        [:input.application__form-single-choice-button
-        {:id        option-id
-         :type      "checkbox"
-         :checked   @checked?
-         :value     option-value
-         :on-change on-change}]
+        (merge {:id        option-id
+                :type      "checkbox"
+                :checked   @checked?
+                :value     option-value
+                :on-change on-change}
+          (when cannot-edit? {:disabled true}))]
        [:label
-        {:for option-id}
+        (merge {:for option-id}
+          (when cannot-edit? {:class "disabled"}))
         label]
        (when (and @checked? (not-empty (:followups option)))
          [:div.application__form-single-choice-followups-indicator])])))
@@ -477,8 +490,9 @@
                                                           @followups)))]))})))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-  (let [button-id  (answer-key field-descriptor)
-        validators (:validators field-descriptor)]
+  (let [button-id    (answer-key field-descriptor)
+        validators   (:validators field-descriptor)
+        cannot-edit? (subscribe [:application/cannot-edit-answer? button-id])]
     (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
@@ -488,7 +502,7 @@
         {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
-                       [single-choice-option option button-id validators])
+                       [single-choice-option option button-id validators @cannot-edit?])
                      (:options field-descriptor))]
        [single-choice-followups button-id (:options field-descriptor)]])))
 
@@ -538,7 +552,7 @@
 (defn attachment-view-file [field-descriptor component-id attachment-idx]
   (let [on-click (fn remove-attachment [event]
                   (.preventDefault event)
-                   (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))]
+                  (dispatch [:application/remove-attachment field-descriptor component-id attachment-idx]))]
     (fn [field-descriptor component-id attachment-idx]
       [:div.application__form-filename-container
        [:span.application__form-attachment-text
@@ -615,13 +629,16 @@
   (let [on-change (fn [evt]
                     (let [value (-> evt .-target .-value)]
                       (dispatch [:application/set-adjacent-field-answer child row-idx value question-group-idx])))
-        value     (subscribe [:state-query [:application :answers (keyword id) :values question-group-idx row-idx :value]])]
+        answer    (subscribe [:state-query [:application :answers (keyword id)]])]
     (fn [{:keys [id]} row-idx]
-      [:input.application__form-text-input.application__form-text-input--normal
-       {:id        (str id "-" row-idx)
-        :type      "text"
-        :value     @value
-        :on-change on-change}])))
+      (let [value        (get-in @answer [:values question-group-idx row-idx :value])
+            cannot-edit? (:cannot-edit @answer)]
+        [:input.application__form-text-input.application__form-text-input--normal
+         (merge {:id        (str id "-" row-idx)
+                 :type      "text"
+                 :value     value
+                 :on-change on-change}
+           (when cannot-edit? {:disabled true}))]))))
 
 (defn adjacent-text-fields [field-descriptor]
   (let [language        (subscribe [:application/form-language])

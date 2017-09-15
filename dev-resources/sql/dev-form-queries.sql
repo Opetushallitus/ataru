@@ -6,13 +6,13 @@ WHERE id = :old_id;
 
 -- name: yesql-delete-fixture-application-review!
 DELETE FROM application_reviews
-WHERE application_key = (SELECT key
+WHERE application_key in (SELECT key
                          FROM applications
                          WHERE form_id = :form_id);
 
 -- name: yesql-delete-fixture-application-events!
 DELETE FROM application_events
-WHERE application_key = (SELECT key
+WHERE application_key in (SELECT key
                          FROM applications
                          WHERE form_id = :form_id);
 

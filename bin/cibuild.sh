@@ -184,23 +184,22 @@ case "$command" in
         ;;
     *)
         echo "Unknown command $command. Available commands:
+* clean
 * compile-less
 * npm-dependencies
 * process-resources
 * build-clojurescript-virkailija
 * build-clojurescript-hakija
-* prepare-ui-tests
+* test-clojure
+* test-clojurescript
+* test-browser
+* run-migrations
+* nuke-test-db
+* create-db-schema
 * reset-test-database-with-fixture
 * ui-compile
+* prepare-ui-tests
 * create-uberjar
-* create-db-schema
-* test-clojure
-* test-browser
-* test-clojurescript
 * run-tests
-* nuke-test-db
-* test-integration
-* run-migrations
-* clean"
-        ;;
+* run-browser-tests"
 esac

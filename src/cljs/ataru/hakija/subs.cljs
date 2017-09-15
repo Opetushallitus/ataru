@@ -42,6 +42,11 @@
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
 
 (re-frame/reg-sub
+  :application/cannot-edit-answer?
+  (fn [db [_ key]]
+    (-> db :application :answers key :cannot-edit)))
+
+(re-frame/reg-sub
   :application/default-language
   (fn [db]
     (-> db
@@ -100,7 +105,9 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
-  (fn [db _] (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))))
+  (fn [db _]
+    (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
+         (not @(re-frame/subscribe [:application/cannot-edit-answer? :hakukohteet])))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
