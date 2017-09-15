@@ -31,10 +31,13 @@
           values       (:value answer)
           multi-value? #(or (seq? %) (vector? %))]
       (if (multi-value? values)
-        (into [:ul.application__form-field-list] (for [value values]
-                                                   (if (multi-value? value)
-                                                     (map (fn [x] [:li x]) value)
-                                                     [:li value])))
+        (into [:ul.application__form-field-list] (map-indexed (fn [question-group-idx value]
+                                                                (if (multi-value? value)
+                                                                  (map-indexed (fn [value-idx x]
+                                                                                 ^{:key (str "value-" question-group-idx "-" value-idx)}
+                                                                                 [:li x]) value)
+                                                                  [:li value]))
+                                                              values))
         (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
