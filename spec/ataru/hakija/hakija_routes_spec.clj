@@ -23,9 +23,11 @@
 (def form-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
 (def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
 (def form-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
-(def form-for-hakukohde-edited-email (assoc-in application-fixtures/person-info-form-application-for-hakukohde [:answers 2 :value] "edited@foo.com"))
 (def form-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
 (def form-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
+(def form-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
+                                   (assoc-in [:answers 2 :value] "edited@foo.com")
+                                   (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -109,8 +111,6 @@
   {:on    false
    :start (- (System/currentTimeMillis) (* 30 24 3600 1000))
    :end   (- (System/currentTimeMillis) (* 20 24 3600 1000))})
-
-
 
 (describe "/application"
   (tags :unit :hakija-routes)
@@ -198,22 +198,21 @@
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "edited@foo.com" (get-answer application "email"))))))
+            (should= "edited@foo.com" (get-answer application "email")))))
 
-      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff..
-      ;(it "should not allow editing ssn"
-      ;  (with-response :put resp form-edited-ssn
-      ;    (println resp)
-      ;    (should= 200 (:status resp))
-      ;    (let [id (-> resp :body :id)
-      ;          application (get-application-by-id id)]
-      ;      (should= "010101A123N" (get-answer application "ssn"))))))
+      (it "should not allow editing ssn"
+        (with-response :put resp form-edited-ssn
+          (should= 200 (:status resp))
+          (let [id (-> resp :body :id)
+                application (get-application-by-id id)]
+            (should= "010101A123N" (get-answer application "ssn"))))))
 
     (describe "PUT application after hakuaika ended"
       (around [spec]
         (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
                       application-email/start-email-edit-confirmation-job (fn [_])
-                      hakuaika/get-hakuaika-info hakuaika-ended-within-10-days]
+                      hakuaika/get-hakuaika-info hakuaika-ended-within-10-days
+                      application-service/remove-orphan-attachments (fn [_ _])]
           (spec)))
 
       (before-all
@@ -224,14 +223,13 @@
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id])))))
 
-
-      ; TODO: Make backend check whether fields can be edited don't rely on frontend stuff, email should remain unedited.
-      (it "should allow application edit after hakuaika within 10 days"
-        (with-response :put resp form-for-hakukohde-edited-email
+      (it "should allow application edit after hakuaika within 10 days and only changes to attachments"
+        (with-response :put resp form-for-hakukohde-edited
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "edited@foo.com" (get-answer application "email")))))
+            (should= "aku@ankkalinna.com" (get-answer application "email"))
+            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"] (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))
 
       (it "should not allow application edit after hakuaika"
         (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-20-days]

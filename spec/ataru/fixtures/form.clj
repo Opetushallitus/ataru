@@ -138,4 +138,11 @@
                                               :id "b0839467-a6e8-4294-b5cc-830756bbda8a",
                                               :params {},
                                               :validators ["required"]}],
-                                  :params {}}]})
+                                  :params {}}
+                                 {:label {:fi "Eka liite"
+                                          :sv ""}
+                                  :fieldClass "formField"
+                                  :id "164954b5-7b23-4774-bd44-dee14071316b"
+                                  :params {}
+                                  :options []
+                                  :fieldType "attachment"}]})

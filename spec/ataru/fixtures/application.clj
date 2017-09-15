@@ -201,7 +201,8 @@
                     {:key "first-name", :value "Aku Petteri", :fieldType "textField", :label {:fi "Etunimet", :sv "Förnamn"}}
                     {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
                     {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
-                    {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}]})
+                    {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}
+                    {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}]})
 
 (def application-with-person-info-module {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
                                           :lang "fi",
