@@ -103,7 +103,9 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
-  (fn [db _] (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))))
+  (fn [db _]
+    (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
+         (not @(re-frame/subscribe [:application/cannot-edit-answer? :hakukohteet])))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
