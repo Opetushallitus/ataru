@@ -471,10 +471,11 @@
       {:reagent-render       (fn [parent-id options]
                                (when (not-empty @followups)
                                  [:div.application__form-multi-choice-followups-container.animated.fadeIn
-                                  (map (fn [followup]
-                                         ^{:key (str (:id followup))}
-                                         [render-field followup])
-                                       @followups)]))
+                                  (doall
+                                   (map (fn [followup]
+                                          ^{:key (str (:id followup))}
+                                          [render-field followup])
+                                        @followups))]))
        :component-did-update (fn []
                                ; Setting visible? state to true/false determines answer's visibility
                                ; in the "required answers" list on the header, below the submit application
@@ -500,10 +501,11 @@
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
         {:aria-labelledby (id-for-label field-descriptor)}
-        (map-indexed (fn [idx option]
-                       ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
-                       [single-choice-option option button-id validators @cannot-edit?])
-                     (:options field-descriptor))]
+        (doall
+         (map-indexed (fn [idx option]
+                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
+                        [single-choice-option option button-id validators @cannot-edit?])
+                      (:options field-descriptor)))]
        [single-choice-followups button-id (:options field-descriptor)]])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
