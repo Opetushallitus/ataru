@@ -41,9 +41,9 @@
 (defn- get-hakuaikas
   [tarjonta-service application]
   (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
-        hakukohde             (when application-hakukohde (.get-hakukohde tarjonta-service application-hakukohde))
+        hakukohde             (when application-hakukohde (get-hakukohde tarjonta-service application-hakukohde))
         haku-oid              (:hakuOid hakukohde)
-        haku                  (when haku-oid (.get-haku tarjonta-service haku-oid))]
+        haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
     (hakuaika/get-hakuaika-info hakukohde haku)))
 
 (defn- after-apply-end-within-10-days?
@@ -210,15 +210,13 @@
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
-  (if (allowed-to-apply? tarjonta-service application)
-    (let [{passed? :passed?
-           application-id :application-id
-           :as result}
-          (validate-and-store tarjonta-service application application-store/add-application false)]
-      (if passed?
-        (start-submit-jobs application-id)
-        result))
-    not-allowed-reply))
+  (let [{passed?        :passed?
+         application-id :application-id
+         :as            result}
+        (validate-and-store tarjonta-service application application-store/add-application false)]
+    (if passed?
+      (start-submit-jobs application-id)
+      result)))
 
 (defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)
