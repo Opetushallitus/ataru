@@ -416,7 +416,7 @@
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (answer-key field-descriptor)
         validators   (:validators field-descriptor)
-        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
+        cannot-edit? @(subscribe [:application/cannot-edit-answer? id])]
     (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
@@ -426,7 +426,7 @@
         {:aria-labelledby (id-for-label field-descriptor)}
         (map-indexed (fn [idx option]
                        ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                       [multiple-choice-option field-descriptor option id @cannot-edit?])
+                       [multiple-choice-option field-descriptor option id cannot-edit?])
           (:options field-descriptor))]])))
 
 (defn- single-choice-option [option parent-id validators cannot-edit?]
