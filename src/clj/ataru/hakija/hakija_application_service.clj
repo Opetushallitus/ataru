@@ -31,11 +31,29 @@
      :application-id application-id}))
 
 (defn- get-hakukohteet [application]
-  (->> application
-       :answers
-       (filter #(= (:key %) "hakukohteet"))
-       first
-       :value))
+  (or (->> application
+           :answers
+           (filter #(= (:key %) "hakukohteet"))
+           first
+           :value)
+      (:hakukohde application)))
+
+(defn- get-hakuaikas
+  [tarjonta-service application]
+  (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
+        hakukohde             (when application-hakukohde (.get-hakukohde tarjonta-service application-hakukohde))
+        haku-oid              (:hakuOid hakukohde)
+        haku                  (when haku-oid (.get-haku tarjonta-service haku-oid))]
+    (hakuaika/get-hakuaika-info hakukohde haku)))
+
+(defn- after-apply-end-within-10-days?
+  [apply-end-long]
+  (when apply-end-long
+    (let [now            (time/now)
+          apply-end      (from-long apply-end-long)
+          days-after-end (time/plus apply-end (time/days 10))]
+      (and (time/after? now apply-end)
+           (time/after? days-after-end now)))))
 
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
@@ -43,11 +61,9 @@
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true ;; plain form, always allowed to apply
-      (let [hakukohde         (get-hakukohde tarjonta-service (first hakukohteet)) ; TODO check apply times for each hakukohde separately?
-            haku-oid          (:hakuOid hakukohde)
-            haku              (when haku-oid (get-haku tarjonta-service haku-oid))
-            {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
-        hakuaika-on))))
+      (let [hakuaikas (get-hakuaikas tarjonta-service application)]
+        (or (:on hakuaikas)
+            (after-apply-end-within-10-days? (:end hakuaikas)))))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -164,23 +180,6 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
-
-(defn- get-hakuaikas
-  [tarjonta-service application]
-  (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
-        hakukohde             (when application-hakukohde (.get-hakukohde tarjonta-service application-hakukohde))
-        haku-oid              (:hakuOid hakukohde)
-        haku                  (when haku-oid (.get-haku tarjonta-service haku-oid))]
-    (hakuaika/get-hakuaika-info hakukohde haku)))
-
-(defn- after-apply-end-within-10-days?
-  [apply-end-long]
-  (when apply-end-long
-    (let [now            (time/now)
-          apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days 10))]
-      (and (time/after? now apply-end)
-           (time/after? days-after-end now)))))
 
 (defn- flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service cannot-view-field-ids cannot-edit-field-ids]

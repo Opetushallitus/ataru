@@ -174,6 +174,7 @@
   {:form           2147483647
    :lang           "fi"
    :id             2
+   :secret         "12345"
    :hakukohde      ["1.2.246.562.29.11111111110"]
    :answers        [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
                      :value     "Vastaus tekstikysymykseen",

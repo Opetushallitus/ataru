@@ -23,7 +23,7 @@
 (def form-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
 (def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
 (def form-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
-(def form-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
+(def form-edited-email (assoc-in application-fixtures/person-info-form-application-for-hakukohde [:answers 2 :value] "edited@foo.com"))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -99,8 +99,16 @@
 (defn- hakuaika-ended-within-10-days
   [_ _]
   {:on    false
-   :start (- (System/currentTimeMillis) (* 20 24 3600))     ;20 days
-   :end   (- (System/currentTimeMillis) (* 5 24 3600))})
+   :start (- (System/currentTimeMillis) (* 20 24 3600 1000))
+   :end   (- (System/currentTimeMillis) (* 5 24 3600 1000))})
+
+(defn- hakuaika-ended-within-20-days
+  [_ _]
+  {:on    false
+   :start (- (System/currentTimeMillis) (* 30 24 3600 1000))
+   :end   (- (System/currentTimeMillis) (* 20 24 3600 1000))})
+
+
 
 (describe "/application"
   (tags :unit :hakija-routes)
@@ -167,22 +175,24 @@
           (let [answers (-> resp :body :answers)]
             (should= (count answers)
                      (count (filter cannot-edit? answers)))
-            (should= 1 (count (filter cannot-view? answers)))))))
+            (should= 1 (count (filter cannot-view? answers))))))))
 
     (describe "PUT application"
       (around [spec]
-        (with-redefs [application-email/start-email-edit-confirmation-job (fn [_])]
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                      application-email/start-email-edit-confirmation-job (fn [_])
+                      hakuaika/get-hakuaika-info hakuaika-ended-within-10-days]
           (spec)))
 
       (before-all
         (reset! form (db/init-db-fixture)))
 
       (it "should create"
-        (with-response :post resp application-fixtures/person-info-form-application
+        (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
           (should (have-application-in-db (get-in resp [:body :id])))))
 
-      (it "should edit application"
+      (it "should allow application edit after hakuaika within 10 days"
         (with-response :put resp form-edited-email
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
@@ -190,7 +200,7 @@
             (should= "edited@foo.com" (get-answer application "email")))))
 
       (it "should not allow application edit after hakuaika"
-        (with-redefs [application-service/allowed-to-apply? (fn [_ _] false)]
-          (with-response :put resp application-fixtures/person-info-form-application
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-20-days]
+          (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
             (should= 400 (:status resp))
-            (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp))))))))
+            (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp)))))))
