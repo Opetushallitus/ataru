@@ -38,10 +38,29 @@ Virkailija has a certain amount of configurations containing private
 secrets like passwords etc. To run it in full development mode, first
 check out `https://github.com/Opetushallitus/ataru-secrets` (you'll
 need privileges). You also need to forward untuva ldap to a local port:
+
 ```
 ssh -L31337:ldap.ldap.untuva.aws.opintopolku.fi:389 ubuntu@bastion.untuva.aws.opintopolku.fi
 ```
-Then you can run:
+
+Or you can edit your `~/.ssh/config` file to contain a host definition like:
+ 
+```
+Host bastion.untuva.aws.opintopolku.fi
+    LocalForward 31337 ldap.ldap.untuva.aws.opintopolku.fi:389
+    user <your username here>
+    IdentityFile <your private key file path here>
+    HostName bastion.untuva.aws.opintopolku.fi
+```
+
+Possibly with multiple LocalForward definitions for whatever you need. Then you can simply `ssh ubuntu@bastion.untuva.aws.opintopolku.fi`
+
+After setting up the tunnel you can run:
+
+`./bin/start-dev-build.sh`
+
+Which starts all build processes in a new tmux instance. You can also manually run:
+
 ```
 CONFIG=../ataru-secrets/virkailija-dev.edn lein virkailija-dev
 (in another terminal)
