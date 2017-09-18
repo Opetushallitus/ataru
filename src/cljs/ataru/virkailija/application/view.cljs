@@ -362,11 +362,11 @@
           [:a
            {:href (str "/authentication-henkiloui/html/henkilo/"
                        person-oid
-                       "/?permissionCheckService=ATARU")
+                       "?permissionCheckService=ATARU")
             :target "_blank"}
-           [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]]
-          [:span.application-handling__review-area-main-heading-person-oid
-           (str "Oppija " person-oid)]])]
+           [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
+           [:span.application-handling__review-area-main-heading-person-oid
+            (str "Oppija " person-oid)]]])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
