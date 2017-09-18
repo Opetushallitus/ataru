@@ -172,7 +172,8 @@
         valid                  (or (empty? validators)
                                    (and question-group-idx
                                         (every? values-in-group-valid? value))
-                                   (values-in-group-valid? value))]
+                                   (and (not question-group-idx)
+                                        (values-in-group-valid? value)))]
     (merge answer {:value value :valid valid})))
 
 (defn- select-single-choice-button [db [_ button-id value validators]]
