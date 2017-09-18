@@ -161,7 +161,7 @@
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :selected-review-hakukohde] (first hakukohde-reviews))))
+      (assoc-in [:application :selected-review-hakukohde] (-> application :hakukohde (first)))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -333,3 +333,8 @@
     {:db db
      :dispatch-n [[:application/navigate path]
                   [:application/dispatch dispatch-vec]]}))
+
+(reg-event-db
+  :application/select-review-hakukohde
+  (fn [db [_ selected-hakukohde-oid]]
+    (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
