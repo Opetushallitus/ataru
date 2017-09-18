@@ -136,7 +136,8 @@
           query-param (case type
                         :ssn "ssn"
                         :dob "dob"
-                        :email "email")]
+                        :email "email"
+                        :name "name")]
       (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
 
 (reg-event-db

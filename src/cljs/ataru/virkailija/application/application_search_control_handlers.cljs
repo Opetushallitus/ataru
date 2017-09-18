@@ -38,7 +38,10 @@
                                    [search-term-ucase :dob]
 
                                    (email/email? search-term)
-                                   [search-term :email])
+                                   [search-term :email]
+
+                                   :else
+                                   [search-term :name])
          show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-search-term (-> db
                                  (assoc-in [:application :search-control :search-term :value] search-term)
