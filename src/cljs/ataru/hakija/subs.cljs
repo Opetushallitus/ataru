@@ -72,8 +72,10 @@
 
 (re-frame/reg-sub
   :application/multiple-choice-option-checked?
-  (fn [db [_ parent-id option-value]]
-    (let [options (get-in db [:application :answers parent-id :options])]
+  (fn [db [_ parent-id option-value question-group-idx]]
+    (let [option-path (cond-> [:application :answers parent-id :options]
+                        question-group-idx (conj question-group-idx))
+          options     (get-in db option-path)]
       (true? (get options option-value)))))
 
 (re-frame/reg-sub

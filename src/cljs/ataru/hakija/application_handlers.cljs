@@ -153,14 +153,26 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn- toggle-multiple-choice-option [answer option-value validators answers-by-key]
-  (let [answer (update-in answer [:options option-value] not)
-        value  (->> (:options answer)
-                    (filter (comp true? second))
-                    (map first))
-        valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value answers-by-key nil) validators))
-                 true)]
+(defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
+  (let [option-path            (if question-group-idx
+                                 [:options question-group-idx option-value]
+                                 [:options option-value])
+        answer                 (cond-> answer
+                                 question-group-idx (update :options (fnil identity []))
+                                 true (update-in option-path not))
+        parse-option-values    (fn [options]
+                                 (->> options
+                                      (filter (comp true? second))
+                                      (map first)))
+        value                  (if question-group-idx
+                                 (map parse-option-values (:options answer))
+                                 (parse-option-values (:options answer)))
+        values-in-group-valid? (fn [values]
+                                 (every? true? (map #(validator/validate % values answers-by-key nil) validators)))
+        valid                  (or (empty? validators)
+                                   (and question-group-idx
+                                        (every? values-in-group-valid? value))
+                                   (values-in-group-valid? value))]
     (merge answer {:value value :valid valid})))
 
 (defn- select-single-choice-button [db [_ button-id value validators]]
@@ -178,7 +190,7 @@
 (defn- toggle-values
   [answer options answers-by-key]
   (reduce (fn [answer option-value]
-            (toggle-multiple-choice-option answer option-value nil answers-by-key))
+            (toggle-multiple-choice-option answer option-value nil answers-by-key nil))
           answer
           options))
 
@@ -501,15 +513,21 @@
 
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ field-descriptor option]]
-    (let [id (keyword (:id field-descriptor))
-          validators (:validators field-descriptor)]
-      (-> db
-          (update-in [:application :answers id]
-                     (fn [answer]
-                       (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
-          (set-multi-value-changed id)
-          (set-multiple-choice-followup-visibility field-descriptor option)))))
+  (fn [db [_ field-descriptor option question-group-idx]]
+    (let [id         (keyword (:id field-descriptor))
+          validators (:validators field-descriptor)
+          db      (-> db
+                         (update-in [:application :answers id]
+                                    (fn [answer]
+                                      (toggle-multiple-choice-option answer
+                                                                     (:value option)
+                                                                     validators
+                                                                     (-> db :application :answers)
+                                                                     question-group-idx)))
+                         (set-multi-value-changed id))]
+      (cond-> db
+        (not question-group-idx)
+        (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
   :application/select-single-choice-button
