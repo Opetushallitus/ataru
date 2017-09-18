@@ -150,7 +150,7 @@ SELECT
 FROM applications a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
-WHERE (to_tsvector(a.preferred_name) || to_tsvector(a.last_name)) @@ plainto_tsquery(:name)
+WHERE to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name)
       AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 

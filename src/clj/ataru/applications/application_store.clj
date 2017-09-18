@@ -257,15 +257,21 @@
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
+(defn- name-search-query [name]
+  (->> (clojure.string/split name #"\s+")
+       (remove clojure.string/blank?)
+       (map #(str % ":*"))
+       (clojure.string/join " & ")))
+
 (defn get-application-list-by-name [name organization-oids]
-  (->> (exec-db :db yesql-get-application-list-by-name {:name                         name
+  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
                                                         :query_type                   "ORGS"
                                                         :authorized_organization_oids organization-oids})
        (map ->kebab-case-kw)
        (latest-versions-only)))
 
 (defn get-full-application-list-by-name [name]
-  (->> (exec-db :db yesql-get-application-list-by-name {:name                         name
+  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
                                                         :query_type                   "ALL"
                                                         :authorized_organization_oids [""]})
        (map ->kebab-case-kw)
