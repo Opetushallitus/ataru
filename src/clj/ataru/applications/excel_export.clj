@@ -10,6 +10,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -290,6 +291,28 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
+(defn- get-hakukohde-name [tarjonta-service lang-s oid]
+  (let [lang (keyword lang-s)]
+    (when-let [hakukohde (tarjonta-parser/parse-hakukohde
+                          tarjonta-service
+                          (tarjonta/get-hakukohde tarjonta-service oid))]
+      (str (get-in hakukohde [:name lang]) " - "
+           (get-in hakukohde [:tarjoaja-name lang])))))
+
+(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer]
+  (update hakukohde-answer :value
+          (partial map (fn [oid]
+                         (if-let [name (get-hakukohde-name tarjonta-service lang oid)]
+                           (str name " (" oid ")")
+                           oid)))))
+
+(defn- add-hakukohde-names [tarjonta-service application]
+  (update application :answers
+          (partial map (fn [answer]
+                         (if (= "hakukohteet" (:key answer))
+                           (add-hakukohde-name tarjonta-service (:lang application) answer)
+                           answer)))))
+
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -299,6 +322,7 @@
         get-latest-form-by-key  (memoize form-store/fetch-by-key)]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
+         (map (partial add-hakukohde-names tarjonta-service))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
