@@ -44,9 +44,9 @@
      text]))
 
 (defn hilight-text [text hilight-text]
-  (if (pos? (count hilight-text))
+  (if (some? text)
     (map-indexed hilighted-text->span (match-text text hilight-text))
-    text))
+    [:span ""]))
 
 (defn- hakukohde-remove-event-handler [e]
   (dispatch [:application/hakukohde-remove-selection
