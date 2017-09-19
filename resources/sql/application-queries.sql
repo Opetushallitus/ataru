@@ -303,6 +303,16 @@ SELECT
 FROM applications
 WHERE id = :application_id;
 
+-- name: yesql-has-ssn-applied
+SELECT EXISTS (SELECT 1 FROM applications
+               WHERE haku = :haku_oid
+                   AND ssn = upper(:ssn)) AS has_applied;
+
+-- name: yesql-has-email-applied
+SELECT EXISTS (SELECT 1 FROM applications
+               WHERE haku = :haku_oid
+                   AND email = :email) AS has_applied;
+
 -- name: yesql-get-latest-application-by-key
 WITH latest_version AS (
     SELECT max(created_time) AS latest_time
