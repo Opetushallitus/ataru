@@ -257,26 +257,29 @@
                                                      (not (supports-multiple-values (:fieldType answer))))
                                                 (first))]
                                (if (contains? answers answer-key)
-                                 (update
-                                   (match answer
-                                          {:fieldType "multipleChoice"}
-                                          (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
+                                 (let [answer (match answer
+                                                     {:fieldType "multipleChoice"}
+                                                     (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
 
-                                          {:fieldType "dropdown"}
-                                          (update answers answer-key merge {:valid true :value value})
+                                                     {:fieldType "dropdown"}
+                                                     (update answers answer-key merge {:valid true :value value})
 
-                                          {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                          (update answers answer-key merge
-                                                  {:valid  true
-                                                   :values (mapv (fn [value]
-                                                                   (cond-> {:valid true :value value}
-                                                                     (= field-type "attachment")
-                                                                     (assoc :status :ready)))
-                                                                 (:value answer))})
+                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
+                                                     (update answers answer-key merge
+                                                             {:valid  true
+                                                              :values (mapv (fn [value]
+                                                                              (cond-> {:valid true :value value}
+                                                                                (= field-type "attachment")
+                                                                                (assoc :status :ready)))
+                                                                            (:value answer))})
 
-                                          :else
-                                          (update answers answer-key merge {:valid true :value value}))
-                                   answer-key merge {:cannot-edit cannot-edit :cannot-view cannot-view})
+                                                     :else
+                                                     (update answers answer-key merge {:valid true :value value}))]
+                                   (update
+                                     answer
+                                     answer-key
+                                     merge
+                                     {:cannot-edit cannot-edit :cannot-view cannot-view}))
                                  answers)))
                            answers
                            submitted-answers)))
