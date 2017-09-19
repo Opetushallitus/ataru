@@ -49,15 +49,22 @@
  (fn [db [_ field value]]
    (let [selected-key         (get-in db [:application :selected-key])
          application-list     (get-in db [:application :applications])
+         selected-hakukohde   (get-in db [:application :selected-review-hakukohde])
+         is-hakukohde-review? (some #{field} [:language-requirement
+                                              :degree-requirement
+                                              :eligibility-requirement
+                                              :selection-requirement])
          updated-applications (if (some #{field} [:state :score])
                                 (mapv
                                  #(update-review-field-of-selected-application-in-list % selected-key field value)
                                  application-list)
                                 application-list)]
-     (-> db
-         (update-in [:application :review] assoc field value)
-         (assoc-in [:application :applications] updated-applications)
-         (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
+     (if is-hakukohde-review?
+       (assoc-in db [:application :hakukohde-reviews (keyword selected-hakukohde) field] value)
+       (-> db
+           (update-in [:application :review] assoc field value)
+           (assoc-in [:application :applications] updated-applications)
+           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
 (reg-event-db
  :application/update-sort
@@ -161,7 +168,7 @@
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :selected-review-hakukohde] (-> application :hakukohde (first)))))
+      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
