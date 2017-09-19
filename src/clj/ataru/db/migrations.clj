@@ -174,10 +174,10 @@
     (doseq [hakukohde hakukohteet]
       (info "Updating hakukohde" hakukohde "to state" selection-state)
       (application-store/save-application-hakukohde-review
-        {:application-key (:key application)
-         :requirement     "selection-state"
-         :state           selection-state
-         :hakukohde       hakukohde}
+        (:key application)
+        hakukohde
+        :selection-state
+        selection-state
         fake-session))))
 
 (defn- application-reviews->new-model
