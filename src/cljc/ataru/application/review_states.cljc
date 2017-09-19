@@ -18,9 +18,9 @@
    ["rejected" "Hylätty"]])
 
 (def application-hakukohde-review-states
-  [["unreviewed" "Tarkastamatta"
-    "fulfilled" "Täyttyy"
-    "unfulfilled" "Ei täyty"]])
+  [["unreviewed" "Tarkastamatta"]
+   ["fulfilled" "Täyttyy"]
+   ["unfulfilled" "Ei täyty"]])
 
 (def application-hakukohde-eligibility-states
   [["unreviewed" "Tarkastamatta"]
