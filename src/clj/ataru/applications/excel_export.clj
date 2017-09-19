@@ -148,16 +148,12 @@
   (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (:value answer)
-          _ (println "kysymysryhmä?" (kysymysryhma-answer? value-or-values))
-          _ (println "question" (util/get-field-descriptor (-> form :content) (:key answer)))
-          _ (println "answer" answer)
-          _ (println "-----------")
           value           (cond
                             (kysymysryhma-answer? value-or-values)
                             (->> value-or-values
                                  (map #(clojure.string/join "," %))
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
-                                 (interpose "\n-\n")
+                                 (map-indexed #(format "#%s: %s,\n" %1 %2))
                                  (apply str))
 
                             (sec-or-vec? value-or-values)
