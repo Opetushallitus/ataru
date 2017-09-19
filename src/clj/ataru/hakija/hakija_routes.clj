@@ -219,7 +219,18 @@
              (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
                (if-let [labels (:label code)]
                  (response/ok labels)
-                 (response/not-found))))))
+                 (response/not-found))))
+    (api/GET "/has-applied" []
+             :summary "Check if a person has already applied"
+             :query-params [hakuOid :- (api/describe s/Str "Haku OID")
+                            {ssn :- (api/describe s/Str "SSN") nil}
+                            {email :- (api/describe s/Str "Email address") nil}]
+             (cond (some? ssn)
+                   (response/ok (application-store/has-ssn-applied hakuOid ssn))
+                   (some? email)
+                   (response/ok (application-store/has-email-applied hakuOid email))
+                   :else
+                   (response/bad-request {:error "Either ssn or email is required"})))))
 
 (defn- render-application []
   (let [config (json/generate-string (or (:public-config config) {}))]
