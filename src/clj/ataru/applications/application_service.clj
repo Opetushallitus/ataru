@@ -74,7 +74,7 @@
   [application-key]
   (reduce
     (fn [acc {:keys [hakukohde requirement state]}]
-      (assoc-in acc [(name (or hakukohde "form"))] {(keyword requirement) state}))
+      (update-in acc [(or hakukohde :form)] assoc (keyword requirement) state))
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
@@ -126,13 +126,23 @@
                                         :form-key)))]
     (ByteArrayInputStream. (excel/export-applications applications tarjonta-service))))
 
-(defn save-application-review [review session organization-service]
+(defn- save-application-hakukohde-reviews
+  [application-key hakukohde-reviews session]
+  (doseq [[hakukohde review] hakukohde-reviews]
+    (doseq [[review-requirement review-state] review]
+      (application-store/save-application-hakukohde-review
+        application-key (name hakukohde) (name review-requirement) review-state session))))
+
+(defn save-application-review
+  [review session organization-service]
   (let [application-key (:application-key review)]
     (aac/check-application-access
-     application-key
-     session
-     organization-service
-     [:edit-applications])
+      application-key
+      session
+      organization-service
+      [:edit-applications])
     (application-store/save-application-review review session)
+    (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
     {:review (application-store/get-application-review application-key)
-     :events (application-store/get-application-events application-key)}))
+     :events (application-store/get-application-events application-key)
+     :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))

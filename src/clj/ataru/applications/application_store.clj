@@ -337,31 +337,27 @@
 
 (defn get-application-hakukohde-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-review {:application_key application-key})))
-
-(defn- upsert-hakukohde-review!
-  [hakukohde-review connection]
-  (if (:hakukohde hakukohde-review)
-    (yesql-upsert-application-hakukohde-review! hakukohde-review connection)
-    (yesql-upsert-application-hakukohdeless-review! (dissoc hakukohde-review :hakukohde) connection)))
+  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn save-application-hakukohde-review
-  [review session]
+  [application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection       {:connection conn}
-                                  app-key          (:application-key review)
-                                  old-review       (first (yesql-get-application-hakukohde-reviews {:application_key app-key} connection))
-                                  review-to-store  (transform-keys ->snake_case review)
-                                  username         (get-in session [:identity :username])
-                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
-                              (audit-log/log {:new              review-to-store
-                                              :old              old-review
-                                              :id               username
-                                              :operation        audit-log/operation-modify
-                                              :organization-oid organization-oid})
-                              (upsert-hakukohde-review! review-to-store connection)
-                              (when (not= (:state old-review) (:state review-to-store))
-                                (let [hakukohde-event {:application_key  app-key
+                            (let [connection                {:connection conn}
+                                  review-to-store           {:application_key application-key
+                                                             :requirement     hakukohde-review-requirement
+                                                             :state           hakukohde-review-state
+                                                             :hakukohde       hakukohde}
+                                  existing-duplicate-review (yesql-get-existing-application-review review-to-store connection)
+                                  username                  (get-in session [:identity :username])
+                                  organization-oid          (get-in session [:identity :organizations 0 :oid])]
+                              (when (empty? existing-duplicate-review)
+                                (audit-log/log {:new              review-to-store
+                                                :old              existing-duplicate-review
+                                                :id               username
+                                                :operation        audit-log/operation-modify
+                                                :organization-oid organization-oid})
+                                (yesql-upsert-application-hakukohde-review! review-to-store connection)
+                                (let [hakukohde-event {:application_key  application-key
                                                        :event_type       "hakukohde-review-state-change"
                                                        :new_review_state (:state review-to-store)
                                                        :hakukohde        (:hakukohde review-to-store)

@@ -215,15 +215,16 @@
                        (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
-                            :summary "Update existing application review"
-                            :body [review ataru-schema/Review]
-                            :return {:review ataru-schema/Review
-                                     :events [ataru-schema/Event]}
-                            (ok
-                             (application-service/save-application-review
-                                 review
-                                 session
-                                 organization-service)))
+                     :summary "Update existing application review"
+                     :body [review ataru-schema/Review]
+                     :return {:review            ataru-schema/Review
+                              :events            [ataru-schema/Event]
+                              :hakukohde-reviews ataru-schema/HakukohdeReviews}
+                     (ok
+                       (application-service/save-application-review
+                         review
+                         session
+                         organization-service)))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}

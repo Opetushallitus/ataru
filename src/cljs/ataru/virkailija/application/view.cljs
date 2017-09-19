@@ -275,7 +275,7 @@
 (defn- application-hakukohde-review-input
   [label name states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
-        review-state      (subscribe [:state-query [:application :hakukohde-reviews (keyword @current-hakukohde) name]])
+        review-state      (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) name]])
         list-opened       (r/atom false)
         list-click        (fn [_] (swap! list-opened not))]
     (fn []
@@ -302,9 +302,9 @@
    [application-hakukohde-review-input
     "Tutkinnon kelpoisuus" :degree-requirement application-review-states/application-hakukohde-review-states]
    [application-hakukohde-review-input
-    "Hakukelpoisuus" :eligibility-requirement application-review-states/application-hakukohde-eligibility-states]
+    "Hakukelpoisuus" :eligibility-state application-review-states/application-hakukohde-eligibility-states]
    [application-hakukohde-review-input
-    "Valinta" :selection-requirement application-review-states/application-hakukohde-selection-states]])
+    "Valinta" :selection-state application-review-states/application-hakukohde-selection-states]])
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   [(str first-name " " last-name)
