@@ -190,10 +190,23 @@
 
 (defn- toggle-values
   [answer options answers-by-key]
-  (reduce (fn [answer option-value]
-            (toggle-multiple-choice-option answer option-value nil answers-by-key nil))
-          answer
-          options))
+  (let [question-group-answer? (and (vector? options)
+                                    (every? vector? options))]
+    (->> options
+         (map-indexed (fn [question-group-idx option-or-options]
+                        [(when question-group-answer? question-group-idx)
+                         option-or-options]))
+         (reduce (fn [answer [question-group-idx option-or-options]]
+                   (if question-group-idx
+                     (reduce #(toggle-multiple-choice-option %1 %2 nil answers-by-key question-group-idx)
+                             answer
+                             option-or-options)
+                     (toggle-multiple-choice-option answer
+                                                    option-or-options
+                                                    nil
+                                                    answers-by-key
+                                                    nil)))
+                 answer))))
 
 (defn- merge-multiple-choice-option-values [value answers-by-key answer]
   (if (string? value)
