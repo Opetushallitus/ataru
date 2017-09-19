@@ -305,6 +305,28 @@ SELECT
 FROM applications
 WHERE id = :application_id;
 
+-- name: yesql-has-ssn-applied
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT EXISTS (SELECT 1 FROM latest
+               JOIN application_reviews
+               ON application_key = key
+               WHERE haku = :haku_oid
+                   AND ssn = upper(:ssn)
+                   AND state <> 'inactivated') AS has_applied;
+
+-- name: yesql-has-email-applied
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT EXISTS (SELECT 1 FROM latest
+               JOIN application_reviews
+               ON application_key = key
+               WHERE haku = :haku_oid
+                   AND email = :email
+                   AND state <> 'inactivated') AS has_applied;
+
 -- name: yesql-get-latest-application-by-key
 WITH latest_version AS (
     SELECT max(created_time) AS latest_time
