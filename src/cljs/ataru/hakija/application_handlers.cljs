@@ -316,9 +316,22 @@
                             (assoc answers answer-key answer)))
                         {}))))
 
+(defn- set-question-group-ids [fields & {:keys [question-group-id]}]
+  (map (fn [{:keys [fieldClass id] :as field}]
+         (cond (= fieldClass "questionGroup")
+               (update field :children set-question-group-ids :question-group-id (keyword id))
+
+               question-group-id
+               (assoc-in field [:params :question-group-id] question-group-id)
+
+               :else
+               field))
+       fields))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
-                 (set-form-language))
+                 (set-form-language)
+                 (update :content set-question-group-ids))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         (-> db
                      (update :form (fn [{:keys [selected-language]}]
