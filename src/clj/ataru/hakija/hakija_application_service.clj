@@ -77,28 +77,33 @@
     (and (= state "processing")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
+(defn- get-hakuaika-end
+  [application tarjonta-service]
+  (when tarjonta-service
+    (:end (get-hakuaikas tarjonta-service application))))
+
+(defn- only-attachments-editable?
+  [answer application tarjonta-service]
+  (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
+    (and (when hakuaika-end
+           (after-apply-end-within-10-days? hakuaika-end))
+         (not= (:fieldType answer) "attachment"))))
 
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service]
-  (let [hakuaika-end                    (when tarjonta-service
-                                          (:end (get-hakuaikas tarjonta-service application)))
-        after-apply-end-within-10-days? (when hakuaika-end
-                                          (after-apply-end-within-10-days? hakuaika-end))
-        only-attachments-editable?      (fn [answer]
-                                          (and after-apply-end-within-10-days?
-                                               (not= (:fieldType answer) "attachment")))]
-    (assoc application
-      :answers
-      (map
-        (fn [answer]
-          (let [answer-kw (keyword (:key answer))]
-            (cond-> answer
-              (contains? viewing-forbidden-person-info-field-ids answer-kw)
-              (merge {:cannot-view true :value nil})
+  (assoc application
+    :answers
+    (map
+      (fn [answer]
+        (let [answer-kw (keyword (:key answer))]
+          (cond-> answer
+            (contains? viewing-forbidden-person-info-field-ids answer-kw)
+            (merge {:cannot-view true :value nil})
 
-              (or (contains? editing-forbidden-person-info-field-ids answer-kw) (only-attachments-editable? answer))
-              (merge {:cannot-edit true}))))
-        answers))))
+            (or (contains? editing-forbidden-person-info-field-ids answer-kw)
+                (only-attachments-editable? answer application tarjonta-service))
+            (merge {:cannot-edit true}))))
+      answers)))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
