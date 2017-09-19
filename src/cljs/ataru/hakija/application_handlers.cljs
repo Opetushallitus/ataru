@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
+            [ataru.util :as cljc-util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -246,6 +247,19 @@
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
+(defn set-question-group-row-amounts [db]
+  (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
+    (reduce-kv (fn [db answer-key {:keys [value]}]
+                 (let [field-descriptor  (->> flattened-form-fields
+                                              (filter (comp (partial = answer-key) keyword :id))
+                                              (first))
+                       question-group-id (-> field-descriptor :params :question-group-id)]
+                   (cond-> db
+                     question-group-id
+                     (update-in [:application :ui question-group-id :count] (fnil identity (-> value first count))))))
+               db
+               (-> db :application :answers))))
+
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
@@ -286,21 +300,24 @@
       (populate-hakukohde-answers-if-necessary)
       (set-have-finnish-ssn)
       (set-ssn-field-visibility)
-      (set-country-specific-fields-visibility)))
+      (set-country-specific-fields-visibility)
+      (set-question-group-row-amounts)))
 
 (defn- set-followup-visibility-to-false
   [db]
-  (assoc-in db [:application :ui]
-            (->> (autil/flatten-form-fields (:content (:form db)))
-                 (filter :followup?)
-                 (map (fn [field]
-                        (let [id (keyword (:id field))
-                              has-value? (or (some? (get-in db [:application :answers id :value]))
-                                             (some #(some? (:value %))
-                                                   (get-in db [:application :answers id :values] [])))
-                              has-children? (not (empty? (:children field)))]
-                          {id {:visible? (or has-value? has-children?)}})))
-                 (reduce merge))))
+  (update-in db
+             [:application :ui]
+             merge
+             (->> (autil/flatten-form-fields (:content (:form db)))
+                  (filter :followup?)
+                  (map (fn [field]
+                         (let [id            (keyword (:id field))
+                               has-value?    (or (some? (get-in db [:application :answers id :value]))
+                                                 (some #(some? (:value %))
+                                                       (get-in db [:application :answers id :values] [])))
+                               has-children? (not (empty? (:children field)))]
+                           {id {:visible? (or has-value? has-children?)}})))
+                  (reduce merge))))
 
 (defn- original-values->answers [db]
   (cond-> db
