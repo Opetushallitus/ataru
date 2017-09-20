@@ -89,6 +89,41 @@
            (after-apply-end-within-10-days? hakuaika-end))
          (not= (:fieldType answer) "attachment"))))
 
+(defn- dummy-answer-to-unanswered-question
+  [{:keys [id fieldType label]}]
+  {:key       id
+   :fieldType fieldType
+   :label     label
+   :value     ""})
+
+(defn- filter-questions-without-answers
+  [answers-by-key form-fields]
+  (filter (fn [answer]
+            (and (not (some #{(keyword (:id answer))} (keys answers-by-key)))
+                 (some #{(:fieldType answer)} ["textField"
+                                               "textArea"
+                                               "dropdown"
+                                               "multipleChoice"
+                                               "singleChoice"
+                                               "attachment"
+                                               "hakukohteet"]) ; no container fields!
+                 (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
+                 (not (:exclude-from-answers answer)))) form-fields))
+
+(defn- get-questions-without-answers
+  "This function serves to get dummy answers and their editability (mainly for 10 day crage period of attachments
+   for fields that were not required and thus were left editable in the 10 day attachment grace period. This happened
+   due to the fact that they had no answer in db to which make uneditable in flag-uneditable-answers."
+  [application]
+  (let [form-fields               (-> application
+                                      (:form)
+                                      (form-store/fetch-by-id)
+                                      :content
+                                      (util/flatten-form-fields))
+        answers-by-key            (util/answers-by-key (:answers application))
+        questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
+    (map dummy-answer-to-unanswered-question questions-without-answers)))
+
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service]
   (assoc application
@@ -103,7 +138,7 @@
             (or (contains? editing-forbidden-person-info-field-ids answer-kw)
                 (only-attachments-editable? answer application tarjonta-service))
             (merge {:cannot-edit true}))))
-      answers)))
+      (apply conj answers (get-questions-without-answers application)))))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]

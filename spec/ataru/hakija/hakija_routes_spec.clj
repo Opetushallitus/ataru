@@ -175,8 +175,10 @@
         (with-get-response "asdfgh" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
-            (should= (count answers)
-                     (count (filter cannot-edit? answers)))
+            (should= 1 (count (filter #(not (cannot-edit? %)) answers)))
+            ;; Take -1 here since the form has one more quesiton than this application has answers to, and the extra
+            ;; question on the form happens to be an attachment
+            (should= (- (count answers) 1 ) (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers))))))))
 
     (describe "PUT application"
