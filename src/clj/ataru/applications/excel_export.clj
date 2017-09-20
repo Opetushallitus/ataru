@@ -132,6 +132,13 @@
             (str filename " (" (util/size-bytes->str size) ")")))
         value))))
 
+(defn- all-answers-sec-or-vec? [answers]
+  (every? sequential? answers))
+
+(defn- kysymysryhma-answer? [value-or-values]
+  (and (sequential? value-or-values)
+       (all-answers-sec-or-vec? value-or-values)))
+
 (defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
@@ -139,11 +146,21 @@
   (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (:value answer)
-          value           (if (or (seq? value-or-values) (vector? value-or-values))
+          value           (cond
+                            (kysymysryhma-answer? value-or-values)
+                            (->> value-or-values
+                                 (map #(clojure.string/join "," %))
+                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (map-indexed #(format "#%s: %s,\n" %1 %2))
+                                 (apply str))
+
+                            (sequential? value-or-values)
                             (->> value-or-values
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
                                  (interpose ",\n")
                                  (apply str))
+
+                            :else
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (when (and value column)
         (writer 0 (+ column (count application-meta-fields)) value))))
