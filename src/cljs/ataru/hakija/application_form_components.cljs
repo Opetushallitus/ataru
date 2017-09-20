@@ -423,10 +423,11 @@
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)}
-        (map-indexed (fn [option-idx option]
-                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
-                       [multiple-choice-option field-descriptor option id cannot-edit? idx])
-          (:options field-descriptor))]])))
+        (doall
+          (map-indexed (fn [option-idx option]
+                         ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
+                         [multiple-choice-option field-descriptor option id cannot-edit? idx])
+            (:options field-descriptor)))]])))
 
 (defn- single-choice-option [option parent-id validators cannot-edit?]
   (let [lang         (subscribe [:application/form-language])
