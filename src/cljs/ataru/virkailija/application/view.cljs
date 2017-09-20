@@ -280,19 +280,19 @@
         list-click        (fn [_] (swap! list-opened not))]
     (fn []
       [:div.application-handling__review-state-container
-       [:div.application-handling__review-header label
-        [:div
-         (if @list-opened
-           [:div.application-handling__review-state-list-opened-anchor
-            (into [:div.application-handling__review-state-list-opened
-                   {:on-click list-click}]
-                  (opened-review-state-list name review-state states))]
-           [:div
-            {:on-click list-click}
-            (review-state-selected-row
-              (get-review-state-label-by-name
-                states
-                (or @review-state (ffirst states))))])]]])))
+       [:div.application-handling__review-header label]
+       [:div
+        (if @list-opened
+          [:div.application-handling__review-state-list-opened-anchor
+           (into [:div.application-handling__review-state-list-opened
+                  {:on-click list-click}]
+                 (opened-review-state-list name review-state states))]
+          [:div
+           {:on-click list-click}
+           (review-state-selected-row
+             (get-review-state-label-by-name
+               states
+               (or @review-state (ffirst states))))])]])))
 
 (defn- application-hakukohde-review-inputs
   []
