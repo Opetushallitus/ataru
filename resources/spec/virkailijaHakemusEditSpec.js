@@ -4,6 +4,8 @@
     loadInFrame('/hakemus?virkailija-secret=' + virkailijaSecret)
   })
 
+  var newPhoneNumber = Math.floor(Math.random() * 10000000).toString();
+
   describe('Virkailija hakemus edit', function () {
     describe('shows application with secret', function () {
       before(
@@ -22,7 +24,7 @@
 
     describe('change values and save', function () {
       before(
-        setNthFieldInputValue(6, '12345'),
+        setNthFieldInputValue(6, newPhoneNumber),
         clickElement(function () {
           return submitButton()
         }),
@@ -42,7 +44,7 @@
           "Suomi",
           "***********",
           "test@example.com",
-          "12345",
+          newPhoneNumber,
           "Suomi",
           "Katutie 12 B",
           "40100",

@@ -44,7 +44,8 @@
 (re-frame/reg-sub
   :application/cannot-edit-answer?
   (fn [db [_ key]]
-    (-> db :application :answers key :cannot-edit)))
+    (let [answer (-> db :application :answers key)]
+      (or (:cannot-edit answer) (:cannot-view answer)))))
 
 (re-frame/reg-sub
   :application/default-language

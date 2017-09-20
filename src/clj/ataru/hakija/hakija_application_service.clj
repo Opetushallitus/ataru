@@ -16,6 +16,7 @@
    [ataru.applications.application-store :as application-store]
    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
                                                   editing-forbidden-person-info-field-ids]]
+   [ataru.application.field-types :as types]
    [ataru.util :as util]
    [ataru.files.file-store :as file-store]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -77,28 +78,62 @@
     (and (= state "processing")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
+(defn- get-hakuaika-end
+  [application tarjonta-service]
+  (when tarjonta-service
+    (:end (get-hakuaikas tarjonta-service application))))
+
+(defn- only-attachments-editable?
+  [answer application tarjonta-service]
+  (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
+    (and (when hakuaika-end
+           (after-apply-end-within-10-days? hakuaika-end))
+         (not= (:fieldType answer) "attachment"))))
+
+(defn- dummy-answer-to-unanswered-question
+  [{:keys [id fieldType label]}]
+  {:key       id
+   :fieldType fieldType
+   :label     label
+   :value     ""})
+
+(defn- filter-questions-without-answers
+  [answers-by-key form-fields]
+  (filter (fn [answer]
+            (and (not (some #{(keyword (:id answer))} (keys answers-by-key)))
+                 (some #{(:fieldType answer)} types/form-fields)
+                 (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
+                 (not (:exclude-from-answers answer)))) form-fields))
+
+(defn- get-questions-without-answers
+  "This function serves to get dummy answers and their editability for fields that were not required and thus were left
+   editable in the 10 day attachment grace period. This happened due to the fact that they had no answer in db to which
+   make uneditable in flag-uneditable-answers."
+  [application]
+  (let [form-fields               (-> application
+                                      (:form)
+                                      (form-store/fetch-by-id)
+                                      :content
+                                      (util/flatten-form-fields))
+        answers-by-key            (util/answers-by-key (:answers application))
+        questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
+    (map dummy-answer-to-unanswered-question questions-without-answers)))
 
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service]
-  (let [hakuaika-end                    (when tarjonta-service
-                                          (:end (get-hakuaikas tarjonta-service application)))
-        after-apply-end-within-10-days? (when hakuaika-end
-                                          (after-apply-end-within-10-days? hakuaika-end))
-        only-attachments-editable?      (fn [answer]
-                                          (and after-apply-end-within-10-days?
-                                               (not= (:fieldType answer) "attachment")))]
-    (assoc application
-      :answers
-      (map
-        (fn [answer]
-          (let [answer-kw (keyword (:key answer))]
-            (cond-> answer
-              (contains? viewing-forbidden-person-info-field-ids answer-kw)
-              (merge {:cannot-view true :value nil})
+  (assoc application
+    :answers
+    (map
+      (fn [answer]
+        (let [answer-kw (keyword (:key answer))]
+          (cond-> answer
+            (contains? viewing-forbidden-person-info-field-ids answer-kw)
+            (merge {:cannot-view true :value nil})
 
-              (or (contains? editing-forbidden-person-info-field-ids answer-kw) (only-attachments-editable? answer))
-              (merge {:cannot-edit true}))))
-        answers))))
+            (or (contains? editing-forbidden-person-info-field-ids answer-kw)
+                (only-attachments-editable? answer application tarjonta-service))
+            (merge {:cannot-edit true}))))
+      (apply conj answers (get-questions-without-answers application)))))
 
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
