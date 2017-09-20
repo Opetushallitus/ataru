@@ -131,9 +131,6 @@
             (str filename " (" (util/size-bytes->str size) ")")))
         value))))
 
-(defn- sequential? [value]
-  (or (seq? value) (vector? value)))
-
 (defn- all-answers-sec-or-vec? [answers]
   (every? sequential? answers))
 
