@@ -131,14 +131,14 @@
             (str filename " (" (util/size-bytes->str size) ")")))
         value))))
 
-(defn- sec-or-vec? [value]
+(defn- sequential? [value]
   (or (seq? value) (vector? value)))
 
 (defn- all-answers-sec-or-vec? [answers]
-  (every? sec-or-vec? answers))
+  (every? sequential? answers))
 
 (defn- kysymysryhma-answer? [value-or-values]
-  (and (sec-or-vec? value-or-values)
+  (and (sequential? value-or-values)
        (all-answers-sec-or-vec? value-or-values)))
 
 (defn- write-application! [writer application headers application-meta-fields form]
@@ -156,7 +156,7 @@
                                  (map-indexed #(format "#%s: %s,\n" %1 %2))
                                  (apply str))
 
-                            (sec-or-vec? value-or-values)
+                            (sequential? value-or-values)
                             (->> value-or-values
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
                                  (interpose ",\n")
