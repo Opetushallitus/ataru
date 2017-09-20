@@ -16,7 +16,7 @@
    [ataru.applications.application-store :as application-store]
    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
                                                   editing-forbidden-person-info-field-ids]]
-   [ataru.application.field-types :refer [form-fields]]
+   [ataru.application.field-types :as types]
    [ataru.util :as util]
    [ataru.files.file-store :as file-store]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -101,7 +101,7 @@
   [answers-by-key form-fields]
   (filter (fn [answer]
             (and (not (some #{(keyword (:id answer))} (keys answers-by-key)))
-                 (some #{(:fieldType answer)} form-fields)
+                 (some #{(:fieldType answer)} types/form-fields)
                  (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
                  (not (:exclude-from-answers answer)))) form-fields))
 
