@@ -386,47 +386,46 @@
            [render-field followup])
          followups)]])
 
-(defn- multiple-choice-option [field-descriptor option parent-id cannot-edit?]
+(defn- multiple-choice-option [field-descriptor option parent-id cannot-edit? question-group-idx]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
                                     (get-in option [:label @default-lang]))
         value        (:value option)
-        option-id    (util/component-id)
-        checked?     (subscribe [:application/multiple-choice-option-checked? parent-id value])
-        on-change    (fn [_]
-                       (dispatch [:application/toggle-multiple-choice-option field-descriptor option]))]
-    (fn [field-descriptor option parent-id]
-      [:div {:key option-id}
-       [:input.application__form-checkbox
-        (merge {:id        option-id
-                :type      "checkbox"
-                :checked   @checked?
-                :value     value
-                :on-change on-change}
-          (when cannot-edit? {:disabled true}))]
-       [:label
-        (merge {:for option-id}
-          (when cannot-edit? {:class "disabled"}))
-        label]
-       (when (and @checked? (not-empty (:followups option)))
-         [multi-choice-followups (:followups option)])])))
+        option-id    (util/component-id)]
+    (fn [field-descriptor option parent-id cannot-edit? question-group-idx]
+      (let [on-change (fn [_]
+                        (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
+            checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])]
+        [:div {:key option-id}
+         [:input.application__form-checkbox
+          (merge {:id        option-id
+                  :type      "checkbox"
+                  :checked   @checked?
+                  :value     value
+                  :on-change on-change}
+                 (when cannot-edit? {:disabled true}))]
+         [:label
+          (merge {:for option-id}
+                 (when cannot-edit? {:class "disabled"}))
+          label]
+         (when (and @checked? (not-empty (:followups option)) (not question-group-idx))
+           [multi-choice-followups (:followups option)])]))))
 
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (answer-key field-descriptor)
-        validators   (:validators field-descriptor)
-        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
-    (fn [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
+        cannot-edit? @(subscribe [:application/cannot-edit-answer? id])]
+    (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)}
-        (map-indexed (fn [idx option]
-                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" idx)}
-                       [multiple-choice-option field-descriptor option id @cannot-edit?])
+        (map-indexed (fn [option-idx option]
+                       ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
+                       [multiple-choice-option field-descriptor option id cannot-edit? idx])
           (:options field-descriptor))]])))
 
 (defn- single-choice-option [option parent-id validators cannot-edit?]
