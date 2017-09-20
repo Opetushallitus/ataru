@@ -1,5 +1,6 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
+            [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
             [schema.core :as s]))
 
@@ -75,13 +76,7 @@
                                                                            (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        :fieldType                                       (apply s/enum ["textField"
-                                                                                        "textArea"
-                                                                                        "dropdown"
-                                                                                        "singleChoice"
-                                                                                        "multipleChoice"
-                                                                                        "attachment"
-                                                                                        "hakukohteet"])
+                        :fieldType                                       (apply s/enum form-fields)
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
 
 (s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
@@ -176,13 +171,7 @@
                                                                [(s/cond-pre s/Str
                                                                             File
                                                                             [(s/cond-pre s/Str s/Int File)])])
-                     :fieldType                    (apply s/enum ["textField"
-                                                                  "textArea"
-                                                                  "dropdown"
-                                                                  "multipleChoice"
-                                                                  "singleChoice"
-                                                                  "attachment"
-                                                                  "hakukohteet"])
+                     :fieldType                    (apply s/enum form-fields)
                      (s/optional-key :cannot-edit) s/Bool
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre

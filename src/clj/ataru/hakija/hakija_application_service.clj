@@ -16,6 +16,7 @@
    [ataru.applications.application-store :as application-store]
    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
                                                   editing-forbidden-person-info-field-ids]]
+   [ataru.application.field-types :refer [form-fields]]
    [ataru.util :as util]
    [ataru.files.file-store :as file-store]
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -100,20 +101,14 @@
   [answers-by-key form-fields]
   (filter (fn [answer]
             (and (not (some #{(keyword (:id answer))} (keys answers-by-key)))
-                 (some #{(:fieldType answer)} ["textField"
-                                               "textArea"
-                                               "dropdown"
-                                               "multipleChoice"
-                                               "singleChoice"
-                                               "attachment"
-                                               "hakukohteet"]) ; no container fields!
+                 (some #{(:fieldType answer)} form-fields)
                  (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
                  (not (:exclude-from-answers answer)))) form-fields))
 
 (defn- get-questions-without-answers
-  "This function serves to get dummy answers and their editability (mainly for 10 day crage period of attachments
-   for fields that were not required and thus were left editable in the 10 day attachment grace period. This happened
-   due to the fact that they had no answer in db to which make uneditable in flag-uneditable-answers."
+  "This function serves to get dummy answers and their editability for fields that were not required and thus were left
+   editable in the 10 day attachment grace period. This happened due to the fact that they had no answer in db to which
+   make uneditable in flag-uneditable-answers."
   [application]
   (let [form-fields               (-> application
                                       (:form)
