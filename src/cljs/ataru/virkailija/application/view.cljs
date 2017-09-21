@@ -493,7 +493,7 @@
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
              [application-contents @selected-application-and-form]]
-            [:span.application-handling__review-position-canary]
+            [:span#application-handling__review-position-canary]
             (when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
 
@@ -519,7 +519,7 @@
   (let [review-canary-visible        (atom true)
         positioning-change-threshold 45]
     (fn [_]
-      (when-let [canary-element (aget (.getElementsByClassName js/document "application-handling__review-position-canary") 0)]
+      (when-let [canary-element (.getElementById js/document "application-handling__review-position-canary")]
         (if (<= (-> canary-element .getBoundingClientRect .-top) positioning-change-threshold)
           (when @review-canary-visible
             (dispatch [:state-update #(assoc-in % [:application :review-positioning] :fixed)])
