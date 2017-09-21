@@ -17,17 +17,17 @@
 
 (def ^:private form (atom nil))
 
-(def form-blank-required-field (assoc-in application-fixtures/person-info-form-application [:answers 0 :value] ""))
-(def form-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
-(def form-invalid-phone-field (assoc-in application-fixtures/person-info-form-application [:answers 5 :value] "invalid phone number"))
-(def form-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
-(def form-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
-(def form-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
-(def form-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
-(def form-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
-(def form-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
-                                   (assoc-in [:answers 2 :value] "edited@foo.com")
-                                   (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
+(def application-blank-required-field (assoc-in application-fixtures/person-info-form-application [:answers 0 :value] ""))
+(def application-invalid-email-field (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "invalid@email@foo.com"))
+(def application-invalid-phone-field (assoc-in application-fixtures/person-info-form-application [:answers 5 :value] "invalid phone number"))
+(def application-invalid-ssn-field (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "010101-123M"))
+(def application-invalid-postal-code (assoc-in application-fixtures/person-info-form-application [:answers 11 :value] "0001"))
+(def application-invalid-dropdown-value (assoc-in application-fixtures/person-info-form-application [:answers 13 :value] "kuikka"))
+(def application-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
+(def application-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
+(def application-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
+                                          (assoc-in [:answers 2 :value] "edited@foo.com")
+                                          (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 
 (def application-with-extra-answers (update application-fixtures/person-info-form-application
                                       :answers
@@ -147,17 +147,17 @@
         (should= 400 (:status resp))
         (should= {:failures {:extra-answers ["j1jk2h121lkh"]}} (:body resp))))
 
-    (add-spec "should not validate form with blank required field" form-blank-required-field)
+    (add-spec "should not validate form with blank required field" application-blank-required-field)
 
-    (add-spec "should not validate form with invalid email field" form-invalid-email-field)
+    (add-spec "should not validate form with invalid email field" application-invalid-email-field)
 
-    (add-spec "should not validate form with invalid phone field" form-invalid-phone-field)
+    (add-spec "should not validate form with invalid phone field" application-invalid-phone-field)
 
-    (add-spec "should not validate form with invalid ssn field" form-invalid-ssn-field)
+    (add-spec "should not validate form with invalid ssn field" application-invalid-ssn-field)
 
-    (add-spec "should not validate form with invalid postal code field" form-invalid-postal-code)
+    (add-spec "should not validate form with invalid postal code field" application-invalid-postal-code)
 
-    (add-spec "should not validate form with invalid dropdown field" form-invalid-dropdown-value))
+    (add-spec "should not validate form with invalid dropdown field" application-invalid-dropdown-value))
 
   (describe "GET application"
     (around [spec]
@@ -209,14 +209,14 @@
           (should (have-application-in-db (get-in resp [:body :id])))))
 
       (it "should edit application"
-        (with-response :put resp form-edited-email
+        (with-response :put resp application-edited-email
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
             (should= "edited@foo.com" (get-answer application "email")))))
 
       (it "should not allow editing ssn"
-        (with-response :put resp form-edited-ssn
+        (with-response :put resp application-edited-ssn
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
@@ -239,7 +239,7 @@
           (should (have-application-in-db (get-in resp [:body :id])))))
 
       (it "should allow application edit after hakuaika within 10 days and only changes to attachments"
-        (with-response :put resp form-for-hakukohde-edited
+        (with-response :put resp application-for-hakukohde-edited
           (should= 200 (:status resp))
           (let [id (-> resp :body :id)
                 application (get-application-by-id id)]
