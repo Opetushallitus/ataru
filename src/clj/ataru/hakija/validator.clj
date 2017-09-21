@@ -4,6 +4,7 @@
             [ataru.util :as util]
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
+            [clojure.core.async :as async]
             [taoensso.timbre :refer [spy debug warn]]
             [ataru.koodisto.koodisto :as koodisto]
             [clojure.pprint :as pprint]))
@@ -39,7 +40,7 @@
 
 (defn passed? [answer validators answers-by-key field-descriptor]
   (every? (fn [validator]
-            (validator/validate validator answer answers-by-key field-descriptor))
+            (first (async/<!! (validator/validate validator answer answers-by-key field-descriptor))))
           validators))
 
 (defn- wrap-coll [xs]

@@ -1,9 +1,11 @@
 (ns ataru.hakija.application-validators
+  #?(:cljs (:require-macros [cljs.core.async.macros :as async]))
   (:require [clojure.string]
             [ataru.email :as email]
             [ataru.ssn :as ssn]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
+            #?(:clj  [clojure.core.async :as async])
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
             #?(:clj  [clj-time.format :as f]
@@ -130,21 +132,26 @@
         (and (pos? num-answers) answers-subset-of-options?))
       true)))
 
-(def validators {:required        required?
-                 :ssn             ssn?
-                 :email           email?
-                 :postal-code     postal-code?
-                 :postal-office   postal-office?
-                 :phone           phone?
-                 :past-date       past-date?
-                 :main-first-name pn/main-first-name?
-                 :birthplace      birthplace?
-                 :home-town       home-town?
-                 :city            city?
-                 :hakukohteet     hakukohteet?})
+(def pure-validators {:required        required?
+                      :ssn             ssn?
+                      :email           email?
+                      :postal-code     postal-code?
+                      :postal-office   postal-office?
+                      :phone           phone?
+                      :past-date       past-date?
+                      :main-first-name pn/main-first-name?
+                      :birthplace      birthplace?
+                      :home-town       home-town?
+                      :city            city?
+                      :hakukohteet     hakukohteet?})
+
+(def async-validators {})
 
 (defn validate
   [validator value answers-by-key field-descriptor]
-  (boolean
-    (when-let [validator-fn ((keyword validator) validators)]
-      (validator-fn value answers-by-key field-descriptor))))
+  (if-let [pure-validator ((keyword validator) pure-validators)]
+    (let [valid? (pure-validator value answers-by-key field-descriptor)]
+      (async/go [valid? []]))
+    (if-let [async-validator ((keyword validator) async-validators)]
+      (async-validator value answers-by-key field-descriptor)
+      (async/go [false []]))))
