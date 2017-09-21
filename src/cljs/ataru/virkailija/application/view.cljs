@@ -247,9 +247,10 @@
 
 
 (defn- selected-hakukohde-row
-  [selected-hakukohde-oid hakukohteet]
+  [selected-hakukohde-oid on-click hakukohteet]
   (let [selected-hakukohde (find-hakukohde-by-oid hakukohteet selected-hakukohde-oid)]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
+     {:on-click on-click}
      (:name selected-hakukohde)]))
 
 (defn- application-hakukohde-selection
@@ -268,9 +269,7 @@
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
               (map #(opened-hakukohde-list-row @selected-hakukohde-oid @hakukohteet %) @application-hakukohteet))]
-           [:div
-            {:on-click select-list-item}
-            (selected-hakukohde-row @selected-hakukohde-oid @hakukohteet)])]))))
+           (selected-hakukohde-row @selected-hakukohde-oid select-list-item @hakukohteet))]))))
 
 (defn- application-hakukohde-review-input
   [label name states]
@@ -365,14 +364,13 @@
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
     (fn []
       [:div.application-handling__review-inputs
-       [:div.application-handling__review-header "Hakijan arviointi"]
        [:div.application-handling__review-row--nocolumn
-        [:div.application-handling__review-sub-header "Muistiinpanot"]
+        [:div.application-handling__review-header "Muistiinpanot"]
         [:textarea.application-handling__review-notes
          {:value (review-field->str review :notes)
           :on-change (partial update-review-field :notes identity)}]]
        [:div.application-handling__review-row
-        [:div.application-handling__review-sub-header "Pisteet"]
+        [:div.application-handling__review-header "Pisteet"]
         [:input.application-handling__score-input
          {:type "text"
           :max-length "2"

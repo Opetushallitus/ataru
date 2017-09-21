@@ -339,7 +339,7 @@ and (max-width: 1000px) {
 .application-handling__review-header {
   color: @text-color;
   .semibold;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .application-handling__review-state-container--columnar {
@@ -350,18 +350,16 @@ and (max-width: 1000px) {
   padding-top: 8px;
 }
 
+.application-handling__review-state-container--columnar .application-handling__review-header {
+  padding-top: 0;
+}
+
 .application-handling__review-row {
   display: flex;
 }
 
 .application-handling__review-row--nocolumn {
   display: block;
-}
-
-.application-handling__review-sub-header {
-  width: 120px;
-  color: #000;
-  padding-top: 6px;
 }
 
 .application-handling__edit-link {
@@ -377,13 +375,14 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-container {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
 }
 
-.application-handling__review-state-container--border-bottom {
+.application-handling__review-state-container--bottom-border {
   border-bottom: 1px solid @review-separator-color;
+  padding-bottom: 12px;
 }
 
 .application-handling__review-state-list-opened-anchor {
@@ -399,14 +398,12 @@ and (max-width: 1000px) {
 .application-handling__review-state-row {
   position: relative;
   color: #2a2a2a;
-  padding-top: 9px;
-  padding-bottom: 11px;
+  padding: 9px 11px 9px 20px;
   margin-bottom: 3px;
   width: 200px;
   cursor: pointer;
   box-shadow: @modal-shadow;
   background: #fff;
-  text-align: center;
 }
 
 .application-handling__review-state-row:hover {
@@ -417,7 +414,6 @@ and (max-width: 1000px) {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
-  padding-left: 12px;
   display: inline-block;
 }
 
@@ -454,8 +450,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-notes {
   width: 100%;
-  height: 180px;
-  margin: 7px 0;
+  height: 130px;
+  margin-bottom: 7px;
   font-size: 14px;
   padding: 4px 8px;
   color: #1A1919;
@@ -465,11 +461,14 @@ and (max-width: 1000px) {
 
 .application-handling__review-inputs {
   margin-bottom: 20px;
+  padding-top: 12px;
+  border-top: 1px solid @review-separator-color;
 }
 
 .application-handling__score-input {
   font-size: 14px;
   padding: 6px;
+  margin-left: 10px;
   border: 1px solid @section-gray-border;
   border-radius: 2px;
 }
