@@ -41,7 +41,9 @@
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application conn]
   (let [connection           {:connection conn}
-        answers              (:answers application)
+        answers              (->> application
+                                  :answers
+                                  (filter #(not-empty (:value %))))
         secret               (:secret application)
         application-to-store {:form_id        (:form application)
                               :key            (or (:key application)
