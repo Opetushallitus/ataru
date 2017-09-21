@@ -194,6 +194,7 @@
         extra-answers      (extra-answers-not-in-original-form
                              (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                              (keys answers-by-key))
+        _ (println "extra" extra-answers)
         results            (build-results answers-by-key [] (:content form))
         failed-results     (some->>
                              (into {} (filter #(not (:passed? (second %))) results))
@@ -212,5 +213,6 @@
        (empty? failed-meta-fields))
      :failures
      (merge
+       {:extra-answers extra-answers}
        failed-results
        failed-meta-fields)}))

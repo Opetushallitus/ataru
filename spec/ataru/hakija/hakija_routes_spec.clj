@@ -29,6 +29,14 @@
                                    (assoc-in [:answers 2 :value] "edited@foo.com")
                                    (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 
+(def application-with-extra-answers (update application-fixtures/person-info-form-application
+                                      :answers
+                                      conj
+                                      {:key       "j1jk2h121lkh",
+                                       :value     "Extra stuff!",
+                                       :fieldType "textField",
+                                       :label     {:fi "exxxtra", :sv ""}}))
+
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
                  .start
@@ -133,6 +141,11 @@
       (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
         (should= 200 (:status resp))
         (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
+
+    (it "should not validate application with extra answers"
+      (with-response :post resp application-with-extra-answers
+        (should= 400 (:status resp))
+        (should= {:failures {:extra-answers ["j1jk2h121lkh"]}} (:body resp))))
 
     (add-spec "should not validate form with blank required field" form-blank-required-field)
 
