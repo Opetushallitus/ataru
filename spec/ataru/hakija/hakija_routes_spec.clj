@@ -75,7 +75,7 @@
            (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
-(defmacro add-spec
+(defmacro add-failing-post-spec
   [desc fixture]
   `(it ~desc
      (with-response :post resp# ~fixture
@@ -147,17 +147,17 @@
         (should= 400 (:status resp))
         (should= {:failures {:extra-answers ["j1jk2h121lkh"]}} (:body resp))))
 
-    (add-spec "should not validate form with blank required field" application-blank-required-field)
+    (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
-    (add-spec "should not validate form with invalid email field" application-invalid-email-field)
+    (add-failing-post-spec "should not validate form with invalid email field" application-invalid-email-field)
 
-    (add-spec "should not validate form with invalid phone field" application-invalid-phone-field)
+    (add-failing-post-spec "should not validate form with invalid phone field" application-invalid-phone-field)
 
-    (add-spec "should not validate form with invalid ssn field" application-invalid-ssn-field)
+    (add-failing-post-spec "should not validate form with invalid ssn field" application-invalid-ssn-field)
 
-    (add-spec "should not validate form with invalid postal code field" application-invalid-postal-code)
+    (add-failing-post-spec "should not validate form with invalid postal code field" application-invalid-postal-code)
 
-    (add-spec "should not validate form with invalid dropdown field" application-invalid-dropdown-value))
+    (add-failing-post-spec "should not validate form with invalid dropdown field" application-invalid-dropdown-value))
 
   (describe "GET application"
     (around [spec]
