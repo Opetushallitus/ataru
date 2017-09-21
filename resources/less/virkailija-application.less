@@ -132,7 +132,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
-  margin-left: 9px;
   color: #06526B;
 }
 
@@ -340,7 +339,10 @@ and (max-width: 1000px) {
   color: @text-color;
   .semibold;
   margin-bottom: 16px;
-  min-width: 120px;
+}
+
+.application-handling__review-state-container--columnar {
+  flex-flow: column;
 }
 
 .application-handling__review-state-container .application-handling__review-header {
@@ -376,8 +378,11 @@ and (max-width: 1000px) {
 .application-handling__review-state-container {
   margin-bottom: 15px;
   display: flex;
+  justify-content: space-between;
+}
+
+.application-handling__review-state-container--border-bottom {
   border-bottom: 1px solid @review-separator-color;
-  min-height: 62px;
 }
 
 .application-handling__review-state-list-opened-anchor {
@@ -385,7 +390,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-list-opened {
-  position: absolute;
   background-color: @very-light-gray;
   border-radius: 3px;
   box-shadow: @modal-shadow;
@@ -396,11 +400,12 @@ and (max-width: 1000px) {
   color: #2a2a2a;
   padding-top: 9px;
   padding-bottom: 11px;
-  padding-left: 30px;
   margin-bottom: 3px;
+  width: 200px;
   cursor: pointer;
   box-shadow: @modal-shadow;
   background: #fff;
+  text-align: center;
 }
 
 .application-handling__review-state-row:hover {
@@ -412,13 +417,11 @@ and (max-width: 1000px) {
   border-radius: 3px;
   margin-left: 0;
   padding-left: 12px;
-  width: 240px;
   display: inline-block;
-  text-transform: capitalize;
 }
 
 .application-handling__review-state-row-hakukohde {
-  width: 320px;
+  width: 100%;
   padding-left: 10px;
 }
 
@@ -428,7 +431,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-selected-icon {
-  margin-left: 2px;
+  margin-left: -10px;
   margin-right: 5px;
 }
 

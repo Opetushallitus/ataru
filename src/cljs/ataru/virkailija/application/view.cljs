@@ -198,14 +198,15 @@
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
 
-(defn review-state-selected-row [label]
+(defn review-state-selected-row [on-click label]
   [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+   {:on-click on-click}
    [icon-check] label])
 
 (defn review-state-row [state-name current-review-state review-state]
   (let [[review-state-id review-state-label] review-state]
     (if (= current-review-state review-state-id)
-      (review-state-selected-row review-state-label)
+      (review-state-selected-row #() review-state-label)
       [:div.application-handling__review-state-row
        {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
        review-state-label])))
@@ -218,17 +219,16 @@
         list-opened  (r/atom false)
         list-click   (fn [evt] (swap! list-opened not))]
     (fn []
-      [:div.application-handling__review-state-container
+      [:div.application-handling__review-state-container.application-handling__review-state-container--bottom-border
        [:div.application-handling__review-header "Hakemus"]
        (if @list-opened
          [:div.application-handling__review-state-list-opened-anchor
           (into [:div.application-handling__review-state-list-opened
                  {:on-click list-click}]
                 (opened-review-state-list :state review-state application-review-states/application-review-states))]
-         [:div
-          {:on-click list-click}
-          (review-state-selected-row
-            (get-review-state-label-by-name application-review-states/application-review-states @review-state))])])))
+         (review-state-selected-row
+           list-click
+           (get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
 
 (defn- find-hakukohde-by-oid
   [hakukohteet hakukohde-oid]
@@ -261,16 +261,16 @@
         select-list-item        #(swap! list-opened not)]
     (fn []
       (when (pos? (count @application-hakukohteet))
-        [:div.application-handling__review-state-container
-         [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohteet) ")")
-          (if @list-opened
-            [:div.application-handling__review-state-list-opened-anchor
-             (into
-               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-               (map #(opened-hakukohde-list-row @selected-hakukohde-oid @hakukohteet %) @application-hakukohteet))]
-            [:div
-             {:on-click select-list-item}
-             (selected-hakukohde-row @selected-hakukohde-oid @hakukohteet)])]]))))
+        [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
+         [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohteet) ")")]
+         (if @list-opened
+           [:div.application-handling__review-state-list-opened-anchor
+            (into
+              [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
+              (map #(opened-hakukohde-list-row @selected-hakukohde-oid @hakukohteet %) @application-hakukohteet))]
+           [:div
+            {:on-click select-list-item}
+            (selected-hakukohde-row @selected-hakukohde-oid @hakukohteet)])]))))
 
 (defn- application-hakukohde-review-input
   [label name states]
@@ -281,18 +281,16 @@
     (fn []
       [:div.application-handling__review-state-container
        [:div.application-handling__review-header label]
-       [:div
-        (if @list-opened
-          [:div.application-handling__review-state-list-opened-anchor
-           (into [:div.application-handling__review-state-list-opened
-                  {:on-click list-click}]
-                 (opened-review-state-list name review-state states))]
-          [:div
-           {:on-click list-click}
-           (review-state-selected-row
-             (get-review-state-label-by-name
-               states
-               (or @review-state (ffirst states))))])]])))
+       (if @list-opened
+         [:div.application-handling__review-state-list-opened-anchor
+          (into [:div.application-handling__review-state-list-opened
+                 {:on-click list-click}]
+                (opened-review-state-list name review-state states))]
+         (review-state-selected-row
+           list-click
+           (get-review-state-label-by-name
+             states
+             (or @review-state (ffirst states)))))])))
 
 (defn- application-hakukohde-review-inputs
   []
