@@ -275,22 +275,22 @@
 (defn- application-hakukohde-review-input
   [label name states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
-        review-state      (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) name]])
         list-opened       (r/atom false)
         list-click        (fn [_] (swap! list-opened not))]
     (fn []
-      [:div.application-handling__review-state-container
-       [:div.application-handling__review-header label]
-       (if @list-opened
-         [:div.application-handling__review-state-list-opened-anchor
-          (into [:div.application-handling__review-state-list-opened
-                 {:on-click list-click}]
-                (opened-review-state-list name review-state states))]
-         (review-state-selected-row
-           list-click
-           (get-review-state-label-by-name
-             states
-             (or @review-state (ffirst states)))))])))
+      (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) name]])]
+        [:div.application-handling__review-state-container
+         [:div.application-handling__review-header label]
+         (if @list-opened
+           [:div.application-handling__review-state-list-opened-anchor
+            (into [:div.application-handling__review-state-list-opened
+                   {:on-click list-click}]
+                  (opened-review-state-list name review-state-for-current-hakukohde states))]
+           (review-state-selected-row
+             list-click
+             (get-review-state-label-by-name
+               states
+               (or @review-state-for-current-hakukohde (ffirst states)))))]))))
 
 (defn- application-hakukohde-review-inputs
   []
