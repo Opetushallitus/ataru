@@ -233,12 +233,14 @@
    :first-name                        (s/maybe s/Str)
    :last-name                         (s/maybe s/Str)})
 
+(def hakukohde-review-types-schema
+  (reduce (fn [acc [kw _ states]]
+            (assoc acc (s/optional-key kw) (apply s/enum (map first states))))
+          {}
+          review-states/hakukohde-review-types))
+
 (s/defschema HakukohdeReviews
-  ; keyed by :hakukohde-oid or ":form"
-  {s/Keyword {(s/optional-key :language-requirement) (apply s/enum (map first review-states/application-hakukohde-review-states))
-              (s/optional-key :degree-requirement)   (apply s/enum (map first review-states/application-hakukohde-review-states))
-              (s/optional-key :eligibility-state)    (apply s/enum (map first review-states/application-hakukohde-eligibility-states))
-              (s/optional-key :selection-state)      (apply s/enum (map first review-states/application-hakukohde-selection-states))}})
+  {s/Keyword hakukohde-review-types-schema})
 
 (s/defschema Review
   {:id                                 s/Int

@@ -15,8 +15,8 @@
     [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
     [ataru.cljs-util :as util]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
-    [goog.string :as gstring]
-    [goog.string.format]))
+    [goog.string.format]
+    [ataru.application.review-states :as review-states]))
 
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
@@ -272,19 +272,19 @@
            (selected-hakukohde-row @selected-hakukohde-oid select-list-item @hakukohteet))]))))
 
 (defn- application-hakukohde-review-input
-  [label name states]
+  [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
         list-opened       (r/atom false)
         list-click        (fn [_] (swap! list-opened not))]
     (fn []
-      (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) name]])]
+      (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
          [:div.application-handling__review-header label]
          (if @list-opened
            [:div.application-handling__review-state-list-opened-anchor
             (into [:div.application-handling__review-state-list-opened
                    {:on-click list-click}]
-                  (opened-review-state-list name review-state-for-current-hakukohde states))]
+                  (opened-review-state-list kw review-state-for-current-hakukohde states))]
            (review-state-selected-row
              list-click
              (get-review-state-label-by-name
@@ -292,16 +292,11 @@
                (or @review-state-for-current-hakukohde (ffirst states)))))]))))
 
 (defn- application-hakukohde-review-inputs
-  []
-  [:div
-   [application-hakukohde-review-input
-    "Kielitaitovaatimus" :language-requirement application-review-states/application-hakukohde-review-states]
-   [application-hakukohde-review-input
-    "Tutkinnon kelpoisuus" :degree-requirement application-review-states/application-hakukohde-review-states]
-   [application-hakukohde-review-input
-    "Hakukelpoisuus" :eligibility-state application-review-states/application-hakukohde-eligibility-states]
-   [application-hakukohde-review-input
-    "Valinta" :selection-state application-review-states/application-hakukohde-selection-states]])
+  [review-types]
+  (into [:div]
+        (mapv (fn [[kw label states]]
+                [application-hakukohde-review-input label kw states])
+              review-types)))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
   [(str first-name " " last-name)
@@ -392,7 +387,7 @@
                "application-handling__review-floating animated fadeIn")}
      [application-review-state]
      [application-hakukohde-selection]
-     [application-hakukohde-review-inputs]
+     [application-hakukohde-review-inputs review-states/hakukohde-review-types]
      [application-review-inputs]
      [application-modify-link]
      [application-review-events]]))

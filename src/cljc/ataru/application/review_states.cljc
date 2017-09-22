@@ -27,10 +27,11 @@
    ["eligible" "Hakukelpoinen"]
    ["uneligible" "Ei hakukelpoinen"]])
 
-(def application-hakukohde-states
-  {:language-requirement application-hakukohde-review-states
-   :degree-requirement application-hakukohde-review-states
-   :apply-eligibility application-hakukohde-eligibility-states})
+(def hakukohde-review-types
+  [[:language-requirement "Kielivaatimus" application-hakukohde-review-states]
+   [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
+   [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
+   [:selection-state "Valinta" application-hakukohde-selection-states]])
 
 ;; States that are - at least for the time being - considered terminal. They have been handled
 ;; and might be left at this state forever
