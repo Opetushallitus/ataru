@@ -11,7 +11,8 @@
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
-            [yesql.core :as sql]))
+            [yesql.core :as sql]
+            [ataru.fixtures.form :as form-fixtures]))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -28,14 +29,6 @@
 (def application-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
                                           (assoc-in [:answers 2 :value] "edited@foo.com")
                                           (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
-
-(def application-with-extra-answers (update application-fixtures/person-info-form-application
-                                      :answers
-                                      conj
-                                      {:key       "j1jk2h121lkh",
-                                       :value     "Extra stuff!",
-                                       :fieldType "textField",
-                                       :label     {:fi "exxxtra", :sv ""}}))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -130,7 +123,7 @@
         (spec)))
 
     (before
-      (reset! form (db/init-db-fixture)))
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should validate application"
       (with-response :post resp application-fixtures/person-info-form-application
@@ -143,9 +136,9 @@
         (should (have-application-for-hakukohde-in-db (get-in resp [:body :id])))))
 
     (it "should not validate application with extra answers"
-      (with-response :post resp application-with-extra-answers
+      (with-response :post resp application-fixtures/person-info-form-application-with-extra-answer
         (should= 400 (:status resp))
-        (should= {:failures {:extra-answers ["j1jk2h121lkh"]}} (:body resp))))
+        (should= {:failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
 
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
@@ -165,7 +158,7 @@
         (spec)))
 
     (before-all
-      (reset! form (db/init-db-fixture)))
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
       (with-response :post resp application-fixtures/person-info-form-application
@@ -197,11 +190,12 @@
     (describe "PUT application"
       (around [spec]
         (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job (fn [_])]
+                      application-email/start-email-edit-confirmation-job (fn [_])
+                      application-service/remove-orphan-attachments (fn [_ _])]
           (spec)))
 
       (before-all
-        (reset! form (db/init-db-fixture)))
+        (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
       (it "should create"
         (with-response :post resp application-fixtures/person-info-form-application
@@ -231,7 +225,7 @@
           (spec)))
 
       (before-all
-        (reset! form (db/init-db-fixture)))
+        (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
       (it "should create"
         (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
@@ -250,4 +244,53 @@
         (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-20-days]
           (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
             (should= 400 (:status resp))
-            (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp)))))))
+            (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp))))))
+
+  (describe "Tests for a more complicated form"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                    application-email/start-email-edit-confirmation-job (fn [_])
+                    application-service/remove-orphan-attachments (fn [_ _])]
+        (spec)))
+
+    (before-all
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form-with-more-questions)))
+
+    (it "should not create"
+      (with-response :post resp application-fixtures/person-info-form-application
+        (should= 400 (:status resp))
+        (should= {:failures {:adjacent-answer-1 {:passed? false}
+                             :repeatable-required {:passed? false}
+                             :more-questions-attachment-id {:passed? false}}}
+                 (:body resp))))
+
+    (it "should create"
+      (with-response :post resp application-fixtures/person-info-form-application-with-more-answers
+        (should= 200 (:status resp))
+        (should (have-application-in-db (get-in resp [:body :id])))))
+
+    (it "should update answers"
+      (with-response :put resp application-fixtures/person-info-form-application-with-more-modified-answers
+        (should= 200 (:status resp))
+        (let [id          (-> resp :body :id)
+              application (get-application-by-id id)]
+          (should= "Toistuva pakollinen 4" (last (get-answer application "repeatable-required")))
+          (should= "modified-attachment-id" (get-answer application "more-questions-attachment-id"))
+          (should= "Vierekkäinen vastaus 2" (get-answer application "adjacent-answer-2"))
+          (should= "toka vaihtoehto" (get-answer application "more-answers-dropdown-id")))))
+
+    (it "should not update dropdown answer when required followups are not answered"
+      (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
+                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+      (should= 400 (:status resp))
+      (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
+
+    (it "should update dropdown answer"
+      (with-response :put resp (-> application-fixtures/person-info-form-application-with-more-modified-answers
+                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+        (should= 200 (:status resp))
+        (let [id          (-> resp :body :id)
+              application (get-application-by-id id)]
+          (should= "eka vaihtoehto" (get-answer application "more-answers-dropdown-id"))
+          (should= "followup-attachment" (get-answer application "dropdown-followup-1"))
+          (should= "toka" (get-answer application "dropdown-followup-2")))))))

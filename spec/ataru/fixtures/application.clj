@@ -170,6 +170,59 @@
                                              {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
                                              {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}]})
 
+(def person-info-form-application-with-extra-answer
+  (update person-info-form-application
+    :answers
+    conj
+    {:key       "extra-answer-key",
+     :value     "Extra stuff!",
+     :fieldType "textField",
+     :label     {:fi "exxxtra", :sv ""}}))
+
+(def person-info-form-application-with-more-answers
+  (-> person-info-form-application
+      (merge {:id     555
+              :secret "more-answers-secret"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key       "adjacent-answer-1"
+          :value     "Vierekkäinen vastaus 1"
+          :fieldType "textField"
+          :label     {:fi "Vierekkäinen Kenttä1" :sv ""}}
+         {:key       "repeatable-required"
+          :value     ["Toistuva pakollinen 1" "Toistuva pakollinen 2" "Toistuva pakollinen 3"]
+          :fieldType "textField"
+          :label     {:fi "Toistuva pakollinen" :sv ""}}
+         {:key       "more-questions-attachment-id"
+          :value     "attachment-id"
+          :fieldType "attachment"
+          :label     {:fi "Eka liite" :sv ""}}])))
+
+(def person-info-form-application-with-modified-answers
+  (-> person-info-form-application-with-more-answers
+      (update-in [:answers 15 :value] conj "Toistuva pakollinen 4")
+      (assoc-in [:answers 16 :value] "modified-attachment-id")
+      (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
+                                           :value     "Vierekkäinen vastaus 2"
+                                           :fieldType "textField"}
+                                          {:key       "more-answers-dropdown-id"
+                                           :value     "toka vaihtoehto"
+                                           :fieldType "dropdown"}])))
+
+(def dropdown-followups
+  [{:key      "dropdown-followup-1"
+   :value     "followup-attachment"
+   :fieldType "attachment"
+   :label     {:fi "Dropdown liite" :sv ""}}
+  {:key       "dropdown-followup-2"
+   :value     "toka"
+   :fieldType "singleChoice"
+   :label     {:fi "Dropdown painikkeet required" :sv ""}}])
+
+(def person-info-form-application-with-more-modified-answers
+  (update person-info-form-application-with-modified-answers :answers (comp vec concat) dropdown-followups))
+
 (def person-info-form-application-for-hakukohde
   {:form           2147483647
    :lang           "fi"
