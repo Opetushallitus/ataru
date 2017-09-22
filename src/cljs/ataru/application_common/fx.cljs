@@ -1,6 +1,7 @@
 (ns ataru.application-common.fx
   (:require [re-frame.core :as re-frame]
             [cljs.core.async :as async]
+            [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]))
 
 (re-frame/reg-fx :delayed-dispatch
@@ -29,7 +30,7 @@
 
 (defn- validatep [value answers field-descriptor]
   (async/merge
-   (map (fn [v] (validator/validate v value answers field-descriptor))
+   (map (fn [v] (validator/validate has-applied v value answers field-descriptor))
         (:validators field-descriptor))))
 
 (defn- all-valid? [valid-ch]

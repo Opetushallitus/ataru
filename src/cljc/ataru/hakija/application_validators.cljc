@@ -1,17 +1,63 @@
 (ns ataru.hakija.application-validators
-  #?(:cljs (:require-macros [cljs.core.async.macros :as async]))
+  #?(:cljs (:require-macros [cljs.core.async.macros :as asyncm]))
   (:require [clojure.string]
             [ataru.email :as email]
             [ataru.ssn :as ssn]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
-            #?(:clj  [clojure.core.async :as async])
+            #?(:clj  [clojure.core.async :as async]
+               :cljs [cljs.core.async :as async])
+            #?(:clj  [clojure.core.async :as asyncm])
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
             #?(:clj  [clj-time.format :as f]
                :cljs [cljs-time.format :as f])
             #?(:clj  [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])))
+
+(defn- email-applied-error
+  [email preferred-name]
+  [{:fi [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hei " preferred-name "!")
+               "Hei!")]
+         [:p "Huomasimme, että "
+          [:strong "olet jo lähettänyt hakemuksen"]
+          " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+         [:p "Jos haluat "
+          [:strong "muuttaa hakemustasi"]
+          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
+         jättäessäsi edellisen hakemuksen."]
+         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
+          [:strong email]
+          " on varmasti oikein."]
+         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]}])
+
+(defn- email-applied-error-when-modifying
+  [email preferred-name]
+  [{:fi [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hei " preferred-name "!")
+               "Hei!")]
+         [:p "Antamallasi sähköpostiosoitteella "
+          [:strong email]
+          " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
+          on varmasti oikein."]]}])
+
+(defn- ssn-applied-error
+  [preferred-name]
+  [{:fi [:div
+          [:p (if (not (clojure.string/blank? preferred-name))
+                (str "Hei " preferred-name "!")
+                "Hei!")]
+          [:p "Huomasimme, että "
+           [:strong "olet jo lähettänyt hakemuksen"]
+           " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+          [:p "Jos haluat "
+           [:strong "muuttaa hakemustasi"]
+           " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
+         jättäessäsi edellisen hakemuksen. Ongelmatilanteissa ole yhteydessä
+         hakemaasi oppilaitokseen."]]}])
 
 (defn ^:private required?
   [value _ _]
@@ -30,12 +76,47 @@
       (ssn/ssn? (get-in answers-by-key [:ssn :value]))))
 
 (defn- ssn?
-  [value _ _]
-  (ssn/ssn? value))
+     [has-applied value answers-by-key field-descriptor]
+     (let [multiple? (get-in field-descriptor
+                             [:params :can-submit-multiple-applications]
+                             true)
+           haku-oid (get-in field-descriptor
+                            [:params :haku-oid])
+           preferred-name (:preferred-name answers-by-key)]
+       (asyncm/go
+         (cond (not (ssn/ssn? value))
+               [false []]
+               (and (not multiple?)
+                    (async/<! (has-applied haku-oid {:ssn value})))
+               [false (ssn-applied-error (when (:valid preferred-name)
+                                           (:value preferred-name)))]
+               :else
+               [true []]))))
 
 (defn- email?
-  [value _ _]
-  (email/email? value))
+     [has-applied value answers-by-key field-descriptor]
+     (let [multiple? (get-in field-descriptor
+                             [:params :can-submit-multiple-applications]
+                             true)
+           haku-oid (get-in field-descriptor
+                            [:params :haku-oid])
+           preferred-name (:preferred-name answers-by-key)
+           original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
+           modifying? (some? original-value)]
+       (asyncm/go
+         (cond (not (email/email? value))
+               [false []]
+               (and (not (have-finnish-ssn? answers-by-key))
+                    (not multiple?)
+                    (not (and modifying? (= value original-value)))
+                    (async/<! (has-applied haku-oid {:email value})))
+               [false
+                ((if modifying?
+                   email-applied-error-when-modifying
+                   email-applied-error) value (when (:valid preferred-name)
+                                                (:value preferred-name)))]
+               :else
+               [true []]))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
 
@@ -133,8 +214,6 @@
       true)))
 
 (def pure-validators {:required        required?
-                      :ssn             ssn?
-                      :email           email?
                       :postal-code     postal-code?
                       :postal-office   postal-office?
                       :phone           phone?
@@ -145,13 +224,14 @@
                       :city            city?
                       :hakukohteet     hakukohteet?})
 
-(def async-validators {})
+(def async-validators {:ssn ssn?
+                       :email email?})
 
 (defn validate
-  [validator value answers-by-key field-descriptor]
+  [has-applied validator value answers-by-key field-descriptor]
   (if-let [pure-validator ((keyword validator) pure-validators)]
     (let [valid? (pure-validator value answers-by-key field-descriptor)]
-      (async/go [valid? []]))
+      (asyncm/go [valid? []]))
     (if-let [async-validator ((keyword validator) async-validators)]
-      (async-validator value answers-by-key field-descriptor)
-      (async/go [false []]))))
+      (async-validator has-applied value answers-by-key field-descriptor)
+      (asyncm/go [false []]))))
