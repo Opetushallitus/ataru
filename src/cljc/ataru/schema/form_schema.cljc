@@ -134,6 +134,7 @@
    :haku-name                          LocalizedStringOptional
    :max-hakukohteet                    (s/maybe s/Int)
    :is-jatkuva-haku?                   s/Bool
+   :can-submit-multiple-applications   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde
    (s/optional-key :hakuaika-dates)    {:start                s/Int
                                         (s/optional-key :end) (s/maybe s/Int)

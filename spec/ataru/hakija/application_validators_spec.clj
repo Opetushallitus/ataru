@@ -11,10 +11,12 @@
             [clojure.core.async :as async]))
 
 (defn- validate! [validator value answers-by-key field-descriptor]
-  (first (async/<!! (validator/validate validator
-                                        value
-                                        answers-by-key
-                                        field-descriptor))))
+  (let [has-applied (fn [haku-oid identifier] (async/go false))]
+    (first (async/<!! (validator/validate has-applied
+                                          validator
+                                          value
+                                          answers-by-key
+                                          field-descriptor)))))
 
 (describe "required validator"
   (tags :unit)

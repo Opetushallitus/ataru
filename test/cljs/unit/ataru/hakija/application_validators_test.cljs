@@ -10,17 +10,19 @@
             [cljs.core.async :as async]
             [cljs.test :refer-macros [deftest is testing async]]))
 
+(defn- has-never-applied [haku-oid identifier] (asyncm/go false))
+
 (deftest ssn-validation
   (async done
          (asyncm/go
            (doseq [ssn ssn/ssn-list]
              (doseq [century-char ["A"]]
                (let [ssn (str (:start ssn) century-char (:end ssn))]
-                 (is (first (async/<! (validator/validate "ssn" ssn {} nil)))
+                 (is (first (async/<! (validator/validate has-never-applied "ssn" ssn {} nil)))
                      (str "SSN " ssn " is not valid")))))
 
-           (is (not (first (async/<! (validator/validate "ssn" nil {} nil)))))
-           (is (not (first (async/<! (validator/validate "ssn" "" {} nil)))))
+           (is (not (first (async/<! (validator/validate has-never-applied "ssn" nil {} nil)))))
+           (is (not (first (async/<! (validator/validate has-never-applied "ssn" "" {} nil)))))
            (done))))
 
 (deftest email-validation
@@ -29,7 +31,7 @@
            (doseq [email (keys email/email-list)]
              (let [expected (get email/email-list email)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate "email" email {} nil)))
+                   actual   (first (async/<! (validator/validate has-never-applied "email" email {} nil)))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "email " email " was not " message))))
@@ -41,7 +43,7 @@
            (doseq [postal-code (keys postal-code/postal-code-list)]
              (let [expected (get postal-code/postal-code-list postal-code)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate "postal-code"
+                   actual   (first (async/<! (validator/validate has-never-applied "postal-code"
                                                                  postal-code
                                                                  {:country-of-residence {:value "246"}}
                                                                  nil)))
@@ -56,7 +58,7 @@
            (doseq [number (keys phone/phone-list)]
              (let [expected (get phone/phone-list number)
                    pred     (if expected true? false?)
-                   actual   (first (async/<! (validator/validate "phone" number {} nil)))
+                   actual   (first (async/<! (validator/validate has-never-applied "phone" number {} nil)))
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "phone number " number " was not " message))))
@@ -66,7 +68,7 @@
   (async done
          (asyncm/go
            (doseq [[input expected] date/date-list]
-             (is (= expected (first (async/<! (validator/validate :past-date
+             (is (= expected (first (async/<! (validator/validate has-never-applied :past-date
                                                                   input
                                                                   {}
                                                                   nil))))))
@@ -76,7 +78,7 @@
   (async done
          (asyncm/go
            (doseq [[first-name main-name expected] first-name/first-name-list]
-             (is (= expected (first (async/<! (validator/validate :main-first-name
+             (is (= expected (first (async/<! (validator/validate has-never-applied :main-first-name
                                                                   main-name
                                                                   {:first-name {:value first-name}}
                                                                   nil))))))

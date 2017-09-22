@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-application-service
   (:require
    [taoensso.timbre :as log]
+   [clojure.core.async :as async]
    [ataru.background-job.job :as job]
    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
    [ataru.hakija.application-email-confirmation :as application-email]
@@ -192,6 +193,17 @@
   (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
     virkailija-secret))
 
+(defn- set-original-value
+  [old-values-by-key new-answer]
+  (assoc new-answer :original-value (get old-values-by-key (:key new-answer))))
+
+(defn- set-original-values
+  [old-application new-application]
+  (let [old-values-by-key (into {} (map (juxt :key :value)
+                                        (:answers old-application)))]
+    (update new-application :answers
+            (partial map (partial set-original-value old-values-by-key)))))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
@@ -199,13 +211,22 @@
                                (:form)
                                (form-store/fetch-by-id)
                                (hakija-form-service/inject-hakukohde-component-if-missing)
-                               (hakukohde/populate-hakukohde-answer-options tarjonta-info))
+                               (hakukohde/populate-hakukohde-answer-options tarjonta-info)
+                               (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
                              application)
-        validation-result  (validator/valid-application? final-application form)
+        has-applied        (fn [haku-oid identifier]
+                             (async/go
+                               (if (contains? identifier :ssn)
+                                 (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
+                                 (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
+        validation-result  (validator/valid-application?
+                            has-applied
+                            (set-original-values latest-application final-application)
+                            form)
         virkailija-secret  (valid-virkailija-secret application)]
     (cond
       (and (not (nil? virkailija-secret))

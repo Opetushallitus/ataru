@@ -38,9 +38,13 @@
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn passed? [answer validators answers-by-key field-descriptor]
+(defn- passed? [has-applied answer validators answers-by-key field-descriptor]
   (every? (fn [validator]
-            (first (async/<!! (validator/validate validator answer answers-by-key field-descriptor))))
+            (first (async/<!! (validator/validate has-applied
+                                                  validator
+                                                  answer
+                                                  answers-by-key
+                                                  field-descriptor))))
           validators))
 
 (defn- wrap-coll [xs]
@@ -53,9 +57,9 @@
   #{:hakukohteet})
 
 (defn- passes-all?
-  [validators answers answers-by-key field-descriptor]
+  [has-applied validators answers answers-by-key field-descriptor]
   (every? true? (map
-                  #(passed? % validators answers-by-key field-descriptor)
+                  #(passed? has-applied % validators answers-by-key field-descriptor)
                   (or
                     (when (empty? answers) [nil])
                     (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
@@ -106,7 +110,7 @@
        (every-followup-nil? answers-by-key followups)))
 
 (defn build-results
-  [answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
+  [has-applied answers-by-key results [{:keys [id] :as field} & rest-form-fields]]
   (let [id          (keyword id)
         answers     (wrap-coll (:value (get answers-by-key id)))
         ; Hakukohdes selected by user
@@ -124,7 +128,7 @@
                                                                      (not-dropdown-or-multiple-choice %)))
                               (if (belongs-to-existing-hakukohde? field hakukohteet)
                                 (concat results
-                                        {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                                        {id {:passed? (passes-all? has-applied validators answers answers-by-key field)}})
                                 (concat results {id {:passed? (every? nil? answers)}}))
 
                               {:fieldClass      "wrapperElement"
@@ -133,11 +137,11 @@
                               (concat results
                                       {id {:passed?
                                            ((validator-keyword->fn validation-keyword) answers-by-key
-                                             (build-results answers-by-key [] children))}})
+                                             (build-results has-applied answers-by-key [] children))}})
 
                               {:fieldClass "wrapperElement"
                                :children   children}
-                              (concat results (build-results answers-by-key [] children))
+                              (concat results (build-results has-applied answers-by-key [] children))
 
                               {:fieldClass "formField"
                                :fieldType  (:or "dropdown" "multipleChoice")
@@ -152,9 +156,10 @@
                                                                (belongs-to-existing-hakukohde? field hakukohteet)
                                                                (all-answers-nil? non-empty-answers answers-by-key followups))
                                                            (all-answers-allowed? non-empty-answers allowed-values)
-                                                           (passes-all? validators non-empty-answers answers-by-key field))}}
+                                                           (passes-all? has-applied validators non-empty-answers answers-by-key field))}}
                                         (when followups
                                           (build-results
+                                            has-applied
                                             answers-by-key
                                             results
                                             followups))))
@@ -162,10 +167,10 @@
                               {:fieldClass "formField"
                                :validators validators}
                               (concat results
-                                      {id {:passed? (passes-all? validators answers answers-by-key field)}})
+                                      {id {:passed? (passes-all? has-applied validators answers answers-by-key field)}})
 
                               :else nil)]
-            (build-results answers-by-key ret rest-form-fields)
+            (build-results has-applied answers-by-key ret rest-form-fields)
             results))))
 
 (defn build-failed-results [answers-by-key failed-results]
@@ -189,13 +194,13 @@
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
-  [application form]
+  [has-applied application form]
   {:pre [(not-empty form)]}
   (let [answers-by-key     (util/answers-by-key (:answers application))
         extra-answers      (extra-answers-not-in-original-form
                              (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                              (keys answers-by-key))
-        results            (build-results answers-by-key [] (:content form))
+        results            (build-results has-applied answers-by-key [] (:content form))
         failed-results     (some->>
                              (into {} (filter #(not (:passed? (second %))) results))
                              (build-failed-results answers-by-key))

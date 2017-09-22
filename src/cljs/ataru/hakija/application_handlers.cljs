@@ -398,10 +398,12 @@
 
 (reg-event-fx
   :application/set-application-field-valid
-  (fn [{db :db} [_ field-descriptor valid?]]
+  (fn [{db :db} [_ field-descriptor valid? errors]]
     (let [id (keyword (:id field-descriptor))
           rules (:rules field-descriptor)]
-      (cond-> {:db (assoc-in db [:application :answers id :valid] valid?)}
+      (cond-> {:db (-> db
+                       (assoc-in [:application :answers id :valid] valid?)
+                       (assoc-in [:application :answers id :errors] errors))}
         (not (empty? rules))
         (assoc :dispatch [:application/run-rule rules])))))
 
@@ -424,7 +426,7 @@
                   :field-descriptor field
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-application-field-valid
-                                             field valid?]))}})))
+                                             field valid? errors]))}})))
 
 (defn- set-repeatable-field-values
   [db field-descriptor value data-idx question-group-idx]
