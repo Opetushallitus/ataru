@@ -112,7 +112,8 @@
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        size         (get-in field-descriptor [:params :size])
+        size-class   (text-field-size->class size)
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
         on-change    (if idx
                        (partial multi-value-field-change field-descriptor 0 idx)
@@ -124,24 +125,35 @@
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
-     (let [cannot-view? (and editing (:cannot-view @answer))
-           cannot-edit? (:cannot-edit @answer)]
-       [:input.application__form-text-input
-        (merge {:id          id
-                :type        "text"
-                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (non-blank-val (get input-hint @lang)
-                                              (get input-hint @default-lang)))
-                :class       (str size-class (if show-error?
-                                               " application__form-field-error"
-                                               " application__form-text-input--normal"))
-                :value       (if cannot-view? "***********" (if idx
-                                                              (get-in @answer [0 :value])
-                                                              (:value @answer)))
-                :on-blur     on-blur
-                :on-change   on-change
-                :required    (is-required-field? field-descriptor)}
-               (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])]))
+     [:div.application__form-text-input-and-validation-errors
+      (let [cannot-view? (and editing (:cannot-view @answer))
+            cannot-edit? (:cannot-edit @answer)]
+        [:input.application__form-text-input
+         (merge {:id          id
+                 :type        "text"
+                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                (non-blank-val (get input-hint @lang)
+                                               (get input-hint @default-lang)))
+                 :class       (str size-class (if show-error?
+                                                " application__form-field-error"
+                                                " application__form-text-input--normal"))
+                 :value       (if cannot-view? "***********" (if idx
+                                                               (get-in @answer [0 :value])
+                                                               (:value @answer)))
+                 :on-blur     on-blur
+                 :on-change   on-change
+                 :required    (is-required-field? field-descriptor)}
+                (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])
+      (when (not-empty (:errors @answer))
+        [:div.application__validation-error-dialog
+         [:div.application__validation-error-dialog__arrow]
+         [:div.application__validation-error-dialog__box
+          (doall
+           (map-indexed (fn [idx error]
+                          (with-meta (non-blank-val (get error @lang)
+                                                    (get error @default-lang))
+                            {:key (str "error-" idx)}))
+                        (:errors @answer)))]])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))

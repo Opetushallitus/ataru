@@ -90,7 +90,7 @@
   (remove #(= hakukohde %) hakukohteet))
 
 (reg-event-fx
- :application/hakukohde-remove-selection
+ :application/hakukohde-remove
  (fn [{db :db} [_ hakukohde-oid]]
    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
          new-hakukohde-values (remove #(= hakukohde-oid (:value %)) selected-hakukohteet)
