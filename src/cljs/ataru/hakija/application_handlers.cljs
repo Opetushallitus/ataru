@@ -437,7 +437,7 @@
         value-path (cond-> [:application :answers id :values]
                      question-group-idx (conj question-group-idx))]
     (-> db
-        (update-in [:application :answers id :values] (fnil identity []))
+        (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
         (update-in value-path
                    (fnil assoc []) data-idx {:valid valid? :value value}))))
 
