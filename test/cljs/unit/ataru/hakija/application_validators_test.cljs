@@ -23,6 +23,12 @@
 
            (is (not (first (async/<! (validator/validate has-never-applied "ssn" nil {} nil)))))
            (is (not (first (async/<! (validator/validate has-never-applied "ssn" "" {} nil)))))
+           (is (not (first (async/<! (validator/validate (fn [_ _] (asyncm/go true))
+                                                         "ssn"
+                                                         "020202A0202"
+                                                         {}
+                                                         {:params {:can-submit-multiple-applications false
+                                                                   :haku-oid "dummy-haku-oid"}})))))
            (done))))
 
 (deftest email-validation
@@ -35,6 +41,12 @@
                    message  (if expected "valid" "invalid")]
                (is (pred actual)
                    (str "email " email " was not " message))))
+           (is (not (first (async/<! (validator/validate (fn [_ _] (asyncm/go true))
+                                                         "email"
+                                                         "test@example.com"
+                                                         {}
+                                                         {:params {:can-submit-multiple-applications false
+                                                                   :haku-oid "dummy-haku-oid"}})))))
            (done))))
 
 (deftest postal-code-validation

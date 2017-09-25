@@ -10,13 +10,19 @@
             [speclj.core :refer :all]
             [clojure.core.async :as async]))
 
-(defn- validate! [validator value answers-by-key field-descriptor]
-  (let [has-applied (fn [haku-oid identifier] (async/go false))]
-    (first (async/<!! (validator/validate has-applied
-                                          validator
-                                          value
-                                          answers-by-key
-                                          field-descriptor)))))
+(defn- validate!
+  ([validator value answers-by-key field-descriptor]
+   (validate! (fn [haku-oid identifier] (async/go false))
+              validator
+              value
+              answers-by-key
+              field-descriptor))
+  ([has-applied validator value answers-by-key field-descriptor]
+   (first (async/<!! (validator/validate has-applied
+                                         validator
+                                         value
+                                         answers-by-key
+                                         field-descriptor)))))
 
 (describe "required validator"
   (tags :unit)
@@ -59,7 +65,15 @@
         (doseq [experiment ["020202A0202"
                             "020202A0202"
                             "020200A020J"]]
-          (should (fun experiment {} nil))))))
+          (should (fun experiment {} nil)))))
+
+  (it "should fail to validate SSN if cannot submit multiple applications and has applied"
+      (should-not (validate! (fn [_ _] (async/go true))
+                             :ssn
+                             "020202A0202"
+                             {}
+                             {:params {:can-submit-multiple-applications false
+                                       :haku-oid "dummy-haku-oid"}}))))
 
 (describe "email validator"
   (tags :unit)
@@ -70,7 +84,15 @@
                 actual   (validate! :email email {} nil)]
             (it (str "should validate " email)
               (should (pred actual)))))
-        (keys email/email-list)))
+        (keys email/email-list))
+
+  (it "should fail to validate email if cannot submit multiple applications and has applied"
+      (should-not (validate! (fn [_ _] (async/go true))
+                             :email
+                             "test@example.com"
+                             {}
+                             {:params {:can-submit-multiple-applications false
+                                       :haku-oid "dummy-haku-oid"}}))))
 
 (describe "postal code validation"
   (tags :unit)
