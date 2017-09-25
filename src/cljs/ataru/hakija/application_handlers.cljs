@@ -160,13 +160,16 @@
       (> add-length 0)
       (into (repeatedly add-length (fn [] nil))))))
 
+(defn- vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))
+
 (defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
   (let [option-path            (if question-group-idx
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (comp (partial resize-vector question-group-idx)
-                                                                           (fnil identity [])))
+                                 question-group-idx (update :options (vector-of-length question-group-idx))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
