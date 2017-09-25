@@ -792,4 +792,4 @@
 (reg-event-db
   :application/add-question-group-row
   (fn add-question-group-row [db [_ field-descriptor-id]]
-    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1))))
+    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2))))
