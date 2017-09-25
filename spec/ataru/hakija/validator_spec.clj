@@ -82,6 +82,19 @@
 
 (defn- has-never-applied [haku-oid identifier] (async/go false))
 
+(defn- populate-can-submit-multiple-applications
+  [form multiple?]
+  (update form :content
+          (fn [content]
+            (clojure.walk/prewalk
+             (fn [field]
+               (if (or (= "ssn" (:id field))
+                       (= "email" (:id field)))
+                 (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
+                   (not multiple?) (assoc-in [:params :haku-oid] "dummy-haku-oid"))
+                 field))
+             content))))
+
 (describe "application validation"
   (tags :unit)
   (it "fails answers with extraneous keys"
@@ -343,4 +356,36 @@
                              (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
                              (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                                :belongs-to-hakukohteet
-                                                                               ["1.2.246.562.20.352373851711"])))))))
+                                                                               ["1.2.246.562.20.352373851711"]))))))
+
+  (it "fails validation when cannot submit multiple applications and has applied"
+      (let [has-applied (fn [_ _] (async/go true))
+            form (populate-can-submit-multiple-applications f false)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should-not (:passed? (validator/valid-application?
+                               has-applied
+                               answers form)))))
+
+  (it "passes validation when cannot submit multiple applications and has not applied"
+      (let [has-applied (fn [_ _] (async/go false))
+            form (populate-can-submit-multiple-applications f false)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form)))))
+
+  (it "passes validation when can submit multiple applications and has applied"
+      (let [has-applied (fn [_ _] (async/go true))
+            form (populate-can-submit-multiple-applications f true)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form)))))
+
+  (it "passes validation when can submit multiple applications and has not applied"
+      (let [has-applied (fn [_ _] (async/go false))
+            form (populate-can-submit-multiple-applications f true)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form))))))
