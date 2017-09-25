@@ -590,14 +590,3 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
-
--- name: yesql-get-application-hakukohde-reviews
-SELECT
-  id,
-  modified_time,
-  application_key,
-  state,
-  requirement,
-  hakukohde
-FROM application_hakukohde_reviews
-WHERE application_key = :application_key;
