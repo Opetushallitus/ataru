@@ -152,7 +152,7 @@
         old-state       (:state old-review)
         hakukohteet     (if (pos? (count (:hakukohde application)))
                           (:hakukohde application)
-                          [nil])
+                          ["form"])
         [application-state selection-state] (case (keyword old-state)
                                               :unprocessed ["unprocessed" "incomplete"]
                                               :processing ["processing" "incomplete"]
