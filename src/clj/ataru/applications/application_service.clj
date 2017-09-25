@@ -9,7 +9,8 @@
     [ataru.applications.excel-export :as excel]
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [taoensso.timbre :refer [spy debug]]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser])
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.virkailija.user.ldap-client :as ldap])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -131,7 +132,12 @@
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
-        application-key (name hakukohde) (name review-requirement) (name review-state) session))))
+        (:employeeNumber (ldap/get-virkailija-by-username (-> session :identity :username)))
+        application-key
+        (name hakukohde)
+        (name review-requirement)
+        (name review-state)
+        session))))
 
 (defn save-application-review
   [review session organization-service]

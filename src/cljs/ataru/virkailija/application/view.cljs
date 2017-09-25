@@ -303,35 +303,41 @@
               review-types)))
 
 (defn- name-and-initials [{:keys [first-name last-name]}]
-  [(str first-name " " last-name)
-   (str (subs first-name 0 1)
-        (subs last-name 0 1))])
+  (if (and first-name last-name)
+    [(str first-name " " last-name)
+     (str (subs first-name 0 1)
+          (subs last-name 0 1))]
+    [nil nil]))
+
+(defn- virkailija-initials-span
+  [event]
+  (let [[name initials] (name-and-initials event)]
+    (when (and name initials)
+      [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
 
 (defn event-caption [event]
   (case (:event-type event)
     "review-state-change" (get-review-state-label-by-name
                             application-review-states/application-review-states (:new-review-state event))
     "updated-by-applicant" "Hakija muokannut hakemusta"
-    "updated-by-virkailija" (let [[name initials] (name-and-initials event)]
-                              [:span
-                               "Virkailija "
-                               [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")]
-                               " muokannut hakemusta"])
+    "updated-by-virkailija" [:span
+                             "Virkailija "
+                             (virkailija-initials-span event)
+                             " muokannut hakemusta"]
     "received-from-applicant" "Hakemus vastaanotettu"
-    "hakukohde-review-state-change" (str
-                                      (:hakukohde event)
-                                      ", "
-                                      (->> application-review-states/hakukohde-review-types
-                                           (filter #(= (keyword (:review-key event)) (first %)))
-                                           (first)
-                                           (second))
-                                      ": "
-                                      (get-review-state-label-by-name
-                                        (concat application-review-states/application-hakukohde-review-states
-                                                application-review-states/application-hakukohde-eligibility-states
-                                                application-review-states/application-hakukohde-selection-states)
-                                        (:new-review-state event)))
-
+    "hakukohde-review-state-change" [:span
+                                     (str
+                                       (->> application-review-states/hakukohde-review-types
+                                            (filter #(= (keyword (:review-key event)) (first %)))
+                                            (first)
+                                            (second))
+                                       ": "
+                                       (get-review-state-label-by-name
+                                         (concat application-review-states/application-hakukohde-review-states
+                                                 application-review-states/application-hakukohde-eligibility-states
+                                                 application-review-states/application-hakukohde-selection-states)
+                                         (:new-review-state event)))
+                                     (virkailija-initials-span event)]
     "Tuntematon"))
 
 (defn to-event-row

@@ -346,7 +346,7 @@
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn save-application-hakukohde-review
-  [application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
+  [virkailija-oid application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
@@ -369,7 +369,7 @@
                                                        :new_review_state (:state review-to-store)
                                                        :review_key       hakukohde-review-requirement
                                                        :hakukohde        (:hakukohde review-to-store)
-                                                       :virkailija_oid   nil}]
+                                                       :virkailija_oid   virkailija-oid}]
                                   (yesql-add-application-event!
                                     hakukohde-event
                                     connection)
