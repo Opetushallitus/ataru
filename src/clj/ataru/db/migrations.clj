@@ -222,7 +222,7 @@
   (followups-to-vectored-followups-like-all-of-them))
 
 (migrations/defmigration
-  migrate-application-reviews "1.63"
+  migrate-application-reviews "1.64"
   "Migrate old per-application reviews to application + hakukohde specific ones"
   (application-reviews->new-model))
 
