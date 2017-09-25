@@ -131,7 +131,7 @@
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
-        application-key (name hakukohde) (name review-requirement) review-state session))))
+        application-key (name hakukohde) (name review-requirement) (name review-state) session))))
 
 (defn save-application-review
   [review session organization-service]

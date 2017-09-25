@@ -91,7 +91,9 @@
       (yesql-add-application-event! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil
-                                     :virkailija_oid   nil}
+                                     :virkailija_oid   nil
+                                     :hakukohde        nil
+                                     :review_key       nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
                                       :state           "unprocessed"}
@@ -139,7 +141,9 @@
                                                          "updated-by-applicant"
                                                          "updated-by-virkailija")
                                      :new_review_state nil
-                                     :virkailija_oid   virkailija-oid}
+                                     :virkailija_oid   virkailija-oid
+                                     :hakukohde        nil
+                                     :review_key       nil}
                                     {:connection conn})
       (audit-log/log {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
@@ -326,7 +330,9 @@
         (let [application-event {:application_key  app-key
                                  :event_type       "review-state-change"
                                  :new_review_state (:state review-to-store)
-                                 :virkailija_oid   nil}]
+                                 :virkailija_oid   nil
+                                 :hakukohde        nil
+                                 :review_key       nil}]
           (yesql-add-application-event!
             application-event
             connection)
@@ -342,17 +348,18 @@
 (defn save-application-hakukohde-review
   [application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection                {:connection conn}
-                                  review-to-store           {:application_key application-key
-                                                             :requirement     hakukohde-review-requirement
-                                                             :state           hakukohde-review-state
-                                                             :hakukohde       hakukohde}
-                                  existing-duplicate-review (yesql-get-existing-application-review review-to-store connection)
-                                  username                  (get-in session [:identity :username])
-                                  organization-oid          (get-in session [:identity :organizations 0 :oid])]
+                            (let [connection                  {:connection conn}
+                                  review-to-store             {:application_key application-key
+                                                               :requirement     hakukohde-review-requirement
+                                                               :state           hakukohde-review-state
+                                                               :hakukohde       hakukohde}
+                                  existing-duplicate-review   (yesql-get-existing-application-review review-to-store connection)
+                                  existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
+                                  username                    (get-in session [:identity :username])
+                                  organization-oid            (get-in session [:identity :organizations 0 :oid])]
                               (when (empty? existing-duplicate-review)
                                 (audit-log/log {:new              review-to-store
-                                                :old              existing-duplicate-review
+                                                :old              (first existing-requirement-review)
                                                 :id               username
                                                 :operation        audit-log/operation-modify
                                                 :organization-oid organization-oid})
@@ -360,6 +367,7 @@
                                 (let [hakukohde-event {:application_key  application-key
                                                        :event_type       "hakukohde-review-state-change"
                                                        :new_review_state (:state review-to-store)
+                                                       :review_key       hakukohde-review-requirement
                                                        :hakukohde        (:hakukohde review-to-store)
                                                        :virkailija_oid   nil}]
                                   (yesql-add-application-event!

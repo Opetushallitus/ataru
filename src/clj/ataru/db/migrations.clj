@@ -176,7 +176,7 @@
       (application-store/save-application-hakukohde-review
         (:key application)
         hakukohde
-        :selection-state
+        "selection-state"
         selection-state
         fake-session))))
 

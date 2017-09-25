@@ -230,6 +230,7 @@
    :application-key                   s/Str
    (s/optional-key :new-review-state) (s/maybe application-review-states)
    (s/optional-key :hakukohde)        (s/maybe s/Str)
+   (s/optional-key :review-key)       (s/maybe s/Str)
    :first-name                        (s/maybe s/Str)
    :last-name                         (s/maybe s/Str)})
 

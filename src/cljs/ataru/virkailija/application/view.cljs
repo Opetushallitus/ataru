@@ -314,6 +314,20 @@
                                [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")]
                                " muokannut hakemusta"])
     "received-from-applicant" "Hakemus vastaanotettu"
+    "hakukohde-review-state-change" (str
+                                      (:hakukohde event)
+                                      ", "
+                                      (->> application-review-states/hakukohde-review-types
+                                           (filter #(= (keyword (:review-key event)) (first %)))
+                                           (first)
+                                           (second))
+                                      ": "
+                                      (get-review-state-label-by-name
+                                        (concat application-review-states/application-hakukohde-review-states
+                                                application-review-states/application-hakukohde-eligibility-states
+                                                application-review-states/application-hakukohde-selection-states)
+                                        (:new-review-state event)))
+
     "Tuntematon"))
 
 (defn to-event-row
