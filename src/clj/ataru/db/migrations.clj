@@ -174,6 +174,7 @@
     (doseq [hakukohde hakukohteet]
       (info "Updating hakukohde" hakukohde "to state" selection-state)
       (application-store/save-application-hakukohde-review
+        nil
         (:key application)
         hakukohde
         "selection-state"
