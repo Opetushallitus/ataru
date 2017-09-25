@@ -243,33 +243,37 @@
       :class              (when selected? "application-handling__review-state-selected-row-hakukohde")
       :on-click           (fn [evt]
                             (dispatch [:application/select-review-hakukohde (aget evt "target" "dataset" "hakukohdeOid")]))}
+     (when selected? [icon-check])
      (:name hakukohde)]))
 
 
 (defn- selected-hakukohde-row
-  [selected-hakukohde-oid on-click hakukohteet]
-  (let [selected-hakukohde (find-hakukohde-by-oid hakukohteet selected-hakukohde-oid)]
-    [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
-     {:on-click on-click}
+  [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
+  (let [selected-hakukohde                  (find-hakukohde-by-oid haku-hakukohteet selected-hakukohde-oid)
+        application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))]
+    [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde.application-handling__review-state-selected-row-hakukohde
+     {:on-click (if application-has-multiple-hakukohde? on-click identity)
+      :class (if (not application-has-multiple-hakukohde?) "application-handling__review-state-row-hakukohde--single-option")}
+     [icon-check]
      (:name selected-hakukohde)]))
 
 (defn- application-hakukohde-selection
   []
-  (let [selected-hakukohde-oid  (subscribe [:state-query [:application :selected-review-hakukohde]])
-        hakukohteet             (subscribe [:state-query [:application :hakukohteet]])
-        application-hakukohteet (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
-        list-opened             (r/atom false)
-        select-list-item        #(swap! list-opened not)]
+  (let [selected-hakukohde-oid     (subscribe [:state-query [:application :selected-review-hakukohde]])
+        haku-hakukohteet           (subscribe [:state-query [:application :hakukohteet]])
+        application-hakukohde-oids (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
+        list-opened                (r/atom false)
+        select-list-item           #(swap! list-opened not)]
     (fn []
-      (when (pos? (count @application-hakukohteet))
+      (when (pos? (count @application-hakukohde-oids))
         [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
-         [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohteet) ")")]
+         [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohde-oids) ")")]
          (if @list-opened
            [:div.application-handling__review-state-list-opened-anchor
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-              (map #(opened-hakukohde-list-row @selected-hakukohde-oid @hakukohteet %) @application-hakukohteet))]
-           (selected-hakukohde-row @selected-hakukohde-oid select-list-item @hakukohteet))]))))
+              (map #(opened-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
+           (selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
 
 (defn- application-hakukohde-review-input
   [label kw states]
