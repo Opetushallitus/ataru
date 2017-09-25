@@ -169,7 +169,7 @@
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (vector-of-length question-group-idx))
+                                 question-group-idx (update :options (vector-of-length (inc question-group-idx)))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
