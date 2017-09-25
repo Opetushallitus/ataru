@@ -205,6 +205,8 @@ SELECT
   ae.new_review_state,
   ae.application_key,
   ae.id,
+  ae.hakukohde,
+  ae.review_key,
   v.first_name,
   v.last_name
 FROM application_events ae
@@ -446,7 +448,6 @@ FROM applications a
 
 -- name: yesql-get-application-review-organization-by-id
 -- Get the related form's organization oid for access checks
-
 SELECT f.organization_oid
 FROM application_reviews ar
   JOIN applications a ON a.key = ar.application_key
@@ -455,8 +456,8 @@ FROM application_reviews ar
 
 -- name: yesql-add-application-event!
 -- Add application event
-INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid)
-VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid);
+INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key)
+VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key);
 
 -- name: yesql-add-application-review!
 -- Add application review, initially it doesn't have all fields. This is just a "skeleton"
@@ -578,6 +579,17 @@ ON CONFLICT (application_key, requirement, hakukohde)
 SELECT id
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND state = :state AND hakukohde = :hakukohde;
+
+-- name: yesql-get-existing-requirement-review
+SELECT
+  id,
+  modified_time,
+  requirement,
+  state,
+  hakukohde,
+  application_key
+FROM application_hakukohde_reviews
+WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
 
 -- name: yesql-get-application-hakukohde-reviews
 SELECT
