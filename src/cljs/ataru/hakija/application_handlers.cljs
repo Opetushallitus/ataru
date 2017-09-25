@@ -154,12 +154,19 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
 (defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
   (let [option-path            (if question-group-idx
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (fnil identity []))
+                                 question-group-idx (update :options (comp (partial resize-vector question-group-idx)
+                                                                           (fnil identity [])))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
