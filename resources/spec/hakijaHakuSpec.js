@@ -70,10 +70,12 @@
 
     describe('clicking remove on selected hakukohde', function () {
       before(
-        clickElement(function() { return selectedHakukohteet().eq(0).find('a') })
+        clickElement(function() { return selectedHakukohteet().eq(0).find('a') }),
+        wait.until(function () {
+          return selectedHakukohteet().length === 0
+        })
       )
       it('removes as expected', function () {
-        expect(selectedHakukohteet().length).to.equal(0)
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 11 tietoa')
       })
     })

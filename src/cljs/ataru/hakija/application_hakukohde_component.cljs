@@ -49,8 +49,10 @@
     [:span ""]))
 
 (defn- hakukohde-remove-event-handler [e]
-  (dispatch [:application/hakukohde-remove-selection
-             (.getAttribute (.-target e) "data-hakukohde-oid")]))
+  (js/setTimeout ; Do this with timeout since phantomrunner is bad with `on animationend|transitionend`
+    #(dispatch [:application/hakukohde-remove-selection (.getAttribute (.-target e) "data-hakukohde-oid")])
+    500)
+  (set! (.-className parent) (str (.-className parent) " fadeOut")))
 
 (defn- hakukohde-select-event-handler [e]
   (dispatch [:application/hakukohde-add-selection
@@ -79,7 +81,7 @@
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row.application__hakukohde-row--selected
+  [:div.application__hakukohde-row.application__hakukohde-row--selected.animated.fadeIn
    [:div.application__hakukohde-row-icon-container
     [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
    [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
