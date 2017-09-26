@@ -322,13 +322,25 @@
   []
   [:div.application-handling__floating-application-review-placeholder])
 
+(defn- koulutus->str
+  [koulutus]
+  (->> [(-> koulutus :koulutuskoodi-name :fi)
+        (-> koulutus :tutkintonimike-name :fi)
+        (:tarkenne koulutus)]
+       (remove #(or (nil? %) (clojure.string/blank? %)))
+       (distinct)
+       (clojure.string/join ", ")))
+
 (defn- hakukohteet-list-row [hakukohde]
   ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
   [:li.application-handling__hakukohteet-list-row
    [:div.application-handling__review-area-hakukohde-heading
     (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
-   [:div.application-handling__review-area-koulutus-heading
-    (map #(-> % :koulutuskoodi-name :fi) (:koulutukset hakukohde))]])
+   (doall
+    (for [koulutus (:koulutukset hakukohde)]
+      ^{:key (str "koulutus-" (:oid koulutus))}
+      [:div.application-handling__review-area-koulutus-heading
+       (koulutus->str koulutus)]))])
 
 (defn- hakukohteet-list [hakukohteet]
   (into [:ul.application-handling__hakukohteet-list]
