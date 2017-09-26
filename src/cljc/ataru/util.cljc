@@ -114,3 +114,7 @@
         (if (= (:id ret) key)
           ret
           (recur (next field-descriptors)))))))
+
+(defn in?
+  [vec item]
+  (some #(= item %) vec))

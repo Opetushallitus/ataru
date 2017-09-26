@@ -100,10 +100,12 @@
 (defn- filter-questions-without-answers
   [answers-by-key form-fields]
   (filter (fn [answer]
-            (and (not (some #{(keyword (:id answer))} (keys answers-by-key)))
+            (and (not (util/in? (keys answers-by-key) (keyword (:id answer))))
+                 (not (util/in? (:validators answer) "required"))
                  (some #{(:fieldType answer)} types/form-fields)
                  (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
-                 (not (:exclude-from-answers answer)))) form-fields))
+                 (not (:exclude-from-answers answer))
+                 (not (:exclude-from-answers-if-hidden answer)))) form-fields))
 
 (defn- get-questions-without-answers
   "This function serves to get dummy answers and their editability for fields that were not required and thus were left
@@ -138,7 +140,7 @@
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
   ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
-  (map (fn [answer]
+  (keep (fn [answer]
          (let [answer-key (:key answer)
                answer-with-key #(= (:key %) answer-key)
                old-answer (->> old-answers
@@ -148,7 +150,9 @@
                                (filter answer-with-key)
                                (first)
                                :label)]
-           (merge old-answer {:label new-label})))
+           (when old-answer
+             ;Sometimes old an answer doesn't exist: old application, new question in form (flag-uneditable-answers)
+             (merge old-answer {:label new-label}))))
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
