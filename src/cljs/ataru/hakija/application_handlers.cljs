@@ -350,10 +350,7 @@
     (update-in [:application :answers]
                (partial reduce-kv
                         (fn [answers answer-key {:keys [value values] :as answer}]
-                          (let [value  (if values
-                                         (map :value values)
-                                         value)
-                                answer (assoc answer :original-value value)]
+                          (let [answer (assoc answer :original-value (or values value))]
                             (assoc answers answer-key answer)))
                         {}))))
 
