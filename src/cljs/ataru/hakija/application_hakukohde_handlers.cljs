@@ -76,7 +76,7 @@
           set-visibility-of-belongs-to-hakukohteet-questions))))
 
 (reg-event-db
-  :application/hakukohde-remove-selection
+  :application/hakukohde-remove
   (fn [db [_ hakukohde-oid]]
     (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
           new-hakukohde-values (remove #(= hakukohde-oid (:value %)) selected-hakukohteet)]
@@ -87,6 +87,13 @@
                     (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
           set-values-changed
           set-visibility-of-belongs-to-hakukohteet-questions))))
+
+(reg-event-fx
+  :application/hakukohde-remove-selection
+  (fn [{db :db} [_ hakukohde-oid]]
+    {:db             db
+     :dispatch-later [{:ms       500
+                       :dispatch [:application/hakukohde-remove hakukohde-oid]}]}))
 
 (reg-event-db
   :application/show-answers-belonging-to-hakukohteet
