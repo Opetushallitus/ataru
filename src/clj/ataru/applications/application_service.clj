@@ -10,7 +10,8 @@
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [taoensso.timbre :refer [spy debug]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.user.ldap-client :as ldap])
+    [ataru.virkailija.user.ldap-client :as ldap]
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -128,11 +129,11 @@
     (ByteArrayInputStream. (excel/export-applications applications tarjonta-service))))
 
 (defn- save-application-hakukohde-reviews
-  [application-key hakukohde-reviews session]
+  [virkailija application-key hakukohde-reviews session]
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
-        (:employeeNumber (ldap/get-virkailija-by-username (-> session :identity :username)))
+        virkailija
         application-key
         (name hakukohde)
         (name review-requirement)
@@ -141,14 +142,15 @@
 
 (defn save-application-review
   [review session organization-service]
-  (let [application-key (:application-key review)]
+  (let [application-key (:application-key review)
+        virkailija (virkailija-edit/upsert-virkailija session)]
     (aac/check-application-access
       application-key
       session
       organization-service
       [:edit-applications])
     (application-store/save-application-review review session)
-    (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
+    (save-application-hakukohde-reviews virkailija application-key (:hakukohde-reviews review) session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
