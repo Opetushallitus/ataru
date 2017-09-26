@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
+            [ataru.util :as cljc-util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -153,12 +154,22 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
+(defn- vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))
+
 (defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
   (let [option-path            (if question-group-idx
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (fnil identity []))
+                                 question-group-idx (update :options (vector-of-length (inc question-group-idx)))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
@@ -190,10 +201,23 @@
 
 (defn- toggle-values
   [answer options answers-by-key]
-  (reduce (fn [answer option-value]
-            (toggle-multiple-choice-option answer option-value nil answers-by-key nil))
-          answer
-          options))
+  (let [question-group-answer? (and (vector? options)
+                                    (every? vector? options))]
+    (->> options
+         (map-indexed (fn [question-group-idx option-or-options]
+                        [(when question-group-answer? question-group-idx)
+                         option-or-options]))
+         (reduce (fn [answer [question-group-idx option-or-options]]
+                   (if question-group-idx
+                     (reduce #(toggle-multiple-choice-option %1 %2 nil answers-by-key question-group-idx)
+                             answer
+                             option-or-options)
+                     (toggle-multiple-choice-option answer
+                                                    option-or-options
+                                                    nil
+                                                    answers-by-key
+                                                    nil)))
+                 answer))))
 
 (defn- merge-multiple-choice-option-values [value answers-by-key answer]
   (if (string? value)
@@ -207,7 +231,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet"})
+(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet" "dropdown"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -233,58 +257,87 @@
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
+(defn set-question-group-row-amounts [db]
+  (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
+    (reduce-kv (fn [db answer-key {:keys [value]}]
+                 (let [field-descriptor  (->> flattened-form-fields
+                                              (filter (comp (partial = answer-key) keyword :id))
+                                              (first))
+                       question-group-id (-> field-descriptor :params :question-group-id)]
+                   (cond-> db
+                     question-group-id
+                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn pos?) (-> value first count) 1)]
+                                                                               (if (> % provided-val)
+                                                                                 %
+                                                                                 provided-val))))))
+               db
+               (-> db :application :answers))))
+
+(defn- merge-dropdown-values [value answer]
+  (if (and (vector? value)
+           (every? vector? value))
+    (let [values (mapv (partial mapv (fn [value] {:valid true :value value})) value)]
+      (merge answer {:valid true :values values}))
+    (merge answer {:valid true :value value})))
+
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
-        (fn [answers]
-          (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
-                    (let [answer-key (keyword key)
-                          value      (cond-> value
-                                             (and (vector? value)
-                                                  (not (supports-multiple-values (:fieldType answer))))
-                                             (first))]
-                      (if (contains? answers answer-key)
-                        (update
-                          (match answer
-                                 {:fieldType "multipleChoice"}
-                                 (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
+                 (fn [answers]
+                   (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
+                             (let [answer-key (keyword key)
+                                   value      (cond-> value
+                                                (and (vector? value)
+                                                     (not (supports-multiple-values (:fieldType answer))))
+                                                (first))]
+                               (if (contains? answers answer-key)
+                                 (let [answer (match answer
+                                                     {:fieldType "multipleChoice"}
+                                                     (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
 
-                                 {:fieldType "dropdown"}
-                                 (update answers answer-key merge {:valid true :value value})
+                                                     {:fieldType "dropdown"}
+                                                     (update answers answer-key (partial merge-dropdown-values value))
 
-                                 {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                 (update answers answer-key merge
-                                   {:valid  true
-                                    :values (mapv (fn [value]
-                                                    (cond-> {:valid true :value value}
-                                                      (= field-type "attachment")
-                                                      (assoc :status :ready)))
-                                                  (:value answer))})
+                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
+                                                     (update answers answer-key merge
+                                                             {:valid  true
+                                                              :values (mapv (fn [value]
+                                                                              (cond-> {:valid true :value value}
+                                                                                (= field-type "attachment")
+                                                                                (assoc :status :ready)))
+                                                                            (:value answer))})
 
-                                 :else
-                                 (update answers answer-key merge {:valid true :value value}))
-                          answer-key merge {:cannot-edit cannot-edit :cannot-view cannot-view})
-                        answers)))
-                  answers
-                  submitted-answers)))
+                                                     :else
+                                                     (update answers answer-key merge {:valid true :value value}))]
+                                   (update
+                                     answer
+                                     answer-key
+                                     merge
+                                     {:cannot-edit cannot-edit :cannot-view cannot-view}))
+                                 answers)))
+                           answers
+                           submitted-answers)))
       (populate-hakukohde-answers-if-necessary)
       (set-have-finnish-ssn)
       (set-ssn-field-visibility)
-      (set-country-specific-fields-visibility)))
+      (set-country-specific-fields-visibility)
+      (set-question-group-row-amounts)))
 
 (defn- set-followup-visibility-to-false
   [db]
-  (assoc-in db [:application :ui]
-            (->> (autil/flatten-form-fields (:content (:form db)))
-                 (filter :followup?)
-                 (map (fn [field]
-                        (let [id (keyword (:id field))
-                              has-value? (or (some? (get-in db [:application :answers id :value]))
-                                             (some #(some? (:value %))
-                                                   (get-in db [:application :answers id :values] [])))
-                              has-children? (not (empty? (:children field)))]
-                          {id {:visible? (or has-value? has-children?)}})))
-                 (reduce merge))))
+  (update-in db
+             [:application :ui]
+             merge
+             (->> (autil/flatten-form-fields (:content (:form db)))
+                  (filter :followup?)
+                  (map (fn [field]
+                         (let [id            (keyword (:id field))
+                               has-value?    (or (some? (get-in db [:application :answers id :value]))
+                                                 (some #(some? (:value %))
+                                                       (get-in db [:application :answers id :values] [])))
+                               has-children? (not (empty? (:children field)))]
+                           {id {:visible? (or has-value? has-children?)}})))
+                  (reduce merge))))
 
 (defn- original-values->answers [db]
   (cond-> db
@@ -293,16 +346,26 @@
     (update-in [:application :answers]
                (partial reduce-kv
                         (fn [answers answer-key {:keys [value values] :as answer}]
-                          (let [value  (if values
-                                         (map :value values)
-                                         value)
-                                answer (assoc answer :original-value value)]
+                          (let [answer (assoc answer :original-value (or values value))]
                             (assoc answers answer-key answer)))
                         {}))))
 
+(defn- set-question-group-ids [fields & {:keys [question-group-id]}]
+  (map (fn [{:keys [fieldClass id] :as field}]
+         (cond (= fieldClass "questionGroup")
+               (update field :children set-question-group-ids :question-group-id (keyword id))
+
+               question-group-id
+               (assoc-in field [:params :question-group-id] question-group-id)
+
+               :else
+               field))
+       fields))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
-                 (set-form-language))
+                 (set-form-language)
+                 (update :content set-question-group-ids))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         (-> db
                      (update :form (fn [{:keys [selected-language]}]
@@ -377,7 +440,7 @@
         value-path (cond-> [:application :answers id :values]
                      question-group-idx (conj question-group-idx))]
     (-> db
-        (update-in [:application :answers id :values] (fnil identity []))
+        (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
         (update-in value-path
                    (fnil assoc []) data-idx {:valid valid? :value value}))))
 
@@ -415,7 +478,9 @@
         (update-in [:application :answers id]
                    merge
                    {:valid valid? :value (value-fn values)})
-        (set-multi-value-changed id [:value]))))
+        (set-multi-value-changed id
+                                 (when-not (= (:fieldType field-descriptor) "dropdown")
+                                   [:value])))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -742,4 +807,4 @@
 (reg-event-db
   :application/add-question-group-row
   (fn add-question-group-row [db [_ field-descriptor-id]]
-    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1))))
+    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2))))
