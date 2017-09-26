@@ -75,6 +75,10 @@
           set-values-changed
           set-visibility-of-belongs-to-hakukohteet-questions))))
 
+(defn- remove-hakukohde-from-deleting
+  [hakukohteet hakukohde]
+  (remove #(= hakukohde %) hakukohteet))
+
 (reg-event-db
   :application/hakukohde-remove
   (fn [db [_ hakukohde-oid]]
@@ -85,13 +89,14 @@
                     new-hakukohde-values)
           (assoc-in [:application :answers :hakukohteet :valid]
                     (validator/validate :hakukohteet new-hakukohde-values nil (hakukohteet-field db)))
+          (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
           set-values-changed
           set-visibility-of-belongs-to-hakukohteet-questions))))
 
 (reg-event-fx
   :application/hakukohde-remove-selection
   (fn [{db :db} [_ hakukohde-oid]]
-    {:db             db
+    {:db             (update-in db [:application :ui :hakukohteet :deleting] (comp set conj) hakukohde-oid)
      :dispatch-later [{:ms       500
                        :dispatch [:application/hakukohde-remove hakukohde-oid]}]}))
 
