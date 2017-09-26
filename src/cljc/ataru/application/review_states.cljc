@@ -8,13 +8,12 @@
    ["invited-to-exam" "Kutsuttu valintakokeeseen"]
    ["evaluating" "Arvioinnissa"]
    ["processed" "Käsitelty"]
-   ["inactivated" "Passivoitu"]])
+   ["inactivated" "Passiivinen"]])
 
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
    ["selection-proposal" "Valintaesitys"]
    ["selected" "Hyväksytty"]
-   ["selected-from-reserve" "Hyväksytty varasijalta"]
    ["rejected" "Hylätty"]])
 
 (def application-hakukohde-review-states

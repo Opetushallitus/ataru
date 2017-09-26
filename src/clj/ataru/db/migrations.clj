@@ -171,12 +171,12 @@
     (when (not= old-state application-state)
       (info "Updating application state:" old-state "->" application-state)
       (application-store/save-application-review (merge old-review (:state application-state)) fake-session))
-    (doseq [hakukohde hakukohteet]
-      (info "Updating hakukohde" hakukohde "to state" selection-state)
+    (when (= 1 (count hakukohteet))
+      (info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
         nil
         (:key application)
-        hakukohde
+        (first hakukohteet)
         "selection-state"
         selection-state
         fake-session))))
