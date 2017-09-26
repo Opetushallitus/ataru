@@ -257,10 +257,6 @@
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
-(defn- >0? [x]
-  (when (> x 0)
-    x))
-
 (defn set-question-group-row-amounts [db]
   (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
     (reduce-kv (fn [db answer-key {:keys [value]}]
@@ -270,7 +266,7 @@
                        question-group-id (-> field-descriptor :params :question-group-id)]
                    (cond-> db
                      question-group-id
-                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?) (-> value first count) 1)]
+                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn pos?) (-> value first count) 1)]
                                                                                (if (> % provided-val)
                                                                                  %
                                                                                  provided-val))))))
