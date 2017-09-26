@@ -336,8 +336,11 @@
   [:li.application-handling__hakukohteet-list-row
    [:div.application-handling__review-area-hakukohde-heading
     (str (-> hakukohde :name :fi) " - " (-> hakukohde :tarjoaja-name :fi))]
-   [:div.application-handling__review-area-koulutus-heading
-    (map koulutus->str (:koulutukset hakukohde))]])
+   (doall
+    (for [koulutus (:koulutukset hakukohde)]
+      ^{:key (str "koulutus-" (:oid koulutus))}
+      [:div.application-handling__review-area-koulutus-heading
+       (koulutus->str koulutus)]))])
 
 (defn- hakukohteet-list [hakukohteet]
   (into [:ul.application-handling__hakukohteet-list]
