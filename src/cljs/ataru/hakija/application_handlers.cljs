@@ -482,7 +482,9 @@
         (update-in [:application :answers id]
                    merge
                    {:valid valid? :value (value-fn values)})
-        (set-multi-value-changed id [:value]))))
+        (set-multi-value-changed id
+                                 (when-not (= (:fieldType field-descriptor) "dropdown")
+                                   [:value])))))
 
 (reg-event-db
   :application/set-repeatable-application-field
