@@ -303,13 +303,15 @@
                                                      (update answers answer-key (partial merge-dropdown-values value))
 
                                                      {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                                     (update answers answer-key merge
-                                                             {:valid  true
-                                                              :values (mapv (fn [value]
-                                                                              (cond-> {:valid true :value value}
-                                                                                (= field-type "attachment")
-                                                                                (assoc :status :ready)))
-                                                                            (:value answer))})
+                                                     (letfn [(parse-values [value-or-values]
+                                                               (if (vector? value-or-values)
+                                                                 (mapv parse-values value-or-values)
+                                                                 (cond-> {:valid true :value value-or-values}
+                                                                   (= field-type "attachment")
+                                                                   (assoc :status :ready))))]
+                                                       (update answers answer-key merge
+                                                               {:valid  true
+                                                                :values (parse-values (:value answer))}))
 
                                                      :else
                                                      (update answers answer-key merge {:valid true :value value}))]
