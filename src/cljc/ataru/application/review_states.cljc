@@ -35,8 +35,7 @@
 
 ;; States that are - at least for the time being - considered terminal. They have been handled
 ;; and might be left at this state forever
-;; TODO remove this!
-(def complete-states ["canceled" "selected" "rejected" "applicant-has-accepted" "not-selected" "selection-proposal"])
+(def complete-states ["processed" "inactivated"])
 
 ;; States which are not considered terminal, see above for terminal states
 (def incomplete-states
