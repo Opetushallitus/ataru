@@ -327,9 +327,9 @@
   (->> [(-> koulutus :koulutuskoodi-name :fi)
         (-> koulutus :tutkintonimike-name :fi)
         (:tarkenne koulutus)]
-       (remove #(or (nil? %) (blank? %)))
+       (remove #(or (nil? %) (clojure.string/blank? %)))
        (distinct)
-       (join ", ")))
+       (clojure.string/join ", ")))
 
 (defn- hakukohteet-list-row [hakukohde]
   ^{:key (str "hakukohteet-list-row-" (:oid hakukohde))}
