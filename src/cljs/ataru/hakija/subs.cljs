@@ -128,6 +128,11 @@
           @(re-frame/subscribe [:application/selected-hakukohteet]))))
 
 (re-frame/reg-sub
+  :application/hakukohde-deleting?
+  (fn [db [_ hakukohde-oid]]
+    (some #{hakukohde-oid} (-> db :application :ui :hakukohteet :deleting))))
+
+(re-frame/reg-sub
   :application/max-hakukohteet
   (fn [db _]
     (get-in (hakukohteet-field db)

@@ -11,7 +11,8 @@
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store])
+            [ataru.applications.application-store :as application-store]
+            [ataru.hakija.application-email-confirmation :as application-email])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-in-virkailija-system
@@ -26,12 +27,14 @@
 
 (defn- run-specs-in-hakija-system
   [specs]
-  (let [system (atom (hakija-system/new-system))]
-    (try
-      (reset! system (component/start-system @system))
-      (specs)
-      (finally
-        (component/stop-system @system)))))
+  (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+                application-email/start-email-edit-confirmation-job   (fn [_])]
+    (let [system (atom (hakija-system/new-system))]
+      (try
+        (reset! system (component/start-system @system))
+        (specs)
+        (finally
+          (component/stop-system @system))))))
 
 (defn- sh-timeout
   [timeout-secs & args]
