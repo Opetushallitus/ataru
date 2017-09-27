@@ -129,7 +129,8 @@
       (fn [answer]
         (let [answer-kw (keyword (:key answer))]
           (cond-> answer
-            (contains? viewing-forbidden-person-info-field-ids answer-kw)
+            (and (not (clojure.string/blank? (:value answer)))
+                 (contains? viewing-forbidden-person-info-field-ids answer-kw))
             (merge {:cannot-view true :value nil})
 
             (or (contains? editing-forbidden-person-info-field-ids answer-kw)
