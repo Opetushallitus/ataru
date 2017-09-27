@@ -169,15 +169,13 @@
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
 (defn- hakukohteet [content application]
-  (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
-        hakukohteet (map hakukohteet-by-oid
-                         (get-in application [:answers :hakukohteet :value] []))]
+  (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
       [:h2 @(subscribe [:application/hakukohteet-header])]
       [scroll-to-anchor content]]
      [:div.application__wrapper-contents
-      (for [hakukohde-oid @(subscribe [:application/hakukohteet])]
+      (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
 
