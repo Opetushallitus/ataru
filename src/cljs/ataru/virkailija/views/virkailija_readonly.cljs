@@ -179,6 +179,10 @@
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
 
+(defn- person-info-module [content application lang]
+  [:div.application__person-info-wrapper
+   [wrapper content application lang (:children content)]])
+
 (defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
              {application-hakukohteet :hakukohde :as application}
              lang]
@@ -190,6 +194,7 @@
             (not-empty (clojure.set/intersection (set field-hakukohteet)
                                                  (set application-hakukohteet))))
     (match content
+           {:module "person-info"} [person-info-module content application lang]
            {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
