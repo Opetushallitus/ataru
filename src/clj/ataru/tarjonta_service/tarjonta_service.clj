@@ -12,23 +12,28 @@
 (defn- any-hakuaika-on? [haku]
   (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
 
+(defn- haku-name-and-oid-when-hakuaika-on [accumulator haku]
+  (if (any-hakuaika-on? haku)
+    (assoc accumulator
+           (:oid haku)
+           {:haku-oid  (:oid haku)
+            :haku-name (get-in haku [:nimi :kieli_fi])})
+    accumulator))
+
+(defn- hakus-by-form-key [accumulator {:keys [avain haut]}]
+  (let [haku-info (reduce haku-name-and-oid-when-hakuaika-on {} haut)]
+    (if (not-empty haku-info)
+      (assoc accumulator avain haku-info)
+      accumulator)))
+
 (defn forms-in-use
   [organization-service username]
   (let [direct-organizations  (.get-direct-organizations-for-rights organization-service username [:form-edit])
         all-organization-oids (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
         in-oph-organization?  (some #{oph-organization} all-organization-oids)]
-    (reduce (fn [acc1 {:keys [avain haut]}]
-              (assoc acc1 avain
-                          (reduce (fn [acc2 haku]
-                                    (if (any-hakuaika-on? haku)
-                                      (assoc acc2 (:oid haku)
-                                                  {:haku-oid  (:oid haku)
-                                                   :haku-name (get-in haku [:nimi :kieli_fi])})
-                                      {}))
-                            {}
-                            haut)))
-      {}
-      (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
+    (reduce hakus-by-form-key
+            {}
+            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
 (defn- parse-multi-lang-text
   [text]
