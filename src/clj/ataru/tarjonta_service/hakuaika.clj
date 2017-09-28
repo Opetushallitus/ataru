@@ -31,7 +31,7 @@
       {:start (:alkuPvm this-haku-hakuaika)
        :end   (:loppuPvm this-haku-hakuaika)})))
 
-(defn- hakuaika-on [start end]
+(defn hakuaika-on [start end]
   (cond
     (and start end (time-within? (time/now) start end))
     true

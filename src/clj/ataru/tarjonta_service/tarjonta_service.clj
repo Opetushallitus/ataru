@@ -6,22 +6,29 @@
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
-    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
+    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]
+    [ataru.tarjonta-service.hakuaika :refer [hakuaika-on]]))
+
+(defn- any-hakuaika-on? [haku]
+  (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
 
 (defn forms-in-use
   [organization-service username]
-  (let [direct-organizations     (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids    (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
-        in-oph-organization?     (some #{oph-organization} all-organization-oids)]
+  (let [direct-organizations  (.get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
+        in-oph-organization?  (some #{oph-organization} all-organization-oids)]
     (reduce (fn [acc1 {:keys [avain haut]}]
               (assoc acc1 avain
                           (reduce (fn [acc2 haku]
-                                    (assoc acc2 (:oid haku)
-                                                {:haku-oid  (:oid haku)
-                                                 :haku-name (get-in haku [:nimi :kieli_fi])}))
-                                  {} haut)))
-            {}
-            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
+                                    (if (any-hakuaika-on? haku)
+                                      (assoc acc2 (:oid haku)
+                                                  {:haku-oid  (:oid haku)
+                                                   :haku-name (get-in haku [:nimi :kieli_fi])})
+                                      {}))
+                            {}
+                            haut)))
+      {}
+      (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
 (defn- parse-multi-lang-text
   [text]
