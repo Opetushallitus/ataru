@@ -8,21 +8,6 @@
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
 
-(defn forms-in-use
-  [organization-service username]
-  (let [direct-organizations     (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids    (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
-        in-oph-organization?     (some #{oph-organization} all-organization-oids)]
-    (reduce (fn [acc1 {:keys [avain haut]}]
-              (assoc acc1 avain
-                          (reduce (fn [acc2 haku]
-                                    (assoc acc2 (:oid haku)
-                                                {:haku-oid  (:oid haku)
-                                                 :haku-name (get-in haku [:nimi :kieli_fi])}))
-                                  {} haut)))
-            {}
-            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
-
 (defn- parse-multi-lang-text
   [text]
   (reduce-kv (fn [m lang s]
@@ -33,6 +18,21 @@
              (clojure.set/rename-keys text {:kieli_fi :fi
                                             :kieli_sv :sv
                                             :kieli_en :en})))
+
+(defn forms-in-use
+  [organization-service username]
+  (let [direct-organizations     (.get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids    (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
+        in-oph-organization?     (some #{oph-organization} all-organization-oids)]
+    (reduce (fn [acc1 {:keys [avain haut]}]
+              (assoc acc1 avain
+                          (reduce (fn [acc2 haku]
+                                    (assoc acc2 (:oid haku)
+                                                {:haku-oid  (:oid haku)
+                                                 :haku-name (parse-multi-lang-text (:nimi haku))}))
+                                  {} haut)))
+            {}
+            (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
 (defn- epoch-millis->zoned-date-time
   [millis]

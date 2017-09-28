@@ -133,7 +133,7 @@
 
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
-                          :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
+                          :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
                           (ok (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
 
                  (api/GET "/forms/:id" []
