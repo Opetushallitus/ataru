@@ -161,8 +161,10 @@
             (some? virkailija-secret) (assoc :virkailija-secret virkailija-secret))))
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label :children])
-       (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
+  (->> (:content form)
+       (filter #(and (= (:fieldClass %) "wrapperElement")
+                     (not= (:fieldType %) "adjacentfieldset")))
+       (map #(select-keys % [:id :label :children]))))
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 

@@ -17,7 +17,7 @@
         expect(formFields().length).to.equal(30)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
-        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
     });

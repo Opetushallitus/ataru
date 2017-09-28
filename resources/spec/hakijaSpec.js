@@ -15,7 +15,7 @@
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
-        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
         expect(formFields().eq(15).find('.application__form-textarea-max-length').text()).to.equal('0 / 2000');
       })
