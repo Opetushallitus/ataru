@@ -320,11 +320,10 @@
                                                   (let [reduced (reduce #(toggle-followup-visibility %1 %2 false) db previous-followups)]
                                                     (reduce #(toggle-followup-visibility %1 %2 true) reduced current-followups)))])))))
        :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followups (resolve-followups (:value @value))]
-                                 (into [:div.application__form-dropdown-followups]
+                               (when-let [followups (seq (resolve-followups (:value @value)))]
+                                 (into [:div.application__form-dropdown-followups.animated.fadeIn]
                                    (for [followup followups]
-                                     [:div.application__form-dropdown-followups.animated.fadeIn
-                                      [render-field followup]]))))})))
+                                     [render-field followup]))))})))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
@@ -345,35 +344,34 @@
                        (partial textual-field-change field-descriptor))
         lang         @lang
         default-lang @default-lang]
-    [:div
-     [div-kwd
-      [label field-descriptor]
-      [:div.application__form-text-input-info-text
-       [info-text field-descriptor]]
-      [:div.application__form-select-wrapper
-       (when (not @disabled?)
-         [:span.application__form-select-arrow])
-       [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
-        {:id        (:id field-descriptor)
-         :value     (or (:value @value) "")
-         :on-change on-change
-         :disabled  @disabled?
-         :required  (is-required-field? field-descriptor)}
-        (concat
-          (when
+    [div-kwd
+     [label field-descriptor]
+     [:div.application__form-text-input-info-text
+      [info-text field-descriptor]]
+     [:div.application__form-select-wrapper
+      (when (not @disabled?)
+        [:span.application__form-select-arrow])
+      [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+       {:id        (:id field-descriptor)
+        :value     (or (:value @value) "")
+        :on-change on-change
+        :disabled  @disabled?
+        :required  (is-required-field? field-descriptor)}
+       (concat
+        (when
             (and
-              (nil? (:koodisto-source field-descriptor))
-              (not (:no-blank-option field-descriptor))
-              (not= "" (:value (first (:options field-descriptor)))))
-            [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-          (map-indexed
-            (fn [idx option]
-              (let [label        (non-blank-val (get-in option [:label lang])
-                                                (get-in option [:label default-lang]))
-                    option-value (:value option)]
-                ^{:key idx}
-                [:option {:value option-value} label]))
-            (:options field-descriptor)))]]]
+             (nil? (:koodisto-source field-descriptor))
+             (not (:no-blank-option field-descriptor))
+             (not= "" (:value (first (:options field-descriptor)))))
+          [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+        (map-indexed
+         (fn [idx option]
+           (let [label        (non-blank-val (get-in option [:label lang])
+                                             (get-in option [:label default-lang]))
+                 option-value (:value option)]
+             ^{:key idx}
+             [:option {:value option-value} label]))
+         (:options field-descriptor)))]]
      (when-not idx
        [dropdown-followups lang value field-descriptor])]))
 
