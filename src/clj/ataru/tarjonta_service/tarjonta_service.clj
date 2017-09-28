@@ -70,10 +70,8 @@
     (cache/cache-get-or-fetch cache-service :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
 
   (get-hakukohde-name [this hakukohde-oid]
-    (-> this
-        (.get-hakukohde hakukohde-oid)
-        :hakukohteenNimet
-        :kieli_fi))
+    (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
+      (parse-multi-lang-text (:hakukohteenNimet hakukohde))))
 
   (hakukohde-search [this haku-oid organization-oid]
     (some->> (client/hakukohde-search haku-oid organization-oid)
@@ -86,10 +84,8 @@
     (cache/cache-get-or-fetch cache-service :haku haku-oid #(client/get-haku haku-oid)))
 
   (get-haku-name [this haku-oid]
-    (-> this
-        (.get-haku haku-oid)
-        :nimi
-        :kieli_fi))
+    (when-let [haku (.get-haku this haku-oid)]
+      (parse-multi-lang-text (:nimi haku))))
 
   (get-koulutus [this koulutus-oid]
     (cache/cache-get-or-fetch cache-service :koulutus koulutus-oid #(client/get-koulutus koulutus-oid))))

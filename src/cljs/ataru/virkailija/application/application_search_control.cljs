@@ -80,7 +80,7 @@
 (defn haku-info-link [link-href haku-info]
   [:a
    {:href link-href}
-   (:name haku-info)
+   (some #(get (:name haku-info) %) [:fi :sv :en])
    (str " (" (:application-count haku-info) ")")
    (when (pos? (:unprocessed haku-info))
      [:span.application__search-control-haku-unprocessed
@@ -116,7 +116,7 @@
   [:div.application__search-control-haku.application__search-control-direct-form-haku
    [haku-info-link
     (str "/lomake-editori/applications/" (:key haku))
-    haku]])
+    (update haku :name (partial hash-map :fi))]])
 
 (defn loading-indicator []
   [:div.application__search-control-loading-indicator

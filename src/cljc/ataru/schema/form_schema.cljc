@@ -235,13 +235,13 @@
    :notes                          (s/maybe s/Str)})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
-                                         :name              s/Str
+                                         :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
                                          :incomplete        s/Int})
 
 (s/defschema TarjontaHaku {:oid               s/Str
-                           :name              s/Str
+                           :name              LocalizedStringOptional
                            :application-count s/Int
                            :unprocessed       s/Int
                            :incomplete        s/Int
