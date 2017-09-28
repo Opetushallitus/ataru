@@ -63,7 +63,7 @@ function setTextFieldValue(selectFn, contents) {
 
 var wait = {
   waitIntervalMs: 100,
-  testTimeoutDefault: 5000,
+  testTimeoutDefault: 10000,
   until: function(condition, maxWaitMs) {
     return function() {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault;
