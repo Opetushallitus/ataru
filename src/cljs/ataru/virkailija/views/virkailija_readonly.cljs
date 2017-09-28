@@ -26,7 +26,7 @@
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div
+   [:div.application__form-field-value
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
           multi-value? #(or (seq? %) (vector? %))]
