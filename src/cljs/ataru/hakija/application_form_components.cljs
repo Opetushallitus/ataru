@@ -81,9 +81,9 @@
   (and
     (not valid?)
     (is-required-field? field-descriptor)
-    (if (or (seq? value) (vector? value))
-      (not (empty? value))
-      (not (clojure.string/blank? value)))))
+    (if (string? value)
+      (not (clojure.string/blank? value))
+      (not (empty? value)))))
 
 (defn- add-link-target-prop
   [text state]
