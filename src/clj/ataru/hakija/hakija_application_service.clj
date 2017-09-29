@@ -196,6 +196,13 @@
     (update new-application :answers
             (partial map (partial set-original-value old-values-by-key)))))
 
+(defn- has-applied
+  [haku-oid identifier]
+  (async/go
+    (if (contains? identifier :ssn)
+      (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
+      (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
@@ -210,11 +217,6 @@
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
                              application)
-        has-applied        (fn [haku-oid identifier]
-                             (async/go
-                               (if (contains? identifier :ssn)
-                                 (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
-                                 (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
         validation-result  (validator/valid-application?
                             has-applied
                             (set-original-values latest-application final-application)
