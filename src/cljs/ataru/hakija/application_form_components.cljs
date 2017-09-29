@@ -230,12 +230,14 @@
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
-        on-change    (partial textual-field-change field-descriptor)
         size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit-answer? (-> field-descriptor :id keyword)])]
-    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
-      (let [value (textual-field-value field-descriptor @application)]
+    (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
+      (let [value     (textual-field-value field-descriptor @application)
+            on-change (if idx
+                        (partial multi-value-field-change field-descriptor 0 idx)
+                        (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
          [:div.application__form-text-area-info-text
