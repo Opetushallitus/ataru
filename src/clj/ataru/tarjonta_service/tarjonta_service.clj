@@ -7,10 +7,7 @@
     [ataru.cache.cache-service :as cache]
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]
-    [ataru.tarjonta-service.hakuaika :refer [hakuaika-on]]))
-
-(defn- any-hakuaika-on? [haku]
-  (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
+    [ataru.tarjonta-service.hakuaika :refer [any-hakuaika-on?]]))
 
 (defn- haku-name-and-oid-when-hakuaika-on [accumulator haku]
   (if (any-hakuaika-on? haku)

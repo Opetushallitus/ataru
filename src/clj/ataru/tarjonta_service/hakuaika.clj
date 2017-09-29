@@ -43,6 +43,9 @@
     :else
     false))
 
+(defn any-hakuaika-on? [haku]
+  (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
+
 (defn get-hakuaika-info [hakukohde haku]
   (let [{start :start end :end :as interval} (parse-hakuaika hakukohde haku)]
     (assoc interval :on (hakuaika-on start end))))
