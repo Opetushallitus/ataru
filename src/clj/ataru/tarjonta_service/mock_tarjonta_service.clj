@@ -190,7 +190,7 @@
 
   (get-hakukohde-name [this hakukohde-oid]
     (when (= hakukohde-oid "hakukohde.oid")
-      "Ajoneuvonosturinkuljettajan ammattitutkinto"))
+      {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}))
 
   (hakukohde-search [_ _ _]
     (->> [(:1.2.246.562.20.49028196523 hakukohde)
@@ -204,7 +204,7 @@
 
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
-      "testing2"))
+      {:fi "testing2"}))
 
   (get-koulutus [this koulutus-id]
     ((keyword koulutus-id) koulutus)))
@@ -215,4 +215,4 @@
     {"belongs-to-hakukohteet-test-form"
      {(:oid base-haku)
       {:haku-oid (:oid base-haku)
-       :haku-name (:kieli_fi (:nimi base-haku))}}}))
+       :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}}))
