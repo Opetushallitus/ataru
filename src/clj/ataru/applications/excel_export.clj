@@ -394,9 +394,13 @@
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (create-filename (or (.get-hakukohde-name tarjonta-service hakukohde-oid) hakukohde-oid)))
+  (let [name (some #(get (.get-hakukohde-name tarjonta-service hakukohde-oid) %)
+                   [:fi :sv :en])]
+    (create-filename (or name hakukohde-oid))))
 
 (defn filename-by-haku
   [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (create-filename (or (.get-haku-name tarjonta-service haku-oid) haku-oid)))
+  (let [name (some #(get (.get-haku-name tarjonta-service haku-oid) %)
+                   [:fi :sv :en])]
+    (create-filename (or name haku-oid))))

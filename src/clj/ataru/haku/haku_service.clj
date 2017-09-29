@@ -9,14 +9,14 @@
          {:oid (:hakukohde raw-haku-row)
           :name (or
                  (.get-hakukohde-name tarjonta-service (:hakukohde raw-haku-row))
-                 (:hakukohde raw-haku-row))}))
+                 {:fi (:hakukohde raw-haku-row)})}))
 
 (defn- handle-haut [tarjonta-service raw-haku-rows]
   (for [[haku-oid rows] (group-by :haku raw-haku-rows)]
     {:oid               haku-oid
      :name              (or
                          (.get-haku-name tarjonta-service haku-oid)
-                         haku-oid)
+                         {:fi haku-oid})
      :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
      :application-count (apply + (map :application-count rows))
      :unprocessed       (apply + (map :unprocessed rows))

@@ -1,6 +1,9 @@
 (ns ataru.virkailija.application.application-subs
   (:require [re-frame.core :as re-frame]))
 
+(defn- from-multi-lang [text]
+  (some #(get text %) [:fi :sv :en]))
+
 (re-frame/reg-sub
  :application/list-heading
  (fn [db]
@@ -9,10 +12,10 @@
          selected-form-key   (get-in db [:application :selected-form-key])
          forms               (get-in db [:application :forms])
          applications        (get-in db [:application :applications])]
-    (or (:name (get forms selected-form-key))
-        (:name selected-hakukohde)
-        (:name selected-haku)
-        (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
+     (or (:name (get forms selected-form-key))
+         (from-multi-lang (:name selected-hakukohde))
+         (from-multi-lang (:name selected-haku))
+         (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
  :application/application-list-belongs-to-haku?
@@ -35,7 +38,10 @@
   (sort-by :unprocessed #(compare %2 %1) haku-seq))
 
 (defn sort-haku-seq-by-name [haku-seq]
-  (sort-by :name
+  (sort-by (fn [haku]
+             (if (string? (:name haku))
+               (:name haku)
+               (from-multi-lang (:name haku))))
            #(compare (clojure.string/lower-case %1) (clojure.string/lower-case %2))
            haku-seq))
 
