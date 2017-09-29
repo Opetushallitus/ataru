@@ -54,7 +54,10 @@
                                                 (should= :db ds-key)
                                                 (should= "yesql-get-applications-for-form" (-> query-fn .meta :name))
                                                 (should= {:form_key "abcdefghjkl" :filtered_states ["unprocessed"]} params)
-                                                (filter #(empty? (:hakukohde %)) fixtures/applications))]
+                                                (->> fixtures/applications
+                                                     (filter #(empty? (:hakukohde %)))
+                                                     (sort-by :created-time)
+                                                     reverse))]
                     (spec)))
 
           (it "should return all applications belonging to a form"
@@ -72,7 +75,11 @@
                                                 (should= {:filtered_states ["unprocessed"]
                                                           :hakukohde_oid   hakukohde-oid}
                                                          params)
-                                                (filter #(and (contains? (set (:hakukohde %)) hakukohde-oid) (= (:form_id %) 703)) fixtures/applications))]
+                                                (->> fixtures/applications
+                                                     (filter #(and (contains? (set (:hakukohde %)) hakukohde-oid)
+                                                                   (= (:form_id %) 703)))
+                                                     (sort-by :created-time)
+                                                     reverse))]
                     (spec)))
 
           (it "should return all applications belonging to a hakukohde"
