@@ -19,7 +19,7 @@
         expect(formFields().length).to.equal(32)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
-        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
 
@@ -108,7 +108,7 @@
 
       it('shows invalidity errors', function () {
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
-        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
         expect(submitButton().prop('disabled')).to.equal(true)
       })
