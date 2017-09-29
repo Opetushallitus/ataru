@@ -26,7 +26,7 @@
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div
+   [:div.application__form-field-value
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
           multi-value? #(or (seq? %) (vector? %))]
@@ -169,17 +169,19 @@
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
 (defn- hakukohteet [content application]
-  (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
-        hakukohteet (map hakukohteet-by-oid
-                         (get-in application [:answers :hakukohteet :value] []))]
+  (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
       [:h2 @(subscribe [:application/hakukohteet-header])]
       [scroll-to-anchor content]]
      [:div.application__wrapper-contents
-      (for [hakukohde-oid @(subscribe [:application/hakukohteet])]
+      (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
+
+(defn- person-info-module [content application lang]
+  [:div.application__person-info-wrapper
+   [wrapper content application lang (:children content)]])
 
 (defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
              {application-hakukohteet :hakukohde :as application}
@@ -192,6 +194,7 @@
             (not-empty (clojure.set/intersection (set field-hakukohteet)
                                                  (set application-hakukohteet))))
     (match content
+           {:module "person-info"} [person-info-module content application lang]
            {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
