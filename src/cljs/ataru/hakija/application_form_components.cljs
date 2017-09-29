@@ -234,7 +234,7 @@
         size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit-answer? (-> field-descriptor :id keyword)])]
-    (fn [field-descriptor]
+    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
       (let [value (textual-field-value field-descriptor @application)]
         [div-kwd
          [label field-descriptor]
