@@ -82,17 +82,26 @@
 
 (defn- has-never-applied [haku-oid identifier] (async/go false))
 
+(defn- set-can-submit-multiple-applications
+  [multiple? haku-oid field]
+  (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
+    (not multiple?) (assoc-in [:params :haku-oid] haku-oid)))
+
+(defn- map-if-ssn-or-email
+  [f field]
+  (if (or (= "ssn" (:id field))
+          (= "email" (:id field)))
+    (f field)
+    field))
+
 (defn- populate-can-submit-multiple-applications
   [form multiple?]
   (update form :content
           (fn [content]
             (clojure.walk/prewalk
-             (fn [field]
-               (if (or (= "ssn" (:id field))
-                       (= "email" (:id field)))
-                 (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
-                   (not multiple?) (assoc-in [:params :haku-oid] "dummy-haku-oid"))
-                 field))
+             (partial map-if-ssn-or-email
+                      (partial set-can-submit-multiple-applications
+                               multiple? "dummy-haku-oid"))
              content))))
 
 (describe "application validation"
