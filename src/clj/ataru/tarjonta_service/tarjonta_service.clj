@@ -6,7 +6,8 @@
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
-    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
+    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]
+    [ataru.tarjonta-service.hakuaika :refer [any-hakuaika-on?]]))
 
 (defn- parse-multi-lang-text
   [text]
@@ -14,23 +15,31 @@
                (if (or (nil? s) (clojure.string/blank? s))
                  m
                  (assoc m lang s)))
-             {}
-             (clojure.set/rename-keys text {:kieli_fi :fi
-                                            :kieli_sv :sv
-                                            :kieli_en :en})))
+    {}
+    (clojure.set/rename-keys text {:kieli_fi :fi
+                                   :kieli_sv :sv
+                                   :kieli_en :en})))
+
+(defn- haku-name-and-oid-when-hakuaika-on [haku-names-and-oids haku]
+  (if (any-hakuaika-on? haku)
+    (assoc haku-names-and-oids
+           (:oid haku)
+           {:haku-oid  (:oid haku)
+            :haku-name (parse-multi-lang-text (:nimi haku))})
+    haku-names-and-oids))
+
+(defn- hakus-by-form-key [hakus {:keys [avain haut]}]
+  (let [haku-info (reduce haku-name-and-oid-when-hakuaika-on {} haut)]
+    (if (not-empty haku-info)
+      (assoc hakus avain haku-info)
+      hakus)))
 
 (defn forms-in-use
   [organization-service username]
-  (let [direct-organizations     (.get-direct-organizations-for-rights organization-service username [:form-edit])
-        all-organization-oids    (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
-        in-oph-organization?     (some #{oph-organization} all-organization-oids)]
-    (reduce (fn [acc1 {:keys [avain haut]}]
-              (assoc acc1 avain
-                          (reduce (fn [acc2 haku]
-                                    (assoc acc2 (:oid haku)
-                                                {:haku-oid  (:oid haku)
-                                                 :haku-name (parse-multi-lang-text (:nimi haku))}))
-                                  {} haut)))
+  (let [direct-organizations  (.get-direct-organizations-for-rights organization-service username [:form-edit])
+        all-organization-oids (map :oid (.get-all-organizations organization-service (:form-edit direct-organizations)))
+        in-oph-organization?  (some #{oph-organization} all-organization-oids)]
+    (reduce hakus-by-form-key
             {}
             (client/get-forms-in-use (if in-oph-organization? nil all-organization-oids)))))
 
