@@ -9,19 +9,19 @@
     [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]
     [ataru.tarjonta-service.hakuaika :refer [any-hakuaika-on?]]))
 
-(defn- haku-name-and-oid-when-hakuaika-on [accumulator haku]
+(defn- haku-name-and-oid-when-hakuaika-on [haku-names-and-oids haku]
   (if (any-hakuaika-on? haku)
-    (assoc accumulator
+    (assoc haku-names-and-oids
            (:oid haku)
            {:haku-oid  (:oid haku)
             :haku-name (get-in haku [:nimi :kieli_fi])})
-    accumulator))
+    haku-names-and-oids))
 
-(defn- hakus-by-form-key [accumulator {:keys [avain haut]}]
+(defn- hakus-by-form-key [hakus {:keys [avain haut]}]
   (let [haku-info (reduce haku-name-and-oid-when-hakuaika-on {} haut)]
     (if (not-empty haku-info)
-      (assoc accumulator avain haku-info)
-      accumulator)))
+      (assoc hakus avain haku-info)
+      hakus)))
 
 (defn forms-in-use
   [organization-service username]
