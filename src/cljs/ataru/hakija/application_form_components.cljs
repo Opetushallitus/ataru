@@ -283,14 +283,17 @@
                              [render-field child :idx idx])
                            children)
                         (when (< idx (dec row-count))
-                          [[:div.application__question-group-spacer]])))
+                          [^{:key (str "spacer-" row-count)}
+                            [:div.application__question-group-spacer]])))
                     (range row-count)))
-         (conj [:div.application__form-field
+         (conj [:div.application__form-field.flex-row.application__add-question-group-row
+
                 [:a {:href     "#"
                      :on-click (fn add-question-group-row [event]
                                  (.preventDefault event)
                                  (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-                 "+ Lisää"]]))]))
+                 [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+                 "Lisää"]]))]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
