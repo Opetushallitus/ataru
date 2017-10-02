@@ -26,21 +26,28 @@
        (contains? field-descriptor :koodisto-source)))
 
 (defn text [field-descriptor application lang]
-  (let [answer ((answer-key field-descriptor) (:answers application))]
+  (let [answer            ((answer-key field-descriptor) (:answers application))
+        multi-values->:li (partial map-indexed (fn [idx value]
+                                                 ^{:key (str "value-" idx)}
+                                                 [:li (str (if (map? value)
+                                                             (:value value)
+                                                             value))]))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      (if (:cannot-view answer)
        [:div "***********"]
        [:div
-        (let [repeatable?  (-> field-descriptor :params :repeatable)
-              values       (if repeatable? (map :value (:values answer)) (:value answer))
-              multi-value? (and
-                             (not (multiple-choice-with-koodisto field-descriptor))
-                             (or (seq? values) (vector? values)))]
-          (cond
-            multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-            :else (textual-field-value field-descriptor application :lang lang)))])]))
+        (cond (and (vector? (:values answer))
+                   (every? vector? (:values answer)))
+              (into [:ul.application__form-field-list] (map multi-values->:li (:values answer)))
+
+              (and (vector? (:values answer))
+                   (some (comp not vector?) (:values answer)))
+              (into [:ul.application__form-field-list] (multi-values->:li (:values answer)))
+
+              :else
+              (textual-field-value field-descriptor application :lang lang))])]))
 
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))

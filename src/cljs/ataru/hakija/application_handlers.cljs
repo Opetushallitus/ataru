@@ -263,14 +263,17 @@
 
 (defn set-question-group-row-amounts [db]
   (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
-    (reduce-kv (fn [db answer-key {:keys [value]}]
+    (reduce-kv (fn [db answer-key {:keys [value values]}]
                  (let [field-descriptor  (->> flattened-form-fields
                                               (filter (comp (partial = answer-key) keyword :id))
                                               (first))
                        question-group-id (-> field-descriptor :params :question-group-id)]
                    (cond-> db
                      question-group-id
-                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?) (-> value first count) 1)]
+                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
+                                                                                                  (-> values count)
+                                                                                                  (-> value count)
+                                                                                                  1)]
                                                                                (if (> % provided-val)
                                                                                  %
                                                                                  provided-val))))))
@@ -303,13 +306,15 @@
                                                      (update answers answer-key (partial merge-dropdown-values value))
 
                                                      {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                                     (update answers answer-key merge
-                                                             {:valid  true
-                                                              :values (mapv (fn [value]
-                                                                              (cond-> {:valid true :value value}
-                                                                                (= field-type "attachment")
-                                                                                (assoc :status :ready)))
-                                                                            (:value answer))})
+                                                     (letfn [(parse-values [value-or-values]
+                                                               (if (vector? value-or-values)
+                                                                 (mapv parse-values value-or-values)
+                                                                 (cond-> {:valid true :value value-or-values}
+                                                                   (= field-type "attachment")
+                                                                   (assoc :status :ready))))]
+                                                       (update answers answer-key merge
+                                                               {:valid  true
+                                                                :values (parse-values (:value answer))}))
 
                                                      :else
                                                      (update answers answer-key merge {:valid true :value value}))]
