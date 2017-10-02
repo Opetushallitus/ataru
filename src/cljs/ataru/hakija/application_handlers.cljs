@@ -231,7 +231,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet" "dropdown"})
+(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))

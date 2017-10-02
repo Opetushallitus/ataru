@@ -230,12 +230,17 @@
 
 (defn text-area [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [application  (subscribe [:state-query [:application]])
-        on-change    (partial textual-field-change field-descriptor)
         size         (-> field-descriptor :params :size)
         max-length   (parse-max-length field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit-answer? (-> field-descriptor :id keyword)])]
-    (fn [field-descriptor]
-      (let [value (textual-field-value field-descriptor @application)]
+    (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
+      (let [value-path (cond-> [:application :answers (-> field-descriptor :id keyword)]
+                         idx (conj :values idx 0)
+                         true (conj :value))
+            value     (subscribe [:state-query value-path])
+            on-change (if idx
+                        (partial multi-value-field-change field-descriptor 0 idx)
+                        (partial textual-field-change field-descriptor))]
         [div-kwd
          [label field-descriptor]
          [:div.application__form-text-area-info-text
@@ -246,13 +251,13 @@
                   :maxLength     max-length
                   ; default-value because IE11 will "flicker" on input fields. This has side-effect of NOT showing any
                   ; dynamically made changes to the text-field value.
-                  :default-value value
+                  :default-value @value
                   :on-change     on-change
-                  :value         value
+                  :value         @value
                   :required      (is-required-field? field-descriptor)}
             (when @cannot-edit? {:disabled true}))]
          (when max-length
-           [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
+           [:span.application__form-textarea-max-length (str (count @value) " / " max-length)])]))))
 
 (declare render-field)
 
