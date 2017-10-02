@@ -248,7 +248,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
+(defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -297,6 +297,16 @@
                db
                (-> db :application :answers))))
 
+(defn- merge-single-choice-values [value answer]
+  (if (and (vector? value)
+           (every? vector? value))
+    (merge answer {:valid true
+                   :value value
+                   :values (mapv (partial mapv (fn [value]
+                                                 {:valid true :value value}))
+                                 value)})
+    (merge answer {:valid true :value value})))
+
 (defn- merge-dropdown-values [value answer]
   (if (and (vector? value)
            (every? vector? value))
@@ -318,6 +328,9 @@
                                  (let [answer (match answer
                                                      {:fieldType "multipleChoice"}
                                                      (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
+
+                                                     {:fieldType "singleChoice"}
+                                                     (update answers answer-key (partial merge-single-choice-values value))
 
                                                      {:fieldType "dropdown"}
                                                      (update answers answer-key (partial merge-dropdown-values value))
