@@ -497,7 +497,7 @@
   (let [button-id    (answer-key field-descriptor)
         validators   (:validators field-descriptor)
         cannot-edit? (subscribe [:application/cannot-edit-answer? button-id])]
-    (fn [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
+    (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
        [label field-descriptor]
        [:div.application__form-text-input-info-text
@@ -509,7 +509,8 @@
                         ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
                         [single-choice-option option button-id validators @cannot-edit?])
                       (:options field-descriptor)))]
-       [single-choice-followups button-id (:options field-descriptor)]])))
+       (when-not idx
+         [single-choice-followups button-id (:options field-descriptor)])])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
