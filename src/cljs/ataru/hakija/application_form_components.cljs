@@ -432,32 +432,32 @@
                          [multiple-choice-option field-descriptor option id cannot-edit? idx])
             (:options field-descriptor)))]])))
 
-(defn- single-choice-option [option parent-id validators cannot-edit?]
+(defn- single-choice-option [option parent-id validators cannot-edit? question-group-idx]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
                                     (get-in option [:label @default-lang]))
         option-value (:value option)
         option-id    (util/component-id)
-        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])
-        on-change    (fn [event]
-                       (let [value (.. event -target -value)]
-                         (dispatch [:application/select-single-choice-button parent-id value validators])))]
-    (fn [option parent-id validators]
-      [:div.application__form-single-choice-button-inner-container {:key option-id}
-       [:input.application__form-single-choice-button
-        (merge {:id        option-id
-                :type      "checkbox"
-                :checked   @checked?
-                :value     option-value
-                :on-change on-change}
-          (when cannot-edit? {:disabled true}))]
-       [:label
-        (merge {:for option-id}
-          (when cannot-edit? {:class "disabled"}))
-        label]
-       (when (and @checked? (not-empty (:followups option)))
-         [:div.application__form-single-choice-followups-indicator])])))
+        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
+    (fn [option parent-id validators cannot-edit? question-group-idx]
+      (let [on-change (fn [event]
+                        (let [value (.. event -target -value)]
+                          (dispatch [:application/select-single-choice-button parent-id value validators question-group-idx])))]
+        [:div.application__form-single-choice-button-inner-container {:key option-id}
+         [:input.application__form-single-choice-button
+          (merge {:id        option-id
+                  :type      "checkbox"
+                  :checked   @checked?
+                  :value     option-value
+                  :on-change on-change}
+                 (when cannot-edit? {:disabled true}))]
+         [:label
+          (merge {:for option-id}
+                 (when cannot-edit? {:class "disabled"}))
+          label]
+         (when (and @checked? (not-empty (:followups option)))
+           [:div.application__form-single-choice-followups-indicator])]))))
 
 (defn- hide-followups [db {:keys [followups]}]
   (reduce #(toggle-followup-visibility %1 %2 false)
@@ -505,9 +505,9 @@
        [:div.application__form-single-choice-button-outer-container
         {:aria-labelledby (id-for-label field-descriptor)}
         (doall
-         (map-indexed (fn [idx option]
-                        ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
-                        [single-choice-option option button-id validators @cannot-edit?])
+         (map-indexed (fn [option-idx option]
+                        ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
+                        [single-choice-option option button-id validators @cannot-edit? idx])
                       (:options field-descriptor)))]
        (when-not idx
          [single-choice-followups button-id (:options field-descriptor)])])))

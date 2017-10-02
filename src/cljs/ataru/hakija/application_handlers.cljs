@@ -187,17 +187,32 @@
                                         (values-in-group-valid? value)))]
     (merge answer {:value value :valid valid})))
 
-(defn- select-single-choice-button [db [_ button-id value validators]]
+(defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
   (let [button-path   [:application :answers button-id]
-        current-value (:value (get-in db button-path))
-        new-value     (when (not= value current-value) value)]
-    (update-in db button-path
-               (fn [answer]
-                 (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
-                                true)]
-                   (merge answer {:value new-value
-                                  :valid valid?}))))))
+        current-value (:value (get-in db (if question-group-idx
+                                           (into button-path [:values question-group-idx])
+                                           button-path)))
+        new-value     (when (not= value current-value) value)
+        value-valid?  (fn [value]
+                        (if (not-empty validators)
+                          (every? true? (map #(validator/validate % value (-> db :application :answers) nil) validators))
+                          true))
+        update-value  (fn [value]
+                        (let [valid? (value-valid? new-value)]
+                          (merge value {:value new-value
+                                        :valid valid?})))]
+    (if question-group-idx
+      (letfn [(values-valid? [values]
+                (and (every? value-valid? values)
+                     (or (not (some #{"required"} validators))
+                         (not-empty values))))]
+        (-> db
+            (update-in (conj button-path :values) (vector-of-length (inc question-group-idx)))
+            (update-in (into button-path [:values question-group-idx]) (fnil identity []))
+            (update-in (into button-path [:values question-group-idx 0]) update-value)
+            (update-in button-path (fn [answer]
+                                     (assoc answer :valid (every? values-valid? (:values answer)))))))
+      (update-in db button-path update-value))))
 
 (defn- toggle-values
   [answer options answers-by-key]
