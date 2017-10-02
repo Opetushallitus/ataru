@@ -287,6 +287,63 @@
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
 }
+
+.application__question-group .application__form-field {
+  margin: 0;
+  padding: 20px 0 0 13px;
+  border-left: 2px solid #c4c4c4;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 10px;
+  }
+}
+
+.application__question-group {
+  @media only screen and (min-width: @desktop-content-width) {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.application__question-group .application__form-field:last-child {
+  margin-left: -6px;
+  padding: 10px 0 0 0;
+  border: none;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 3px;
+  }
+}
+
+.application__question-group-spacer + .application__form-field,
+.application__question-group-wrapper-contents .application__form-field:first-child {
+  padding-top: 0;
+}
+
+.application__question-group-wrapper-heading {
+  position: relative;
+  @media only screen and (max-width: @desktop-content-width) {
+    display: none;
+  }
+}
+
+.application__question-group-wrapper-contents {
+  @media only screen and (min-width: @desktop-content-width) {
+    flex-grow: 1;
+  }
+}
+
+.application__question-group-spacer {
+  height: 20px;
+}
+
+.application__add-question-group-row {
+  color: @link-color;
+}
+
+.application__add-question-group-plus-sign {
+  margin-right: 8px;
+  font-size: larger;
+}
+
 .application__form-content-area {
   margin-top: @total-banner-height;
   margin-right: auto;

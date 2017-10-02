@@ -276,23 +276,29 @@
              [render-field child lang]))]))))
 
 (defn question-group [field-descriptor children]
-  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
-    [:div.application__wrapper-element
-     [:div.application__wrapper-heading
+  (let [row-count (or @(subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]]) 1)]
+    [:div.application__wrapper-element.application__question-group
+     [:div.application__wrapper-heading.application__question-group-wrapper-heading
       [scroll-to-anchor field-descriptor]]
-     (-> [:div.application__wrapper-contents]
+     (-> [:div.application__wrapper-contents.application__question-group-wrapper-contents]
          (into (map (fn [idx]
-                      (map (fn [child]
+                      (concat
+                        (map (fn [child]
                              ^{:key (str (:id child) "-" idx)}
                              [render-field child :idx idx])
-                           children))
-                    (range (or @row-count 1))))
-         (conj [:div.application__form-field
+                           children)
+                        (when (< idx (dec row-count))
+                          [^{:key (str "spacer-" row-count)}
+                            [:div.application__question-group-spacer]])))
+                    (range row-count)))
+         (conj [:div.application__form-field.flex-row.application__add-question-group-row
+
                 [:a {:href     "#"
                      :on-click (fn add-question-group-row [event]
                                  (.preventDefault event)
                                  (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-                 "+ Lisää"]]))]))
+                 [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+                 "Lisää"]]))]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
