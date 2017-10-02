@@ -438,10 +438,10 @@
         label        (non-blank-val (get-in option [:label @lang])
                                     (get-in option [:label @default-lang]))
         option-value (:value option)
-        option-id    (util/component-id)
-        checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])]
+        option-id    (util/component-id)]
     (fn [option parent-id validators cannot-edit? question-group-idx]
-      (let [on-change (fn [event]
+      (let [checked?  (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+            on-change (fn [event]
                         (let [value (.. event -target -value)]
                           (dispatch [:application/select-single-choice-button parent-id value validators question-group-idx])))]
         [:div.application__form-single-choice-button-inner-container {:key option-id}
