@@ -287,6 +287,47 @@
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
 }
+
+.application__question-group .application__form-field  {
+  margin-left: 6px;
+  @media only screen and (min-width: @desktop-content-width) {
+    margin-left: 0;
+  }
+}
+
+.application__question-group .application__form-field:not(:last-child) {
+  margin: 0 0 0 10px;
+  padding: 0 0 20px 10px;
+  border-left: 2px solid #c2c2c2;
+  @media only screen and (min-width: @desktop-content-width) {
+    margin-left: 3px;
+  }
+}
+
+.application__question-group-wrapper-heading {
+  position: relative;
+  @media only screen and (max-width: @desktop-content-width) {
+    display: none;
+  }
+}
+
+.application__question-group {
+  @media only screen and (min-width: @desktop-content-width) {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.application__question-group-wrapper-contents {
+  @media only screen and (min-width: @desktop-content-width) {
+    flex-grow: 1;
+  }
+}
+
+.application__question-group-spacer {
+  height: 10px;
+}
+
 .application__form-content-area {
   margin-top: @total-banner-height;
   margin-right: auto;

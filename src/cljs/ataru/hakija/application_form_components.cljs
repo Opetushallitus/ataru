@@ -271,17 +271,20 @@
              [render-field child lang]))]))))
 
 (defn question-group [field-descriptor children]
-  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
-    [:div.application__wrapper-element
-     [:div.application__wrapper-heading
+  (let [row-count (or @(subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]]) 1)]
+    [:div.application__wrapper-element.application__question-group
+     [:div.application__wrapper-heading.application__question-group-wrapper-heading
       [scroll-to-anchor field-descriptor]]
-     (-> [:div.application__wrapper-contents]
+     (-> [:div.application__wrapper-contents.application__question-group-wrapper-contents]
          (into (map (fn [idx]
-                      (map (fn [child]
+                      (concat
+                        (map (fn [child]
                              ^{:key (str (:id child) "-" idx)}
                              [render-field child :idx idx])
-                           children))
-                    (range (or @row-count 1))))
+                           children)
+                        (when (< idx (dec row-count))
+                          [[:div.application__question-group-spacer]])))
+                    (range row-count)))
          (conj [:div.application__form-field
                 [:a {:href     "#"
                      :on-click (fn add-question-group-row [event]
