@@ -696,7 +696,7 @@
                                      files)
           db            (if (not-empty files)
                           (as-> db db'
-                                (update-in db' [:application :answers (keyword component-id) :values] (fnil identity []))
+                                (update-in db' [:application :answers (keyword component-id) :values] (vector-of-length (or question-group-idx 0)))
                                 (->> files
                                      (map-indexed (fn attachment-idx->file [idx file]
                                                     {:idx (+ attachment-count idx) :file file}))
