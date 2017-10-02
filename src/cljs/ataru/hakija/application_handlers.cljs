@@ -770,9 +770,11 @@
 
 (reg-event-db
   :application/handle-attachment-delete
-  (fn [db [_ field-descriptor component-id attachment-key _]]
+  (fn [db [_ field-descriptor component-id question-group-idx attachment-key _]]
     (-> db
-        (update-in [:application :answers (keyword component-id) :values]
+        (update-in (if question-group-idx
+                     [:application :answers (keyword component-id) :values question-group-idx]
+                     [:application :answers (keyword component-id) :values])
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
         (update-attachment-answer-validity field-descriptor component-id)
@@ -780,19 +782,24 @@
 
 (reg-event-fx
   :application/remove-attachment
-  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx]]
-    (let [key (get-in db [:application :answers (keyword component-id) :values attachment-idx :value :key])
-          db  (-> db
-                  (assoc-in [:application :answers (keyword component-id) :valid] false)
-                  (update-in [:application :answers (keyword component-id) :values attachment-idx] merge
-                    {:status :deleting
-                     :valid  false}))
+  (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx question-group-idx]]
+    (let [key       (get-in db (if question-group-idx
+                                 [:application :answers (keyword component-id) :values question-group-idx attachment-idx :value :key]
+                                 [:application :answers (keyword component-id) :values attachment-idx :value :key]))
+          db        (-> db
+                        (assoc-in [:application :answers (keyword component-id) :valid] false)
+                        (update-in (if question-group-idx
+                                     [:application :answers (keyword component-id) :values question-group-idx attachment-idx]
+                                     [:application :answers (keyword component-id) :values attachment-idx])
+                                   merge
+                                   {:status :deleting
+                                    :valid  false}))
           db-and-fx {:db db}]
       (if (get-in db [:application :editing?])
-        (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id key])
+        (assoc db-and-fx :dispatch [:application/handle-attachment-delete field-descriptor component-id question-group-idx key])
         (assoc db-and-fx :http {:method  :delete
                                 :url     (str "/hakemus/api/files/" key)
-                                :handler [:application/handle-attachment-delete field-descriptor component-id key]})))))
+                                :handler [:application/handle-attachment-delete field-descriptor component-id question-group-idx key]})))))
 
 (reg-event-db
   :application/remove-attachment-error
