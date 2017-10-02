@@ -289,11 +289,11 @@
 }
 
 .application__question-group .application__form-field {
-  margin: 0 0 0 10px;
-  padding: 20px 0 0 15px;
-  border-left: 2px solid #c2c2c2;
-  @media only screen and (min-width: @desktop-content-width) {
-    margin-left: 3px;
+  margin: 0;
+  padding: 20px 0 0 13px;
+  border-left: 2px solid #c4c4c4;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 10px;
   }
 }
 
@@ -305,10 +305,11 @@
 }
 
 .application__question-group .application__form-field:last-child {
-  margin-left: -2px;
+  margin-left: -6px;
   padding: 10px 0 0 0;
-  border: none;@media only screen and (max-width: @desktop-content-width) {
-    margin-left: 6px;
+  border: none;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 3px;
   }
 }
 
@@ -339,7 +340,8 @@
 }
 
 .application__add-question-group-plus-sign {
-  margin-right:5px;
+  margin-right: 8px;
+  font-size: larger;
 }
 
 .application__form-content-area {
