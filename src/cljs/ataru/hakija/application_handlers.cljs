@@ -211,7 +211,9 @@
             (update-in (into button-path [:values question-group-idx]) (fnil identity []))
             (update-in (into button-path [:values question-group-idx 0]) update-value)
             (update-in button-path (fn [answer]
-                                     (assoc answer :valid (every? values-valid? (:values answer)))))))
+                                     (assoc answer :valid (every? values-valid? (:values answer)))))
+            (update-in button-path (fn [answer]
+                                     (assoc answer :value (map (partial map :value) (:values answer)))))))
       (update-in db button-path update-value))))
 
 (defn- toggle-values
