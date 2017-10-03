@@ -252,6 +252,18 @@
           :authorized_organization_oids [""]})
        (map ->kebab-case-kw)))
 
+(defn has-ssn-applied [haku-oid ssn]
+  (->> (exec-db :db yesql-has-ssn-applied {:haku_oid haku-oid
+                                           :ssn ssn})
+       first
+       ->kebab-case-kw))
+
+(defn has-email-applied [haku-oid email]
+  (->> (exec-db :db yesql-has-email-applied {:haku_oid haku-oid
+                                             :email email})
+       first
+       ->kebab-case-kw))
+
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
 

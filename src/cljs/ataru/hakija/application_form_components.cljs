@@ -15,7 +15,6 @@
               textual-field-value
               scroll-to-anchor
               is-required-field?]]
-            [ataru.hakija.application-validators :as validator]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.util :as util]
             [reagent.core :as r]
@@ -41,16 +40,6 @@
   (if-not (clojure.string/blank? val)
     val
     default))
-
-(defn- field-value-valid?
-  [field-data value answers-by-key]
-  (if (and (not (or
-                  (:cannot-view field-data)
-                  (:cannot-edit field-data)))
-           (not-empty (:validators field-data)))
-    (every? true? (map #(validator/validate % value answers-by-key field-data)
-                    (:validators field-data)))
-    true))
 
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
@@ -91,7 +80,9 @@
   (and
     (not valid?)
     (is-required-field? field-descriptor)
-    (validator/validate "required" value nil field-descriptor)))
+    (if (string? value)
+      (not (clojure.string/blank? value))
+      (not (empty? value)))))
 
 (defn- add-link-target-prop
   [text state]
@@ -120,7 +111,8 @@
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
-        size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
+        size         (get-in field-descriptor [:params :size])
+        size-class   (text-field-size->class size)
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
         on-change    (if idx
                        (partial multi-value-field-change field-descriptor 0 idx)
@@ -132,24 +124,35 @@
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
-     (let [cannot-view? (and editing (:cannot-view @answer))
-           cannot-edit? (:cannot-edit @answer)]
-       [:input.application__form-text-input
-        (merge {:id          id
-                :type        "text"
-                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                               (non-blank-val (get input-hint @lang)
-                                              (get input-hint @default-lang)))
-                :class       (str size-class (if show-error?
-                                               " application__form-field-error"
-                                               " application__form-text-input--normal"))
-                :value       (if cannot-view? "***********" (if idx
-                                                              (get-in @answer [0 :value])
-                                                              (:value @answer)))
-                :on-blur     on-blur
-                :on-change   on-change
-                :required    (is-required-field? field-descriptor)}
-               (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])]))
+     [:div.application__form-text-input-and-validation-errors
+      (let [cannot-view? (and editing (:cannot-view @answer))
+            cannot-edit? (:cannot-edit @answer)]
+        [:input.application__form-text-input
+         (merge {:id          id
+                 :type        "text"
+                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                (non-blank-val (get input-hint @lang)
+                                               (get input-hint @default-lang)))
+                 :class       (str size-class (if show-error?
+                                                " application__form-field-error"
+                                                " application__form-text-input--normal"))
+                 :value       (if cannot-view? "***********" (if idx
+                                                               (get-in @answer [0 :value])
+                                                               (:value @answer)))
+                 :on-blur     on-blur
+                 :on-change   on-change
+                 :required    (is-required-field? field-descriptor)}
+                (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])
+      (when (not-empty (:errors @answer))
+        [:div.application__validation-error-dialog
+         [:div.application__validation-error-dialog__arrow]
+         [:div.application__validation-error-dialog__box
+          (doall
+           (map-indexed (fn [idx error]
+                          (with-meta (non-blank-val (get error @lang)
+                                                    (get error @default-lang))
+                            {:key (str "error-" idx)}))
+                        (:errors @answer)))]])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
@@ -438,7 +441,7 @@
                          [multiple-choice-option field-descriptor option id cannot-edit? idx])
             (:options field-descriptor)))]])))
 
-(defn- single-choice-option [option parent-id validators cannot-edit?]
+(defn- single-choice-option [option parent-id field-descriptor cannot-edit?]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
@@ -448,8 +451,8 @@
         checked?     (subscribe [:application/single-choice-option-checked? parent-id option-value])
         on-change    (fn [event]
                        (let [value (.. event -target -value)]
-                         (dispatch [:application/select-single-choice-button parent-id value validators])))]
-    (fn [option parent-id validators]
+                         (dispatch [:application/select-single-choice-button value field-descriptor])))]
+    (fn [option parent-id field-descriptor cannot-edit?]
       [:div.application__form-single-choice-button-inner-container {:key option-id}
        [:input.application__form-single-choice-button
         (merge {:id        option-id
@@ -513,7 +516,7 @@
         (doall
          (map-indexed (fn [idx option]
                         ^{:key (str "single-choice-" (:id field-descriptor) "-" idx)}
-                        [single-choice-option option button-id validators @cannot-edit?])
+                        [single-choice-option option button-id field-descriptor @cannot-edit?])
                       (:options field-descriptor)))]
        [single-choice-followups button-id (:options field-descriptor)]])))
 
