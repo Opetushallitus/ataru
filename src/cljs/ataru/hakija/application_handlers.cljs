@@ -726,14 +726,25 @@
        :dispatch-n dispatch-list})))
 
 (defn- update-attachment-answer-validity [db field-descriptor component-id]
-  (update-in db [:application :answers (keyword component-id)]
-             (fn [{:keys [values] :as component}]
-               (let [validators (:validators field-descriptor)
-                     validated? (every? true? (map #(validator/validate % values (-> db :application :answers) nil) validators))]
-                 (assoc component
-                   :valid
-                   (and validated?
-                        (every? (comp true? :valid) values)))))))
+  (let [attachment-valid?        (fn [attachment]
+                                   (every? true? (map #(validator/validate % attachment (-> db :application :answers) nil) (:validators field-descriptor))))
+        required?                (some #{"required"} (:validators field-descriptor))
+        answers-valid?           (fn [answers]
+                                   (and (every? (comp true? :valid) answers)
+                                        (or (not required?)
+                                            (not (empty? answers)))))
+        attachment-answer-valid? (fn [answer]
+                                   (let [question-group-answer? (and (vector? (:values answer))
+                                                                     (not (empty? (:values answer)))
+                                                                     (every? vector? (:values answer)))
+                                         validators-ok?         (if question-group-answer?
+                                                                  (->> answer :values (every? (partial every? attachment-valid?)))
+                                                                  (->> answer :values (every? attachment-valid?)))
+                                         every-valid?           (if question-group-answer?
+                                                                  (->> answer :values (every? answers-valid?))
+                                                                  (->> answer :values answers-valid?))]
+                                     (assoc answer :valid (and validators-ok? every-valid?))))]
+    (update-in db [:application :answers (keyword component-id)] attachment-answer-valid?)))
 
 (reg-event-db
   :application/handle-attachment-upload
