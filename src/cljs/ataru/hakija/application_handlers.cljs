@@ -18,6 +18,10 @@
   {:form        nil
    :application {:answers {}}})
 
+(defn- required? [field-descriptor]
+  (some (partial = "required")
+        (:validators field-descriptor)))
+
 (defn- handle-get-application [{:keys [db]}
                                [_
                                 {:keys [secret virkailija-secret]}
