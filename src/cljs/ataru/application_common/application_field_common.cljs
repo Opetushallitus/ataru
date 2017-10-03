@@ -40,7 +40,7 @@
   ^{:key value}
   [:li value])
 
-(defn- predefined-value-answer?
+(defn predefined-value-answer?
   "Does the answer have predefined values? Form elements like dropdowns
    and single and multi-choice buttons have fixed, predefined values, as
    opposed to a text input field where an user can provide anything as
