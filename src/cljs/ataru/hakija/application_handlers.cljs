@@ -18,6 +18,10 @@
   {:form        nil
    :application {:answers {}}})
 
+(defn- required? [field-descriptor]
+  (some (partial = "required")
+        (:validators field-descriptor)))
+
 (defn- handle-get-application [{:keys [db]}
                                [_
                                 {:keys [secret virkailija-secret]}
@@ -493,21 +497,19 @@
 (reg-event-fx
   :application/set-repeatable-application-field
   (fn [{db :db} [_ field-descriptor value data-idx question-group-idx]]
-    (let [required? (some (partial = "required")
-                          (:validators field-descriptor))]
-      {:db (-> db
-               (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
-               (set-repeatable-field-value field-descriptor))
-       :validate {:value value
-                  :answers (get-in db [:application :answers])
-                  :field-descriptor field-descriptor
-                  :on-validated (fn [[valid? errors]]
-                                  (dispatch [:application/set-repeatable-application-field-valid
-                                             (keyword (:id field-descriptor))
-                                             question-group-idx
-                                             data-idx
-                                             required?
-                                             valid?]))}})))
+    {:db (-> db
+             (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
+             (set-repeatable-field-value field-descriptor))
+     :validate {:value value
+                :answers (get-in db [:application :answers])
+                :field-descriptor field-descriptor
+                :on-validated (fn [[valid? errors]]
+                                (dispatch [:application/set-repeatable-application-field-valid
+                                           (keyword (:id field-descriptor))
+                                           question-group-idx
+                                           data-idx
+                                           (required? field-descriptor)
+                                           valid?]))}}))
 
 (defn- remove-repeatable-field-value
   [db field-descriptor data-idx question-group-idx]
@@ -652,21 +654,19 @@
 (reg-event-fx
   :application/set-adjacent-field-answer
   (fn [{db :db} [_ field-descriptor idx value question-group-idx]]
-    (let [required? (some (partial = "required")
-                          (:validators field-descriptor))]
-      {:db (-> db
-               (set-repeatable-field-values field-descriptor value idx question-group-idx)
-               (set-repeatable-field-value field-descriptor))
-       :validate {:value value
-                  :answers (get-in db [:application :answers])
-                  :field-descriptor field-descriptor
-                  :on-validated (fn [[valid? errors]]
-                                  (dispatch [:application/set-repeatable-application-field-valid
-                                             (keyword (:id field-descriptor))
-                                             question-group-idx
-                                             idx
-                                             required?
-                                             valid?]))}})))
+    {:db (-> db
+             (set-repeatable-field-values field-descriptor value idx question-group-idx)
+             (set-repeatable-field-value field-descriptor))
+     :validate {:value value
+                :answers (get-in db [:application :answers])
+                :field-descriptor field-descriptor
+                :on-validated (fn [[valid? errors]]
+                                (dispatch [:application/set-repeatable-application-field-valid
+                                           (keyword (:id field-descriptor))
+                                           question-group-idx
+                                           idx
+                                           (required? field-descriptor)
+                                           valid?]))}}))
 
 (reg-event-fx
   :application/add-adjacent-fields
