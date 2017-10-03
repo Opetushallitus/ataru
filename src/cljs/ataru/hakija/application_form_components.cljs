@@ -290,10 +290,8 @@
                            children)
                         (when (< idx (dec row-count))
                           (group-spacer idx))))
-
                     (range row-count)))
          (conj [:div.application__form-field.flex-row.application__add-question-group-row
-
                 [:a {:href     "#"
                      :on-click (fn add-question-group-row [event]
                                  (.preventDefault event)

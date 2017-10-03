@@ -80,7 +80,7 @@
 
       :else value-or-koodi-uri)))
 
-(defn- group-spacer
+(defn group-spacer
   [index]
   [^{:key (str "spacer-" index)}
   [:div.application__question-group-spacer]])
