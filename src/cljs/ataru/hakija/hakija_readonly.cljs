@@ -49,17 +49,27 @@
               :else
               (textual-field-value field-descriptor application :lang lang))])]))
 
+(defn- attachment-list [attachments]
+  [:div
+   (map (fn [{:keys [value]}]
+          ^{:key (:key value)}
+          [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
+        attachments)])
+
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))
         values     (get-in application [:answers answer-key :values])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     [:div
-      (map (fn [{:keys [value]}]
-             ^{:key (:key value)}
-             [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
-           values)]]))
+     (if (and (not (empty? values))
+              (vector? values)
+              (every? vector? values))
+       (map-indexed (fn [question-group-idx attachments]
+                      ^{:key (str (:id field-descriptor) "-" question-group-idx)}
+                      [attachment-list attachments])
+                    values)
+       [attachment-list values])]))
 
 (declare field)
 
