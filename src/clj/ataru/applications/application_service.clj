@@ -53,18 +53,22 @@
           (cond-> answer
             (contains? koodisto-fields key)
             (update :value (fn [koodi-value]
-                             (let [koodisto-uri         (get-in koodisto-fields [key :uri])
-                                   version              (get-in koodisto-fields [key :version])
-                                   koodisto             (koodisto/get-koodisto-options koodisto-uri version)
-                                   human-readable-value (->> (cond-> koodi-value
-                                                               (string? koodi-value)
-                                                               (clojure.string/split #"\s*,\s*"))
-                                                             (map (fn [koodi-uri]
-                                                                    (let [koodi (get-koodi koodisto koodi-uri)]
-                                                                      (get-in koodi [:label lang])))))]
-                               (cond-> human-readable-value
-                                 (= (count human-readable-value) 1)
-                                 first))))))))))
+                             (let [koodisto-uri (get-in koodisto-fields [key :uri])
+                                   version (get-in koodisto-fields [key :version])
+                                   koodisto (koodisto/get-koodisto-options koodisto-uri version)
+                                   get-label (fn [koodi-uri]
+                                               (let [koodi (get-koodi koodisto koodi-uri)]
+                                                 (get-in koodi [:label lang])))]
+                               (cond (string? koodi-value)
+                                     (let [values (clojure.string/split koodi-value #"\s*,\s*")]
+                                       (if (< 1 (count values))
+                                         (map get-label values)
+                                         (get-label (first values))))
+                                     (and (vector? koodi-value)
+                                          (every? vector? koodi-value))
+                                     (map (partial map get-label) koodi-value)
+                                     :else
+                                     (map get-label koodi-value)))))))))))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
