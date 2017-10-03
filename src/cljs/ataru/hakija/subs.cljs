@@ -81,8 +81,10 @@
 
 (re-frame/reg-sub
   :application/single-choice-option-checked?
-  (fn [db [_ parent-id option-value]]
-    (let [value (get-in db [:application :answers parent-id :value])]
+  (fn [db [_ parent-id option-value question-group-idx]]
+    (let [value (get-in db (if question-group-idx
+                             [:application :answers parent-id :values question-group-idx 0 :value]
+                             [:application :answers parent-id :value]))]
       (= option-value value))))
 
 (defn- hakukohteet-field [db]

@@ -187,17 +187,34 @@
                                         (values-in-group-valid? value)))]
     (merge answer {:value value :valid valid})))
 
-(defn- select-single-choice-button [db [_ button-id value validators]]
+(defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
   (let [button-path   [:application :answers button-id]
-        current-value (:value (get-in db button-path))
-        new-value     (when (not= value current-value) value)]
-    (update-in db button-path
-               (fn [answer]
-                 (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
-                                true)]
-                   (merge answer {:value new-value
-                                  :valid valid?}))))))
+        current-value (:value (get-in db (if question-group-idx
+                                           (into button-path [:values question-group-idx])
+                                           button-path)))
+        new-value     (when (not= value current-value) value)
+        value-valid?  (fn [value]
+                        (if (not-empty validators)
+                          (every? true? (map #(validator/validate % value (-> db :application :answers) nil) validators))
+                          true))
+        update-value  (fn [value]
+                        (let [valid? (value-valid? new-value)]
+                          (merge value {:value new-value
+                                        :valid valid?})))]
+    (if question-group-idx
+      (letfn [(values-valid? [values]
+                (and (every? value-valid? values)
+                     (or (not (some #{"required"} validators))
+                         (not-empty values))))]
+        (-> db
+            (update-in (conj button-path :values) (vector-of-length (inc question-group-idx)))
+            (update-in (into button-path [:values question-group-idx]) (fnil identity []))
+            (update-in (into button-path [:values question-group-idx 0]) update-value)
+            (update-in button-path (fn [answer]
+                                     (assoc answer :valid (every? values-valid? (:values answer)))))
+            (update-in button-path (fn [answer]
+                                     (assoc answer :value (map (partial map :value) (:values answer)))))))
+      (update-in db button-path update-value))))
 
 (defn- toggle-values
   [answer options answers-by-key]
@@ -231,7 +248,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
+(defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -280,6 +297,16 @@
                db
                (-> db :application :answers))))
 
+(defn- merge-single-choice-values [value answer]
+  (if (and (vector? value)
+           (every? vector? value))
+    (merge answer {:valid true
+                   :value value
+                   :values (mapv (partial mapv (fn [value]
+                                                 {:valid true :value value}))
+                                 value)})
+    (merge answer {:valid true :value value})))
+
 (defn- merge-dropdown-values [value answer]
   (if (and (vector? value)
            (every? vector? value))
@@ -301,6 +328,9 @@
                                  (let [answer (match answer
                                                      {:fieldType "multipleChoice"}
                                                      (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
+
+                                                     {:fieldType "singleChoice"}
+                                                     (update answers answer-key (partial merge-single-choice-values value))
 
                                                      {:fieldType "dropdown"}
                                                      (update answers answer-key (partial merge-dropdown-values value))
