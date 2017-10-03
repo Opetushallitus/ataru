@@ -80,6 +80,11 @@
 
       :else value-or-koodi-uri)))
 
+(defn- group-spacer
+  [index]
+  [^{:key (str "spacer-" index)}
+  [:div.application__question-group-spacer]])
+
 (defn scroll-to-anchor
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])

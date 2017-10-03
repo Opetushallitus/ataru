@@ -19,7 +19,8 @@
                                                                        scroll-to-anchor
                                                                        question-group-answer?
                                                                        answers->read-only-format
-                                                                       value-or-koodi-uri->label]]
+                                                                       value-or-koodi-uri->label
+                                                                       group-spacer]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- multiple-choice-with-koodisto [field-descriptor]
@@ -96,11 +97,6 @@
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui nil))])))
-
-(defn- group-spacer
-  [index]
-  [^{:key (str "spacer-" index)}
-   [:div.application__question-group-spacer]])
 
 (defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]

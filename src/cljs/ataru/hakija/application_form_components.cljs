@@ -14,7 +14,8 @@
               required-hint
               textual-field-value
               scroll-to-anchor
-              is-required-field?]]
+              is-required-field?
+              group-spacer]]
             [ataru.hakija.application-validators :as validator]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.util :as util]
@@ -288,8 +289,8 @@
                              [render-field child :idx idx])
                            children)
                         (when (< idx (dec row-count))
-                          [^{:key (str "spacer-" row-count)}
-                            [:div.application__question-group-spacer]])))
+                          (group-spacer idx))))
+
                     (range row-count)))
          (conj [:div.application__form-field.flex-row.application__add-question-group-row
 
