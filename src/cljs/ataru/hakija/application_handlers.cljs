@@ -401,6 +401,50 @@
                      [[:application/run-rule (:blur-rules field)]])})))
 
 (reg-event-fx
+  :application/validate
+  (fn [{db :db} [_ field-descriptor group-idx]]
+    (let [id (keyword (:id field-descriptor))
+          answers (get-in db [:application :answers])
+          answer (get answers id)]
+      (match field-descriptor
+        {:fieldType "dropdown"}
+        (if (nil? group-idx)
+          {:validate {:value (:value answer)
+                      :answers answers
+                      :field-descriptor field-descriptor
+                      :on-validated (fn [[valid? errors]]
+                                      (assoc-in db [:application :answers id :valid] valid?))}}
+          {:validate {:value (:value (nth (:values answer) group-idx))
+                      :answers answers
+                      :field-descriptor field-descriptor
+                      :on-validated (fn [[valid? errors]]
+                                      (let [db (assoc-in db [:application :answers id :values group-idx :valid] valid?)
+                                            values (get-in db [:application :answers id :values])]
+                                        (assoc-in db [:application :answers id :valid]
+                                                  (and (every? :valid values)
+                                                       (or (not (required? field-descriptor))
+                                                           (every? not-empty values))))))}})
+        {:fieldType "singleChoice"}
+        (if (nil? group-idx)
+          {:validate {:value (:value answer)
+                      :answers answers
+                      :field-descriptor field-descriptor
+                      :on-validated (fn [[valid? errors]]
+                                      (assoc-in db [:application :answers id :valid] valid?))}})
+        {:fieldType "multipleChoice"}
+        (if (nil? group-idx)
+          {:validate {:value (:value answer)
+                      :answers answers
+                      :field-descriptor field-descriptor
+                      :on-validated (fn [[valid? errors]]
+                                      (assoc-in db [:application :answers id :valid] valid?))}}
+          {:validate-n {:values (:value answer)
+                        :answers answers
+                        :field-descriptor field-descriptor
+                        :on-validated (fn [[valid? errors]]
+                                        (assoc-in db [:application :answers id :valid] valid?))}})))))
+
+(reg-event-fx
   :application/set-application-field-valid
   (fn [{db :db} [_ field-descriptor valid? errors]]
     (let [id (keyword (:id field-descriptor))
