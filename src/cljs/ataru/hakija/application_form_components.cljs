@@ -523,7 +523,7 @@
                         (map #(.item file-list %)))
         file-sizes (map #(.-size %) files)]
     (if (some #(> % max-attachment-size-bytes) file-sizes)
-      (dispatch [:application/show-attachment-too-big-error component-id])
+      (dispatch [:application/show-attachment-too-big-error component-id question-group-idx])
       (dispatch [:application/add-attachments field-descriptor component-id attachment-count files question-group-idx]))))
 
 (defn attachment-upload [field-descriptor component-id attachment-count question-group-idx]
@@ -547,8 +547,12 @@
      (let [file-size-info-text (case language
                                  :fi "Tiedoston maksimikoko on 10 MB"
                                  :en "Maximum file size is 10 MB"
-                                 :sv "Den maximala filstorleken är 10 MB")]
-       (if @(subscribe [:state-query [:application :answers (keyword component-id) :too-big]])
+                                 :sv "Den maximala filstorleken är 10 MB")
+           size-error-path     (if question-group-idx
+                                 [:application :answers (keyword component-id) :errors question-group-idx :too-big]
+                                 [:application :answers (keyword component-id) :errors :too-big])
+           size-error          (subscribe [:state-query size-error-path])]
+       (if @size-error
          [:span.application__form-upload-button-error.animated.shake file-size-info-text]
          [:span.application__form-upload-button-info file-size-info-text]))]))
 

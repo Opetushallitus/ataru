@@ -115,10 +115,26 @@
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
+(defn- vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))
+
 (reg-event-db
   :application/show-attachment-too-big-error
-  (fn [db [_ component-id]]
-    (assoc-in db [:application :answers (keyword component-id) :too-big] true)))
+  (fn [db [_ component-id question-group-idx]]
+    (let [error-path (if question-group-idx
+                       [:application :answers (keyword component-id) :errors question-group-idx :too-big]
+                       [:application :answers (keyword component-id) :errors :too-big])
+          db         (cond-> db
+                       question-group-idx
+                       (update-in [:application :answers (keyword component-id) :errors] (vector-of-length question-group-idx)))]
+      (assoc-in db error-path true))))
 
 (reg-event-fx
   :application/submit
@@ -153,16 +169,6 @@
   (update form :languages
     (fn [languages]
       (mapv keyword languages))))
-
-(defn- resize-vector [target-length x]
-  (let [add-length (- target-length (count x))]
-    (cond-> x
-      (> add-length 0)
-      (into (repeatedly add-length (fn [] nil))))))
-
-(defn- vector-of-length [target-length]
-  (comp (partial resize-vector target-length)
-        (fnil identity [])))
 
 (defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
   (let [option-path            (if question-group-idx
