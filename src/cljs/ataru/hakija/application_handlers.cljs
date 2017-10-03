@@ -843,7 +843,30 @@
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
 
+(defn- collect-required-children
+  [field]
+  (autil/reduce-form-fields (fn [required-children child]
+                              (if (some (partial = "required")
+                                        (:validators child))
+                                (conj required-children child)
+                                required-children))
+                            []
+                            (:children field)))
+
+(defn- required-children
+  [db id]
+  (autil/reduce-form-fields (fn [required-children field]
+                              (if (= id (:id field))
+                                (collect-required-children field)
+                                required-children))
+                            []
+                            (get-in db [:form :content])))
+
 (reg-event-db
   :application/add-question-group-row
   (fn add-question-group-row [db [_ field-descriptor-id]]
-    (update-in db [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2))))
+    (-> (reduce (fn [db required-child]
+                  (assoc-in db [:application :answers (keyword (:id required-child)) :valid] false))
+                db
+                (required-children db field-descriptor-id))
+        (update-in [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2)))))
