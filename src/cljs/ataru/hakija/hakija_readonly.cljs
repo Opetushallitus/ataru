@@ -50,13 +50,13 @@
        [:div.application__readonly-text
         (cond (and (vector? values)
                    (every? vector? values)
-                   (not= 1 (count values)))
+                   (< 1 (count values)))
               (into [:ul.application__form-field-list]
                     (map #(multi-values->:li field-descriptor lang %) values))
 
               (and (vector? values)
                    (some (comp not vector?) values)
-                   (not= 1 (count values)))
+                   (< 1 (count values)))
               (into [:ul.application__form-field-list]
                     (multi-values->:li field-descriptor lang values))
 
@@ -110,16 +110,16 @@
          [:div.application__wrapper-heading.application__question-group-wrapper-heading]
          (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
                 [:p.application__read-only-heading-text (-> content :label lang)]]
-               (map
+               (mapcat
                  (fn [group-index]
-                   (concat
-                     (map-indexed
-                       (fn [i [id [field-descriptor]]]
-                         ^{:key (str id "-" (+ group-index i))}
+                   (conj
+                     (mapv
+                       (fn [[id [field-descriptor]]]
+                         ^{:key (str id "-" group-index)}
                          [field field-descriptor application lang group-index])
                        fields)
                      (when (< group-index (dec groups-amount))
-                       (group-spacer group-index))))
+                       [group-spacer group-index])))
                  (range groups-amount)))]))))
 
 (defn row-container [application lang children question-group-index]

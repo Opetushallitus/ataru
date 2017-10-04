@@ -59,7 +59,6 @@
         split-values       (cond-> value-or-koodi-uri
                                    (and is-koodisto? (string? value-or-koodi-uri))
                                    (clojure.string/split #"\s*,\s*"))]
-    ;(println value-or-koodi-uri)
     (cond
       is-koodisto?
       (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
@@ -82,8 +81,8 @@
 
 (defn group-spacer
   [index]
-  [^{:key (str "spacer-" index)}
-  [:div.application__question-group-spacer]])
+  ^{:key (str "spacer-" index)}
+  [:div.application__question-group-spacer])
 
 (defn scroll-to-anchor
   [field-descriptor]
