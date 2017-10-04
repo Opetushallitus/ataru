@@ -38,12 +38,17 @@
                                    [search-term-ucase :dob]
 
                                    (email/email? search-term)
-                                   [search-term :email])
+                                   [search-term :email]
+
+                                   (< 2 (count search-term))
+                                   [search-term :name])
          show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
          db-with-search-term (-> db
                                  (assoc-in [:application :search-control :search-term :value] search-term)
                                  (assoc-in [:application :search-control :search-term :show-error] show-error))]
      (if-let [[term type] term-type]
        {:db db-with-search-term
-        :dispatch [:application/fetch-applications-by-term term type]}
+        :dispatch-debounced {:timeout 500
+                             :id :application-search
+                             :dispatch [:application/fetch-applications-by-term term type]}}
        {:db (assoc-in db-with-search-term [:application :applications] nil)}))))

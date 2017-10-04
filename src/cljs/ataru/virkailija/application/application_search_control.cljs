@@ -21,7 +21,7 @@
     (str " (" count ")")
     ""))
 
-(defn search-term-field []
+(defn search-term-field [placeholder-text title-text]
   (let [search-term (subscribe [:state-query [:application :search-control :search-term :value]])]
     [:div
      [:input.application__search-control-search-term-input
@@ -30,7 +30,8 @@
        :id          "ssn-search-field"
        :class       (when (true? @(subscribe [:state-query [:application :search-control :search-term :show-error]]))
                       "application__search-control-search-term-input-error animated shake")
-       :placeholder "Etsi hetulla, syntymäajalla tai sähköpostiosoitteella"
+       :placeholder placeholder-text
+       :title       title-text
        :value       @search-term
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
      (when-not (clojure.string/blank? @search-term)
@@ -38,7 +39,7 @@
         {:on-click #(dispatch [:application/clear-applications-haku-and-form-selections])}
         [:i.zmdi.zmdi-close]])]))
 
-(defn search-term-tab [tab-id selected-tab link-url label-text]
+(defn search-term-tab [tab-id selected-tab link-url label-text title-text]
   (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
     [:div.application__search-control-tab-selector-wrapper
      [:a {:href link-url
@@ -49,8 +50,8 @@
       [:div.application__search-control-tab-selector
        {:class (when tab-selected "application__search-control-selected-tab-with-input")}
        (if tab-selected
-         [search-term-field]
-         label-text)]]
+         [search-term-field label-text title-text]
+         [:span.application__search-control-tab-text {:title title-text} label-text])]]
      (when (= tab-id selected-tab)
        [:div.application-handling_search-control-tab-arrow-down])]))
 
@@ -68,7 +69,8 @@
       :search-term
       @selected-tab
       "/lomake-editori/applications/search/"
-      "Etsi hetulla, syntymäajalla tai sähköpostiosoitteella"]
+      "Etsi hakijan henkilötiedoilla"
+      "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"]
      [haku-tab
       :complete
       @selected-tab
@@ -78,7 +80,7 @@
 (defn haku-info-link [link-href haku-info]
   [:a
    {:href link-href}
-   (:name haku-info)
+   (some #(get (:name haku-info) %) [:fi :sv :en])
    (str " (" (:application-count haku-info) ")")
    (when (pos? (:unprocessed haku-info))
      [:span.application__search-control-haku-unprocessed
@@ -114,7 +116,7 @@
   [:div.application__search-control-haku.application__search-control-direct-form-haku
    [haku-info-link
     (str "/lomake-editori/applications/" (:key haku))
-    haku]])
+    (update haku :name (partial hash-map :fi))]])
 
 (defn loading-indicator []
   [:div.application__search-control-loading-indicator

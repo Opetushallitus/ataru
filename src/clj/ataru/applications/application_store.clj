@@ -41,7 +41,9 @@
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application conn]
   (let [connection           {:connection conn}
-        answers              (:answers application)
+        answers              (->> application
+                                  :answers
+                                  (filter #(not-empty (:value %))))
         secret               (:secret application)
         application-to-store {:form_id        (:form application)
                               :key            (or (:key application)
@@ -147,33 +149,11 @@
                                    virkailija-oid)})
       id)))
 
-(defn- older?
-  "Check if application given as first argument is older than
-   application given as second argument by comparing :created-time."
-  [a1 a2]
-  (time/before? (:created-time a1)
-                (:created-time a2)))
-
-(defn- latest-versions-only [applications]
-  (->> applications
-       (reduce (fn [applications {:keys [key] :as a1}]
-                 (let [a2 (get applications key)]
-                   (if (or (nil? a2)
-                           (older? a2 a1))
-                     (assoc applications key a1)
-                     applications)))
-               {})
-       (vals)
-       (sort-by :created-time)
-       (reverse)
-       (vec)))
-
 (defn get-application-list-by-form
   "Only list with header-level info, not answers. Does NOT include applications associated with any hakukohde."
   [form-key]
   (->> (exec-db :db yesql-get-application-list-by-form {:form_key form-key})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-hakukohde
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
@@ -181,8 +161,7 @@
   (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid                hakukohde-oid
                                                              :query_type                   "ORGS"
                                                              :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-hakukohde
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
@@ -190,8 +169,7 @@
   (->> (exec-db :db yesql-get-application-list-by-hakukohde {:hakukohde_oid hakukohde-oid
                                                              :query_type "ALL"
                                                              :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-haku
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
@@ -199,8 +177,7 @@
   (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid                     haku-oid
                                                         :query_type                   "ORGS"
                                                         :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-haku
   "Only list with header-level info, not answers. ONLY include applications associated with given hakukohde."
@@ -208,8 +185,7 @@
   (->> (exec-db :db yesql-get-application-list-by-haku {:haku_oid haku-oid
                                                         :query_type "ALL"
                                                         :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-ssn
   "Only list with header-level info"
@@ -217,8 +193,7 @@
   (->> (exec-db :db yesql-get-application-list-by-ssn {:ssn                          ssn
                                                        :query_type                   "ORGS"
                                                        :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-ssn
   "Only list with header-level info"
@@ -226,44 +201,56 @@
   (->> (exec-db :db yesql-get-application-list-by-ssn {:ssn                          ssn
                                                        :query_type                   "ALL"
                                                        :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-dob [dob organization-oids]
   (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
                                                        :query_type                   "ORGS"
                                                        :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-dob [dob]
   (->> (exec-db :db yesql-get-application-list-by-dob {:dob                          dob
                                                        :query_type                   "ALL"
                                                        :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-list-by-email [email organization-oids]
   (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
                                                          :query_type                   "ORGS"
                                                          :authorized_organization_oids organization-oids})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-email [email]
   (->> (exec-db :db yesql-get-application-list-by-email {:email                        email
                                                          :query_type                   "ALL"
                                                          :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
+
+(defn- name-search-query [name]
+  (->> (clojure.string/split name #"\s+")
+       (remove clojure.string/blank?)
+       (map #(str % ":*"))
+       (clojure.string/join " & ")))
+
+(defn get-application-list-by-name [name organization-oids]
+  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
+                                                        :query_type                   "ORGS"
+                                                        :authorized_organization_oids organization-oids})
+       (map ->kebab-case-kw)))
+
+(defn get-full-application-list-by-name [name]
+  (->> (exec-db :db yesql-get-application-list-by-name {:name                         (name-search-query name)
+                                                        :query_type                   "ALL"
+                                                        :authorized_organization_oids [""]})
+       (map ->kebab-case-kw)))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
   (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
          {:person_oid                   person-oid
           :query_type                   "ALL"
           :authorized_organization_oids [""]})
-       (map ->kebab-case-kw)
-       (latest-versions-only)))
+       (map ->kebab-case-kw)))
 
 (defn get-application-review [application-key]
   (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
@@ -310,6 +297,14 @@
 (defn get-application-organization-oid [application-key]
   (:organization_oid (first (exec-db :db yesql-get-application-organization-by-key {:application_key application-key}))))
 
+(defn get-organization-oids-of-applications-of-persons [person-oids]
+  (if (empty? person-oids)
+    #{}
+    (set (map :organization_oid
+              (exec-db :db
+                       yesql-organization-oids-of-applications-of-persons
+                       {:person_oids person-oids})))))
+
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
@@ -344,8 +339,7 @@
   [form-key :- s/Str filtered-states :- [s/Str]]
   (->> {:form_key form-key :filtered_states filtered-states}
        (exec-db :db yesql-get-applications-for-form)
-       (mapv unwrap-application)
-       (latest-versions-only)))
+       (mapv unwrap-application)))
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [filtered-states :- [s/Str]
@@ -353,8 +347,7 @@
   (->> (exec-db :db yesql-get-applications-for-hakukohde
                 {:filtered_states filtered-states
                  :hakukohde_oid   hakukohde-oid})
-       (mapv (partial unwrap-application))
-       (latest-versions-only)))
+       (mapv (partial unwrap-application))))
 
 (s/defn get-applications-for-haku :- [schema/Application]
   [haku-oid :- s/Str
@@ -362,8 +355,7 @@
   (->> (exec-db :db yesql-get-applications-for-haku
          {:filtered_states filtered-states
           :haku_oid        haku-oid})
-       (mapv (partial unwrap-application))
-       (latest-versions-only)))
+       (mapv (partial unwrap-application))))
 
 (defn add-person-oid
   "Add person OID to an application"

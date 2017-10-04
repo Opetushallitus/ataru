@@ -6,7 +6,9 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.application.review-states :refer [complete-states]]
             [ataru.application-common.application-field-common :refer [required-validators]]
-            [clojure.core.match :refer [match]]))
+            [clojure.core.match :refer [match]]
+            [cljs-time.core :as time]
+            [cljs-time.coerce :refer [from-long]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohde]
   (into {}
@@ -159,8 +161,10 @@
             (some? virkailija-secret) (assoc :virkailija-secret virkailija-secret))))
 
 (defn extract-wrapper-sections [form]
-  (map #(select-keys % [:id :label :children])
-       (filter #(= (:fieldClass %) "wrapperElement") (:content form))))
+  (->> (:content form)
+       (filter #(and (= (:fieldClass %) "wrapperElement")
+                     (not= (:fieldType %) "adjacentfieldset")))
+       (map #(select-keys % [:id :label :children]))))
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
@@ -192,6 +196,15 @@
   (and (= (:state application) "processing")
        (:is-jatkuva-haku? haku)))
 
+(defn- after-apply-end-within-10-days?
+  [apply-end-long]
+  (if apply-end-long
+    (let [now            (time/now)
+          apply-end      (from-long apply-end-long)
+          days-after-end (time/plus apply-end (time/days 10))]
+      (time/within? apply-end days-after-end now))
+    false))
+
 (defn applying-possible? [form application]
   (cond
     (:virkailija-secret application)
@@ -200,6 +213,9 @@
     (or (application-in-complete-state? application)
         (application-processing-jatkuva-haku? application (:tarjonta form)))
     false
+
+    (after-apply-end-within-10-days? (-> form :tarjonta :hakuaika-dates :end))
+    true
 
     ;; When applying to hakukohde, hakuaika must be on
     (-> form :tarjonta)

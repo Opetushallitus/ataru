@@ -8,7 +8,7 @@
 (re-frame/reg-sub
   :state-query
   (fn [db [_ path]]
-    (get-in db path)))
+    (get-in db (remove nil? path))))
 
 (re-frame/reg-sub
   :application/valid-status
@@ -42,6 +42,12 @@
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
 
 (re-frame/reg-sub
+  :application/cannot-edit-answer?
+  (fn [db [_ key]]
+    (let [answer (-> db :application :answers key)]
+      (or (:cannot-edit answer) (:cannot-view answer)))))
+
+(re-frame/reg-sub
   :application/default-language
   (fn [db]
     (-> db
@@ -55,9 +61,11 @@
 
 (re-frame/reg-sub
   :application/adjacent-field-row-amount
-  (fn [db [_ field-descriptor]]
+  (fn [db [_ field-descriptor question-group-idx]]
     (let [child-id   (-> (:children field-descriptor) first :id keyword)
-          row-amount (-> (get-in db [:application :answers child-id :values] [])
+          value-path (cond-> [:application :answers child-id :values]
+                       question-group-idx (conj question-group-idx))
+          row-amount (-> (get-in db value-path [])
                          count)]
       (if (= row-amount 0)
         1
@@ -65,14 +73,18 @@
 
 (re-frame/reg-sub
   :application/multiple-choice-option-checked?
-  (fn [db [_ parent-id option-value]]
-    (let [options (get-in db [:application :answers parent-id :options])]
+  (fn [db [_ parent-id option-value question-group-idx]]
+    (let [option-path (cond-> [:application :answers parent-id :options]
+                        question-group-idx (conj question-group-idx))
+          options     (get-in db option-path)]
       (true? (get options option-value)))))
 
 (re-frame/reg-sub
   :application/single-choice-option-checked?
-  (fn [db [_ parent-id option-value]]
-    (let [value (get-in db [:application :answers parent-id :value])]
+  (fn [db [_ parent-id option-value question-group-idx]]
+    (let [value (get-in db (if question-group-idx
+                             [:application :answers parent-id :values question-group-idx 0 :value]
+                             [:application :answers parent-id :value]))]
       (= option-value value))))
 
 (defn- hakukohteet-field [db]
@@ -98,7 +110,9 @@
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
-  (fn [db _] (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))))
+  (fn [db _]
+    (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
+         (not @(re-frame/subscribe [:application/cannot-edit-answer? :hakukohteet])))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
@@ -114,6 +128,11 @@
   (fn [db [_ hakukohde-oid]]
     (some #(= % hakukohde-oid)
           @(re-frame/subscribe [:application/selected-hakukohteet]))))
+
+(re-frame/reg-sub
+  :application/hakukohde-deleting?
+  (fn [db [_ hakukohde-oid]]
+    (some #{hakukohde-oid} (-> db :application :ui :hakukohteet :deleting))))
 
 (re-frame/reg-sub
   :application/max-hakukohteet

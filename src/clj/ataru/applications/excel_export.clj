@@ -10,6 +10,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.util :as util]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.string :as string :refer [trim]]
@@ -131,6 +132,13 @@
             (str filename " (" (util/size-bytes->str size) ")")))
         value))))
 
+(defn- all-answers-sec-or-vec? [answers]
+  (every? sequential? answers))
+
+(defn- kysymysryhma-answer? [value-or-values]
+  (and (sequential? value-or-values)
+       (all-answers-sec-or-vec? value-or-values)))
+
 (defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
     (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
@@ -138,11 +146,21 @@
   (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
           value-or-values (:value answer)
-          value           (if (or (seq? value-or-values) (vector? value-or-values))
+          value           (cond
+                            (kysymysryhma-answer? value-or-values)
+                            (->> value-or-values
+                                 (map #(clojure.string/join "," %))
+                                 (map (partial raw-values->human-readable-value form application (:key answer)))
+                                 (map-indexed #(format "#%s: %s,\n" %1 %2))
+                                 (apply str))
+
+                            (sequential? value-or-values)
                             (->> value-or-values
                                  (map (partial raw-values->human-readable-value form application (:key answer)))
                                  (interpose ",\n")
                                  (apply str))
+
+                            :else
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (when (and value column)
         (writer 0 (+ column (count application-meta-fields)) value))))
@@ -290,6 +308,28 @@
       (update application :answers conj
         {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label "Hakukohteet"}))))
 
+(defn- get-hakukohde-name [tarjonta-service lang-s oid]
+  (let [lang (keyword lang-s)]
+    (when-let [hakukohde (tarjonta-parser/parse-hakukohde
+                          tarjonta-service
+                          (tarjonta/get-hakukohde tarjonta-service oid))]
+      (str (get-in hakukohde [:name lang]) " - "
+           (get-in hakukohde [:tarjoaja-name lang])))))
+
+(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer]
+  (update hakukohde-answer :value
+          (partial map (fn [oid]
+                         (if-let [name (get-hakukohde-name tarjonta-service lang oid)]
+                           (str name " (" oid ")")
+                           oid)))))
+
+(defn- add-hakukohde-names [tarjonta-service application]
+  (update application :answers
+          (partial map (fn [answer]
+                         (if (= "hakukohteet" (:key answer))
+                           (add-hakukohde-name tarjonta-service (:lang application) answer)
+                           answer)))))
+
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -299,6 +339,7 @@
         get-latest-form-by-key  (memoize form-store/fetch-by-key)]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
+         (map (partial add-hakukohde-names tarjonta-service))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
@@ -353,9 +394,13 @@
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (create-filename (or (.get-hakukohde-name tarjonta-service hakukohde-oid) hakukohde-oid)))
+  (let [name (some #(get (.get-hakukohde-name tarjonta-service hakukohde-oid) %)
+                   [:fi :sv :en])]
+    (create-filename (or name hakukohde-oid))))
 
 (defn filename-by-haku
   [haku-oid session organization-service tarjonta-service]
   {:post [(some? %)]}
-  (create-filename (or (.get-haku-name tarjonta-service haku-oid) haku-oid)))
+  (let [name (some #(get (.get-haku-name tarjonta-service haku-oid) %)
+                   [:fi :sv :en])]
+    (create-filename (or name haku-oid))))

@@ -138,4 +138,63 @@
                                               :id "b0839467-a6e8-4294-b5cc-830756bbda8a",
                                               :params {},
                                               :validators ["required"]}],
-                                  :params {}}]})
+                                  :params {}}
+                                 {:label {:fi "Eka liite"
+                                          :sv ""}
+                                  :fieldClass "formField"
+                                  :id "164954b5-7b23-4774-bd44-dee14071316b"
+                                  :params {}
+                                  :options []
+                                  :fieldType "attachment"}]})
+
+(def more-questions
+  [{:fieldClass "formField"
+    :fieldType  "attachment"
+    :id         "more-questions-attachment-id"
+    :label      {:fi "Eka liite" :sv ""}
+    :validators ["required"]}
+   {:fieldClass "formField"
+    :fieldType  "dropdown"
+    :id         "more-answers-dropdown-id"
+    :label      {:fi "droparii" :sv ""}
+    :options    [{:label     {:fi "eka vaihtoehto" :sv ""}
+                  :value     "eka vaihtoehto"
+                  :followups [{:fieldClass "formField"
+                               :fieldType  "attachment"
+                               :id         "dropdown-followup-1"
+                               :label      {:fi "Dropdown liite" :sv ""}}
+                              {:fieldClass "formField",
+                               :fieldType  "singleChoice",
+                               :id         "dropdown-followup-2",
+                               :label      {:fi "Dropdown painikkeet required" :sv ""}
+                               :validators ["required"]
+                               :options    [{:label {:fi "eka" :sv ""}
+                                             :value "eka"}
+                                            {:label {:fi "toka" :sv ""}
+                                             :value "toka"}]}]}
+                 {:label {:fi "toka vaihtoehto" :sv ""}
+                  :value "toka vaihtoehto"}]}
+   {:fieldClass "wrapperElement"
+    :fieldType  "adjacentfieldset"
+    :id         "adjacent-quesiton-id"
+    :label      {:fi "vierekkäiset kentät"}
+    :children   [{:fieldClass "formField"
+                  :fieldType  "textField"
+                  :id         "adjacent-answer-1"
+                  :label      {:fi "Vierekkäinen Kenttä1" :sv ""}
+                  :params     {:adjacent true}
+                  :validators ["required"]}
+                 {:fieldClass "formField"
+                  :fieldType  "textField"
+                  :id "adjacent-answer-2"
+                  :label      {:fi "Vierekkäinen Kenttä2" :sv ""}
+                  :params     {:adjacent true}}]}
+   {:fieldClass "formField"
+    :fieldType "textField"
+    :id "repeatable-required"
+    :label {:fi "Toistuva pakollinen" :sv ""}
+    :params {:repeatable true}
+    :validators ["required"]}])
+
+(def person-info-form-with-more-questions
+  (update person-info-form :content concat more-questions))

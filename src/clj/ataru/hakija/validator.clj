@@ -212,5 +212,6 @@
        (empty? failed-meta-fields))
      :failures
      (merge
+       (when (not-empty extra-answers) {:extra-answers extra-answers})
        failed-results
        failed-meta-fields)}))

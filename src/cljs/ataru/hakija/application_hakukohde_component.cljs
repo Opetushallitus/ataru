@@ -44,13 +44,12 @@
      text]))
 
 (defn hilight-text [text hilight-text]
-  (if (pos? (count hilight-text))
+  (if (some? text)
     (map-indexed hilighted-text->span (match-text text hilight-text))
-    text))
+    [:span ""]))
 
 (defn- hakukohde-remove-event-handler [e]
-  (dispatch [:application/hakukohde-remove-selection
-             (.getAttribute (.-target e) "data-hakukohde-oid")]))
+  (dispatch [:application/hakukohde-remove-selection (.getAttribute (.-target e) "data-hakukohde-oid")]))
 
 (defn- hakukohde-select-event-handler [e]
   (dispatch [:application/hakukohde-add-selection
@@ -79,16 +78,20 @@
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  [:div.application__hakukohde-row.application__hakukohde-row--selected
-   [:div.application__hakukohde-row-icon-container
-    [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
-   [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
-    [:div.application__hakukohde-selected-row-header
-     @(subscribe [:application/hakukohde-label hakukohde-oid])]
-    [:div.application__hakukohde-selected-row-description
-     @(subscribe [:application/hakukohde-description hakukohde-oid])]]
-   (when @(subscribe [:application/hakukohteet-editable?])
-     [selected-hakukohde-row-remove hakukohde-oid])])
+  (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])]
+    [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
+     {:class (if deleting?
+               "fadeOut"
+               "fadeIn")}
+     [:div.application__hakukohde-row-icon-container
+      [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
+     [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected
+      [:div.application__hakukohde-selected-row-header
+       @(subscribe [:application/hakukohde-label hakukohde-oid])]
+      [:div.application__hakukohde-selected-row-description
+       @(subscribe [:application/hakukohde-description hakukohde-oid])]]
+     (when @(subscribe [:application/hakukohteet-editable?])
+       [selected-hakukohde-row-remove hakukohde-oid])]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]

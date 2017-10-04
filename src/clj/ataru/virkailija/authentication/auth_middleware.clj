@@ -40,6 +40,8 @@
                        :handler any-access}
                       {:pattern #".*/favicon.ico"
                        :handler any-access}
+                      {:pattern #".*/api/checkpermission"
+                       :handler any-access}
                       {:pattern #".*/api/.*"
                        :handler authenticated-access
                        :on-error send-not-authenticated-api-response}

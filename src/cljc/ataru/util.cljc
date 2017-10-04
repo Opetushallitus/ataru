@@ -24,7 +24,7 @@
           :when (not= "infoElement" (:fieldClass field))]
       (match
         field
-        {:fieldClass "wrapperElement"
+        {:fieldClass (:or "wrapperElement" "questionGroup")
          :children   children}
         (flatten-form-fields children)
 
@@ -114,3 +114,7 @@
         (if (= (:id ret) key)
           ret
           (recur (next field-descriptors)))))))
+
+(defn in?
+  [vec item]
+  (some #(= item %) vec))

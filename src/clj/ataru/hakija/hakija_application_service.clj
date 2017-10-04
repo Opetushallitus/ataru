@@ -1,25 +1,29 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-    [taoensso.timbre :as log]
-    [ataru.background-job.job :as job]
-    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.hakija.application-email-confirmation :as application-email]
-    [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-    [ataru.hakija.hakija-form-service :as hakija-form-service]
-    [ataru.person-service.person-integration :as person-integration]
-    [ataru.tarjonta-service.hakuaika :as hakuaika]
-    [ataru.tarjonta-service.hakukohde :as hakukohde]
-    [ataru.forms.form-store :as form-store]
-    [ataru.hakija.validator :as validator]
-    [ataru.application.review-states :refer [complete-states]]
-    [ataru.applications.application-store :as application-store]
-    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
-                                                   editing-forbidden-person-info-field-ids]]
-    [ataru.util :as util]
-    [ataru.files.file-store :as file-store]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
+   [taoensso.timbre :as log]
+   [ataru.background-job.job :as job]
+   [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+   [ataru.hakija.application-email-confirmation :as application-email]
+   [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
+   [ataru.hakija.hakija-form-service :as hakija-form-service]
+   [ataru.person-service.person-integration :as person-integration]
+   [ataru.tarjonta-service.hakuaika :as hakuaika]
+   [ataru.tarjonta-service.hakukohde :as hakukohde]
+   [ataru.tarjonta-service.tarjonta-protocol :refer [get-hakukohde get-haku]]
+   [ataru.forms.form-store :as form-store]
+   [ataru.hakija.validator :as validator]
+   [ataru.application.review-states :refer [complete-states]]
+   [ataru.applications.application-store :as application-store]
+   [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
+                                                  editing-forbidden-person-info-field-ids]]
+   [ataru.application.field-types :as types]
+   [ataru.util :as util]
+   [ataru.files.file-store :as file-store]
+   [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+   [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
+   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [clj-time.core :as time]
+   [clj-time.coerce :refer [from-long]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -28,11 +32,29 @@
      :application-id application-id}))
 
 (defn- get-hakukohteet [application]
-  (->> application
-       :answers
-       (filter #(= (:key %) "hakukohteet"))
-       first
-       :value))
+  (or (->> application
+           :answers
+           (filter #(= (:key %) "hakukohteet"))
+           first
+           :value)
+      (:hakukohde application)))
+
+(defn- get-hakuaikas
+  [tarjonta-service application]
+  (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
+        hakukohde             (when application-hakukohde (get-hakukohde tarjonta-service application-hakukohde))
+        haku-oid              (:hakuOid hakukohde)
+        haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
+    (hakuaika/get-hakuaika-info hakukohde haku)))
+
+(defn- after-apply-end-within-10-days?
+  [apply-end-long]
+  (when apply-end-long
+    (let [now            (time/now)
+          apply-end      (from-long apply-end-long)
+          days-after-end (time/plus apply-end (time/days 10))]
+      (and (time/after? now apply-end)
+           (time/after? days-after-end now)))))
 
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
@@ -40,11 +62,9 @@
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true ;; plain form, always allowed to apply
-      (let [hakukohde         (.get-hakukohde tarjonta-service (first hakukohteet)) ; TODO check apply times for each hakukohde separately?
-            haku-oid          (:hakuOid hakukohde)
-            haku              (when haku-oid (.get-haku tarjonta-service haku-oid))
-            {hakuaika-on :on} (hakuaika/get-hakuaika-info hakukohde haku)]
-        hakuaika-on))))
+      (let [hakuaikas (get-hakuaikas tarjonta-service application)]
+        (or (:on hakuaikas)
+            (after-apply-end-within-10-days? (:end hakuaikas)))))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -58,10 +78,73 @@
     (and (= state "processing")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
+(defn- get-hakuaika-end
+  [application tarjonta-service]
+  (when tarjonta-service
+    (:end (get-hakuaikas tarjonta-service application))))
+
+(defn- only-attachments-editable?
+  [answer application tarjonta-service]
+  (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
+    (and (when hakuaika-end
+           (after-apply-end-within-10-days? hakuaika-end))
+         (not= (:fieldType answer) "attachment"))))
+
+(defn- dummy-answer-to-unanswered-question
+  [{:keys [id fieldType label]}]
+  {:key       id
+   :fieldType fieldType
+   :label     label
+   :value     ""})
+
+(defn- filter-questions-without-answers
+  [answers-by-key form-fields]
+  (filter (fn [answer]
+            (and (not (util/in? (keys answers-by-key) (keyword (:id answer))))
+                 (not (util/in? (:validators answer) "required"))
+                 (some #{(:fieldType answer)} types/form-fields)
+                 (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
+                 (not (:exclude-from-answers answer))
+                 (not (:exclude-from-answers-if-hidden answer)))) form-fields))
+
+(defn- get-questions-without-answers
+  "This function serves to get dummy answers and their editability for fields that were not required and thus were left
+   editable in the 10 day attachment grace period. This happened due to the fact that they had no answer in db to which
+   make uneditable in flag-uneditable-answers."
+  [application]
+  (let [form-fields               (-> application
+                                      (:form)
+                                      (form-store/fetch-by-id)
+                                      :content
+                                      (util/flatten-form-fields))
+        answers-by-key            (util/answers-by-key (:answers application))
+        questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
+    (map dummy-answer-to-unanswered-question questions-without-answers)))
+
+(defn flag-uneditable-answers
+  [{:keys [answers] :as application} tarjonta-service]
+  (assoc application
+    :answers
+    (map
+      (fn [answer]
+        (let [answer-kw (keyword (:key answer))]
+          (cond-> answer
+            (and (not (or (and (seq? (:value answer))
+                               (empty? (:value answer)))
+                          (and (string? (:value answer))
+                               (clojure.string/blank? (:value answer)))))
+                 (contains? viewing-forbidden-person-info-field-ids answer-kw))
+            (merge {:cannot-view true :value nil})
+
+            (or (contains? editing-forbidden-person-info-field-ids answer-kw)
+                (only-attachments-editable? answer application tarjonta-service))
+            (merge {:cannot-edit true}))))
+      (apply conj answers (get-questions-without-answers application)))))
+
 (defn- uneditable-answers-with-labels-from-new
   [uneditable-answers new-answers old-answers]
   ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
-  (map (fn [answer]
+  (keep (fn [answer]
          (let [answer-key (:key answer)
                answer-with-key #(= (:key %) answer-key)
                old-answer (->> old-answers
@@ -71,12 +154,16 @@
                                (filter answer-with-key)
                                (first)
                                :label)]
-           (merge old-answer {:label new-label})))
+           (when old-answer
+             ;Sometimes old an answer doesn't exist: old application, new question in form (flag-uneditable-answers)
+             (merge old-answer {:label new-label}))))
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [old-application new-application]
-  (let [new-answers                 (:answers new-application)
+  [old-application new-application tarjonta-service]
+  (let [new-answers                 (-> new-application
+                                        (flag-uneditable-answers tarjonta-service)
+                                        :answers)
         uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
         uneditable-answers          (filter uneditable-or-unviewable new-answers)
         editable-answers            (remove uneditable-or-unviewable new-answers)
@@ -116,7 +203,7 @@
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
-                             (merge-uneditable-answers-from-previous latest-application application)
+                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
                              application)
         validation-result  (validator/valid-application? final-application form)
         virkailija-secret  (valid-virkailija-secret application)]
@@ -162,35 +249,15 @@
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
 
-(defn- flag-uneditable-answers
-  [{:keys [answers] :as application} cannot-view-field-ids cannot-edit-field-ids]
-  (assoc application
-    :answers
-    (map
-      (fn [answer]
-        (let [answer-kw (keyword (:key answer))]
-          (cond
-            (contains? cannot-view-field-ids answer-kw) (merge answer {:cannot-view true :value nil})
-            (contains? cannot-edit-field-ids answer-kw) (merge answer {:cannot-edit true})
-            :else answer)))
-      answers)))
-
-(defn remove-person-info-module-from-application-answers
-  [application]
-  (when application
-    (flag-uneditable-answers application viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids)))
-
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
-  (if (allowed-to-apply? tarjonta-service application)
-    (let [{passed? :passed?
-           application-id :application-id
-           :as result}
-          (validate-and-store tarjonta-service application application-store/add-application false)]
-      (if passed?
-        (start-submit-jobs application-id)
-        result))
-    not-allowed-reply))
+  (let [{passed?        :passed?
+         application-id :application-id
+         :as            result}
+        (validate-and-store tarjonta-service application application-store/add-application false)]
+    (if passed?
+      (start-submit-jobs application-id)
+      result)))
 
 (defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)

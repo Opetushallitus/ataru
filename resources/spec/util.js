@@ -27,8 +27,8 @@ var elementExists = function($e) {
 }
 
 var triggerEvent = function($e, type) {
-  var evt = testFrame().get(0).createEvent('HTMLEvents')
-  evt.initEvent(type, true, true)
+  var evt = new Event(type, { bubbles: true })
+  evt.simulated = true
   $e.get(0).dispatchEvent(evt)
 }
 
@@ -63,7 +63,7 @@ function setTextFieldValue(selectFn, contents) {
 
 var wait = {
   waitIntervalMs: 100,
-  testTimeoutDefault: 5000,
+  testTimeoutDefault: 10000,
   until: function(condition, maxWaitMs) {
     return function() {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault;

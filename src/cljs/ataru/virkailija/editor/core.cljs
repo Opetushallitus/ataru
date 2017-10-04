@@ -27,61 +27,65 @@
   (let [render-children (fn [children & [new-path]]
                           (for [[index child] (map vector (range) children)]
                             ^{:key index}
-                            [soresu->reagent child (conj (vec path) :children index)]))]
-    (fn [content path]
+                            [soresu->reagent child (conj (vec path) :children index) :question-group-element? (= (:fieldClass content) "questionGroup")]))]
+    (fn [content path & args]
       [:div
-       (when-not ((set path) :followups)
-         [ec/drag-n-drop-spacer path content])
+       [ec/drag-n-drop-spacer path content]
 
        (match content
-         {:module module}
-         [ec/module path]
+              {:module module}
+              [ec/module path]
 
-         {:fieldClass "wrapperElement"
-          :fieldType  "adjacentfieldset"
-          :children   children}
-         [ec/adjacent-fieldset content path (render-children children)]
+              {:fieldClass "wrapperElement"
+               :fieldType  "adjacentfieldset"
+               :children   children}
+              [ec/adjacent-fieldset content path (render-children children)]
 
-         {:fieldClass "wrapperElement"
-          :children   children}
-         [ec/component-group content path (render-children children path)]
+              {:fieldClass "wrapperElement"
+               :children   children}
+              [ec/component-group content path (render-children children path)]
 
-         {:fieldClass "formField" :fieldType "textField"
-          :params {:adjacent true}}
-         [ec/adjacent-text-field content path]
+              {:fieldClass "questionGroup"
+               :fieldType  "fieldset"
+               :children   children}
+              [ec/component-group content path (render-children children path)]
 
-         {:fieldClass "formField" :fieldType "textField"}
-         [ec/text-field content path]
+              {:fieldClass "formField" :fieldType "textField"
+               :params     {:adjacent true}}
+              [ec/adjacent-text-field content path]
 
-         {:fieldClass "formField" :fieldType "textArea"}
-         [ec/text-area content path]
+              {:fieldClass "formField" :fieldType "textField"}
+              [ec/text-field content path]
 
-         {:fieldClass "formField" :fieldType "dropdown"}
-         [ec/dropdown content path]
+              {:fieldClass "formField" :fieldType "textArea"}
+              [ec/text-area content path]
 
-         {:fieldClass "formField" :fieldType "multipleChoice"}
-         [ec/dropdown content path]
+              {:fieldClass "formField" :fieldType "dropdown"}
+              [ec/dropdown content path args]
 
-         {:fieldClass "infoElement"}
-         [ec/info-element content path]
+              {:fieldClass "formField" :fieldType "multipleChoice"}
+              [ec/dropdown content path args]
 
-         {:fieldClass "formField"
-          :fieldType "singleChoice"}
-         [ec/dropdown content path]
+              {:fieldClass "infoElement"}
+              [ec/info-element content path]
 
-         {:fieldClass "formField"
-          :fieldType  "attachment"}
-         (if attachments-enabled?
-           [ec/attachment content path]
-           [:div])
+              {:fieldClass "formField"
+               :fieldType  "singleChoice"}
+              [ec/dropdown content path]
 
-         {:fieldClass "formField"
-          :fieldType  "hakukohteet"}
-         nil
+              {:fieldClass "formField"
+               :fieldType  "attachment"}
+              (if attachments-enabled?
+                [ec/attachment content path]
+                [:div])
 
-         :else (do
-                 (error content)
-                 (throw "error" content)))])))
+              {:fieldClass "formField"
+               :fieldType  "hakukohteet"}
+              nil
+
+              :else (do
+                      (error content)
+                      (throw "error" content)))])))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])

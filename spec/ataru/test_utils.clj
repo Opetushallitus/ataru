@@ -68,7 +68,7 @@
   []
   (let [test-form   (get-latest-form "Testilomake")
         application (get-latest-application-by-form-name "Testilomake")]
-    (println (str "application: " application))
+    (println (str "using application " (:key application)))
     (cond->
       {:test-form-key                (:key test-form)
        :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))

@@ -68,6 +68,15 @@
     #(hash-map :applications (application-store/get-application-list-by-email email %))
     #(hash-map :applications (application-store/get-full-application-list-by-email email))))
 
+(defn get-application-list-by-name [name session organization-service]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   empty-applications-result-fn
+   #(hash-map :applications (application-store/get-application-list-by-name name %))
+   #(hash-map :applications (application-store/get-full-application-list-by-name name))))
+
 (defn get-latest-application-by-key [application-key session organization-service]
   (session-orgs/run-org-authorized
     session

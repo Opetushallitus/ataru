@@ -1,6 +1,6 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
   (:require [com.stuartsierra.component :as component]
-            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]))
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService]]))
 
 (def base-haku
   {:tila                                                 "LUONNOS",
@@ -171,30 +171,12 @@
                                             :kieli_sv :sv
                                             :kieli_en :en})))
 
-(defn- epoch-millis->zoned-date-time
-  [millis]
-  (java.time.ZonedDateTime/ofInstant
-   (.truncatedTo (java.time.Instant/ofEpochMilli millis)
-                 (java.time.temporal.ChronoUnit/SECONDS))
-   (java.time.ZoneId/of "Europe/Helsinki")))
-
-(defn- parse-hakuaika
-  [hakuaika]
-  (cond-> {:start (epoch-millis->zoned-date-time (:alkuPvm hakuaika))}
-    (contains? hakuaika :loppuPvm)
-    (assoc :end (epoch-millis->zoned-date-time (:loppuPvm hakuaika)))))
-
-(defn- parse-haku
-  [haku]
-  {:oid (:oid haku)
-   :name (parse-multi-lang-text (:nimi haku))
-   :hakuajat (map parse-hakuaika (:hakuaikas haku))})
-
 (defn- parse-hakukohde
   [hakukohde]
   {:oid (:oid hakukohde)
    :haku-oid (:hakuOid hakukohde)
-   :name (parse-multi-lang-text (:nimi hakukohde))})
+   :name (parse-multi-lang-text (:nimi hakukohde))
+   :tarjoaja-name (:tarjoajaNimet hakukohde)})
 
 (defrecord MockTarjontaService []
   component/Lifecycle
@@ -208,25 +190,29 @@
 
   (get-hakukohde-name [this hakukohde-oid]
     (when (= hakukohde-oid "hakukohde.oid")
-      "Ajoneuvonosturinkuljettajan ammattitutkinto"))
+      {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}))
 
-  (hakukohteet-by-organization [_ _]
+  (hakukohde-search [_ _ _]
     (->> [(:1.2.246.562.20.49028196523 hakukohde)
           (:1.2.246.562.20.49028196524 hakukohde)
           (:1.2.246.562.20.49028196525 hakukohde)]
          (map #(assoc % :nimi (:hakukohteenNimet %)))
          (map parse-hakukohde)))
 
-  (all-haut [_]
-    (map parse-haku
-         [(:1.2.246.562.29.65950024186 haku)]))
-
   (get-haku [this haku-oid]
     ((keyword haku-oid) haku))
 
   (get-haku-name [this haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
-      "testing2"))
+      {:fi "testing2"}))
 
   (get-koulutus [this koulutus-id]
     ((keyword koulutus-id) koulutus)))
+
+(defrecord MockVirkailijaTarjontaService []
+  VirkailijaTarjontaService
+  (get-forms-in-use [_ _]
+    {"belongs-to-hakukohteet-test-form"
+     {(:oid base-haku)
+      {:haku-oid (:oid base-haku)
+       :haku-name {:fi (:kieli_fi (:nimi base-haku))}}}}))

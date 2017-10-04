@@ -22,6 +22,14 @@
    :children   []
    :params     {}})
 
+(defn question-group []
+  {:fieldClass "questionGroup"
+   :fieldType  "fieldset"
+   :id         (util/component-id)
+   :label      {:fi "" :sv ""}
+   :children   []
+   :params     {}})
+
 (defn dropdown-option
   []
   {:value ""

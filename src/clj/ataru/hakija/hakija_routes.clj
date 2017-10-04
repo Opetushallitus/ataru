@@ -43,18 +43,21 @@
 (defn- attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))
 
-(defn- get-application [secret]
-  (let [application (-> secret
-                        (application-store/get-latest-application-by-secret)
-                        (application-service/remove-person-info-module-from-application-answers)
-                        (attachments-metadata->answers))]
-    (if application
-      (do
-        (info (str "Getting application " (:id application) " with answers"))
-        (response/ok application))
-      (do
-        (info (str "Failed to get application belonging by secret, returning HTTP 404"))
-        (response/not-found {})))))
+(defn- get-application
+  ([secret]
+   (get-application secret nil))
+  ([secret tarjonta-service]
+   (let [application (-> secret
+                         (application-store/get-latest-application-by-secret)
+                         (application-service/flag-uneditable-answers tarjonta-service)
+                         (attachments-metadata->answers))]
+     (if application
+       (do
+         (info (str "Getting application " (:id application) " with answers"))
+         (response/ok application))
+       (do
+         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
+         (response/not-found {}))))))
 
 (defn- get-application-by-virkailija-secret [virkailija-secret]
   (if (virkailija-secret-valid? virkailija-secret)
@@ -169,7 +172,7 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/Application
       (cond (not-blank? secret)
-            (get-application secret)
+            (get-application secret tarjonta-service)
 
             (not-blank? virkailija-secret)
             (get-application-by-virkailija-secret virkailija-secret)
@@ -253,7 +256,7 @@
                                       (render-application))
                                     (api/GET "/" []
                                       (render-application))))
-                                (route/not-found "<h1>Page not found</h1>")))
+                               (route/not-found "<h1>Page not found</h1>")))
                             (wrap-with-logger
                               :debug identity
                               :info (fn [x] (info x))

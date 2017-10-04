@@ -1,5 +1,6 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
+            [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
             [schema.core :as s]))
 
@@ -75,13 +76,7 @@
                                                                            (s/optional-key :description)   LocalizedString
                                                                            (s/optional-key :default-value) (s/maybe s/Bool)
                                                                            (s/optional-key :followups)     [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        :fieldType                                       (apply s/enum ["textField"
-                                                                                        "textArea"
-                                                                                        "dropdown"
-                                                                                        "singleChoice"
-                                                                                        "multipleChoice"
-                                                                                        "attachment"
-                                                                                        "hakukohteet"])
+                        :fieldType                                       (apply s/enum form-fields)
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]})
 
 (s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
@@ -103,7 +98,7 @@
                             #(= "button" (:fieldClass %)) Button
                             :else InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement"])
+(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
@@ -152,7 +147,8 @@
 (s/defschema Hakukohde
   {:oid s/Str
    :haku-oid s/Str
-   :name LocalizedStringOptional})
+   :name LocalizedStringOptional
+   :tarjoaja-name LocalizedStringOptional})
 
 (s/defschema File
   {:key                      s/Str
@@ -172,14 +168,10 @@
 (s/defschema Answer {:key                          s/Str,
                      :value                        (s/cond-pre s/Str
                                                                s/Int
-                                                               [(s/cond-pre s/Str File)])
-                     :fieldType                    (apply s/enum ["textField"
-                                                                  "textArea"
-                                                                  "dropdown"
-                                                                  "multipleChoice"
-                                                                  "singleChoice"
-                                                                  "attachment"
-                                                                  "hakukohteet"])
+                                                               [(s/cond-pre s/Str
+                                                                            File
+                                                                            [(s/cond-pre s/Str s/Int File)])])
+                     :fieldType                    (apply s/enum form-fields)
                      (s/optional-key :cannot-edit) s/Bool
                      (s/optional-key :cannot-view) s/Bool
                      (s/optional-key :label)       (s/maybe (s/cond-pre
@@ -243,13 +235,13 @@
    :notes                          (s/maybe s/Str)})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
-                                         :name              s/Str
+                                         :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
                                          :incomplete        s/Int})
 
 (s/defschema TarjontaHaku {:oid               s/Str
-                           :name              s/Str
+                           :name              LocalizedStringOptional
                            :application-count s/Int
                            :unprocessed       s/Int
                            :incomplete        s/Int
@@ -270,3 +262,10 @@
                                   :user-agent s/Str
                                   :rating     s/Int
                                   :feedback   (s/maybe s/Str)})
+
+(s/defschema PermissionCheckDto {:personOidsForSamePerson [s/Str]
+                                 :organisationOids [s/Str]
+                                 :loggedInUserRoles [s/Str]})
+
+(s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
+                                         (s/optional-key :errorMessage) s/Str})

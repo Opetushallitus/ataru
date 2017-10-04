@@ -4,6 +4,8 @@
     loadInFrame('/hakemus?virkailija-secret=' + virkailijaSecret)
   })
 
+  var newPhoneNumber = Math.floor(Math.random() * 10000000).toString();
+
   describe('Virkailija hakemus edit', function () {
     describe('shows application with secret', function () {
       before(
@@ -15,14 +17,14 @@
         expect(formFields().length).to.equal(30)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
-        expect(invalidSections().find('a').length).to.equal(3)
+        expect(invalidSections().find('a').length).to.equal(2)
         expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(0)
       })
     });
 
     describe('change values and save', function () {
       before(
-        setNthFieldInputValue(6, '12345'),
+        setNthFieldInputValue(6, newPhoneNumber),
         clickElement(function () {
           return submitButton()
         }),
@@ -42,7 +44,7 @@
           "Suomi",
           "***********",
           "test@example.com",
-          "12345",
+          newPhoneNumber,
           "Suomi",
           "Katutie 12 B",
           "40100",

@@ -88,35 +88,44 @@
 (defn- belongs-to-hakukohteet-modal
   [path id selected-hakukohteet]
   (let [search-term (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
-        fetching?   (subscribe [:editor/fetching-active-haut])
-        active-haut (subscribe [:editor/filtered-active-haut id])
+        fetching?   (subscribe [:editor/fetching-haut?])
+        used-by-haku? (subscribe [:editor/used-by-haku?])
+        haut (subscribe [:editor/filtered-haut id])
         on-click (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
         on-change (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
                                      id (.-value (.-target e))]))]
     (fn [path id selected-hakukohteet]
       [:div.belongs-to-hakukohteet-modal
        [:div.belongs-to-hakukohteet-modal__arrow-up]
-       [:div.belongs-to-hakukohteet-modal__box
-        [:div.belongs-to-hakukohteet-modal__input-row
-         [:div.belongs-to-hakukohteet-modal__search-container
-          [:input.belongs-to-hakukohteet-modal__search
-           {:value @search-term
-            :on-change on-change}]]
-         [:button.belongs-to-hakukohteet-modal__hide
-          {:on-click on-click}
-          [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
-        (if @fetching?
-          [:div.belongs-to-hakukohteet-modal__spinner
-           [:i.zmdi.zmdi-spinner.spin]]
-          [:ul.belongs-to-hakukohteet-modal__haku-list
-           (for [[_ haku] @active-haut]
-             ^{:key (:oid haku)}
-             [haku-list-item path id haku selected-hakukohteet])])]])))
+       (if @used-by-haku?
+         [:div.belongs-to-hakukohteet-modal__box
+          [:div.belongs-to-hakukohteet-modal__input-row
+           [:div.belongs-to-hakukohteet-modal__search-container
+            [:input.belongs-to-hakukohteet-modal__search
+             {:value @search-term
+              :on-change on-change}]]
+           [:button.belongs-to-hakukohteet-modal__hide
+            {:on-click on-click}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+          (if @fetching?
+            [:div.belongs-to-hakukohteet-modal__spinner
+             [:i.zmdi.zmdi-spinner.spin]]
+            [:ul.belongs-to-hakukohteet-modal__haku-list
+             (for [[_ haku] @haut]
+               ^{:key (:oid haku)}
+               [haku-list-item path id haku selected-hakukohteet])])]
+         [:div.belongs-to-hakukohteet-modal__box
+          [:div.belongs-to-hakukohteet-modal__no-haku-row
+           [:p.belongs-to-hakukohteet-modal__no-haku
+            "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."]
+           [:button.belongs-to-hakukohteet-modal__hide
+            {:on-click on-click}
+            [:i.zmdi.zmdi-close.zmdi-hc-lg]]]])])))
 
 (defn- belongs-to-hakukohde
   [path oid]
   (let [name (subscribe [:editor/belongs-to-hakukohde-name oid])
-        fetching? (subscribe [:editor/fetching-active-haut])
+        fetching? (subscribe [:editor/fetching-haut?])
         on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
                                     path oid]))]
     (fn [_ _]
@@ -176,7 +185,7 @@
 (defn- text-header
   [label path & {:keys [component-wrapped? draggable] :or {draggable true}}]
   [:div.editor-form__header-wrapper
-   {:draggable     (and draggable (nil? ((set path) :followup)))
+   {:draggable     draggable
     :on-drag-start (on-drag-start path)
     :on-drag-over  prevent-default}
    [:header.editor-form__component-header label]
@@ -431,7 +440,7 @@
         options-koodisto (subscribe [:editor/get-component-value path :koodisto-source])
         value            (subscribe [:editor/get-component-value path])
         animation-effect (fade-out-effect path)]
-    (fn [initial-content path]
+    (fn [initial-content path {:keys [question-group-element?]}]
       (let [languages  @languages
             field-type (:fieldType @value)]
         [:div.editor-form__component-wrapper
@@ -465,7 +474,8 @@
                    ^{:key "options-input"}
                    [:div.editor-form__multi-options-container
                     (map-indexed (fn [idx _]
-                                   (dropdown-option idx path languages :include-followup? (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"])))
+                                   (dropdown-option idx path languages :include-followup? (and (not question-group-element?)
+                                                                                               (some #{field-type} ["dropdown" "multipleChoice" "singleChoice"]))))
                                  (:options @value))]
                    ^{:key "options-input-add"}
                    [:div.editor-form__add-dropdown-item
@@ -503,19 +513,27 @@
                   "editor-form__drag_n_drop_spacer--dashbox-visible"
                   "editor-form__drag_n_drop_spacer--dashbox-hidden")}]])))
 
+;{:children [], :label {:fi "Kysymysryhmä", :sv ""}, :fieldClass "questionGroup", :id "722d4388-8814-4f66-8b0b-7a860a70475e", :params {}, :fieldType "fieldset"}
+
 (defn component-group [content path children]
-  (let [languages        (subscribe [:editor/languages])
-        value            (subscribe [:editor/get-component-value path])
-        animation-effect (fade-out-effect path)]
+  (let [languages         (subscribe [:editor/languages])
+        value             (subscribe [:editor/get-component-value path])
+        animation-effect  (fade-out-effect path)
+        group-header-text (case (:fieldClass content)
+                            "wrapperElement" "Lomakeosio"
+                            "questionGroup" "Kysymysryhmä")
+        header-label-text (case (:fieldClass content)
+                            "wrapperElement" "Osion nimi"
+                            "questionGroup" "Kysymysryhmän otsikko")]
     (fn [content path children]
       (let [languages @languages
             value     @value]
         [:div.editor-form__section_wrapper
          {:class @animation-effect}
          [:div.editor-form__component-wrapper
-          [text-header "Lomakeosio" path :component-wrapped? true]
+          [text-header group-header-text path :component-wrapped? true]
           [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-           [:header.editor-form__component-item-header "Osion nimi"]
+           [:header.editor-form__component-item-header header-label-text]
            (input-fields-with-lang
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
@@ -523,7 +541,11 @@
              :header? true)]]
          children
          [drag-n-drop-spacer (conj path :children (count children))]
-         [toolbar/add-component (conj path :children (count children))]]))))
+         (case (:fieldClass content)
+           "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+           "questionGroup" [toolbar/followup-toolbar path
+                            (fn [generate-fn]
+                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]

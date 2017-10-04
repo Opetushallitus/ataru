@@ -9,6 +9,7 @@
             [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
+            [ataru.applications.permission-check :as permission-check]
             [ataru.applications.application-service :as application-service]
             [ataru.forms.form-store :as form-store]
             [ataru.files.file-store :as file-store]
@@ -17,6 +18,8 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
@@ -46,6 +49,7 @@
             [ring.util.http-response :as response]
             [org.httpkit.client :as http]
             [medley.core :refer [map-kv]]
+            [ataru.cache.cache-service :as cache]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
@@ -129,7 +133,7 @@
 
                  (api/GET "/forms-in-use" {session :session}
                           :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
-                          :return {s/Str {s/Str {:haku-oid s/Str :haku-name s/Str}}}
+                          :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
                           (ok (.get-forms-in-use virkailija-tarjonta-service (-> session :identity :username))))
 
                  (api/GET "/forms/:id" []
@@ -164,7 +168,8 @@
                                           {hakuOid      :- s/Str nil}
                                           {ssn          :- s/Str nil}
                                           {dob          :- s/Str nil}
-                                          {email        :- s/Str nil}]
+                                          {email        :- s/Str nil}
+                                          {name         :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
                            (cond
@@ -185,7 +190,9 @@
                                (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))
 
                              (some? email)
-                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))))
+                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))
+                             (some? name)
+                             (ok (access-controlled-application/get-application-list-by-name name session organization-service))))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
@@ -265,14 +272,14 @@
                      :path-params [cache :- s/Str]
                      :summary "Clear an entire cache map of its entries"
                      {:status 200
-                      :body   (do (.cache-clear cache-service (keyword cache))
+                      :body   (do (cache/cache-clear cache-service (keyword cache))
                                   {})})
                    (api/POST "/remove/:cache/:key" {session :session}
                      :path-params [cache :- s/Str
                                    key :- s/Str]
                      :summary "Remove an entry from cache map"
                      {:status 200
-                      :body   (do (.cache-remove cache-service (keyword cache) key)
+                      :body   (do (cache/cache-remove cache-service (keyword cache) key)
                                   {})}))
 
                  (api/GET "/haut" {session :session}
@@ -295,18 +302,23 @@
 
                  (api/context "/tarjonta" []
                               :tags ["tarjonta-api"]
-                              (api/GET "/haku" []
-                                       :return [ataru-schema/Haku]
-                                       (if-let [haut (tarjonta/all-haut tarjonta-service)]
-                                         (-> haut
+                              (api/GET "/haku/:oid" []
+                                       :path-params [oid :- (api/describe s/Str "Haku OID")]
+                                       :return ataru-schema/Haku
+                                       (if-let [haku (tarjonta/get-haku
+                                                      tarjonta-service
+                                                      oid)]
+                                         (-> (tarjonta-service/parse-haku haku)
                                              ok
                                              (header "Cache-Control" "public, max-age=300"))
                                          (internal-server-error {:error "Internal server error"})))
                               (api/GET "/hakukohde" []
-                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")]
+                                       :query-params [organizationOid :- (api/describe s/Str "Organization OID")
+                                                      hakuOid :- (api/describe s/Str "Haku OID")]
                                        :return [ataru-schema/Hakukohde]
-                                       (if-let [hakukohteet (tarjonta/hakukohteet-by-organization
+                                       (if-let [hakukohteet (tarjonta/hakukohde-search
                                                              tarjonta-service
+                                                             hakuOid
                                                              organizationOid)]
                                          (-> hakukohteet
                                              ok
@@ -336,7 +348,12 @@
                    (api/GET "/applications/:time-period" []
                             :path-params [time-period :- (api/describe (s/enum "month" "week" "day") "One of: month, week, day")]
                             :summary "Get info about number of submitted applications for past time period"
-                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))))
+                            (ok (statistics-service/get-application-stats cache-service (keyword time-period)))))
+
+                 (api/POST "/checkpermission" []
+                           :body [dto ataru-schema/PermissionCheckDto]
+                           :return ataru-schema/PermissionCheckResponseDto
+                           (ok (permission-check/check organization-service dto)))))
 
 (api/defroutes resource-routes
   (api/undocumented

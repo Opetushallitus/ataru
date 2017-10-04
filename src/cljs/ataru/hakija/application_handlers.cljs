@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
+            [ataru.util :as cljc-util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -153,34 +154,87 @@
     (fn [languages]
       (mapv keyword languages))))
 
-(defn- toggle-multiple-choice-option [answer option-value validators answers-by-key]
-  (let [answer (update-in answer [:options option-value] not)
-        value  (->> (:options answer)
-                    (filter (comp true? second))
-                    (map first))
-        valid  (if (not-empty validators)
-                 (every? true? (map #(validator/validate % value answers-by-key nil) validators))
-                 true)]
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
+(defn- vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))
+
+(defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
+  (let [option-path            (if question-group-idx
+                                 [:options question-group-idx option-value]
+                                 [:options option-value])
+        answer                 (cond-> answer
+                                 question-group-idx (update :options (vector-of-length (inc question-group-idx)))
+                                 true (update-in option-path not))
+        parse-option-values    (fn [options]
+                                 (->> options
+                                      (filter (comp true? second))
+                                      (map first)))
+        value                  (if question-group-idx
+                                 (map parse-option-values (:options answer))
+                                 (parse-option-values (:options answer)))
+        values-in-group-valid? (fn [values]
+                                 (every? true? (map #(validator/validate % values answers-by-key nil) validators)))
+        valid                  (or (empty? validators)
+                                   (and question-group-idx
+                                        (every? values-in-group-valid? value))
+                                   (and (not question-group-idx)
+                                        (values-in-group-valid? value)))]
     (merge answer {:value value :valid valid})))
 
-(defn- select-single-choice-button [db [_ button-id value validators]]
+(defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
   (let [button-path   [:application :answers button-id]
-        current-value (:value (get-in db button-path))
-        new-value     (when (not= value current-value) value)]
-    (update-in db button-path
-               (fn [answer]
-                 (let [valid? (if (not-empty validators)
-                                (every? true? (map #(validator/validate % new-value (-> db :application :answers) nil) validators))
-                                true)]
-                   (merge answer {:value new-value
-                                  :valid valid?}))))))
+        current-value (:value (get-in db (if question-group-idx
+                                           (into button-path [:values question-group-idx])
+                                           button-path)))
+        new-value     (when (not= value current-value) value)
+        value-valid?  (fn [value]
+                        (if (not-empty validators)
+                          (every? true? (map #(validator/validate % value (-> db :application :answers) nil) validators))
+                          true))
+        update-value  (fn [value]
+                        (let [valid? (value-valid? new-value)]
+                          (merge value {:value new-value
+                                        :valid valid?})))]
+    (if question-group-idx
+      (letfn [(values-valid? [values]
+                (and (every? value-valid? values)
+                     (or (not (some #{"required"} validators))
+                         (not-empty values))))]
+        (-> db
+            (update-in (conj button-path :values) (vector-of-length (inc question-group-idx)))
+            (update-in (into button-path [:values question-group-idx]) (fnil identity []))
+            (update-in (into button-path [:values question-group-idx 0]) update-value)
+            (update-in button-path (fn [answer]
+                                     (assoc answer :valid (every? values-valid? (:values answer)))))
+            (update-in button-path (fn [answer]
+                                     (assoc answer :value (map (partial map :value) (:values answer)))))))
+      (update-in db button-path update-value))))
 
 (defn- toggle-values
   [answer options answers-by-key]
-  (reduce (fn [answer option-value]
-            (toggle-multiple-choice-option answer option-value nil answers-by-key))
-          answer
-          options))
+  (let [question-group-answer? (and (vector? options)
+                                    (every? vector? options))]
+    (->> options
+         (map-indexed (fn [question-group-idx option-or-options]
+                        [(when question-group-answer? question-group-idx)
+                         option-or-options]))
+         (reduce (fn [answer [question-group-idx option-or-options]]
+                   (if question-group-idx
+                     (reduce #(toggle-multiple-choice-option %1 %2 nil answers-by-key question-group-idx)
+                             answer
+                             option-or-options)
+                     (toggle-multiple-choice-option answer
+                                                    option-or-options
+                                                    nil
+                                                    answers-by-key
+                                                    nil)))
+                 answer))))
 
 (defn- merge-multiple-choice-option-values [value answers-by-key answer]
   (if (string? value)
@@ -194,7 +248,7 @@
   [db]
   (rules/run-rule {:change-country-of-residence nil} db))
 
-(defonce multi-value-field-types #{"multipleChoice" "textField" "attachment" "hakukohteet"})
+(defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
 (defn- supports-multiple-values [field-type]
   (contains? multi-value-field-types field-type))
@@ -220,58 +274,109 @@
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
+(defn- >0? [x]
+  (when (> x 0)
+    x))
+
+(defn set-question-group-row-amounts [db]
+  (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
+    (reduce-kv (fn [db answer-key {:keys [value values]}]
+                 (let [field-descriptor  (->> flattened-form-fields
+                                              (filter (comp (partial = answer-key) keyword :id))
+                                              (first))
+                       question-group-id (-> field-descriptor :params :question-group-id)]
+                   (cond-> db
+                     question-group-id
+                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
+                                                                                                  (-> values count)
+                                                                                                  (-> value count)
+                                                                                                  1)]
+                                                                               (if (> % provided-val)
+                                                                                 %
+                                                                                 provided-val))))))
+               db
+               (-> db :application :answers))))
+
+(defn- merge-single-choice-values [value answer]
+  (if (and (vector? value)
+           (every? vector? value))
+    (merge answer {:valid true
+                   :value value
+                   :values (mapv (partial mapv (fn [value]
+                                                 {:valid true :value value}))
+                                 value)})
+    (merge answer {:valid true :value value})))
+
+(defn- merge-dropdown-values [value answer]
+  (if (and (vector? value)
+           (every? vector? value))
+    (let [values (mapv (partial mapv (fn [value] {:valid true :value value})) value)]
+      (merge answer {:valid true :values values}))
+    (merge answer {:valid true :value value})))
+
 (defn- merge-submitted-answers [db submitted-answers]
   (-> db
       (update-in [:application :answers]
-        (fn [answers]
-          (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
-                    (let [answer-key (keyword key)
-                          value      (cond-> value
-                                             (and (vector? value)
-                                                  (not (supports-multiple-values (:fieldType answer))))
-                                             (first))]
-                      (if (contains? answers answer-key)
-                        (update
-                          (match answer
-                                 {:fieldType "multipleChoice"}
-                                 (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
+                 (fn [answers]
+                   (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
+                             (let [answer-key (keyword key)
+                                   value      (cond-> value
+                                                (and (vector? value)
+                                                     (not (supports-multiple-values (:fieldType answer))))
+                                                (first))]
+                               (if (contains? answers answer-key)
+                                 (let [answer (match answer
+                                                     {:fieldType "multipleChoice"}
+                                                     (update answers answer-key (partial merge-multiple-choice-option-values value (-> db :application :answers)))
 
-                                 {:fieldType "dropdown"}
-                                 (update answers answer-key merge {:valid true :value value})
+                                                     {:fieldType "singleChoice"}
+                                                     (update answers answer-key (partial merge-single-choice-values value))
 
-                                 {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                 (update answers answer-key merge
-                                   {:valid  true
-                                    :values (mapv (fn [value]
-                                                    (cond-> {:valid true :value value}
-                                                      (= field-type "attachment")
-                                                      (assoc :status :ready)))
-                                                  (:value answer))})
+                                                     {:fieldType "dropdown"}
+                                                     (update answers answer-key (partial merge-dropdown-values value))
 
-                                 :else
-                                 (update answers answer-key merge {:valid true :value value}))
-                          answer-key merge {:cannot-edit cannot-edit :cannot-view cannot-view})
-                        answers)))
-                  answers
-                  submitted-answers)))
+                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
+                                                     (letfn [(parse-values [value-or-values]
+                                                               (if (vector? value-or-values)
+                                                                 (mapv parse-values value-or-values)
+                                                                 (cond-> {:valid true :value value-or-values}
+                                                                   (= field-type "attachment")
+                                                                   (assoc :status :ready))))]
+                                                       (update answers answer-key merge
+                                                               {:valid  true
+                                                                :values (parse-values (:value answer))}))
+
+                                                     :else
+                                                     (update answers answer-key merge {:valid true :value value}))]
+                                   (update
+                                     answer
+                                     answer-key
+                                     merge
+                                     {:cannot-edit cannot-edit :cannot-view cannot-view}))
+                                 answers)))
+                           answers
+                           submitted-answers)))
       (populate-hakukohde-answers-if-necessary)
       (set-have-finnish-ssn)
       (set-ssn-field-visibility)
-      (set-country-specific-fields-visibility)))
+      (set-country-specific-fields-visibility)
+      (set-question-group-row-amounts)))
 
 (defn- set-followup-visibility-to-false
   [db]
-  (assoc-in db [:application :ui]
-            (->> (autil/flatten-form-fields (:content (:form db)))
-                 (filter :followup?)
-                 (map (fn [field]
-                        (let [id (keyword (:id field))
-                              has-value? (or (some? (get-in db [:application :answers id :value]))
-                                             (some #(some? (:value %))
-                                                   (get-in db [:application :answers id :values] [])))
-                              has-children? (not (empty? (:children field)))]
-                          {id {:visible? (or has-value? has-children?)}})))
-                 (reduce merge))))
+  (update-in db
+             [:application :ui]
+             merge
+             (->> (autil/flatten-form-fields (:content (:form db)))
+                  (filter :followup?)
+                  (map (fn [field]
+                         (let [id            (keyword (:id field))
+                               has-value?    (or (some? (get-in db [:application :answers id :value]))
+                                                 (some #(some? (:value %))
+                                                       (get-in db [:application :answers id :values] [])))
+                               has-children? (not (empty? (:children field)))]
+                           {id {:visible? (or has-value? has-children?)}})))
+                  (reduce merge))))
 
 (defn- original-values->answers [db]
   (cond-> db
@@ -280,16 +385,26 @@
     (update-in [:application :answers]
                (partial reduce-kv
                         (fn [answers answer-key {:keys [value values] :as answer}]
-                          (let [value  (if values
-                                         (map :value values)
-                                         value)
-                                answer (assoc answer :original-value value)]
+                          (let [answer (assoc answer :original-value (or values value))]
                             (assoc answers answer-key answer)))
                         {}))))
 
+(defn- set-question-group-ids [fields & {:keys [question-group-id]}]
+  (map (fn [{:keys [fieldClass id] :as field}]
+         (cond (= fieldClass "questionGroup")
+               (update field :children set-question-group-ids :question-group-id (keyword id))
+
+               question-group-id
+               (assoc-in field [:params :question-group-id] question-group-id)
+
+               :else
+               field))
+       fields))
+
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
-                 (set-form-language))
+                 (set-form-language)
+                 (update :content set-question-group-ids))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         (-> db
                      (update :form (fn [{:keys [selected-language]}]
@@ -332,7 +447,7 @@
 
 (reg-event-fx
   :application/set-application-field
-  (fn [{db :db} [_ field value]]
+  (fn [{db :db} [_ field value idx]]
     (let [id       (keyword (:id field))
           answers  (get-in db [:application :answers])
           answer   (get answers id)
@@ -353,16 +468,20 @@
                      [[:application/run-rule (:rules field)]])})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor idx value]
-  (let [id (keyword (:id field-descriptor))
-        answers (get-in db [:application :answers])
-        answer (get answers id)
-        valid? (or (:cannot-view answer)
-                   (:cannot-edit answer)
-                   (every? #(validator/validate % value answers field-descriptor)
-                           (:validators field-descriptor)))]
-    (update-in db [:application :answers id :values]
-               (fnil assoc []) idx {:valid valid? :value value})))
+  [db field-descriptor value data-idx question-group-idx]
+  (let [id         (keyword (:id field-descriptor))
+        answers    (get-in db [:application :answers])
+        answer     (get answers id)
+        valid?     (or (:cannot-view answer)
+                       (:cannot-edit answer)
+                       (every? #(validator/validate % value answers field-descriptor)
+                               (:validators field-descriptor)))
+        value-path (cond-> [:application :answers id :values]
+                     question-group-idx (conj question-group-idx))]
+    (-> db
+        (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
+        (update-in value-path
+                   (fnil assoc []) data-idx {:valid valid? :value value}))))
 
 (defn- set-multi-value-changed [db id & [subpath]]
   (let [{:keys [original-value value values]} (-> db :application :answers id)
@@ -380,47 +499,60 @@
 
 (defn- set-repeatable-field-value
   [db field-descriptor]
-  (let [id        (keyword (:id field-descriptor))
-        values    (get-in db [:application :answers id :values])
-        required? (some (partial = "required")
-                        (:validators field-descriptor))
-        valid?    (if (empty? values)
-                    (not required?)
-                    (every? :valid values))]
+  (let [id                   (keyword (:id field-descriptor))
+        values               (get-in db [:application :answers id :values])
+        required?            (some (partial = "required")
+                                   (:validators field-descriptor))
+        multi-value-answers? (every? #(or (vector? %) (list? %)) values)
+        is-empty?            (if multi-value-answers?
+                               (partial every? empty?)
+                               (partial empty?))
+        valid?               (if (is-empty? values)
+                               (not required?)
+                               (every? :valid (flatten values)))
+        value-fn             (if multi-value-answers?
+                               (partial map (partial map :value))
+                               (partial map :value))]
     (-> db
         (update-in [:application :answers id]
                    merge
-                   {:valid valid? :value (mapv :value values)})
-        (set-multi-value-changed id [:value]))))
+                   {:valid valid? :value (value-fn values)})
+        (set-multi-value-changed id
+                                 (when-not (= (:fieldType field-descriptor) "dropdown")
+                                   [:value])))))
 
 (reg-event-db
   :application/set-repeatable-application-field
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor value data-idx question-group-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (defn- remove-repeatable-field-value
-  [db field-descriptor idx]
-  (let [id (keyword (:id field-descriptor))]
+  [db field-descriptor data-idx question-group-idx]
+  (let [id              (keyword (:id field-descriptor))
+        raw-value-path  (cond-> [:application :answers id :values]
+                          question-group-idx (conj question-group-idx))
+        disp-value-path (cond-> [:application :answers id :value]
+                          question-group-idx (conj question-group-idx))]
     (cond-> db
-      (seq (get-in db [:application :answers id :values]))
-      (update-in [:application :answers id :values]
-                 #(autil/remove-nth % idx))
+      (seq (get-in db raw-value-path))
+      (update-in raw-value-path
+                 #(autil/remove-nth % data-idx))
 
       ;; when creating application, we have the value below (and it's important). when editing, we do not.
       ;; consider this a temporary, terrible bandaid solution
-      (seq (get-in db [:application :answers id :value]))
-      (update-in [:application :answers id :value]
-                 #(autil/remove-nth (vec %) idx))
+      (seq (get-in db disp-value-path))
+      (update-in disp-value-path
+                 #(autil/remove-nth (vec %) data-idx))
 
       true
       (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
-  (fn [db [_ field-descriptor idx]]
-    (remove-repeatable-field-value db field-descriptor idx)))
+  (fn [db [_ field-descriptor data-idx question-group-idx]]
+    (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
 (defn default-error-handler [db [_ response]]
   (assoc db :error {:message "Tapahtui virhe " :detail (str response)}))
@@ -486,15 +618,21 @@
 
 (reg-event-db
   :application/toggle-multiple-choice-option
-  (fn [db [_ field-descriptor option]]
-    (let [id (keyword (:id field-descriptor))
-          validators (:validators field-descriptor)]
-      (-> db
-          (update-in [:application :answers id]
-                     (fn [answer]
-                       (toggle-multiple-choice-option answer (:value option) validators (-> db :application :answers))))
-          (set-multi-value-changed id)
-          (set-multiple-choice-followup-visibility field-descriptor option)))))
+  (fn [db [_ field-descriptor option question-group-idx]]
+    (let [id         (keyword (:id field-descriptor))
+          validators (:validators field-descriptor)
+          db      (-> db
+                         (update-in [:application :answers id]
+                                    (fn [answer]
+                                      (toggle-multiple-choice-option answer
+                                                                     (:value option)
+                                                                     validators
+                                                                     (-> db :application :answers)
+                                                                     question-group-idx)))
+                         (set-multi-value-changed id))]
+      (cond-> db
+        (not question-group-idx)
+        (set-multiple-choice-followup-visibility field-descriptor option)))))
 
 (reg-event-db
   :application/select-single-choice-button
@@ -502,19 +640,21 @@
 
 (reg-event-db
   :application/set-adjacent-field-answer
-  (fn [db [_ field-descriptor idx value]]
+  (fn [db [_ field-descriptor idx value question-group-idx]]
     (-> db
-        (set-repeatable-field-values field-descriptor idx value)
+        (set-repeatable-field-values field-descriptor value idx question-group-idx)
         (set-repeatable-field-value field-descriptor))))
 
 (reg-event-db
   :application/add-adjacent-fields
-  (fn [db [_ field-descriptor]]
+  (fn [db [_ field-descriptor question-group-idx]]
     (reduce (fn [db child]
               (let [id (keyword (:id child))
-                    new-idx (count (get-in db [:application :answers id :values]))]
+                    new-idx (count (if question-group-idx
+                                     (get-in db [:application :answers id :values question-group-idx])
+                                     (get-in db [:application :answers id :values])))]
                 (-> db
-                    (set-repeatable-field-values child new-idx "")
+                    (set-repeatable-field-values child "" new-idx question-group-idx)
                     (set-repeatable-field-value child))))
             db
             (:children field-descriptor))))
@@ -522,7 +662,7 @@
 (reg-event-db
   :application/remove-adjacent-field
   (fn [db [_ field-descriptor index]]
-    (reduce #(remove-repeatable-field-value %1 %2 index)
+    (reduce #(remove-repeatable-field-value %1 %2 index nil)
             db
             (:children field-descriptor))))
 
@@ -702,3 +842,31 @@
                           (-> db :form :name))]
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
+
+(defn- collect-required-children
+  [field]
+  (autil/reduce-form-fields (fn [required-children child]
+                              (if (some (partial = "required")
+                                        (:validators child))
+                                (conj required-children child)
+                                required-children))
+                            []
+                            (:children field)))
+
+(defn- required-children
+  [db id]
+  (autil/reduce-form-fields (fn [required-children field]
+                              (if (= id (:id field))
+                                (collect-required-children field)
+                                required-children))
+                            []
+                            (get-in db [:form :content])))
+
+(reg-event-db
+  :application/add-question-group-row
+  (fn add-question-group-row [db [_ field-descriptor-id]]
+    (-> (reduce (fn [db required-child]
+                  (assoc-in db [:application :answers (keyword (:id required-child)) :valid] false))
+                db
+                (required-children db field-descriptor-id))
+        (update-in [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2)))))

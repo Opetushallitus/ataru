@@ -16,7 +16,9 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]
+                                                                       scroll-to-anchor
+                                                                       question-group-answer?
+                                                                       answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
@@ -24,12 +26,18 @@
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-   [:div
+   [:div.application__form-field-value
     (let [answer       ((answer-key field-descriptor) (:answers application))
           values       (:value answer)
-          multi-value? (or (seq? values) (vector? values))]
-      (if multi-value?
-        (into [:ul.application__form-field-list] (for [value values] [:li value]))
+          multi-value? #(or (seq? %) (vector? %))]
+      (if (multi-value? values)
+        (into [:ul.application__form-field-list] (map-indexed (fn [question-group-idx value]
+                                                                (if (multi-value? value)
+                                                                  (map-indexed (fn [value-idx x]
+                                                                                 ^{:key (str "value-" question-group-idx "-" value-idx)}
+                                                                                 [:li x]) value)
+                                                                  [:li value]))
+                                                              values))
         (textual-field-value field-descriptor application :lang lang)))]])
 
 (defn attachment [field-descriptor application lang]
@@ -98,7 +106,19 @@
                                         (eduction editor-side child-answers))
                                       (filter not-empty)
                                       not-empty)]
-      (apply map vector concatenated-answers))))
+      (if (question-group-answer? concatenated-answers)
+        (answers->read-only-format concatenated-answers)
+        (apply map vector concatenated-answers)))))
+
+(defn- fieldset-answer-table [answers]
+  [:tbody
+   (doall
+     (for [[idx values] (map vector (range) answers)]
+       (into
+         [:tr {:key (str idx "-" (apply str values))}]
+         (for [value values]
+           [:td (str value)]))))])
+
 
 (defn fieldset [field-descriptor application lang children]
   (let [fieldset-answers (extract-values children (:answers application))]
@@ -110,13 +130,12 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      [:tbody
-       (doall
-         (for [[idx values] (map vector (range) fieldset-answers)]
-           (into
-             [:tr {:key (str idx "-" (apply str values))}]
-             (for [value values]
-               [:td value]))))]]]))
+      (if (question-group-answer? fieldset-answers)
+        (map-indexed (fn [idx fieldset-answers]
+                       ^{:key (str (:id field-descriptor) "-" idx)}
+                       [fieldset-answer-table fieldset-answers])
+                     fieldset-answers)
+        [fieldset-answer-table fieldset-answers])]]))
 
 (defn- followup-has-answer?
   [followup application]
@@ -150,17 +169,19 @@
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
 (defn- hakukohteet [content application]
-  (let [hakukohteet-by-oid (into {} (map (juxt :value identity) (:options content)))
-        hakukohteet (map hakukohteet-by-oid
-                         (get-in application [:answers :hakukohteet :value] []))]
+  (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
       [:h2 @(subscribe [:application/hakukohteet-header])]
       [scroll-to-anchor content]]
      [:div.application__wrapper-contents
-      (for [hakukohde-oid @(subscribe [:application/hakukohteet])]
+      (for [hakukohde-oid hakukohteet]
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
+
+(defn- person-info-module [content application lang]
+  [:div.application__person-info-wrapper
+   [wrapper content application lang (:children content)]])
 
 (defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
              {application-hakukohteet :hakukohde :as application}
@@ -173,7 +194,8 @@
             (not-empty (clojure.set/intersection (set field-hakukohteet)
                                                  (set application-hakukohteet))))
     (match content
-           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+           {:module "person-info"} [person-info-module content application lang]
+           {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
            {:fieldClass "formField" :exclude-from-answers true} nil

@@ -31,7 +31,7 @@
       {:start (:alkuPvm this-haku-hakuaika)
        :end   (:loppuPvm this-haku-hakuaika)})))
 
-(defn- hakuaika-on [start end]
+(defn hakuaika-on [start end]
   (cond
     (and start end (time-within? (time/now) start end))
     true
@@ -42,6 +42,9 @@
 
     :else
     false))
+
+(defn any-hakuaika-on? [haku]
+  (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
 
 (defn get-hakuaika-info [hakukohde haku]
   (let [{start :start end :end :as interval} (parse-hakuaika hakukohde haku)]

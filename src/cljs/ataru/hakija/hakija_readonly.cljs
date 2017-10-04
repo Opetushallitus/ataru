@@ -16,7 +16,9 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        textual-field-value
-                                                                       scroll-to-anchor]]
+                                                                       scroll-to-anchor
+                                                                       question-group-answer?
+                                                                       answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
 (defn- multiple-choice-with-koodisto [field-descriptor]
@@ -24,21 +26,28 @@
        (contains? field-descriptor :koodisto-source)))
 
 (defn text [field-descriptor application lang]
-  (let [answer ((answer-key field-descriptor) (:answers application))]
+  (let [answer            ((answer-key field-descriptor) (:answers application))
+        multi-values->:li (partial map-indexed (fn [idx value]
+                                                 ^{:key (str "value-" idx)}
+                                                 [:li (str (if (map? value)
+                                                             (:value value)
+                                                             value))]))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      (if (:cannot-view answer)
        [:div "***********"]
        [:div
-        (let [repeatable?  (-> field-descriptor :params :repeatable)
-              values       (if repeatable? (map :value (:values answer)) (:value answer))
-              multi-value? (and
-                             (not (multiple-choice-with-koodisto field-descriptor))
-                             (or (seq? values) (vector? values)))]
-          (cond
-            multi-value? (into [:ul.application__form-field-list] (for [value values] [:li value]))
-            :else (textual-field-value field-descriptor application :lang lang)))])]))
+        (cond (and (vector? (:values answer))
+                   (every? vector? (:values answer)))
+              (into [:ul.application__form-field-list] (map multi-values->:li (:values answer)))
+
+              (and (vector? (:values answer))
+                   (some (comp not vector?) (:values answer)))
+              (into [:ul.application__form-field-list] (multi-values->:li (:values answer)))
+
+              :else
+              (textual-field-value field-descriptor application :lang lang))])]))
 
 (defn attachment [field-descriptor application lang]
   (let [answer-key (keyword (answer-key field-descriptor))
@@ -75,10 +84,30 @@
       (into [:div] (child-fields children application lang @ui)))))
 
 (defn- extract-values [children answers]
-  (->> children
-       (map answer-key)
-       (map #(map :value (:values (get answers %))))
-       (apply map vector)))
+  (let [l?      (fn [x]
+                  (or (list? x)
+                      (vector? x)))
+        answers (->> children
+                     (map answer-key)
+                     (map (comp (fn [values]
+                                  (if (and (l? values)
+                                           (every? l? values))
+                                    (map (partial map :value) values)
+                                    (map :value values)))
+                                :values
+                                (partial get answers))))]
+    (if (question-group-answer? answers)
+      (answers->read-only-format answers)
+      (apply map vector answers))))
+
+(defn- fieldset-answer-table [answers]
+  [:tbody
+   (doall
+     (for [[idx values] (map vector (range) answers)]
+       (into
+         [:tr {:key (str idx "-" (apply str values))}]
+         (for [value values]
+           [:td (str value)]))))])
 
 (defn fieldset [field-descriptor application lang children]
   (let [fieldset-answers (extract-values children (:answers application))]
@@ -90,13 +119,12 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      [:tbody
-       (doall
-         (for [[idx values] (map vector (range) fieldset-answers)]
-           (into
-             [:tr {:key (str idx "-" (apply str values))}]
-             (for [value values]
-               [:td value]))))]]]))
+      (if (question-group-answer? fieldset-answers)
+        (map-indexed (fn [idx fieldset-answers]
+                       ^{:key (str (:id field-descriptor) "-" idx)}
+                       [fieldset-answer-table fieldset-answers])
+                     fieldset-answers)
+        [fieldset-answer-table fieldset-answers])]]))
 
 (defn- followup-has-answer?
   [followup application]
@@ -147,7 +175,7 @@
   [content application lang]
   (match content
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+         {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
          {:fieldClass "formField" :exclude-from-answers true} nil
