@@ -7,6 +7,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
+            [ataru.config.core :refer [config]]
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
@@ -101,17 +102,24 @@
        first
        :value))
 
-(defn- hakuaika-ended-within-10-days
+(defn- hakuaika-ended-within-grace-period
   [_ _]
-  {:on    false
-   :start (- (System/currentTimeMillis) (* 20 24 3600 1000))
-   :end   (- (System/currentTimeMillis) (* 5 24 3600 1000))})
+  (let [edit-grace-period (-> config :public-config :features :attachment-modify-grace-period-days)
+        start             (* 2 edit-grace-period)
+        end               (quot edit-grace-period 2)]
+    (println "grace" edit-grace-period)
+    {:on    false
+     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
-(defn- hakuaika-ended-within-20-days
+(defn- hakuaika-ended-grace-period-passed
   [_ _]
-  {:on    false
-   :start (- (System/currentTimeMillis) (* 30 24 3600 1000))
-   :end   (- (System/currentTimeMillis) (* 20 24 3600 1000))})
+  (let [edit-grace-period (-> config :public-config :features :attachment-modify-grace-period-days)
+        start             (* 2 edit-grace-period)
+        end               (+ edit-grace-period 1)]
+    {:on    false
+     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
 (describe "/application"
   (tags :unit :hakija-routes)
@@ -177,7 +185,7 @@
           (should= 1 (count (filter cannot-view? answers))))))
 
     (it "should get application with hakuaika ended"
-      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-10-days]
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
         (with-get-response "asdfgh" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
@@ -219,9 +227,9 @@
     (describe "PUT application after hakuaika ended"
       (around [spec]
         (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job (fn [_])
-                      hakuaika/get-hakuaika-info hakuaika-ended-within-10-days
-                      application-service/remove-orphan-attachments (fn [_ _])]
+                      application-email/start-email-edit-confirmation-job   (fn [_])
+                      hakuaika/get-hakuaika-info                            hakuaika-ended-within-grace-period
+                      application-service/remove-orphan-attachments         (fn [_ _])]
           (spec)))
 
       (before-all
@@ -241,7 +249,7 @@
             (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"] (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))
 
       (it "should not allow application edit after hakuaika"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-20-days]
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed]
           (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
             (should= 400 (:status resp))
             (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp))))))

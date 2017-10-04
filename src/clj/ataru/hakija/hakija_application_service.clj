@@ -22,6 +22,7 @@
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [ataru.config.core :refer [config]]
    [clj-time.core :as time]
    [clj-time.coerce :refer [from-long]]))
 
@@ -47,12 +48,15 @@
         haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
     (hakuaika/get-hakuaika-info hakukohde haku)))
 
-(defn- after-apply-end-within-10-days?
+(defn- after-apply-end-within-days?
   [apply-end-long]
   (when apply-end-long
     (let [now            (time/now)
           apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days 10))]
+          days-after-end (time/plus apply-end (time/days (-> config
+                                                             :public-config
+                                                             :features
+                                                             (get :attachment-modify-grace-period-days 14))))]
       (and (time/after? now apply-end)
            (time/after? days-after-end now)))))
 
@@ -64,7 +68,7 @@
       true ;; plain form, always allowed to apply
       (let [hakuaikas (get-hakuaikas tarjonta-service application)]
         (or (:on hakuaikas)
-            (after-apply-end-within-10-days? (:end hakuaikas)))))))
+            (after-apply-end-within-days? (:end hakuaikas)))))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -87,7 +91,7 @@
   [answer application tarjonta-service]
   (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
     (and (when hakuaika-end
-           (after-apply-end-within-10-days? hakuaika-end))
+           (after-apply-end-within-days? hakuaika-end))
          (not= (:fieldType answer) "attachment"))))
 
 (defn- dummy-answer-to-unanswered-question
