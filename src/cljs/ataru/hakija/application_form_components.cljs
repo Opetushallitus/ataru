@@ -14,7 +14,8 @@
               required-hint
               textual-field-value
               scroll-to-anchor
-              is-required-field?]]
+              is-required-field?
+              group-spacer]]
             [ataru.hakija.application-validators :as validator]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.util :as util]
@@ -281,18 +282,17 @@
      [:div.application__wrapper-heading.application__question-group-wrapper-heading
       [scroll-to-anchor field-descriptor]]
      (-> [:div.application__wrapper-contents.application__question-group-wrapper-contents]
-         (into (map (fn [idx]
-                      (concat
-                        (map (fn [child]
+         (into (mapcat
+                 (fn [idx]
+                   (conj
+                     (mapv (fn [child]
                              ^{:key (str (:id child) "-" idx)}
                              [render-field child :idx idx])
-                           children)
-                        (when (< idx (dec row-count))
-                          [^{:key (str "spacer-" row-count)}
-                            [:div.application__question-group-spacer]])))
-                    (range row-count)))
+                       children)
+                     (when (< idx (dec row-count))
+                       [group-spacer idx])))
+                 (range row-count)))
          (conj [:div.application__form-field.flex-row.application__add-question-group-row
-
                 [:a {:href     "#"
                      :on-click (fn add-question-group-row [event]
                                  (.preventDefault event)
