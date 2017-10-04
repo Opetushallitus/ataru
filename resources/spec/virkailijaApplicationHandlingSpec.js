@@ -240,6 +240,7 @@
         })()
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
+        .then(wait.until(function() { return applicantNames().length === 2 }))
         .then(function() {
           expectApplicants(['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
         })

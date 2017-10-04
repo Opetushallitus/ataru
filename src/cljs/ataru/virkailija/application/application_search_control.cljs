@@ -63,18 +63,18 @@
      [haku-tab
       :incomplete
       @selected-tab
-      "/lomake-editori/applications/incomplete/"
+      "/lomake-editori/applications/incomplete"
       (str "Käsittelemättä olevat haut" (haku-count-str @incomplete-count))]
      [search-term-tab
       :search-term
       @selected-tab
-      "/lomake-editori/applications/search/"
+      "/lomake-editori/applications/search"
       "Etsi hakijan henkilötiedoilla"
       "Nimi, henkilötunnus, syntymäaika tai sähköpostiosoite"]
      [haku-tab
       :complete
       @selected-tab
-      "/lomake-editori/applications/complete/"
+      "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
 (defn haku-info-link [link-href haku-info]
