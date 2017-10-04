@@ -299,7 +299,6 @@
   margin: 0;
   padding: 20px 0 0 13px;
   border-left: 2px solid #d8d8d8;
-  flex-wrap: unset;
   @media only screen and (max-width: @desktop-content-width) {
     margin-left: 10px;
   }
@@ -743,22 +742,15 @@ textarea.application__form-text-area__size-large {
 
 .application__readonly-adjacent {
   text-align: left;
-  width: 610px;
 }
 
-.application__readonly-adjacent {
-  word-break: break-all;
+.application__readonly-text, .application__readonly-adjacent {
+  max-width: 610px;
 }
 
 th.application__readonly-adjacent--header {
   font-weight: 600;
   min-width: 33%;
-}
-
-.application__readonly-text {
-  -ms-word-wrap: break-word;
-  word-wrap: break-word;
-  max-width: 610px;
 }
 
 .application__form-single-choice-button-outer-container {
