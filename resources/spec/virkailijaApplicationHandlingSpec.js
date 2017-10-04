@@ -152,7 +152,7 @@
       });
 
       function expectApplicants(expected) {
-        expect(_.isEqual(applicantNames(), expected)).to.be.true
+        expect(applicantNames()).to.eql(expected)
       }
 
       function firstApplicantName() { return applicantNames()[0] }
@@ -266,7 +266,7 @@
       }
 
       function expectApplicants(expected) {
-        expect(_.isEqual(applicantNames(), expected)).to.be.true
+        expect(applicantNames()).to.eql(expected)
       }
 
       function applicantNames() {
