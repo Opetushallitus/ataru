@@ -188,16 +188,21 @@
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
   (fn [{:keys [db]} [_ response]]
-    (let [response-map (group-by :key response)
-          db (->> (get-in db [:application :selected-application-and-form :application :answers])
-                  (map (fn [[_ {:keys [fieldType] :as answer}]]
-                         (cond-> answer
-                           (= fieldType "attachment")
-                           (update :value (partial map (fn [file-key]
-                                                         (first (get response-map file-key))))))))
-                  (reduce (fn [db {:keys [key] :as answer}]
-                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
-                          db))]
+    (let [response-map       (group-by :key response)
+          file-key->metadata (fn file-key->metadata [file-key-or-keys]
+                               (if (vector? file-key-or-keys)
+                                 (mapv file-key->metadata file-key-or-keys)
+                                 (first (response-map file-key-or-keys))))
+          set-file-metadata  (fn [answer]
+                               (assoc answer :values (-> answer :value file-key->metadata)))
+          db                 (->> (get-in db [:application :selected-application-and-form :application :answers])
+                                  (map (fn [[_ {:keys [fieldType] :as answer}]]
+                                         (cond-> answer
+                                           (= fieldType "attachment")
+                                           (set-file-metadata))))
+                                  (reduce (fn [db {:keys [key] :as answer}]
+                                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
+                                          db))]
       {:db       db
        :dispatch [:application/start-autosave]})))
 
