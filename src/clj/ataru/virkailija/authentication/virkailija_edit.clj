@@ -1,13 +1,15 @@
 (ns ataru.virkailija.authentication.virkailija-edit
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
-            [ataru.virkailija.user.ldap-client :as ldap])
+            [ataru.virkailija.user.ldap-client :as ldap]
+            [ataru.config.core :refer [config]])
   (:import (java.util UUID)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 (sql/defqueries "sql/virkailija-credentials-queries.sql")
 
-(defn- upsert-virkailija [session]
+(defn upsert-virkailija
+  [session]
   (when-let [virkailija (ldap/get-virkailija-by-username (-> session :identity :username))]
     (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
                                             :first_name (:givenName virkailija)

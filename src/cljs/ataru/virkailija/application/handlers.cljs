@@ -49,15 +49,22 @@
  (fn [db [_ field value]]
    (let [selected-key         (get-in db [:application :selected-key])
          application-list     (get-in db [:application :applications])
+         selected-hakukohde   (get-in db [:application :selected-review-hakukohde])
+         is-hakukohde-review? (some #{field} [:language-requirement
+                                              :degree-requirement
+                                              :eligibility-state
+                                              :selection-state])
          updated-applications (if (some #{field} [:state :score])
                                 (mapv
                                  #(update-review-field-of-selected-application-in-list % selected-key field value)
                                  application-list)
                                 application-list)]
-     (-> db
-         (update-in [:application :review] assoc field value)
-         (assoc-in [:application :applications] updated-applications)
-         (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
+     (if is-hakukohde-review?
+       (assoc-in db [:application :review :hakukohde-reviews (keyword selected-hakukohde) field] value)
+       (-> db
+           (update-in [:application :review] assoc field value)
+           (assoc-in [:application :applications] updated-applications)
+           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
 (reg-event-db
  :application/update-sort
@@ -153,13 +160,15 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review]}]
+(defn update-application-details [db {:keys [form application events review hakukohde-reviews]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
-      (assoc-in [:application :review] review)))
+      (assoc-in [:application :review] review)
+      (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
+      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -183,7 +192,8 @@
                                                                                         :application-key
                                                                                         :notes
                                                                                         :score
-                                                                                        :state])}))})))
+                                                                                        :state
+                                                                                        :hakukohde-reviews])}))})))
 
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
@@ -331,3 +341,8 @@
     {:db db
      :dispatch-n [[:application/navigate path]
                   [:application/dispatch dispatch-vec]]}))
+
+(reg-event-db
+  :application/select-review-hakukohde
+  (fn [db [_ selected-hakukohde-oid]]
+    (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))

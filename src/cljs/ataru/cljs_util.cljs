@@ -165,7 +165,11 @@
 
 (defn get-unselected-review-states
   [unselected-states]
-  (clojure.set/difference (-> application-review-states keys set) (set unselected-states)))
+  (clojure.set/difference
+    (->> application-review-states
+         (map first)
+         set)
+    (set unselected-states)))
 
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))

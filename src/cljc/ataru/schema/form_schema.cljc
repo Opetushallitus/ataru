@@ -209,30 +209,48 @@
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
-(def application-states
-  (apply s/enum (keys review-states/application-review-states)))
+(def application-review-states
+  (apply s/enum
+         (concat
+           (map first review-states/application-hakukohde-selection-states)
+           (map first review-states/application-review-states)
+           (map first review-states/application-hakukohde-eligibility-states)
+           (map first review-states/application-hakukohde-review-states))))
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
-                         "review-state-change"))
+                         "review-state-change"
+                         "hakukohde-review-state-change"))
 
 (s/defschema Event
   {:event-type                        event-types
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-states)
+   (s/optional-key :new-review-state) (s/maybe application-review-states)
+   (s/optional-key :hakukohde)        (s/maybe s/Str)
+   (s/optional-key :review-key)       (s/maybe s/Str)
    :first-name                        (s/maybe s/Str)
    :last-name                         (s/maybe s/Str)})
 
+(def hakukohde-review-types-schema
+  (reduce (fn [acc [kw _ states]]
+            (assoc acc (s/optional-key kw) (apply s/enum (map first states))))
+          {}
+          review-states/hakukohde-review-types))
+
+(s/defschema HakukohdeReviews
+  {s/Keyword hakukohde-review-types-schema})
+
 (s/defschema Review
-  {:id                             s/Int
-   :application-key                s/Str
-   (s/optional-key :modified-time) org.joda.time.DateTime
-   :state                          application-states
-   (s/optional-key :score)         (s/maybe s/Int)
-   :notes                          (s/maybe s/Str)})
+  {:id                                 s/Int
+   :application-key                    s/Str
+   (s/optional-key :modified-time)     org.joda.time.DateTime
+   :state                              application-review-states
+   (s/optional-key :score)             (s/maybe s/Int)
+   :notes                              (s/maybe s/Str)
+   (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional
