@@ -50,9 +50,11 @@
        (some #{fieldType} ["dropdown" "singleChoice" "multipleChoice"])
        (not-empty options)))
 
-(defn textual-field-value [field-descriptor application & {:keys [lang]}]
+(defn textual-field-value [field-descriptor application & {:keys [lang question-group-index]}]
   (let [key                (answer-key field-descriptor)
-        value-or-koodi-uri (:value (get (:answers application) key))
+        value-or-koodi-uri (if question-group-index
+                             (-> application :answers key :value (nth question-group-index))
+                             (-> application :answers key :value))
         is-koodisto?       (contains? field-descriptor :koodisto-source)
         split-values       (cond-> value-or-koodi-uri
                                    (and is-koodisto? (string? value-or-koodi-uri))
@@ -76,6 +78,11 @@
        (map wrap-value split-values)]
 
       :else value-or-koodi-uri)))
+
+(defn group-spacer
+  [index]
+  ^{:key (str "spacer-" index)}
+  [:div.application__question-group-spacer])
 
 (defn scroll-to-anchor
   [field-descriptor]

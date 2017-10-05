@@ -133,6 +133,13 @@
   padding-left: 10px;
 }
 
+.application__read-only-heading-text {
+  color: @text-color;
+  font-size: 15px;
+  display: inline-block;
+  margin: 0 0 20px 0;
+}
+
 .application__wrapper-heading {
   position: absolute;
   width: 245px;
@@ -287,6 +294,63 @@
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
 }
+
+.application__question-group .application__form-field {
+  margin: 0;
+  padding: 20px 0 0 13px;
+  border-left: 2px solid #d8d8d8;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 10px;
+  }
+}
+
+.application__question-group {
+  @media only screen and (min-width: @desktop-content-width) {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.application__question-group:not(.application__read-only) .application__form-field:last-child {
+  margin-left: -6px;
+  padding: 10px 0 0 0;
+  border: none;
+  @media only screen and (max-width: @desktop-content-width) {
+    margin-left: 3px;
+  }
+}
+
+.application__question-group-spacer + .application__form-field,
+.application__question-group-wrapper-contents div.application__form-field:nth-of-type(1) {
+  padding-top: 0;
+}
+
+.application__question-group-wrapper-heading {
+  position: relative;
+  @media only screen and (max-width: @desktop-content-width) {
+    display: none;
+  }
+}
+
+.application__question-group-wrapper-contents {
+  @media only screen and (min-width: @desktop-content-width) {
+    flex-grow: 1;
+  }
+}
+
+.application__question-group-spacer {
+  height: 30px;
+}
+
+.application__add-question-group-row {
+  color: @link-color;
+}
+
+.application__add-question-group-plus-sign {
+  margin-right: 8px;
+  font-size: larger;
+}
+
 .application__form-content-area {
   margin-top: @total-banner-height;
   margin-right: auto;
@@ -676,10 +740,12 @@ textarea.application__form-text-area__size-large {
   z-index: 1;
 }
 
-.application__readonly-adjacent{
+.application__readonly-adjacent {
   text-align: left;
-  width: 100%;
-  font-size: 14px;
+}
+
+.application__readonly-text, .application__readonly-adjacent {
+  max-width: 610px;
 }
 
 th.application__readonly-adjacent--header {
@@ -1048,10 +1114,10 @@ and (max-width: @desktop-content-width) {
 
 .application-feedback-form {
   animation: slide-from-bottom 1s;
-  bottom: 20px;
+  bottom: 0;
   position: fixed;
-  left: 10%;
-  right: 10%;
+  left: 0;
+  right: 0;
   padding: 10px 20px;
   background-color: @white;
   border: 1px solid @separator-color;
@@ -1163,6 +1229,7 @@ and (max-width: @desktop-content-width) {
   display: inline-block;
   margin-bottom: 4px;
   font-size: 24px;
+  font-style: italic;
 }
 
 .application__thanks-icon {
