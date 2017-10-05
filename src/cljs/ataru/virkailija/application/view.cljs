@@ -350,7 +350,7 @@
 
 (defn to-event-row
   [time-str caption]
-  [:div
+  [:div.application-handling__event-row
    [:span.application-handling__event-timestamp time-str]
    [:span.application-handling__event-caption caption]])
 

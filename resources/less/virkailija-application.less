@@ -468,13 +468,18 @@ and (max-width: 1000px) {
   overflow: auto;
 }
 
+.application-handling__event-row {
+  display: flex;
+}
+
 .application-handling__event-timestamp {
-  display: inline-block;
-  width: 125px;
+  flex: 0 0 125px;
   color: #999;
 }
 
 .application-handling__event-caption {
+  flex: 0 0 100%;
+  max-width: 240px;
   font-style: italic;
 }
 
