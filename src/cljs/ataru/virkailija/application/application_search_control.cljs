@@ -40,19 +40,20 @@
         [:i.zmdi.zmdi-close]])]))
 
 (defn search-term-tab [tab-id selected-tab link-url label-text title-text]
-  (let [tab-selected (when (= tab-id selected-tab) "application__search-control-selected-tab-with-input")]
+  (let [tab-selected (= tab-id selected-tab)]
     [:div.application__search-control-tab-selector-wrapper
-     [:a {:href link-url
-          :on-click (fn [event]
-                      (.preventDefault event)
-                      (when-not tab-selected
-                        (dispatch [:application/navigate link-url])))}
-      [:div.application__search-control-tab-selector
-       {:class (when tab-selected "application__search-control-selected-tab-with-input")}
-       (if tab-selected
-         [search-term-field label-text title-text]
-         [:span.application__search-control-tab-text {:title title-text} label-text])]]
-     (when (= tab-id selected-tab)
+     (if tab-selected
+       [:div.application__search-control-tab-selector.application__search-control-selected-tab-with-input
+        [search-term-field label-text title-text]]
+       [:a {:href link-url
+            :on-click (fn [event]
+                        (.preventDefault event)
+                        (dispatch [:application/navigate link-url]))}
+        [:div.application__search-control-tab-selector
+         [:span.application__search-control-tab-text
+          {:title title-text}
+          label-text]]])
+     (when tab-selected
        [:div.application-handling_search-control-tab-arrow-down])]))
 
 (defn tab-row []
