@@ -397,7 +397,8 @@
          {:value (review-field->str review :notes)
           :on-change (partial update-review-field :notes identity)}]]
        [:div.application-handling__review-row
-        [:div.application-handling__review-header "Pisteet"]
+        [:div.application-handling__review-header.application-handling__review-header--points
+         "Pisteet"]
         [:input.application-handling__score-input
          {:type "text"
           :max-length "2"
