@@ -3,7 +3,8 @@
    [re-frame.core :refer [reg-event-fx reg-event-db]]
    [ataru.dob :as dob]
    [ataru.email :as email]
-   [ataru.ssn :as ssn]))
+   [ataru.ssn :as ssn]
+   [ataru.cljs-util :as cljs-util]))
 
 (def show-path [:application :search-control :show])
 
@@ -27,28 +28,40 @@
  (fn [db]
    (assoc-in db show-path nil)))
 
+(reg-event-db
+ :application/set-search-term
+ (fn [db [_ term]]
+   (cljs-util/set-query-param "term" term)
+   (assoc-in db [:application :search-control :search-term :value] term)))
+
+(reg-event-db
+ :application/unset-search-term
+ (fn [db _]
+   (cljs-util/unset-query-param "term")
+   (assoc-in db [:application :search-control :search-term :value] "")))
+
 (reg-event-fx
- :application/search-by-term
- (fn [{:keys [db]} [_ search-term]]
-   (let [search-term-ucase   (clojure.string/upper-case search-term)
-         term-type           (cond (ssn/ssn? search-term-ucase)
-                                   [search-term-ucase :ssn]
+  :application/search-by-term
+  (fn [{:keys [db]} [_ search-term]]
+    (let [search-term-ucase   (clojure.string/upper-case search-term)
+          term-type           (cond (ssn/ssn? search-term-ucase)
+                                    [search-term-ucase :ssn]
 
-                                   (dob/dob? search-term-ucase)
-                                   [search-term-ucase :dob]
+                                    (dob/dob? search-term-ucase)
+                                    [search-term-ucase :dob]
 
-                                   (email/email? search-term)
-                                   [search-term :email]
+                                    (email/email? search-term)
+                                    [search-term :email]
 
-                                   (< 2 (count search-term))
-                                   [search-term :name])
-         show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
-         db-with-search-term (-> db
-                                 (assoc-in [:application :search-control :search-term :value] search-term)
-                                 (assoc-in [:application :search-control :search-term :show-error] show-error))]
-     (if-let [[term type] term-type]
-       {:db db-with-search-term
-        :dispatch-debounced {:timeout 500
-                             :id :application-search
-                             :dispatch [:application/fetch-applications-by-term term type]}}
-       {:db (assoc-in db-with-search-term [:application :applications] nil)}))))
+                                    (< 2 (count search-term))
+                                    [search-term :name])
+          show-error          false ; temporarily disabled for now, no sense in showing it if email is always default
+          db-with-search-term (assoc-in db [:application :search-control :search-term :show-error] show-error)]
+      (if-let [[term type] term-type]
+        {:db db-with-search-term
+         :dispatch-debounced {:timeout 500
+                              :id :application-search
+                              :dispatch [:application/fetch-applications-by-term term type]}
+         :dispatch [:application/set-search-term search-term]}
+        {:db (assoc-in db-with-search-term [:application :applications] nil)
+         :dispatch [:application/set-search-term search-term]}))))

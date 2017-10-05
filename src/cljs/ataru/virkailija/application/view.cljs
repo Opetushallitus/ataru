@@ -365,9 +365,9 @@
         (when (> applications-count 1)
           [:a.application-handling__review-area-main-heading-applications-link
            {:on-click (fn [_]
-                        (dispatch [:application/navigate-with-callback
-                                   "/lomake-editori/applications/search/"
-                                   [:application/search-by-term (or ssn email)]]))}
+                        (dispatch [:application/navigate
+                                   (str "/lomake-editori/applications/search"
+                                        "?term=" (or ssn email))]))}
            (str applications-count " hakemusta")])]
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
