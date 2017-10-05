@@ -290,7 +290,8 @@
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
-         [:div.application-handling__review-header label]
+         [:div.application-handling__review-header
+          {:class (str "application-handling__review-header--" (name kw))} label]
          (if @list-opened
            [:div.application-handling__review-state-list-opened-anchor
             (into [:div.application-handling__review-state-list-opened
