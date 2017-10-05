@@ -104,17 +104,16 @@
 
 (defn- hakuaika-ended-within-grace-period
   [_ _]
-  (let [edit-grace-period (-> config :public-config :features :attachment-modify-grace-period-days)
+  (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
-    (println "grace" edit-grace-period)
     {:on    false
      :start (- (System/currentTimeMillis) (* start 24 3600 1000))
      :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
 (defn- hakuaika-ended-grace-period-passed
   [_ _]
-  (let [edit-grace-period (-> config :public-config :features :attachment-modify-grace-period-days)
+  (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
     {:on    false

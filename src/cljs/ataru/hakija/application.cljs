@@ -198,17 +198,6 @@
   (and (= (:state application) "processing")
        (:is-jatkuva-haku? haku)))
 
-(defn- after-apply-end-within-days?
-  [apply-end-long]
-  (if apply-end-long
-    (let [now            (time/now)
-          apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days (-> js/config
-                                                             js->clj
-                                                             (get "attachment-modify-grace-period-days" 14))))]
-      (time/within? apply-end days-after-end now))
-    false))
-
 (defn applying-possible? [form application]
   (cond
     (:virkailija-secret application)
@@ -218,7 +207,10 @@
         (application-processing-jatkuva-haku? application (:tarjonta form)))
     false
 
-    (after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end))
+    (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
+                                       (-> js/config
+                                           js->clj
+                                           (get "attachment-modify-grace-period-days" 14)))
     true
 
     ;; When applying to hakukohde, hakuaika must be on
