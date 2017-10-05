@@ -234,6 +234,13 @@
   [hakukohteet hakukohde-oid]
   (first (filter #(= (:oid %) hakukohde-oid) hakukohteet)))
 
+(defn- hakukohde-label
+  [hakukohde]
+  (let [name (:name hakukohde)]
+    (or (:fi name)
+        (:sv name)
+        (:en name))))
+
 (defn- opened-hakukohde-list-row
   [selected-hakukohde-oid hakukohteet hakukohde-oid]
   (let [hakukohde (find-hakukohde-by-oid hakukohteet hakukohde-oid)
@@ -244,7 +251,7 @@
       :on-click           (fn [evt]
                             (dispatch [:application/select-review-hakukohde (aget evt "target" "dataset" "hakukohdeOid")]))}
      (when selected? [icon-check])
-     (:name hakukohde)]))
+     (hakukohde-label hakukohde)]))
 
 
 (defn- selected-hakukohde-row
@@ -255,7 +262,7 @@
      {:on-click (if application-has-multiple-hakukohde? on-click identity)
       :class (if (not application-has-multiple-hakukohde?) "application-handling__review-state-row-hakukohde--single-option")}
      [icon-check]
-     (:name selected-hakukohde)]))
+     (hakukohde-label selected-hakukohde)]))
 
 (defn- application-hakukohde-selection
   []
