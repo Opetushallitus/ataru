@@ -178,7 +178,7 @@
     [:div.application-handling__review-area-koulutus-heading
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
-(defn- hakukohteet [content application]
+(defn- hakukohteet [content]
   (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
@@ -214,7 +214,7 @@
            [followups (mapcat :followups options) content application lang]
            {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
            {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
-           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content application])))
+           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
