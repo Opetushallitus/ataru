@@ -321,7 +321,7 @@
   [event]
   (let [[name initials] (name-and-initials event)]
     (when (and name initials)
-      [:span.application-handling__review-state-initials {:data-tooltip name} (str "(" initials ")")])))
+      [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
 
 (defn event-caption [event]
   (case (:event-type event)
