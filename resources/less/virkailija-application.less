@@ -394,6 +394,7 @@ and (max-width: 1000px) {
 .application-handling__review-state-container--bottom-border {
   border-bottom: 1px solid @review-separator-color;
   padding-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .application-handling__review-state-list-opened-anchor {
@@ -409,7 +410,7 @@ and (max-width: 1000px) {
 .application-handling__review-state-row {
   position: relative;
   color: #2a2a2a;
-  padding: 9px 11px 9px 20px;
+  padding: 11px 11px 11px 32px;
   margin-bottom: 3px;
   width: 200px;
   cursor: pointer;
@@ -425,13 +426,20 @@ and (max-width: 1000px) {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
+  padding-left: 25px;
+  margin-bottom: 8px;
   display: inline-block;
 }
 
 .application-handling__review-state-row-hakukohde {
   width: 100%;
-  padding-left: 30px;
+  padding-left: 32px;
   max-width: 500px;
+  display: flex;
+}
+
+.application-handling__review-state-row-selection-label {
+  margin-left: 10px;
 }
 
 .application-handling__review-state-row-hakukohde--single-option {
@@ -455,7 +463,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-selected-icon {
   margin-left: -10px;
-  margin-right: 5px;
+  align-self: center;
+  margin-right: 7px;
 }
 
 .application-handling__review-state-initials {
@@ -471,6 +480,7 @@ and (max-width: 1000px) {
 
 .application-handling__event-row {
   display: flex;
+  margin-bottom: 2px;
 }
 
 .application-handling__event-timestamp {
@@ -497,7 +507,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-inputs {
   margin-bottom: 20px;
-  padding-top: 12px;
+  padding-top: 20px;
   border-top: 1px solid @review-separator-color;
 }
 
