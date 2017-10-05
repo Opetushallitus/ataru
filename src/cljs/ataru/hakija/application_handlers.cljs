@@ -869,4 +869,4 @@
                   (assoc-in db [:application :answers (keyword (:id required-child)) :valid] false))
                 db
                 (required-children db field-descriptor-id))
-        (update-in [:application :ui (keyword field-descriptor-id) :count] (fnil inc 2)))))
+        (update-in [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1)))))
