@@ -40,32 +40,42 @@
                                                               values))
         (textual-field-value field-descriptor application :lang lang)))]])
 
+(defn- attachment-list [attachments]
+  [:div
+   (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+                  (let [text              (str filename " (" (util/size-bytes->str size) ")")
+                        component-key     (str "attachment-div-" idx)
+                        virus-status-elem (case virus-scan-status
+                                            "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
+                                                           " | Tarkastetaan..."]
+                                            "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                      " | Virus löytyi"]
+                                            "done" nil
+                                            "Virhe")]
+                    [:div.application__virkailija-readonly-attachment-text
+                     {:key component-key}
+                     (if (= virus-scan-status "done")
+                       [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+                        text]
+                       text)
+                     virus-status-elem]))
+                attachments)])
+
 (defn attachment [field-descriptor application lang]
   (when (fc/feature-enabled? :attachment)
     (let [answer-key (keyword (answer-key field-descriptor))
-          values     (get-in application [:answers answer-key :value])]
+          values     (get-in application [:answers answer-key :values])]
       [:div.application__form-field
        [:label.application__form-field-label
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-       [:div
-        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                       (let [text              (str filename " (" (util/size-bytes->str size) ")")
-                             component-key     (str "attachment-div-" idx)
-                             virus-status-elem (case virus-scan-status
-                                                 "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                                " | Tarkastetaan..."]
-                                                 "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                           " | Virus löytyi"]
-                                                 "done" nil
-                                                 "Virhe")]
-                         [:div.application__virkailija-readonly-attachment-text
-                          {:key component-key}
-                          (if (= virus-scan-status "done")
-                            [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
-                             text]
-                            text)
-                          virus-status-elem]))
-                     values)]])))
+       (if (and (not (empty? values))
+                (vector? values)
+                (every? vector? values))
+         (map-indexed (fn [question-group-idx attachments]
+                        ^{:key (str (:id field-descriptor) "-" question-group-idx)}
+                        [attachment-list attachments])
+                      values)
+         [attachment-list values])])))
 
 (declare field)
 

@@ -38,7 +38,12 @@
 (defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
   (cond-> answer
     (= fieldType "attachment")
-    (update :value (partial file-store/get-metadata))))
+    (update :value (fn [value]
+                     (if (and (vector? value)
+                              (not (empty? value))
+                              (every? vector? value))
+                       (map file-store/get-metadata value)
+                       (file-store/get-metadata value))))))
 
 (defn- attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))

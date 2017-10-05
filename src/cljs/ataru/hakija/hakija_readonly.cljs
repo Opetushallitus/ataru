@@ -63,6 +63,13 @@
               :else
               (textual-field-value field-descriptor application :lang lang :question-group-index question-group-index))])]))
 
+(defn- attachment-list [attachments]
+  [:div
+   (map (fn [{:keys [value]}]
+          ^{:key (:key value)}
+          [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
+        attachments)])
+
 (defn attachment [field-descriptor application lang question-group-index]
   (let [answer-key (keyword (answer-key field-descriptor))
         values     (if question-group-index
@@ -75,11 +82,7 @@
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     [:div
-      (map (fn [{:keys [value]}]
-             ^{:key (:key value)}
-             [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
-           values)]]))
+     [attachment-list values]]))
 
 (declare field)
 

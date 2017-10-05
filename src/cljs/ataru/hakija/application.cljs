@@ -118,11 +118,13 @@
         fields-to-remove           (clojure.set/intersection fields-to-remove-if-hidden hidden-field-ids)]
     (remove-keys #(contains? fields-to-remove %) answers)))
 
-(defn- value->str [field-map value]
-  (cond (= (:fieldType field-map) "attachment")
-        (get-in value [:value :key])
-
-        :else (or (:value value) "")))
+(defn- value-from-values [field-map value]
+  (let [t (if (= (:fieldType field-map) "attachment")
+            #(-> % :value :key)
+            #(or (:value %) ""))]
+    (if (vector? value)
+      (map t value)
+      (t value))))
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
@@ -142,7 +144,7 @@
       (cond-> {:key       (name ans-key)
                :value     (or
                             value
-                            (map (partial value->str field-map) values))
+                            (map (partial value-from-values field-map) values))
                :fieldType field-type
                :label     label}
               cannot-edit (assoc :cannot-edit true)
