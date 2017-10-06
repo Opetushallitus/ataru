@@ -26,7 +26,8 @@
                                       "Lista, monta valittavissa"
                                       "Infoteksti"
                                       "Liitepyyntö"
-                                      "Vierekkäiset tekstikentät"})
+                                      "Vierekkäiset tekstikentät"
+                                      "Kysymysryhmä"})
 
 (def ^:private followup-toolbar-elements
   (filter
