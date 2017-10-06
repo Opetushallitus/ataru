@@ -38,4 +38,4 @@
 
 ;; States which are not considered terminal, see above for terminal states
 (def incomplete-states
-  (-> application-review-states first set (difference (set complete-states)) vec))
+  (-> (map first application-review-states) set (difference (set complete-states)) vec))
