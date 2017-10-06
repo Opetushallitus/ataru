@@ -27,7 +27,7 @@
    ["uneligible" "Ei hakukelpoinen"]])
 
 (def hakukohde-review-types
-  [[:language-requirement "Kielivaatimus" application-hakukohde-review-states]
+  [[:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
    [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
    [:selection-state "Valinta" application-hakukohde-selection-states]])
