@@ -170,7 +170,7 @@
     (info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
       (info "Updating application state:" old-state "->" application-state)
-      (application-store/save-application-review (merge old-review (:state application-state)) fake-session))
+      (application-store/save-application-review (merge old-review {:state application-state}) fake-session))
     (when (= 1 (count hakukohteet))
       (info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
