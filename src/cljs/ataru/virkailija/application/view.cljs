@@ -328,12 +328,12 @@
     "review-state-change" (get-review-state-label-by-name
                             application-review-states/application-review-states (:new-review-state event))
     "updated-by-applicant" "Hakija muokannut hakemusta"
-    "updated-by-virkailija" [:span
+    "updated-by-virkailija" [:span.application-handling__event-caption
                              "Virkailija "
                              (virkailija-initials-span event)
                              " muokannut hakemusta"]
     "received-from-applicant" "Hakemus vastaanotettu"
-    "hakukohde-review-state-change" [:span
+    "hakukohde-review-state-change" [:span.application-handling__event-caption
                                      (str
                                        (->> application-review-states/hakukohde-review-types
                                             (filter #(= (keyword (:review-key event)) (first %)))
