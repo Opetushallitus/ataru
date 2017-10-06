@@ -6,8 +6,7 @@
     [ataru.config.core :refer [config]]
     [ataru.cache.cache-service :as cache]
     [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService VirkailijaTarjontaService get-hakukohde]]
-    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]
-    [ataru.tarjonta-service.hakuaika :refer [any-hakuaika-on?]]))
+    [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService ->MockVirkailijaTarjontaService]]))
 
 (defn- parse-multi-lang-text
   [text]
@@ -20,16 +19,14 @@
                                    :kieli_sv :sv
                                    :kieli_en :en})))
 
-(defn- haku-name-and-oid-when-hakuaika-on [haku-names-and-oids haku]
-  (if (any-hakuaika-on? haku)
-    (assoc haku-names-and-oids
-           (:oid haku)
-           {:haku-oid  (:oid haku)
-            :haku-name (parse-multi-lang-text (:nimi haku))})
-    haku-names-and-oids))
+(defn- haku-name-and-oid [haku-names-and-oids haku]
+  (assoc haku-names-and-oids
+         (:oid haku)
+         {:haku-oid  (:oid haku)
+          :haku-name (parse-multi-lang-text (:nimi haku))}))
 
 (defn- hakus-by-form-key [hakus {:keys [avain haut]}]
-  (let [haku-info (reduce haku-name-and-oid-when-hakuaika-on {} haut)]
+  (let [haku-info (reduce haku-name-and-oid {} haut)]
     (if (not-empty haku-info)
       (assoc hakus avain haku-info)
       hakus)))
