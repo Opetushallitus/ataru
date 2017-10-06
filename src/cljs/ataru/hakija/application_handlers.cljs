@@ -196,7 +196,7 @@
 (defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
   (let [button-path   [:application :answers button-id]
         current-value (:value (get-in db (if question-group-idx
-                                           (into button-path [:values question-group-idx])
+                                           (into button-path [:values question-group-idx 0])
                                            button-path)))
         new-value     (when (not= value current-value) value)
         value-valid?  (fn [value]
