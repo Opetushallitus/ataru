@@ -209,14 +209,6 @@
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
-(def application-review-states
-  (apply s/enum
-         (concat
-           (map first review-states/application-hakukohde-selection-states)
-           (map first review-states/application-review-states)
-           (map first review-states/application-hakukohde-eligibility-states)
-           (map first review-states/application-hakukohde-review-states))))
-
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
@@ -228,7 +220,7 @@
    :time                              org.joda.time.DateTime
    :id                                s/Int
    :application-key                   s/Str
-   (s/optional-key :new-review-state) (s/maybe application-review-states)
+   (s/optional-key :new-review-state) (s/maybe s/Str)
    (s/optional-key :hakukohde)        (s/maybe s/Str)
    (s/optional-key :review-key)       (s/maybe s/Str)
    :first-name                        (s/maybe s/Str)
@@ -247,7 +239,7 @@
   {:id                                 s/Int
    :application-key                    s/Str
    (s/optional-key :modified-time)     org.joda.time.DateTime
-   :state                              application-review-states
+   :state                              s/Str
    (s/optional-key :score)             (s/maybe s/Int)
    :notes                              (s/maybe s/Str)
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
