@@ -104,10 +104,7 @@
 (defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-      (let [answers       (-> application
-                              :answers
-                              (select-keys (map (comp keyword :id) children)))
-            groups-amount (->> content :id keyword (get @ui) :count)
+      (let [groups-amount (->> content :id keyword (get @ui) :count)
             fields        (group-by :id children)]
         [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
          [:div.application__wrapper-heading.application__question-group-wrapper-heading]
