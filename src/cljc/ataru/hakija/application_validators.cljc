@@ -2,6 +2,7 @@
   (:require [clojure.string]
             [ataru.email :as email]
             [ataru.ssn :as ssn]
+            [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
@@ -93,17 +94,6 @@
     (not (clojure.string/blank? value))
     true))
 
-(defn- main-first-name?
-  [value answers-by-key _]
-  (let [first-names     (clojure.string/split (-> answers-by-key :first-name :value) #"[\s-]+")
-        num-first-names (count first-names)
-        possible-names  (set
-                          (for [sub-length (range 1 (inc num-first-names))
-                                start-idx  (range 0 num-first-names)
-                                :when (<= (+ sub-length start-idx) num-first-names)]
-                            (clojure.string/join " " (subvec first-names start-idx (+ start-idx sub-length)))))]
-    (contains? possible-names (clojure.string/replace value "-" " "))))
-
 (defn- birthplace?
   [value answers-by-key _]
   (if (have-finnish-ssn? answers-by-key)
@@ -147,7 +137,7 @@
                  :postal-office   postal-office?
                  :phone           phone?
                  :past-date       past-date?
-                 :main-first-name main-first-name?
+                 :main-first-name pn/main-first-name?
                  :birthplace      birthplace?
                  :home-town       home-town?
                  :city            city?

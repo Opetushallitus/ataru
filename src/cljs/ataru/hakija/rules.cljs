@@ -2,6 +2,7 @@
   (:require [cljs.core.match :refer-macros [match]]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-validators :as validators]
+            [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (def ^:private no-required-answer {:valid false :value ""})
@@ -186,15 +187,17 @@
 
 (defn- prefill-preferred-first-name
   [db _]
-  (let [answers          (-> db :application :answers)
-        first-names      (-> answers :first-name :value)
-        main-first-name  (-> answers :preferred-name :value)
-        first-first-name (first (clojure.string/split first-names #" "))]
-    (if (and
-          first-first-name
-          (clojure.string/blank? main-first-name))
-      (update-in db [:application :answers :preferred-name] merge {:value first-first-name :valid true})
-      db)))
+  (let [answers        (-> db :application :answers)
+        first-name     (-> answers :first-name :value (clojure.string/split #" ") first)
+        preferred-name (-> answers :preferred-name :value)]
+    (cond
+      (and first-name (clojure.string/blank? preferred-name))
+      (update-in db [:application :answers :preferred-name] merge {:value first-name :valid true})
+
+      (and first-name (not (clojure.string/blank? preferred-name)))
+      (update-in db [:application :answers :preferred-name] merge {:valid (pn/main-first-name? preferred-name answers nil)})
+
+      :else db)))
 
 (defn- change-country-of-residence
   [db _]
