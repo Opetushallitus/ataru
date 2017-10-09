@@ -170,6 +170,16 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- set-multi-value-changed [db id]
+  (let [{:keys [original-value value values]} (-> db :application :answers id)
+        [new-diff original-diff _] (d/diff value original-value)]
+    (update-in db [:application :values-changed?] (fn [values]
+                                                    (let [values (or values #{})]
+                                                      (if (and (empty? new-diff)
+                                                               (empty? original-diff))
+                                                        (disj values id)
+                                                        (conj values id)))))))
+
 (defn- toggle-multiple-choice-option [answer option-value validators answers-by-key question-group-idx]
   (let [option-path            (if question-group-idx
                                  [:options question-group-idx option-value]
@@ -219,8 +229,11 @@
             (update-in button-path (fn [answer]
                                      (assoc answer :valid (every? values-valid? (:values answer)))))
             (update-in button-path (fn [answer]
-                                     (assoc answer :value (map (partial map :value) (:values answer)))))))
-      (update-in db button-path update-value))))
+                                     (assoc answer :value (map (partial map :value) (:values answer)))))
+            (set-multi-value-changed button-id)))
+      (-> db
+          (update-in button-path update-value)
+          (set-multi-value-changed button-id)))))
 
 (defn- toggle-values
   [answer options answers-by-key]
@@ -391,7 +404,10 @@
     (update-in [:application :answers]
                (partial reduce-kv
                         (fn [answers answer-key {:keys [value values] :as answer}]
-                          (let [answer (assoc answer :original-value (or values value))]
+                          (let [answer (assoc answer :original-value
+                                              (or value (if (every? sequential? values)
+                                                          (mapv (partial map :value) values)
+                                                          (mapv :value values))))]
                             (assoc answers answer-key answer)))
                         {}))))
 
@@ -460,15 +476,10 @@
           valid?   (or (:cannot-view answer)
                        (:cannot-edit answer)
                        (every? #(validator/validate % value answers field)
-                               (:validators field)))
-          changed? (not= value (:original-value answer))]
+                               (:validators field)))]
       {:db         (-> db
                        (update-in [:application :answers id] merge {:valid valid? :value value})
-                       (update-in [:application :values-changed?] (fn [values]
-                                                                    (let [values (or values #{})]
-                                                                      (if changed?
-                                                                        (conj values id)
-                                                                        (disj values id))))))
+                       (set-multi-value-changed id))
        :dispatch-n (if (empty? (:rules field))
                      []
                      [[:application/run-rule (:rules field)]])})))
@@ -488,20 +499,6 @@
         (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
         (update-in value-path
                    (fnil assoc []) data-idx {:valid valid? :value value}))))
-
-(defn- set-multi-value-changed [db id & [subpath]]
-  (let [{:keys [original-value value values]} (-> db :application :answers id)
-        new-value (cond->> (or values value)
-                    (vector? subpath)
-                    (map #(get-in % subpath)))
-        [new-diff original-diff _] (d/diff new-value
-                                           original-value)]
-    (update-in db [:application :values-changed?] (fn [values]
-                                                    (let [values (or values #{})]
-                                                      (if (and (empty? new-diff)
-                                                               (empty? original-diff))
-                                                        (disj values id)
-                                                        (conj values id)))))))
 
 (defn- set-repeatable-field-value
   [db field-descriptor]
@@ -523,9 +520,7 @@
         (update-in [:application :answers id]
                    merge
                    {:valid valid? :value (value-fn values)})
-        (set-multi-value-changed id
-                                 (when-not (= (:fieldType field-descriptor) "dropdown")
-                                   [:value])))))
+        (set-multi-value-changed id))))
 
 (reg-event-db
   :application/set-repeatable-application-field
@@ -757,7 +752,7 @@
                      merge
                      {:value response :valid true :status :ready})
           (update-attachment-answer-validity field-descriptor component-id)
-          (set-multi-value-changed (keyword component-id) [:value])))))
+          (set-multi-value-changed (keyword component-id))))))
 
 (defn- rate-limit-error? [response]
   (= (:status response) 429))
@@ -795,7 +790,7 @@
                    (comp vec
                          (partial remove (comp (partial = attachment-key) :key :value))))
         (update-attachment-answer-validity field-descriptor component-id)
-        (set-multi-value-changed (keyword component-id) [:value]))))
+        (set-multi-value-changed (keyword component-id)))))
 
 (reg-event-fx
   :application/remove-attachment
