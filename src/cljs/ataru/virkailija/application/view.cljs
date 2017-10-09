@@ -418,12 +418,14 @@
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating animated fadeIn")}
-     [application-review-state]
-     [application-hakukohde-selection]
-     [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-     [application-review-inputs]
-     [application-modify-link]
-     [application-review-events]]))
+     [:div.application-handling__review-inner-container
+      [:div.application-handling__review-outer-container
+       [application-review-state]
+       [application-hakukohde-selection]
+       [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+       [application-review-inputs]
+       [application-modify-link]
+       [application-review-events]]]]))
 
 (defn floating-application-review-placeholder
   "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
