@@ -38,7 +38,9 @@
 (reg-event-fx
   :application/search-by-term
   (fn [{:keys [db]} [_ search-term]]
-    (let [search-term-ucase   (clojure.string/upper-case search-term)
+    (let [search-term-ucase   (-> search-term
+                                  clojure.string/trim
+                                  clojure.string/upper-case)
           term-type           (cond (ssn/ssn? search-term-ucase)
                                     [search-term-ucase :ssn]
 
