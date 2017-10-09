@@ -196,7 +196,7 @@
 (defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
   (let [button-path   [:application :answers button-id]
         current-value (:value (get-in db (if question-group-idx
-                                           (into button-path [:values question-group-idx])
+                                           (into button-path [:values question-group-idx 0])
                                            button-path)))
         new-value     (when (not= value current-value) value)
         value-valid?  (fn [value]
@@ -877,30 +877,48 @@
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
 
-(defn- collect-required-children
-  [field]
-  (autil/reduce-form-fields (fn [required-children child]
-                              (if (some (partial = "required")
-                                        (:validators child))
-                                (conj required-children child)
-                                required-children))
-                            []
-                            (:children field)))
+(defn- set-empty-value-dispatch
+  [group-idx field-descriptor]
+  (let [id (keyword (:id field-descriptor))]
+    (match field-descriptor
+      {:fieldType (:or "dropdown" "textField" "textArea")}
+      [[:application/set-repeatable-application-field
+        field-descriptor
+        ""
+        0
+        group-idx]]
+      {:fieldType "singleChoice"}
+      (let [d [:application/select-single-choice-button
+               id
+               (:value (first (:options field-descriptor)))
+               (:validators field-descriptor)
+               group-idx]]
+        [d d])
+      {:fieldType "multipleChoice"}
+      (let [d [:application/toggle-multiple-choice-option
+               field-descriptor
+               (first (:options field-descriptor))
+               group-idx]]
+        [d d])
+      {:fieldType "adjacentfieldset"}
+      (mapv (fn [child]
+              [:application/set-adjacent-field-answer child 0 "" group-idx])
+            (:children field-descriptor))
+      {:fieldType (:or "attachment" "infoElement")})))
 
-(defn- required-children
-  [db id]
-  (autil/reduce-form-fields (fn [required-children field]
+(defn- set-empty-value-dispatches
+  [db id group-idx]
+  (autil/reduce-form-fields (fn [dispatches field]
                               (if (= id (:id field))
-                                (collect-required-children field)
-                                required-children))
+                                (mapcat (partial set-empty-value-dispatch group-idx)
+                                        (:children field))
+                                dispatches))
                             []
                             (get-in db [:form :content])))
 
-(reg-event-db
+(reg-event-fx
   :application/add-question-group-row
-  (fn add-question-group-row [db [_ field-descriptor-id]]
-    (-> (reduce (fn [db required-child]
-                  (assoc-in db [:application :answers (keyword (:id required-child)) :valid] false))
-                db
-                (required-children db field-descriptor-id))
-        (update-in [:application :ui (keyword field-descriptor-id) :count] (fnil inc 1)))))
+  (fn add-question-group-row [{db :db} [_ field-descriptor-id]]
+    (let [repeat-count (get-in db [:application :ui (keyword field-descriptor-id) :count] 1)]
+      {:db (assoc-in db [:application :ui (keyword field-descriptor-id) :count] (inc repeat-count))
+       :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
