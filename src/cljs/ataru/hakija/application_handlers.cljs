@@ -634,20 +634,10 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
-(reg-event-fx
- :application/validate-multiple-choice
- (fn [{db :db} [_ field-descriptor values valid-so-far?]]
-   (let [id (keyword (:id field-descriptor))]
-     (if (empty? values)
-       {:db (assoc-in db [:application :answers id :valid] valid-so-far?)}
-       {:validate {:value (first values)
-                   :answers (get-in db [:application :answers])
-                   :field-descriptor field-descriptor
-                   :on-validated (fn [[valid? errors]]
-                                   (dispatch [:application/validate-multiple-choice
-                                              field-descriptor
-                                              (rest values)
-                                              (and valid-so-far? valid?)]))}}))))
+(reg-event-db
+  :application/set-multiple-choice-valid
+  (fn [db [_ field-descriptor valid?]]
+    (assoc-in db [:application :answers (keyword (:id field-descriptor)) :valid] valid?)))
 
 (reg-event-fx
   :application/toggle-multiple-choice-option
@@ -662,15 +652,21 @@
                  (set-multi-value-changed id))]
       (if question-group-idx
         {:db db
-         :dispatch [:application/validate-multiple-choice
-                    field-descriptor
-                    (get-in db [:application :answers id :value])
-                    true]}
+         :validate-every {:values (get-in db [:application :answers id :value])
+                          :answers (get-in db [:application :answers])
+                          :field-descriptor field-descriptor
+                          :on-validated (fn [[valid? errors]]
+                                          (dispatch [:application/set-multiple-choice-valid
+                                                     field-descriptor
+                                                     valid?]))}}
         {:db (set-multiple-choice-followup-visibility db field-descriptor option)
-         :dispatch [:application/validate-multiple-choice
-                    field-descriptor
-                    [(get-in db [:application :answers id :value])]
-                    true]}))))
+         :validate {:value (get-in db [:application :answers id :value])
+                    :answers (get-in db [:application :answers])
+                    :field-descriptor field-descriptor
+                    :on-validated (fn [[valid? errors]]
+                                    (dispatch [:application/set-multiple-choice-valid
+                                               field-descriptor
+                                               valid?]))}}))))
 
 (reg-event-fx
   :application/select-single-choice-button

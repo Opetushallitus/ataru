@@ -48,3 +48,16 @@
        (on-validated [true []])
        (async/take! (all-valid? (validatep value answers field-descriptor))
                     on-validated)))))
+
+(re-frame/reg-fx
+ :validate-every
+ (fn [{:keys [values answers field-descriptor on-validated]}]
+   (let [id (keyword (:id field-descriptor))]
+     (if (or (get-in answers [id :cannot-edit])
+             (get-in answers [id :cannot-view]))
+       (on-validated [true []])
+       (async/take! (all-valid?
+                     (async/merge
+                      (map (fn [value] (validatep value answers field-descriptor))
+                           values)))
+                    on-validated)))))
