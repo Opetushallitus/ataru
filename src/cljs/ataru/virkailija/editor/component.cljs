@@ -211,7 +211,12 @@
      [:br]
      [:span "[linkin teksti](http://linkin osoite)"]
      [:br]
-     [:a {:href "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet" :target "_blank"} "Lisää muotoiluohjeita"]]]])
+     [:a {:href          "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"
+          :target        "_blank"
+          :on-mouse-down (fn [evt]
+                           (let [url (.getAttribute (-> evt .-target) "href")]
+                             (.open js/window url "_blank")))}
+      "Lisää muotoiluohjeita"]]]])
 
 (defn input-field [path lang dispatch-fn {:keys [class value-fn tag]
                                           :or   {tag :input}}]
