@@ -108,7 +108,13 @@
                               :answers
                               (select-keys (map (comp keyword :id) children)))
             groups-amount (->> content :id keyword (get @ui) :count)
-            fields        (group-by :id children)]
+            fields        (->> children
+                               (map (fn [field]
+                                      (merge field
+                                        (select-keys ((keyword (:id field)) answers) [:order-idx]))))
+                               (sort-by :order-idx <)
+                               (group-by :id))]
+        (cljs.pprint/pprint fields)
         [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
          [:div.application__wrapper-heading.application__question-group-wrapper-heading]
          (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
