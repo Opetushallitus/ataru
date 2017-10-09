@@ -13,6 +13,7 @@
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
    ["selection-proposal" "Valintaesitys"]
+   ["reserve" "Varalla"]
    ["selected" "Hyväksytty"]
    ["rejected" "Hylätty"]])
 

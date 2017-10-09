@@ -161,7 +161,7 @@
                                               :evaluating ["evaluating" "incomplete"]
                                               :processed ["processed" "incomplete"]
                                               :inactivated ["inactivated" "incomplete"]
-                                              :not-selected ["processed" "rejected"]
+                                              :not-selected ["processed" "reserve"]
                                               :selection-proposal ["processed" "selection-proposal"]
                                               :selected ["processed" "selected"]
                                               :applicant-has-accepted ["processed" "selected"]
