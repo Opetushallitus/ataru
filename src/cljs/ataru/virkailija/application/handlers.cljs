@@ -136,16 +136,13 @@
 
 (reg-event-fx
   :application/fetch-applications-by-term
-  (fn [{:keys [db]} [_ search-kwd type]]
-    (let [db          (cond-> db
-                        (clojure.string/blank? (get-in db [:application :search-control :search-term :value]))
-                        (assoc-in [:application :search-control :search-term :value] search-kwd))
-          query-param (case type
+  (fn [{:keys [db]} [_ term type]]
+    (let [query-param (case type
                         :ssn "ssn"
                         :dob "dob"
                         :email "email"
                         :name "name")]
-      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" term)))))
 
 (reg-event-db
  :application/review-updated
@@ -272,14 +269,15 @@
       (cond-> {:db db}
         (some? autosave) (assoc :stop-autosave autosave)))))
 
-(reg-event-db
+(reg-event-fx
  :application/clear-applications-haku-and-form-selections
- (fn [db _]
-   (-> db
-       (assoc-in [:editor :selected-form-key] nil)
-       (assoc-in [:application :applications] nil)
-       (assoc-in [:application :search-control :search-term] nil)
-       (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
+ (fn [{db :db} _]
+   (cljs-util/unset-query-param "term")
+   {:db (-> db
+            (assoc-in [:editor :selected-form-key] nil)
+            (assoc-in [:application :applications] nil)
+            (assoc-in [:application :search-control :search-term :value] "")
+            (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))}))
 
 (reg-event-db
  :application/select-form
@@ -334,13 +332,6 @@
   (fn [{:keys [db]} [_ dispatch-vec]]
     {:db       db
      :dispatch dispatch-vec}))
-
-(reg-event-fx
-  :application/navigate-with-callback
-  (fn [{:keys [db]} [_ path dispatch-vec]]
-    {:db db
-     :dispatch-n [[:application/navigate path]
-                  [:application/dispatch dispatch-vec]]}))
 
 (reg-event-db
   :application/select-review-hakukohde
