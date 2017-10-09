@@ -156,8 +156,10 @@
          (for [value values]
            [:td.application__readonly-adjacent-cell (str value)]))))])
 
-(defn fieldset [field-descriptor application lang children]
-  (let [fieldset-answers (extract-values children (:answers application))]
+(defn fieldset [field-descriptor application lang children question-group-idx]
+  (let [fieldset-answers (cond-> (extract-values children (:answers application))
+                           question-group-idx
+                           (nth question-group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
@@ -166,12 +168,7 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      (if (question-group-answer? fieldset-answers)
-        (map-indexed (fn [idx fieldset-answers]
-                       ^{:key (str (:id field-descriptor) "-" idx)}
-                       [fieldset-answer-table fieldset-answers])
-                     fieldset-answers)
-        [fieldset-answer-table fieldset-answers])]]))
+      [fieldset-answer-table fieldset-answers]]]))
 
 (defn- followup-has-answer?
   [followup application]
@@ -225,7 +222,7 @@
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
