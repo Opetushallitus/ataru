@@ -132,7 +132,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection-row.application-handling__filter-state-selected-row {
-  margin-left: 9px;
   color: #06526B;
 }
 
@@ -253,6 +252,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-area {
   display: flex;
+  min-height: 1200px; // floating review bar must be shorter than review area
 }
 
 .application-handling__review {
@@ -265,6 +265,15 @@ and (max-width: 1000px) {
   .application-handling-webkit-scrollbar-mixin;
 }
 
+.application-handling__review-outer-container {
+  padding-right: 5px;
+}
+
+.application-handling__review-inner-container {
+  height: 100%;
+  overflow-y: auto;
+}
+
 .application-handling__floating-application-review-placeholder {
   width: 587px;
   visibility: hidden;
@@ -274,6 +283,8 @@ and (max-width: 1000px) {
   position: fixed;
   top: 43px;
   right: 0px;
+  height: 100%;
+  padding-bottom: 50px;
 }
 
 .application__handling-heading {
@@ -339,12 +350,30 @@ and (max-width: 1000px) {
 .application-handling__review-header {
   color: @text-color;
   .semibold;
-  margin-bottom: 16px;
-  min-width: 120px;
+  margin-bottom: 8px;
+}
+
+.application-handling__review-header--language-requirement,
+.application-handling__review-header--degree-requirement,
+.application-handling__review-header--eligibility-state {
+  font-weight: normal;
+}
+
+.application-handling__review-header--points {
+  align-self: center;
+  margin-bottom: 0;
+}
+
+.application-handling__review-state-container--columnar {
+  flex-flow: column;
 }
 
 .application-handling__review-state-container .application-handling__review-header {
   padding-top: 8px;
+}
+
+.application-handling__review-state-container--columnar .application-handling__review-header {
+  padding-top: 0;
 }
 
 .application-handling__review-row {
@@ -353,12 +382,6 @@ and (max-width: 1000px) {
 
 .application-handling__review-row--nocolumn {
   display: block;
-}
-
-.application-handling__review-sub-header {
-  width: 120px;
-  color: #000;
-  padding-top: 6px;
 }
 
 .application-handling__edit-link {
@@ -374,10 +397,15 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-container {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   display: flex;
+  justify-content: space-between;
+}
+
+.application-handling__review-state-container--bottom-border {
   border-bottom: 1px solid @review-separator-color;
-  min-height: 62px;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .application-handling__review-state-list-opened-anchor {
@@ -385,7 +413,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-list-opened {
-  position: absolute;
   background-color: @very-light-gray;
   border-radius: 3px;
   box-shadow: @modal-shadow;
@@ -394,10 +421,9 @@ and (max-width: 1000px) {
 .application-handling__review-state-row {
   position: relative;
   color: #2a2a2a;
-  padding-top: 9px;
-  padding-bottom: 11px;
-  padding-left: 30px;
+  padding: 11px 11px 11px 32px;
   margin-bottom: 3px;
+  width: 219px;
   cursor: pointer;
   box-shadow: @modal-shadow;
   background: #fff;
@@ -411,10 +437,34 @@ and (max-width: 1000px) {
   color: @text-color;
   border-radius: 3px;
   margin-left: 0;
-  padding-left: 12px;
-  width: 240px;
+  padding-left: 25px;
+  margin-bottom: 8px;
   display: inline-block;
-  text-transform: capitalize;
+}
+
+.application-handling__review-state-row-hakukohde {
+  width: 100%;
+  padding-left: 32px;
+  max-width: 500px;
+  display: flex;
+}
+
+.application-handling__review-state-row-selection-label {
+  margin-left: 10px;
+}
+
+.application-handling__review-state-row-hakukohde--single-option {
+  cursor: default;
+  box-shadow: none;
+  background: #fcfcfc;
+}
+
+.application-handling__review-state-row-hakukohde--single-option:hover {
+  background-color: #fcfcfc;
+}
+
+.application-handling__review-state-selected-row-hakukohde {
+  padding-left: 25px;
 }
 
 .application-handling__review-state-list-opened .application-handling__review-state-row {
@@ -423,30 +473,43 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-selected-icon {
-  margin-left: 2px;
-  margin-right: 5px;
+  margin-left: -10px;
+  align-self: center;
+  margin-right: 7px;
+}
+
+.application-handling__review-state-initials {
+  margin-left: 3px;
+  color: @sg-color-gray-2;
 }
 
 .application-handling__event-list {
   padding-top: 9px;
   max-height: 275px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.application-handling__event-row {
+  display: flex;
+  margin-bottom: 2px;
 }
 
 .application-handling__event-timestamp {
-  display: inline-block;
-  width: 125px;
+  flex: 0 0 125px;
   color: #999;
 }
 
 .application-handling__event-caption {
+  flex: 0 0 100%;
+  max-width: 240px;
   font-style: italic;
 }
 
 .application-handling__review-notes {
   width: 100%;
-  height: 180px;
-  margin: 7px 0;
+  height: 80px;
+  margin-bottom: 7px;
   font-size: 14px;
   padding: 4px 8px;
   color: #1A1919;
@@ -456,11 +519,14 @@ and (max-width: 1000px) {
 
 .application-handling__review-inputs {
   margin-bottom: 20px;
+  padding-top: 20px;
+  border-top: 1px solid @review-separator-color;
 }
 
 .application-handling__score-input {
   font-size: 14px;
   padding: 6px;
+  margin-left: 10px;
   border: 1px solid @section-gray-border;
   border-radius: 2px;
 }
@@ -545,6 +611,23 @@ and (max-width: 1000px) {
   border-top: solid 1px @review-separator-color;
 }
 
+.application__question-group-heading {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 245px;
+}
+
+.application__question-group-repeat {
+  border-left: 2px solid #d8d8d8;
+  margin-left: 245px;
+}
+
+.application__question-group-repeat .application__form-field {
+  margin-left: 10px;
+}
+
 .application__person-info-wrapper .application__wrapper-element--border {
   padding-bottom: 14px;
 }
@@ -593,10 +676,39 @@ th.application__readonly-adjacent--header {
 }
 
 @media print {
-  .top-banner, .application-handling__excel-download-link, .application-handling__review, .close-details-button, .select_application_list {display: none;}
-  .main-container {padding-top: 0;}
-  .application-handling__header, .application-handling__overview {border-bottom: none;}
-  .application-handling__content-wrapper { padding: 0; }
+  .virkailija-raamit {
+    display: none;
+  }
+  .application-handling__overview {
+    display: none;
+  }
+  .top-banner {
+    display: none;
+  }
+  .application-handling__review {
+    display: none;
+  }
+  .application-handling__floating-application-review-placeholder {
+    display: none;
+  }
+  .fixed-top-banner-placeholder {
+    display: none;
+  }
+  .local-dev-logout {
+    display: none;
+  }
+  .close-details-button {
+    display: none;
+  }
+  .application__wrapper-heading {
+    position: relative;
+  }
+  .application-handling__detail-container {
+    padding: 0px;
+  }
+  .application__form-field {
+    margin-left: 0px;
+  }
 }
 
 .application__search-control-tab-row {
@@ -678,6 +790,7 @@ th.application__readonly-adjacent--header {
 .application__search-control-clear-search-term {
   color: @sg-color-gray;
   position: absolute;
+  cursor: pointer;
   right: 15px;
   top: 16px;
   > i { font-weight: bold; }

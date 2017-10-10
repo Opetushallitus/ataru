@@ -54,20 +54,31 @@
      :handler select-editor-form-if-not-deleted))
 
   (defroute #"^/lomake-editori/applications/" []
-    (secretary/dispatch! "/lomake-editori/applications/incomplete/"))
+    (secretary/dispatch! "/lomake-editori/applications/incomplete"))
 
   (defroute #"^/lomake-editori/applications/incomplete/" []
+    (secretary/dispatch! "/lomake-editori/applications/incomplete"))
+
+  (defroute #"^/lomake-editori/applications/incomplete" []
     (common-actions-for-applications-route)
     (dispatch [:application/show-incomplete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/complete/" []
+    (secretary/dispatch! "/lomake-editori/applications/complete"))
+
+  (defroute #"^/lomake-editori/applications/complete" []
     (common-actions-for-applications-route)
     (dispatch [:application/show-complete-haut-list]))
 
   (defroute #"^/lomake-editori/applications/search/" []
+    (secretary/dispatch! "/lomake-editori/applications/search"))
+
+  (defroute #"^/lomake-editori/applications/search" [_ params]
     (dispatch [:set-active-panel :application])
-    (dispatch [:application/clear-applications-haku-and-form-selections])
-    (dispatch [:application/show-search-term]))
+    (dispatch [:application/show-search-term])
+    (if-let [term (:term (:query-params params))]
+      (dispatch [:application/search-by-term term])
+      (dispatch [:application/clear-applications-haku-and-form-selections])))
 
   (defroute #"^/lomake-editori/applications/hakukohde/(.*)" [hakukohde-oid]
     (common-actions-for-applications-route)

@@ -57,7 +57,7 @@
 (def application-for-hakukohde {:id             3424
                                 :key            "application_3424_key"
                                 :created-time   (c/date-time 2016 6 15 12 34 56)
-                                :state          "rejected"
+                                :state          "processing"
                                 :form           321
                                 :name           "Form with hakukohde and haku"
                                 :lang           "fi"

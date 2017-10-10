@@ -3,15 +3,12 @@
             [clojure.java.shell :refer [sh]]
             [environ.core :refer [env]]
             [speclj.core :refer :all]
-            [ataru.db.db :as db]
             [ataru.config.core :refer [config]]
             [com.stuartsierra.component :as component]
-            [ataru.db.migrations :as migrations]
             [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
             [ataru.hakija.application-email-confirmation :as application-email])
   (:import (java.util.concurrent TimeUnit)))
 

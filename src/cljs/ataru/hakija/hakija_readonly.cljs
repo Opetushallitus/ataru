@@ -104,8 +104,7 @@
 (defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-      (let [groups-amount (->> content :id keyword (get @ui) :count)
-            fields        (group-by :id children)]
+      (let [groups-amount (->> content :id keyword (get @ui) :count)]
         [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
          [:div.application__wrapper-heading.application__question-group-wrapper-heading]
          (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
@@ -114,10 +113,10 @@
                  (fn [group-index]
                    (conj
                      (mapv
-                       (fn [[id [field-descriptor]]]
-                         ^{:key (str id "-" group-index)}
-                         [field field-descriptor application lang group-index])
-                       fields)
+                       (fn [child]
+                         ^{:key (str (:id child) "-" group-index)}
+                         [field child application lang group-index])
+                       children)
                      (when (< group-index (dec groups-amount))
                        [group-spacer group-index])))
                  (range groups-amount)))]))))

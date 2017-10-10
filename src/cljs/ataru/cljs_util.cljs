@@ -158,14 +158,32 @@
   (let [url (-> (.. js/window -location -href)
                 (url/url)
                 (update-query-params params)
-                (str)
-                (clojure.string/split #"/")
-                (last))]
+                (str))]
     (.replaceState js/history nil nil url)))
+
+(defn set-query-param
+  [key value]
+  (let [new-url (-> (.. js/window -location -href)
+                    (url/url)
+                    (assoc-in [:query key] value)
+                    str)]
+    (.replaceState js/history nil nil new-url)))
+
+(defn unset-query-param
+  [key]
+  (let [new-url (-> (.. js/window -location -href)
+                    (url/url)
+                    (update :query dissoc key)
+                    str)]
+    (.replaceState js/history nil nil new-url)))
 
 (defn get-unselected-review-states
   [unselected-states]
-  (clojure.set/difference (-> application-review-states keys set) (set unselected-states)))
+  (clojure.set/difference
+    (->> application-review-states
+         (map first)
+         set)
+    (set unselected-states)))
 
 (defn include-csrf-header? [method]
   (contains? #{:post :put :delete} method))
