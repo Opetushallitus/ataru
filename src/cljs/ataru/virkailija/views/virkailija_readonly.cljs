@@ -228,7 +228,8 @@
                                                  (set application-hakukohteet))))
     (match content
            {:module "person-info"} [person-info-module content application lang]
-           {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [question-group content application lang children]
+           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+           {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
            {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
            {:fieldClass "formField" :exclude-from-answers true} nil
