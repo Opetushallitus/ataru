@@ -86,7 +86,8 @@
            :hakuaika-dates   (hakuaika/get-hakuaika-info
                               (first hakukohteet)
                               haku)                         ; TODO take into account each hakukohde time?
-           :is-jatkuva-haku? (jatkuva-haku? haku)}}))))
+           :is-jatkuva-haku? (jatkuva-haku? haku)
+           :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service haku-oid]
    (when haku-oid
      (parse-tarjonta-info-by-haku tarjonta-service haku-oid (or (->> haku-oid

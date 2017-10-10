@@ -7,22 +7,37 @@
             [ataru.fixtures.first-name :as first-name]
             [ataru.fixtures.hakukohde :as hakukohde]
             [ataru.hakija.application-validators :as validator]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all]
+            [clojure.core.async :as async]))
+
+(defn- validate!
+  ([validator value answers-by-key field-descriptor]
+   (validate! (fn [haku-oid identifier] (async/go false))
+              validator
+              value
+              answers-by-key
+              field-descriptor))
+  ([has-applied validator value answers-by-key field-descriptor]
+   (first (async/<!! (validator/validate has-applied
+                                         validator
+                                         value
+                                         answers-by-key
+                                         field-descriptor)))))
 
 (describe "required validator"
   (tags :unit)
 
   (it "should not allow nil"
-    (should-not (validator/validate :required nil {} nil)))
+    (should-not (validate! :required nil {} nil)))
 
   (it "should not allow empty string"
-    (should-not (validator/validate :required "" {} nil)))
+    (should-not (validate! :required "" {} nil)))
 
   (it "should not allow string with only whitespace"
-    (should-not (validator/validate :required " " {} nil)))
+    (should-not (validate! :required " " {} nil)))
 
   (it "should allow string with at least one character"
-    (should (validator/validate :required "a" {} nil))))
+    (should (validate! :required "a" {} nil))))
 
 (describe "ssn validator"
   (tags :unit)
@@ -31,18 +46,18 @@
          (map (fn [century-char]
                 (let [ssn (str (:start ssn) century-char (:end ssn))]
                   (it (str "should validate " ssn)
-                    (should (validator/validate :ssn ssn {} nil)))))
+                    (should (validate! :ssn ssn {} nil)))))
               ["A"]))
        ssn/ssn-list)
 
   (it "should fail to validate nil"
-    (should-not (validator/validate :ssn nil {} nil)))
+    (should-not (validate! :ssn nil {} nil)))
 
   (it "should fail to validate empty string"
-      (should-not (validator/validate :ssn "" {} nil)))
+      (should-not (validate! :ssn "" {} nil)))
 
   (it "should fail to validate SSN with century - / + and year between 2000-current_year"
-      (let [fun (partial validator/validate :ssn)]
+      (let [fun (partial validate! :ssn)]
         (doseq [experiment ["020202-0202"
                             "020202+0202"
                             "020200+020J"]]
@@ -50,7 +65,15 @@
         (doseq [experiment ["020202A0202"
                             "020202A0202"
                             "020200A020J"]]
-          (should (fun experiment {} nil))))))
+          (should (fun experiment {} nil)))))
+
+  (it "should fail to validate SSN if cannot submit multiple applications and has applied"
+      (should-not (validate! (fn [_ _] (async/go true))
+                             :ssn
+                             "020202A0202"
+                             {}
+                             {:params {:can-submit-multiple-applications false
+                                       :haku-oid "dummy-haku-oid"}}))))
 
 (describe "email validator"
   (tags :unit)
@@ -58,10 +81,18 @@
   (mapv (fn [email]
           (let [expected (get email/email-list email)
                 pred     (if expected true? false?)
-                actual   (validator/validate :email email {} nil)]
+                actual   (validate! :email email {} nil)]
             (it (str "should validate " email)
               (should (pred actual)))))
-        (keys email/email-list)))
+        (keys email/email-list))
+
+  (it "should fail to validate email if cannot submit multiple applications and has applied"
+      (should-not (validate! (fn [_ _] (async/go true))
+                             :email
+                             "test@example.com"
+                             {}
+                             {:params {:can-submit-multiple-applications false
+                                       :haku-oid "dummy-haku-oid"}}))))
 
 (describe "postal code validation"
   (tags :unit)
@@ -69,7 +100,7 @@
   (mapv (fn [postal-code]
           (let [expected (get postal-code/postal-code-list postal-code)
                 pred     (if expected true? false?)
-                actual   (validator/validate "postal-code" postal-code {:country-of-residence {:value "246"}} nil)]
+                actual   (validate! "postal-code" postal-code {:country-of-residence {:value "246"}} nil)]
             (it (str "should validate " postal-code expected)
               (should (pred actual)))))
     (keys postal-code/postal-code-list)))
@@ -80,7 +111,7 @@
   (mapv (fn [number]
           (let [expected (get phone/phone-list number)
                 pred     (if expected true? false?)
-                actual   (validator/validate :phone number {} nil)]
+                actual   (validate! :phone number {} nil)]
             (it (str "should validate " number)
               (should (pred actual)))))
         (keys phone/phone-list)))
@@ -90,7 +121,7 @@
   (doall
     (for [[input expected] date/date-list]
       (it (str "should validate past-date " input " to " expected)
-          (should= expected (validator/validate :past-date input {} nil))))))
+          (should= expected (validate! :past-date input {} nil))))))
 
 (describe "main first name validation"
   (tags :unit)
@@ -98,11 +129,11 @@
   (doall
     (for [[first main expected] first-name/first-name-list]
       (it (str "should validate first-name " first " with main name " main " as " expected)
-          (should= expected (validator/validate :main-first-name main {:first-name {:value first}} nil))))))
+          (should= expected (validate! :main-first-name main {:first-name {:value first}} nil))))))
 
 (describe "hakukohde validation"
           (tags :unit)
           (doall
             (for [[answer field expected] hakukohde/hakukohteet]
               (it (str "should validate hakukohteet " answer " with field " field " as " expected)
-                  (should= expected (validator/validate :hakukohteet answer nil field))))))
+                  (should= expected (validate! :hakukohteet answer nil field))))))

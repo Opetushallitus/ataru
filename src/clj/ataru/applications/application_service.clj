@@ -8,6 +8,7 @@
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.applications.excel-export :as excel]
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
+    [ataru.hakija.hakija-form-service :as hakija-form-service]
     [taoensso.timbre :refer [spy debug]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.virkailija.user.ldap-client :as ldap]
@@ -86,12 +87,13 @@
   [application-key session organization-service tarjonta-service]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
-                           tarjonta-service
-                           (:haku bare-application)
-                           (:hakukohde bare-application))
-        form             (populate-hakukohde-answer-options
-                           (form-store/fetch-by-id (:form bare-application))
-                           tarjonta-info)
+                          tarjonta-service
+                          (:haku bare-application)
+                          (:hakukohde bare-application))
+        form             (-> (:form bare-application)
+                             form-store/fetch-by-id
+                             (populate-hakukohde-answer-options tarjonta-info)
+                             (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application       (merge application tarjonta-info)
