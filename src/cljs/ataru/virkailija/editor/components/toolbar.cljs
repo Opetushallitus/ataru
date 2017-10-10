@@ -13,20 +13,22 @@
      ["Lista, monta valittavissa" component/multiple-choice]
      ["Tekstikenttä" component/text-field]
      ["Tekstialue" component/text-area]
-     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
-     ["Kysymysryhmä" component/question-group] ;Will be enabled when feature is ready
-     ]
+     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
+    (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])))
 
-(def followup-toolbar-element-names #{"Tekstikenttä"
-                                      "Tekstialue"
-                                      "Pudotusvalikko"
-                                      "Painikkeet, yksi valittavissa"
-                                      "Lista, monta valittavissa"
-                                      "Infoteksti"
-                                      "Liitepyyntö"
-                                      "Vierekkäiset tekstikentät"})
+(def followup-toolbar-element-names
+  (cond-> #{"Tekstikenttä"
+            "Tekstialue"
+            "Pudotusvalikko"
+            "Painikkeet, yksi valittavissa"
+            "Lista, monta valittavissa"
+            "Infoteksti"
+            "Liitepyyntö"
+            "Vierekkäiset tekstikentät"}
+    (fc/feature-enabled? :question-group)
+    (conj "Kysymysryhmä")))
 
 (def ^:private followup-toolbar-elements
   (filter

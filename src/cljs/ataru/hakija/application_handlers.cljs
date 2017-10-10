@@ -603,7 +603,8 @@
   [db field-descriptor visible?]
   (let [id (keyword (:id field-descriptor))
         db (assoc-in db [:application :ui id :visible?] visible?)]
-    (if (= "adjacentfieldset" (:fieldType field-descriptor))
+    (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
+            (= (:fieldClass field-descriptor) "questionGroup"))
       (reduce #(set-field-visibility %1 %2 visible?)
               db
               (:children field-descriptor))
@@ -899,7 +900,10 @@
       (mapv (fn [child]
               [:application/set-adjacent-field-answer child 0 "" group-idx])
             (:children field-descriptor))
-      {:fieldType (:or "attachment" "infoElement")})))
+      {:fieldType "attachment"}
+      []
+      {:fieldClass "infoElement"}
+      [])))
 
 (defn- set-empty-value-dispatches
   [db id group-idx]
