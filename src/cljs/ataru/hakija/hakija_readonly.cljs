@@ -107,14 +107,7 @@
       (let [answers       (-> application
                               :answers
                               (select-keys (map (comp keyword :id) children)))
-            groups-amount (->> content :id keyword (get @ui) :count)
-            fields        (->> children
-                               (map (fn [field]
-                                      (merge field
-                                        (select-keys ((keyword (:id field)) answers) [:order-idx]))))
-                               (sort-by :order-idx <)
-                               (group-by :id))]
-        (cljs.pprint/pprint fields)
+            groups-amount (->> content :id keyword (get @ui) :count)]
         [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
          [:div.application__wrapper-heading.application__question-group-wrapper-heading]
          (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
@@ -123,10 +116,10 @@
                  (fn [group-index]
                    (conj
                      (mapv
-                       (fn [[id [field-descriptor]]]
-                         ^{:key (str id "-" group-index)}
-                         [field field-descriptor application lang group-index])
-                       fields)
+                       (fn [child]
+                         ^{:key (str (:id child) "-" group-index)}
+                         [field child application lang group-index])
+                       children)
                      (when (< group-index (dec groups-amount))
                        [group-spacer group-index])))
                  (range groups-amount)))]))))
