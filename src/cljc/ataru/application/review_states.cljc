@@ -33,8 +33,7 @@
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
    [:selection-state "Valinta" application-hakukohde-selection-states]])
 
-;; States that are - at least for the time being - considered terminal. They have been handled
-;; and might be left at this state forever
+; States where applications are considered "complete" in the application handling UI
 (def complete-states ["processed" "inactivated"])
 
 ;; States which are not considered terminal, see above for terminal states

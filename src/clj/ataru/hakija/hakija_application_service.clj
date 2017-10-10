@@ -62,13 +62,9 @@
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
 
-(defn- in-complete-state? [application-key]
-  (let [state (:state (application-store/get-application-review application-key))]
-    (boolean (some #{state} complete-states))))
-
 (defn processing-in-jatkuva-haku? [application-key tarjonta-info]
   (let [state (:state (application-store/get-application-review application-key))]
-    (and (= state "processing")
+    (and (not= state "unprocessed")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
 (defn- get-hakuaika-end
@@ -221,8 +217,7 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (or (in-complete-state? (:key latest-application))
-               (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
+           (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info))
       not-allowed-reply
 
       (not (:passed? validation-result))
