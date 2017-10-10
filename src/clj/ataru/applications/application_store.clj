@@ -46,8 +46,7 @@
                                   (filter #(not-empty (:value %))))
         secret               (:secret application)
         application-to-store {:form_id        (:form application)
-                              :key            (or (:key application)
-                                                  (str (java.util.UUID/randomUUID)))
+                              :key            (:key application)
                               :lang           (:lang application)
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
@@ -59,7 +58,9 @@
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))
                               :person_oid     (:person-oid application)}
-        application          (yesql-add-application-query<! application-to-store connection)]
+        application          (if (contains? application :key)
+                               (yesql-add-application-version<! application-to-store connection)
+                               (yesql-add-application<! application-to-store connection))]
     (unwrap-application application)))
 
 (def ^:private email-pred (comp (partial = "email") :key))
