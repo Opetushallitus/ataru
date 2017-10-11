@@ -317,24 +317,14 @@
               (:children followup))
       db)))
 
-(defn dropdown-followups [lang value field-descriptor]
-  (let [prev (r/atom (:value @value))
-        resolve-followups (partial util/resolve-followups (:options field-descriptor))]
-    (r/create-class
-      {:component-did-update (fn []
-                               (let [previous @prev]
-                                 (when-not (= previous (reset! prev (:value @value)))
-                                   (let [previous-followups (resolve-followups previous)
-                                         current-followups  (resolve-followups (:value @value))]
-                                     (dispatch [:state-update
-                                                (fn [db]
-                                                  (let [reduced (reduce #(toggle-followup-visibility %1 %2 false) db previous-followups)]
-                                                    (reduce #(toggle-followup-visibility %1 %2 true) reduced current-followups)))])))))
-       :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followups (seq (resolve-followups (:value @value)))]
-                                 (into [:div.application__form-dropdown-followups.animated.fadeIn]
-                                   (for [followup followups]
-                                     [render-field followup]))))})))
+(defn- dropdown-followups [field-descriptor value]
+  (when-let [followups (seq (util/resolve-followups
+                             (:options field-descriptor)
+                             value))]
+    [:div.application__form-dropdown-followups.animated.fadeIn
+     (for [followup followups]
+       ^{:key (:id followup)}
+       [render-field followup])]))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
@@ -350,9 +340,11 @@
         value-path   (cond-> [:application :answers (answer-key field-descriptor)]
                        idx (concat [:values idx 0]))
         value        (subscribe [:state-query value-path])
-        on-change    (if idx
-                       (partial multi-value-field-change field-descriptor 0 idx)
-                       (partial textual-field-change field-descriptor))
+        on-change    (fn [e]
+                       (dispatch [:application/dropdown-change
+                                  field-descriptor
+                                  (.-value (.-target e))
+                                  idx]))
         lang         @lang
         default-lang @default-lang]
     [div-kwd
@@ -384,7 +376,7 @@
              [:option {:value option-value} label]))
          (:options field-descriptor)))]]
      (when-not idx
-       [dropdown-followups lang value field-descriptor])]))
+       (dropdown-followups field-descriptor (:value @value)))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container

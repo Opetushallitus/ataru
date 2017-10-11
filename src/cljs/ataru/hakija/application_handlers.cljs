@@ -600,12 +600,12 @@
                    merge {:value "" :valid false}))))
 
 (defn- set-field-visibility
-  [db field-descriptor visible?]
+  [visible? db field-descriptor]
   (let [id (keyword (:id field-descriptor))
         db (assoc-in db [:application :ui id :visible?] visible?)]
     (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
             (= (:fieldClass field-descriptor) "questionGroup"))
-      (reduce #(set-field-visibility %1 %2 visible?)
+      (reduce (partial set-field-visibility visible?)
               db
               (:children field-descriptor))
       db)))
@@ -614,7 +614,7 @@
   [db field-descriptor option]
   (let [id (keyword (:id field-descriptor))
         selected? (get-in db [:application :answers id :options (:value option)])]
-    (reduce #(set-field-visibility %1 %2 selected?)
+    (reduce (partial set-field-visibility selected?)
             db
             (:followups option))))
 
@@ -921,3 +921,16 @@
     (let [repeat-count (get-in db [:application :ui (keyword field-descriptor-id) :count] 1)]
       {:db (assoc-in db [:application :ui (keyword field-descriptor-id) :count] (inc repeat-count))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
+
+(reg-event-fx
+  :application/dropdown-change
+  (fn [{db :db} [_ field-descriptor value group-idx]]
+    {:db (reduce (fn [db option]
+                   (reduce (partial set-field-visibility (= value (:value option)))
+                           db
+                           (:followups option)))
+                 db
+                 (:options field-descriptor))
+     :dispatch (if (some? group-idx)
+                 [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
+                 [:application/set-application-field field-descriptor value])}))
