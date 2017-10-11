@@ -77,23 +77,29 @@
       [readonly-view/readonly-fields form @application])))
 
 (defn render-fields [form]
-  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])
+        editing?      (subscribe [:state-query [:application :editing?]])
+        can-apply?    (subscribe [:application/can-apply?])]
     (fn [form]
-      (if (= :submitted @submit-status)
+      (if (or (= :submitted @submit-status)
+              (and
+                editing?
+                (not can-apply?)))
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form                  (subscribe [:state-query [:form]])
-        can-apply?            (subscribe [:application/can-apply?])]
+  (let [form       (subscribe [:state-query [:form]])
+        can-apply? (subscribe [:application/can-apply?])
+        editing?   (subscribe [:state-query [:application :editing?]])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
 
-       (when @can-apply?
+       (when (or @can-apply? @editing?)
          ^{:key "form-fields"}
          [render-fields @form])])))
 
