@@ -170,6 +170,34 @@
     (fn [languages]
       (mapv keyword languages))))
 
+(defn- set-field-visibility
+  [visible? db field-descriptor]
+  (let [id (keyword (:id field-descriptor))
+        db (assoc-in db [:application :ui id :visible?] visible?)]
+    (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
+            (= (:fieldClass field-descriptor) "questionGroup"))
+      (reduce (partial set-field-visibility visible?)
+              db
+              (:children field-descriptor))
+      db)))
+
+(defn- set-single-choice-followup-visibility
+  [db field-descriptor value]
+  (reduce (fn [db option]
+            (reduce (partial set-field-visibility (= value (:value option)))
+                    db
+                    (:followups option)))
+          db
+          (:options field-descriptor)))
+
+(defn- set-multiple-choice-followup-visibility
+  [db field-descriptor option]
+  (let [id (keyword (:id field-descriptor))
+        selected? (get-in db [:application :answers id :options (:value option)])]
+    (reduce (partial set-field-visibility selected?)
+            db
+            (:followups option))))
+
 (defn- set-multi-value-changed [db id]
   (let [{:keys [original-value value values]} (-> db :application :answers id)
         [new-diff original-diff _] (d/diff value original-value)]
@@ -203,8 +231,10 @@
                                         (values-in-group-valid? value)))]
     (merge answer {:value value :valid valid})))
 
-(defn- select-single-choice-button [db [_ button-id value validators question-group-idx]]
-  (let [button-path   [:application :answers button-id]
+(defn- select-single-choice-button [db [_ value field-descriptor question-group-idx]]
+  (let [button-id (keyword (:id field-descriptor))
+        validators (:validators field-descriptor)
+        button-path   [:application :answers button-id]
         current-value (:value (get-in db (if question-group-idx
                                            (into button-path [:values question-group-idx 0])
                                            button-path)))
@@ -230,10 +260,12 @@
                                      (assoc answer :valid (every? values-valid? (:values answer)))))
             (update-in button-path (fn [answer]
                                      (assoc answer :value (map (partial map :value) (:values answer)))))
-            (set-multi-value-changed button-id)))
+            (set-multi-value-changed button-id)
+            (set-single-choice-followup-visibility field-descriptor value)))
       (-> db
           (update-in button-path update-value)
-          (set-multi-value-changed button-id)))))
+          (set-multi-value-changed button-id)
+          (set-single-choice-followup-visibility field-descriptor value)))))
 
 (defn- toggle-values
   [answer options answers-by-key]
@@ -599,25 +631,6 @@
         (update-in [:application :answers :postal-office]
                    merge {:value "" :valid false}))))
 
-(defn- set-field-visibility
-  [db field-descriptor visible?]
-  (let [id (keyword (:id field-descriptor))
-        db (assoc-in db [:application :ui id :visible?] visible?)]
-    (if (or (= (:fieldType field-descriptor) "adjacentfieldset")
-            (= (:fieldClass field-descriptor) "questionGroup"))
-      (reduce #(set-field-visibility %1 %2 visible?)
-              db
-              (:children field-descriptor))
-      db)))
-
-(defn- set-multiple-choice-followup-visibility
-  [db field-descriptor option]
-  (let [id (keyword (:id field-descriptor))
-        selected? (get-in db [:application :answers id :options (:value option)])]
-    (reduce #(set-field-visibility %1 %2 selected?)
-            db
-            (:followups option))))
-
 (reg-event-db
   :application/toggle-multiple-choice-option
   (fn [db [_ field-descriptor option question-group-idx]]
@@ -885,9 +898,8 @@
         group-idx]]
       {:fieldType "singleChoice"}
       (let [d [:application/select-single-choice-button
-               id
                (:value (first (:options field-descriptor)))
-               (:validators field-descriptor)
+               field-descriptor
                group-idx]]
         [d d])
       {:fieldType "multipleChoice"}
@@ -921,3 +933,11 @@
     (let [repeat-count (get-in db [:application :ui (keyword field-descriptor-id) :count] 1)]
       {:db (assoc-in db [:application :ui (keyword field-descriptor-id) :count] (inc repeat-count))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
+
+(reg-event-fx
+  :application/dropdown-change
+  (fn [{db :db} [_ field-descriptor value group-idx]]
+    {:db (set-single-choice-followup-visibility db field-descriptor value)
+     :dispatch (if (some? group-idx)
+                 [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
+                 [:application/set-application-field field-descriptor value])}))

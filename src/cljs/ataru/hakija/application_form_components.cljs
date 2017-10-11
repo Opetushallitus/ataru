@@ -308,33 +308,14 @@
         (for [child (util/flatten-form-fields children)]
           [render-field child :div-kwd :div.application__row-field.application__form-field])))
 
-(defn- toggle-followup-visibility [db followup visible?]
-  (let [db (assoc-in db [:application :ui (answer-key followup) :visible?] visible?)]
-    (if (= (:fieldType followup) "adjacentfieldset")
-      (reduce (fn [db adjacent-fieldset-question]
-                (assoc-in db [:application :ui (answer-key adjacent-fieldset-question) :visible?] visible?))
-              db
-              (:children followup))
-      db)))
-
-(defn dropdown-followups [lang value field-descriptor]
-  (let [prev (r/atom (:value @value))
-        resolve-followups (partial util/resolve-followups (:options field-descriptor))]
-    (r/create-class
-      {:component-did-update (fn []
-                               (let [previous @prev]
-                                 (when-not (= previous (reset! prev (:value @value)))
-                                   (let [previous-followups (resolve-followups previous)
-                                         current-followups  (resolve-followups (:value @value))]
-                                     (dispatch [:state-update
-                                                (fn [db]
-                                                  (let [reduced (reduce #(toggle-followup-visibility %1 %2 false) db previous-followups)]
-                                                    (reduce #(toggle-followup-visibility %1 %2 true) reduced current-followups)))])))))
-       :reagent-render       (fn [lang value field-descriptor]
-                               (when-let [followups (seq (resolve-followups (:value @value)))]
-                                 (into [:div.application__form-dropdown-followups.animated.fadeIn]
-                                   (for [followup followups]
-                                     [render-field followup]))))})))
+(defn- dropdown-followups [field-descriptor value]
+  (when-let [followups (seq (util/resolve-followups
+                             (:options field-descriptor)
+                             value))]
+    [:div.application__form-dropdown-followups.animated.fadeIn
+     (for [followup followups]
+       ^{:key (:id followup)}
+       [render-field followup])]))
 
 (defn dropdown [field-descriptor & {:keys [div-kwd editing idx] :or {div-kwd :div.application__form-field editing false}}]
   (let [application  (subscribe [:state-query [:application]])
@@ -350,9 +331,11 @@
         value-path   (cond-> [:application :answers (answer-key field-descriptor)]
                        idx (concat [:values idx 0]))
         value        (subscribe [:state-query value-path])
-        on-change    (if idx
-                       (partial multi-value-field-change field-descriptor 0 idx)
-                       (partial textual-field-change field-descriptor))
+        on-change    (fn [e]
+                       (dispatch [:application/dropdown-change
+                                  field-descriptor
+                                  (.-value (.-target e))
+                                  idx]))
         lang         @lang
         default-lang @default-lang]
     [div-kwd
@@ -384,7 +367,7 @@
              [:option {:value option-value} label]))
          (:options field-descriptor)))]]
      (when-not idx
-       [dropdown-followups lang value field-descriptor])]))
+       (dropdown-followups field-descriptor (:value @value)))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
@@ -438,7 +421,7 @@
                          [multiple-choice-option field-descriptor option id cannot-edit? idx])
             (:options field-descriptor)))]])))
 
-(defn- single-choice-option [option parent-id validators cannot-edit? question-group-idx]
+(defn- single-choice-option [option parent-id field-descriptor cannot-edit? question-group-idx]
   (let [lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         label        (non-blank-val (get-in option [:label @lang])
@@ -449,7 +432,7 @@
       (let [checked?  (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
             on-change (fn [event]
                         (let [value (.. event -target -value)]
-                          (dispatch [:application/select-single-choice-button parent-id value validators question-group-idx])))]
+                          (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))]
         [:div.application__form-single-choice-button-inner-container {:key option-id}
          [:input.application__form-single-choice-button
           (merge {:id        option-id
@@ -465,39 +448,19 @@
          (when (and @checked? (not-empty (:followups option)))
            [:div.application__form-single-choice-followups-indicator])]))))
 
-(defn- hide-followups [db {:keys [followups]}]
-  (reduce #(toggle-followup-visibility %1 %2 false)
-          db
-          followups))
-
-(defn- single-choice-followups [parent-id options]
-  (let [single-choice-value (subscribe [:state-query [:application :answers parent-id :value]])
-        followups           (reaction (->> options
+(defn- single-choice-followups [field-descriptor]
+  (let [id (keyword (:id field-descriptor))
+        single-choice-value (subscribe [:state-query [:application :answers id :value]])
+        followups           (reaction (->> (:options field-descriptor)
                                            (filter (comp (partial = @single-choice-value) :value))
                                            (map :followups)
                                            (first)))]
-    (r/create-class
-      {:reagent-render       (fn [parent-id options]
-                               (when (not-empty @followups)
-                                 [:div.application__form-multi-choice-followups-container.animated.fadeIn
-                                  (doall
-                                   (map (fn [followup]
-                                          ^{:key (str (:id followup))}
-                                          [render-field followup])
-                                        @followups))]))
-       :component-did-update (fn []
-                               ; Setting visible? state to true/false determines answer's visibility
-                               ; in the "required answers" list on the header, below the submit application
-                               ; button
-                               (dispatch [:state-update
-                                          (fn [db]
-                                            (as-> db db'
-                                                  (reduce hide-followups
-                                                          db'
-                                                          (filter (comp (partial not= @single-choice-value) :value) options))
-                                                  (reduce #(toggle-followup-visibility %1 %2 true)
-                                                          db'
-                                                          @followups)))]))})))
+    (fn [field-descriptor]
+      (when (seq @followups)
+        [:div.application__form-multi-choice-followups-container.animated.fadeIn
+         (for [followup @followups]
+           ^{:key (:id followup)}
+           [render-field followup])]))))
 
 (defn single-choice-button [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [button-id    (answer-key field-descriptor)
@@ -513,10 +476,10 @@
         (doall
          (map-indexed (fn [option-idx option]
                         ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
-                        [single-choice-option option button-id validators @cannot-edit? idx])
+                        [single-choice-option option button-id field-descriptor @cannot-edit? idx])
                       (:options field-descriptor)))]
        (when-not idx
-         [single-choice-followups button-id (:options field-descriptor)])])))
+         [single-choice-followups field-descriptor])])))
 
 (defonce max-attachment-size-bytes (* 10 1024 1024))
 
