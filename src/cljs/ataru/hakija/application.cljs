@@ -191,11 +191,8 @@
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
       wrapper-sections)))
 
-(defn application-in-complete-state? [application]
-  (boolean (some #{(:state application)} complete-states)))
-
 (defn application-processing-jatkuva-haku? [application haku]
-  (and (= (:state application) "processing")
+  (and (not= (:state application) "unprocessed")
        (:is-jatkuva-haku? haku)))
 
 (defn applying-possible? [form application]
@@ -203,8 +200,7 @@
     (:virkailija-secret application)
     true
 
-    (or (application-in-complete-state? application)
-        (application-processing-jatkuva-haku? application (:tarjonta form)))
+    (application-processing-jatkuva-haku? application (:tarjonta form))
     false
 
     (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)

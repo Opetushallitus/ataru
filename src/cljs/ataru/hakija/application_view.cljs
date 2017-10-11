@@ -6,7 +6,7 @@
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
-            [ataru.hakija.application :refer [application-in-complete-state? application-processing-jatkuva-haku?]]
+            [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [cljs-time.format :refer [unparse formatter]]
@@ -34,18 +34,17 @@
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
-
         translations      (get-translations
                             (keyword selected-lang)
                             translations/application-view-translations)
         apply-dates       (when haku-name
                             (if (and apply-start-date apply-end-date)
                               (str (:application-period translations)
-                                   ": "
+                                   " "
                                    (unparse date-format (from-long apply-start-date))
                                    " - "
                                    (unparse date-format (from-long apply-end-date))
-                                   (when (and (not hakuaika-on) (nil? virkailija-secret))
+                                   (when (and (not hakuaika-on) (nil? @virkailija-secret))
                                      (str " (" (:not-within-application-period translations) ")")))
                               (:continuous-period translations)))]
     (fn [form]
@@ -66,8 +65,7 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (and (or (application-in-complete-state? @application)
-                      (application-processing-jatkuva-haku? @application (:tarjonta form)))
+       (when (and (application-processing-jatkuva-haku? @application (:tarjonta form))
                   (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
