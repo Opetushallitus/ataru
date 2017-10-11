@@ -22,6 +22,13 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
+(defn- replace-with-option-label
+  [values options lang]
+  (if (sequential? values)
+    (map #(replace-with-option-label % options lang) values)
+    (let [option (some #(when (= values (:value %)) %) options)]
+      (get-in option [:label lang] values))))
+
 (defn text [field-descriptor application lang group-idx]
   [:div.application__form-field
    [:label.application__form-field-label
@@ -29,23 +36,19 @@
    [:div.application__form-field-value
     (let [values (cond-> (get-in application [:answers (keyword (:id field-descriptor)) :value])
                    (some? group-idx)
-                   (nth group-idx))]
-      (cond
-        (and (predefined-value-answer? field-descriptor)
-             (not (contains? field-descriptor :koodisto-source)))
-        (let [option (->> (:options field-descriptor)
-                          (filter (comp (partial = (first values)) :value))
-                          (first))]
-          (get-in option [:label lang] (first values)))
-        (and (sequential? values) (< 1 (count values)))
-        [:ul.application__form-field-list
-         (for [value values]
-           ^{:key value}
-           [:li value])]
-        (sequential? values)
-        (first values)
-        :else
-        values))]])
+                   (nth group-idx)
+                   (and (predefined-value-answer? field-descriptor)
+                        (not (contains? field-descriptor :koodisto-source)))
+                   (replace-with-option-label (:options field-descriptor) lang))]
+      (cond (and (sequential? values) (< 1 (count values)))
+            [:ul.application__form-field-list
+             (for [value values]
+               ^{:key value}
+               [:li value])]
+            (sequential? values)
+            (first values)
+            :else
+            values))]])
 
 (defn- attachment-list [attachments]
   [:div
