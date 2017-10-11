@@ -102,7 +102,8 @@
                  (assoc-in [:application :sort] application-sorting/initial-sort))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
-                            (:application-key (cljs-util/extract-query-params)))]
+                            (when-let [query-key (:application-key (cljs-util/extract-query-params))]
+                              (some #{query-key} (map :key applications))))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key]
