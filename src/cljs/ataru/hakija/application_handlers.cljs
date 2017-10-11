@@ -448,22 +448,30 @@
                             (assoc answers answer-key answer)))
                         {}))))
 
-(defn- set-question-group-ids [fields & {:keys [question-group-id]}]
-  (map (fn [{:keys [fieldClass id] :as field}]
-         (cond (= fieldClass "questionGroup")
-               (update field :children set-question-group-ids :question-group-id (keyword id))
-
-               question-group-id
-               (assoc-in field [:params :question-group-id] question-group-id)
-
-               :else
-               field))
-       fields))
+(defn- set-question-group-id
+  ([field]
+   (let [update-group-child (partial set-question-group-id (keyword (:id field)))
+         update-followups (fn [option] (update option :followups (partial map set-question-group-id)))]
+     (if (= "questionGroup" (:fieldClass field))
+       (update field :children (partial map update-group-child))
+       (cond-> field
+         (contains? field :children)
+         (update :children (partial map set-question-group-id))
+         (contains? field :options)
+         (update :options (partial map update-followups))))))
+  ([question-group-id field]
+   (let [update-child (partial set-question-group-id question-group-id)
+         update-followups (fn [option] (update option :followups (partial map update-child)))]
+     (cond-> (assoc-in field [:params :question-group-id] question-group-id)
+       (contains? field :children)
+       (update :children (partial map update-child))
+       (contains? field :options)
+       (update :options (partial map update-followups))))))
 
 (defn handle-form [{:keys [db]} [_ answers form]]
   (let [form (-> (languages->kwd form)
                  (set-form-language)
-                 (update :content set-question-group-ids))
+                 (update :content (partial map set-question-group-id)))
         preselected-hakukohde (-> db :application :preselected-hakukohde)]
     {:db         (-> db
                      (update :form (fn [{:keys [selected-language]}]
