@@ -429,7 +429,7 @@
            (reduce (fn [db option]
                      (set-multiple-choice-followup-visibility db field option))
                    db
-                   (filter #(= value (:value %)) options)))
+                   options))
          db)))
    db
    (get-in db [:form :content])))
