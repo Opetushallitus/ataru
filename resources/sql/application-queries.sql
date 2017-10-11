@@ -644,7 +644,7 @@ FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
 
 -- name: yesql-applications-by-haku
-SELECT
+SELECT DISTINCT ON (key)
   key,
   haku,
   person_oid,
@@ -654,4 +654,5 @@ SELECT
   ssn,
   hakukohde
 FROM applications
-WHERE haku = :haku_oid;
+WHERE haku = :haku_oid
+ORDER BY key, created_time DESC;
