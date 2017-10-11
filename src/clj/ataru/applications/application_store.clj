@@ -454,3 +454,19 @@
   (-> (exec-db :db yesql-get-hakija-secret-by-virkailija-secret {:virkailija_secret virkailija-secret})
       (first)
       :secret))
+
+(defn- unwrap-vts-application
+  [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
+  {:oid           key
+   :hakuOid       haku
+   :henkiloOid    person_oid
+   :asiointikieli lang
+   :henkilotiedot {:kutsumanimi preferred_name
+                   :email       email
+                   :hasHetu     (not (clojure.string/blank? ssn))}
+   :hakukohteet   hakukohde})
+
+(defn get-applications-by-haku
+  [haku-oid]
+  (->> (exec-db :db yesql-applications-by-haku {:haku_oid haku-oid})
+       (map unwrap-vts-application)))

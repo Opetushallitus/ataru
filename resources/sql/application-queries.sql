@@ -642,3 +642,16 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
+
+-- name: yesql-applications-by-haku
+SELECT
+  key,
+  haku,
+  person_oid,
+  lang,
+  preferred_name,
+  email,
+  ssn,
+  hakukohde
+FROM applications
+WHERE haku = :haku_oid;
