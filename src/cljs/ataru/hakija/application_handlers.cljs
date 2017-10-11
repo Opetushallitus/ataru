@@ -413,21 +413,26 @@
       (set-country-specific-fields-visibility)
       (set-question-group-row-amounts)))
 
-(defn- set-followup-visibility-to-false
+(defn- set-followup-visibility
   [db]
-  (update-in db
-             [:application :ui]
-             merge
-             (->> (autil/flatten-form-fields (:content (:form db)))
-                  (filter :followup?)
-                  (map (fn [field]
-                         (let [id            (keyword (:id field))
-                               has-value?    (or (some? (get-in db [:application :answers id :value]))
-                                                 (some #(some? (:value %))
-                                                       (get-in db [:application :answers id :values] [])))
-                               has-children? (not (empty? (:children field)))]
-                           {id {:visible? (or has-value? has-children?)}})))
-                  (reduce merge))))
+  (autil/reduce-form-fields
+   (fn [db field]
+     (let [id (keyword (:id field))
+           value (get-in db [:application :answers id :value])
+           options (:options field)
+           field-type (:fieldType field)]
+       (if (and options
+                (not-empty (mapcat :followups options)))
+         (if (or (= "dropdown" field-type)
+                 (= "singleChoice" field-type))
+           (set-single-choice-followup-visibility db field value)
+           (reduce (fn [db option]
+                     (set-multiple-choice-followup-visibility db field option))
+                   db
+                   (filter #(= value (:value %)) options)))
+         db)))
+   db
+   (get-in db [:form :content])))
 
 (defn- original-values->answers [db]
   (cond-> db
@@ -470,7 +475,7 @@
                      (assoc :wrapper-sections (extract-wrapper-sections form))
                      (merge-submitted-answers answers)
                      (original-values->answers)
-                     (set-followup-visibility-to-false))
+                     (set-followup-visibility))
      :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
                   [:application/show-answers-belonging-to-hakukohteet]
                   [:application/hakukohde-query-change "" 0]
