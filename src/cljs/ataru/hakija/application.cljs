@@ -203,10 +203,12 @@
     (application-processing-jatkuva-haku? application (:tarjonta form))
     false
 
-    (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
-                                       (-> js/config
-                                           js->clj
-                                           (get "attachment-modify-grace-period-days" 14)))
+    (and
+      (:editing? application)
+      (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
+                                         (-> js/config
+                                             js->clj
+                                             (get "attachment-modify-grace-period-days" 14))))
     true
 
     ;; When applying to hakukohde, hakuaika must be on
