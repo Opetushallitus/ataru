@@ -15,6 +15,8 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
+                                                                       get-value
+                                                                       replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
@@ -22,21 +24,13 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
-(defn- replace-with-option-label
-  [values options lang]
-  (if (sequential? values)
-    (map #(replace-with-option-label % options lang) values)
-    (let [option (some #(when (= values (:value %)) %) options)]
-      (get-in option [:label lang] values))))
-
 (defn text [field-descriptor application lang group-idx]
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
    [:div.application__form-field-value
-    (let [values (cond-> (get-in application [:answers (keyword (:id field-descriptor)) :value])
-                   (some? group-idx)
-                   (nth group-idx)
+    (let [answer (get-in application [:answers (keyword (:id field-descriptor))])
+          values (cond-> (get-value answer group-idx)
                    (and (predefined-value-answer? field-descriptor)
                         (not (contains? field-descriptor :koodisto-source)))
                    (replace-with-option-label (:options field-descriptor) lang))]

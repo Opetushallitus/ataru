@@ -15,53 +15,42 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
-                                                                       textual-field-value
+                                                                       get-value
+                                                                       replace-with-option-label
+                                                                       predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
                                                                        answers->read-only-format
-                                                                       value-or-koodi-uri->label
                                                                        group-spacer]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn- multiple-choice-with-koodisto [field-descriptor]
-  (and (= (:fieldType field-descriptor) "multipleChoice")
-       (contains? field-descriptor :koodisto-source)))
+(defn- split-if-string [s]
+  (if (string? s)
+    (clojure.string/split s #"\s*,\s*")
+    s))
 
-(defn- multi-values->:li
-  [field-descriptor lang values]
-  (map-indexed (fn [idx value-or-koodi-uri]
-                 (let [value (str (if (map? value-or-koodi-uri)
-                                    (:value value-or-koodi-uri)
-                                    value-or-koodi-uri))]
-                   ^{:key (str "value-" idx)}
-                   [:li (value-or-koodi-uri->label field-descriptor lang value)]))
-               values))
-
-(defn text [field-descriptor application lang question-group-index]
-  (let [answer            ((answer-key field-descriptor) (:answers application))
-        values (if question-group-index
-                 (-> answer :values (nth question-group-index))
-                 (:values answer))]
+(defn text [field-descriptor application lang group-idx]
+  (let [answer (get-in application [:answers (keyword (:id field-descriptor))])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      (if (:cannot-view answer)
        [:div "***********"]
        [:div.application__readonly-text
-        (cond (and (vector? values)
-                   (every? vector? values)
-                   (< 1 (count values)))
-              (into [:ul.application__form-field-list]
-                    (map #(multi-values->:li field-descriptor lang %) values))
-
-              (and (vector? values)
-                   (some (comp not vector?) values)
-                   (< 1 (count values)))
-              (into [:ul.application__form-field-list]
-                    (multi-values->:li field-descriptor lang values))
-
-              :else
-              (textual-field-value field-descriptor application :lang lang :question-group-index question-group-index))])]))
+        (let [values (cond-> (get-value answer group-idx)
+                       (contains? field-descriptor :koodisto-source)
+                       split-if-string
+                       (predefined-value-answer? field-descriptor)
+                       (replace-with-option-label (:options field-descriptor) lang))]
+          (cond (and (sequential? values) (< 1 (count values)))
+                [:ul.application__form-field-list
+                 (for [value values]
+                   ^{:key value}
+                   [:li value])]
+                (sequential? values)
+                (first values)
+                :else
+                values))])]))
 
 (defn- attachment-list [attachments]
   [:div

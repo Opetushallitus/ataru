@@ -40,6 +40,22 @@
   ^{:key value}
   [:li value])
 
+(defn get-value [answer group-idx]
+  (if-let [value (:value answer)]
+    (cond-> value
+      (some? group-idx)
+      (nth group-idx))
+    (map :value (cond-> (:values answer)
+                  (some? group-idx)
+                  (nth group-idx)))))
+
+(defn replace-with-option-label
+  [values options lang]
+  (if (sequential? values)
+    (map #(replace-with-option-label % options lang) values)
+    (let [option (some #(when (= values (:value %)) %) options)]
+      (get-in option [:label lang] values))))
+
 (defn predefined-value-answer?
   "Does the answer have predefined values? Form elements like dropdowns
    and single and multi-choice buttons have fixed, predefined values, as
@@ -49,35 +65,6 @@
   (and (= fieldClass "formField")
        (some #{fieldType} ["dropdown" "singleChoice" "multipleChoice"])
        (not-empty options)))
-
-(defn textual-field-value [field-descriptor application & {:keys [lang question-group-index]}]
-  (let [key                (answer-key field-descriptor)
-        value-or-koodi-uri (if question-group-index
-                             (-> application :answers key :value (nth question-group-index))
-                             (-> application :answers key :value))
-        is-koodisto?       (contains? field-descriptor :koodisto-source)
-        split-values       (cond-> value-or-koodi-uri
-                                   (and is-koodisto? (string? value-or-koodi-uri))
-                                   (clojure.string/split #"\s*,\s*"))]
-    (cond
-      is-koodisto?
-      (let [values (map (partial value-or-koodi-uri->label field-descriptor lang) split-values)]
-        (if (= (count values) 1)
-          (first values)
-          [:ul.application__form-field-list
-           (map wrap-value values)]))
-
-      (predefined-value-answer? field-descriptor)
-      (let [option (->> (:options field-descriptor)
-                        (filter (comp (partial = value-or-koodi-uri) :value))
-                        (first))]
-        (get-in option [:label lang] value-or-koodi-uri))
-
-      (and (sequential? split-values) (< 1 (count split-values)))
-      [:ul.application__form-field-list
-       (map wrap-value split-values)]
-
-      :else value-or-koodi-uri)))
 
 (defn group-spacer
   [index]
