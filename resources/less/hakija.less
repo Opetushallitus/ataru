@@ -1245,6 +1245,67 @@ and (max-width: @desktop-content-width) {
   font-size: 2em;
 }
 
+.application__form-text-input-and-validation-errors {
+  position: relative
+}
+
+.application__validation-error-dialog {
+  display: flex;
+  position: absolute;
+  left: 340px;
+  top: -46px;
+  width: 396px;
+
+  @media only screen and (max-width: @desktop-content-width) {
+    flex-direction: column;
+    position: relative;
+    left: 0px;
+    top: 0px;
+    width: 305px;
+  }
+
+  &__arrow {
+    top: 52px;
+    width: 15px;
+    position: relative;
+    overflow: hidden;
+    z-index: 9;
+
+    @media only screen and (max-width: @desktop-content-width) {
+      top: 0px;
+      left: 20px;
+      width: 31px;
+      height: 16px;
+    }
+
+    &:after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: @pale-blue;
+      transform: rotate(135deg);
+      top: 6px;
+      left: 5px;
+    }
+  }
+
+  &__box {
+    background: @pale-blue;
+    color: white;
+    padding: 20px;
+    font-size: 16px;
+    border-radius: 6px;
+
+    & p:first-child {
+      margin-top: 0px;
+    }
+
+    & p:last-child {
+      margin-bottom: 0px;
+    }
+  }
+}
 
 @media print {
   .application__banner-container {

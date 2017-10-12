@@ -16,6 +16,30 @@
       form
       (update-in form [:content] #(into [(component/hakukohteet)] %)))))
 
+(defn- set-can-submit-multiple-applications
+  [multiple? haku-oid field]
+  (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
+    (not multiple?) (assoc-in [:params :haku-oid] haku-oid)))
+
+(defn- map-if-ssn-or-email
+  [f field]
+  (if (or (= "ssn" (:id field))
+          (= "email" (:id field)))
+    (f field)
+    field))
+
+(defn populate-can-submit-multiple-applications
+  [form tarjonta-info]
+  (let [multiple? (get-in tarjonta-info [:tarjonta :can-submit-multiple-applications] true)
+        haku-oid (get-in tarjonta-info [:tarjonta :haku-oid])]
+    (update form :content
+            (fn [content]
+              (clojure.walk/prewalk
+               (partial map-if-ssn-or-email
+                        (partial set-can-submit-multiple-applications
+                                 multiple? haku-oid))
+               content)))))
+
 (defn fetch-form-by-key
   [key]
   (let [form (form-store/fetch-by-key key)]
@@ -40,7 +64,8 @@
           ; remove hakukohteet from form tarjonta for deduplication
           (merge (assoc-in tarjonta-info [:tarjonta :hakukohteet] []))
           (inject-hakukohde-component-if-missing)
-          (populate-hakukohde-answer-options tarjonta-info))
+          (populate-hakukohde-answer-options tarjonta-info)
+          (populate-can-submit-multiple-applications tarjonta-info))
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid
