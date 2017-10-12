@@ -548,7 +548,7 @@
          [drag-n-drop-spacer (conj path :children (count children))]
          (case (:fieldClass content)
            "wrapperElement" [toolbar/add-component (conj path :children (count children))]
-           "questionGroup" [toolbar/followup-toolbar path
+           "questionGroup" [toolbar/question-group-toolbar path
                             (fn [generate-fn]
                               (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]))))
 
