@@ -12,7 +12,6 @@
              :refer
              [answer-key
               required-hint
-              textual-field-value
               scroll-to-anchor
               is-required-field?
               group-spacer]]
