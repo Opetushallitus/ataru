@@ -665,9 +665,7 @@ SELECT DISTINCT ON (key)
   haku,
   person_oid,
   lang,
-  preferred_name,
   email,
-  ssn,
   hakukohde
 FROM applications
 WHERE person_oid IS NOT NULL

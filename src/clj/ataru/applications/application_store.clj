@@ -461,9 +461,7 @@
    :hakuOid       haku
    :henkiloOid    person_oid
    :asiointikieli lang
-   :henkilotiedot {:kutsumanimi preferred_name
-                   :email       email
-                   :hasHetu     (not (clojure.string/blank? ssn))}
+   :email         email
    :hakukohteet   hakukohde})
 
 (defn get-applications-by-haku
