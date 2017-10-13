@@ -157,6 +157,25 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(1)').prop('checked')).to.equal(true)
         })
       })
+
+      describe('adding multiple choice button as element to a question group', function() {
+        before(
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Lista, monta valittavissa")') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(7)') }, 'Kysymysryhmä: lista, monta valittavissa'),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(2)') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(8)')}, 'Lista, monta valittavissa: A' ),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(2)') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(9)')}, 'Lista, monta valittavissa: B' ),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(2)') })
+        )
+        it('adds multiple choice button as element to a question group', function() {
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(3)').text()).to.equal('Lista, monta valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(7)').val()).to.equal('Kysymysryhmä: lista, monta valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(8)').val()).to.equal('Lista, monta valittavissa: A')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(9)').val()).to.equal('Lista, monta valittavissa: B')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(1)').prop('checked')).to.equal(true)
+        })
+      })
     })
   })
 })();
