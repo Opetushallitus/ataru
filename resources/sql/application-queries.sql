@@ -675,3 +675,13 @@ WHERE person_oid IS NOT NULL
   AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
   AND key IN (:hakemus_oids)
 ORDER BY key, created_time DESC;
+
+-- name: yesql-person-and-application-oids
+SELECT DISTINCT ON (KEY)
+  key,
+  person_oid
+FROM applications
+WHERE person_oid IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
+ORDER BY key, created_time DESC;

@@ -219,7 +219,13 @@
         (if (and (nil? haku-oid)
                  (nil? application-oids))
           (response/bad-request {:error "No haku or application oid provided."})
-          (response/ok (application-store/get-applications-by-haku haku-oid hakukohde-oid application-oids)))))
+          (response/ok (application-store/get-applications-by-haku haku-oid hakukohde-oid application-oids))))
+      (api/GET "/persons" []
+        :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
+        :query-params [haku-oid :- s/Str
+                       {hakukohde-oid :- s/Str nil}]
+        :return [{:hakemusOid s/Str :personOid s/Str}]
+        (response/ok (application-store/get-person-and-application-oids haku-oid hakukohde-oid))))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"

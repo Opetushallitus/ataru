@@ -476,3 +476,14 @@
                  :hakukohde_oid hakukohde-oid
                  :hakemus_oids  hakemus-oids})
        (map unwrap-vts-application)))
+
+(defn unwrap-person-and-hakemus-oid
+  [{:keys [key person_oid]}]
+  {:hakemusOid key
+   :personOid  person_oid})
+
+(defn get-person-and-application-oids
+  [haku-oid hakukohde-oid]
+  (->> (exec-db :db yesql-person-and-application-oids {:haku_oid      haku-oid
+                                                       :hakukohde_oid hakukohde-oid})
+       (map unwrap-person-and-hakemus-oid)))
