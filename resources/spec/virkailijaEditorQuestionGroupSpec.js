@@ -100,7 +100,7 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(8)').text()).to.equal('Infoteksti')
         })
       })
-//PudotusvalikkoPainikkeet, yksi valittavissaLista, monta valittavissaTekstikenttäTekstialueVierekkäiset tekstikentätLiitepyyntöKysymysryhmäInfoteksti
+
       describe('adding question group as a followup element', function () {
         before(
           clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:contains("Kysymysryhmä")') }),
