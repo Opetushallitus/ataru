@@ -210,7 +210,7 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/ApplicationInfo]
         (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid)))
-      (api/GET "/applications/:haku-oid" []
+      (api/GET "/applications/haku/:haku-oid" []
         :summary "Get the latest versions of applications in haku."
         :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
         :return [ataru-schema/VtsApplication]
