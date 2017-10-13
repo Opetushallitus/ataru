@@ -51,7 +51,7 @@
      ~@body))
 
 (defmacro with-get-response
-  [secret resp application & body]
+  [secret resp & body]
   `(let [~resp (-> (mock/request :get (str "/hakemus/api/application?secret=" ~secret))
                    (mock/content-type "application/json")
                    handler
@@ -174,7 +174,7 @@
 
     (it "should not get application with wrong secret"
       (with-get-response "asdfasfas" resp
-        (should= 400 (:ststus resp))))
+        (should= 500 (:status resp))))
 
     (it "should get application"
       (with-get-response "asdfgh" resp
