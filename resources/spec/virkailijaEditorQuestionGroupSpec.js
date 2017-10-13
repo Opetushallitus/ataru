@@ -198,7 +198,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(5)') }),
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(6)') })
         )
-        it('adds single-answer text field as element to a question group', function() {
+        it('adds multi-answer text field as element to a question group', function() {
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(5)').text()).to.equal('Tekstikenttä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(11)').val()).to.equal('Tekstikenttä, monta vastausta')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(5)').prop('checked')).to.equal(true) // required
