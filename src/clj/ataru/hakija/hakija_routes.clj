@@ -210,11 +210,17 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/ApplicationInfo]
         (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid)))
-      (api/GET "/applications/haku/:haku-oid" []
+      (api/GET "/applications/vts/list" []
         :summary "Get the latest versions of applications in haku."
-        :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
+        :query-params [{haku-oid :- s/Str nil}
+                       {hakukohde-oid :- s/Str nil}
+                       {application-oids :- [s/Str] nil}]
         :return [ataru-schema/VtsApplication]
-        (response/ok (application-store/get-applications-by-haku haku-oid))))
+        (if (and (nil? haku-oid)
+                 (nil? application-oids))
+          (response/bad-request {:error "No haku or application oid provided."})
+          (response/ok (application-store/get-applications-by-haku haku-oid hakukohde-oid application-oids)))))
+
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]

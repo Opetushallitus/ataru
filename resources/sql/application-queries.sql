@@ -654,5 +654,24 @@ SELECT DISTINCT ON (key)
   ssn,
   hakukohde
 FROM applications
-WHERE haku = :haku_oid
+WHERE person_oid IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
+ORDER BY key, created_time DESC;
+
+-- name: yesql-applications-by-haku-and-hakemusoids
+SELECT DISTINCT ON (key)
+  key,
+  haku,
+  person_oid,
+  lang,
+  preferred_name,
+  email,
+  ssn,
+  hakukohde
+FROM applications
+WHERE person_oid IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
+  AND key IN (:hakemus_oids)
 ORDER BY key, created_time DESC;

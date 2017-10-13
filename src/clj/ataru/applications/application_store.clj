@@ -467,6 +467,12 @@
    :hakukohteet   hakukohde})
 
 (defn get-applications-by-haku
-  [haku-oid]
-  (->> (exec-db :db yesql-applications-by-haku {:haku_oid haku-oid})
+  [haku-oid hakukohde-oid hakemus-oids]
+  (->> (exec-db :db
+                (if (empty? hakemus-oids) ;; After furious battle had to give in to yesql parser
+                  yesql-applications-by-haku
+                  yesql-applications-by-haku-and-hakemusoids)
+                {:haku_oid      haku-oid
+                 :hakukohde_oid hakukohde-oid
+                 :hakemus_oids  hakemus-oids})
        (map unwrap-vts-application)))
