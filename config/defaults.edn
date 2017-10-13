@@ -9,8 +9,8 @@
  :public-config  {:applicant        {:service_url "http://localhost:8351"}
                   :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}
                   :environment-name "dev"
-                  :features         {:attachment     false
-                                     :question-group false}
+                  :features         {:attachment     true
+                                     :question-group true}
                   :attachment-modify-grace-period-days 14}
  :background-job {:exec-interval-seconds 15}
  :log            {:virkailija-base-path "."
