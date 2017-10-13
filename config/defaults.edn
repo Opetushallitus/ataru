@@ -10,7 +10,7 @@
                   :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}
                   :environment-name "dev"
                   :features         {:attachment     false
-                                     :question-group false}
+                                     :question-group true}
                   :attachment-modify-grace-period-days 14}
  :background-job {:exec-interval-seconds 15}
  :log            {:virkailija-base-path "."
