@@ -19,6 +19,10 @@ switch (app) {
     addPhantomCookie();
     url = 'http://localhost:8350/lomake-editori/virkailija-test.html'
     break;
+  case 'virkailija-question-group':
+    addPhantomCookie();
+    url = 'http://localhost:8350/lomake-editori/virkailija-question-group-test.html'
+    break;
   case 'hakija-form':
     url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;

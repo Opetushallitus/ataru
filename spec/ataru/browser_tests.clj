@@ -64,7 +64,9 @@
           (around-all [specs]
                       (run-specs-in-virkailija-system specs))
           (it "are successful"
-              (run-phantom-test "virkailija" (last (split (utils/login) #"=")))))
+              (run-phantom-test "virkailija" (last (split (utils/login) #"="))))
+          (it "creates a form with question groups"
+            (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"=")))))
 
 (describe "Hakija UI tests /"
           (tags :ui :ui-hakija)
