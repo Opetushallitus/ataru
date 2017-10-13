@@ -9,7 +9,8 @@
             [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [cljs-time.format :refer [unparse formatter]]
+            [cljs-time.core :refer [to-default-time-zone]]
+            [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]))
@@ -19,7 +20,14 @@
    :sv "På svenska"
    :en "In English"})
 
-(def date-format (formatter "d.M.yyyy HH:mm"))
+(def date-format (formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
+
+(defn- millis->str
+  [millis]
+  (->> millis
+    (from-long)
+    (to-default-time-zone)
+    (unparse-local date-format)))
 
 (defn application-header [form]
   (let [selected-lang     (or (:selected-language form) :fi)
@@ -41,9 +49,9 @@
                             (if (and apply-start-date apply-end-date)
                               (str (:application-period translations)
                                    " "
-                                   (unparse date-format (from-long apply-start-date))
+                                   (millis->str apply-start-date)
                                    " - "
-                                   (unparse date-format (from-long apply-end-date))
+                                   (millis->str apply-end-date)
                                    (when (and (not hakuaika-on) (nil? @virkailija-secret))
                                      (str " (" (:not-within-application-period translations) ")")))
                               (:continuous-period translations)))]
