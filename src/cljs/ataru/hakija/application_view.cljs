@@ -83,8 +83,8 @@
     (fn [form]
       (if (or (= :submitted @submit-status)
               (and
-                editing?
-                (not can-apply?)))
+                @editing?
+                (not @can-apply?)))
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf
