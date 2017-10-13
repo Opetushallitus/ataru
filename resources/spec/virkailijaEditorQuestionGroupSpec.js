@@ -100,18 +100,19 @@
           })
         )
         it('opens up toolbar for adding followup components', function () {
-          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a')).to.have.length(8)
+          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a')).to.have.length(9)
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(0)').text()).to.equal('Pudotusvalikko')
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(1)').text()).to.equal('Painikkeet, yksi valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(2)').text()).to.equal('Lista, monta valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(3)').text()).to.equal('Tekstikenttä')
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(4)').text()).to.equal('Tekstialue')
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(5)').text()).to.equal('Vierekkäiset tekstikentät')
-          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(6)').text()).to.equal('Kysymysryhmä')
-          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(7)').text()).to.equal('Infoteksti')
+          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(6)').text()).to.equal('Liitepyyntö')
+          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(7)').text()).to.equal('Kysymysryhmä')
+          expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:eq(8)').text()).to.equal('Infoteksti')
         })
       })
-
+//PudotusvalikkoPainikkeet, yksi valittavissaLista, monta valittavissaTekstikenttäTekstialueVierekkäiset tekstikentätLiitepyyntöKysymysryhmäInfoteksti
       describe('adding question group as a followup element', function () {
         before(
           clickElement(function () {
@@ -124,14 +125,15 @@
         it('adds question group as a followup element', function () {
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__component-header').text()).to.equal('Kysymysryhmä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field').val()).to.equal('Kysymysryhmä: ryhmän otsikko')
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a')).to.have.length(7)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a')).to.have.length(8)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(0)').text()).to.equal('Pudotusvalikko')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(1)').text()).to.equal('Painikkeet, yksi valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(2)').text()).to.equal('Lista, monta valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(3)').text()).to.equal('Tekstikenttä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(4)').text()).to.equal('Tekstialue')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(5)').text()).to.equal('Vierekkäiset tekstikentät')
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(6)').text()).to.equal('Infoteksti')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(6)').text()).to.equal('Liitepyyntö')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(7)').text()).to.equal('Infoteksti')
         })
       })
 
