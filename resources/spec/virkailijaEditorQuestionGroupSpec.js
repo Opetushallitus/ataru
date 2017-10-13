@@ -173,7 +173,21 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(7)').val()).to.equal('Kysymysryhmä: lista, monta valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(8)').val()).to.equal('Lista, monta valittavissa: A')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(9)').val()).to.equal('Lista, monta valittavissa: B')
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(1)').prop('checked')).to.equal(true)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(2)').prop('checked')).to.equal(true)
+        })
+      })
+
+      describe('adding single-answer text field as element to a question group', function() {
+        before(
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Tekstikenttä")') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(10)') }, 'Tekstikenttä, yksi vastaus'),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(3)') })
+        )
+        it('adds single-answer text field as element to a question group', function() {
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(4)').text()).to.equal('Tekstikenttä')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(10)').val()).to.equal('Tekstikenttä, yksi vastaus')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(3)').prop('checked')).to.equal(true) // required
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(4)').prop('checked')).to.equal(false) // multiple answers
         })
       })
     })
