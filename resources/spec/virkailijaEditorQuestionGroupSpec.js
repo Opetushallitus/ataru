@@ -138,6 +138,25 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox').prop('checked')).to.equal(true)
         })
       })
+
+      describe('adding single choice button as element to a question group', function() {
+        before(
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Painikkeet, yksi valittavissa")') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(4)') }, 'Kysymysryhmä: painikkeet, yksi valittavissa'),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(1)') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(5)')}, 'Painikkeet, yksi valittavissa: A' ),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(1)') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(6)')}, 'Painikkeet, yksi valittavissa: B' ),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(1)') })
+        )
+        it('adds single choice button as element to a question group', function() {
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(2)').text()).to.equal('Painikkeet, yksi valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(4)').val()).to.equal('Kysymysryhmä: painikkeet, yksi valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(5)').val()).to.equal('Painikkeet, yksi valittavissa: A')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(6)').val()).to.equal('Painikkeet, yksi valittavissa: B')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(1)').prop('checked')).to.equal(true)
+        })
+      })
     })
   })
 })();
