@@ -54,9 +54,7 @@
         clickElement(addNewFormLink),
         wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
         setTextFieldValue(formTitleField, 'Kysymysryhmä: testilomake'),
-        wait.until(function() {
-          return formListItems(0).find('span:eq(0)').text() === 'Kysymysryhmä: testilomake'
-        })
+        wait.until(function() { return formListItems(0).find('span:eq(0)').text() === 'Kysymysryhmä: testilomake' })
       )
       it('creates blank form', function () {
         expect(formTitleField().val()).to.equal('Kysymysryhmä: testilomake')
@@ -71,18 +69,10 @@
       describe('adding main level dropdown', function () {
         before(
           clickComponentMenuItem('Pudotusvalikko'),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__text-field:eq(0)')
-          }, 'Päätaso: pudotusvalikko'),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__text-field:eq(1)')
-          }, 'Päätaso: A'),
-          clickElement(function () {
-            return formComponents().find('.editor-form__add-dropdown-item a:contains("Lisää")')
-          }),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__text-field:eq(2)')
-          }, 'Päätaso: B')
+          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(0)') }, 'Päätaso: pudotusvalikko'),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(1)') }, 'Päätaso: A'),
+          clickElement(function () { return formComponents().find('.editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B')
         )
         it('has expected contents', function () {
           expect(formComponents()).to.have.length(1)
@@ -95,9 +85,7 @@
 
       describe('available followup components for dropdown', function () {
         before(
-          clickElement(function () {
-            return formComponents().eq(0).find('.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")')
-          })
+          clickElement(function () { return formComponents().eq(0).find('.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")') })
         )
         it('opens up toolbar for adding followup components', function () {
           expect(formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a')).to.have.length(9)
@@ -115,12 +103,8 @@
 //PudotusvalikkoPainikkeet, yksi valittavissaLista, monta valittavissaTekstikenttäTekstialueVierekkäiset tekstikentätLiitepyyntöKysymysryhmäInfoteksti
       describe('adding question group as a followup element', function () {
         before(
-          clickElement(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:contains("Kysymysryhmä")')
-          }),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field')
-          }, 'Kysymysryhmä: ryhmän otsikko')
+          clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a:contains("Kysymysryhmä")') }),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field') }, 'Kysymysryhmä: ryhmän otsikko')
         )
         it('adds question group as a followup element', function () {
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__component-header').text()).to.equal('Kysymysryhmä')
@@ -139,24 +123,12 @@
 
       describe('adding dropdown as element to a question group', function () {
         before(
-          clickElement(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Pudotusvalikko")')
-          }),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(1)')
-          }, 'Kysymysryhmä: pudotusvalikko'),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(2)')
-          }, 'Pudotusvalikko: A'),
-          clickElement(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää")')
-          }),
-          setTextFieldValue(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(3)')
-          }, 'Pudotusvalikko: B'),
-          clickElement(function () {
-            return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label')
-          })
+          clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Pudotusvalikko")') }),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(1)') }, 'Kysymysryhmä: pudotusvalikko'),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(2)') }, 'Pudotusvalikko: A'),
+          clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__add-dropdown-item a:contains("Lisää")') }),
+          setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(3)') }, 'Pudotusvalikko: B'),
+          clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label') })
         )
         it('adds dropdown as element to a question group', function () {
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(1)').text()).to.equal('Pudotusvalikko')
