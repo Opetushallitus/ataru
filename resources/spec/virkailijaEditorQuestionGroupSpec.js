@@ -205,6 +205,19 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(6)').prop('checked')).to.equal(true) // multiple answers
         })
       })
+
+      describe('adding text area as element to a question group', function() {
+        before(
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:contains("Tekstialue")') }),
+          setTextFieldValue(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(12)') }, 'Tekstialue'),
+          clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(7)') })
+        )
+        it('adds single-answer text field as element to a question group', function() {
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(6)').text()).to.equal('Tekstialue')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(12)').val()).to.equal('Tekstialue')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(7)').prop('checked')).to.equal(true) // required
+        })
+      })
     })
   })
 })();
