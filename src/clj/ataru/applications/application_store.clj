@@ -468,8 +468,8 @@
   [haku-oid hakukohde-oid hakemus-oids]
   (->> (exec-db :db
                 (if (empty? hakemus-oids) ;; After furious battle had to give in to yesql parser
-                  yesql-applications-by-haku
-                  yesql-applications-by-haku-and-hakemusoids)
+                  yesql-applications-by-haku-and-hakukohde-oids
+                  yesql-applications-by-haku-hakukohde-and-hakemusoids)
                 {:haku_oid      haku-oid
                  :hakukohde_oid hakukohde-oid
                  :hakemus_oids  hakemus-oids})
@@ -482,6 +482,6 @@
 
 (defn get-person-and-application-oids
   [haku-oid hakukohde-oid]
-  (->> (exec-db :db yesql-person-and-application-oids {:haku_oid      haku-oid
-                                                       :hakukohde_oid hakukohde-oid})
+  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid      haku-oid
+                                                                   :hakukohde_oid hakukohde-oid})
        (map unwrap-person-and-hakemus-oid)))

@@ -643,7 +643,7 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
 
--- name: yesql-applications-by-haku
+-- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT DISTINCT ON (key)
   key,
   haku,
@@ -659,7 +659,7 @@ WHERE person_oid IS NOT NULL
   AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
 ORDER BY key, created_time DESC;
 
--- name: yesql-applications-by-haku-and-hakemusoids
+-- name: yesql-applications-by-haku-hakukohde-and-hakemusoids
 SELECT DISTINCT ON (key)
   key,
   haku,
@@ -672,14 +672,4 @@ WHERE person_oid IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
   AND key IN (:hakemus_oids)
-ORDER BY key, created_time DESC;
-
--- name: yesql-person-and-application-oids
-SELECT DISTINCT ON (KEY)
-  key,
-  person_oid
-FROM applications
-WHERE person_oid IS NOT NULL
-  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
-  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
 ORDER BY key, created_time DESC;
