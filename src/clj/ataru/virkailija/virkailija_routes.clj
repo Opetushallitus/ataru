@@ -111,6 +111,10 @@
             (if (:dev? env)
               (render-file-in-dev "templates/virkailija-test.html")
               (route/not-found "Not found")))
+   (api/GET "/virkailija-question-group-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-question-group-test.html")
+       (route/not-found "Not found")))
    (api/GET "/spec/:filename.js" [filename]
             (if (:dev? env)
               (render-file-in-dev (str "spec/" filename ".js"))
