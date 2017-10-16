@@ -89,6 +89,9 @@
               (run-phantom-test "hakija-edit"))
 
           (it "can edit an application successfully as virkailija"
-              (run-phantom-test "virkailija-hakemus-edit")))
+              (run-phantom-test "virkailija-hakemus-edit"))
+
+          (it "can fill a form with a question group successfully"
+              (run-phantom-test "hakija-question-group-form")))
 
 (run-specs)
