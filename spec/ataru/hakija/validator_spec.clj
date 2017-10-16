@@ -1,6 +1,7 @@
 (ns ataru.hakija.validator-spec
   (:require [ataru.hakija.validator :as validator]
             [clojure.core.match :refer [match]]
+            [clojure.core.async :as async]
             [speclj.core :refer :all]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
@@ -79,11 +80,35 @@
                                :value "en.."
                                :fieldType "textField"})
 
+(defn- has-never-applied [haku-oid identifier] (async/go false))
+
+(defn- set-can-submit-multiple-applications
+  [multiple? haku-oid field]
+  (cond-> (assoc-in field [:params :can-submit-multiple-applications] multiple?)
+    (not multiple?) (assoc-in [:params :haku-oid] haku-oid)))
+
+(defn- map-if-ssn-or-email
+  [f field]
+  (if (or (= "ssn" (:id field))
+          (= "email" (:id field)))
+    (f field)
+    field))
+
+(defn- populate-can-submit-multiple-applications
+  [form multiple?]
+  (update form :content
+          (fn [content]
+            (clojure.walk/prewalk
+             (partial map-if-ssn-or-email
+                      (partial set-can-submit-multiple-applications
+                               multiple? "dummy-haku-oid"))
+             content))))
+
 (describe "application validation"
   (tags :unit)
   (it "fails answers with extraneous keys"
     (should= false
-      (-> (validator/valid-application? extra-answers f)
+      (-> (validator/valid-application? has-never-applied extra-answers f)
         :passed?))
     (should= #{:foo}
       (validator/extra-answers-not-in-original-form
@@ -91,13 +116,13 @@
         (keys (util/answers-by-key (:answers extra-answers))))))
   (it "fails answers with missing answers"
     (should= false
-      (:passed? (validator/valid-application? (assoc a :answers []) f)))
+      (:passed? (validator/valid-application? has-never-applied (assoc a :answers []) f)))
     (should= false
-      (:passed? (validator/valid-application? (update a :answers rest) f))))
+      (:passed? (validator/valid-application? has-never-applied (update a :answers rest) f))))
 
   (it "passes validation"
     (should= true
-      (:passed? (validator/valid-application? a f)))
+      (:passed? (validator/valid-application? has-never-applied a f)))
     (should=
       {:address                              {:passed? true}
        :email                                {:passed? true}
@@ -119,13 +144,13 @@
        :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 {:passed? true}
        ; dropdown "Pohjakoulutus"
        :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
-      (validator/build-results answers-by-key
+      (validator/build-results has-never-applied answers-by-key
         []
         (:content f))))
 
   (it "passes validation on multipleChoice answer being empty"
     (should
-      (-> (validator/build-results
+      (-> (validator/build-results has-never-applied
             (update
               answers-by-key
               :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
@@ -138,7 +163,7 @@
 
   (it "passes validation on dropdown answer being empty"
       (should
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               (update
                 answers-by-key
                 :gender
@@ -157,7 +182,7 @@
 
   (it "fails validation on multipleChoice answer being empty and required set to true"
     (should-not
-      (-> (validator/build-results
+      (-> (validator/build-results has-never-applied
             (update
               answers-by-key
               :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
@@ -176,7 +201,7 @@
 
   (it "fails validation on dropdown answer being empty and required set to true"
       (should-not
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               (update
                 answers-by-key
                 :gender
@@ -195,7 +220,7 @@
 
   (it "passes validation on repeatable answer being empty"
     (should
-      (-> (validator/build-results
+      (-> (validator/build-results has-never-applied
             (update
               answers-by-key
               :047da62c-9afe-4e28-bfe8-5b50b21b4277
@@ -208,7 +233,7 @@
 
   (it "fails validation on repeatable answer being empty and required set to true"
       (should-not
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               (update
                 answers-by-key
                 :047da62c-9afe-4e28-bfe8-5b50b21b4277
@@ -227,7 +252,7 @@
 
   (it "fails validation when followup field is set required and no answer"
       (should-not
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               answers-by-key
               []
               (clojure.walk/postwalk
@@ -242,7 +267,7 @@
 
   (it "passes validation when followup field is set required and answer is provided"
       (should
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               (->
                 (update a :answers conj {:key "fbe3522d-6f1d-4e05-85e3-4e716146c686" :value "perustelu"})
                 :answers
@@ -261,7 +286,7 @@
 
   (it "fails validation when incorrect birth-date data is used with :birthdate-and-gender-component validation"
       (should-not
-        (-> (validator/build-results
+        (-> (validator/build-results has-never-applied
               (->
                 a
                 :answers
@@ -282,62 +307,94 @@
             :passed?)))
 
   (it "passes validation when no hakukohde selected (and no answers are specified to a hakukohde)"
-      (should (:passed? (validator/valid-application? a (update f :content conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question)))))
 
   (it "passes validation when no hakukohde is selected, a question belongs to a hakukohde a but has no value"
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer-nil-value)
                          (update f :content conj hakukohde-specific-question)))))
 
   (it "fails when no hakukohde is selected, a question belongs to a hakukohde and has a value"
-      (should-not (:passed? (validator/valid-application?
+      (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer)
                              (update f :content conj hakukohde-specific-question)))))
 
 
   (it "passes validation when hakukohde is selected and no answers are specified to a hakukohde"
-      (should (:passed? (validator/valid-application? a (update f :content conj hakukohde-specific-question)))))
+      (should (:passed? (validator/valid-application? has-never-applied a (update f :content conj hakukohde-specific-question)))))
 
   (it "passes validation when hakukohde is selected and an answer belongs to it"
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
                          (update f :content conj hakukohde-question hakukohde-specific-question)))))
 
   (it "passes validation when hakukohde is selected, a question belongs to different hakukohde but has no value"
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer-nil-value hakukohde-answer)
                          (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
 
   (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
-      (should-not (:passed? (validator/valid-application?
+      (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
                              (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde)))))
 
   (it "passes validation when a dropdown question is hakukohde specific, no answers"
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          a
                          (update f :content conj hakukohde-specific-dropdown-with-followups)))))
 
   (it "passes validation when a dropdown question is hakukohde specific and has answers",
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
                          (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
 
   (it "fails validation when a dropdown question is hakukohde specific and has no required followup answers",
-      (should-not (:passed? (validator/valid-application?
+      (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer)
                              (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups)))))
 
   (it "passes validation when a dropdown question is hakukohde specific to wrong hakukohde and has no answers",
-      (should (:passed? (validator/valid-application?
+      (should (:passed? (validator/valid-application? has-never-applied
                          (update a :answers conj hakukohde-answer)
                          (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                           :belongs-to-hakukohteet
                                                                           ["1.2.246.562.20.352373851711"]))))))
 
   (it "fails validation when a dropdown question is hakukohde specific to wrong hakukohde and has answers",
-      (should-not (:passed? (validator/valid-application?
+      (should-not (:passed? (validator/valid-application? has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
                              (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                                :belongs-to-hakukohteet
-                                                                               ["1.2.246.562.20.352373851711"])))))))
+                                                                               ["1.2.246.562.20.352373851711"]))))))
+
+  (it "fails validation when cannot submit multiple applications and has applied"
+      (let [has-applied (fn [_ _] (async/go true))
+            form (populate-can-submit-multiple-applications f false)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should-not (:passed? (validator/valid-application?
+                               has-applied
+                               answers form)))))
+
+  (it "passes validation when cannot submit multiple applications and has not applied"
+      (let [has-applied (fn [_ _] (async/go false))
+            form (populate-can-submit-multiple-applications f false)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form)))))
+
+  (it "passes validation when can submit multiple applications and has applied"
+      (let [has-applied (fn [_ _] (async/go true))
+            form (populate-can-submit-multiple-applications f true)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form)))))
+
+  (it "passes validation when can submit multiple applications and has not applied"
+      (let [has-applied (fn [_ _] (async/go false))
+            form (populate-can-submit-multiple-applications f true)
+            answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
+        (should (:passed? (validator/valid-application?
+                           has-applied
+                           answers form))))))

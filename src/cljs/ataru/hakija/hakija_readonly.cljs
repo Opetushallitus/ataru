@@ -15,58 +15,70 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
-                                                                       textual-field-value
+                                                                       get-value
+                                                                       replace-with-option-label
+                                                                       predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
-                                                                       answers->read-only-format]]
+                                                                       answers->read-only-format
+                                                                       group-spacer]]
             [taoensso.timbre :refer-macros [spy debug]]))
 
-(defn- multiple-choice-with-koodisto [field-descriptor]
-  (and (= (:fieldType field-descriptor) "multipleChoice")
-       (contains? field-descriptor :koodisto-source)))
+(defn- split-if-string [s]
+  (if (string? s)
+    (clojure.string/split s #"\s*,\s*")
+    s))
 
-(defn text [field-descriptor application lang]
-  (let [answer            ((answer-key field-descriptor) (:answers application))
-        multi-values->:li (partial map-indexed (fn [idx value]
-                                                 ^{:key (str "value-" idx)}
-                                                 [:li (str (if (map? value)
-                                                             (:value value)
-                                                             value))]))]
+(defn text [field-descriptor application lang group-idx]
+  (let [answer (get-in application [:answers (keyword (:id field-descriptor))])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
      (if (:cannot-view answer)
        [:div "***********"]
-       [:div
-        (cond (and (vector? (:values answer))
-                   (every? vector? (:values answer)))
-              (into [:ul.application__form-field-list] (map multi-values->:li (:values answer)))
+       [:div.application__readonly-text
+        (let [values (cond-> (get-value answer group-idx)
+                       (contains? field-descriptor :koodisto-source)
+                       split-if-string
+                       (predefined-value-answer? field-descriptor)
+                       (replace-with-option-label (:options field-descriptor) lang))]
+          (cond (and (sequential? values) (< 1 (count values)))
+                [:ul.application__form-field-list
+                 (for [value values]
+                   ^{:key value}
+                   [:li value])]
+                (sequential? values)
+                (first values)
+                :else
+                values))])]))
 
-              (and (vector? (:values answer))
-                   (some (comp not vector?) (:values answer)))
-              (into [:ul.application__form-field-list] (multi-values->:li (:values answer)))
+(defn- attachment-list [attachments]
+  [:div
+   (map (fn [{:keys [value]}]
+          ^{:key (:key value)}
+          [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
+        attachments)])
 
-              :else
-              (textual-field-value field-descriptor application :lang lang))])]))
-
-(defn attachment [field-descriptor application lang]
+(defn attachment [field-descriptor application lang question-group-index]
   (let [answer-key (keyword (answer-key field-descriptor))
-        values     (get-in application [:answers answer-key :values])]
+        values     (if question-group-index
+                     (-> application
+                         :answers
+                         answer-key
+                         :values
+                         (nth question-group-index))
+                     (-> application :answers answer-key :values))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     [:div
-      (map (fn [{:keys [value]}]
-             ^{:key (:key value)}
-             [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
-           values)]]))
+     [attachment-list values]]))
 
 (declare field)
 
-(defn child-fields [children application lang ui]
+(defn child-fields [children application lang ui question-group-id]
   (for [child children
         :when (get-in ui [(keyword (:id child)) :visible?] true)]
-    [field child application lang]))
+    [field child application lang question-group-id]))
 
 (defn wrapper [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -76,12 +88,32 @@
         [:h2 (-> content :label lang)]
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
-         (child-fields children application lang @ui))])))
+         (child-fields children application lang @ui nil))])))
 
-(defn row-container [application lang children]
+(defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [application lang children]
-      (into [:div] (child-fields children application lang @ui)))))
+    (fn [content application lang children]
+      (let [groups-amount (->> content :id keyword (get @ui) :count)]
+        [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
+         [:div.application__wrapper-heading.application__question-group-wrapper-heading]
+         (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
+                [:p.application__read-only-heading-text (-> content :label lang)]]
+               (mapcat
+                 (fn [group-index]
+                   (conj
+                     (mapv
+                       (fn [child]
+                         ^{:key (str (:id child) "-" group-index)}
+                         [field child application lang group-index])
+                       children)
+                     (when (< group-index (dec groups-amount))
+                       [group-spacer group-index])))
+                 (range groups-amount)))]))))
+
+(defn row-container [application lang children question-group-index]
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [application lang children question-group-index]
+      (into [:div] (child-fields children application lang @ui question-group-index)))))
 
 (defn- extract-values [children answers]
   (let [l?      (fn [x]
@@ -107,10 +139,12 @@
        (into
          [:tr {:key (str idx "-" (apply str values))}]
          (for [value values]
-           [:td (str value)]))))])
+           [:td.application__readonly-adjacent-cell (str value)]))))])
 
-(defn fieldset [field-descriptor application lang children]
-  (let [fieldset-answers (extract-values children (:answers application))]
+(defn fieldset [field-descriptor application lang children question-group-idx]
+  (let [fieldset-answers (cond-> (extract-values children (:answers application))
+                           question-group-idx
+                           (nth question-group-idx))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
@@ -119,12 +153,7 @@
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header (str (-> child :label lang)) (required-hint field-descriptor)]))]
-      (if (question-group-answer? fieldset-answers)
-        (map-indexed (fn [idx fieldset-answers]
-                       ^{:key (str (:id field-descriptor) "-" idx)}
-                       [fieldset-answer-table fieldset-answers])
-                     fieldset-answers)
-        [fieldset-answer-table fieldset-answers])]]))
+      [fieldset-answer-table fieldset-answers]]]))
 
 (defn- followup-has-answer?
   [followup application]
@@ -135,9 +164,9 @@
         (< 0 (count answer-value))
         true))))
 
-(defn- followups [followups content application lang]
+(defn- followups [followups content application lang question-group-index]
   [:div
-   (text content application lang)
+   (text content application lang question-group-index)
    (into [:div]
      (for [followup followups
            :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
@@ -145,7 +174,7 @@
                    followup-is-visible?
                    (followup-has-answer? followup application))]
        [:div
-        [field followup application lang]]))])
+        [field followup application lang question-group-index]]))])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -172,18 +201,19 @@
       [selected-hakukohde-row hakukohde-oid])]])
 
 (defn field
-  [content application lang]
+  [content application lang question-group-index]
   (match content
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
-         {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+         {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "infoElement"} nil
          {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
-         [followups (mapcat :followups options) content application lang]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
+         [followups (mapcat :followups options) content application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang question-group-index)
+         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
 
 (defn- application-language [{:keys [lang]}]

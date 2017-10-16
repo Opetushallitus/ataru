@@ -111,6 +111,10 @@
             (if (:dev? env)
               (render-file-in-dev "templates/virkailija-test.html")
               (route/not-found "Not found")))
+   (api/GET "/virkailija-question-group-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-question-group-test.html")
+       (route/not-found "Not found")))
    (api/GET "/spec/:filename.js" [filename]
             (if (:dev? env)
               (render-file-in-dev (str "spec/" filename ".js"))
@@ -197,10 +201,11 @@
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application ataru-schema/Application
-                             :events      [ataru-schema/Event]
-                             :review      ataru-schema/Review
-                             :form        ataru-schema/FormWithContent}
+                    :return {:application       ataru-schema/Application
+                             :events            [ataru-schema/Event]
+                             :review            ataru-schema/Review
+                             :hakukohde-reviews ataru-schema/HakukohdeReviews
+                             :form              ataru-schema/FormWithContent}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -214,15 +219,16 @@
                        (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
-                            :summary "Update existing application review"
-                            :body [review ataru-schema/Review]
-                            :return {:review ataru-schema/Review
-                                     :events [ataru-schema/Event]}
-                            (ok
-                             (application-service/save-application-review
-                                 review
-                                 session
-                                 organization-service)))
+                     :summary "Update existing application review"
+                     :body [review ataru-schema/Review]
+                     :return {:review            ataru-schema/Review
+                              :events            [ataru-schema/Event]
+                              :hakukohde-reviews ataru-schema/HakukohdeReviews}
+                     (ok
+                       (application-service/save-application-review
+                         review
+                         session
+                         organization-service)))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}

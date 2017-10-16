@@ -33,7 +33,9 @@
     (time-formatter date-time modified-time-format)))
 
 (defn state-formatter [state]
-  (or (get application-review-states state) "Tuntematon"))
+  (or
+    (->> application-review-states (filter #(= (first %) state)) first second)
+    "Tuntematon"))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"

@@ -41,14 +41,14 @@
           [:div.editor-form__followup-question-overlay
            (into [:div]
              (for [[index followup] (map vector (range) @followups)]
-               [ataru.virkailija.editor.core/soresu->reagent followup (flatten [option-path :followups index])]))
+               [ataru.virkailija.editor.core/soresu->reagent followup (vec (flatten [option-path :followups index]))]))
            [toolbar/followup-toolbar option-path
             (fn [generate-fn]
               (dispatch [:editor/generate-followup-component generate-fn option-path]))]]]]))))
 
 (defn followup-question [option-path]
   (let [layer-visible?      (subscribe [:editor/followup-overlay option-path :visible?])
-        followup-component  (subscribe [:editor/get-component-value (flatten [option-path :followups])])
+        followup-component  (subscribe [:editor/get-component-value (vec (flatten [option-path :followups]))])
         ; disallow nesting followup questions
         top-level-followup? (nil? ((set (flatten option-path)) :followups))]
     (fn [option-path]

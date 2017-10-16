@@ -71,7 +71,7 @@
 
               {:fieldClass "formField"
                :fieldType  "singleChoice"}
-              [ec/dropdown content path]
+              [ec/dropdown content path args]
 
               {:fieldClass "formField"
                :fieldType  "attachment"}

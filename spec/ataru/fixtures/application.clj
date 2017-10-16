@@ -224,38 +224,39 @@
   (update person-info-form-application-with-modified-answers :answers (comp vec concat) dropdown-followups))
 
 (def person-info-form-application-for-hakukohde
-  {:form           2147483647
-   :lang           "fi"
-   :id             2
-   :secret         "12345"
-   :hakukohde      ["1.2.246.562.29.11111111110"]
-   :answers        [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
-                     :value     "Vastaus tekstikysymykseen",
-                     :fieldType "textField",
-                     :label     {:fi "Tekstikysymys", :sv ""}}
-                    {:key "address", :value "Paratiisitie 13", :fieldType "textField", :label {:fi "Katuosoite", :sv "Adress"}}
-                    {:key       "email",
-                     :value     "aku@ankkalinna.com",
-                     :fieldType "textField",
-                     :label     {:fi "Sähköpostiosoite", :sv "E-postadress"}}
-                    {:key "preferred-name", :value "Aku", :fieldType "textField", :label {:fi "Kutsumanimi", :sv "Smeknamn"}}
-                    {:key "last-name", :value "Ankka", :fieldType "textField", :label {:fi "Sukunimi", :sv "Efternamn"}}
-                    {:key       "phone",
-                     :value     "050123",
-                     :fieldType "textField",
-                     :label     {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
-                    {:key "nationality", :value "Suomi", :fieldType "dropdown", :label {:fi "Kansalaisuus", :sv "Nationalitet"}}
-                    {:key "country-of-residence", :value "246", :fieldType "dropdown", :label {:fi "Asuinmaa", :sv "Boningsland"}}
-                    {:key "ssn", :value "010101A123N", :fieldType "textField", :label {:fi "Henkilötunnus", :sv "Personnummer"}}
-                    {:key       "home-town",
-                     :value     "Ankkalinna",
-                     :fieldType "textField",
-                     :label     {:fi "Kotikunta", :sv "Bostadsort"}}
-                    {:key "first-name", :value "Aku Petteri", :fieldType "textField", :label {:fi "Etunimet", :sv "Förnamn"}}
-                    {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
-                    {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
-                    {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}
-                    {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}]})
+  {:form      2147483647
+   :lang      "fi"
+   :id        2
+   :secret    "12345"
+   :haku      "1.2.246.562.29.65950024186"
+   :hakukohde ["1.2.246.562.20.49028196523"]
+   :answers   [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
+                :value     "Vastaus tekstikysymykseen",
+                :fieldType "textField",
+                :label     {:fi "Tekstikysymys", :sv ""}}
+               {:key "address", :value "Paratiisitie 13", :fieldType "textField", :label {:fi "Katuosoite", :sv "Adress"}}
+               {:key       "email",
+                :value     "aku@ankkalinna.com",
+                :fieldType "textField",
+                :label     {:fi "Sähköpostiosoite", :sv "E-postadress"}}
+               {:key "preferred-name", :value "Aku", :fieldType "textField", :label {:fi "Kutsumanimi", :sv "Smeknamn"}}
+               {:key "last-name", :value "Ankka", :fieldType "textField", :label {:fi "Sukunimi", :sv "Efternamn"}}
+               {:key       "phone",
+                :value     "050123",
+                :fieldType "textField",
+                :label     {:fi "Matkapuhelin", :sv "Mobiltelefonnummer"}}
+               {:key "nationality", :value "Suomi", :fieldType "dropdown", :label {:fi "Kansalaisuus", :sv "Nationalitet"}}
+               {:key "country-of-residence", :value "246", :fieldType "dropdown", :label {:fi "Asuinmaa", :sv "Boningsland"}}
+               {:key "ssn", :value "010101A123N", :fieldType "textField", :label {:fi "Henkilötunnus", :sv "Personnummer"}}
+               {:key       "home-town",
+                :value     "Ankkalinna",
+                :fieldType "textField",
+                :label     {:fi "Kotikunta", :sv "Bostadsort"}}
+               {:key "first-name", :value "Aku Petteri", :fieldType "textField", :label {:fi "Etunimet", :sv "Förnamn"}}
+               {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
+               {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
+               {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}
+               {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}]})
 
 (def application-with-person-info-module {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
                                           :lang "fi",

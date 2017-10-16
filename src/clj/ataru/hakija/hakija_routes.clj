@@ -38,7 +38,12 @@
 (defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
   (cond-> answer
     (= fieldType "attachment")
-    (update :value (partial file-store/get-metadata))))
+    (update :value (fn [value]
+                     (if (and (vector? value)
+                              (not (empty? value))
+                              (every? vector? value))
+                       (map file-store/get-metadata value)
+                       (file-store/get-metadata value))))))
 
 (defn- attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))
@@ -214,7 +219,18 @@
              (let [code (koodisto/get-postal-office-by-postal-code postal-code)]
                (if-let [labels (:label code)]
                  (response/ok labels)
-                 (response/not-found))))))
+                 (response/not-found))))
+    (api/GET "/has-applied" []
+             :summary "Check if a person has already applied"
+             :query-params [hakuOid :- (api/describe s/Str "Haku OID")
+                            {ssn :- (api/describe s/Str "SSN") nil}
+                            {email :- (api/describe s/Str "Email address") nil}]
+             (cond (some? ssn)
+                   (response/ok (application-store/has-ssn-applied hakuOid ssn))
+                   (some? email)
+                   (response/ok (application-store/has-email-applied hakuOid email))
+                   :else
+                   (response/bad-request {:error "Either ssn or email is required"})))))
 
 (defn- render-application []
   (let [config (json/generate-string (or (:public-config config) {}))]

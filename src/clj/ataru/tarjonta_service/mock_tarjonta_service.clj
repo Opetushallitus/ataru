@@ -37,7 +37,8 @@
                                                            :loppuPvm   (+ (System/currentTimeMillis)
                                                                           86400000),
                                                            :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}],
-   :sijoittelu                                           false})
+   :sijoittelu                                           false
+   :canSubmitMultipleApplications                        true})
 
 (def base-hakukohde
   {:tila                                    "LUONNOS",

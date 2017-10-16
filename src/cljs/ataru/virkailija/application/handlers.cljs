@@ -49,15 +49,22 @@
  (fn [db [_ field value]]
    (let [selected-key         (get-in db [:application :selected-key])
          application-list     (get-in db [:application :applications])
+         selected-hakukohde   (get-in db [:application :selected-review-hakukohde])
+         is-hakukohde-review? (some #{field} [:language-requirement
+                                              :degree-requirement
+                                              :eligibility-state
+                                              :selection-state])
          updated-applications (if (some #{field} [:state :score])
                                 (mapv
                                  #(update-review-field-of-selected-application-in-list % selected-key field value)
                                  application-list)
                                 application-list)]
-     (-> db
-         (update-in [:application :review] assoc field value)
-         (assoc-in [:application :applications] updated-applications)
-         (assoc-in [:application :review-state-counts] (review-state-counts updated-applications))))))
+     (if is-hakukohde-review?
+       (assoc-in db [:application :review :hakukohde-reviews (keyword selected-hakukohde) field] value)
+       (-> db
+           (update-in [:application :review] assoc field value)
+           (assoc-in [:application :applications] updated-applications)
+           (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
 (reg-event-db
  :application/update-sort
@@ -95,7 +102,8 @@
                  (assoc-in [:application :sort] application-sorting/initial-sort))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
-                            (:application-key (cljs-util/extract-query-params)))]
+                            (when-let [query-key (:application-key (cljs-util/extract-query-params))]
+                              (some #{query-key} (map :key applications))))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key]
@@ -129,16 +137,13 @@
 
 (reg-event-fx
   :application/fetch-applications-by-term
-  (fn [{:keys [db]} [_ search-kwd type]]
-    (let [db          (cond-> db
-                        (clojure.string/blank? (get-in db [:application :search-control :search-term :value]))
-                        (assoc-in [:application :search-control :search-term :value] search-kwd))
-          query-param (case type
+  (fn [{:keys [db]} [_ term type]]
+    (let [query-param (case type
                         :ssn "ssn"
                         :dob "dob"
                         :email "email"
                         :name "name")]
-      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" search-kwd)))))
+      (fetch-applications-fx db (str "/lomake-editori/api/applications/list?" query-param "=" term)))))
 
 (reg-event-db
  :application/review-updated
@@ -153,13 +158,15 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review]}]
+(defn update-application-details [db {:keys [form application events review hakukohde-reviews]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
-      (assoc-in [:application :review] review)))
+      (assoc-in [:application :review] review)
+      (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
+      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -183,21 +190,27 @@
                                                                                         :application-key
                                                                                         :notes
                                                                                         :score
-                                                                                        :state])}))})))
+                                                                                        :state
+                                                                                        :hakukohde-reviews])}))})))
 
 (reg-event-fx
   :application/handle-fetch-application-attachment-metadata
   (fn [{:keys [db]} [_ response]]
-    (let [response-map (group-by :key response)
-          db (->> (get-in db [:application :selected-application-and-form :application :answers])
-                  (map (fn [[_ {:keys [fieldType] :as answer}]]
-                         (cond-> answer
-                           (= fieldType "attachment")
-                           (update :value (partial map (fn [file-key]
-                                                         (first (get response-map file-key))))))))
-                  (reduce (fn [db {:keys [key] :as answer}]
-                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
-                          db))]
+    (let [response-map       (group-by :key response)
+          file-key->metadata (fn file-key->metadata [file-key-or-keys]
+                               (if (vector? file-key-or-keys)
+                                 (mapv file-key->metadata file-key-or-keys)
+                                 (first (response-map file-key-or-keys))))
+          set-file-metadata  (fn [answer]
+                               (assoc answer :values (-> answer :value file-key->metadata)))
+          db                 (->> (get-in db [:application :selected-application-and-form :application :answers])
+                                  (map (fn [[_ {:keys [fieldType] :as answer}]]
+                                         (cond-> answer
+                                           (= fieldType "attachment")
+                                           (set-file-metadata))))
+                                  (reduce (fn [db {:keys [key] :as answer}]
+                                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
+                                          db))]
       {:db       db
        :dispatch [:application/start-autosave]})))
 
@@ -257,14 +270,15 @@
       (cond-> {:db db}
         (some? autosave) (assoc :stop-autosave autosave)))))
 
-(reg-event-db
+(reg-event-fx
  :application/clear-applications-haku-and-form-selections
- (fn [db _]
-   (-> db
-       (assoc-in [:editor :selected-form-key] nil)
-       (assoc-in [:application :applications] nil)
-       (assoc-in [:application :search-control :search-term] nil)
-       (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))))
+ (fn [{db :db} _]
+   (cljs-util/unset-query-param "term")
+   {:db (-> db
+            (assoc-in [:editor :selected-form-key] nil)
+            (assoc-in [:application :applications] nil)
+            (assoc-in [:application :search-control :search-term :value] "")
+            (update-in [:application] dissoc :selected-form-key :selected-haku :selected-hakukohde))}))
 
 (reg-event-db
  :application/select-form
@@ -320,9 +334,7 @@
     {:db       db
      :dispatch dispatch-vec}))
 
-(reg-event-fx
-  :application/navigate-with-callback
-  (fn [{:keys [db]} [_ path dispatch-vec]]
-    {:db db
-     :dispatch-n [[:application/navigate path]
-                  [:application/dispatch dispatch-vec]]}))
+(reg-event-db
+  :application/select-review-hakukohde
+  (fn [db [_ selected-hakukohde-oid]]
+    (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))

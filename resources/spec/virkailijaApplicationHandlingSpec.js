@@ -5,7 +5,6 @@
 
   describe('Application handling', function() {
     describe('for first form', function() {
-      // Tie these to describe-scope instead of global
       var firstNotSelected = null;
       var eventCountBefore = null;
       var firstNotSelectedCaption = null;
@@ -190,7 +189,7 @@
     describe('application filtering', function() {
       before(clickElement(filterLink));
       it('reduces application list', function(done) {
-        expect(includedFilters()).to.equal(11);
+        expect(includedFilters()).to.equal(8);
         expect(applicationStates().length).to.equal(3);
 
         var stateOfFirstApplication = applicationStates().eq(0).text();
@@ -240,9 +239,9 @@
         })()
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
-        .then(function() {
-          expectApplicants(['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
-        })
+        .then(wait.until(function() {
+          return _.isEqual(applicantNames(), ['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
+        }))
         .then(done)
         .fail(done)
       });
@@ -263,10 +262,6 @@
         return function() {
           return ssnSearchField().val() === value
         }
-      }
-
-      function expectApplicants(expected) {
-        expect(applicantNames()).to.eql(expected)
       }
 
       function applicantNames() {
@@ -314,7 +309,7 @@
         );
 
         it('shows virkailija edit link', function() {
-          expect(includedFilters()).to.equal(8);
+          expect(includedFilters()).to.equal(5);
         })
       });
     });

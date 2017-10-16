@@ -15,57 +15,66 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
-                                                                       textual-field-value
+                                                                       get-value
+                                                                       replace-with-option-label
+                                                                       predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]))
 
-(defn text [field-descriptor application lang]
+(defn text [field-descriptor application lang group-idx]
   [:div.application__form-field
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
    [:div.application__form-field-value
-    (let [answer       ((answer-key field-descriptor) (:answers application))
-          values       (:value answer)
-          multi-value? #(or (seq? %) (vector? %))]
-      (if (multi-value? values)
-        (into [:ul.application__form-field-list] (map-indexed (fn [question-group-idx value]
-                                                                (if (multi-value? value)
-                                                                  (map-indexed (fn [value-idx x]
-                                                                                 ^{:key (str "value-" question-group-idx "-" value-idx)}
-                                                                                 [:li x]) value)
-                                                                  [:li value]))
-                                                              values))
-        (textual-field-value field-descriptor application :lang lang)))]])
+    (let [answer (get-in application [:answers (keyword (:id field-descriptor))])
+          values (cond-> (get-value answer group-idx)
+                   (and (predefined-value-answer? field-descriptor)
+                        (not (contains? field-descriptor :koodisto-source)))
+                   (replace-with-option-label (:options field-descriptor) lang))]
+      (cond (and (sequential? values) (< 1 (count values)))
+            [:ul.application__form-field-list
+             (for [value values]
+               ^{:key value}
+               [:li value])]
+            (sequential? values)
+            (first values)
+            :else
+            values))]])
 
-(defn attachment [field-descriptor application lang]
+(defn- attachment-list [attachments]
+  [:div
+   (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+                  (let [text              (str filename " (" (util/size-bytes->str size) ")")
+                        component-key     (str "attachment-div-" idx)
+                        virus-status-elem (case virus-scan-status
+                                            "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
+                                                           " | Tarkastetaan..."]
+                                            "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                      " | Virus löytyi"]
+                                            "done" nil
+                                            "Virhe")]
+                    [:div.application__virkailija-readonly-attachment-text
+                     {:key component-key}
+                     (if (= virus-scan-status "done")
+                       [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
+                        text]
+                       text)
+                     virus-status-elem]))
+                attachments)])
+
+(defn attachment [field-descriptor application lang group-idx]
   (when (fc/feature-enabled? :attachment)
     (let [answer-key (keyword (answer-key field-descriptor))
-          values     (get-in application [:answers answer-key :value])]
+          values     (cond-> (get-in application [:answers answer-key :values])
+                       (some? group-idx)
+                       (nth group-idx))]
       [:div.application__form-field
        [:label.application__form-field-label
         (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-       [:div
-        (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                       (let [text              (str filename " (" (util/size-bytes->str size) ")")
-                             component-key     (str "attachment-div-" idx)
-                             virus-status-elem (case virus-scan-status
-                                                 "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                                " | Tarkastetaan..."]
-                                                 "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                           " | Virus löytyi"]
-                                                 "done" nil
-                                                 "Virhe")]
-                         [:div.application__virkailija-readonly-attachment-text
-                          {:key component-key}
-                          (if (= virus-scan-status "done")
-                            [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
-                             text]
-                            text)
-                          virus-status-elem]))
-                     values)]])))
+       [attachment-list values]])))
 
 (declare field)
 
@@ -89,7 +98,7 @@
     (fn [application lang children]
       (into [:div] (child-fields children application lang @ui)))))
 
-(defn- extract-values [children answers]
+(defn- extract-values [children answers group-idx]
   (let [child-answers  (->> (map answer-key children)
                             (select-keys answers))
         ; applicant side stores values as hashmaps
@@ -107,7 +116,7 @@
                                       (filter not-empty)
                                       not-empty)]
       (if (question-group-answer? concatenated-answers)
-        (answers->read-only-format concatenated-answers)
+        (nth (answers->read-only-format concatenated-answers) group-idx)
         (apply map vector concatenated-answers)))))
 
 (defn- fieldset-answer-table [answers]
@@ -120,8 +129,8 @@
            [:td (str value)]))))])
 
 
-(defn fieldset [field-descriptor application lang children]
-  (let [fieldset-answers (extract-values children (:answers application))]
+(defn fieldset [field-descriptor application lang children group-idx]
+  (let [fieldset-answers (extract-values children (:answers application) group-idx)]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
@@ -150,7 +159,7 @@
 
 (defn- followups [followups content application lang]
   [:div
-   (text content application lang)
+   (text content application lang nil)
    (into [:div]
      (for [followup followups
            :let [followup-is-visible? (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id followup)) :visible?])]
@@ -168,7 +177,7 @@
     [:div.application-handling__review-area-koulutus-heading
      @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
 
-(defn- hakukohteet [content application]
+(defn- hakukohteet [content]
   (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]
     [:div.application__wrapper-element.application__wrapper-element--border
      [:div.application__wrapper-heading
@@ -183,9 +192,30 @@
   [:div.application__person-info-wrapper
    [wrapper content application lang (:children content)]])
 
+(defn- repeat-count
+  [application question-group-children]
+  (util/reduce-form-fields
+   (fn [max-count child]
+     (max max-count
+          (count (get-in application [:answers (keyword (:id child)) :value]))))
+   0
+   question-group-children))
+
+(defn- question-group [content application lang children]
+  [:div.application__question-group
+   [:h3.application__question-group-heading
+    (-> content :label lang)]
+   (for [idx (range (repeat-count application children))]
+     ^{:key (str "question-group-" (:id content) "-" idx)}
+     [:div.application__question-group-repeat
+      (for [child children]
+        ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
+        [field child application lang idx])])])
+
 (defn field [{field-hakukohteet :belongs-to-hakukohteet :as content}
              {application-hakukohteet :hakukohde :as application}
-             lang]
+             lang
+             group-idx]
   ;; render the field if either
   ;; 1) the field isn't a hakukohde specific question
   ;; 2) the field is a hakukohde specific question and the user has applied to one of
@@ -195,16 +225,17 @@
                                                  (set application-hakukohteet))))
     (match content
            {:module "person-info"} [person-info-module content application lang]
-           {:fieldClass (:or "wrapperElement" "questionGroup") :fieldType "fieldset" :children children} [wrapper content application lang children]
+           {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+           {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
            {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children]
-           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children]
+           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
            {:fieldClass "formField" :exclude-from-answers true} nil
            {:fieldClass "infoElement"} nil
            {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice") :options (options :guard util/followups?)}
            [followups (mapcat :followups options) content application lang]
-           {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang)
-           {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang]
-           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content application])))
+           {:fieldClass "formField" :fieldType (:or "textField" "textArea" "dropdown" "multipleChoice" "singleChoice")} (text content application lang group-idx)
+           {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
+           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content])))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
@@ -220,4 +251,4 @@
       (into [:div.application__readonly-container]
         (for [content (:content form)
               :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
-          [field content application lang])))))
+          [field content application lang nil])))))

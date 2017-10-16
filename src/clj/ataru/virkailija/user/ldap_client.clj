@@ -48,6 +48,14 @@
 (defn get-right-organization-oids [connection user-name rights]
   (user->right-organization-oids (get-user connection user-name) rights))
 
-(defn get-virkailija-by-username [user-name]
-  (get-user (create-ldap-connection) user-name))
+(def fake-virkailija-value {:employeeNumber "1.2.246.562.11.11111111012"
+                            :givenName      "Veijo"
+                            :sn             "Virkailija"})
+
+(defn get-virkailija-by-username
+  [user-name]
+  ; TODO this function should probably be in a service with a proper mock version
+  (if (-> config :dev :fake-dependencies)
+    fake-virkailija-value
+    (get-user (create-ldap-connection) user-name)))
 

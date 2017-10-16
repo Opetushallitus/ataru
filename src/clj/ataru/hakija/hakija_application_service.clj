@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-application-service
   (:require
    [taoensso.timbre :as log]
+   [clojure.core.async :as async]
    [ataru.background-job.job :as job]
    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
    [ataru.hakija.application-email-confirmation :as application-email]
@@ -22,8 +23,7 @@
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [clj-time.core :as time]
-   [clj-time.coerce :refer [from-long]]))
+   [ataru.config.core :refer [config]]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -47,35 +47,28 @@
         haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
     (hakuaika/get-hakuaika-info hakukohde haku)))
 
-(defn- after-apply-end-within-10-days?
-  [apply-end-long]
-  (when apply-end-long
-    (let [now            (time/now)
-          apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days 10))]
-      (and (time/after? now apply-end)
-           (time/after? days-after-end now)))))
+(defn- attachment-modify-grace-period
+  []
+  (-> config
+      :public-config
+      (get :attachment-modify-grace-period-days 14)))
 
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
-      true ;; plain form, always allowed to apply
+      true                                                  ;; plain form, always allowed to apply
       (let [hakuaikas (get-hakuaikas tarjonta-service application)]
         (or (:on hakuaikas)
-            (after-apply-end-within-10-days? (:end hakuaikas)))))))
+            (util/after-apply-end-within-days? (:end hakuaikas) (attachment-modify-grace-period)))))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
 
-(defn- in-complete-state? [application-key]
-  (let [state (:state (application-store/get-application-review application-key))]
-    (boolean (some #{state} complete-states))))
-
 (defn processing-in-jatkuva-haku? [application-key tarjonta-info]
   (let [state (:state (application-store/get-application-review application-key))]
-    (and (= state "processing")
+    (and (not= state "unprocessed")
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
 (defn- get-hakuaika-end
@@ -87,7 +80,7 @@
   [answer application tarjonta-service]
   (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
     (and (when hakuaika-end
-           (after-apply-end-within-10-days? hakuaika-end))
+           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period)))
          (not= (:fieldType answer) "attachment"))))
 
 (defn- dummy-answer-to-unanswered-question
@@ -192,6 +185,24 @@
   (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
     virkailija-secret))
 
+(defn- set-original-value
+  [old-values-by-key new-answer]
+  (assoc new-answer :original-value (get old-values-by-key (:key new-answer))))
+
+(defn- set-original-values
+  [old-application new-application]
+  (let [old-values-by-key (into {} (map (juxt :key :value)
+                                        (:answers old-application)))]
+    (update new-application :answers
+            (partial map (partial set-original-value old-values-by-key)))))
+
+(defn- has-applied
+  [haku-oid identifier]
+  (async/go
+    (if (contains? identifier :ssn)
+      (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
+      (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
+
 (defn- validate-and-store [tarjonta-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
@@ -199,13 +210,17 @@
                                (:form)
                                (form-store/fetch-by-id)
                                (hakija-form-service/inject-hakukohde-component-if-missing)
-                               (hakukohde/populate-hakukohde-answer-options tarjonta-info))
+                               (hakukohde/populate-hakukohde-answer-options tarjonta-info)
+                               (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
                              application)
-        validation-result  (validator/valid-application? final-application form)
+        validation-result  (validator/valid-application?
+                            has-applied
+                            (set-original-values latest-application final-application)
+                            form)
         virkailija-secret  (valid-virkailija-secret application)]
     (cond
       (and (not (nil? virkailija-secret))
@@ -225,8 +240,7 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (or (in-complete-state? (:key latest-application))
-               (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info)))
+           (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info))
       not-allowed-reply
 
       (not (:passed? validation-result))

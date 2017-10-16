@@ -13,24 +13,41 @@
      ["Lista, monta valittavissa" component/multiple-choice]
      ["Tekstikenttä" component/text-field]
      ["Tekstialue" component/text-area]
-     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]
-     ;["Kysymysryhmä" component/question-group] Will be enabled when feature is ready
-     ]
+     ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
+    (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])))
 
-(def followup-toolbar-element-names #{"Tekstikenttä"
-                                      "Tekstialue"
-                                      "Pudotusvalikko"
-                                      "Painikkeet, yksi valittavissa"
-                                      "Lista, monta valittavissa"
-                                      "Infoteksti"
-                                      "Liitepyyntö"
-                                      "Vierekkäiset tekstikentät"})
+(def followup-toolbar-element-names
+  (cond-> #{"Tekstikenttä"
+            "Tekstialue"
+            "Pudotusvalikko"
+            "Painikkeet, yksi valittavissa"
+            "Lista, monta valittavissa"
+            "Infoteksti"
+            "Liitepyyntö"
+            "Vierekkäiset tekstikentät"}
+    (fc/feature-enabled? :question-group)
+    (conj "Kysymysryhmä")))
+
+(def question-group-toolbar-element-names
+  #{"Tekstikenttä"
+    "Tekstialue"
+    "Pudotusvalikko"
+    "Painikkeet, yksi valittavissa"
+    "Lista, monta valittavissa"
+    "Infoteksti"
+    "Liitepyyntö"
+    "Vierekkäiset tekstikentät"})
 
 (def ^:private followup-toolbar-elements
   (filter
     (fn [[el-name _]] (contains? followup-toolbar-element-names el-name))
+    toolbar-elements))
+
+(def ^:private question-group-toolbar-elements
+  (filter
+    (fn [[el-name _]] (contains? question-group-toolbar-element-names el-name))
     toolbar-elements))
 
 (def ^:private adjacent-fieldset-toolbar-elements
@@ -68,6 +85,9 @@
 
 (defn followup-toolbar [option-path generator]
   [custom-add-component followup-toolbar-elements option-path generator])
+
+(defn question-group-toolbar [option-path generator]
+  [custom-add-component question-group-toolbar-elements option-path generator])
 
 (defn adjacent-fieldset-toolbar [path generator]
   [custom-add-component adjacent-fieldset-toolbar-elements path generator])

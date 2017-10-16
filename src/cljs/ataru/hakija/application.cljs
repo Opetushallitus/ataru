@@ -118,11 +118,13 @@
         fields-to-remove           (clojure.set/intersection fields-to-remove-if-hidden hidden-field-ids)]
     (remove-keys #(contains? fields-to-remove %) answers)))
 
-(defn- value->str [field-map value]
-  (cond (= (:fieldType field-map) "attachment")
-        (get-in value [:value :key])
-
-        :else (or (:value value) "")))
+(defn- value-from-values [field-map value]
+  (let [t (if (= (:fieldType field-map) "attachment")
+            #(-> % :value :key)
+            #(or (:value %) ""))]
+    (if (vector? value)
+      (map t value)
+      (t value))))
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
@@ -142,7 +144,7 @@
       (cond-> {:key       (name ans-key)
                :value     (or
                             value
-                            (map (partial value->str field-map) values))
+                            (map (partial value-from-values field-map) values))
                :fieldType field-type
                :label     label}
               cannot-edit (assoc :cannot-edit true)
@@ -189,32 +191,24 @@
         (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
       wrapper-sections)))
 
-(defn application-in-complete-state? [application]
-  (boolean (some #{(:state application)} complete-states)))
-
 (defn application-processing-jatkuva-haku? [application haku]
-  (and (= (:state application) "processing")
+  (and (not= (:state application) "unprocessed")
        (:is-jatkuva-haku? haku)))
-
-(defn- after-apply-end-within-10-days?
-  [apply-end-long]
-  (if apply-end-long
-    (let [now            (time/now)
-          apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days 10))]
-      (time/within? apply-end days-after-end now))
-    false))
 
 (defn applying-possible? [form application]
   (cond
     (:virkailija-secret application)
     true
 
-    (or (application-in-complete-state? application)
-        (application-processing-jatkuva-haku? application (:tarjonta form)))
+    (application-processing-jatkuva-haku? application (:tarjonta form))
     false
 
-    (after-apply-end-within-10-days? (-> form :tarjonta :hakuaika-dates :end))
+    (and
+      (:editing? application)
+      (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
+                                         (-> js/config
+                                             js->clj
+                                             (get "attachment-modify-grace-period-days" 14))))
     true
 
     ;; When applying to hakukohde, hakuaika must be on

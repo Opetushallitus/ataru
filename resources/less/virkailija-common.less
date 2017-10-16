@@ -68,20 +68,6 @@
   transform: translateX(-50%);
 }
 
-[data-tooltip]:after {
-  content: '';
-  display: none;
-  position: absolute;
-  width: 0;
-  height: 0;
-  left: 50%;
-  top: 100%;
-  margin-left: -6px;
-  border: transparent solid;
-  border-width: 0 6px 6px;
-  border-bottom-color: @banner-blue;
-}
-
 [data-tooltip]:hover:before, [data-tooltip]:hover:after {
   display: block;
   z-index: 5;
