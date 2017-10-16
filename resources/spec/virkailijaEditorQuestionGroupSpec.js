@@ -72,12 +72,13 @@
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(0)') }, 'Päätaso: pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(1)') }, 'Päätaso: A'),
           clickElement(function () { return formComponents().find('.editor-form__add-dropdown-item a:contains("Lisää")') }),
-          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B')
+          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B'),
+          clickElement(function() { return formComponents().find('.editor-form__checkbox + label') })
         )
         it('has expected contents', function () {
           expect(formComponents()).to.have.length(1)
           expect(formComponents().find('.editor-form__text-field:eq(0)').val()).to.equal('Päätaso: pudotusvalikko')
-          expect(formComponents().find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formComponents().find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__text-field:eq(1)').val()).to.equal('Päätaso: A')
           expect(formComponents().find('.editor-form__text-field:eq(2)').val()).to.equal('Päätaso: B')
         })

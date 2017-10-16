@@ -26,6 +26,9 @@ switch (app) {
   case 'hakija-form':
     url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;
+  case 'hakija-question-group-form':
+    url = 'http://localhost:8351/hakemus/hakija-question-group-form-test.html'
+    break;
   case 'hakija-haku':
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html'
     break;
@@ -44,6 +47,9 @@ switch (app) {
      *  is to add the credentials directly in to the db
      * */
     url = 'http://localhost:8351/hakemus/virkailija-hakemus-edit-test.html'
+    break;
+  case 'hakija-question-group-form':
+    url = 'http://localhost:8351/hakemus/hakija-question-group-form-test.html'
     break;
   default:
     console.log('invalid app: ' + app)

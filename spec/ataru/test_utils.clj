@@ -72,6 +72,7 @@
     (cond->
       {:test-form-key                (:key test-form)
        :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
+       :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
        :test-form-application-secret (:secret application)}
 
       (some? application)

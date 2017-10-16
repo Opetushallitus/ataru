@@ -88,7 +88,7 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET ["/hakija-:testname{[A-Za-z]+}-test.html"] [testname]
+    (api/GET ["/hakija-:testname{[A-Za-z\\-]+}-test.html"] [testname]
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
