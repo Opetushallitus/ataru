@@ -1014,3 +1014,13 @@
      :dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
                  [:application/set-application-field field-descriptor value])}))
+
+(reg-event-db
+  :application/remove-question-group-mouse-over
+  (fn [db [_ field-descriptor idx]]
+    (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] true)))
+
+(reg-event-db
+  :application/remove-question-group-mouse-out
+  (fn [db [_ field-descriptor idx]]
+    (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))

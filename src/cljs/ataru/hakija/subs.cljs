@@ -172,3 +172,8 @@
   :application/show-hakukohde-search
   (fn [db _]
     (get-in db [:application :show-hakukohde-search])))
+
+(re-frame/reg-sub
+  :application/mouse-over-remove-question-group-button
+  (fn [db [_ field-descriptor idx]]
+    (get-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx])))

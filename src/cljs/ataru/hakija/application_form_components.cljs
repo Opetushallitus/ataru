@@ -278,29 +278,53 @@
            (for [child children]
              [render-field child lang]))]))))
 
+(defn- remove-question-group-button [field-descriptor idx]
+  (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
+                                field-descriptor
+                                idx])
+        on-mouse-over (fn [_]
+                        (dispatch [:application/remove-question-group-mouse-over
+                                   field-descriptor
+                                   idx]))
+        on-mouse-out (fn [_]
+                       (dispatch [:application/remove-question-group-mouse-out
+                                  field-descriptor
+                                  idx]))]
+    (fn [_ _]
+      (if @mouse-over?
+        [:i.zmdi.zmdi-close.application__remove-question-group-row.application__remove-question-group-row-mouse-over
+         {:on-mouse-out on-mouse-out}]
+        [:i.zmdi.zmdi-close.application__remove-question-group-row
+         {:on-mouse-over on-mouse-over}]))))
+
+(defn- question-group-row [field-descriptor children idx]
+  (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
+                                field-descriptor
+                                idx])]
+    [(if @mouse-over?
+       :div.application__question-group-row.application__question-group-row-mouse-over
+       :div.application__question-group-row)
+     [:div.application__question-group-row-content
+      (for [child children]
+        ^{:key (str (:id child) "-" idx)}
+        [render-field child :idx idx])]
+     [remove-question-group-button field-descriptor idx]]))
+
 (defn question-group [field-descriptor children]
-  (let [row-count (or @(subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]]) 1)]
-    [:div.application__wrapper-element.application__question-group
-     [:div.application__wrapper-heading.application__question-group-wrapper-heading
-      [scroll-to-anchor field-descriptor]]
-     (-> [:div.application__wrapper-contents.application__question-group-wrapper-contents]
-         (into (mapcat
-                 (fn [idx]
-                   (conj
-                     (mapv (fn [child]
-                             ^{:key (str (:id child) "-" idx)}
-                             [render-field child :idx idx])
-                       children)
-                     (when (< idx (dec row-count))
-                       [group-spacer idx])))
-                 (range row-count)))
-         (conj [:div.application__form-field.flex-row.application__add-question-group-row
-                [:a {:href     "#"
-                     :on-click (fn add-question-group-row [event]
-                                 (.preventDefault event)
-                                 (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-                 [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-                 "Lisää"]]))]))
+  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
+    [:div.application__question-group
+     [scroll-to-anchor field-descriptor]
+     [:div
+      (for [idx (range (or @row-count 1))]
+        ^{:key (str "question-group-row-" idx)}
+        [question-group-row field-descriptor children idx])]
+     [:div.application__add-question-group-row
+      [:a {:href     "#"
+           :on-click (fn add-question-group-row [event]
+                       (.preventDefault event)
+                       (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+       [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+       "Lisää"]]]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
