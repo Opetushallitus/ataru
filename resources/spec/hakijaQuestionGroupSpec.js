@@ -172,6 +172,7 @@
           expect(formFields().eq(29).find('.application__form-text-input:eq(2)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C2')
           expect(formFields().eq(29).find('.application__form-text-input:eq(3)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
           expect(invalidFieldsStatus().text()).to.equal('')
+          expect(submitButton().prop('disabled')).to.equal(false)
         })
       })
     })
