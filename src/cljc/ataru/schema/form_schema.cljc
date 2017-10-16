@@ -217,7 +217,7 @@
    :henkiloOid    s/Str
    :asiointikieli s/Str
    :hakukohteet   [s/Str]
-   :email         s/Str})
+   :email         (s/maybe s/Str)})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
