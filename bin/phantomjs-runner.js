@@ -26,6 +26,9 @@ switch (app) {
   case 'hakija-form':
     url = 'http://localhost:8351/hakemus/hakija-form-test.html'
     break;
+  case 'hakija-question-group-form':
+    url = 'http://localhost:8351/hakemus/hakija-question-group-form-test.html'
+    break;
   case 'hakija-haku':
     url = 'http://localhost:8351/hakemus/hakija-haku-test.html'
     break;
