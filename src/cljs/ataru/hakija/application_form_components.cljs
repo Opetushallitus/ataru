@@ -289,15 +289,20 @@
         on-mouse-out (fn [_]
                        (dispatch [:application/remove-question-group-mouse-out
                                   field-descriptor
-                                  idx]))]
+                                  idx]))
+        on-click (fn [_]
+                   (dispatch [:application/remove-question-group-row
+                              field-descriptor
+                              idx]))]
     (fn [_ _]
-      (if @mouse-over?
-        [:i.zmdi.zmdi-close.application__remove-question-group-row.application__remove-question-group-row-mouse-over
-         {:on-mouse-out on-mouse-out}]
-        [:i.zmdi.zmdi-close.application__remove-question-group-row
-         {:on-mouse-over on-mouse-over}]))))
+      [(if @mouse-over?
+         :i.zmdi.zmdi-close.application__remove-question-group-row.application__remove-question-group-row-mouse-over
+         :i.zmdi.zmdi-close.application__remove-question-group-row)
+       {:on-mouse-over on-mouse-over
+        :on-mouse-out on-mouse-out
+        :on-click on-click}])))
 
-(defn- question-group-row [field-descriptor children idx]
+(defn- question-group-row [field-descriptor children idx can-remove?]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
                                 field-descriptor
                                 idx])]
@@ -308,16 +313,22 @@
       (for [child children]
         ^{:key (str (:id child) "-" idx)}
         [render-field child :idx idx])]
-     [remove-question-group-button field-descriptor idx]]))
+     (when can-remove?
+       [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
   (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
     [:div.application__question-group
      [scroll-to-anchor field-descriptor]
      [:div
-      (for [idx (range (or @row-count 1))]
-        ^{:key (str "question-group-row-" idx)}
-        [question-group-row field-descriptor children idx])]
+      (doall
+       (for [idx (range (or @row-count 1))]
+         ^{:key (str "question-group-row-" idx)}
+         [question-group-row
+          field-descriptor
+          children
+          idx
+          (< 1 @row-count)]))]
      [:div.application__add-question-group-row
       [:a {:href     "#"
            :on-click (fn add-question-group-row [event]
