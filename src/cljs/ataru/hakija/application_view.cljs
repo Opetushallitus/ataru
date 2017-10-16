@@ -6,10 +6,11 @@
             [ataru.cljs-util :as util]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :as translations]
-            [ataru.hakija.application :refer [application-in-complete-state? application-processing-jatkuva-haku?]]
+            [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
-            [cljs-time.format :refer [unparse formatter]]
+            [cljs-time.core :refer [to-default-time-zone]]
+            [cljs-time.format :refer [unparse unparse-local formatter]]
             [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]))
@@ -19,7 +20,14 @@
    :sv "På svenska"
    :en "In English"})
 
-(def date-format (formatter "d.M.yyyy HH:mm"))
+(def date-format (formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
+
+(defn- millis->str
+  [millis]
+  (->> millis
+    (from-long)
+    (to-default-time-zone)
+    (unparse-local date-format)))
 
 (defn application-header [form]
   (let [selected-lang     (or (:selected-language form) :fi)
@@ -34,18 +42,17 @@
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
-
         translations      (get-translations
                             (keyword selected-lang)
                             translations/application-view-translations)
         apply-dates       (when haku-name
                             (if (and apply-start-date apply-end-date)
                               (str (:application-period translations)
-                                   ": "
-                                   (unparse date-format (from-long apply-start-date))
+                                   " "
+                                   (millis->str apply-start-date)
                                    " - "
-                                   (unparse date-format (from-long apply-end-date))
-                                   (when (and (not hakuaika-on) (nil? virkailija-secret))
+                                   (millis->str apply-end-date)
+                                   (when (and (not hakuaika-on) (nil? @virkailija-secret))
                                      (str " (" (:not-within-application-period translations) ")")))
                               (:continuous-period translations)))]
     (fn [form]
@@ -66,8 +73,7 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (and (or (application-in-complete-state? @application)
-                      (application-processing-jatkuva-haku? @application (:tarjonta form)))
+       (when (and (application-processing-jatkuva-haku? @application (:tarjonta form))
                   (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
@@ -79,23 +85,29 @@
       [readonly-view/readonly-fields form @application])))
 
 (defn render-fields [form]
-  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])
+        editing?      (subscribe [:state-query [:application :editing?]])
+        can-apply?    (subscribe [:application/can-apply?])]
     (fn [form]
-      (if (= :submitted @submit-status)
+      (if (or (= :submitted @submit-status)
+              (and
+                @editing?
+                (not @can-apply?)))
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf
           [editable-fields form])))))
 
 (defn application-contents []
-  (let [form                  (subscribe [:state-query [:form]])
-        can-apply?            (subscribe [:application/can-apply?])]
+  (let [form       (subscribe [:state-query [:form]])
+        can-apply? (subscribe [:application/can-apply?])
+        editing?   (subscribe [:state-query [:application :editing?]])]
     (fn []
       [:div.application__form-content-area
        ^{:key (:id @form)}
        [application-header @form]
 
-       (when @can-apply?
+       (when (or @can-apply? @editing?)
          ^{:key "form-fields"}
          [render-fields @form])])))
 

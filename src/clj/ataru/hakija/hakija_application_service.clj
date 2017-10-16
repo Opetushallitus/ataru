@@ -47,18 +47,21 @@
         haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
     (hakuaika/get-hakuaika-info hakukohde haku)))
 
+(defn- attachment-modify-grace-period
+  []
+  (-> config
+      :public-config
+      (get :attachment-modify-grace-period-days 14)))
+
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service application]
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
-      true ;; plain form, always allowed to apply
-      (let [hakuaikas                    (get-hakuaikas tarjonta-service application)
-            attachment-edit-grace-period (-> config
-                                             :public-config
-                                             (get :attachment-modify-grace-period-days 14))]
+      true                                                  ;; plain form, always allowed to apply
+      (let [hakuaikas (get-hakuaikas tarjonta-service application)]
         (or (:on hakuaikas)
-            (util/after-apply-end-within-days? (:end hakuaikas) attachment-edit-grace-period))))))
+            (util/after-apply-end-within-days? (:end hakuaikas) (attachment-modify-grace-period)))))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -75,12 +78,9 @@
 
 (defn- only-attachments-editable?
   [answer application tarjonta-service]
-  (let [hakuaika-end                 (get-hakuaika-end application tarjonta-service)
-        attachment-edit-grace-period (-> config
-                                         :public-config
-                                         (get :attachment-modify-grace-period-days 14))]
+  (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
     (and (when hakuaika-end
-           (util/after-apply-end-within-days? hakuaika-end attachment-edit-grace-period))
+           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period)))
          (not= (:fieldType answer) "attachment"))))
 
 (defn- dummy-answer-to-unanswered-question
