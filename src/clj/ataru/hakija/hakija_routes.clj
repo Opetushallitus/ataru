@@ -212,14 +212,14 @@
         (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid)))
       (api/GET "/applications" []
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
-        :query-params [{haku-oid :- s/Str nil}
-                       {hakukohde-oid :- s/Str nil}
-                       {application-oids :- [s/Str] nil}]
+        :query-params [{hakuOid :- s/Str nil}
+                       {hakukohdeOid :- s/Str nil}
+                       {applicationOids :- [s/Str] nil}]
         :return [ataru-schema/VtsApplication]
-        (if (and (nil? haku-oid)
-                 (nil? application-oids))
+        (if (and (nil? hakuOid)
+                 (nil? applicationOids))
           (response/bad-request {:error "No haku or application oid provided."})
-          (response/ok (application-store/get-applications-by-haku haku-oid hakukohde-oid application-oids))))
+          (response/ok (application-store/get-applications-by-haku hakuOid hakukohdeOid applicationOids))))
       (api/GET "/persons" []
         :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
         :query-params [haku-oid :- s/Str
