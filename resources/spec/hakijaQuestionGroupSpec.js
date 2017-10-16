@@ -41,7 +41,7 @@
           setNthFieldOption(13, 'Päätaso: B')
         )
         it('shows the question group as a followup element', function() {
-          expect(formFields().find('.application__form-dropdown-followups .application__question-group-wrapper-contents').length).to.equal(1)
+          expect(formFields().find('.application__form-dropdown-followups .application__question-group-row').length).to.equal(1)
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 10 tietoa')
         })
       })
