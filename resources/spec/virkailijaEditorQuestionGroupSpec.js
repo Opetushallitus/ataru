@@ -264,6 +264,18 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(13)').prop('checked')).to.equal(true)
         })
       })
+
+      describe('autosave', function () {
+        before(
+          wait.until(function() {
+            var flasher = testFrame().find('.top-banner .flasher')
+            return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
+          }, 5000)
+        )
+        it('notification shows success', function() {
+          expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
+        })
+      })
     })
   })
 })();
