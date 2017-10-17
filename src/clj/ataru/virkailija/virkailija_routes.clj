@@ -363,7 +363,39 @@
                  (api/POST "/checkpermission" []
                            :body [dto ataru-schema/PermissionCheckDto]
                            :return ataru-schema/PermissionCheckResponseDto
-                           (ok (permission-check/check organization-service dto)))))
+                           (ok (permission-check/check organization-service dto)))
+
+                 (api/context "/external" []
+                   :tags ["external-api"]
+                   (api/GET "/applications" {session :session}
+                            :summary "Get the latest versions of applications in haku or hakukohde or by oids."
+                            :query-params [{hakuOid :- s/Str nil}
+                                           {hakukohdeOid :- s/Str nil}
+                                           {hakemusOids :- [s/Str] nil}]
+                            :return [ataru-schema/VtsApplication]
+                            (if (and (nil? hakuOid)
+                                     (nil? hakemusOids))
+                              (response/bad-request {:error "No haku or application oid provided."})
+                              (if-let [applications (access-controlled-application/vts-applications
+                                                     organization-service
+                                                     session
+                                                     hakuOid
+                                                     hakukohdeOid
+                                                     hakemusOids)]
+                                (response/ok applications)
+                                (response/unauthorized {:error "Unauthorized"}))))
+                   (api/GET "/persons" {session :session}
+                            :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
+                            :query-params [hakuOid :- s/Str
+                                           {hakukohdeOid :- s/Str nil}]
+                            :return [{:hakemusOid s/Str :personOid s/Str}]
+                            (if-let [mapping (access-controlled-application/application-key-to-person-oid
+                                              organization-service
+                                              session
+                                              hakuOid
+                                              hakukohdeOid)]
+                              (response/ok mapping)
+                              (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes
   (api/undocumented

@@ -209,23 +209,7 @@
         :summary "Get latest versions of every application belonging to a user with given person OID"
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/ApplicationInfo]
-        (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid)))
-      (api/GET "/applications" []
-        :summary "Get the latest versions of applications in haku or hakukohde or by oids."
-        :query-params [{hakuOid :- s/Str nil}
-                       {hakukohdeOid :- s/Str nil}
-                       {hakemusOids :- [s/Str] nil}]
-        :return [ataru-schema/VtsApplication]
-        (if (and (nil? hakuOid)
-                 (nil? hakemusOids))
-          (response/bad-request {:error "No haku or application oid provided."})
-          (response/ok (application-store/get-applications-by-haku hakuOid hakukohdeOid hakemusOids))))
-      (api/GET "/persons" []
-        :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
-        :query-params [hakuOid :- s/Str
-                       {hakukohdeOid :- s/Str nil}]
-        :return [{:hakemusOid s/Str :personOid s/Str}]
-        (response/ok (application-store/get-person-and-application-oids hakuOid hakukohdeOid))))
+        (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid))))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
