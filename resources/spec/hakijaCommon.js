@@ -164,3 +164,11 @@ function focusInput(index) {
     formFields().eq(index).find('input').focus();
   }
 }
+
+function readonlyAnswer(index) {
+  return testFrame().find('.application__readonly-text:eq(' + index + ')').text()
+}
+
+function adjacentReadonlyAnswer(index) {
+  return testFrame().find('.application__readonly-adjacent-cell:eq(' + index + ')').text()
+}

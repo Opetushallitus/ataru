@@ -35,7 +35,9 @@
         // person info module intentionally not verified in detail in this test
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 1 tietoa')
       })
+    })
 
+    describe('question group', function() {
       describe('selecting dropdown element having question group as a followup question', function() {
         before(
           setNthFieldOption(13, 'Päätaso: B')
@@ -173,6 +175,64 @@
           expect(formFields().eq(29).find('.application__form-text-input:eq(3)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
           expect(invalidFieldsStatus().text()).to.equal('')
           expect(submitButton().prop('disabled')).to.equal(false)
+        })
+      })
+
+      describe('submitting the application', function() {
+        before(
+          clickElement(submitButton)
+        )
+        it('submits the application and shows the feedback form', function() {
+          expect(testFrame().find('.application__status-controls .application__sent-placeholder-text').text()).to.equal('Hakemus lähetetty')
+          expect(testFrame().find('.application-feedback-form').length).to.equal(1)
+        })
+      })
+
+      describe('closing the feedback form', function() {
+        before(
+          clickElement(function() { return testFrame().find('.application-feedback-form__close-button') })
+        )
+        it('closes the feedback form and shows the read-only view', function() {
+          expect(testFrame().find('.application-feedback-form').length).to.equal(0)
+          expect(readonlyAnswer(0)).to.equal('Etunimi Tokanimi')
+          expect(readonlyAnswer(1)).to.equal('Etunimi')
+          expect(readonlyAnswer(2)).to.equal('Sukunimi')
+          expect(readonlyAnswer(3)).to.equal('Suomi')
+          expect(readonlyAnswer(4)).to.equal('020202A0202')
+          expect(readonlyAnswer(5)).to.equal('test@example.com')
+          expect(readonlyAnswer(6)).to.equal('050123')
+          expect(readonlyAnswer(7)).to.equal('Suomi')
+          expect(readonlyAnswer(8)).to.equal('Katutie 12 B')
+          expect(readonlyAnswer(9)).to.equal('40100')
+          expect(readonlyAnswer(10)).to.equal('JYVÄSKYLÄ')
+          expect(readonlyAnswer(11)).to.equal('Jyväskylä')
+          expect(readonlyAnswer(12)).to.equal('suomi')
+          expect(readonlyAnswer(13)).to.equal('Päätaso: B')
+          expect(readonlyAnswer(14)).to.equal('Pudotusvalikko: A')
+          expect(readonlyAnswer(15)).to.equal('Painikkeet, yksi valittavissa: A')
+          expect(readonlyAnswer(16)).to.equal('Lista, monta valittavissa: ALista, monta valittavissa: B')
+          expect(readonlyAnswer(17)).to.equal('Tekstikenttä, yksi vastaus: A')
+          expect(readonlyAnswer(18)).to.equal('Tekstikenttä, monta vastausta: ATekstikenttä, monta vastausta: B')
+          expect(readonlyAnswer(19)).to.equal('Tekstialue: AAAAA')
+          expect(adjacentReadonlyAnswer(0)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus A')
+          expect(adjacentReadonlyAnswer(1)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus B')
+          expect(adjacentReadonlyAnswer(2)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus A1')
+          expect(adjacentReadonlyAnswer(3)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus B1')
+          expect(adjacentReadonlyAnswer(4)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus A2')
+          expect(adjacentReadonlyAnswer(5)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus B2')
+
+          expect(readonlyAnswer(20)).to.equal('Pudotusvalikko: B')
+          expect(readonlyAnswer(21)).to.equal('Painikkeet, yksi valittavissa: B')
+          expect(readonlyAnswer(22)).to.equal('Lista, monta valittavissa: B')
+          expect(readonlyAnswer(23)).to.equal('Tekstikenttä, yksi vastaus: B')
+          expect(readonlyAnswer(24)).to.equal('Tekstikenttä, monta vastausta: CTekstikenttä, monta vastausta: D')
+          expect(readonlyAnswer(25)).to.equal('Tekstialue: BBBBB')
+          expect(adjacentReadonlyAnswer(6)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus C')
+          expect(adjacentReadonlyAnswer(7)).to.equal('Vierekkäiset tekstikentät, yksi vastaus: vastaus D')
+          expect(adjacentReadonlyAnswer(8)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C1')
+          expect(adjacentReadonlyAnswer(9)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D1')
+          expect(adjacentReadonlyAnswer(10)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C2')
+          expect(adjacentReadonlyAnswer(11)).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
         })
       })
     })
