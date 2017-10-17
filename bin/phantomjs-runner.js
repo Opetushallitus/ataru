@@ -48,9 +48,6 @@ switch (app) {
      * */
     url = 'http://localhost:8351/hakemus/virkailija-hakemus-edit-test.html'
     break;
-  case 'hakija-question-group-form':
-    url = 'http://localhost:8351/hakemus/hakija-question-group-form-test.html'
-    break;
   default:
     console.log('invalid app: ' + app)
     phantom.exit(1)
