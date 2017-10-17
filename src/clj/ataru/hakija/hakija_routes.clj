@@ -214,18 +214,18 @@
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
-                       {applicationOids :- [s/Str] nil}]
+                       {hakemusOids :- [s/Str] nil}]
         :return [ataru-schema/VtsApplication]
         (if (and (nil? hakuOid)
-                 (nil? applicationOids))
+                 (nil? hakemusOids))
           (response/bad-request {:error "No haku or application oid provided."})
-          (response/ok (application-store/get-applications-by-haku hakuOid hakukohdeOid applicationOids))))
+          (response/ok (application-store/get-applications-by-haku hakuOid hakukohdeOid hakemusOids))))
       (api/GET "/persons" []
         :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
-        :query-params [haku-oid :- s/Str
-                       {hakukohde-oid :- s/Str nil}]
+        :query-params [hakuOid :- s/Str
+                       {hakukohdeOid :- s/Str nil}]
         :return [{:hakemusOid s/Str :personOid s/Str}]
-        (response/ok (application-store/get-person-and-application-oids haku-oid hakukohde-oid))))
+        (response/ok (application-store/get-person-and-application-oids hakuOid hakukohdeOid))))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
