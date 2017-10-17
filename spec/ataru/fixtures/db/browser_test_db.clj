@@ -171,4 +171,4 @@
 (defn insert-test-form [form-name]
   (if (= form-name "SSN_testilomake")
     (form-store/create-new-form! ssn-testform (:key ssn-testform))
-    (println "No test form found. Run virkailija test first!")))
+    (println (str "No test form (" form-name ") found. Run virkailija test first!"))))
