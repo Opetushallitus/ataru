@@ -66,8 +66,7 @@
           (it "are successful"
               (run-phantom-test "virkailija" (last (split (utils/login) #"="))))
           (it "creates a form with question groups"
-            (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"=")))
-            (println (str "virkailija-question-group test done, form key in db: " (utils/get-latest-form "Kysymysryhmä: testilomake")))))
+            (run-phantom-test "virkailija-question-group" (last (split (utils/login) #"=")))))
 
 (describe "Hakija UI tests /"
           (tags :ui :ui-hakija)
@@ -93,7 +92,6 @@
               (run-phantom-test "virkailija-hakemus-edit"))
 
           (it "can fill a form with a question group successfully"
-              (println (str "running hakija-question-group-form test, form key in db: " (utils/get-latest-form "Kysymysryhmä: testilomake")))
               (run-phantom-test "hakija-question-group-form")))
 
 (run-specs)
