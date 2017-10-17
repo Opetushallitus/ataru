@@ -35,7 +35,9 @@
         // person info module intentionally not verified in detail in this test
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 1 tietoa')
       })
+    })
 
+    describe('question group', function() {
       describe('selecting dropdown element having question group as a followup question', function() {
         before(
           setNthFieldOption(13, 'Päätaso: B')
