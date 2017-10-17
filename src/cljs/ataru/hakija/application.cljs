@@ -192,8 +192,9 @@
       wrapper-sections)))
 
 (defn application-processing-jatkuva-haku? [application haku]
-  (and (not= (:state application) "unprocessed")
-       (:is-jatkuva-haku? haku)))
+  (when-let [state (:state application)]
+    (and (not= state "unprocessed")
+         (:is-jatkuva-haku? haku))))
 
 (defn applying-possible? [form application]
   (cond
