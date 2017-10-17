@@ -175,6 +175,16 @@
           expect(submitButton().prop('disabled')).to.equal(false)
         })
       })
+
+      describe('submitting the application', function() {
+        before(
+          clickElement(submitButton)
+        )
+        it('submits the application and shows the feedback form', function() {
+          expect(testFrame().find('.application__status-controls .application__sent-placeholder-text').text()).to.equal('Hakemus lähetetty')
+          expect(testFrame().find('.application-feedback-form').length).to.equal(1)
+        })
+      })
     })
   })
 })()
