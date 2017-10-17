@@ -161,3 +161,11 @@
                 :answers
                 :hakukohteet
                 :value])))
+
+(re-frame/reg-sub
+  :application/filtered-applications
+  (fn [db _]
+    (let [applications       (-> db :application :applications)
+          application-filter (-> db :application :filter)
+          include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
+      (include-filtered application-filter applications))))

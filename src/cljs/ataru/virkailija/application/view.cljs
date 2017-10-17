@@ -18,6 +18,10 @@
     [goog.string.format]
     [ataru.application.review-states :as review-states]))
 
+(defn- icon-check []
+  [:img.application-handling__review-state-selected-icon
+   {:src "/lomake-editori/images/icon_check.png"}])
+
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
         hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
@@ -49,12 +53,112 @@
     [:div.application-handling__header-haku-name
      @header]))
 
+;(if @list-opened
+;  [:div.application-handling__review-state-list-opened-anchor
+;   (into [:div.application-handling__review-state-list-opened
+;          {:on-click list-click}]
+;     (opened-review-state-list :state review-state application-review-states/application-review-states))]
+;  (review-state-selected-row
+;    list-click
+;    (get-review-state-label-by-name application-review-states/application-review-states @review-state)))
+
+(defn- selected-or-default-mass-review-state
+  [selected all]
+  (if @selected
+    [@selected (all @selected)]
+    [(ffirst all) (second (first all))]))
+
+(defn- review-state-label
+  [state-name]
+  (second (first (filter #(= (first %) state-name) review-states/application-review-states))))
+
+(defn- review-label-with-count
+  [label count]
+  (str label
+       (when (< 0 count)
+         (str " (" count ")"))))
+
+(defn- selected-or-default-mass-review-state-label
+  [selected all]
+  (let [[name count] (selected-or-default-mass-review-state selected all)
+        label (review-state-label name)]
+    (review-label-with-count label count)))
+
+(defn mass-review-state-selected-row
+  [on-click label]
+  [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+   {:on-click on-click}
+   [icon-check] label])
+
+(defn mass-review-state-row
+  [current-review-state review-state]
+  (let [[review-state-name review-state-count] review-state
+        review-state-label (review-state-label review-state-name)
+        label-with-count   (review-label-with-count review-state-label review-state-count)
+        on-click           #(reset! current-review-state review-state-name)]
+    (if (= @current-review-state review-state-name)
+      (mass-review-state-selected-row #() label-with-count)
+      [:div.application-handling__review-state-row
+       {:on-click on-click}
+       label-with-count])))
+
+(defn opened-mass-review-state-list
+  [current-state all-states]
+  (mapv (partial mass-review-state-row current-state) all-states))
+
+(defn mass-update-applications-link
+  []
+  (let [element-visible?           (r/atom false)
+        from-list-open?            (r/atom false)
+        to-list-open?              (r/atom false)
+        filtered-applications      (subscribe [:application/filtered-applications])
+        selected-from-review-state (r/atom nil)
+        selected-to-review-state   (r/atom nil)
+        to-states (reduce (fn [acc [state _]]
+                            (assoc acc state 0))
+                          {}
+                          review-states/application-review-states)]
+    (fn []
+      (when-not (empty? @filtered-applications)
+        (let [from-states (reduce
+                            (fn [acc {:keys [state]}]
+                              (if (contains? acc state)
+                                (update acc state inc)
+                                (assoc acc state 1)))
+                            {} @filtered-applications)]
+          [:div.application-handling__mass-edit-review-states-container
+           [:a.application-handling__mass-edit-review-states-link
+            {:on-click #(swap! element-visible? not)}
+            "Tilojen massamuutos"]
+           (when @element-visible?
+             [:div.application-handling__mass-edit-review-states-popup
+              [:h4 "Hakemukset tilasta"]
+              (if @from-list-open?
+                [:div.application-handling__review-state-list-opened-anchor
+                 (into [:div.application-handling__review-state-list-opened
+                        {:on-click #(swap! from-list-open? not)}]
+                       (opened-mass-review-state-list selected-from-review-state from-states))]
+                (mass-review-state-selected-row
+                  #(swap! from-list-open? not)
+                  (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
+              [:h4 "Muutetaan tilaan"]
+              (if @to-list-open?
+                [:div.application-handling__review-state-list-opened-anchor
+                 (into [:div.application-handling__review-state-list-opened
+                        {:on-click #(swap! to-list-open? not)}]
+                       (opened-mass-review-state-list selected-to-review-state to-states))]
+                (mass-review-state-selected-row
+                  #(swap! to-list-open? not)
+                  (selected-or-default-mass-review-state-label selected-to-review-state to-states)))])])))))
+
 (defn haku-heading [filtered-applications application-filter]
   (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
     [:div.application-handling__header
      [haku-header]
-     (when @belongs-to-haku
-       [excel-download-link filtered-applications application-filter])]))
+     [:div
+      [mass-update-applications-link]
+      (when @belongs-to-haku
+        [excel-download-link filtered-applications application-filter])]]))
 
 (defn- select-application
   [application-key]
@@ -94,10 +198,6 @@
               (if selected?
                 [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
-
-(defn icon-check []
-  [:img.application-handling__review-state-selected-icon
-   {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn toggle-filter [application-filters review-state-id selected]
   (let [new-application-filter (if selected
@@ -526,22 +626,20 @@
             [application-review]]])))))
 
 (defn application []
-  (let [applications            (subscribe [:state-query [:application :applications]])
-        application-filter      (subscribe [:state-query [:application :filter]])
+  (let [application-filter      (subscribe [:state-query [:application :filter]])
         search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        include-filtered        (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
-        filtered-applications   (include-filtered @application-filter @applications)]
+        filtered-applications   (subscribe [:application/filtered-applications])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading filtered-applications @application-filter]
-         [application-list filtered-applications]
+         [haku-heading @filtered-applications @application-filter]
+         [application-list @filtered-applications]
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
        [:div
-        [application-review-area filtered-applications]])]))
+        [application-review-area @filtered-applications]])]))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)
