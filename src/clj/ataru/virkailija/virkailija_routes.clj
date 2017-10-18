@@ -388,7 +388,7 @@
                             :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
                             :query-params [hakuOid :- s/Str
                                            {hakukohdeOid :- s/Str nil}]
-                            :return [{:hakemusOid s/Str :personOid s/Str}]
+                            :return {s/Str s/Str}
                             (if-let [mapping (access-controlled-application/application-key-to-person-oid
                                               organization-service
                                               session
