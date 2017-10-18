@@ -121,7 +121,8 @@
 (defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
   (let [field-descriptor (util/get-field-descriptor content key)
         lang (-> lang clojure.string/lower-case keyword)
-        koodisto-source (:koodisto-source field-descriptor)]
+        koodisto-source (:koodisto-source field-descriptor)
+        options (:options field-descriptor)]
     (cond (some? koodisto-source)
           (let [koodisto (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
                 koodi-uri->label (partial get-label koodisto lang)]
@@ -133,6 +134,11 @@
           (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
             (when (and filename size)
               (str filename " (" (util/size-bytes->str size) ")")))
+          (not (empty? options))
+          (some (fn [option]
+                  (when (= value (:value option))
+                    (get-in option [:label lang] value)))
+                options)
           :else
           value)))
 
