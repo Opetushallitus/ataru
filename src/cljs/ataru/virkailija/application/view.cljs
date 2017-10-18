@@ -114,6 +114,7 @@
         filtered-applications      (subscribe [:application/filtered-applications])
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
+        submit-button-state        (r/atom :submit)
         to-states (reduce (fn [acc [state _]]
                             (assoc acc state 0))
                           {}
@@ -149,7 +150,21 @@
                        (opened-mass-review-state-list selected-to-review-state to-states))]
                 (mass-review-state-selected-row
                   #(swap! to-list-open? not)
-                  (selected-or-default-mass-review-state-label selected-to-review-state to-states)))])])))))
+                  (selected-or-default-mass-review-state-label selected-to-review-state to-states)))
+              (case @submit-button-state
+                :submit [:a.application-handling__link-button
+                         {:on-click #(reset! submit-button-state :confirm)}
+                         "Muuta"]
+                :confirm [:a.application-handling__link-button
+                          {:on-click (fn []
+                                       (dispatch [:application/mass-update-application-reviews
+                                                  (map :id @filtered-applications)
+                                                  (first (selected-or-default-mass-review-state selected-from-review-state from-states))
+                                                  (first (selected-or-default-mass-review-state selected-to-review-state to-states))])
+                                       (reset! submit-button-state :submit)
+                                       (reset! element-visible? false))}
+                           "Vahvista muutos"]
+                [:div])])])))))
 
 (defn haku-heading [filtered-applications application-filter]
   (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]

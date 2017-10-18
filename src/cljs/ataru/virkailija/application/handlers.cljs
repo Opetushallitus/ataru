@@ -338,3 +338,19 @@
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
     (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
+
+(reg-event-db
+  :application/handle-mass-update-application-reviews
+  (fn [db [_ response]]
+    db))
+
+(reg-event-fx
+  :application/mass-update-application-reviews
+  (fn [{:keys [db]} [_ application-ids from-state to-state]]
+    {:db db
+     :http {:method :post
+            :params {:application-ids application-ids
+                     :from-state from-state
+                     :to-state to-state}
+            :path "/lomake-editori/api/mass-update-application-reviews"
+            :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
