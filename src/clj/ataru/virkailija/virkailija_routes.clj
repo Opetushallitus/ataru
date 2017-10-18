@@ -94,9 +94,9 @@
     (api/GET client-sub-routes [] (render-virkailija-page))))
 
 (defn- render-file-in-dev
-  [filename]
+  [filename js-config]
   (if (:dev? env)
-    (selmer/render-file filename {})
+    (selmer/render-file filename {:config (json/generate-string js-config)})
     (not-found "Not found")))
 
 (defn- wrap-database-backed-session [handler]
@@ -109,15 +109,19 @@
   (api/undocumented
    (api/GET "/virkailija-test.html" []
             (if (:dev? env)
-              (render-file-in-dev "templates/virkailija-test.html")
+              (render-file-in-dev "templates/virkailija-test.html" {})
               (route/not-found "Not found")))
    (api/GET "/virkailija-question-group-test.html" []
      (if (:dev? env)
-       (render-file-in-dev "templates/virkailija-question-group-test.html")
+       (render-file-in-dev "templates/virkailija-question-group-test.html" {})
+       (route/not-found "Not found")))
+   (api/GET "/virkailija-question-group-application-handling-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-question-group-application-handling-test.html" {:form-key (form-store/get-latest-form-by-name "Kysymysryhmä: testilomake")})
        (route/not-found "Not found")))
    (api/GET "/spec/:filename.js" [filename]
             (if (:dev? env)
-              (render-file-in-dev (str "spec/" filename ".js"))
+              (render-file-in-dev (str "spec/" filename ".js") {})
               (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]

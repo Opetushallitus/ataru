@@ -95,4 +95,11 @@
           (it "can fill a form with a question group successfully"
               (run-phantom-test "hakija-question-group-form")))
 
+(describe "Virkailija viewing an application with a question group /"
+  (tags :ui :ui-virkailija)
+  (around-all [specs]
+    (run-specs-in-virkailija-system specs false))
+  (it "shows the application with question group"
+    (run-phantom-test "virkailija-question-group-application-handling")))
+
 (run-specs)
