@@ -1279,17 +1279,14 @@ and (max-width: @desktop-content-width) {
   }
 
   &__arrow {
-    top: 52px;
+    flex: none;
     width: 15px;
-    position: relative;
     overflow: hidden;
     z-index: 9;
 
     @media only screen and (max-width: @desktop-content-width) {
-      top: 0px;
-      left: 20px;
-      width: 31px;
-      height: 16px;
+      width: auto;
+      height: 15px;
     }
 
     &:after {
@@ -1298,13 +1295,19 @@ and (max-width: @desktop-content-width) {
       width: 20px;
       height: 20px;
       background: @pale-blue;
-      transform: rotate(135deg);
-      top: 6px;
+      transform: rotate(45deg);
+      top: 57px;
       left: 5px;
+
+      @media only screen and (max-width: @desktop-content-width) {
+        top: 5px;
+        left: 25px;
+      }
     }
   }
 
   &__box {
+    flex: auto;
     background: @pale-blue;
     color: white;
     padding: 20px;
