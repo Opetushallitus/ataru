@@ -148,3 +148,8 @@
                       :operation        audit-log/operation-new
                       :organization-oid organization-oid})
       new-form)))
+
+(defn get-latest-form-by-name [form-name]
+  (->> (execute-with-db :db yesql-get-latest-form-by-name {:form_name form-name})
+       (map (comp keyword :key))
+       (first)))

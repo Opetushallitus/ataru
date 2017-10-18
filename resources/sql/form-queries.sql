@@ -124,3 +124,20 @@ FROM forms f
 SELECT organization_oid
 FROM forms f
 WHERE id = :id;
+
+-- name: yesql-get-latest-form-by-name
+WITH latest_forms AS (
+    SELECT
+      key,
+      MAX(id) AS max_id
+    FROM forms
+    GROUP BY key
+)
+SELECT
+  f.key
+FROM forms f
+  JOIN latest_forms lf ON f.id = lf.max_id
+WHERE (f.deleted IS NULL OR f.deleted = FALSE)
+      AND f.name = :form_name
+ORDER BY created_time DESC
+LIMIT 1;
