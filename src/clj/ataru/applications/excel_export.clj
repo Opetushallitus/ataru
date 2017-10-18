@@ -120,19 +120,21 @@
 
 (defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
   (let [field-descriptor (util/get-field-descriptor content key)
-        lang             (-> lang clojure.string/lower-case keyword)]
-    (if-some [koodisto-source (:koodisto-source field-descriptor)]
-      (let [koodisto         (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
-            koodi-uri->label (partial get-label koodisto lang)]
-        (->> (clojure.string/split value #"\s*,\s*")
-             (mapv koodi-uri->label)
-             (interpose ",\n")
-             (apply str)))
-      (if (= (:fieldType field-descriptor) "attachment")
-        (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
-          (when (and filename size)
-            (str filename " (" (util/size-bytes->str size) ")")))
-        value))))
+        lang (-> lang clojure.string/lower-case keyword)
+        koodisto-source (:koodisto-source field-descriptor)]
+    (cond (some? koodisto-source)
+          (let [koodisto (koodisto/get-koodisto-options (:uri koodisto-source) (:version koodisto-source))
+                koodi-uri->label (partial get-label koodisto lang)]
+            (->> (clojure.string/split value #"\s*,\s*")
+                 (mapv koodi-uri->label)
+                 (interpose ",\n")
+                 (apply str)))
+          (= (:fieldType field-descriptor) "attachment")
+          (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
+            (when (and filename size)
+              (str filename " (" (util/size-bytes->str size) ")")))
+          :else
+          value)))
 
 (defn- all-answers-sec-or-vec? [answers]
   (every? sequential? answers))
