@@ -82,11 +82,14 @@
                              true)
            haku-oid (get-in field-descriptor
                             [:params :haku-oid])
-           preferred-name (:preferred-name answers-by-key)]
+           preferred-name (:preferred-name answers-by-key)
+           original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
+           modifying? (some? original-value)]
        (asyncm/go
          (cond (not (ssn/ssn? value))
                [false []]
                (and (not multiple?)
+                    (not (and modifying? (= value original-value)))
                     (async/<! (has-applied haku-oid {:ssn value})))
                [false (ssn-applied-error (when (:valid preferred-name)
                                            (:value preferred-name)))]
