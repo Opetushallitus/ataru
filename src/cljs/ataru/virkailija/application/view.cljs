@@ -508,7 +508,7 @@
 
 (defn- application-modify-link []
   (let [application-key (subscribe [:state-query [:application :selected-key]])]
-    [:a.application-handling__edit-link
+    [:a.application-handling__link-button.application-handling__edit-link
      {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
       :target "_blank"}
      "Muokkaa hakemusta"]))
