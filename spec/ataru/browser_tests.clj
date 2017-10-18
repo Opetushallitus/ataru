@@ -13,10 +13,11 @@
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-in-virkailija-system
-  [specs]
+  [specs clear-db?]
   (let [system (atom (virkailija-system/new-system))]
     (try
-      (ataru.fixtures.db.browser-test-db/reset-test-db true)
+      (when clear-db?
+        (ataru.fixtures.db.browser-test-db/reset-test-db true))
       (reset! system (component/start-system @system))
       (specs)
       (finally
@@ -62,7 +63,7 @@
 (describe "Virkailija UI tests /"
           (tags :ui :ui-virkailija)
           (around-all [specs]
-                      (run-specs-in-virkailija-system specs))
+                      (run-specs-in-virkailija-system specs true))
           (it "are successful"
               (run-phantom-test "virkailija" (last (split (utils/login) #"="))))
           (it "creates a form with question groups"
