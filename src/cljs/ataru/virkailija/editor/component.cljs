@@ -343,7 +343,9 @@
          (when text-area?
            [:div.editor-form__max-length-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
-            [:input.editor-form__text-field.editor-form__text-field-auto-width {:on-change #(max-length-change (get-val %))}]])]
+            [:input.editor-form__text-field.editor-form__text-field-auto-width
+             {:value @max-length
+              :on-change #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?
