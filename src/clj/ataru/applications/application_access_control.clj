@@ -98,7 +98,7 @@
      hakukohde-oid
      hakemus-oids)))
 
-(defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oid]
+(defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oids]
   (session-orgs/run-org-authorized
    session
    organization-service
@@ -107,4 +107,4 @@
    (constantly nil)
    #(application-store/get-person-and-application-oids
      haku-oid
-     hakukohde-oid)))
+     hakukohde-oids)))

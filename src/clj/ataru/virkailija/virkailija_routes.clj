@@ -387,13 +387,13 @@
                    (api/GET "/persons" {session :session}
                             :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
                             :query-params [hakuOid :- s/Str
-                                           {hakukohdeOid :- s/Str nil}]
+                                           {hakukohdeOids :- [s/Str] nil}]
                             :return {s/Str s/Str}
                             (if-let [mapping (access-controlled-application/application-key-to-person-oid
                                               organization-service
                                               session
                                               hakuOid
-                                              hakukohdeOid)]
+                                              hakukohdeOids)]
                               (response/ok mapping)
                               (response/unauthorized {:error "Unauthorized"}))))))
 

@@ -656,20 +656,7 @@ SELECT DISTINCT ON (key)
 FROM applications
 WHERE person_oid IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
-  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
-ORDER BY key, created_time DESC;
-
--- name: yesql-applications-by-haku-hakukohde-and-hakemusoids
-SELECT DISTINCT ON (key)
-  key,
-  haku,
-  person_oid,
-  lang,
-  email,
-  hakukohde
-FROM applications
-WHERE person_oid IS NOT NULL
-  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
-  AND (:hakukohde_oid::text IS NULL OR :hakukohde_oid = ANY (hakukohde))
-  AND key IN (:hakemus_oids)
+  -- Parameter list contains empty string to avoid empty lists
+  AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
 ORDER BY key, created_time DESC;

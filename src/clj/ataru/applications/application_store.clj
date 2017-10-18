@@ -466,22 +466,23 @@
 
 (defn get-applications-by-haku
   [haku-oid hakukohde-oid hakemus-oids]
-  (->> (exec-db :db
-                (if (empty? hakemus-oids) ;; After furious battle had to give in to yesql parser
-                  yesql-applications-by-haku-and-hakukohde-oids
-                  yesql-applications-by-haku-hakukohde-and-hakemusoids)
-                {:haku_oid      haku-oid
-                 :hakukohde_oid hakukohde-oid
-                 :hakemus_oids  hakemus-oids})
+  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
+                                                                   ; Empty string to avoid empty parameter lists
+                                                                   :hakukohde_oids (cond-> [""]
+                                                                                           (some? hakukohde-oid)
+                                                                                           (conj hakukohde-oid))
+                                                                   :hakemus_oids   (cons "" hakemus-oids)})
        (map unwrap-vts-application)))
 
-(defn unwrap-person-and-hakemus-oid
+(defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
   {key person_oid})
 
 (defn get-person-and-application-oids
-  [haku-oid hakukohde-oid]
-  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid      haku-oid
-                                                                   :hakukohde_oid hakukohde-oid})
+  [haku-oid hakukohde-oids]
+  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
+                                                                   ; Empty string to avoid empty parameter lists
+                                                                   :hakukohde_oids (cons "" hakukohde-oids)
+                                                                   :hakemus_oids    [""]})
        (map unwrap-person-and-hakemus-oid)
        (into {})))
