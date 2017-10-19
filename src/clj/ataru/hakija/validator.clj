@@ -123,14 +123,6 @@
                               {:exclude-from-answers true}
                               results
 
-                              ({:fieldClass "formField"
-                                :validators validators} :guard #(and (field-belongs-to-hakukohde? %)
-                                                                     (not-dropdown-or-multiple-choice %)))
-                              (if (belongs-to-existing-hakukohde? field hakukohteet)
-                                (concat results
-                                        {id {:passed? (passes-all? has-applied validators answers answers-by-key field)}})
-                                (concat results {id {:passed? (every? nil? answers)}}))
-
                               {:fieldClass      "wrapperElement"
                                :children        children
                                :child-validator validation-keyword}
@@ -167,7 +159,10 @@
                               {:fieldClass "formField"
                                :validators validators}
                               (concat results
-                                      {id {:passed? (passes-all? has-applied validators answers answers-by-key field)}})
+                                      {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
+                                                            (belongs-to-existing-hakukohde? field hakukohteet))
+                                                      (passes-all? has-applied validators answers answers-by-key field)
+                                                      (every? nil? answers))}})
 
                               :else nil)]
             (build-results has-applied answers-by-key ret rest-form-fields)
