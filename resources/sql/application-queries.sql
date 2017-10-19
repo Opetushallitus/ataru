@@ -657,6 +657,8 @@ SELECT
   ssn,
   hakukohde
 FROM latest
+JOIN application_reviews
+ON application_key = key
 WHERE person_oid IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
