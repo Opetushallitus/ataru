@@ -644,7 +644,10 @@ FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
-SELECT DISTINCT ON (key)
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT
   key,
   haku,
   person_oid,
@@ -653,10 +656,10 @@ SELECT DISTINCT ON (key)
   email,
   ssn,
   hakukohde
-FROM applications
+FROM latest
 WHERE person_oid IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
   AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
-ORDER BY key, created_time DESC;
+ORDER BY created_time DESC;
