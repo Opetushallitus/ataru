@@ -49,6 +49,7 @@ switch (app) {
     url = 'http://localhost:8351/hakemus/virkailija-hakemus-edit-test.html'
     break;
   case 'virkailija-question-group-application-handling':
+    addPhantomCookie();
     url = 'http://localhost:8350/lomake-editori/virkailija-question-group-application-handling-test.html'
     break;
   default:
