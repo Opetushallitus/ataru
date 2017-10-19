@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.components.toolbar
   (:require
    [ataru.virkailija.component-data.component :as component]
+   [ataru.virkailija.component-data.base-education-module :as base-education-module]
    [ataru.feature-config :as fc]
    [re-frame.core :refer [dispatch]]
    [taoensso.timbre :refer-macros [spy debug]]))
@@ -16,7 +17,8 @@
      ["Vierekkäiset tekstikentät" component/adjacent-fieldset]]
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
-    true (conj ["Infoteksti" component/info-element])))
+    true (conj ["Infoteksti" component/info-element])
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
