@@ -34,9 +34,12 @@
       .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
   }
 
+  function menuItem(title) {
+    return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")')
+  }
+
   function clickComponentMenuItem(title) {
-    function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
-    return clickElement(menuItem)
+    return clickElement(function() { return menuItem(title) })
   }
 
   before(function () {
@@ -62,6 +65,9 @@
       })
       it('has person info module', function() {
         expect(personInfoModule()).to.have.length(1)
+      })
+      it('should have base education module link', function() {
+        expect(elementExists(menuItem('Pohjakoulutusmoduuli'))).to.equal(true)
       })
     })
 
@@ -239,6 +245,7 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(9)').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(16)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: B')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(10)').prop('checked')).to.equal(true)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")').length).to.equal(0)
         })
       })
 
@@ -262,6 +269,7 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(12)').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(19)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: B')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(13)').prop('checked')).to.equal(true)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")').length).to.equal(0)
         })
       })
 
