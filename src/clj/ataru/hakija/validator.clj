@@ -152,11 +152,11 @@
                                     non-empty-answers (get-non-empty-answers field answers)
                                     followups         (get-followup-questions options non-empty-answers)]
                                 (concat results
-                                        {id {:passed? (and (or (not (field-belongs-to-hakukohde? field))
-                                                               (belongs-to-existing-hakukohde? field hakukohteet)
-                                                               (all-answers-nil? non-empty-answers answers-by-key followups))
-                                                           (all-answers-allowed? non-empty-answers allowed-values)
-                                                           (passes-all? has-applied validators non-empty-answers answers-by-key field))}}
+                                        {id {:passed? (if (or (not (field-belongs-to-hakukohde? field))
+                                                              (belongs-to-existing-hakukohde? field hakukohteet))
+                                                        (and (all-answers-allowed? non-empty-answers allowed-values)
+                                                             (passes-all? has-applied validators non-empty-answers answers-by-key field))
+                                                        (all-answers-nil? non-empty-answers answers-by-key followups))}}
                                         (when followups
                                           (build-results
                                             has-applied
