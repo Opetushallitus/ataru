@@ -662,4 +662,5 @@ WHERE person_oid IS NOT NULL
   -- Parameter list contains empty string to avoid empty lists
   AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
+  AND state <> 'inactivated'
 ORDER BY created_time DESC;
