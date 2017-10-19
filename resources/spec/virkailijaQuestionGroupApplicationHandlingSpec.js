@@ -7,9 +7,19 @@
     return testFrame().find('.application__form-field:eq(' + formFieldIndex + ') .application__form-field-label:contains("' + label + '") + .application__readonly-adjacent td:eq(' + answerIndex +')').text()
   }
 
-  before(function () {
-    loadInFrame('/lomake-editori/applications/' + config['form-key']) // config magic var is provided by virkailija-routes.clj
-  })
+  function navigateToApplicationHandling() {
+    var src = 'http://localhost:8350/lomake-editori/applications/' + config['form-key'];
+    console.log(src)
+    loadInFrame(src)
+  }
+
+  function linkToApplicationWithQuestionGroup() {
+    return testFrame().find('.application-handling__list-row').not('.application-handling__list-header')
+  }
+
+  function linkToApplicationWithQuestionGroupIsRendered() {
+    return elementExists(linkToApplicationWithQuestionGroup())
+  }
 
   afterEach(function() {
     expect(window.uiError || null).to.be.null
@@ -17,7 +27,8 @@
 
   describe('Virkailija application handling for form with a question group', function () {
     before(
-      wait.until(function() { return testFrame().find('.application-handling__list-row').not('.application-handling__list-header').length === 1 })
+      navigateToApplicationHandling,
+      wait.until(linkToApplicationWithQuestionGroupIsRendered)
     )
     it('automatically shows the only application belonging to the form', function() {
       expect(answer(0, 'Etunimet')).to.equal('Etunimi Tokanimi')
