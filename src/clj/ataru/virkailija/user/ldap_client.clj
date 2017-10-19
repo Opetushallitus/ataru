@@ -57,5 +57,8 @@
   ; TODO this function should probably be in a service with a proper mock version
   (if (-> config :dev :fake-dependencies)
     fake-virkailija-value
-    (get-user (create-ldap-connection) user-name)))
+    (let [connection (create-ldap-connection)
+          user (get-user connection user-name)]
+      (ldap/close connection)
+      user)))
 
