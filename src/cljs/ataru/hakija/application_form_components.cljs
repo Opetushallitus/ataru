@@ -335,7 +335,9 @@
                        (.preventDefault event)
                        (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
        [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-       "Lisää"]]]))
+       @(subscribe [:application/get-i18n-text {:fi "Lisää"
+                                                :sv "Lägg till"
+                                                :en "Add more"}])]]]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
