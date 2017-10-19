@@ -211,6 +211,14 @@
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
+(s/defschema VtsApplication
+  {:oid           s/Str ; (:key application)
+   :hakuOid       s/Str
+   :henkiloOid    s/Str
+   :asiointikieli s/Str
+   :hakukohteet   [s/Str]
+   :email         (s/maybe s/Str)})
+
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"

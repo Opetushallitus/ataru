@@ -210,6 +210,7 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/ApplicationInfo]
         (response/ok (application-store/get-full-application-list-by-person-oid-for-omatsivut person-oid))))
+
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
       :body [error-details client-error/ClientError]

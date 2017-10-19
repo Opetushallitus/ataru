@@ -1,5 +1,35 @@
--- name: yesql-add-application-query<!
+-- name: yesql-add-application<!
 -- Add application
+INSERT INTO applications (
+  form_id,
+  content,
+  lang,
+  preferred_name,
+  last_name,
+  hakukohde,
+  haku,
+  secret,
+  person_oid,
+  ssn,
+  dob,
+  email
+) VALUES (
+  :form_id,
+  :content,
+  :lang,
+  :preferred_name,
+  :last_name,
+  ARRAY[:hakukohde]::character varying(127)[],
+  :haku,
+  :secret,
+  :person_oid,
+  :ssn,
+  :dob,
+  :email
+);
+
+-- name: yesql-add-application-version<!
+-- Add application version
 INSERT INTO applications (
   form_id,
   key,
@@ -612,3 +642,25 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
+
+-- name: yesql-applications-by-haku-and-hakukohde-oids
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT
+  key,
+  haku,
+  person_oid,
+  lang,
+  preferred_name,
+  email,
+  ssn,
+  hakukohde
+FROM latest
+WHERE person_oid IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  -- Parameter list contains empty string to avoid empty lists
+  AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

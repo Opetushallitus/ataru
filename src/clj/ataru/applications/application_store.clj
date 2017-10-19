@@ -46,8 +46,7 @@
                                   (filter #(not-empty (:value %))))
         secret               (:secret application)
         application-to-store {:form_id        (:form application)
-                              :key            (or (:key application)
-                                                  (str (java.util.UUID/randomUUID)))
+                              :key            (:key application)
                               :lang           (:lang application)
                               :preferred_name (find-value-from-answers "preferred-name" answers)
                               :last_name      (find-value-from-answers "last-name" answers)
@@ -59,7 +58,9 @@
                               :content        {:answers answers}
                               :secret         (or secret (crypto/url-part 34))
                               :person_oid     (:person-oid application)}
-        application          (yesql-add-application-query<! application-to-store connection)]
+        application          (if (contains? application :key)
+                               (yesql-add-application-version<! application-to-store connection)
+                               (yesql-add-application<! application-to-store connection))]
     (unwrap-application application)))
 
 (def ^:private email-pred (comp (partial = "email") :key))
@@ -453,3 +454,35 @@
   (-> (exec-db :db yesql-get-hakija-secret-by-virkailija-secret {:virkailija_secret virkailija-secret})
       (first)
       :secret))
+
+(defn- unwrap-vts-application
+  [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
+  {:oid           key
+   :hakuOid       haku
+   :henkiloOid    person_oid
+   :asiointikieli lang
+   :email         email
+   :hakukohteet   hakukohde})
+
+(defn get-applications-by-haku
+  [haku-oid hakukohde-oid hakemus-oids]
+  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
+                                                                   ; Empty string to avoid empty parameter lists
+                                                                   :hakukohde_oids (cond-> [""]
+                                                                                           (some? hakukohde-oid)
+                                                                                           (conj hakukohde-oid))
+                                                                   :hakemus_oids   (cons "" hakemus-oids)})
+       (map unwrap-vts-application)))
+
+(defn- unwrap-person-and-hakemus-oid
+  [{:keys [key person_oid]}]
+  {key person_oid})
+
+(defn get-person-and-application-oids
+  [haku-oid hakukohde-oids]
+  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
+                                                                   ; Empty string to avoid empty parameter lists
+                                                                   :hakukohde_oids (cons "" hakukohde-oids)
+                                                                   :hakemus_oids    [""]})
+       (map unwrap-person-and-hakemus-oid)
+       (into {})))
