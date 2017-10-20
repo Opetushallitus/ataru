@@ -163,12 +163,14 @@
                 :confirm
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                  {:on-click (fn []
-                              (dispatch [:application/mass-update-application-reviews
-                                         (map :key @filtered-applications)
-                                         (first (selected-or-default-mass-review-state selected-from-review-state from-states))
-                                         (first (selected-or-default-mass-review-state selected-to-review-state to-states))])
-                              (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])
-                              (reset! element-visible? false))}
+                              (let [from-state-name (first (selected-or-default-mass-review-state selected-from-review-state from-states))
+                                    to-state-name   (first (selected-or-default-mass-review-state selected-to-review-state to-states))]
+                                (dispatch [:application/mass-update-application-reviews
+                                           (map :key (filter #(= (:state %) from-state-name)  @filtered-applications))
+                                           from-state-name
+                                           to-state-name])
+                                (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])
+                                (reset! element-visible? false)))}
                  "Vahvista muutos"]
 
                 :in-progress
