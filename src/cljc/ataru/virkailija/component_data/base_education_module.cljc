@@ -2,7 +2,7 @@
   (:require [ataru.util :as u]
             [ataru.virkailija.component-data.component :as component]))
 
-(defn module []
+(defn eligibility []
   (merge (component/form-section)
          {:label    {:fi "Koulutustausta"
                      :sv "Utbildningsbakgrund"

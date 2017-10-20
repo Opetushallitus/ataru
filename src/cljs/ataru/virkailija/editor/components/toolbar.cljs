@@ -18,7 +18,7 @@
     (fc/feature-enabled? :attachment) (conj ["Liitepyyntö" component/attachment])
     (fc/feature-enabled? :question-group) (conj ["Kysymysryhmä" component/question-group])
     true (conj ["Infoteksti" component/info-element])
-    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/module])))
+    (fc/feature-enabled? :question-group) (conj ["Pohjakoulutusmoduuli" base-education-module/eligibility])))
 
 (def followup-toolbar-element-names
   (cond-> #{"Tekstikenttä"
