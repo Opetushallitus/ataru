@@ -30,8 +30,10 @@
 (reg-event-db :editor/get-user-info get-user-info)
 
 (defn- current-form-content-path
-  [db further-path]
-  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
+  [db & further-path]
+  (-> [:editor :forms (-> db :editor :selected-form-key) :content]
+      (concat further-path)
+      (flatten)))
 
 (reg-event-fx
   :editor/remove-dropdown-option
