@@ -99,17 +99,35 @@
   (fn [db [_ value & path]]
     (assoc-in db (current-form-content-path db [path]) value)))
 
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
+(defn- vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))
+
 (defn generate-component
-  [db [_ generate-fn path]]
-  (with-form-key [db form-key]
-    (let [form-key  (get-in db [:editor :selected-form-key])
-          path-vec  (current-form-content-path db [path])
-          component (generate-fn)]
-      (->
-        (if (zero? (last path-vec))
-          (assoc-in db (butlast path-vec) [component])
-          (assoc-in db path-vec component))
-        (assoc-in [:editor :ui (:id component) :focus?] true)))))
+  [db [_ generate-fn sub-path]]
+  (let [parent-component-path (cond-> (current-form-content-path db)
+                                (not (number? sub-path))
+                                (concat (butlast sub-path)))
+        components            (if (vector? generate-fn)
+                                (map #(apply % []) generate-fn)
+                                [(generate-fn)])
+        first-component-idx   (cond-> sub-path
+                                (not (number? sub-path))
+                                (last))]
+    (as-> db db'
+          (update-in db' parent-component-path (vector-of-length (count components)))
+          (reduce (fn [db' [idx component]]
+                    (let [path (flatten [parent-component-path (+ first-component-idx idx)])]
+                      (assoc-in db' path component)))
+                  db'
+                  (map vector (range) components))
+          (assoc-in db' [:editor :ui (-> components first :id) :focus?] true))))
 
 (reg-event-db :generate-component generate-component)
 
