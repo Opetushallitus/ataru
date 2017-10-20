@@ -22,10 +22,12 @@
 
 (defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
-(defn- str->googdate [timestamp-value]
+(defn str->googdate [timestamp-value]
+  {:pre [(some? timestamp-value)]}
   (->> (for [formatter formatters]
            (try (f/parse formatter timestamp-value)
                 (catch :default _
+                  (warn "Could not parse" timestamp-value)
                   nil)))
        (filter some?)
        first))
@@ -52,10 +54,16 @@
 (defn time->long [google-date]
   (coerce/to-long google-date))
 
+(defonce iso-date-pattern (re-pattern "^\\d{4}-\\d{2}-\\d{2}.*"))
+
+(defn date? [date-str]
+  (when (and date-str (string? date-str))
+    (re-matches iso-date-pattern date-str)))
+
 (defn parse-times [expr]
   (let [f (fn [[k v]]
-            (if-let [date (str->googdate v)]
-              [k date]
+            (if (date? v)
+              [k (str->googdate v)]
               [k v]))]
     (postwalk
       (fn [x]
