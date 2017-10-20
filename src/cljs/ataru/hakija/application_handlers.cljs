@@ -119,16 +119,6 @@
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
-(defn- resize-vector [target-length x]
-  (let [add-length (- target-length (count x))]
-    (cond-> x
-      (> add-length 0)
-      (into (repeatedly add-length (fn [] nil))))))
-
-(defn- vector-of-length [target-length]
-  (comp (partial resize-vector target-length)
-        (fnil identity [])))
-
 (reg-event-db
   :application/show-attachment-too-big-error
   (fn [db [_ component-id question-group-idx]]
@@ -137,7 +127,7 @@
                        [:application :answers (keyword component-id) :errors :too-big])
           db         (cond-> db
                        question-group-idx
-                       (update-in [:application :answers (keyword component-id) :errors] (vector-of-length question-group-idx)))]
+                       (update-in [:application :answers (keyword component-id) :errors] (util/vector-of-length question-group-idx)))]
       (assoc-in db error-path true))))
 
 (reg-event-fx
@@ -217,7 +207,7 @@
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (vector-of-length (inc question-group-idx)))
+                                 question-group-idx (update :options (util/vector-of-length (inc question-group-idx)))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
@@ -507,7 +497,7 @@
         value-path (cond-> [:application :answers id :values]
                      question-group-idx (conj question-group-idx))]
     (-> db
-        (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
+        (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
         (update-in value-path (fnil assoc []) data-idx {:value value}))))
 
 (defn- set-repeatable-field-value
@@ -682,7 +672,7 @@
           new-value (when (not= value current-value) value)]
       {:db (if (some? question-group-idx)
              (-> db
-                 (update-in (conj button-path :values) (vector-of-length (inc question-group-idx)))
+                 (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
                  (update-in (conj button-path :values question-group-idx) (fnil identity []))
                  (assoc-in value-path new-value)
                  (update-in button-path (fn [answer]
@@ -774,7 +764,7 @@
                                      files)
           db            (if (not-empty files)
                           (as-> db db'
-                                (update-in db' [:application :answers (keyword component-id) :values] (vector-of-length (or row-count 0)))
+                                (update-in db' [:application :answers (keyword component-id) :values] (util/vector-of-length (or row-count 0)))
                                 (cond-> db'
                                   question-group-idx
                                   (update-in [:application :answers (keyword component-id) :values question-group-idx] (fnil identity [])))
