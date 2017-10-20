@@ -124,7 +124,7 @@
             "Tilojen massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
-              [:h4 "Hakemukset tilasta"]
+              [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
               (if @from-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
@@ -135,7 +135,7 @@
                     (swap! from-list-open? not)
                     (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
-              [:h4 "Muutetaan tilaan"]
+              [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
               (if @to-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
@@ -149,11 +149,11 @@
               (case @submit-button-state
                 :submit (let [button-disabled? (= (first (selected-or-default-mass-review-state selected-from-review-state from-states))
                                                   (first (selected-or-default-mass-review-state selected-to-review-state to-states)))]
-                          [:a.application-handling__link-button
+                          [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                            {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                             :disabled button-disabled?}
                            "Muuta"])
-                :confirm [:a.application-handling__link-button
+                :confirm [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                           {:on-click (fn []
                                        (dispatch [:application/mass-update-application-reviews
                                                   (map :key @filtered-applications)

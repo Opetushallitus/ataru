@@ -75,11 +75,19 @@
   text-align: start;
   background-color: white;
   min-width: 240px;
-  padding: 11px 0 12px 1px;
+  padding: 15px;
   box-shadow: @modal-shadow;
   font-size: 13px;
   overflow: hidden;
   line-height: 21px;
+}
+
+.application-handling__mass-edit-review-states-heading {
+  margin: 0 0 10px 0;
+}
+
+.application-handling__mass-edit-review-states-submit-button {
+  margin-top: 10px;
 }
 
 .application-handling__mass-edit-review-states-selection {
@@ -427,6 +435,11 @@ and (max-width: 1000px) {
   align-items: center;
   justify-content: center;
   height: 41px;
+}
+
+.application-handling__link-button[disabled] {
+  cursor: default;
+  opacity: 0.33;
 }
 
 .application-handling__edit-link {
