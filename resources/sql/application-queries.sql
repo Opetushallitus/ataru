@@ -624,7 +624,7 @@ ON CONFLICT (application_key, requirement, hakukohde)
   WHERE hakukohde IS NOT NULL
   DO UPDATE SET state = :state;
 
--- name: yesql-get-existing-application-review
+-- name: yesql-get-existing-application-hakukohde-review
 SELECT id
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND state = :state AND hakukohde = :hakukohde;

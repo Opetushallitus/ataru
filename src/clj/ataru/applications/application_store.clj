@@ -365,7 +365,7 @@
                                                                :requirement     hakukohde-review-requirement
                                                                :state           hakukohde-review-state
                                                                :hakukohde       hakukohde}
-                                  existing-duplicate-review   (yesql-get-existing-application-review review-to-store connection)
+                                  existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
                                   existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
                                   username                    (get-in session [:identity :username])
                                   organization-oid            (get-in session [:identity :organizations 0 :oid])]
