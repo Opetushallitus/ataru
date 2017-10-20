@@ -461,6 +461,7 @@ WITH latest_version AS (
 SELECT
   id,
   key,
+  secret,
   lang,
   form_id AS form,
   created_time,
