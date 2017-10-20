@@ -196,3 +196,13 @@
 
 (defn flatten-path [db & parts]
   (flatten [:editor :forms (-> db :editor :selected-form-key) :content [parts]]))
+
+(defn- resize-vector [target-length x]
+  (let [add-length (- target-length (count x))]
+    (cond-> x
+      (> add-length 0)
+      (into (repeatedly add-length (fn [] nil))))))
+
+(defn vector-of-length [target-length]
+  (comp (partial resize-vector target-length)
+        (fnil identity [])))

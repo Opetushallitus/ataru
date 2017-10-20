@@ -16,6 +16,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
             [ataru.util :as util]
+            [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
@@ -99,16 +100,6 @@
   (fn [db [_ value & path]]
     (assoc-in db (current-form-content-path db [path]) value)))
 
-(defn- resize-vector [target-length x]
-  (let [add-length (- target-length (count x))]
-    (cond-> x
-      (> add-length 0)
-      (into (repeatedly add-length (fn [] nil))))))
-
-(defn- vector-of-length [target-length]
-  (comp (partial resize-vector target-length)
-        (fnil identity [])))
-
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [parent-component-path (cond-> (current-form-content-path db)
@@ -121,7 +112,7 @@
                                 (not (number? sub-path))
                                 (last))]
     (as-> db db'
-          (update-in db' parent-component-path (vector-of-length (count components)))
+          (update-in db' parent-component-path (cu/vector-of-length (count components)))
           (reduce (fn [db' [idx component]]
                     (let [path (flatten [parent-component-path (+ first-component-idx idx)])]
                       (assoc-in db' path component)))
