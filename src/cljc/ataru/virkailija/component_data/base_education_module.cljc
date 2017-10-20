@@ -44,16 +44,7 @@
                                                                :label      {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"}
                                                                :params     {}
                                                                :fieldType  "textField"
-                                                               :fieldClass "formField"}
-                                                              {:id         (u/component-id)
-                                                               :label      {:en "Attachment request for higher education completed in Finland"
-                                                                            :fi "Liitepyyntö Suomessa suoritetusta kk-tutkinnosta"
-                                                                            :sv "Begäran om bilagan för en universitetsexamen i Finland"}
-                                                               :params     {}
-                                                               :options    []
-                                                               :fieldType  "attachment"
-                                                               :fieldClass "formField"
-                                                               :validators ["required"]}]
+                                                               :fieldClass "formField"}]
                                                  :fieldType  "fieldset"
                                                  :fieldClass "questionGroup"}]}
                                    {:label     {:en "Studies required by the higher education institution completed at open university or open university of applied sciences (UAS)"
