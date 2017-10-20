@@ -99,7 +99,8 @@
                  (assoc-in [:application :applications] applications)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
-                 (assoc-in [:application :sort] application-sorting/initial-sort))
+                 (assoc-in [:application :sort] application-sorting/initial-sort)
+                 (assoc-in [:application :mass-update-application-reviews-submit-state] :submit))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
@@ -339,10 +340,23 @@
   (fn [db [_ selected-hakukohde-oid]]
     (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-mass-update-application-reviews
-  (fn [db [_ response]]
-    db))
+  (fn [{:keys [db]} [_ _]]
+    (let [db-application (:application db)
+          selected-type  (cond
+                           (:selected-form-key db-application) :selected-form-key
+                           (:selected-haku db-application) :selected-haku
+                           (:selected-hakukohde db-application) :selected-hakukohde)
+          selected-id    (selected-type db-application)
+          dispatch-kw    (case selected-type
+                           :selected-form-key :application/fetch-applications
+                           :selected-haku :application/fetch-applications-by-haku
+                           :selected-hakukohde :application/fetch-applications-by-hakukohde)]
+      (if selected-type
+        {:db db
+         :dispatch [dispatch-kw selected-id]}
+        {:db db}))))
 
 (reg-event-fx
   :application/mass-update-application-reviews
@@ -354,3 +368,8 @@
                                   :to-state         to-state}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+
+(reg-event-db
+  :application/update-mass-update-application-reviews-submit-state
+  (fn [db [_ new-state]]
+    (assoc-in db [:application :mass-update-application-reviews-submit-state] new-state)))

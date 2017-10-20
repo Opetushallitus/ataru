@@ -102,10 +102,10 @@
   (let [element-visible?           (r/atom false)
         from-list-open?            (r/atom false)
         to-list-open?              (r/atom false)
-        filtered-applications      (subscribe [:application/filtered-applications])
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
-        submit-button-state        (r/atom :submit)
+        filtered-applications      (subscribe [:application/filtered-applications])
+        submit-button-state        (subscribe [:state-query [:application :mass-update-application-reviews-submit-state]])
         to-states                  (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -125,6 +125,7 @@
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
+
               (if @from-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
@@ -132,10 +133,13 @@
                        (opened-mass-review-state-list selected-from-review-state from-states))]
                 (mass-review-state-selected-row
                   (fn []
-                    (swap! from-list-open? not)
-                    (reset! submit-button-state :submit))
+                    (when (< 1 (count @filtered-applications))
+                      (swap! from-list-open? not)
+                      (dispatch [:application/update-mass-update-application-reviews-submit-state :submit])))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
+
               [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
+
               (if @to-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
@@ -144,24 +148,32 @@
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
-                    (reset! submit-button-state :submit))
+                    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit]))
                   (selected-or-default-mass-review-state-label selected-to-review-state to-states)))
+
               (case @submit-button-state
-                :submit (let [button-disabled? (= (first (selected-or-default-mass-review-state selected-from-review-state from-states))
-                                                  (first (selected-or-default-mass-review-state selected-to-review-state to-states)))]
-                          [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
-                           {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
-                            :disabled button-disabled?}
-                           "Muuta"])
-                :confirm [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
-                          {:on-click (fn []
-                                       (dispatch [:application/mass-update-application-reviews
-                                                  (map :key @filtered-applications)
-                                                  (first (selected-or-default-mass-review-state selected-from-review-state from-states))
-                                                  (first (selected-or-default-mass-review-state selected-to-review-state to-states))])
-                                       (reset! submit-button-state :submit)
-                                       (reset! element-visible? false))}
-                          "Vahvista muutos"]
+                :submit
+                (let [button-disabled? (= (first (selected-or-default-mass-review-state selected-from-review-state from-states))
+                                          (first (selected-or-default-mass-review-state selected-to-review-state to-states)))]
+                  [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
+                   {:on-click #(when-not button-disabled? (dispatch [:application/update-mass-update-application-reviews-submit-state :confirm]))
+                    :disabled button-disabled?}
+                   "Muuta"])
+
+                :confirm
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
+                 {:on-click (fn []
+                              (dispatch [:application/mass-update-application-reviews
+                                         (map :key @filtered-applications)
+                                         (first (selected-or-default-mass-review-state selected-from-review-state from-states))
+                                         (first (selected-or-default-mass-review-state selected-to-review-state to-states))])
+                              (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])
+                              (reset! element-visible? false))}
+                 "Vahvista muutos"]
+
+                :in-progress
+                [:div.application-handling__mass-edit-review-states-spinner-container [:i.zmdi.zmdi-spinner.application-handling__mass-edit-review-states-spinner]]
+
                 [:div])])])))))
 
 (defn haku-heading [filtered-applications application-filter]

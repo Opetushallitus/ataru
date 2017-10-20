@@ -165,4 +165,5 @@
       session
       organization-service
       [:edit-applications]))
-  (application-store/mass-update-application-states session application-keys from-state to-state))
+  (application-store/mass-update-application-states session application-keys from-state to-state)
+  {})
