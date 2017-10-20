@@ -660,6 +660,7 @@ FROM latest
 JOIN application_reviews
 ON application_key = key
 WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
   AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
