@@ -23,7 +23,7 @@ INSERT INTO applications (
   :haku,
   :secret,
   :person_oid,
-  :ssn,
+  upper(:ssn),
   :dob,
   :email
 );
@@ -55,7 +55,7 @@ INSERT INTO applications (
   :haku,
   :secret,
   :person_oid,
-  :ssn,
+  upper(:ssn),
   :dob,
   :email
 );
