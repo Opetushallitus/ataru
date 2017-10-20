@@ -5,6 +5,7 @@
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.application.review-states :as review-states]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -169,6 +170,17 @@
 
                  (api/context "/applications" []
                    :tags ["applications-api"]
+
+                   (api/POST "/mass-update" {session :session}
+                     :body [body {:application-keys [s/Str]
+                                  :from-state       (apply s/enum (map first review-states/application-review-states))
+                                  :to-state         (apply s/enum (map first review-states/application-review-states))}]
+                     :summary "Update list of applications with given state to new state"
+                     (ok (application-service/mass-update-application-states session
+                                                                             organization-service
+                                                                             (:application-keys body)
+                                                                             (:from-state body)
+                                                                             (:to-state body))))
 
                   (api/GET "/list" {session :session}
                            :query-params [{formKey      :- s/Str nil}

@@ -53,15 +53,6 @@
     [:div.application-handling__header-haku-name
      @header]))
 
-;(if @list-opened
-;  [:div.application-handling__review-state-list-opened-anchor
-;   (into [:div.application-handling__review-state-list-opened
-;          {:on-click list-click}]
-;     (opened-review-state-list :state review-state application-review-states/application-review-states))]
-;  (review-state-selected-row
-;    list-click
-;    (get-review-state-label-by-name application-review-states/application-review-states @review-state)))
-
 (defn- selected-or-default-mass-review-state
   [selected all]
   (if @selected
@@ -84,13 +75,13 @@
         label (review-state-label name)]
     (review-label-with-count label count)))
 
-(defn mass-review-state-selected-row
+(defn- mass-review-state-selected-row
   [on-click label]
   [:div.application-handling__review-state-row.application-handling__review-state-selected-row
    {:on-click on-click}
    [icon-check] label])
 
-(defn mass-review-state-row
+(defn- mass-review-state-row
   [current-review-state review-state]
   (let [[review-state-name review-state-count] review-state
         review-state-label (review-state-label review-state-name)
@@ -102,11 +93,11 @@
        {:on-click on-click}
        label-with-count])))
 
-(defn opened-mass-review-state-list
+(defn- opened-mass-review-state-list
   [current-state all-states]
   (mapv (partial mass-review-state-row current-state) all-states))
 
-(defn mass-update-applications-link
+(defn- mass-update-applications-link
   []
   (let [element-visible?           (r/atom false)
         from-list-open?            (r/atom false)
@@ -115,10 +106,10 @@
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
         submit-button-state        (r/atom :submit)
-        to-states (reduce (fn [acc [state _]]
-                            (assoc acc state 0))
-                          {}
-                          review-states/application-review-states)]
+        to-states                  (reduce (fn [acc [state _]]
+                                             (assoc acc state 0))
+                                           {}
+                                           review-states/application-review-states)]
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
@@ -140,30 +131,37 @@
                         {:on-click #(swap! from-list-open? not)}]
                        (opened-mass-review-state-list selected-from-review-state from-states))]
                 (mass-review-state-selected-row
-                  #(swap! from-list-open? not)
+                  (fn []
+                    (swap! from-list-open? not)
+                    (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
               [:h4 "Muutetaan tilaan"]
               (if @to-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
-                        {:on-click #(swap! to-list-open? not)}]
+                        {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
                        (opened-mass-review-state-list selected-to-review-state to-states))]
                 (mass-review-state-selected-row
-                  #(swap! to-list-open? not)
+                  (fn []
+                    (swap! to-list-open? not)
+                    (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-to-review-state to-states)))
               (case @submit-button-state
-                :submit [:a.application-handling__link-button
-                         {:on-click #(reset! submit-button-state :confirm)}
-                         "Muuta"]
+                :submit (let [button-disabled? (= (first (selected-or-default-mass-review-state selected-from-review-state from-states))
+                                                  (first (selected-or-default-mass-review-state selected-to-review-state to-states)))]
+                          [:a.application-handling__link-button
+                           {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
+                            :disabled button-disabled?}
+                           "Muuta"])
                 :confirm [:a.application-handling__link-button
                           {:on-click (fn []
                                        (dispatch [:application/mass-update-application-reviews
-                                                  (map :id @filtered-applications)
+                                                  (map :key @filtered-applications)
                                                   (first (selected-or-default-mass-review-state selected-from-review-state from-states))
                                                   (first (selected-or-default-mass-review-state selected-to-review-state to-states))])
                                        (reset! submit-button-state :submit)
                                        (reset! element-visible? false))}
-                           "Vahvista muutos"]
+                          "Vahvista muutos"]
                 [:div])])])))))
 
 (defn haku-heading [filtered-applications application-filter]
