@@ -25,12 +25,14 @@
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
                                                                :fieldClass      "formField"
+                                                               :validators      ["required"]
                                                                :koodisto-source {:uri "kktutkinnot", :title "Kk-tutkinnot", :version 1}}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Year and date of completion"
                                                                             :fi "Suoritusvuosi ja päivämäärä"
                                                                             :sv "År och datum då examen avlagts"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id              (u/component-id)
@@ -38,11 +40,13 @@
                                                                :params          {}
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
+                                                               :validators      ["required"]
                                                                :fieldClass      "formField"
                                                                :koodisto-source {:uri "tutkinto", :title "Tutkinto", :version 1}}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}]
                                                  :fieldType  "fieldset"
@@ -57,21 +61,25 @@
                                                  :children   [{:id         (u/component-id)
                                                                :label      {:en "Field", :fi "Ala", :sv "Bransch"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Study module", :fi "Opintokokonaisuus ", :sv "Studiehelhet"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Scope", :fi "Laajuus ", :sv "Omfattning"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}]
                                                  :fieldType  "fieldset"
@@ -89,22 +97,26 @@
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
                                                                :fieldClass      "formField"
+                                                               :validators      ["required"]
                                                                :koodisto-source {:uri "kktutkinnot", :title "Kk-tutkinnot", :version 1}}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Year and date of completion"
                                                                             :fi "Suoritusvuosi ja päivämäärä"
                                                                             :sv "År och datum då examen avlagts"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Qualification", :fi "Tutkinto", :sv "Examen"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
                                                                :label      {:en "Higher education institution", :fi "Korkeakoulu ", :sv "Högskola"}
                                                                :params     {}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id              (u/component-id)
@@ -112,6 +124,7 @@
                                                                                  :fi "Suoritusmaa"
                                                                                  :sv "Land där examen har avlagts"}
                                                                :params          {}
+                                                               :validators      ["required"]
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
                                                                :fieldClass      "formField"
@@ -128,6 +141,7 @@
                                                  :children   [{:id         (u/component-id)
                                                                :label      {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"}
                                                                :params     {:size "S"}
+                                                               :validators ["required"]
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         (u/component-id)
@@ -135,6 +149,7 @@
                                                                             :fi "Kelpoisuuden kuvaus"
                                                                             :sv "Beskrivning av behörigheten"}
                                                                :params     {:size "M"}
+                                                               :validators ["required"]
                                                                :fieldType  "textArea"
                                                                :fieldClass "formField"}]
                                                  :fieldType  "fieldset"
