@@ -115,7 +115,6 @@
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
                                                                :fieldClass      "formField"
-                                                               :validators      ["required"]
                                                                :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]
                                                  :fieldType  "fieldset"
                                                  :fieldClass "questionGroup"}]}
