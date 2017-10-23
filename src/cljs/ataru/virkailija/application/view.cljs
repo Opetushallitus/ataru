@@ -53,11 +53,15 @@
     [:div.application-handling__header-haku-name
      @header]))
 
+(defn- count-for-application-state
+  [from-states state]
+  (get from-states state 0))
+
 (defn- selected-or-default-mass-review-state
   [selected all]
   (if @selected
-    [@selected (all @selected)]
-    [(ffirst all) (second (first all))]))
+    @selected
+    (ffirst all)))
 
 (defn- review-state-label
   [state-name]
@@ -71,8 +75,9 @@
 
 (defn- selected-or-default-mass-review-state-label
   [selected all]
-  (let [[name count] (selected-or-default-mass-review-state selected all)
-        label (review-state-label name)]
+  (let [name  (selected-or-default-mass-review-state selected all)
+        label (review-state-label name)
+        count (count-for-application-state all name)]
     (review-label-with-count label count)))
 
 (defn- mass-review-state-selected-row
@@ -82,20 +87,20 @@
    [icon-check] label])
 
 (defn- mass-review-state-row
-  [current-review-state review-state]
-  (let [[review-state-name review-state-count] review-state
-        review-state-label (review-state-label review-state-name)
+  [current-review-state states state]
+  (let [review-state-count (count-for-application-state states state)
+        review-state-label (review-state-label state)
         label-with-count   (review-label-with-count review-state-label review-state-count)
-        on-click           #(reset! current-review-state review-state-name)]
-    (if (= @current-review-state review-state-name)
+        on-click           #(reset! current-review-state state)]
+    (if (= (selected-or-default-mass-review-state current-review-state states) state)
       (mass-review-state-selected-row #() label-with-count)
       [:div.application-handling__review-state-row
        {:on-click on-click}
        label-with-count])))
 
 (defn- opened-mass-review-state-list
-  [current-state all-states]
-  (mapv (partial mass-review-state-row current-state) all-states))
+  [current-state states]
+  (mapv (partial mass-review-state-row current-state states) (map first states)))
 
 (defn- mass-update-applications-link
   []
@@ -106,18 +111,26 @@
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
         submit-button-state        (subscribe [:state-query [:application :mass-update-application-reviews-submit-state]])
-        to-states                  (reduce (fn [acc [state _]]
+        all-states                  (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
                                            review-states/application-review-states)]
     (fn []
       (when-not (empty? @filtered-applications)
-        (let [from-states (reduce
-                            (fn [acc {:keys [state]}]
-                              (if (contains? acc state)
-                                (update acc state inc)
-                                (assoc acc state 1)))
-                            {} @filtered-applications)]
+        (let [from-states       (reduce
+                                  (fn [acc {:keys [state]}]
+                                    (if (contains? acc state)
+                                      (update acc state inc)
+                                      (assoc acc state 1)))
+                                  all-states
+                                  @filtered-applications)
+              from-states-count (reduce
+                                  (fn [acc [_ application-count]]
+                                    (if (pos? application-count)
+                                      (inc acc)
+                                      acc))
+                                  0
+                                  from-states)]
           [:div.application-handling__mass-edit-review-states-container
            [:a.application-handling__mass-edit-review-states-link
             {:on-click #(swap! element-visible? not)}
@@ -133,7 +146,7 @@
                        (opened-mass-review-state-list selected-from-review-state from-states))]
                 (mass-review-state-selected-row
                   (fn []
-                    (when (< 1 (count @filtered-applications))
+                    (when (< 1 from-states-count)
                       (swap! from-list-open? not)
                       (dispatch [:application/update-mass-update-application-reviews-submit-state :submit])))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
@@ -144,17 +157,17 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                       (opened-mass-review-state-list selected-to-review-state to-states))]
+                       (opened-mass-review-state-list selected-to-review-state all-states))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
                     (dispatch [:application/update-mass-update-application-reviews-submit-state :submit]))
-                  (selected-or-default-mass-review-state-label selected-to-review-state to-states)))
+                  (selected-or-default-mass-review-state-label selected-to-review-state all-states)))
 
               (case @submit-button-state
                 :submit
-                (let [button-disabled? (= (first (selected-or-default-mass-review-state selected-from-review-state from-states))
-                                          (first (selected-or-default-mass-review-state selected-to-review-state to-states)))]
+                (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                          (selected-or-default-mass-review-state selected-to-review-state all-states))]
                   [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                    {:on-click #(when-not button-disabled? (dispatch [:application/update-mass-update-application-reviews-submit-state :confirm]))
                     :disabled button-disabled?}
@@ -163,14 +176,13 @@
                 :confirm
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
                  {:on-click (fn []
-                              (let [from-state-name (first (selected-or-default-mass-review-state selected-from-review-state from-states))
-                                    to-state-name   (first (selected-or-default-mass-review-state selected-to-review-state to-states))]
+                              (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                    to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
                                 (dispatch [:application/mass-update-application-reviews
-                                           (map :key (filter #(= (:state %) from-state-name)  @filtered-applications))
+                                           (map :key (filter #(= (:state %) from-state-name) @filtered-applications))
                                            from-state-name
                                            to-state-name])
-                                (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])
-                                (reset! element-visible? false)))}
+                                (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])))}
                  "Vahvista muutos"]
 
                 :in-progress
