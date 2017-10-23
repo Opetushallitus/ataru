@@ -157,6 +157,7 @@
                                                         :options         [{:label {:fi "", :sv ""}, :value ""}],
                                                         :fieldType       "dropdown",
                                                         :fieldClass      "formField",
+                                                        :validators      ["required"]
                                                         :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]}
                                           {:label {:en "No", :fi "En", :sv "Nej"}, :value "Nej"}],
                              :validators ["required"]})]}))
