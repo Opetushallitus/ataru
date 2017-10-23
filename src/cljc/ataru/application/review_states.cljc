@@ -8,7 +8,8 @@
    ["invited-to-exam" "Kutsuttu valintakokeeseen"]
    ["evaluating" "Arvioinnissa"]
    ["processed" "Käsitelty"]
-   ["inactivated" "Passiivinen"]])
+   ["inactivated" "Passiivinen"]
+   ["information-request" "Täydennyspyyntö"]])
 
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
