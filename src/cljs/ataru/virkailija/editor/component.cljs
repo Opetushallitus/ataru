@@ -195,7 +195,7 @@
                                 (-> event .-target .-parentNode .-parentNode .-parentNode)
                                 (-> event .-target .-parentNode .-parentNode))]
                    (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                   (dispatch [:remove-component path target])))}
+                   (dispatch [:editor/start-remove-component path])))}
     "Poista"]])
 
 (defn markdown-help []
