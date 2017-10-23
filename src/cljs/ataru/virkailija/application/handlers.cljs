@@ -363,7 +363,7 @@
 (reg-event-fx
   :application/mass-update-application-reviews
   (fn [{:keys [db]} [_ application-keys from-state to-state]]
-    {:db   db
+    {:db   (assoc-in db [:application :fetching-applications] true)
      :http {:method              :post
             :params              {:application-keys application-keys
                                   :from-state       from-state

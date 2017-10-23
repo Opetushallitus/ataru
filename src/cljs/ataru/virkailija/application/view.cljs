@@ -305,22 +305,24 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
-  [:div
-   [:div.application-handling__list-header.application-handling__list-row
-    [application-list-basic-column-header
-     :applicant-name
-     "application-handling__list-row--applicant"
-     "Hakija"]
-    [application-list-basic-column-header
-     :created-time
-     "application-handling__list-row--time"
-     "Saapunut"]
-    [application-list-basic-column-header
-     :score
-     "application-handling__list-row--score"
-     "Pisteet"]
-    [:span.application-handling__list-row--state [state-filter-controls]]]
-   [application-list-contents applications]])
+  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
+    [:div
+     [:div.application-handling__list-header.application-handling__list-row
+      [application-list-basic-column-header
+       :applicant-name
+       "application-handling__list-row--applicant"
+       "Hakija"]
+      [application-list-basic-column-header
+       :created-time
+       "application-handling__list-row--time"
+       "Saapunut"]
+      [application-list-basic-column-header
+       :score
+       "application-handling__list-row--score"
+       "Pisteet"]
+      [:span.application-handling__list-row--state [state-filter-controls]]]
+     (when-not @fetching
+       [application-list-contents applications])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
