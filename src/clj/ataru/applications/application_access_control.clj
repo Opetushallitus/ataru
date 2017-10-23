@@ -108,3 +108,13 @@
    #(application-store/get-person-and-application-oids
      haku-oid
      hakukohde-oids)))
+
+(defn omatsivut-applications [organization-service session person-oid]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   (constantly nil)
+   #(application-store/get-full-application-list-by-person-oid-for-omatsivut
+     person-oid)))

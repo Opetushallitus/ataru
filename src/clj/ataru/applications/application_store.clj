@@ -252,9 +252,7 @@
 
 (defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
   (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
-         {:person_oid                   person-oid
-          :query_type                   "ALL"
-          :authorized_organization_oids [""]})
+                {:person_oid person-oid})
        (map ->kebab-case-kw)))
 
 (defn has-ssn-applied [haku-oid ssn]

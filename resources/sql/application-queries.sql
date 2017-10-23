@@ -210,22 +210,17 @@ WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
 )
 SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
-  ar.state                               AS state,
-  ar.score                               AS score,
-  a.form_id                              AS form,
-  a.haku,
-  a.secret
+  a.key AS oid,
+  a.key AS key,
+  a.secret AS secret,
+  ar.state AS state,
+  a.haku AS haku,
+  a.hakukohde AS hakukohteet
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
 WHERE a.person_oid = :person_oid
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND a.haku IS NOT NULL
+  AND ar.state <> 'inactivated'
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
