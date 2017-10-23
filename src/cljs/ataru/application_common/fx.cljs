@@ -39,20 +39,32 @@
                 [true []]
                 valid-ch))
 
+(defonce validation-sequences (atom {}))
+
+(defn- next-val [id]
+  (get (swap! validation-sequences update id (fnil inc 0)) id))
+
+(defn- current-val [id]
+  (get @validation-sequences id))
+
 (re-frame/reg-fx
  :validate
  (fn [{:keys [value answers field-descriptor on-validated]}]
-   (let [id (keyword (:id field-descriptor))]
+   (let [id (keyword (:id field-descriptor))
+         val (next-val id)]
      (if (or (get-in answers [id :cannot-edit])
              (get-in answers [id :cannot-view]))
        (on-validated [true []])
        (async/take! (all-valid? (validatep value answers field-descriptor))
-                    on-validated)))))
+                    (fn [result]
+                      (when (= val (current-val id))
+                        (on-validated result))))))))
 
 (re-frame/reg-fx
  :validate-every
  (fn [{:keys [values answers field-descriptor on-validated]}]
-   (let [id (keyword (:id field-descriptor))]
+   (let [id (keyword (:id field-descriptor))
+         val (next-val id)]
      (if (or (get-in answers [id :cannot-edit])
              (get-in answers [id :cannot-view]))
        (on-validated [true []])
@@ -60,4 +72,6 @@
                      (async/merge
                       (map (fn [value] (validatep value answers field-descriptor))
                            values)))
-                    on-validated)))))
+                    (fn [result]
+                      (when (= val (current-val id))
+                        (on-validated result))))))))
