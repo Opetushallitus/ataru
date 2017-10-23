@@ -348,7 +348,9 @@
                            (:selected-form-key db-application) :selected-form-key
                            (:selected-haku db-application) :selected-haku
                            (:selected-hakukohde db-application) :selected-hakukohde)
-          selected-id    (selected-type db-application)
+          selected-id    (if (= :selected-form-key selected-type)
+                           (:selected-form-key db-application)
+                           (-> db-application selected-type :oid))
           dispatch-kw    (case selected-type
                            :selected-form-key :application/fetch-applications
                            :selected-haku :application/fetch-applications-by-haku
