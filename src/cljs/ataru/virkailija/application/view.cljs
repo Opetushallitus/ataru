@@ -434,22 +434,33 @@
     "Lähetä täydennyspyyntö"]])
 
 (defn- application-information-request []
-  [:div.application-handling__information-request-container
-   [:div.application-handling__information-request-header "Lähetä täydennyspyyntö hakijalle" [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button]]
-   [application-information-request-recipient]
-   [application-information-request-subject]
-   [application-information-request-text]
-   [application-information-request-submit-button]])
+  (let [request-window-open? (r/atom true)]
+    (fn []
+      (cond-> [:div.application-handling__information-request-container
+               (into [:div.application-handling__information-request-header]
+                 (if @request-window-open?
+                   ["Lähetä täydennyspyyntö hakijalle"
+                    [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+                     {:on-click #(reset! request-window-open? false)}]]
+                   [[:a {:on-click #(reset! request-window-open? true)} "Lähetä täydennyspyyntö hakijalle"]]))]
+        @request-window-open?
+        (conj
+          [application-information-request-recipient]
+          [application-information-request-subject]
+          [application-information-request-text]
+          [application-information-request-submit-button])))))
 
 (defn application-review []
-  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
+  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
+        review-state       (subscribe [:state-query [:application :review :state]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-floating")}
      [:div.application-handling__review-inner-container
       [:div.application-handling__review-outer-container
        [application-review-state]
-       [application-information-request]
+       (when (= @review-state "information-request")
+         [application-information-request])
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
        [application-review-inputs]
