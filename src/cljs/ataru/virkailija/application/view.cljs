@@ -445,7 +445,7 @@
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
-               "application-handling__review-floating animated fadeIn")}
+               "application-handling__review-floating")}
      [:div.application-handling__review-inner-container
       [:div.application-handling__review-outer-container
        [application-review-state]
