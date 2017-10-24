@@ -436,19 +436,20 @@
 (defn- application-information-request []
   (let [request-window-open? (r/atom true)]
     (fn []
-      (cond-> [:div.application-handling__information-request-container
-               (into [:div.application-handling__information-request-header]
-                 (if @request-window-open?
-                   ["Lähetä täydennyspyyntö hakijalle"
-                    [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
-                     {:on-click #(reset! request-window-open? false)}]]
-                   [[:a {:on-click #(reset! request-window-open? true)} "Lähetä täydennyspyyntö hakijalle"]]))]
-        @request-window-open?
-        (conj
-          [application-information-request-recipient]
-          [application-information-request-subject]
-          [application-information-request-text]
-          [application-information-request-submit-button])))))
+      (if @request-window-open?
+        [:div.application-handling__information-request-container
+         [:div.application-handling__information-request-header
+          "Lähetä täydennyspyyntö hakijalle"
+          [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+           {:on-click #(reset! request-window-open? false)}]]
+         [application-information-request-recipient]
+         [application-information-request-subject]
+         [application-information-request-text]
+         [application-information-request-submit-button]]
+        [:div.application-handling__information-request-show-container-link
+         [:a
+          {:on-click #(reset! request-window-open? true)}
+          "Lähetä täydennyspyyntö hakijalle"]]))))
 
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
