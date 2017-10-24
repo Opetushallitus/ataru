@@ -413,6 +413,34 @@
       :target "_blank"}
      "Muokkaa hakemusta"]))
 
+(defn- application-information-request-recipient []
+  [:div.application-handling__information-request-row
+   [:div.application-handling__information-request-info-heading "Vastaanottaja:"]
+   [:div "foo@bar.com"]])
+
+(defn- application-information-request-subject []
+  [:div.application-handling__information-request-row
+   [:div.application-handling__information-request-info-heading "Aihe:"]
+   [:div.application-handling__information-request-text-input-container
+    [:input.application-handling__information-request-text-input]]])
+
+(defn- application-information-request-text []
+  [:div.application-handling__information-request-row
+   [:textarea.application-handling__information-request-text-area]])
+
+(defn- application-information-request-submit-button []
+  [:div.application-handling__information-request-row
+   [:a.application-handling__send-information-request-button
+    "Lähetä täydennyspyyntö"]])
+
+(defn- application-information-request []
+  [:div.application-handling__information-request-container
+   [:div.application-handling__information-request-header "Lähetä täydennyspyyntö hakijalle" [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button]]
+   [application-information-request-recipient]
+   [application-information-request-subject]
+   [application-information-request-text]
+   [application-information-request-submit-button]])
+
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
     [:div.application-handling__review
@@ -421,6 +449,7 @@
      [:div.application-handling__review-inner-container
       [:div.application-handling__review-outer-container
        [application-review-state]
+       [application-information-request]
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
        [application-review-inputs]
