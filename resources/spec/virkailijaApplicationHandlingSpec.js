@@ -309,7 +309,7 @@
         );
 
         it('shows virkailija edit link', function() {
-          expect(includedFilters()).to.equal(5);
+          expect(includedFilters()).to.equal(6);
         })
       });
     });
