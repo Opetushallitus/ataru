@@ -663,3 +663,25 @@ WHERE person_oid IS NOT NULL
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
+
+--name: yesql-applications-for-hakurekisteri
+WITH latest AS (
+    SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT
+  key,
+  haku,
+  hakukohde,
+  person_oid,
+  lang,
+  content
+FROM latest
+JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  -- Parameter list contains empty string to avoid empty lists
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
+  AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

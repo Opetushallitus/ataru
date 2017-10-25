@@ -98,6 +98,18 @@
      hakukohde-oid
      hakemus-oids)))
 
+(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/get-hakurekisteri-applications
+       haku-oid
+       hakukohde-oids
+       person-oids)))
+
 (defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oids]
   (session-orgs/run-org-authorized
    session

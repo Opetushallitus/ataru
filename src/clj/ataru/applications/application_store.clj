@@ -4,6 +4,7 @@
             [ataru.schema.form-schema :as schema]
             [ataru.application.review-states :refer [incomplete-states]]
             [ataru.virkailija.authentication.virkailija-edit]
+            [ataru.util :refer [answers-by-key]]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -452,6 +453,22 @@
   (-> (exec-db :db yesql-get-hakija-secret-by-virkailija-secret {:virkailija_secret virkailija-secret})
       (first)
       :secret))
+
+(defn- unwrap-hakurekisteri-application
+  [{:keys [key haku hakukohde person_oid lang content]}]
+  (let [answers (answers-by-key (:answers content))]
+    {:oid           key
+     :henkiloOid    person_oid
+     :hakuOid       haku
+     :asiointikieli lang
+     :hakukohteet   hakukohde}))
+
+(defn get-hakurekisteri-applications
+  [haku-oid hakukohde-oids person-oids]
+  (->> (exec-db :db yesql-applications-for-hakurekisteri {:haku_oid       haku-oid
+                                                          :hakukohde_oids (cons "" hakukohde-oids)
+                                                          :person_oids    (cons "" person-oids)})
+       (map unwrap-hakurekisteri-application)))
 
 (defn- unwrap-vts-application
   [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
