@@ -455,7 +455,6 @@ and (max-width: 1000px) {
 }
 
 .application-handling__send-information-request-button {
-  background-color: @link-color;
   color: @white;
   border-radius: 3px;
   box-shadow :none;
@@ -467,6 +466,14 @@ and (max-width: 1000px) {
   font-size: 14px;
   border: none;
   cursor: pointer;
+}
+
+.application-handling__send-information-request-button--enabled {
+  background-color: @link-color;
+}
+
+.application-handling__send-information-request-button--disabled {
+  background-color: @section-gray-border;
 }
 
 .application-handling__information-request-info-heading {

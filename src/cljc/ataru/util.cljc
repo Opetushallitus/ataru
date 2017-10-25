@@ -131,3 +131,6 @@
           days-after-end (time/plus apply-end (time/days days))]
       (and (time/after? now apply-end)
            (time/after? days-after-end now)))))
+
+(defn not-blank? [s]
+  (not (clojure.string/blank? s)))

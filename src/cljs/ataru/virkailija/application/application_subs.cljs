@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [ataru.util :as u]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -161,3 +162,9 @@
                 :answers
                 :hakukohteet
                 :value])))
+
+(re-frame/reg-sub
+  :application/information-request-submit-enabled?
+  (fn [db _]
+    (and (u/not-blank? (-> db :application :information-request :subject))
+         (u/not-blank? (-> db :application :information-request :text)))))

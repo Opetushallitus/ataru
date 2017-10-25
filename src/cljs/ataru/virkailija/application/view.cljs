@@ -435,11 +435,15 @@
                     (dispatch [:application/set-information-request-text text])))}]])
 
 (defn- application-information-request-submit-button []
-  (let [enabled? (r/atom false)]
+  (let [enabled? (subscribe [:application/information-request-submit-enabled?])]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
-        {:type  "button"}
+        {:type     "button"
+         :disabled (not @enabled?)
+         :class    (if @enabled?
+                     "application-handling__send-information-request-button--enabled"
+                     "application-handling__send-information-request-button--disabled")}
         "Lähetä täydennyspyyntö"]])))
 
 (defn- application-information-request []
