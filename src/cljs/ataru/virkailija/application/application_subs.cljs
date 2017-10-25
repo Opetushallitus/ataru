@@ -166,5 +166,5 @@
 (re-frame/reg-sub
   :application/information-request-submit-enabled?
   (fn [db _]
-    (and (u/not-blank? (-> db :application :information-request :subject))
-         (u/not-blank? (-> db :application :information-request :text)))))
+    (and (-> db :application :information-request :subject u/not-blank?)
+         (-> db :application :information-request :text u/not-blank?))))
