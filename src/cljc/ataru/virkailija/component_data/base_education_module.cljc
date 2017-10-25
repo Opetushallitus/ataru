@@ -36,7 +36,7 @@
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id              "higher-education-qualification-in-finland-qualification"
-                                                               :label           {:en "Qualification", :fi "Tutkinto", :sv "Examen"}
+                                                               :label           {:en "Qualification/degree", :fi "Tutkinto", :sv "Examen"}
                                                                :params          {}
                                                                :options         [{:label {:fi "", :sv ""}, :value ""}]
                                                                :fieldType       "dropdown"
@@ -108,7 +108,7 @@
                                                                :fieldType  "textField"
                                                                :fieldClass "formField"}
                                                               {:id         "higher-education-qualification-outside-finland-qualification"
-                                                               :label      {:en "Qualification", :fi "Tutkinto", :sv "Examen"}
+                                                               :label      {:en "Qualification/degree", :fi "Tutkinto", :sv "Examen"}
                                                                :params     {}
                                                                :validators ["required"]
                                                                :fieldType  "textField"
@@ -158,8 +158,8 @@
                       :fieldClass "formField"
                       :validators ["required"]}
                      (merge (component/single-choice-button)
-                            {:label      {:en "Have you completed general upper secondary school syllabus/matriculation examination or vocational qualification?",
-                                          :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon? ",
+                            {:label      {:en "Have you completed general upper secondary education or vocational qualification?",
+                                          :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?",
                                           :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"},
                              :id         "upper-secondary-school-completed"
                              :params     {},
