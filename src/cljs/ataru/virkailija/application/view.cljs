@@ -141,7 +141,9 @@
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
-
+              [:div.application-handling__mass-edit-review-states-close-button
+               {:on-click #(reset! element-visible? false)}
+               [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
 
