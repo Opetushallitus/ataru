@@ -356,7 +356,7 @@
     (let [application-key (-> db :application :selected-application-and-form :application :key)
           text            (-> db :application :information-request :text)
           subject         (-> db :application :information-request :subject)
-          path            (str "/lomake-editori/api/information-request/" application-key)]
+          path            (str "/lomake-editori/api/applications/information-request/" application-key)]
       {:db   (assoc-in db [:application :information-request :state] :submitting)
        :http {:method :post
               :path   path
