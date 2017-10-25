@@ -448,7 +448,8 @@
          :disabled (not @enabled?)
          :class    (if @enabled?
                      "application-handling__send-information-request-button--enabled"
-                     "application-handling__send-information-request-button--disabled")}
+                     "application-handling__send-information-request-button--disabled")
+         :on-click #(dispatch [:application/submit-information-request])}
         "Lähetä täydennyspyyntö"]])))
 
 (defn- application-information-request []
