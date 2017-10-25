@@ -429,7 +429,10 @@
 
 (defn- application-information-request-text []
   [:div.application-handling__information-request-row
-   [:textarea.application-handling__information-request-text-area]])
+   [:textarea.application-handling__information-request-text-area
+    {:on-change (fn [event]
+                  (let [text (-> event .-target .-value)]
+                    (dispatch [:application/set-information-request-text text])))}]])
 
 (defn- application-information-request-submit-button []
   [:div.application-handling__information-request-row

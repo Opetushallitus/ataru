@@ -343,3 +343,8 @@
   :application/set-information-request-subject
   (fn [db [_ subject]]
     (assoc-in db [:application :information-request :subject] subject)))
+
+(reg-event-db
+  :application/set-information-request-text
+  (fn [db [_ text]]
+    (assoc-in db [:application :information-request :text] text)))
