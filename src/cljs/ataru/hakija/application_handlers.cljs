@@ -995,14 +995,20 @@
 (reg-event-fx
   :application/add-question-group-row
   (fn add-question-group-row [{db :db} [_ field-descriptor-id]]
-    (let [repeat-count (get-in db [:application :ui (keyword field-descriptor-id) :count] 1)]
-      {:db (assoc-in db [:application :ui (keyword field-descriptor-id) :count] (inc repeat-count))
+    (let [id (keyword field-descriptor-id)
+          repeat-count (get-in db [:application :ui id :count] 1)]
+      {:db (-> db
+               (assoc-in [:application :ui id :count] (inc repeat-count))
+               (update-in [:application :ui id] dissoc :mouse-over-remove-button))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
 
 (reg-event-db
   :application/remove-question-group-row
   (fn [db [_ field-descriptor idx]]
-    (let [with-decremented-count (update-in db [:application :ui (keyword (:id field-descriptor)) :count] dec)]
+    (let [id (keyword (:id field-descriptor))
+          with-decremented-count (-> db
+                                     (update-in [:application :ui id :count] dec)
+                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))]
       (autil/reduce-form-fields
        (fn [db child]
          (let [id (keyword (:id child))
