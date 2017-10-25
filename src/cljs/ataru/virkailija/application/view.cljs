@@ -440,7 +440,11 @@
                       (dispatch [:application/set-information-request-text text])))}]]))
 
 (defn- application-information-request-submit-button []
-  (let [enabled? (subscribe [:application/information-request-submit-enabled?])]
+  (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
+        request-state (subscribe [:state-query [:application :information-request :state]])
+        button-text   (reaction (if (= @request-state :submitting)
+                                  "Täydennyspyyntöä lähetetään"
+                                  "Lähetä täydennyspyyntö"))]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
@@ -450,7 +454,7 @@
                      "application-handling__send-information-request-button--enabled"
                      "application-handling__send-information-request-button--disabled")
          :on-click #(dispatch [:application/submit-information-request])}
-        "Lähetä täydennyspyyntö"]])))
+        @button-text]])))
 
 (defn- application-information-request []
   (let [request-window-open? (r/atom true)]
