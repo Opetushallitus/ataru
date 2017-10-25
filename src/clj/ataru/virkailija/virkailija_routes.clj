@@ -367,6 +367,16 @@
 
                  (api/context "/external" []
                    :tags ["external-api"]
+                   (api/GET "/omatsivut/applications/:person-oid" {session :session}
+                            :summary "Get latest versions of every application belonging to a user with given person OID"
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OmatsivutApplication]
+                            (if-let [applications (access-controlled-application/omatsivut-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
                    (api/GET "/applications" {session :session}
                             :summary "Get the latest versions of applications in haku or hakukohde or by oids."
                             :query-params [{hakuOid :- s/Str nil}
