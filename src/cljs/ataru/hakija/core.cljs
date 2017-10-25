@@ -11,6 +11,7 @@
             [ataru.hakija.subs] ;; required although no explicit dependency
             [ataru.application-common.fx] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.cljs-util :as cljs-util]
+            [ataru.util :as u]
             [clojure.string :as str]))
 
 (enable-console-print!)
@@ -25,9 +26,6 @@
   (when-let [re-match (re-matches re path)]
     (nth re-match 1)))
 
-(defn- not-blank? [x]
-  (not (clojure.string/blank? x)))
-
 (defn- dispatch-form-load
   []
   (let [path              (cljs-util/get-path)
@@ -37,16 +35,16 @@
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)]
     (cond
-      (not-blank? hakukohde-oid)
+      (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
 
-      (not-blank? haku-oid)
+      (u/not-blank? haku-oid)
       (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
 
-      (not-blank? hakija-secret)
+      (u/not-blank? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
 
-      (not-blank? virkailija-secret)
+      (u/not-blank? virkailija-secret)
       (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret])
 
       :else
