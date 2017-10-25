@@ -414,9 +414,10 @@
      "Muokkaa hakemusta"]))
 
 (defn- application-information-request-recipient []
-  [:div.application-handling__information-request-row
-   [:div.application-handling__information-request-info-heading "Vastaanottaja:"]
-   [:div "foo@bar.com"]])
+  (let [email (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
+    [:div.application-handling__information-request-row
+     [:div.application-handling__information-request-info-heading "Vastaanottaja:"]
+     [:div @email]]))
 
 (defn- application-information-request-subject []
   [:div.application-handling__information-request-row
