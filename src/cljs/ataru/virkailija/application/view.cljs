@@ -44,9 +44,9 @@
                     (str "/lomake-editori/api/applications/excel/haku/"
                          (:oid @haku)
                          (query-string application-filter)))]
-          [:a.application-handling__excel-download-link
+          [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
            {:href url}
-           (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
+           (str "Lataa Excel (" (count applications) ")")])))))
 
 (defn haku-header []
   (let [header (subscribe [:application/list-heading])]
@@ -135,10 +135,10 @@
                                       acc))
                                   0
                                   from-states)]
-          [:div.application-handling__mass-edit-review-states-container
-           [:a.application-handling__mass-edit-review-states-link
+          [:span.application-handling__mass-edit-review-states-container
+           [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
             {:on-click #(swap! element-visible? not)}
-            "Tilojen massamuutos"]
+            "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
@@ -196,7 +196,7 @@
   (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
     [:div.application-handling__header
      [haku-header]
-     [:div
+     [:div.editor-form__form-controls-container
       [mass-update-applications-link]
       (when @belongs-to-haku
         [excel-download-link filtered-applications application-filter])]]))
