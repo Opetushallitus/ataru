@@ -486,11 +486,20 @@ and (max-width: 1000px) {
   width: 219px;
   cursor: pointer;
   box-shadow: @modal-shadow;
-  background: #fff;
+  background: @white;
+}
+
+.application-handling__review-state-row--disabled {
+  color: @sg-gray-lighten-3;
+  cursor: default;
 }
 
 .application-handling__review-state-row:hover {
   background-color: #e8f3f6;
+}
+
+.application-handling__review-state-row--disabled:hover {
+  background-color: @white;
 }
 
 .application-handling__review-state-row.application-handling__review-state-selected-row {

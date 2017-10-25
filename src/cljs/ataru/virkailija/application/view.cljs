@@ -61,7 +61,9 @@
   [selected all]
   (if @selected
     @selected
-    (ffirst all)))
+    (or
+      (ffirst (filter (comp pos? second) all))
+      (ffirst all))))
 
 (defn- review-state-label
   [state-name]
@@ -87,20 +89,22 @@
    [icon-check] label])
 
 (defn- mass-review-state-row
-  [current-review-state states state]
+  [current-review-state states disable-empty-rows? state]
   (let [review-state-count (count-for-application-state states state)
         review-state-label (review-state-label state)
         label-with-count   (review-label-with-count review-state-label review-state-count)
-        on-click           #(reset! current-review-state state)]
+        on-click           #(reset! current-review-state state)
+        disabled?          (and disable-empty-rows? (zero? review-state-count))]
     (if (= (selected-or-default-mass-review-state current-review-state states) state)
       (mass-review-state-selected-row #() label-with-count)
       [:div.application-handling__review-state-row
-       {:on-click on-click}
+       {:on-click (when-not disabled? on-click)
+        :class    (when disabled? "application-handling__review-state-row--disabled")}
        label-with-count])))
 
 (defn- opened-mass-review-state-list
-  [current-state states]
-  (mapv (partial mass-review-state-row current-state states) (map first states)))
+  [current-state states disable-empty-rows?]
+  (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
 
 (defn- mass-update-applications-link
   []
@@ -143,12 +147,11 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(swap! from-list-open? not)}]
-                       (opened-mass-review-state-list selected-from-review-state from-states))]
+                       (opened-mass-review-state-list selected-from-review-state from-states true))]
                 (mass-review-state-selected-row
                   (fn []
-                    (when (< 1 from-states-count)
-                      (swap! from-list-open? not)
-                      (dispatch [:application/update-mass-update-application-reviews-submit-state :submit])))
+                    (swap! from-list-open? not)
+                    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit]))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
 
               [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
@@ -157,7 +160,7 @@
                 [:div.application-handling__review-state-list-opened-anchor
                  (into [:div.application-handling__review-state-list-opened
                         {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                       (opened-mass-review-state-list selected-to-review-state all-states))]
+                       (opened-mass-review-state-list selected-to-review-state all-states false))]
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
@@ -182,11 +185,10 @@
                                            (map :key (filter #(= (:state %) from-state-name) @filtered-applications))
                                            from-state-name
                                            to-state-name])
-                                (dispatch [:application/update-mass-update-application-reviews-submit-state :in-progress])))}
+                                (reset! element-visible? false)
+                                (reset! from-list-open? false)
+                                (reset! to-list-open? false)))}
                  "Vahvista muutos"]
-
-                :in-progress
-                [:div.application-handling__mass-edit-review-states-spinner-container [:i.zmdi.zmdi-spinner.application-handling__mass-edit-review-states-spinner]]
 
                 [:div])])])))))
 
