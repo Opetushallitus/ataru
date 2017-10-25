@@ -420,20 +420,24 @@
      [:div @email]]))
 
 (defn- application-information-request-subject []
-  [:div.application-handling__information-request-row
-   [:div.application-handling__information-request-info-heading "Aihe:"]
-   [:div.application-handling__information-request-text-input-container
-    [:input.application-handling__information-request-text-input
-     {:on-change (fn [event]
-                   (let [subject (-> event .-target .-value)]
-                     (dispatch [:application/set-information-request-subject subject])))}]]])
+  (let [subject (subscribe [:state-query [:application :information-request :subject]])]
+    [:div.application-handling__information-request-row
+     [:div.application-handling__information-request-info-heading "Aihe:"]
+     [:div.application-handling__information-request-text-input-container
+      [:input.application-handling__information-request-text-input
+       {:value     @subject
+        :on-change (fn [event]
+                     (let [subject (-> event .-target .-value)]
+                       (dispatch [:application/set-information-request-subject subject])))}]]]))
 
 (defn- application-information-request-text []
-  [:div.application-handling__information-request-row
-   [:textarea.application-handling__information-request-text-area
-    {:on-change (fn [event]
-                  (let [text (-> event .-target .-value)]
-                    (dispatch [:application/set-information-request-text text])))}]])
+  (let [text (subscribe [:state-query [:application :information-request :text]])]
+    [:div.application-handling__information-request-row
+     [:textarea.application-handling__information-request-text-area
+      {:value     @text
+       :on-change (fn [event]
+                    (let [text (-> event .-target .-value)]
+                      (dispatch [:application/set-information-request-text text])))}]]))
 
 (defn- application-information-request-submit-button []
   (let [enabled? (subscribe [:application/information-request-submit-enabled?])]
