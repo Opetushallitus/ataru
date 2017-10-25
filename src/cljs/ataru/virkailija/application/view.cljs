@@ -422,7 +422,10 @@
   [:div.application-handling__information-request-row
    [:div.application-handling__information-request-info-heading "Aihe:"]
    [:div.application-handling__information-request-text-input-container
-    [:input.application-handling__information-request-text-input]]])
+    [:input.application-handling__information-request-text-input
+     {:on-change (fn [event]
+                   (let [subject (-> event .-target .-value)]
+                     (dispatch [:application/set-information-request-subject subject])))}]]])
 
 (defn- application-information-request-text []
   [:div.application-handling__information-request-row

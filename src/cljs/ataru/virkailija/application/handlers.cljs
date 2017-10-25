@@ -338,3 +338,8 @@
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
     (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
+
+(reg-event-db
+  :application/set-information-request-subject
+  (fn [db [_ subject]]
+    (assoc-in db [:application :information-request :subject] subject)))
