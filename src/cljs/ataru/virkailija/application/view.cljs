@@ -141,6 +141,8 @@
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
+
+              [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
 
               (if @from-list-open?
