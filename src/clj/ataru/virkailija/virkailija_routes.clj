@@ -377,6 +377,22 @@
                                                    person-oid)]
                               (response/ok applications)
                               (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/hakurekisteri/applications" {session :session}
+                     :summary "Get the latest versions of applications."
+                     :query-params [{hakuOid :- s/Str nil}
+                                    {hakukohdeOids :- [s/Str] nil}
+                                    {hakijaOids :- [s/Str] nil}]
+                     ;:return [ataru-schema/???] TODO: Figure out the schema after we know what to return
+                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
+                       (response/bad-request {:error "No search terms provided."})
+                       (if-let [applications (access-controlled-application/hakurekisteri-applications
+                                               organization-service
+                                               session
+                                               hakuOid
+                                               hakukohdeOids
+                                               hakijaOids)]
+                         (response/ok applications)
+                         (response/unauthorized {:error "Unauthorized"}))))
                    (api/GET "/applications" {session :session}
                             :summary "Get the latest versions of applications in haku or hakukohde or by oids."
                             :query-params [{hakuOid :- s/Str nil}
