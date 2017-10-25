@@ -435,9 +435,12 @@
                     (dispatch [:application/set-information-request-text text])))}]])
 
 (defn- application-information-request-submit-button []
-  [:div.application-handling__information-request-row
-   [:a.application-handling__send-information-request-button
-    "Lähetä täydennyspyyntö"]])
+  (let [enabled? (r/atom false)]
+    (fn []
+      [:div.application-handling__information-request-row
+       [:button.application-handling__send-information-request-button
+        {:type  "button"}
+        "Lähetä täydennyspyyntö"]])))
 
 (defn- application-information-request []
   (let [request-window-open? (r/atom true)]
