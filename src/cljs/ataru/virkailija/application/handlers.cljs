@@ -18,7 +18,8 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
-                   (assoc-in [:application :application-list-expanded?] false))]
+                   (assoc-in [:application :application-list-expanded?] false)
+                   (assoc-in [:application :information-request] nil))]
         {:db         db
          :dispatch-n [[:application/stop-autosave]
                       [:application/fetch-application application-key]]}))))
