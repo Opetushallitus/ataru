@@ -239,10 +239,10 @@
                      :path-params [application-key :- s/Str]
                      :body [information-request ataru-schema/InformationRequest]
                      :summary "Send an information request to an applicant"
-                     (information-request/store information-request
-                                                application-key
-                                                session)
-                     (ok {}))
+                     :return ataru-schema/InformationRequest
+                     (ok (information-request/store information-request
+                                                    application-key
+                                                    session)))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}
