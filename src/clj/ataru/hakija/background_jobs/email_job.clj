@@ -19,7 +19,7 @@
                                                                                   :isHtml true
                                                                                   :body body}
                                                                           :recipient wrapped-recipients})})]
-    (if (not= 200 (:status response))
+    (when (not= 200 (:status response))
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-step [{:keys [from recipients subject body]} _]
