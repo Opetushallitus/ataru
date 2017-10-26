@@ -46,7 +46,7 @@
                          (query-string application-filter)))]
           [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
            {:href url}
-           (str "Lataa Excel (" (count applications) ")")])))))
+           "Lataa Excel"])))))
 
 (defn haku-header []
   (let [header (subscribe [:application/list-heading])]
