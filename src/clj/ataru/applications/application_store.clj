@@ -457,11 +457,11 @@
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde person_oid lang content]}]
   (let [answers (answers-by-key (:answers content))]
-    {:oid           key
-     :henkiloOid    person_oid
-     :hakuOid       haku
-     :asiointikieli lang
-     :hakukohteet   hakukohde}))
+    {:oid                 key
+     :personOid           person_oid
+     :applicationSystemId haku
+     :kieli               lang
+     :hakukohteet         hakukohde}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids]
