@@ -289,3 +289,6 @@
 
 (s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
                                          (s/optional-key :errorMessage) s/Str})
+
+(s/defschema InformationRequest {:subject s/Str
+                                 :text    s/Str})

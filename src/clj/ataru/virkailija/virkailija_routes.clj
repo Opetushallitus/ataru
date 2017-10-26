@@ -18,6 +18,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.information-request.information-request-service :as information-request]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
@@ -233,6 +234,15 @@
                          review
                          session
                          organization-service)))
+
+                   (api/POST "/information-request/:application-key" {session :session}
+                     :path-params [application-key :- s/Str]
+                     :body [information-request ataru-schema/InformationRequest]
+                     :summary "Send an information request to an applicant"
+                     (information-request/store information-request
+                                                application-key
+                                                session)
+                     (ok {}))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}
