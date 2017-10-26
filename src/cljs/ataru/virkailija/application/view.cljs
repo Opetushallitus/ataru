@@ -135,14 +135,7 @@
                                       (update acc state inc)
                                       (assoc acc state 1)))
                                   all-states
-                                  @filtered-applications)
-              from-states-count (reduce
-                                  (fn [acc [_ application-count]]
-                                    (if (pos? application-count)
-                                      (inc acc)
-                                      acc))
-                                  0
-                                  from-states)]
+                                  @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
            [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
             {:on-click #(toggle-mass-update-popup-visibility element-visible? not)}
