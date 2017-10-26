@@ -61,9 +61,6 @@ INSERT INTO applications (
 );
 
 -- name: yesql-get-application-list-by-form
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -73,16 +70,14 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON f.id = a.form_id AND f.key = :form_key
+FROM latest_applications AS a
+JOIN application_reviews ar ON a.key = ar.application_key
+JOIN forms AS f ON f.id = a.form_id
 WHERE a.haku IS NULL
+  AND f.key = :form_key
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-hakukohde
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -93,17 +88,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE :hakukohde_oid = ANY (a.hakukohde)
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-haku
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -114,17 +107,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.haku = :haku_oid
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-ssn
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -135,17 +126,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.ssn = :ssn
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-dob
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -156,17 +145,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.dob = :dob
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-email
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -177,17 +164,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.email = :email
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-name
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -198,17 +183,15 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name)
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+      AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-person-oid-for-omatsivut
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.key AS oid,
   a.key AS key,
@@ -217,8 +200,8 @@ SELECT
   a.haku AS haku,
   a.email AS email,
   a.hakukohde AS hakukohteet
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
+FROM latest_applications AS a
+JOIN application_reviews ar ON a.key = ar.application_key
 WHERE a.person_oid = :person_oid
   AND a.haku IS NOT NULL
   AND ar.state <> 'inactivated'
@@ -253,9 +236,6 @@ WHERE application_key = :application_key;
 
 -- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -265,17 +245,16 @@ SELECT
   a.content,
   a.person_oid,
   ar.state  AS state
-FROM latest a
-  JOIN forms f ON f.id = a.form_id AND f.key = :form_key
-  JOIN application_reviews ar ON a.key = ar.application_key
-WHERE a.haku IS NULL AND state IN (:filtered_states)
+FROM latest_applications AS a
+JOIN forms AS f ON f.id = a.form_id
+JOIN application_reviews AS ar ON a.key = ar.application_key
+WHERE a.haku IS NULL
+  AND state IN (:filtered_states)
+  AND f.key = :form_key
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-applications-for-hakukohde
 -- Get applications for form-key/hakukohde
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -288,18 +267,15 @@ SELECT
   a.person_oid,
   ar.state  AS state,
   f.key     AS form_key
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
 WHERE state IN (:filtered_states)
       AND :hakukohde_oid = ANY (a.hakukohde)
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-applications-for-haku
 -- Get applications for form-key/haku
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   a.id,
   a.key,
@@ -312,10 +288,11 @@ SELECT
   a.person_oid,
   ar.state  AS state,
   f.key     AS form_key
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
-WHERE state IN (:filtered_states) AND a.haku = :haku_oid
+FROM latest_applications AS a
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
+WHERE state IN (:filtered_states)
+  AND a.haku = :haku_oid
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-by-id
@@ -332,10 +309,7 @@ FROM applications
 WHERE id = :application_id;
 
 -- name: yesql-has-ssn-applied
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
-SELECT EXISTS (SELECT 1 FROM latest
+SELECT EXISTS (SELECT 1 FROM latest_applications
                JOIN application_reviews
                ON application_key = key
                WHERE haku = :haku_oid
@@ -343,10 +317,7 @@ SELECT EXISTS (SELECT 1 FROM latest
                    AND state <> 'inactivated') AS has_applied;
 
 -- name: yesql-has-email-applied
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
-SELECT EXISTS (SELECT 1 FROM latest
+SELECT EXISTS (SELECT 1 FROM latest_applications
                JOIN application_reviews
                ON application_key = key
                WHERE haku = :haku_oid
@@ -354,11 +325,6 @@ SELECT EXISTS (SELECT 1 FROM latest
                    AND state <> 'inactivated') AS has_applied;
 
 -- name: yesql-get-latest-application-by-key
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM applications a
-    WHERE a.key = :application_key
-)
 SELECT
   id,
   key,
@@ -370,26 +336,23 @@ SELECT
   haku,
   person_oid,
   CASE
-    WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
-                                                     FROM applications a2
-                                                       JOIN forms f2 ON a2.form_id = f2.id
-                                                     WHERE a2.ssn = a.ssn
-                                                           AND (:query_type = 'ALL' OR f2.organization_oid IN (:authorized_organization_oids))) AS temp)
-    WHEN email IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a3.key)
-                                                       FROM applications a3
-                                                         JOIN forms f3 ON a3.form_id = f3.id
-                                                       WHERE a3.email = a.email
-                                                             AND (:query_type = 'ALL' OR f3.organization_oid IN (:authorized_organization_oids))) AS temp)
+    WHEN ssn IS NOT NULL THEN (SELECT count(*)
+                               FROM latest_applications AS aa
+                               JOIN forms AS f ON f.id = aa.form_id
+                               JOIN latest_forms AS lf ON lf.key = f.key
+                               WHERE aa.ssn = a.ssn
+                                 AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+    WHEN email IS NOT NULL THEN (SELECT count(*)
+                                 FROM latest_applications AS aa
+                                 JOIN forms AS f ON f.id = aa.form_id
+                                 JOIN latest_forms AS lf ON lf.key = f.key
+                                 WHERE aa.email = a.email
+                                   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
   END AS applications_count
-  FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time;
+FROM latest_applications AS a
+WHERE a.key = :application_key;
 
 -- name: yesql-get-latest-application-by-secret
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM applications a
-    WHERE a.secret = :secret
-)
 SELECT
   a.id,
   a.key,
@@ -400,18 +363,11 @@ SELECT
   a.haku,
   a.hakukohde,
   f.key     AS form_key
-FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
-  JOIN forms f ON a.form_id = f.id;
+FROM latest_applications AS a
+JOIN forms AS f ON a.form_id = f.id
+WHERE a.secret = :secret;
 
 -- name: yesql-get-latest-application-by-virkailija-secret
-WITH latest_version AS (
-    SELECT max(a.created_time) AS latest_time
-    FROM applications a
-    JOIN virkailija_credentials AS vc
-    ON a.key = vc.application_key
-    WHERE vc.secret = :virkailija_secret
-)
 SELECT
   a.id,
   a.key,
@@ -422,9 +378,10 @@ SELECT
   a.haku,
   a.hakukohde,
   f.key     AS form_key
-FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
-  JOIN forms f ON a.form_id = f.id;
+FROM latest_applications AS a
+JOIN forms f ON a.form_id = f.id
+JOIN virkailija_credentials AS vc ON vc.application_key = a.key
+WHERE vc.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
 WITH latest_version AS (
@@ -472,36 +429,30 @@ FOR UPDATE;
 -- name: yesql-get-application-organization-by-key
 -- Get the related form's organization oid for access checks
 
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM applications a
-    WHERE a.key = :application_key
-)
-SELECT f.organization_oid
-FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
-  JOIN forms f ON f.id = a.form_id;
+SELECT lf.organization_oid
+FROM latest_forms AS lf
+JOIN forms AS f ON f.key = lf.key
+JOIN latest_applications AS a ON a.form_id = f.id
+WHERE a.key = :application_key;
 
 -- name: yesql-organization-oids-of-applications-of-persons
 -- Get the organization oids of the related forms
 
-WITH latest_version AS (
-    SELECT max(created_time) AS latest_time
-    FROM applications a
-    WHERE a.person_oid IN (:person_oids)
-)
-SELECT f.organization_oid
-FROM applications a
-  JOIN latest_version lv ON a.created_time = lv.latest_time
-  JOIN forms f ON f.id = a.form_id;
+SELECT lf.organization_oid
+FROM latest_forms AS lf
+JOIN forms AS f ON f.key = lf.key
+JOIN latest_applications AS a ON a.form_id = f.id
+WHERE a.person_oid IN (:person_oids);
 
 -- name: yesql-get-application-review-organization-by-id
 -- Get the related form's organization oid for access checks
-SELECT f.organization_oid
-FROM application_reviews ar
-  JOIN applications a ON a.key = ar.application_key
-  JOIN forms f ON f.id = a.form_id
-                  AND ar.id = :review_id;
+
+SELECT lf.organization_oid
+FROM latest_forms AS lf
+JOIN forms AS f ON f.key = lf.key
+JOIN latest_applications AS a ON a.form_id = f.id
+JOIN application_reviews AS ar ON ar.application_key = a.key
+WHERE ar.id = :review_id;
 
 -- name: yesql-add-application-event!
 -- Add application event
@@ -531,11 +482,7 @@ WHERE key IN (select key from applications where id = :id)
       AND id >= :id;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
-WITH latest_applications AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-), latest_forms AS (
-  SELECT DISTINCT ON (key) * FROM forms ORDER BY key, id DESC
-), unnested_hakukohde AS (
+WITH unnested_hakukohde AS (
   SELECT
     a.key AS key,
     a.haku AS haku,
@@ -562,11 +509,6 @@ FROM unnested_hakukohde
 GROUP BY haku, hakukohde;
 
 -- name: yesql-get-direct-form-haut
-WITH latest_applications AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-), latest_forms AS (
-  SELECT DISTINCT ON (key) * FROM forms ORDER BY key, id DESC
-)
 SELECT
   lf.name,
   lf.key,
@@ -631,9 +573,6 @@ FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   key,
   haku,
@@ -643,9 +582,8 @@ SELECT
   email,
   ssn,
   hakukohde
-FROM latest
-JOIN application_reviews
-ON application_key = key
+FROM latest_applications
+JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
@@ -656,9 +594,6 @@ WHERE person_oid IS NOT NULL
 ORDER BY created_time DESC;
 
 --name: yesql-applications-for-hakurekisteri
-WITH latest AS (
-    SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
 SELECT
   key,
   haku,
@@ -666,7 +601,7 @@ SELECT
   person_oid,
   lang,
   content
-FROM latest
+FROM latest_applications
 JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
