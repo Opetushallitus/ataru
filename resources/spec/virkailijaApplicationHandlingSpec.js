@@ -33,7 +33,7 @@
       );
       it('has applications', function() {
         expect(applicationHeader().text()).to.equal('Selaintestilomake1');
-        expect(downloadLink().text()).to.equal('Lataa hakemukset Excel-muodossa (3)')
+        expect(downloadLink().text()).to.equal('Lataa Excel')
       });
       it('stores an event for review state change', function() {
         expect(eventCountBefore+1).to.equal(eventCaptions().length);
