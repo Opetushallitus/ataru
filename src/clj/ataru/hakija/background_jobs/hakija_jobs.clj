@@ -1,5 +1,5 @@
 (ns ataru.hakija.background-jobs.hakija-jobs
-  (:require [ataru.hakija.background-jobs.email-job :as email-job]
+  (:require [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]))
 
