@@ -58,9 +58,9 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (audit-log/log {:new       information-request
-                    :operation audit-log/operation-new
-                    :id        (-> session :identity :username)})
-    (start-email-job information-request)
-    (-> (information-request-store/add-information-request information-request conn)
-        (dissoc :id))))
+    (let [information-request (information-request-store/add-information-request information-request conn)]
+      (audit-log/log {:new       information-request
+                      :operation audit-log/operation-new
+                      :id        (-> session :identity :username)})
+      (start-email-job information-request)
+      information-request)))
