@@ -9,3 +9,7 @@ INSERT INTO information_request (
   :subject,
   :message
 );
+
+-- name: yesql-get-information-requests
+-- Get all information requests belonging to an application
+SELECT application_key, subject, message, created_time FROM information_request WHERE application_key = :application_key;
