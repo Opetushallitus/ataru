@@ -78,13 +78,14 @@
    #(hash-map :applications (application-store/get-full-application-list-by-name name))))
 
 (defn get-latest-application-by-key [application-key session organization-service]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    empty-applications-result-fn
-    #(application-store/get-latest-application-by-key application-key %)
-    #(application-store/get-latest-application-by-key-unrestricted application-key)))
+  (-> (session-orgs/run-org-authorized
+        session
+        organization-service
+        [:view-applications :edit-applications]
+        empty-applications-result-fn
+        #(application-store/get-latest-application-by-key application-key %)
+        #(application-store/get-latest-application-by-key-unrestricted application-key))
+      (dissoc :secret)))
 
 (defn vts-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
   (session-orgs/run-org-authorized

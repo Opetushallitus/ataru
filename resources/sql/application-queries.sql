@@ -373,6 +373,7 @@ SELECT
   hakukohde,
   haku,
   person_oid,
+  secret,
   CASE
     WHEN ssn IS NOT NULL THEN (SELECT COUNT(*) FROM (SELECT DISTINCT(a2.key)
                                                      FROM applications a2
