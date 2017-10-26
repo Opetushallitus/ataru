@@ -1,0 +1,1 @@
+ALTER TABLE information_request ADD COLUMN created_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
