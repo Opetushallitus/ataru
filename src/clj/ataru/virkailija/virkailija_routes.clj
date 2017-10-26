@@ -235,13 +235,11 @@
                          session
                          organization-service)))
 
-                   (api/POST "/information-request/:application-key" {session :session}
-                     :path-params [application-key :- s/Str]
+                   (api/POST "/information-request" {session :session}
                      :body [information-request ataru-schema/InformationRequest]
                      :summary "Send an information request to an applicant"
                      :return ataru-schema/InformationRequest
                      (ok (information-request/store information-request
-                                                    application-key
                                                     session)))
 
                    (api/context "/excel" []

@@ -290,7 +290,7 @@
 (s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
                                          (s/optional-key :errorMessage) s/Str})
 
-(s/defschema InformationRequest {:subject                          s/Str
-                                 :message                          s/Str
-                                 (s/optional-key :application-key) s/Str
-                                 (s/optional-key :state)           s/Str})
+(s/defschema InformationRequest {:subject                s/Str
+                                 :message                s/Str
+                                 :application-key        s/Str
+                                 (s/optional-key :state) s/Str})
