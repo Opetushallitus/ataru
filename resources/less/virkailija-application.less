@@ -66,6 +66,10 @@
 }
 
 .application-handling__mass-edit-review-states-popup {
+  .arrow(top, white);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
+  box-sizing: border-box;
+  display: block;
   border-radius: 3px;
   position: absolute;
   z-index: 10;
@@ -75,9 +79,7 @@
   background-color: white;
   min-width: 240px;
   padding: 15px;
-  box-shadow: @modal-shadow;
   font-size: 13px;
-  overflow: hidden;
   line-height: 21px;
 }
 
@@ -100,6 +102,7 @@
 
 .application-handling__mass-edit-review-states-heading {
   margin: 0 0 10px 0;
+  color: @text-color;
 }
 
 .application-handling__mass-edit-review-states-submit-button {
