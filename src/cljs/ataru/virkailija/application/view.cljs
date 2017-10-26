@@ -189,6 +189,8 @@
                                            (map :key (filter #(= (:state %) from-state-name) @filtered-applications))
                                            from-state-name
                                            to-state-name])
+                                (reset! selected-from-review-state nil)
+                                (reset! selected-to-review-state nil)
                                 (reset! element-visible? false)
                                 (reset! from-list-open? false)
                                 (reset! to-list-open? false)))}
