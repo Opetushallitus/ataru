@@ -159,7 +159,7 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review hakukohde-reviews]}]
+(defn update-application-details [db {:keys [form application events review hakukohde-reviews information-requests]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
@@ -167,7 +167,8 @@
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))))
+      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
+      (assoc-in [:application :information-requests] information-requests)))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
