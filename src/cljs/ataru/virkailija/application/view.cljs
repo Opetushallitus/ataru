@@ -84,7 +84,7 @@
 
 (defn- mass-review-state-selected-row
   [on-click label]
-  [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+  [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update.application-handling__review-state-selected-row
    {:on-click on-click}
    [icon-check] label])
 
@@ -97,7 +97,7 @@
         disabled?          (and disable-empty-rows? (zero? review-state-count))]
     (if (= (selected-or-default-mass-review-state current-review-state states) state)
       (mass-review-state-selected-row #() label-with-count)
-      [:div.application-handling__review-state-row
+      [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update
        {:on-click (when-not disabled? on-click)
         :class    (when disabled? "application-handling__review-state-row--disabled")}
        label-with-count])))
