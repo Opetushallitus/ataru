@@ -11,13 +11,11 @@
              application-key
              session]
   {:pre [(-> information-request :subject u/not-blank?)
-         (-> information-request :text u/not-blank?)
+         (-> information-request :message u/not-blank?)
          (u/not-blank? application-key)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (audit-log/log {:new       information-request
                     :operation audit-log/operation-new
                     :id        (-> session :identity :username)})
-    (yesql-add-information-request<! {:application_key application-key
-                                      :subject         (:subject information-request)
-                                      :message         (:text information-request)}
+    (yesql-add-information-request<! (assoc information-request :application_key application-key)
                                      {:connection conn})))

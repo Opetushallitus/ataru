@@ -430,14 +430,14 @@
                      (let [subject (-> event .-target .-value)]
                        (dispatch [:application/set-information-request-subject subject])))}]]]))
 
-(defn- application-information-request-text []
-  (let [text (subscribe [:state-query [:application :information-request :text]])]
+(defn- application-information-request-message []
+  (let [message (subscribe [:state-query [:application :information-request :message]])]
     [:div.application-handling__information-request-row
-     [:textarea.application-handling__information-request-text-area
-      {:value     @text
+     [:textarea.application-handling__information-request-message-area
+      {:value     @message
        :on-change (fn [event]
-                    (let [text (-> event .-target .-value)]
-                      (dispatch [:application/set-information-request-text text])))}]]))
+                    (let [message (-> event .-target .-value)]
+                      (dispatch [:application/set-information-request-message message])))}]]))
 
 (defn- application-information-request-submit-button []
   (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
@@ -467,7 +467,7 @@
            {:on-click #(reset! request-window-open? false)}]]
          [application-information-request-recipient]
          [application-information-request-subject]
-         [application-information-request-text]
+         [application-information-request-message]
          [application-information-request-submit-button]]
         [:div.application-handling__information-request-show-container-link
          [:a

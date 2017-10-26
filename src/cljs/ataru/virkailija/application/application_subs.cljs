@@ -167,5 +167,5 @@
   :application/information-request-submit-enabled?
   (fn [db _]
     (and (-> db :application :information-request :subject u/not-blank?)
-         (-> db :application :information-request :text u/not-blank?)
+         (-> db :application :information-request :message u/not-blank?)
          (-> db :application :information-request :state nil?))))

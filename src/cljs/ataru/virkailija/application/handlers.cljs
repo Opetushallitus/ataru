@@ -346,19 +346,19 @@
     (assoc-in db [:application :information-request :subject] subject)))
 
 (reg-event-db
-  :application/set-information-request-text
-  (fn [db [_ text]]
-    (assoc-in db [:application :information-request :text] text)))
+  :application/set-information-request-message
+  (fn [db [_ message]]
+    (assoc-in db [:application :information-request :message] message)))
 
 (reg-event-fx
   :application/submit-information-request
   (fn [{:keys [db]} _]
     (let [application-key (-> db :application :selected-application-and-form :application :key)
-          text            (-> db :application :information-request :text)
+          message         (-> db :application :information-request :message)
           subject         (-> db :application :information-request :subject)
           path            (str "/lomake-editori/api/applications/information-request/" application-key)]
       {:db   (assoc-in db [:application :information-request :state] :submitting)
        :http {:method :post
               :path   path
-              :params {:text    text
+              :params {:message message
                        :subject subject}}})))
