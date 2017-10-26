@@ -26,7 +26,7 @@
        (map :value)
        (first)))
 
-(defn- create-email [information-request]
+(defn- initial-state [information-request]
   (let [application     (-> information-request :application-key app-store/get-latest-application-by-key-unrestricted)
         lang            (-> application :lang keyword)
         first-name      (extract-answer-value "preferred-name" application)
@@ -45,12 +45,12 @@
                 :body       body}))))
 
 (defn- start-email-job [information-request]
-  (let [email    (create-email information-request)
-        job-type (:type information-request-job/job-definition)
-        job-id   (job/start-job virkailija-jobs/job-definitions
-                                job-type
-                                email)]
-    (log/info (str "Started information request email job with job id " job-id ", email to be sent: " email))))
+  (let [initial-state (initial-state information-request)
+        job-type      (:type information-request-job/job-definition)
+        job-id        (job/start-job virkailija-jobs/job-definitions
+                                     job-type
+                                     initial-state)]
+    (log/info (str "Started information request email job with job id " job-id ", initial state: " initial-state))))
 
 (defn store [information-request
              session]

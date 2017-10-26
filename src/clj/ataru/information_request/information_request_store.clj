@@ -8,7 +8,12 @@
 (def ^:private ->kebab-case-kw (partial t/transform-keys c/->kebab-case-keyword))
 (def ^:private ->snake-case-kw (partial t/transform-keys c/->snake_case_keyword))
 
-(defn add-information-request [information-request conn]
+(defn  add-information-request [information-request conn]
   (-> (yesql-add-information-request<! (->snake-case-kw information-request)
                                        {:connection conn})
       (->kebab-case-kw)))
+
+(defn set-information-request-state [id state conn]
+  (yesql-set-information-request-state! {:id    id
+                                         :state state}
+                                        {:connection conn}))
