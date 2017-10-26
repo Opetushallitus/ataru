@@ -12,8 +12,3 @@
   (-> (yesql-add-information-request<! (->snake-case-kw information-request)
                                        {:connection conn})
       (->kebab-case-kw)))
-
-(defn set-information-request-state [id state conn]
-  (yesql-set-information-request-state! {:id    id
-                                         :state state}
-                                        {:connection conn}))

@@ -3,15 +3,9 @@
 INSERT INTO information_request (
   application_key,
   subject,
-  message,
-  state
+  message
 ) VALUES (
   :application_key,
   :subject,
-  :message,
-  'unprocessed'
+  :message
 );
-
--- name: yesql-set-information-request-state!
--- Set new state to information request
-UPDATE information_request SET state = :state WHERE id = :id;

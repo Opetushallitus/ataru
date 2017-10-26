@@ -293,5 +293,4 @@
 (s/defschema InformationRequest {:subject                s/Str
                                  :message                s/Str
                                  :application-key        s/Str
-                                 (s/optional-key :state) s/Str
                                  (s/optional-key :id)    s/Int})
