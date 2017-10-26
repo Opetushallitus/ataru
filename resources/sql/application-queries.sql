@@ -532,68 +532,58 @@ WHERE key IN (select key from applications where id = :id)
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
 WITH latest_applications AS (
-    SELECT
-      a.key,
-      a.haku,
-      unnest(a.hakukohde) as hakukohde,
-      ar.state,
-      max(a.created_time) AS latest_time
-    FROM applications a
-      INNER JOIN forms f ON (a.form_id = f.id)
-      INNER JOIN application_reviews ar ON a.key = ar.application_key
-    WHERE a.haku IS NOT NULL
-          AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
-    GROUP BY a.key, a.haku, a.hakukohde, ar.state
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_forms AS (
+  SELECT DISTINCT ON (key) * FROM forms ORDER BY key, id DESC
+), unnested_hakukohde AS (
+  SELECT
+    a.key AS key,
+    a.haku AS haku,
+    unnest(a.hakukohde) AS hakukohde,
+    ar.state AS state
+  FROM latest_applications AS a
+  JOIN forms AS f ON f.id = a.form_id
+  JOIN latest_forms AS lf ON lf.key = f.key
+  JOIN application_reviews AS ar ON a.key = ar.application_key
+  WHERE a.haku IS NOT NULL
+    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 )
 SELECT
-  la.haku,
-  la.hakukohde,
-  COUNT(la.key)   AS application_count,
-  SUM(CASE WHEN la.state = 'unprocessed'
-    THEN 1
+  haku,
+  hakukohde,
+  count(key) AS application_count,
+  sum(CASE WHEN state = 'unprocessed'
+      THEN 1
       ELSE 0 END) AS unprocessed,
-  SUM(CASE WHEN la.state IN (:incomplete_states)
-    THEN 1
+  sum(CASE WHEN state IN (:incomplete_states)
+      THEN 1
       ELSE 0 END) AS incomplete
-FROM latest_applications la
-GROUP BY la.haku, la.hakukohde;
+FROM unnested_hakukohde
+GROUP BY haku, hakukohde;
 
 -- name: yesql-get-direct-form-haut
 WITH latest_applications AS (
-    SELECT
-      a1.key,
-      f1.key               AS form_key,
-      ar.state,
-      max(a1.created_time) AS latest_time
-    FROM applications a1
-      INNER JOIN forms f1 ON (a1.form_id = f1.id)
-      INNER JOIN application_reviews ar ON a1.key = ar.application_key
-    WHERE a1.haku IS NULL
-          AND (:query_type = 'ALL' OR f1.organization_oid IN (:authorized_organization_oids))
-    GROUP BY a1.key, form_key, ar.state
-),
-    latest_forms AS (
-      SELECT
-        key,
-        MAX(id) AS max_id
-      FROM forms
-      WHERE (:query_type = 'ALL' OR organization_oid IN (:authorized_organization_oids))
-      GROUP BY key
-  )
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_forms AS (
+  SELECT DISTINCT ON (key) * FROM forms ORDER BY key, id DESC
+)
 SELECT
-  f.name,
-  f.key,
-  COUNT(la.key)   AS application_count,
-  SUM(CASE WHEN la.state = 'unprocessed'
+  lf.name,
+  lf.key,
+  count(a.key) AS application_count,
+  sum(CASE WHEN ar.state = 'unprocessed'
     THEN 1
       ELSE 0 END) AS unprocessed,
-  SUM(CASE WHEN la.state IN (:incomplete_states)
+  sum(CASE WHEN ar.state IN (:incomplete_states)
     THEN 1
       ELSE 0 END) AS incomplete
-FROM latest_applications la
-  JOIN latest_forms lf ON lf.key = la.form_key
-  JOIN forms f ON f.id = lf.max_id
-GROUP BY f.name, f.key;
+  FROM latest_applications AS a
+  JOIN forms AS f on f.id = a.form_id
+  JOIN latest_forms AS lf on lf.key = f.key
+  JOIN application_reviews AS ar ON a.key = ar.application_key
+  WHERE a.haku IS NULL
+    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+GROUP BY lf.name, lf.key;
 
 -- name: yesql-add-application-feedback<!
 INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
