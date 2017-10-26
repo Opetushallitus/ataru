@@ -152,10 +152,6 @@
   }
 }
 
-.application__form-dropdown-followups .application__question-group .application__wrapper-heading {
-  width: 0;
-}
-
 .application__wrapper-heading-block {
   position: relative;
 }
@@ -167,6 +163,7 @@
   position: relative;
   top: -@total-banner-height;
   visibility: hidden;
+  height: 0px;
 }
 .application__invalid-field-status {
   font-size: 14px;
@@ -297,66 +294,85 @@
 .application__wrapper-element {
   margin-bottom: 32px;
   position: relative; /* So that we can make wrapper heading absolute */
+  min-height: 65px;
 }
 
-.application__question-group .application__form-field {
-  margin: 0;
-  padding: 20px 0 0 13px;
-  border-left: 2px solid #d8d8d8;
-  @media only screen and (max-width: @desktop-content-width) {
+.application__question-group {
+  display: flex;
+  flex-direction: column;
+  margin-left: 245px;
+  margin-bottom: 20px;
+  max-width: 610px;
+
+  .application__form-field {
+    margin-left: 13px;
+
+    &:last-child {
+      margin-bottom: 0px;
+    }
+  }
+}
+
+@media only screen and (max-width: @desktop-content-width) {
+  .application__question-group {
     margin-left: 10px;
   }
 }
 
-.application__question-group {
-  @media only screen and (min-width: @desktop-content-width) {
-    display: flex;
-    flex-direction: row;
+.application__form-dropdown-followups .application__question-group {
+  margin-left: 0px;
+}
+
+.application__form-multi-choice-followups-container .application__question-group {
+  margin-left: 0px;
+  width: 100%;
+
+  .application__form-field {
+    margin-left: 13px;
   }
 }
 
-.application__question-group:not(.application__read-only) .application__form-field:last-child {
-  margin-left: -6px;
-  padding: 10px 0 0 0;
-  border: none;
-  @media only screen and (max-width: @desktop-content-width) {
-    margin-left: 3px;
+.application__question-group-row {
+  display: flex;
+  flex-direction: row;
+  border-left: 2px solid #d8d8d8;
+  margin-bottom: 30px;
+
+  &:last-child {
+    margin-bottom: 10px;
   }
 }
 
-.application__question-group-spacer + .application__form-field,
-.application__question-group-wrapper-contents div.application__form-field:nth-of-type(1) {
-  padding-top: 0;
+.application__question-group-row-mouse-over {
+  border-left: 2px solid black;
 }
 
-.application__question-group-wrapper-heading {
-  position: relative;
-  @media only screen and (max-width: @desktop-content-width) {
-    display: none;
-  }
+.application__question-group-row-content {
+  width: 100%;
 }
 
-.application__question-group-wrapper-contents {
-  @media only screen and (min-width: @desktop-content-width) {
-    flex-grow: 1;
-  }
+.application__remove-question-group-row {
+  display: block;
+  font-size: 26px;
+  color: #d8d8d8;
 }
 
-.application__form-multi-choice-followups-container .application__wrapper-heading {
-  width: 0;
-}
-
-.application__question-group-spacer {
-  height: 30px;
+.application__remove-question-group-row-mouse-over {
+  color: black;
 }
 
 .application__add-question-group-row {
   color: @link-color;
+  margin-left: -7px;
 }
 
 .application__add-question-group-plus-sign {
   margin-right: 8px;
   font-size: larger;
+}
+
+.application__form-multi-choice-followups-container .application__wrapper-heading {
+  width: 0;
 }
 
 .application__form-content-area {
@@ -530,7 +546,7 @@ textarea.application__form-text-input {
   width: 610px;
 }
 .application__form-text-area {
-  width: 610px;
+  max-width: 610px;
   resize: none;
 }
 
@@ -628,6 +644,7 @@ textarea.application__form-text-area__size-large {
   justify-content: center;
   width: 211px;
   margin-right: 18px;
+  font-size: 14px;
 }
 
 .application__form-upload-uploading-spinner {
@@ -693,6 +710,7 @@ textarea.application__form-text-area__size-large {
   justify-content: flex-start;
   padding: 0px 19px;
   margin-bottom: 1px;
+  font-size: 14px;
 }
 
 .application__form-checkbox + label.disabled {
@@ -730,10 +748,6 @@ textarea.application__form-text-area__size-large {
 
 .application__form-multi-choice-followups-container .application__form-field:last-child {
   margin-bottom: 0;
-}
-
-.application__form-multi-choice-followups-container .application__form-text-input__size-large,.application__form-text-area {
-  width: auto;
 }
 
 .application__form-multi-choice-followups-indicator {
@@ -783,6 +797,7 @@ th.application__readonly-adjacent--header {
   padding: 7px 10px;
   min-width: 100px;
   line-height: 120%;
+  font-size: 14px;
 }
 
 .application__form-single-choice-button + label.disabled {
@@ -1265,17 +1280,14 @@ and (max-width: @desktop-content-width) {
   }
 
   &__arrow {
-    top: 52px;
+    flex: none;
     width: 15px;
-    position: relative;
     overflow: hidden;
     z-index: 9;
 
     @media only screen and (max-width: @desktop-content-width) {
-      top: 0px;
-      left: 20px;
-      width: 31px;
-      height: 16px;
+      width: auto;
+      height: 15px;
     }
 
     &:after {
@@ -1284,13 +1296,19 @@ and (max-width: @desktop-content-width) {
       width: 20px;
       height: 20px;
       background: @pale-blue;
-      transform: rotate(135deg);
-      top: 6px;
+      transform: rotate(45deg);
+      top: 57px;
       left: 5px;
+
+      @media only screen and (max-width: @desktop-content-width) {
+        top: 5px;
+        left: 25px;
+      }
     }
   }
 
   &__box {
+    flex: auto;
     background: @pale-blue;
     color: white;
     padding: 20px;

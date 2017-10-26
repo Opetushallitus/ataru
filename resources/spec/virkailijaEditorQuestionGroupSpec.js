@@ -34,9 +34,12 @@
       .not('.editor-form__followup-question-overlay .editor-form__component-wrapper')
   }
 
+  function menuItem(title) {
+    return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")')
+  }
+
   function clickComponentMenuItem(title) {
-    function menuItem() { return testFrame().find('.editor-form > .editor-form__add-component-toolbar a:contains("'+ title +'")') }
-    return clickElement(menuItem)
+    return clickElement(function() { return menuItem(title) })
   }
 
   before(function () {
@@ -63,6 +66,9 @@
       it('has person info module', function() {
         expect(personInfoModule()).to.have.length(1)
       })
+      it('should have base education module link', function() {
+        expect(elementExists(menuItem('Pohjakoulutusmoduuli'))).to.equal(true)
+      })
     })
 
     describe('adding elements:', function() {
@@ -72,12 +78,13 @@
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(0)') }, 'Päätaso: pudotusvalikko'),
           setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(1)') }, 'Päätaso: A'),
           clickElement(function () { return formComponents().find('.editor-form__add-dropdown-item a:contains("Lisää")') }),
-          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B')
+          setTextFieldValue(function () { return formComponents().find('.editor-form__text-field:eq(2)') }, 'Päätaso: B'),
+          clickElement(function() { return formComponents().find('.editor-form__checkbox + label') })
         )
         it('has expected contents', function () {
           expect(formComponents()).to.have.length(1)
           expect(formComponents().find('.editor-form__text-field:eq(0)').val()).to.equal('Päätaso: pudotusvalikko')
-          expect(formComponents().find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
+          expect(formComponents().find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__text-field:eq(1)').val()).to.equal('Päätaso: A')
           expect(formComponents().find('.editor-form__text-field:eq(2)').val()).to.equal('Päätaso: B')
         })
@@ -238,6 +245,7 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(9)').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(16)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: B')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(10)').prop('checked')).to.equal(true)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")').length).to.equal(0)
         })
       })
 
@@ -261,6 +269,19 @@
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(12)').prop('checked')).to.equal(true)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(19)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: B')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(13)').prop('checked')).to.equal(true)
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")').length).to.equal(0)
+        })
+      })
+
+      describe('autosave', function () {
+        before(
+          wait.until(function() {
+            var flasher = testFrame().find('.top-banner .flasher')
+            return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
+          }, 5000)
+        )
+        it('notification shows success', function() {
+          expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')
         })
       })
     })

@@ -94,9 +94,9 @@
     (api/GET client-sub-routes [] (render-virkailija-page))))
 
 (defn- render-file-in-dev
-  [filename]
+  [filename js-config]
   (if (:dev? env)
-    (selmer/render-file filename {})
+    (selmer/render-file filename {:config (json/generate-string js-config)})
     (not-found "Not found")))
 
 (defn- wrap-database-backed-session [handler]
@@ -109,15 +109,19 @@
   (api/undocumented
    (api/GET "/virkailija-test.html" []
             (if (:dev? env)
-              (render-file-in-dev "templates/virkailija-test.html")
+              (render-file-in-dev "templates/virkailija-test.html" {})
               (route/not-found "Not found")))
    (api/GET "/virkailija-question-group-test.html" []
      (if (:dev? env)
-       (render-file-in-dev "templates/virkailija-question-group-test.html")
+       (render-file-in-dev "templates/virkailija-question-group-test.html" {})
+       (route/not-found "Not found")))
+   (api/GET "/virkailija-question-group-application-handling-test.html" []
+     (if (:dev? env)
+       (render-file-in-dev "templates/virkailija-question-group-application-handling-test.html" {:form-key (form-store/get-latest-form-by-name "Kysymysryhmä: testilomake")})
        (route/not-found "Not found")))
    (api/GET "/spec/:filename.js" [filename]
             (if (:dev? env)
-              (render-file-in-dev (str "spec/" filename ".js"))
+              (render-file-in-dev (str "spec/" filename ".js") {})
               (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
@@ -359,7 +363,65 @@
                  (api/POST "/checkpermission" []
                            :body [dto ataru-schema/PermissionCheckDto]
                            :return ataru-schema/PermissionCheckResponseDto
-                           (ok (permission-check/check organization-service dto)))))
+                           (ok (permission-check/check organization-service dto)))
+
+                 (api/context "/external" []
+                   :tags ["external-api"]
+                   (api/GET "/omatsivut/applications/:person-oid" {session :session}
+                            :summary "Get latest versions of every application belonging to a user with given person OID"
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OmatsivutApplication]
+                            (if-let [applications (access-controlled-application/omatsivut-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/hakurekisteri/applications" {session :session}
+                     :summary "Get the latest versions of applications."
+                     :query-params [{hakuOid :- s/Str nil}
+                                    {hakukohdeOids :- [s/Str] nil}
+                                    {hakijaOids :- [s/Str] nil}]
+                     ;:return [ataru-schema/???] TODO: Figure out the schema after we know what to return
+                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
+                       (response/bad-request {:error "No search terms provided."})
+                       (if-let [applications (access-controlled-application/hakurekisteri-applications
+                                               organization-service
+                                               session
+                                               hakuOid
+                                               hakukohdeOids
+                                               hakijaOids)]
+                         (response/ok applications)
+                         (response/unauthorized {:error "Unauthorized"}))))
+                   (api/GET "/applications" {session :session}
+                            :summary "Get the latest versions of applications in haku or hakukohde or by oids."
+                            :query-params [{hakuOid :- s/Str nil}
+                                           {hakukohdeOid :- s/Str nil}
+                                           {hakemusOids :- [s/Str] nil}]
+                            :return [ataru-schema/VtsApplication]
+                            (if (and (nil? hakuOid)
+                                     (nil? hakemusOids))
+                              (response/bad-request {:error "No haku or application oid provided."})
+                              (if-let [applications (access-controlled-application/vts-applications
+                                                     organization-service
+                                                     session
+                                                     hakuOid
+                                                     hakukohdeOid
+                                                     hakemusOids)]
+                                (response/ok applications)
+                                (response/unauthorized {:error "Unauthorized"}))))
+                   (api/GET "/persons" {session :session}
+                            :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
+                            :query-params [hakuOid :- s/Str
+                                           {hakukohdeOids :- [s/Str] nil}]
+                            :return {s/Str s/Str}
+                            (if-let [mapping (access-controlled-application/application-key-to-person-oid
+                                              organization-service
+                                              session
+                                              hakuOid
+                                              hakukohdeOids)]
+                              (response/ok mapping)
+                              (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes
   (api/undocumented

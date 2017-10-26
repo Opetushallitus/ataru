@@ -119,16 +119,6 @@
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (assoc :error {:message "Tapahtui virhe " :detail response}))}))
 
-(defn- resize-vector [target-length x]
-  (let [add-length (- target-length (count x))]
-    (cond-> x
-      (> add-length 0)
-      (into (repeatedly add-length (fn [] nil))))))
-
-(defn- vector-of-length [target-length]
-  (comp (partial resize-vector target-length)
-        (fnil identity [])))
-
 (reg-event-db
   :application/show-attachment-too-big-error
   (fn [db [_ component-id question-group-idx]]
@@ -137,7 +127,7 @@
                        [:application :answers (keyword component-id) :errors :too-big])
           db         (cond-> db
                        question-group-idx
-                       (update-in [:application :answers (keyword component-id) :errors] (vector-of-length question-group-idx)))]
+                       (update-in [:application :answers (keyword component-id) :errors] (util/vector-of-length question-group-idx)))]
       (assoc-in db error-path true))))
 
 (reg-event-fx
@@ -217,14 +207,14 @@
                                  [:options question-group-idx option-value]
                                  [:options option-value])
         answer                 (cond-> answer
-                                 question-group-idx (update :options (vector-of-length (inc question-group-idx)))
+                                 question-group-idx (update :options (util/vector-of-length (inc question-group-idx)))
                                  true (update-in option-path not))
         parse-option-values    (fn [options]
                                  (->> options
                                       (filter (comp true? second))
-                                      (map first)))
+                                      (mapv first)))
         value                  (if question-group-idx
-                                 (map parse-option-values (:options answer))
+                                 (mapv parse-option-values (:options answer))
                                  (parse-option-values (:options answer)))]
     (assoc answer :value value)))
 
@@ -507,14 +497,14 @@
         value-path (cond-> [:application :answers id :values]
                      question-group-idx (conj question-group-idx))]
     (-> db
-        (update-in [:application :answers id :values] (vector-of-length (inc question-group-idx)))
+        (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
         (update-in value-path (fnil assoc []) data-idx {:value value}))))
 
 (defn- set-repeatable-field-value
-  [db field-descriptor]
+  [db field-descriptor group-idx]
   (let [id                   (keyword (:id field-descriptor))
         values               (get-in db [:application :answers id :values])
-        multi-value-answers? (every? #(or (vector? %) (list? %)) values)
+        multi-value-answers? (some? group-idx)
         value                (if multi-value-answers?
                                (mapv (partial mapv :value) values)
                                (mapv :value values))]
@@ -529,9 +519,9 @@
     (assoc-in db (conj path data-idx :valid) valid?)))
 
 (defn- set-repeatable-application-field-top-level-valid
-  [db id required? valid?]
+  [db id group-idx required? valid?]
   (let [values (get-in db [:application :answers id :values])
-        multi-value-answers? (every? #(or (vector? %) (list? %)) values)
+        multi-value-answers? (some? group-idx)
         is-empty? (if multi-value-answers?
                     (some empty? values)
                     (empty? values))
@@ -545,14 +535,14 @@
   (fn [db [_ id group-idx data-idx required? valid?]]
     (-> db
         (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
-        (set-repeatable-application-field-top-level-valid id required? valid?))))
+        (set-repeatable-application-field-top-level-valid id group-idx required? valid?))))
 
 (reg-event-fx
   :application/set-repeatable-application-field
   (fn [{db :db} [_ field-descriptor value data-idx question-group-idx]]
     {:db (-> db
              (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
-             (set-repeatable-field-value field-descriptor))
+             (set-repeatable-field-value field-descriptor question-group-idx))
      :validate {:value value
                 :answers (get-in db [:application :answers])
                 :field-descriptor field-descriptor
@@ -583,7 +573,7 @@
                  #(autil/remove-nth (vec %) data-idx))
 
       true
-      (set-repeatable-field-value field-descriptor))))
+      (set-repeatable-field-value field-descriptor question-group-idx))))
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
@@ -682,7 +672,7 @@
           new-value (when (not= value current-value) value)]
       {:db (if (some? question-group-idx)
              (-> db
-                 (update-in (conj button-path :values) (vector-of-length (inc question-group-idx)))
+                 (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
                  (update-in (conj button-path :values question-group-idx) (fnil identity []))
                  (assoc-in value-path new-value)
                  (update-in button-path (fn [answer]
@@ -709,7 +699,7 @@
   (fn [{db :db} [_ field-descriptor idx value question-group-idx]]
     {:db (-> db
              (set-repeatable-field-values field-descriptor value idx question-group-idx)
-             (set-repeatable-field-value field-descriptor))
+             (set-repeatable-field-value field-descriptor question-group-idx))
      :validate {:value value
                 :answers (get-in db [:application :answers])
                 :field-descriptor field-descriptor
@@ -758,7 +748,9 @@
 (reg-event-fx
   :application/add-attachments
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-count files question-group-idx]]
-    (let [files         (filter (fn [file]
+    (let [row-count     (when (some? question-group-idx)
+                          (get-in db [:application :ui (get-in field-descriptor [:params :question-group-id]) :count] 1))
+          files         (filter (fn [file]
                                   (let [prev-files (get-in db [:application :answers (keyword component-id) :values])
                                         new-file   {:filename (.-name file)
                                                     :size     (.-size file)}]
@@ -772,7 +764,7 @@
                                      files)
           db            (if (not-empty files)
                           (as-> db db'
-                                (update-in db' [:application :answers (keyword component-id) :values] (vector-of-length (or question-group-idx 0)))
+                                (update-in db' [:application :answers (keyword component-id) :values] (util/vector-of-length (or row-count 0)))
                                 (cond-> db'
                                   question-group-idx
                                   (update-in [:application :answers (keyword component-id) :values question-group-idx] (fnil identity [])))
@@ -1003,9 +995,33 @@
 (reg-event-fx
   :application/add-question-group-row
   (fn add-question-group-row [{db :db} [_ field-descriptor-id]]
-    (let [repeat-count (get-in db [:application :ui (keyword field-descriptor-id) :count] 1)]
-      {:db (assoc-in db [:application :ui (keyword field-descriptor-id) :count] (inc repeat-count))
+    (let [id (keyword field-descriptor-id)
+          repeat-count (get-in db [:application :ui id :count] 1)]
+      {:db (-> db
+               (assoc-in [:application :ui id :count] (inc repeat-count))
+               (update-in [:application :ui id] dissoc :mouse-over-remove-button))
        :dispatch-n (set-empty-value-dispatches db field-descriptor-id repeat-count)})))
+
+(reg-event-db
+  :application/remove-question-group-row
+  (fn [db [_ field-descriptor idx]]
+    (let [id (keyword (:id field-descriptor))
+          with-decremented-count (-> db
+                                     (update-in [:application :ui id :count] dec)
+                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))]
+      (autil/reduce-form-fields
+       (fn [db child]
+         (let [id (keyword (:id child))
+               answer (get-in db [:application :answers id])]
+           (cond-> db
+             (contains? answer :values)
+             (update-in [:application :answers id :values]
+                        autil/remove-nth idx)
+             (contains? answer :value)
+             (update-in [:application :answers id :value]
+                        autil/remove-nth idx))))
+       with-decremented-count
+       (:children field-descriptor)))))
 
 (reg-event-fx
   :application/dropdown-change
@@ -1014,3 +1030,13 @@
      :dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
                  [:application/set-application-field field-descriptor value])}))
+
+(reg-event-db
+  :application/remove-question-group-mouse-over
+  (fn [db [_ field-descriptor idx]]
+    (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] true)))
+
+(reg-event-db
+  :application/remove-question-group-mouse-out
+  (fn [db [_ field-descriptor idx]]
+    (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))

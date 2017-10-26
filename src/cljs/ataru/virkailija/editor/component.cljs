@@ -195,7 +195,7 @@
                                 (-> event .-target .-parentNode .-parentNode .-parentNode)
                                 (-> event .-target .-parentNode .-parentNode))]
                    (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                   (dispatch [:remove-component path target])))}
+                   (dispatch [:editor/start-remove-component path])))}
     "Poista"]])
 
 (defn markdown-help []
@@ -343,7 +343,9 @@
          (when text-area?
            [:div.editor-form__max-length-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
-            [:input.editor-form__text-field.editor-form__text-field-auto-width {:on-change #(max-length-change (get-val %))}]])]
+            [:input.editor-form__text-field.editor-form__text-field-auto-width
+             {:value @max-length
+              :on-change #(max-length-change (get-val %))}]])]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?

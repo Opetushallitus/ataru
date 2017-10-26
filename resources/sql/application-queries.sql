@@ -1,5 +1,35 @@
--- name: yesql-add-application-query<!
+-- name: yesql-add-application<!
 -- Add application
+INSERT INTO applications (
+  form_id,
+  content,
+  lang,
+  preferred_name,
+  last_name,
+  hakukohde,
+  haku,
+  secret,
+  person_oid,
+  ssn,
+  dob,
+  email
+) VALUES (
+  :form_id,
+  :content,
+  :lang,
+  :preferred_name,
+  :last_name,
+  ARRAY[:hakukohde]::character varying(127)[],
+  :haku,
+  :secret,
+  :person_oid,
+  upper(:ssn),
+  :dob,
+  :email
+);
+
+-- name: yesql-add-application-version<!
+-- Add application version
 INSERT INTO applications (
   form_id,
   key,
@@ -25,7 +55,7 @@ INSERT INTO applications (
   :haku,
   :secret,
   :person_oid,
-  :ssn,
+  upper(:ssn),
   :dob,
   :email
 );
@@ -180,22 +210,18 @@ WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
 )
 SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
-  ar.state                               AS state,
-  ar.score                               AS score,
-  a.form_id                              AS form,
-  a.haku,
-  a.secret
+  a.key AS oid,
+  a.key AS key,
+  a.secret AS secret,
+  ar.state AS state,
+  a.haku AS haku,
+  a.email AS email,
+  a.hakukohde AS hakukohteet
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON a.form_id = f.id
 WHERE a.person_oid = :person_oid
-      AND (:query_type = 'ALL' OR f.organization_oid IN (:authorized_organization_oids))
+  AND a.haku IS NOT NULL
+  AND ar.state <> 'inactivated'
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-events
@@ -431,6 +457,7 @@ WITH latest_version AS (
 SELECT
   id,
   key,
+  secret,
   lang,
   form_id AS form,
   created_time,
@@ -612,3 +639,50 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND state = :state AND hakukohde = :hakukohde;
+
+-- name: yesql-applications-by-haku-and-hakukohde-oids
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT
+  key,
+  haku,
+  person_oid,
+  lang,
+  preferred_name,
+  email,
+  ssn,
+  hakukohde
+FROM latest
+JOIN application_reviews
+ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  -- Parameter list contains empty string to avoid empty lists
+  AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;
+
+--name: yesql-applications-for-hakurekisteri
+WITH latest AS (
+    SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+)
+SELECT
+  key,
+  haku,
+  hakukohde,
+  person_oid,
+  lang,
+  content
+FROM latest
+JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND (:haku_oid::text IS NULL OR haku = :haku_oid)
+  -- Parameter list contains empty string to avoid empty lists
+  AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
+  AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

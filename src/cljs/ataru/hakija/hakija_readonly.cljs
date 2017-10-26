@@ -90,25 +90,23 @@
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui nil))])))
 
+(defn- question-group-row [application lang children idx]
+  [:div.application__question-group-row
+   [:div.application__question-group-row-content
+    (for [child children]
+      ^{:key (str (:id child) "-" idx)}
+      [field child application lang idx])]])
+
 (defn question-group [content application lang children]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
         [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
-         [:div.application__wrapper-heading.application__question-group-wrapper-heading]
-         (into [:div.application__wrapper-contents.application__question-group-wrapper-contents
-                [:p.application__read-only-heading-text (-> content :label lang)]]
-               (mapcat
-                 (fn [group-index]
-                   (conj
-                     (mapv
-                       (fn [child]
-                         ^{:key (str (:id child) "-" group-index)}
-                         [field child application lang group-index])
-                       children)
-                     (when (< group-index (dec groups-amount))
-                       [group-spacer group-index])))
-                 (range groups-amount)))]))))
+         [:p.application__read-only-heading-text (-> content :label lang)]
+         [:div
+          (for [idx (range groups-amount)]
+            ^{:key (str "question-group-row-" idx)}
+            [question-group-row application lang children idx])]]))))
 
 (defn row-container [application lang children question-group-index]
   (let [ui (subscribe [:state-query [:application :ui]])]

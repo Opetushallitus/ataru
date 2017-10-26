@@ -3,12 +3,16 @@ var virkailijaSecret = '{{virkailija-secret}}'
 
 function newForm(formName) {
   var testFormKey = '{{test-form-key}}';
+  var testQuestionGroupFormKey = '{{test-question-group-form-key}}';
   var ssnFormKey = '{{ssn-form-key}}';
   var formKey;
 
   switch (formName) {
     case 'testForm':
       formKey = testFormKey;
+      break;
+    case 'testQuestionGroupForm':
+      formKey = testQuestionGroupFormKey;
       break;
     case 'ssnTestForm':
       formKey = ssnFormKey;
@@ -159,4 +163,12 @@ function focusInput(index) {
   return function() {
     formFields().eq(index).find('input').focus();
   }
+}
+
+function readonlyAnswer(index) {
+  return testFrame().find('.application__readonly-text:eq(' + index + ')').text()
+}
+
+function adjacentReadonlyAnswer(index) {
+  return testFrame().find('.application__readonly-adjacent-cell:eq(' + index + ')').text()
 }

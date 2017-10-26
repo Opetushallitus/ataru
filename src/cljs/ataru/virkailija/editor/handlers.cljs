@@ -16,6 +16,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post dispatch-flasher-error-msg]]
             [ataru.util :as util]
+            [ataru.cljs-util :as cu]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
@@ -30,8 +31,10 @@
 (reg-event-db :editor/get-user-info get-user-info)
 
 (defn- current-form-content-path
-  [db further-path]
-  (flatten [:editor :forms (-> db :editor :selected-form-key) :content [further-path]]))
+  [db & further-path]
+  (-> [:editor :forms (-> db :editor :selected-form-key) :content]
+      (concat further-path)
+      (flatten)))
 
 (reg-event-fx
   :editor/remove-dropdown-option
@@ -98,20 +101,28 @@
     (assoc-in db (current-form-content-path db [path]) value)))
 
 (defn generate-component
-  [db [_ generate-fn path]]
-  (with-form-key [db form-key]
-    (let [form-key  (get-in db [:editor :selected-form-key])
-          path-vec  (current-form-content-path db [path])
-          component (generate-fn)]
-      (->
-        (if (zero? (last path-vec))
-          (assoc-in db (butlast path-vec) [component])
-          (assoc-in db path-vec component))
-        (assoc-in [:editor :ui (:id component) :focus?] true)))))
+  [db [_ generate-fn sub-path]]
+  (let [parent-component-path (cond-> (current-form-content-path db)
+                                (not (number? sub-path))
+                                (concat (butlast sub-path)))
+        components            (if (vector? generate-fn)
+                                (map #(apply % []) generate-fn)
+                                [(generate-fn)])
+        first-component-idx   (cond-> sub-path
+                                (not (number? sub-path))
+                                (last))]
+    (as-> db db'
+          (update-in db' parent-component-path (cu/vector-of-length (count components)))
+          (reduce (fn [db' [idx component]]
+                    (let [path (flatten [parent-component-path (+ first-component-idx idx)])]
+                      (assoc-in db' path component)))
+                  db'
+                  (map vector (range) components))
+          (assoc-in db' [:editor :ui (-> components first :id) :focus?] true))))
 
 (reg-event-db :generate-component generate-component)
 
-(defn remove-component
+(defn- remove-component
   [db path]
   (with-form-key [db form-key]
     (let [remove-index (last path)
@@ -125,18 +136,16 @@
            (assoc-in db path-vec)))))
 
 (reg-event-db
-  :remove-component
-  (fn [db [_ path dom-node]]
-    (.addEventListener
-      dom-node
-      "transitionend"
-      #(do
-         (.removeEventListener (.-target %) "transitionend" (-> (cljs.core/js-arguments) .-callee))
-         (dispatch [:state-update-fx
-                    (fn [{:keys [db]}]
-                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
-                        {:db (remove-component forms-meta-db path)}))])))
-    (assoc-in db [:editor :forms-meta path] :fade-out)))
+  :editor/remove-component
+  (fn [db [_ path]]
+    (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
+      (remove-component forms-meta-db path))))
+
+(reg-event-fx
+  :editor/start-remove-component
+  (fn [{db :db} [_ path]]
+    {:db (assoc-in db [:editor :forms-meta path] :fade-out)
+     :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
 
 (reg-event-fx
   :editor/refresh-used-by-haut

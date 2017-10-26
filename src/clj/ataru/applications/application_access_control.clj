@@ -85,3 +85,48 @@
     empty-applications-result-fn
     #(application-store/get-latest-application-by-key application-key %)
     #(application-store/get-latest-application-by-key-unrestricted application-key)))
+
+(defn vts-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   (constantly nil)
+   #(application-store/get-applications-by-haku
+     haku-oid
+     hakukohde-oid
+     hakemus-oids)))
+
+(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/get-hakurekisteri-applications
+       haku-oid
+       hakukohde-oids
+       person-oids)))
+
+(defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oids]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   (constantly nil)
+   #(application-store/get-person-and-application-oids
+     haku-oid
+     hakukohde-oids)))
+
+(defn omatsivut-applications [organization-service session person-oid]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   (constantly nil)
+   #(application-store/get-full-application-list-by-person-oid-for-omatsivut
+     person-oid)))
