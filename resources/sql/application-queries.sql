@@ -215,6 +215,7 @@ SELECT
   a.secret AS secret,
   ar.state AS state,
   a.haku AS haku,
+  a.email AS email,
   a.hakukohde AS hakukohteet
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key

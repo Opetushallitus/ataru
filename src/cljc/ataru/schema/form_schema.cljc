@@ -217,6 +217,7 @@
    :state s/Str
    :secret s/Str
    :haku s/Str
+   :email s/Str
    :hakukohteet [s/Str]})
 
 (s/defschema VtsApplication
