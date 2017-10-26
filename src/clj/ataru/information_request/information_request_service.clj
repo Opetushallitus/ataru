@@ -39,10 +39,10 @@
                                                     :message         (:message information-request)
                                                     :application-url application-url}
                                                    translations))]
-    {:from       "no-reply@opintopolku.fi"
-     :recipients [recipient-email]
-     :subject    (:subject information-request)
-     :body       body}))
+    (-> (select-keys information-request [:subject :application-key :id])
+        (merge {:from       "no-reply@opintopolku.fi"
+                :recipients [recipient-email]
+                :body       body}))))
 
 (defn- start-email-job [information-request]
   (let [email    (create-email information-request)
