@@ -106,6 +106,14 @@
   [current-state states disable-empty-rows?]
   (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
 
+(defn- toggle-mass-update-popup-visibility
+  [atom fn-or-bool]
+  (if (boolean? fn-or-bool)
+    (reset! atom fn-or-bool)
+    (swap! atom fn-or-bool))
+  (when (not @atom)
+    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit])))
+
 (defn- mass-update-applications-link
   []
   (let [element-visible?           (r/atom false)
@@ -137,12 +145,12 @@
                                   from-states)]
           [:span.application-handling__mass-edit-review-states-container
            [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
-            {:on-click #(swap! element-visible? not)}
+            {:on-click #(toggle-mass-update-popup-visibility element-visible? not)}
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:div.application-handling__mass-edit-review-states-close-button
-               {:on-click #(reset! element-visible? false)}
+               {:on-click #(toggle-mass-update-popup-visibility element-visible? false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
@@ -181,7 +189,7 @@
                    "Muuta"])
 
                 :confirm
-                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button.animated.flash
                  {:on-click (fn []
                               (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
                                     to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
@@ -191,7 +199,7 @@
                                            to-state-name])
                                 (reset! selected-from-review-state nil)
                                 (reset! selected-to-review-state nil)
-                                (reset! element-visible? false)
+                                (toggle-mass-update-popup-visibility element-visible? false)
                                 (reset! from-list-open? false)
                                 (reset! to-list-open? false)))}
                  "Vahvista muutos"]
