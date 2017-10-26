@@ -5,20 +5,14 @@
             [ataru.translations.translation-util :as translations]
             [ataru.util :as u]
             [ataru.information-request.information-request-job :as information-request-job]
+            [ataru.information-request.information-request-store :as information-request-store]
             [ataru.applications.application-store :as app-store]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
-            [camel-snake-kebab.core :as c]
-            [camel-snake-kebab.extras :as t]
             [clojure.java.jdbc :as jdbc]
-            [yesql.core :as sql]
             [selmer.parser :as selmer]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
 
-(sql/defqueries "sql/information-request-queries.sql")
-
-(def ^:private ->kebab-case-kw (partial t/transform-keys c/->kebab-case-keyword))
-(def ^:private ->snake-case-kw (partial t/transform-keys c/->snake_case_keyword))
 (def ^:private information-request-translations {:hello-text   {:fi "Hei"
                                                                 :sv "Hej"
                                                                 :en "Hi"}
@@ -68,7 +62,5 @@
                     :operation audit-log/operation-new
                     :id        (-> session :identity :username)})
     (start-email-job information-request)
-    (-> (yesql-add-information-request<! (->snake-case-kw information-request)
-                                         {:connection conn})
-        (->kebab-case-kw)
+    (-> (information-request-store/add-information-request information-request conn)
         (dissoc :id))))
