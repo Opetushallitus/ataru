@@ -13,12 +13,12 @@
     loadInFrame(src)
   }
 
-  function linkToApplicationWithQuestionGroup() {
-    return testFrame().find('.application-handling__list-row').not('.application-handling__list-header')
+  function personInfoHeader() {
+    return testFrame().find('.application__wrapper-heading h2:contains("Henkilötiedot")')
   }
 
-  function linkToApplicationWithQuestionGroupIsRendered() {
-    return elementExists(linkToApplicationWithQuestionGroup())
+  function personInfoHeaderExists() {
+    return elementExists(personInfoHeader())
   }
 
   afterEach(function() {
@@ -28,7 +28,7 @@
   describe('Virkailija application handling for form with a question group', function () {
     before(
       navigateToApplicationHandling,
-      wait.until(linkToApplicationWithQuestionGroupIsRendered)
+      wait.until(personInfoHeaderExists)
     )
     it('automatically shows the only application belonging to the form', function() {
       expect(answer(0, 'Etunimet')).to.equal('Etunimi Tokanimi')
