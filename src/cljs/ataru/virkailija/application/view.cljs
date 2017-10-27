@@ -451,13 +451,9 @@
 (defn- application-information-request-submit-button []
   (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
         request-state (subscribe [:state-query [:application :information-request :state]])
-        button-text   (reaction (case @request-state
-                                  :submitting "Täydennyspyyntöä lähetetään"
-                                  :submitted "Lähetä uusi täydennyspyyntö"
-                                  "Lähetä täydennyspyyntö"))
-        on-click-fn   (reaction (if (= @request-state :submitted)
-                                  #(dispatch [:application/submit-new-information-request])
-                                  #(dispatch [:application/submit-information-request])))]
+        button-text   (reaction (if (= @request-state :submitting)
+                                  "Täydennyspyyntöä lähetetään"
+                                  "Lähetä täydennyspyyntö"))]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
@@ -466,7 +462,7 @@
          :class    (if @enabled?
                      "application-handling__send-information-request-button--enabled"
                      "application-handling__send-information-request-button--disabled")
-         :on-click @on-click-fn}
+         :on-click #(dispatch [:application/submit-information-request])}
         @button-text]])))
 
 (defn- application-information-request-header []
@@ -493,8 +489,7 @@
         (let [container [:div.application-handling__information-request-container]]
           (if (= @request-state :submitted)
             (conj container
-                  [application-information-request-submitted]
-                  [application-information-request-submit-button])
+                  [application-information-request-submitted])
             (conj container
                   [application-information-request-header]
                   [application-information-request-recipient]

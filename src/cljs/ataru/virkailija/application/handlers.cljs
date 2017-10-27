@@ -368,15 +368,17 @@
   (fn [db [_ visible?]]
     (assoc-in db [:application :information-request :visible?] visible?)))
 
-(reg-event-db
+(reg-event-fx
   :application/handle-submit-information-request-response
-  (fn [db [_ response]]
-    (-> db
-        (assoc-in [:application :information-request] {:state :submitted})
-        (update-in [:application :information-requests] (fnil identity []))
-        (update-in [:application :information-requests] #(conj % response)))))
+  (fn [{:keys [db]} [_ response]]
+    {:db             (-> db
+                         (assoc-in [:application :information-request] {:state :submitted})
+                         (update-in [:application :information-requests] (fnil identity []))
+                         (update-in [:application :information-requests] #(conj % response)))
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/reset-submit-information-request-state]}]}))
 
 (reg-event-db
-  :application/submit-new-information-request
+  :application/reset-submit-information-request-state
   (fn [db _]
-    (assoc-in db [:application :information-request] nil)))
+    (assoc-in db [:application :information-request] {:visible? false})))
