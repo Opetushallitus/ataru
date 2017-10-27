@@ -420,6 +420,14 @@ and (max-width: 1000px) {
   margin-bottom: 8px;
 }
 
+.application-handling__information-request-row {
+  position: relative;
+}
+
+.application-handling__information-request-row--checkmark-container {
+  height: 100px;
+}
+
 .application-handling__information-request-row:not(:last-of-type) {
   display: flex;
   margin-bottom: 11px;
@@ -482,6 +490,55 @@ and (max-width: 1000px) {
   align-items: center;
   flex-direction: row-reverse;
   margin-right: 10px;
+}
+
+@checkmark-height: 75px;
+@checkmark-width: @checkmark-height / 2;
+
+.application-handling__information-request-submitted-checkmark {
+  animation-duration: 800ms;
+  animation-timing-function: ease;
+  animation-name: checkmark;
+  transform: scaleX(-1) rotate(135deg);
+  opacity: 1;
+  height: @checkmark-height;
+  width: @checkmark-width;
+  transform-origin: left top;
+  border-right: 2px solid #60B660;
+  border-top: 2px solid #60B660;
+  content: '';
+  position: absolute;
+  top: 33px;
+  left: 136px;
+}
+
+.application-handling__information-request-submitted-text {
+  position: absolute;
+  top: 78px;
+  left: 83px;
+}
+
+@keyframes checkmark {
+  0% {
+    height: 0;
+    width: 0;
+    opacity: 1;
+  }
+  20% {
+    height: 0;
+    width: @checkmark-width;
+    opacity: 1;
+  }
+  40% {
+    height: @checkmark-height;
+    width: @checkmark-width;
+    opacity: 1;
+  }
+  100% {
+    height: @checkmark-height;
+    width: @checkmark-width;
+    opacity: 1;
+  }
 }
 
 .application-handling__review-state-container {

@@ -356,13 +356,24 @@
   (fn [{:keys [db]} _]
     (let [application-key (-> db :application :selected-application-and-form :application :key)]
       {:db   (assoc-in db [:application :information-request :state] :submitting)
-       :http {:method :post
-              :path   "/lomake-editori/api/applications/information-request"
-              :params (-> db :application :information-request
-                          (select-keys [:message :subject])
-                          (assoc :application-key application-key))}})))
+       :http {:method              :post
+              :path                "/lomake-editori/api/applications/information-request"
+              :params              (-> db :application :information-request
+                                       (select-keys [:message :subject])
+                                       (assoc :application-key application-key))
+              :handler-or-dispatch :application/handle-submit-information-request-response}})))
+
 (reg-event-db
   :application/set-information-request-window-visibility
   (fn [db [_ visible?]]
     (assoc-in db [:application :information-request :visible?] visible?)))
 
+(reg-event-db
+  :application/handle-submit-information-request-response
+  (fn [db [_ _]]
+    (assoc-in db [:application :information-request] {:state :submitted})))
+
+(reg-event-db
+  :application/submit-new-information-request
+  (fn [db _]
+    (assoc-in db [:application :information-request] nil)))

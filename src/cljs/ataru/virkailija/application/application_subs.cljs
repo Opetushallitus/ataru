@@ -167,9 +167,11 @@
 (re-frame/reg-sub
   :application/information-request-submit-enabled?
   (fn [db _]
-    (and (-> db :application :information-request :subject u/not-blank?)
-         (-> db :application :information-request :message u/not-blank?)
-         (-> db :application :information-request :state nil?))))
+    (let [request-state (-> db :application :information-request :state)]
+      (or (= request-state :submitted)
+          (and (-> db :application :information-request :subject u/not-blank?)
+               (-> db :application :information-request :message u/not-blank?)
+               (nil? request-state))))))
 
 (defn- event-and-information-request-comparator [a b]
   (let [time-a (or (:time a) (:created-time a))

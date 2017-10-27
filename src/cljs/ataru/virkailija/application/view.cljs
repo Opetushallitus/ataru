@@ -451,9 +451,13 @@
 (defn- application-information-request-submit-button []
   (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
         request-state (subscribe [:state-query [:application :information-request :state]])
-        button-text   (reaction (if (= @request-state :submitting)
-                                  "Täydennyspyyntöä lähetetään"
-                                  "Lähetä täydennyspyyntö"))]
+        button-text   (reaction (case @request-state
+                                  :submitting "Täydennyspyyntöä lähetetään"
+                                  :submitted "Lähetä uusi täydennyspyyntö"
+                                  "Lähetä täydennyspyyntö"))
+        on-click-fn   (reaction (if (= @request-state :submitted)
+                                  #(dispatch [:application/submit-new-information-request])
+                                  #(dispatch [:application/submit-information-request])))]
     (fn []
       [:div.application-handling__information-request-row
        [:button.application-handling__send-information-request-button
@@ -462,7 +466,7 @@
          :class    (if @enabled?
                      "application-handling__send-information-request-button--enabled"
                      "application-handling__send-information-request-button--disabled")
-         :on-click #(dispatch [:application/submit-information-request])}
+         :on-click @on-click-fn}
         @button-text]])))
 
 (defn- application-information-request-header []
@@ -473,19 +477,30 @@
        [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
         {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])]))
 
+(defn- application-information-request-submitted []
+  [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
+   [:div.application-handling__information-request-submitted-checkmark]
+   [:span.application-handling__information-request-submitted-text "Täydennyspyyntö lähetetty"]])
+
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
                                          visible?
-                                         true))]
+                                         true))
+        request-state        (subscribe [:state-query [:application :information-request :state]])]
     (fn []
       (if @request-window-open?
-        [:div.application-handling__information-request-container
-         [application-information-request-header]
-         [application-information-request-recipient]
-         [application-information-request-subject]
-         [application-information-request-message]
-         [application-information-request-submit-button]]
+        (let [container [:div.application-handling__information-request-container]]
+          (if (= @request-state :submitted)
+            (conj container
+                  [application-information-request-submitted]
+                  [application-information-request-submit-button])
+            (conj container
+                  [application-information-request-header]
+                  [application-information-request-recipient]
+                  [application-information-request-subject]
+                  [application-information-request-message]
+                  [application-information-request-submit-button])))
         [:div.application-handling__information-request-show-container-link
          [:a
           {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
