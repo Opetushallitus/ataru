@@ -323,10 +323,6 @@
     (when (and name initials)
       [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
 
-
-;core.cljs:181 {:last-name nil, :time #object[Object 20171025T063558], :first-name nil, :application-key "1.2.246.562.11.00000000000000000001", :id 7, :hakukohde nil, :new-review-state "information-request", :review-key nil, :event-type "review-state-change"}
-;core.cljs:181 {:subject "bser", :message "saeraser", :application-key "1.2.246.562.11.00000000000000000001", :created-time #object[Object 20171026T141151]}
-
 (defn event-caption [event]
   (match event
          {:event-type "review-state-change"}
