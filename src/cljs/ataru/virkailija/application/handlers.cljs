@@ -370,8 +370,11 @@
 
 (reg-event-db
   :application/handle-submit-information-request-response
-  (fn [db [_ _]]
-    (assoc-in db [:application :information-request] {:state :submitted})))
+  (fn [db [_ response]]
+    (-> db
+        (assoc-in [:application :information-request] {:state :submitted})
+        (update-in [:application :information-requests] (fnil identity []))
+        (update-in [:application :information-requests] #(conj % response)))))
 
 (reg-event-db
   :application/submit-new-information-request
