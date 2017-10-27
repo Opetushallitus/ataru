@@ -466,10 +466,12 @@
         @button-text]])))
 
 (defn- application-information-request-header []
-  [:div.application-handling__information-request-header
-   "Lähetä täydennyspyyntö hakijalle"
-   [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
-    {:on-click #(dispatch [:application/set-information-request-window-visibility false])}]])
+  (let [request-state (subscribe [:state-query [:application :information-request :state]])]
+    [:div.application-handling__information-request-header
+     "Lähetä täydennyspyyntö hakijalle"
+     (when (nil? @request-state)
+       [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+        {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])]))
 
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
