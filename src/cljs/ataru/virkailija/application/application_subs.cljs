@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [re-frame.core :as re-frame]
+  (:require [cljs-time.core :as t]
+            [re-frame.core :as re-frame]
             [ataru.util :as u]))
 
 (defn- from-multi-lang [text]
@@ -169,3 +170,17 @@
     (and (-> db :application :information-request :subject u/not-blank?)
          (-> db :application :information-request :message u/not-blank?)
          (-> db :application :information-request :state nil?))))
+
+(defn- event-and-information-request-comparator [a b]
+  (let [time-a (or (:time a) (:created-time a))
+        time-b (or (:time b) (:created-time b))]
+    (if (t/before? time-a time-b)
+      -1
+      1)))
+
+(re-frame/reg-sub
+  :application/events-and-information-requests
+  (fn [db _]
+    (->> (concat (-> db :application :events)
+                 (-> db :application :information-requests))
+         (sort event-and-information-request-comparator))))

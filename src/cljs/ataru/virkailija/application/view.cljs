@@ -323,30 +323,43 @@
     (when (and name initials)
       [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
 
+
+;core.cljs:181 {:last-name nil, :time #object[Object 20171025T063558], :first-name nil, :application-key "1.2.246.562.11.00000000000000000001", :id 7, :hakukohde nil, :new-review-state "information-request", :review-key nil, :event-type "review-state-change"}
+;core.cljs:181 {:subject "bser", :message "saeraser", :application-key "1.2.246.562.11.00000000000000000001", :created-time #object[Object 20171026T141151]}
+
 (defn event-caption [event]
-  (case (:event-type event)
-    "review-state-change" (get-review-state-label-by-name
-                            application-review-states/application-review-states (:new-review-state event))
-    "updated-by-applicant" "Hakija muokannut hakemusta"
-    "updated-by-virkailija" [:span.application-handling__event-caption
-                             "Virkailija "
-                             (virkailija-initials-span event)
-                             " muokannut hakemusta"]
-    "received-from-applicant" "Hakemus vastaanotettu"
-    "hakukohde-review-state-change" [:span.application-handling__event-caption
-                                     (str
-                                       (->> application-review-states/hakukohde-review-types
-                                            (filter #(= (keyword (:review-key event)) (first %)))
-                                            (first)
-                                            (second))
-                                       ": "
-                                       (get-review-state-label-by-name
-                                         (concat application-review-states/application-hakukohde-review-states
-                                                 application-review-states/application-hakukohde-eligibility-states
-                                                 application-review-states/application-hakukohde-selection-states)
-                                         (:new-review-state event)))
-                                     (virkailija-initials-span event)]
-    "Tuntematon"))
+  (match event
+         {:event-type "review-state-change"}
+         (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))
+
+         {:event-type "updated-by-applicant"}
+         "Hakija muokannut hakemusta"
+
+         {:event-type "updated-by-virkailija"}
+         [:span.application-handling__event-caption "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
+
+         {:event-type "received-from-applicant"}
+         "Hakemus vastaanotettu"
+
+         {:event-type "hakukohde-review-state-change"}
+         [:span.application-handling__event-caption
+          (str (->> application-review-states/hakukohde-review-types
+                    (filter #(= (keyword (:review-key event)) (first %)))
+                    (first)
+                    (second)) ": "
+               (get-review-state-label-by-name
+                 (concat application-review-states/application-hakukohde-review-states
+                         application-review-states/application-hakukohde-eligibility-states
+                         application-review-states/application-hakukohde-selection-states)
+                 (:new-review-state event)))
+          (virkailija-initials-span event)]
+
+         {:subject _ :message message}
+         [:div.application-handling__multi-line-event-caption
+          [:span.application-handling__event-caption "Täydennyspyyntö lähetetty"]
+          [:span.application-handling__event-caption.application-handling__event-caption--extra-info (str "\"" message "\"")]]
+
+         :else "Tuntematon"))
 
 (defn to-event-row
   [time-str caption]
@@ -355,12 +368,12 @@
    [:span.application-handling__event-caption caption]])
 
 (defn event-row [event]
-  (let [time-str      (t/time->short-str (:time event))
-        caption       (event-caption event)]
+  (let [time-str (t/time->short-str (:time event))
+        caption (event-caption event)]
     (to-event-row time-str caption)))
 
 (defn application-review-events []
-  (let [events (subscribe [:state-query [:application :events]])]
+  (let [events (subscribe [:application/events-and-information-requests])]
     (fn []
       (into
         [:div.application-handling__event-list
