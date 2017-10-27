@@ -465,22 +465,28 @@
          :on-click #(dispatch [:application/submit-information-request])}
         @button-text]])))
 
+(defn- application-information-request-header []
+  [:div.application-handling__information-request-header
+   "Lähetä täydennyspyyntö hakijalle"
+   [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+    {:on-click #(dispatch [:application/set-information-request-window-visibility false])}]])
+
 (defn- application-information-request []
-  (let [request-window-open? (r/atom true)]
+  (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
+        request-window-open? (reaction (if-some [visible? @window-visible?]
+                                         visible?
+                                         true))]
     (fn []
       (if @request-window-open?
         [:div.application-handling__information-request-container
-         [:div.application-handling__information-request-header
-          "Lähetä täydennyspyyntö hakijalle"
-          [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
-           {:on-click #(reset! request-window-open? false)}]]
+         [application-information-request-header]
          [application-information-request-recipient]
          [application-information-request-subject]
          [application-information-request-message]
          [application-information-request-submit-button]]
         [:div.application-handling__information-request-show-container-link
          [:a
-          {:on-click #(reset! request-window-open? true)}
+          {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
           "Lähetä täydennyspyyntö hakijalle"]]))))
 
 (defn application-review []

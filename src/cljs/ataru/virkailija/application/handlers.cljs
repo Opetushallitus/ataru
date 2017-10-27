@@ -361,3 +361,8 @@
               :params (-> db :application :information-request
                           (select-keys [:message :subject])
                           (assoc :application-key application-key))}})))
+(reg-event-db
+  :application/set-information-request-window-visibility
+  (fn [db [_ visible?]]
+    (assoc-in db [:application :information-request :visible?] visible?)))
+
