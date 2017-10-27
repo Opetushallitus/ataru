@@ -314,6 +314,116 @@
       });
     });
 
+    describe('Mass application update', function() {
+      describe('popup box', function() {
+        before(
+          navigateToApplicationHandlingForForm,
+          clickElement(function() { return testFrame().find('.application-handling__mass-edit-review-states-link') }),
+          wait.until(function() {
+            return massUpdatePopup().is(':visible')
+          })
+        )
+
+        it('has expected data in applications and popup', function() {
+          expect(applicationStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
+          expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
+          expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä')
+        })
+      })
+
+      describe('state selection boxes', function() {
+        before(
+          clickElement(massUpdateFromStateSelectionClosed),
+          clickElement(massUpdateToStateSelectionClosed)
+        )
+
+        it('have the correct contents', function() {
+          expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row').length === 7)
+          expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row--disabled').length === 5)
+          expect(massUpdateFromStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä (2)')
+
+          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row').length === 7)
+          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-row--disabled').length === 0)
+          expect(massUpdateToStateSelectionOpened().find('.application-handling__review-state-selected-row').text()).to.equal('Käsittelemättä')
+
+          expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
+        })
+      })
+
+      describe('selecting to-state and submitting', function() {
+        before(
+          clickElement(function() {
+            return massUpdateFromStateSelectionOpened().find('.application-handling__review-state-row--mass-update:contains("Käsittelemättä")')
+          }),
+          clickElement(function() {
+            return massUpdateToStateSelectionOpened().find('.application-handling__review-state-row--mass-update:contains("Käsitelty")')
+          }),
+          wait.until(function() {
+            return massUpdateSubmitButton().attr('disabled') !== 'disabled'
+          }),
+          clickElement(massUpdateSubmitButton),
+          wait.until(function() {
+            return massUpdateSubmitButton().text() === 'Vahvista muutos'
+          }),
+          clickElement(massUpdateSubmitButton)
+        )
+        it('closes popup', function() {
+          expect(massUpdatePopup().is(':visible')).to.equal(false)
+        })
+      })
+
+      describe('updates applications', function () {
+        before(
+          wait.until(function() {
+            return applicationStates().length > 0
+          })
+        )
+        it('to selected state', function() {
+          expect(applicationStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
+        })
+      })
+    })
+
+    function massUpdateSubmitButton() {
+      return massUpdatePopup().find('.application-handling__link-button')
+    }
+
+    function massUpdateFromState() {
+      return massUpdatePopup().children('div').eq(1)
+    }
+
+    function massUpdateFromStateSelectionOpened() {
+      return massUpdateFromState().find('.application-handling__review-state-list-opened')
+    }
+
+    function massUpdateFromStateSelectionClosed() {
+      var sel = '.application-handling__review-state-row--mass-update'
+      return massUpdateFromState().find(sel).addBack(sel)
+    }
+
+    function massUpdateToState() {
+      return massUpdatePopup().children('div').eq(2)
+    }
+
+    function massUpdateToStateSelectionOpened() {
+      return massUpdateToState().find('.application-handling__review-state-list-opened')
+    }
+
+    function massUpdateToStateSelectionClosed() {
+      var sel = '.application-handling__review-state-row--mass-update'
+      return massUpdateToState().find(sel).addBack(sel)
+    }
+
+    function massUpdatePopup() {
+      return testFrame().find('.application-handling__mass-edit-review-states-popup')
+    }
+
+    function applicationStates() {
+      return _.map(testFrame().find('.application-handling__list-row--state').slice(1), function(o) {
+        return $(o).text()
+      })
+    }
+
     function editLink() {
       return testFrame().find('.application-handling__edit-link')
     }
@@ -340,6 +450,10 @@
 
     function navigateToApplicationHandlingWithUrlParams() {
       loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&unselected-states=processing,invited-to-interview')
+    }
+
+    function navigateToApplicationHandlingForForm() {
+      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
     }
 
     function includedFilters() {
