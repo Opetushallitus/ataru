@@ -11,7 +11,8 @@
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
             [ataru.background-job.job :as job]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (def ^:private information-request-translations {:hello-text   {:fi "Hei"
                                                                 :sv "Hej"
@@ -58,7 +59,8 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [information-request (information-request-store/add-information-request information-request conn)]
+    (let [virkailija          (virkailija-edit/upsert-virkailija session)
+          information-request (information-request-store/add-information-request information-request virkailija conn)]
       (audit-log/log {:new       information-request
                       :operation audit-log/operation-new
                       :id        (-> session :identity :username)})

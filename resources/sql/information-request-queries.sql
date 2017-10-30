@@ -3,13 +3,24 @@
 INSERT INTO information_requests (
   application_key,
   subject,
-  message
+  message,
+  virkailija_oid
 ) VALUES (
   :application_key,
   :subject,
-  :message
+  :message,
+  :virkailija_oid
 );
 
 -- name: yesql-get-information-requests
 -- Get all information requests belonging to an application
-SELECT application_key, subject, message, created_time FROM information_requests WHERE application_key = :application_key;
+SELECT
+  ir.application_key,
+  ir.subject,
+  ir.message,
+  ir.created_time,
+  v.first_name,
+  v.last_name
+FROM information_requests ir
+LEFT JOIN virkailija v ON ir.virkailija_oid = v.oid
+WHERE application_key = :application_key;

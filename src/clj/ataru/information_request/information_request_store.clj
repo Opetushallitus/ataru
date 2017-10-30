@@ -13,10 +13,11 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
-(defn add-information-request [information-request conn]
-  (-> (yesql-add-information-request<! (->snake-case-kw information-request)
+(defn add-information-request [information-request virkailija conn]
+  (-> (yesql-add-information-request<! (->snake-case-kw (assoc information-request :virkailija_oid (:oid virkailija)))
                                        {:connection conn})
-      (->kebab-case-kw)))
+      (->kebab-case-kw)
+      (dissoc :virkailija-oid)))
 
 (defn get-information-requests [application-key]
   (->> (exec-db :db yesql-get-information-requests {:application_key application-key})

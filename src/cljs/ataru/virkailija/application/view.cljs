@@ -359,7 +359,7 @@
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption "Täydennyspyyntö lähetetty"]
+          [:span.application-handling__event-caption "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
           [:span.application-handling__event-caption.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
          :else "Tuntematon"))
