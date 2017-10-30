@@ -63,25 +63,15 @@ INSERT INTO applications (
 -- name: yesql-get-application-list-by-form
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
-)
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.preferred_name,
-  a.last_name,
-  a.created_time,
-  ar.state                               AS state,
-  ar.score                               AS score
-FROM latest a
-  JOIN application_reviews ar ON a.key = ar.application_key
-  JOIN forms f ON f.id = a.form_id AND f.key = :form_key
-WHERE a.haku IS NULL
-ORDER BY a.created_time DESC;
-
--- name: yesql-get-application-list-by-hakukohde
-WITH latest AS (
-  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -92,7 +82,37 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+FROM latest a
+  JOIN application_reviews ar ON a.key = ar.application_key
+  JOIN forms f ON f.id = a.form_id AND f.key = :form_key
+WHERE a.haku IS NULL
+ORDER BY a.created_time DESC;
+
+-- name: yesql-get-application-list-by-hakukohde
+WITH latest AS (
+  SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
+)
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.preferred_name,
+  a.last_name,
+  a.created_time,
+  ar.state                               AS state,
+  ar.score                               AS score,
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
@@ -103,6 +123,15 @@ ORDER BY a.created_time DESC;
 -- name: yesql-get-application-list-by-haku
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+  SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+  SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+  SELECT up.application_key
+    FROM latest_information_request_event ir
+    JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -113,7 +142,8 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
@@ -124,6 +154,15 @@ ORDER BY a.created_time DESC;
 -- name: yesql-get-application-list-by-ssn
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -134,7 +173,8 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
@@ -145,6 +185,15 @@ ORDER BY a.created_time DESC;
 -- name: yesql-get-application-list-by-dob
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -155,7 +204,8 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
@@ -166,6 +216,15 @@ ORDER BY a.created_time DESC;
 -- name: yesql-get-application-list-by-email
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -176,7 +235,8 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id
@@ -187,6 +247,15 @@ ORDER BY a.created_time DESC;
 -- name: yesql-get-application-list-by-name
 WITH latest AS (
   SELECT DISTINCT ON (key) * FROM applications ORDER BY key, created_time DESC
+), latest_information_request_event AS (
+    SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
+), latest_modification_by_applicant AS (
+    SELECT * FROM application_events WHERE event_type = 'updated-by-applicant' ORDER BY application_key, time DESC
+), new_application_modifications AS (
+    SELECT up.application_key
+    FROM latest_information_request_event ir
+      JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
+    WHERE ir.time < up.time
 )
 SELECT
   a.id,
@@ -197,7 +266,8 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  a.form_id                              AS form
+  a.form_id                              AS form,
+  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest a
   JOIN application_reviews ar ON a.key = ar.application_key
   JOIN forms f ON a.form_id = f.id

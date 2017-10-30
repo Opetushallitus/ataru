@@ -187,6 +187,7 @@
    :lang                            s/Str
    :state                           s/Str
    :score                           (s/maybe s/Int)
+   :new-application-modifications   s/Int
    (s/optional-key :form)           s/Int
    (s/optional-key :preferred-name) (s/maybe s/Str)
    (s/optional-key :last-name)      (s/maybe s/Str)
