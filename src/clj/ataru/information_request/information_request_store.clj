@@ -16,6 +16,7 @@
 (defn add-information-request [information-request virkailija conn]
   (-> (yesql-add-information-request<! (->snake-case-kw (assoc information-request :virkailija_oid (:oid virkailija)))
                                        {:connection conn})
+      (merge (select-keys virkailija [:first_name :last_name]))
       (->kebab-case-kw)
       (dissoc :virkailija-oid)))
 
