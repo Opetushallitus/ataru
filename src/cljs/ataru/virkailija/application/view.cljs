@@ -107,22 +107,22 @@
   (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
 
 (defn- toggle-mass-update-popup-visibility
-  [atom fn-or-bool]
+  [element-visible submit-button-state fn-or-bool]
   (if (boolean? fn-or-bool)
-    (reset! atom fn-or-bool)
-    (swap! atom fn-or-bool))
-  (when (not @atom)
-    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit])))
+    (reset! element-visible fn-or-bool)
+    (swap! element-visible fn-or-bool))
+  (when (not @element-visible)
+    (reset! submit-button-state :submit)))
 
 (defn- mass-update-applications-link
   []
   (let [element-visible?           (r/atom false)
         from-list-open?            (r/atom false)
         to-list-open?              (r/atom false)
+        submit-button-state        (r/atom :submit)
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
-        submit-button-state        (subscribe [:state-query [:application :mass-update-application-reviews-submit-state]])
         all-states                  (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -138,12 +138,12 @@
                                   @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
            [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
-            {:on-click #(toggle-mass-update-popup-visibility element-visible? not)}
+            {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
             "Massamuutos"]
            (when @element-visible?
              [:div.application-handling__mass-edit-review-states-popup
               [:div.application-handling__mass-edit-review-states-close-button
-               {:on-click #(toggle-mass-update-popup-visibility element-visible? false)}
+               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
@@ -156,7 +156,7 @@
                 (mass-review-state-selected-row
                   (fn []
                     (swap! from-list-open? not)
-                    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit]))
+                    (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
 
               [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
@@ -169,7 +169,7 @@
                 (mass-review-state-selected-row
                   (fn []
                     (swap! to-list-open? not)
-                    (dispatch [:application/update-mass-update-application-reviews-submit-state :submit]))
+                    (reset! submit-button-state :submit))
                   (selected-or-default-mass-review-state-label selected-to-review-state all-states)))
 
               (case @submit-button-state
@@ -177,7 +177,7 @@
                 (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
                                           (selected-or-default-mass-review-state selected-to-review-state all-states))]
                   [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
-                   {:on-click #(when-not button-disabled? (dispatch [:application/update-mass-update-application-reviews-submit-state :confirm]))
+                   {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
                     :disabled button-disabled?}
                    "Muuta"])
 
@@ -192,7 +192,7 @@
                                            to-state-name])
                                 (reset! selected-from-review-state nil)
                                 (reset! selected-to-review-state nil)
-                                (toggle-mass-update-popup-visibility element-visible? false)
+                                (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
                                 (reset! from-list-open? false)
                                 (reset! to-list-open? false)))}
                  "Vahvista muutos"]

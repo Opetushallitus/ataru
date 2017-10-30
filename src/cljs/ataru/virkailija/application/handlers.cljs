@@ -99,8 +99,7 @@
                  (assoc-in [:application :applications] applications)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
-                 (assoc-in [:application :sort] application-sorting/initial-sort)
-                 (assoc-in [:application :mass-update-application-reviews-submit-state] :submit))
+                 (assoc-in [:application :sort] application-sorting/initial-sort))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
@@ -370,8 +369,3 @@
                                   :to-state         to-state}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
-
-(reg-event-db
-  :application/update-mass-update-application-reviews-submit-state
-  (fn [db [_ new-state]]
-    (assoc-in db [:application :mass-update-application-reviews-submit-state] new-state)))
