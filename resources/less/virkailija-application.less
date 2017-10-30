@@ -492,8 +492,9 @@ and (max-width: 1000px) {
   margin-right: 10px;
 }
 
-@checkmark-height: 75px;
-@checkmark-width: @checkmark-height / 2;
+@information-request-loader-height: 75px;
+@information-request-checkmark-height: @information-request-loader-height - 21px;
+@information-request-checkmark-width: @information-request-checkmark-height / 2;
 
 .application-handling__information-request-submitted-checkmark {
   animation-duration: 800ms;
@@ -501,15 +502,33 @@ and (max-width: 1000px) {
   animation-name: checkmark;
   transform: scaleX(-1) rotate(135deg);
   opacity: 1;
-  height: @checkmark-height;
-  width: @checkmark-width;
+  height: @information-request-checkmark-height;
+  width: @information-request-checkmark-width;
   transform-origin: left top;
   border-right: 2px solid #60B660;
   border-top: 2px solid #60B660;
   content: '';
   position: absolute;
-  top: 33px;
-  left: 136px;
+  top: 38px;
+  left: 147px;
+}
+
+.application-handling__information-request-submitted-loader {
+  margin: 0 0 30px 10px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-left-color: #60B660;
+  animation-name: loader-spin;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  position: absolute;
+  display: inline-block;
+  vertical-align: top;
+  border-radius: 50%;
+  width: @information-request-loader-height;
+  height: @information-request-loader-height;
+  left: 129px;
+  top: -5px;
 }
 
 .application-handling__information-request-submitted-text {
@@ -526,18 +545,27 @@ and (max-width: 1000px) {
   }
   20% {
     height: 0;
-    width: @checkmark-width;
+    width: @information-request-checkmark-width;
     opacity: 1;
   }
   40% {
-    height: @checkmark-height;
-    width: @checkmark-width;
+    height: @information-request-checkmark-height;
+    width: @information-request-checkmark-width;
     opacity: 1;
   }
   100% {
-    height: @checkmark-height;
-    width: @checkmark-width;
+    height: @information-request-checkmark-height;
+    width: @information-request-checkmark-width;
     opacity: 1;
+  }
+}
+
+@keyframes loader-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
