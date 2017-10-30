@@ -511,33 +511,36 @@
 
 (defn mass-update-application-states
   [session application-keys from-state to-state]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection       {:connection conn}
-          username         (get-in session [:identity :username])
-          organization-oid (get-in session [:identity :organizations 0 :oid])]
-      (doseq [application-key application-keys]
-        (let [existing-review   (get-application-review application-key)
-              new-review        (if existing-review
-                                  (transform-keys ->snake_case
-                                                  (-> existing-review
-                                                      (assoc :state to-state)
-                                                      (dissoc :modified-time)))
-                                  {:state to-state
-                                   :application_key application-key})
-              application-event {:application_key  application-key
-                                 :event_type       "review-state-change"
-                                 :new_review_state to-state
-                                 :virkailija_oid   nil
-                                 :hakukohde        nil
-                                 :review_key       nil}]
-          (assert-correct-from-state-for-review existing-review from-state)
-          (if existing-review
-            (yesql-save-application-review! new-review connection)
-            (yesql-add-application-review! new-review connection))
-          (yesql-add-application-event!
-            application-event
-            connection)
-          (audit-log/log {:new              application-event
-                          :id               username
-                          :operation        audit-log/operation-new
-                          :organization-oid organization-oid}))))))
+  (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (let [connection       {:connection conn}
+                                  username         (get-in session [:identity :username])
+                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
+                              (mapv (fn [application-key]
+                                      (let [existing-review   (get-application-review application-key)
+                                            new-review        (if existing-review
+                                                                (transform-keys ->snake_case
+                                                                                (-> existing-review
+                                                                                    (assoc :state to-state)
+                                                                                    (dissoc :modified-time)))
+                                                                {:state           to-state
+                                                                 :application_key application-key})
+                                            application-event {:application_key  application-key
+                                                               :event_type       "review-state-change"
+                                                               :new_review_state to-state
+                                                               :virkailija_oid   nil
+                                                               :hakukohde        nil
+                                                               :review_key       nil}]
+                                        (assert-correct-from-state-for-review existing-review from-state)
+                                        (if existing-review
+                                          (yesql-save-application-review! new-review connection)
+                                          (yesql-add-application-review! new-review connection))
+                                        (yesql-add-application-event!
+                                          application-event
+                                          connection)
+                                        {:new              application-event
+                                         :id               username
+                                         :operation        audit-log/operation-new
+                                         :organization-oid organization-oid}))
+                                    application-keys)))]
+    (doseq [audit-log-entry audit-log-entries]
+      (audit-log/log audit-log-entry))))
