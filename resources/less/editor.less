@@ -183,6 +183,7 @@
 
 .editor-form__toolbar {
   display: flex;
+  justify-content: space-between;
   position: fixed;
   bottom: 0px;
   width: 100%;
@@ -193,9 +194,64 @@
   padding-top: 4px;
 }
 
+.editor-form__toolbar-left {
+  display: flex;
+}
+
+.editor-form__toolbar-right {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
 .editor-form__language-controls {
   display: flex;
   margin-left: 15px;
+}
+
+.editor-form__fold-all {
+  width: 140px;
+  background-color: #4194bf;
+  border-radius: 13px;
+  overflow: hidden;
+}
+
+.editor-form__fold-all-slider {
+  display: flex;
+  height: 26px;
+  align-items: center;
+  transition: transform 0.3s;
+}
+
+.editor-form__fold-all-slider-left {
+  transform: translateX(-77px);
+}
+
+.editor-form__fold-all-slider-right {
+  transform: translateX(37px);
+}
+
+.editor-form__fold-all-hidden-input {
+  display: none;
+}
+
+.editor-form__fold-all-label-left {
+  min-width: 67px;
+  color: white;
+}
+
+.editor-form__fold-all-label-right {
+  min-width: 76px;
+  color: white;
+}
+
+.editor-form__fold-all-divider {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: white;
+  margin-left: 12px;
+  margin-right: 12px;
 }
 
 .editor-form__checkbox-with-label {

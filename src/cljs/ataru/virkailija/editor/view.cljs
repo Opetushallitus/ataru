@@ -175,21 +175,41 @@
                             (get-org-name org)])
                          @organizations))])])))))
 
+(defn- fold-all []
+  (let [left? (r/atom false)]
+    (fn []
+      [:div.editor-form__fold-all
+       [:input.editor-form__fold-all-hidden-input
+        {:type "checkbox"}]
+       [:div.editor-form__fold-all-slider
+        {:class (if @left?
+                  "editor-form__fold-all-slider-left"
+                  "editor-form__fold-all-slider-right")}
+        [:div.editor-form__fold-all-label-left
+         "Osiot auki"]
+        [:div.editor-form__fold-all-divider
+         {:on-click #(swap! left? not)}]
+        [:div.editor-form__fold-all-label-right
+         "Osiot kiinni"]]])))
+
 (defn- form-toolbar [form]
   (let [fixed? (= :fixed @(subscribe [:state-query [:banner :type]]))
         languages @(subscribe [:editor/languages])]
     [:div.editor-form__toolbar
-     [:div.editor-form__language-controls
-      (map (fn [lang-kwd]
-             (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-           (keys lang-versions))]
-     (if (= (count languages) 1)
-       [:div.editor-form__preview-buttons
-        (lang-kwd->link form (first languages) "Lomakkeen esikatselu")]
-       [:div.editor-form__preview-buttons
-        [:span "Lomakkeen esikatselu:"]
-        (map (partial lang-kwd->link form) languages)])
-     [form-owner-organization form]]))
+     [:div.editor-form__toolbar-left
+      [:div.editor-form__language-controls
+       (map (fn [lang-kwd]
+              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+            (keys lang-versions))]
+      (if (= (count languages) 1)
+        [:div.editor-form__preview-buttons
+         (lang-kwd->link form (first languages) "Lomakkeen esikatselu")]
+        [:div.editor-form__preview-buttons
+         [:span "Lomakkeen esikatselu:"]
+         (map (partial lang-kwd->link form) languages)])
+      [form-owner-organization form]]
+     [:div.editor-form__toolbar-right
+      [fold-all]]]))
 
 (defn form-in-use-warning
   [form]
