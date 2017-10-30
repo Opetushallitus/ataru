@@ -5,6 +5,7 @@
             [ataru.application.review-states :refer [incomplete-states]]
             [ataru.virkailija.authentication.virkailija-edit]
             [ataru.util :refer [answers-by-key]]
+            [ataru.application.review-states :as application-review-states]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -98,7 +99,7 @@
                                      :review_key       nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
-                                      :state           "unprocessed"}
+                                      :state           application-review-states/initial-application-review-state}
                                      connection)
       id)))
 
@@ -506,7 +507,7 @@
   [application-review from-state]
   (assert (or (= (:state application-review) from-state)
               (and (nil? (:state application-review))
-                   (= from-state (ffirst ataru.application.review-states/application-review-states))))))
+                   (= from-state ataru.application.review-states/initial-application-review-state)))))
 
 (defn mass-update-application-states
   [session application-keys from-state to-state]

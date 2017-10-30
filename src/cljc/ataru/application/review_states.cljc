@@ -10,6 +10,8 @@
    ["processed" "Käsitelty"]
    ["inactivated" "Passiivinen"]])
 
+(def initial-application-review-state "unprocessed")
+
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
    ["selection-proposal" "Valintaesitys"]
