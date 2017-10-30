@@ -165,7 +165,6 @@
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
-    (let [applications       (-> db :application :applications)
-          application-filter (-> db :application :filter)
-          include-filtered   (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))]
-      (include-filtered application-filter applications))))
+    (let [applications      (-> db :applications :applications)
+          states-to-include (-> db :application :filter set)]
+      (filter #(contains? states-to-include (:state %)) applications))))
