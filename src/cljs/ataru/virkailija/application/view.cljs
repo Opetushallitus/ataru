@@ -330,7 +330,10 @@
 (defn event-caption [event]
   (match event
          {:event-type "review-state-change"}
-         (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))
+         (let [label (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))]
+           (if (= (:new-review-state event) "information-request")
+             [:span.application-handling__event-caption label (virkailija-initials-span event)]
+             label))
 
          {:event-type "updated-by-applicant"}
          "Hakija muokannut hakemusta"
