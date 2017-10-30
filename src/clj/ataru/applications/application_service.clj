@@ -153,7 +153,7 @@
       session
       organization-service
       [:edit-applications])
-    (application-store/save-application-review review session)
+    (application-store/save-application-review review session virkailija)
     (save-application-hakukohde-reviews virkailija application-key (:hakukohde-reviews review) session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)

@@ -325,7 +325,7 @@
 (defn get-application-review-organization-oid [review-id]
   (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
-(defn save-application-review [review session]
+(defn save-application-review [review session virkailija]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection       {:connection conn}
           app-key          (:application-key review)
@@ -343,7 +343,7 @@
         (let [application-event {:application_key  app-key
                                  :event_type       "review-state-change"
                                  :new_review_state (:state review-to-store)
-                                 :virkailija_oid   nil
+                                 :virkailija_oid   (:oid virkailija)
                                  :hakukohde        nil
                                  :review_key       nil}]
           (yesql-add-application-event!
