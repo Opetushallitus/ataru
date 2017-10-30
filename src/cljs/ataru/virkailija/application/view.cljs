@@ -67,7 +67,8 @@
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
-        applicant (str (:preferred-name application) " " (:last-name application))]
+        applicant (str (:preferred-name application) " " (:last-name application))
+        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
@@ -80,7 +81,10 @@
      [:span.application-handling__list-row--state
       (or
         (get-review-state-label-by-name application-review-states/application-review-states (:state application))
-        "Tuntematon")]]))
+        "Tuntematon")
+      (when @show-state-email-icon?
+        [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
+         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])

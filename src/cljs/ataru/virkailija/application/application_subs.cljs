@@ -185,3 +185,14 @@
     (->> (concat (-> db :application :events)
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
+
+(re-frame/reg-sub
+  :application/show-state-email-icon?
+  (fn [db [_ application-key]]
+    (->> db
+         :application
+         :applications
+         (filter (comp (partial = application-key) :key))
+         (first)
+         :new-application-modifications
+         (< 0))))
