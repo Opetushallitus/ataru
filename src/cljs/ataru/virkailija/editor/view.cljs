@@ -176,21 +176,20 @@
                          @organizations))])])))))
 
 (defn- fold-all []
-  (let [left? (r/atom false)]
-    (fn []
-      [:div.editor-form__fold-all
-       [:input.editor-form__fold-all-hidden-input
-        {:type "checkbox"}]
-       [:div.editor-form__fold-all-slider
-        {:class (if @left?
-                  "editor-form__fold-all-slider-left"
-                  "editor-form__fold-all-slider-right")}
-        [:div.editor-form__fold-all-label-left
-         "Osiot auki"]
-        [:div.editor-form__fold-all-divider
-         {:on-click #(swap! left? not)}]
-        [:div.editor-form__fold-all-label-right
-         "Osiot kiinni"]]])))
+  (let [all-folded? @(subscribe [:editor/all-folded])]
+    [:div.editor-form__fold-all
+     [:div.editor-form__fold-all-slider
+      {:class (if all-folded?
+                "editor-form__fold-all-slider-left"
+                "editor-form__fold-all-slider-right")}
+      [:div.editor-form__fold-all-label-left
+       "Osiot auki"]
+      [:div.editor-form__fold-all-divider
+       {:on-click (if all-folded?
+                    #(dispatch [:editor/unfold-all])
+                    #(dispatch [:editor/fold-all]))}]
+      [:div.editor-form__fold-all-label-right
+       "Osiot kiinni"]]]))
 
 (defn- form-toolbar [form]
   (let [fixed? (= :fixed @(subscribe [:state-query [:banner :type]]))
