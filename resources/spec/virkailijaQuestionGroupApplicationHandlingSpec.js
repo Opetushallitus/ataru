@@ -76,5 +76,69 @@
       expect(adjacentAnswer(35, 2, 'Vierekkäiset tekstikentät, monta vastausta')).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus C2')
       expect(adjacentAnswer(35, 3, 'Vierekkäiset tekstikentät, monta vastausta')).to.equal('Vierekkäiset tekstikentät, monta vastausta: vastaus D2')
     })
-  });
+  })
+
+  function reviewStateButton() {
+    return testFrame().find('.application-handling__review-state-selected-row')
+  }
+
+  function informationRequestStateButton() {
+    return testFrame().find('.application-handling__review-state-row:contains("Täydennyspyyntö")')
+  }
+
+  function informationRequestStateButtonExists() {
+    return elementExists(informationRequestStateButton())
+  }
+
+  function submitInformationRequestButton() {
+    return testFrame().find('.application-handling__send-information-request-button')
+  }
+
+  function submitInformationRequestButtonIsDisabled() {
+    return submitInformationRequestButton().prop('disabled') === true
+  }
+
+  function submitInformationRequestButtonIsEnabled() {
+    return submitInformationRequestButton().prop('disabled') === false
+  }
+
+  function informationRequestSubject() {
+    return testFrame().find('.application-handling__information-request-text-input')
+  }
+
+  function submitInformationRequestMessage() {
+    return testFrame().find('.application-handling__information-request-message-area')
+  }
+
+  function informationRequestConfirmationIsDisplayed() {
+    return elementExists(testFrame().find('.application-handling__information-request-submitted-text:contains("Täydennyspyyntö lähetetty")'))
+  }
+
+  function showInformationRequestFormLinkIsDisplayed() {
+    return elementExists(testFrame().find('.application-handling__information-request-show-container-link a:contains("Lähetä täydennyspyyntö hakijalle")'))
+  }
+
+  describe('Sending information requests to the applicant', function() {
+    before(
+      clickElement(reviewStateButton),
+      wait.until(informationRequestStateButtonExists),
+      clickElement(informationRequestStateButton),
+      wait.until(function() { return elementExists(testFrame().find('.application-handling__information-request-container'))})
+    )
+    it('shows the information request form to the user', function(done) {
+      expect(submitInformationRequestButtonIsDisabled()).to.equal(true)
+      setTextFieldValue(informationRequestSubject, 'Täydennyspyyntö: otsikko')()
+        .then(wait.until(submitInformationRequestButtonIsDisabled))
+        .then(setTextFieldValue(submitInformationRequestMessage, 'Täydennyspyyntö: viesti'))
+        .then(wait.until(submitInformationRequestButtonIsEnabled))
+        .then(setTextFieldValue(submitInformationRequestMessage, ''))
+        .then(wait.until(submitInformationRequestButtonIsDisabled))
+        .then(setTextFieldValue(submitInformationRequestMessage, 'Täydennyspyyntö: viesti'))
+        .then(wait.until(submitInformationRequestButtonIsEnabled))
+        .then(clickElement(submitInformationRequestButton))
+        .then(wait.until(informationRequestConfirmationIsDisplayed))
+        .then(wait.until(showInformationRequestFormLinkIsDisplayed))
+        .then(done)
+    })
+  })
 })();
