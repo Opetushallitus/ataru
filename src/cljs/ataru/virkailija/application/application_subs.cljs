@@ -186,6 +186,10 @@
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
 
+(defn- show-email-icon-for-application? [application]
+  (and (-> application :new-application-modifications (> 0))
+       (-> application :state (= "information-request"))))
+
 (re-frame/reg-sub
   :application/show-state-email-icon?
   (fn [db [_ application-key]]
@@ -194,5 +198,4 @@
          :applications
          (filter (comp (partial = application-key) :key))
          (first)
-         :new-application-modifications
-         (< 0))))
+         (show-email-icon-for-application?))))
