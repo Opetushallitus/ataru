@@ -199,3 +199,10 @@
          (filter (comp (partial = application-key) :key))
          (first)
          (show-email-icon-for-application?))))
+
+(re-frame/reg-sub
+  :application/filtered-applications
+  (fn [db _]
+    (let [applications      (-> db :application :applications)
+          states-to-include (-> db :application :filter set)]
+      (filter #(contains? states-to-include (:state %)) applications))))

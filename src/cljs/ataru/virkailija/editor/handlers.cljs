@@ -122,7 +122,7 @@
 
 (reg-event-db :generate-component generate-component)
 
-(defn remove-component
+(defn- remove-component
   [db path]
   (with-form-key [db form-key]
     (let [remove-index (last path)
@@ -136,18 +136,16 @@
            (assoc-in db path-vec)))))
 
 (reg-event-db
-  :remove-component
-  (fn [db [_ path dom-node]]
-    (.addEventListener
-      dom-node
-      "transitionend"
-      #(do
-         (.removeEventListener (.-target %) "transitionend" (-> (cljs.core/js-arguments) .-callee))
-         (dispatch [:state-update-fx
-                    (fn [{:keys [db]}]
-                      (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
-                        {:db (remove-component forms-meta-db path)}))])))
-    (assoc-in db [:editor :forms-meta path] :fade-out)))
+  :editor/remove-component
+  (fn [db [_ path]]
+    (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
+      (remove-component forms-meta-db path))))
+
+(reg-event-fx
+  :editor/start-remove-component
+  (fn [{db :db} [_ path]]
+    {:db (assoc-in db [:editor :forms-meta path] :fade-out)
+     :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
 
 (reg-event-fx
   :editor/refresh-used-by-haut

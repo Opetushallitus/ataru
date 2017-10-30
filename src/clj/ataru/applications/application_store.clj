@@ -4,6 +4,8 @@
             [ataru.schema.form-schema :as schema]
             [ataru.application.review-states :refer [incomplete-states]]
             [ataru.virkailija.authentication.virkailija-edit]
+            [ataru.util :refer [answers-by-key]]
+            [ataru.application.review-states :as application-review-states]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
@@ -97,7 +99,7 @@
                                      :review_key       nil}
                                     connection)
       (yesql-add-application-review! {:application_key key
-                                      :state           "unprocessed"}
+                                      :state           application-review-states/initial-application-review-state}
                                      connection)
       id)))
 
@@ -252,9 +254,7 @@
 
 (defn get-full-application-list-by-person-oid-for-omatsivut [person-oid]
   (->> (exec-db :db yesql-get-application-list-by-person-oid-for-omatsivut
-         {:person_oid                   person-oid
-          :query_type                   "ALL"
-          :authorized_organization_oids [""]})
+                {:person_oid person-oid})
        (map ->kebab-case-kw)))
 
 (defn has-ssn-applied [haku-oid ssn]
@@ -366,7 +366,7 @@
                                                                :requirement     hakukohde-review-requirement
                                                                :state           hakukohde-review-state
                                                                :hakukohde       hakukohde}
-                                  existing-duplicate-review   (yesql-get-existing-application-review review-to-store connection)
+                                  existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
                                   existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
                                   username                    (get-in session [:identity :username])
                                   organization-oid            (get-in session [:identity :organizations 0 :oid])]
@@ -455,6 +455,22 @@
       (first)
       :secret))
 
+(defn- unwrap-hakurekisteri-application
+  [{:keys [key haku hakukohde person_oid lang content]}]
+  (let [answers (answers-by-key (:answers content))]
+    {:oid                 key
+     :personOid           person_oid
+     :applicationSystemId haku
+     :kieli               lang
+     :hakukohteet         hakukohde}))
+
+(defn get-hakurekisteri-applications
+  [haku-oid hakukohde-oids person-oids]
+  (->> (exec-db :db yesql-applications-for-hakurekisteri {:haku_oid       haku-oid
+                                                          :hakukohde_oids (cons "" hakukohde-oids)
+                                                          :person_oids    (cons "" person-oids)})
+       (map unwrap-hakurekisteri-application)))
+
 (defn- unwrap-vts-application
   [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
   {:oid           key
@@ -486,3 +502,45 @@
                                                                    :hakemus_oids    [""]})
        (map unwrap-person-and-hakemus-oid)
        (into {})))
+
+(defn- assert-correct-from-state-for-review
+  [application-review from-state]
+  (assert (or (= (:state application-review) from-state)
+              (and (nil? (:state application-review))
+                   (= from-state ataru.application.review-states/initial-application-review-state)))))
+
+(defn mass-update-application-states
+  [session application-keys from-state to-state]
+  (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (let [connection       {:connection conn}
+                                  username         (get-in session [:identity :username])
+                                  organization-oid (get-in session [:identity :organizations 0 :oid])]
+                              (mapv (fn [application-key]
+                                      (let [existing-review   (get-application-review application-key)
+                                            new-review        (if existing-review
+                                                                (transform-keys ->snake_case
+                                                                                (-> existing-review
+                                                                                    (assoc :state to-state)
+                                                                                    (dissoc :modified-time)))
+                                                                {:state           to-state
+                                                                 :application_key application-key})
+                                            application-event {:application_key  application-key
+                                                               :event_type       "review-state-change"
+                                                               :new_review_state to-state
+                                                               :virkailija_oid   nil
+                                                               :hakukohde        nil
+                                                               :review_key       nil}]
+                                        (assert-correct-from-state-for-review existing-review from-state)
+                                        (if existing-review
+                                          (yesql-save-application-review! new-review connection)
+                                          (yesql-add-application-review! new-review connection))
+                                        (yesql-add-application-event!
+                                          application-event
+                                          connection)
+                                        {:new              application-event
+                                         :id               username
+                                         :operation        audit-log/operation-new
+                                         :organization-oid organization-oid}))
+                                    application-keys)))]
+    (doseq [audit-log-entry audit-log-entries]
+      (audit-log/log audit-log-entry))))

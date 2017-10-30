@@ -212,6 +212,15 @@
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
+(s/defschema OmatsivutApplication
+  {:oid s/Str
+   :key s/Str
+   :state s/Str
+   :secret s/Str
+   :haku s/Str
+   :email s/Str
+   :hakukohteet [s/Str]})
+
 (s/defschema VtsApplication
   {:oid           s/Str ; (:key application)
    :hakuOid       s/Str

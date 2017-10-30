@@ -5,6 +5,7 @@
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.application.review-states :as review-states]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -170,6 +171,17 @@
 
                  (api/context "/applications" []
                    :tags ["applications-api"]
+
+                   (api/POST "/mass-update" {session :session}
+                     :body [body {:application-keys [s/Str]
+                                  :from-state       (apply s/enum (map first review-states/application-review-states))
+                                  :to-state         (apply s/enum (map first review-states/application-review-states))}]
+                     :summary "Update list of applications with given state to new state"
+                     (ok (application-service/mass-update-application-states session
+                                                                             organization-service
+                                                                             (:application-keys body)
+                                                                             (:from-state body)
+                                                                             (:to-state body))))
 
                   (api/GET "/list" {session :session}
                            :query-params [{formKey      :- s/Str nil}
@@ -376,6 +388,32 @@
 
                  (api/context "/external" []
                    :tags ["external-api"]
+                   (api/GET "/omatsivut/applications/:person-oid" {session :session}
+                            :summary "Get latest versions of every application belonging to a user with given person OID"
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OmatsivutApplication]
+                            (if-let [applications (access-controlled-application/omatsivut-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/hakurekisteri/applications" {session :session}
+                     :summary "Get the latest versions of applications."
+                     :query-params [{hakuOid :- s/Str nil}
+                                    {hakukohdeOids :- [s/Str] nil}
+                                    {hakijaOids :- [s/Str] nil}]
+                     ;:return [ataru-schema/???] TODO: Figure out the schema after we know what to return
+                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
+                       (response/bad-request {:error "No search terms provided."})
+                       (if-let [applications (access-controlled-application/hakurekisteri-applications
+                                               organization-service
+                                               session
+                                               hakuOid
+                                               hakukohdeOids
+                                               hakijaOids)]
+                         (response/ok applications)
+                         (response/unauthorized {:error "Unauthorized"}))))
                    (api/GET "/applications" {session :session}
                             :summary "Get the latest versions of applications in haku or hakukohde or by oids."
                             :query-params [{hakuOid :- s/Str nil}

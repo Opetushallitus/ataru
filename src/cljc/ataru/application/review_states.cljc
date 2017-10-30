@@ -11,6 +11,8 @@
    ["inactivated" "Passiivinen"]
    ["information-request" "Täydennyspyyntö"]])
 
+(def initial-application-review-state "unprocessed")
+
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
    ["selection-proposal" "Valintaesitys"]

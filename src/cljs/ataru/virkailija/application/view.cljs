@@ -18,6 +18,10 @@
     [goog.string.format]
     [ataru.application.review-states :as review-states]))
 
+(defn- icon-check []
+  [:img.application-handling__review-state-selected-icon
+   {:src "/lomake-editori/images/icon_check.png"}])
+
 (defn excel-download-link [applications application-filter]
   (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
         hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
@@ -40,21 +44,169 @@
                     (str "/lomake-editori/api/applications/excel/haku/"
                          (:oid @haku)
                          (query-string application-filter)))]
-          [:a.application-handling__excel-download-link
+          [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
            {:href url}
-           (str "Lataa hakemukset Excel-muodossa (" (count applications) ")")])))))
+           "Lataa Excel"])))))
 
 (defn haku-header []
   (let [header (subscribe [:application/list-heading])]
     [:div.application-handling__header-haku-name
      @header]))
 
+(defn- count-for-application-state
+  [from-states state]
+  (get from-states state 0))
+
+(defn- selected-or-default-mass-review-state
+  [selected all]
+  (if @selected
+    @selected
+    (or
+      (ffirst (filter (comp pos? second) all))
+      (ffirst all))))
+
+(defn- review-state-label
+  [state-name]
+  (second (first (filter #(= (first %) state-name) review-states/application-review-states))))
+
+(defn- review-label-with-count
+  [label count]
+  (str label
+       (when (< 0 count)
+         (str " (" count ")"))))
+
+(defn- selected-or-default-mass-review-state-label
+  [selected all]
+  (let [name  (selected-or-default-mass-review-state selected all)
+        label (review-state-label name)
+        count (count-for-application-state all name)]
+    (review-label-with-count label count)))
+
+(defn- mass-review-state-selected-row
+  [on-click label]
+  [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update.application-handling__review-state-selected-row
+   {:on-click on-click}
+   [icon-check] label])
+
+(defn- mass-review-state-row
+  [current-review-state states disable-empty-rows? state]
+  (let [review-state-count (count-for-application-state states state)
+        review-state-label (review-state-label state)
+        label-with-count   (review-label-with-count review-state-label review-state-count)
+        on-click           #(reset! current-review-state state)
+        disabled?          (and disable-empty-rows? (zero? review-state-count))]
+    (if (= (selected-or-default-mass-review-state current-review-state states) state)
+      (mass-review-state-selected-row #() label-with-count)
+      [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update
+       {:on-click (when-not disabled? on-click)
+        :class    (when disabled? "application-handling__review-state-row--disabled")}
+       label-with-count])))
+
+(defn- opened-mass-review-state-list
+  [current-state states disable-empty-rows?]
+  (mapv (partial mass-review-state-row current-state states disable-empty-rows?) (map first states)))
+
+(defn- toggle-mass-update-popup-visibility
+  [element-visible submit-button-state fn-or-bool]
+  (if (boolean? fn-or-bool)
+    (reset! element-visible fn-or-bool)
+    (swap! element-visible fn-or-bool))
+  (when (not @element-visible)
+    (reset! submit-button-state :submit)))
+
+(defn- mass-update-applications-link
+  []
+  (let [element-visible?           (r/atom false)
+        from-list-open?            (r/atom false)
+        to-list-open?              (r/atom false)
+        submit-button-state        (r/atom :submit)
+        selected-from-review-state (r/atom nil)
+        selected-to-review-state   (r/atom nil)
+        filtered-applications      (subscribe [:application/filtered-applications])
+        all-states                  (reduce (fn [acc [state _]]
+                                             (assoc acc state 0))
+                                           {}
+                                           review-states/application-review-states)]
+    (fn []
+      (when-not (empty? @filtered-applications)
+        (let [from-states       (reduce
+                                  (fn [acc {:keys [state]}]
+                                    (if (contains? acc state)
+                                      (update acc state inc)
+                                      (assoc acc state 1)))
+                                  all-states
+                                  @filtered-applications)]
+          [:span.application-handling__mass-edit-review-states-container
+           [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
+            {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
+            "Massamuutos"]
+           (when @element-visible?
+             [:div.application-handling__mass-edit-review-states-popup
+              [:div.application-handling__mass-edit-review-states-close-button
+               {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
+               [:i.zmdi.zmdi-close]]
+              [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
+              [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
+
+              (if @from-list-open?
+                [:div.application-handling__review-state-list-opened-anchor
+                 (into [:div.application-handling__review-state-list-opened
+                        {:on-click #(swap! from-list-open? not)}]
+                       (opened-mass-review-state-list selected-from-review-state from-states true))]
+                (mass-review-state-selected-row
+                  (fn []
+                    (swap! from-list-open? not)
+                    (reset! submit-button-state :submit))
+                  (selected-or-default-mass-review-state-label selected-from-review-state from-states)))
+
+              [:h4.application-handling__mass-edit-review-states-heading "Muutetaan tilaan"]
+
+              (if @to-list-open?
+                [:div.application-handling__review-state-list-opened-anchor
+                 (into [:div.application-handling__review-state-list-opened
+                        {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
+                       (opened-mass-review-state-list selected-to-review-state all-states false))]
+                (mass-review-state-selected-row
+                  (fn []
+                    (swap! to-list-open? not)
+                    (reset! submit-button-state :submit))
+                  (selected-or-default-mass-review-state-label selected-to-review-state all-states)))
+
+              (case @submit-button-state
+                :submit
+                (let [button-disabled? (= (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                          (selected-or-default-mass-review-state selected-to-review-state all-states))]
+                  [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
+                   {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
+                    :disabled button-disabled?}
+                   "Muuta"])
+
+                :confirm
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button.animated.flash
+                 {:on-click (fn []
+                              (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                    to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
+                                (dispatch [:application/mass-update-application-reviews
+                                           (map :key (filter #(= (:state %) from-state-name) @filtered-applications))
+                                           from-state-name
+                                           to-state-name])
+                                (reset! selected-from-review-state nil)
+                                (reset! selected-to-review-state nil)
+                                (toggle-mass-update-popup-visibility element-visible? submit-button-state false)
+                                (reset! from-list-open? false)
+                                (reset! to-list-open? false)))}
+                 "Vahvista muutos"]
+
+                [:div])])])))))
+
 (defn haku-heading [filtered-applications application-filter]
   (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
     [:div.application-handling__header
      [haku-header]
-     (when @belongs-to-haku
-       [excel-download-link filtered-applications application-filter])]))
+     [:div.editor-form__form-controls-container
+      [mass-update-applications-link]
+      (when @belongs-to-haku
+        [excel-download-link filtered-applications application-filter])]]))
 
 (defn- select-application
   [application-key]
@@ -98,10 +250,6 @@
               (if selected?
                 [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
-
-(defn icon-check []
-  [:img.application-handling__review-state-selected-icon
-   {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn toggle-filter [application-filters review-state-id selected]
   (let [new-application-filter (if selected
@@ -182,22 +330,24 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
-  [:div
-   [:div.application-handling__list-header.application-handling__list-row
-    [application-list-basic-column-header
-     :applicant-name
-     "application-handling__list-row--applicant"
-     "Hakija"]
-    [application-list-basic-column-header
-     :created-time
-     "application-handling__list-row--time"
-     "Saapunut"]
-    [application-list-basic-column-header
-     :score
-     "application-handling__list-row--score"
-     "Pisteet"]
-    [:span.application-handling__list-row--state [state-filter-controls]]]
-   [application-list-contents applications]])
+  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
+    [:div
+     [:div.application-handling__list-header.application-handling__list-row
+      [application-list-basic-column-header
+       :applicant-name
+       "application-handling__list-row--applicant"
+       "Hakija"]
+      [application-list-basic-column-header
+       :created-time
+       "application-handling__list-row--time"
+       "Saapunut"]
+      [application-list-basic-column-header
+       :score
+       "application-handling__list-row--score"
+       "Pisteet"]
+      [:span.application-handling__list-row--state [state-filter-controls]]]
+     (when-not @fetching
+       [application-list-contents applications])]))
 
 (defn application-contents [{:keys [form application]}]
   [readonly-contents/readonly-fields form application])
@@ -424,7 +574,7 @@
 
 (defn- application-modify-link []
   (let [application-key (subscribe [:state-query [:application :selected-key]])]
-    [:a.application-handling__edit-link
+    [:a.application-handling__link-button.application-handling__edit-link
      {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
       :target "_blank"}
      "Muokkaa hakemusta"]))
@@ -624,22 +774,20 @@
             [application-review]]])))))
 
 (defn application []
-  (let [applications            (subscribe [:state-query [:application :applications]])
-        application-filter      (subscribe [:state-query [:application :filter]])
+  (let [application-filter      (subscribe [:state-query [:application :filter]])
         search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        include-filtered        (fn [application-filter applications] (filter #(some #{(:state %)} application-filter) applications))
-        filtered-applications   (include-filtered @application-filter @applications)]
+        filtered-applications   (subscribe [:application/filtered-applications])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading filtered-applications @application-filter]
-         [application-list filtered-applications]
+         [haku-heading @filtered-applications @application-filter]
+         [application-list @filtered-applications]
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
        [:div
-        [application-review-area filtered-applications]])]))
+        [application-review-area @filtered-applications]])]))
 
 (defn create-review-position-handler []
   (let [review-canary-visible        (atom true)

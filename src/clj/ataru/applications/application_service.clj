@@ -158,3 +158,14 @@
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
+
+(defn mass-update-application-states
+  [session organization-service application-keys from-state to-state]
+  (doseq [application-key application-keys]
+    (aac/check-application-access
+      application-key
+      session
+      organization-service
+      [:edit-applications]))
+  (application-store/mass-update-application-states session application-keys from-state to-state)
+  {})

@@ -388,3 +388,34 @@
                                                                  (cond-> application
                                                                    (= (:key application) application-key)
                                                                    (assoc :new-application-modifications 0)))))))))
+
+(reg-event-fx
+  :application/handle-mass-update-application-reviews
+  (fn [{:keys [db]} [_ _]]
+    (let [db-application (:application db)
+          selected-type  (cond
+                           (:selected-form-key db-application) :selected-form-key
+                           (:selected-haku db-application) :selected-haku
+                           (:selected-hakukohde db-application) :selected-hakukohde)
+          selected-id    (if (= :selected-form-key selected-type)
+                           (:selected-form-key db-application)
+                           (-> db-application selected-type :oid))
+          dispatch-kw    (case selected-type
+                           :selected-form-key :application/fetch-applications
+                           :selected-haku :application/fetch-applications-by-haku
+                           :selected-hakukohde :application/fetch-applications-by-hakukohde)]
+      (if selected-type
+        {:db db
+         :dispatch [dispatch-kw selected-id]}
+        {:db db}))))
+
+(reg-event-fx
+  :application/mass-update-application-reviews
+  (fn [{:keys [db]} [_ application-keys from-state to-state]]
+    {:db   (assoc-in db [:application :fetching-applications] true)
+     :http {:method              :post
+            :params              {:application-keys application-keys
+                                  :from-state       from-state
+                                  :to-state         to-state}
+            :path                "/lomake-editori/api/applications/mass-update"
+            :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
