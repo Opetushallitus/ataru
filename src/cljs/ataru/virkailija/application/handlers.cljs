@@ -381,4 +381,10 @@
 (reg-event-db
   :application/reset-submit-information-request-state
   (fn [db _]
-    (assoc-in db [:application :information-request] {:visible? false})))
+    (let [application-key (-> db :application :selected-key)]
+      (-> db
+          (assoc-in [:application :information-request] {:visible? false})
+          (update-in [:application :applications] (partial map (fn [application]
+                                                                 (cond-> application
+                                                                   (= (:key application) application-key)
+                                                                   (assoc :new-application-modifications 0)))))))))
