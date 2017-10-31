@@ -12,11 +12,8 @@
             [selmer.parser :as selmer]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
-
-(def ^:private information-request-translations {:hello-text   {:fi "Hei"
-                                                                :sv "Hej"
-                                                                :en "Hi"}})
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [ataru.translations.information-request :as t]))
 
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
@@ -29,7 +26,7 @@
         lang            (-> application :lang keyword)
         first-name      (extract-answer-value "preferred-name" application)
         recipient-email (extract-answer-value "email" application)
-        translations    (translations/get-translations lang information-request-translations)
+        translations    (translations/get-translations lang t/translations)
         service-url     (get-in config [:public-config :applicant :service_url])
         application-url (str service-url "/hakemus?modify=" (:secret application))
         body            (selmer/render-file "templates/information-request-template.html"
