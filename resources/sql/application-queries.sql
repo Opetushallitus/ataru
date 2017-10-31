@@ -80,7 +80,14 @@ SELECT
   a.created_time,
   ar.state                               AS state,
   ar.score                               AS score,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM ataru.public.application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest_applications AS a
 JOIN application_reviews ar ON a.key = ar.application_key
 JOIN forms AS f ON f.id = a.form_id
@@ -109,7 +116,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -139,7 +153,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -169,7 +190,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -199,7 +227,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -229,7 +264,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -259,7 +301,14 @@ SELECT
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id

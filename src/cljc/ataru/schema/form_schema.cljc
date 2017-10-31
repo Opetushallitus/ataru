@@ -183,18 +183,19 @@
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
-  {:id                              s/Int
-   :key                             s/Str
-   :lang                            s/Str
-   :state                           s/Str
-   :score                           (s/maybe s/Int)
-   :new-application-modifications   s/Int
-   (s/optional-key :form)           s/Int
-   (s/optional-key :preferred-name) (s/maybe s/Str)
-   (s/optional-key :last-name)      (s/maybe s/Str)
-   (s/optional-key :created-time)   org.joda.time.DateTime
-   (s/optional-key :haku)           (s/maybe s/Str)
-   (s/optional-key :secret)         s/Str})
+  {:id                                             s/Int
+   :key                                            s/Str
+   :lang                                           s/Str
+   :state                                          s/Str
+   :score                                          (s/maybe s/Int)
+   :new-application-modifications                  s/Int
+   (s/optional-key :form)                          s/Int
+   (s/optional-key :preferred-name)                (s/maybe s/Str)
+   (s/optional-key :last-name)                     (s/maybe s/Str)
+   (s/optional-key :created-time)                  org.joda.time.DateTime
+   (s/optional-key :haku)                          (s/maybe s/Str)
+   (s/optional-key :secret)                        s/Str
+   (s/optional-key :application-hakukohde-reviews) s/Any})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
