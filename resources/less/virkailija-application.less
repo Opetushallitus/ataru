@@ -598,24 +598,6 @@ and (max-width: 1000px) {
   left: 147px;
 }
 
-.application-handling__information-request-submitted-loader {
-  margin: 0 0 30px 10px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-left-color: #60B660;
-  animation-name: loader-spin;
-  animation-duration: 3s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-  position: absolute;
-  display: inline-block;
-  vertical-align: top;
-  border-radius: 50%;
-  width: @information-request-loader-height;
-  height: @information-request-loader-height;
-  left: 129px;
-  top: -5px;
-}
-
 .application-handling__information-request-submitted-text {
   position: absolute;
   top: 78px;
@@ -642,15 +624,6 @@ and (max-width: 1000px) {
     height: @information-request-checkmark-height;
     width: @information-request-checkmark-width;
     opacity: 1;
-  }
-}
-
-@keyframes loader-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
   }
 }
 
