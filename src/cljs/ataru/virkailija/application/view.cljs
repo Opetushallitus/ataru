@@ -251,17 +251,31 @@
                 [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
 
-(defn toggle-filter [application-filters review-state-id selected]
+(defn toggle-application-state-filter
+  [application-filters review-state-id selected]
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
-                                 (conj application-filters review-state-id))
-        all-filters-selected?  (= (count (first application-review-states/application-review-states)) (count new-application-filter))]
+                                 (conj application-filters review-state-id))]
     (util/update-url-with-query-params
-     {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
+     {:unselected-states (clojure.string/join ","
+                                              (util/get-unselected-review-states
+                                                new-application-filter
+                                                review-states/application-review-states))})
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
+(defn toggle-hakukohde-selection-filter
+  [hakukohde-filters filter-id selected?]
+  (let [new-selection-filter (if selected?
+                                 (remove #(= filter-id %) hakukohde-filters)
+                                 (conj hakukohde-filters filter-id))]
+    (util/update-url-with-query-params
+      {:unselected-selection-states (clojure.string/join ","
+                                                         (util/get-unselected-review-states
+                                                           new-selection-filter
+                                                           review-states/application-hakukohde-selection-states))})
+    (dispatch [:state-update #(assoc-in % [:application :selection-filter] new-selection-filter)])))
 
-(defn- toggle-all-filters [all-filters-selected?]
+(defn- toggle-all-application-state-filters [all-filters-selected?]
   (util/update-url-with-query-params {:unselected-states nil})
   (dispatch [:state-update #(assoc-in % [:application :filter]
                                       (if all-filters-selected?
@@ -289,22 +303,57 @@
                     [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                              :type      "checkbox"
                              :checked   all-filters-selected?
-                             :on-change #(toggle-all-filters (not all-filters-selected?))}]
+                             :on-change #(toggle-all-application-state-filters (not all-filters-selected?))}]
                     [:span "Kaikki"]]]]
                  (mapv
-                   (fn [review-state]
-                     (let [review-state-id (first review-state)
-                           filter-selected (some #{review-state-id} @application-filters)]
+                   (fn [[review-state-id review-state-label]]
+                     (let [filter-selected (some #{review-state-id} @application-filters)]
                        [:div.application-handling__filter-state-selection-row
                         {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
                         [:label
                          [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                                   :type      "checkbox"
                                   :checked   (boolean filter-selected)
-                                  :on-change #(toggle-filter @application-filters review-state-id filter-selected)}]
-                         [:span (str (second review-state)
+                                  :on-change #(toggle-application-state-filter @application-filters review-state-id filter-selected)}]
+                         [:span (str review-state-label
                                   " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
                    application-review-states/application-review-states)))
+         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
+
+(defn selection-state-filter-controls
+  []
+  (let [state-filters        (subscribe [:state-query [:application :selection-filter]])
+        filter-opened        (r/atom false)
+        toggle-filter-opened #(swap! filter-opened not)]
+    (fn []
+      (let [all-filters-selected? (= (count @state-filters)
+                                     (count review-states/application-hakukohde-selection-states))]
+        [:span.application-handling__filter-state
+         [:a
+          {:on-click toggle-filter-opened}
+          (str "Valinta" (when-not all-filters-selected? " *"))]
+         (when @filter-opened
+           (into [:div.application-handling__filter-state-selection
+                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
+                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
+                   [:label
+                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                             :type      "checkbox"
+                             :checked   all-filters-selected?
+                             :on-change #(toggle-all-application-state-filters (not all-filters-selected?))}]
+                    [:span "Kaikki"]]]]
+                 (mapv
+                   (fn [[review-state-id review-state-label]]
+                     (let [filter-selected (some #{review-state-id} @state-filters)]
+                       [:div.application-handling__filter-state-selection-row
+                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
+                        [:label
+                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                  :type      "checkbox"
+                                  :checked   (boolean filter-selected)
+                                  :on-change #(toggle-hakukohde-selection-filter @state-filters review-state-id filter-selected)}]
+                         [:span review-state-label]]]))
+                   application-review-states/application-hakukohde-selection-states)))
          (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
@@ -345,7 +394,8 @@
        :score
        "application-handling__list-row--score"
        "Pisteet"]
-      [:span.application-handling__list-row--state [state-filter-controls]]]
+      [:span.application-handling__list-row--state [state-filter-controls]]
+      [:span.application-handling__list-row--selection [selection-state-filter-controls]]]
      (when-not @fetching
        [application-list-contents applications])]))
 

@@ -116,7 +116,7 @@
              (assoc-in [:application :filter] (-> (cljs-util/extract-query-params)
                                                   :unselected-states
                                                   (clojure.string/split #",")
-                                                  cljs-util/get-unselected-review-states)))
+                                                  (cljs-util/get-unselected-review-states review-states/application-review-states))))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
