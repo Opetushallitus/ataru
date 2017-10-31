@@ -525,6 +525,7 @@
 (defn component-group [content path children]
   (let [languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
+        all-folded        (subscribe [:editor/all-folded])
         animation-effect  (fade-out-effect path)
         group-header-text (case (:fieldClass content)
                             "wrapperElement" "Lomakeosio"
@@ -539,20 +540,24 @@
          {:class @animation-effect}
          [:div.editor-form__component-wrapper
           [text-header group-header-text path :component-wrapped? true]
-          [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-           [:header.editor-form__component-item-header header-label-text]
-           (input-fields-with-lang
+          [:div
+           {:class (when @all-folded "editor-form__folded")}
+           [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+            [:header.editor-form__component-item-header header-label-text]
+            (input-fields-with-lang
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
              languages
-             :header? true)]]
-         children
-         [drag-n-drop-spacer (conj path :children (count children))]
-         (case (:fieldClass content)
-           "wrapperElement" [toolbar/add-component (conj path :children (count children))]
-           "questionGroup" [toolbar/question-group-toolbar path
-                            (fn [generate-fn]
-                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]))))
+             :header? true)]]]
+         [:div
+          {:class (when @all-folded "editor-form__folded")}
+          children
+          [drag-n-drop-spacer (conj path :children (count children))]
+          (case (:fieldClass content)
+            "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+            "questionGroup" [toolbar/question-group-toolbar path
+                             (fn [generate-fn]
+                               (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]]))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
