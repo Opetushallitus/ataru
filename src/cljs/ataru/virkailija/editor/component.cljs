@@ -549,32 +549,38 @@
     (fn [content path children]
       (let [languages @languages
             value     @value]
-        [:div.editor-form__section_wrapper
-         {:class @animation-effect}
-         [:div.editor-form__component-wrapper
-          [text-header group-header-text path
-           :component-wrapped? true
-           :title (:label value)
-           :show-title? @all-folded]
-          [:div
-           {:class (when @all-folded "editor-form__folded")}
-           [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-            [:header.editor-form__component-item-header header-label-text]
-            (input-fields-with-lang
-             (fn [lang]
-               [input-field path lang #(dispatch-sync [:editor/set-component-value
-                                                       (-> % .-target .-value)
-                                                       path
-                                                       :label lang])])
-             languages
-             :header? true)]
+        (if @all-folded
+          [:div.editor-form__section_wrapper
+           {:class @animation-effect}
+           [:div.editor-form__component-wrapper
+            [text-header group-header-text path
+             :component-wrapped? true
+             :title (:label value)
+             :show-title? true]]]
+          [:div.editor-form__section_wrapper
+           {:class @animation-effect}
+           [:div.editor-form__component-wrapper
+            [text-header group-header-text path
+             :component-wrapped? true
+             :title (:label value)
+             :show-title? @all-folded]
+            [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+             [:header.editor-form__component-item-header header-label-text]
+             (input-fields-with-lang
+              (fn [lang]
+                [input-field path lang #(dispatch-sync [:editor/set-component-value
+                                                        (-> % .-target .-value)
+                                                        path
+                                                        :label lang])])
+              languages
+              :header? true)]]
            children
            [drag-n-drop-spacer (conj path :children (count children))]
            (case (:fieldClass content)
              "wrapperElement" [toolbar/add-component (conj path :children (count children))]
              "questionGroup" [toolbar/question-group-toolbar path
                               (fn [generate-fn]
-                                (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]]]))))
+                                (dispatch [:generate-component generate-fn (conj path :children (count children))]))])])))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]
