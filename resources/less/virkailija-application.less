@@ -598,6 +598,29 @@ and (max-width: 1000px) {
   left: 147px;
 }
 
+.application-handling__information-request-submitted-loader {
+  width: @information-request-loader-height;
+  height: @information-request-loader-height;
+  border-radius: 50%;
+  margin: 0 10px 0 10px;
+  background-color: #60B660;
+  position: absolute;
+  left: 128px;
+  top: -4px;
+}
+
+.application-handling__information-request-submitted-loader:after {
+  border-radius: 50%;
+  background-color: @light-gray;
+  width: @information-request-loader-height - 4px;
+  height: @information-request-loader-height - 4px;
+  margin: 0 10px 0 10px;
+  content: ' ';
+  position: absolute;
+  left: -8px;
+  top: 2px;
+}
+
 .application-handling__information-request-submitted-text {
   position: absolute;
   top: 78px;

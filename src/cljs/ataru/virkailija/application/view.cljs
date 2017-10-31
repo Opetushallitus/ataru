@@ -632,6 +632,7 @@
 
 (defn- application-information-request-submitted []
   [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
+   [:div.application-handling__information-request-submitted-loader]
    [:div.application-handling__information-request-submitted-checkmark]
    [:span.application-handling__information-request-submitted-text "Täydennyspyyntö lähetetty"]])
 
