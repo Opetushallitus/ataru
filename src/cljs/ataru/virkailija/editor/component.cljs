@@ -183,10 +183,13 @@
               nil)))
 
 (defn- text-header
-  [label path & {:keys [component-wrapped? draggable title show-title?]
+  [label path & {:keys [component-wrapped?
+                        draggable
+                        sub-header
+                        show-sub-header?]
                  :or {draggable true
-                      title nil
-                      show-title? false}}]
+                      sub-header nil
+                      show-sub-header? false}}]
   [:div.editor-form__header-wrapper
    {:draggable     draggable
     :on-drag-start (on-drag-start path)
@@ -195,13 +198,13 @@
     [:span.editor-form__component-main-header
      label]
     [:span.editor-form__component-sub-header
-     {:class (if show-title?
+     {:class (if show-sub-header?
                "editor-form__component-sub-header-visible"
                "editor-form__component-sub-header-hidden")}
      (->> [:fi :sv :en]
-            (map (partial get title))
-            (remove clojure.string/blank?)
-            (clojure.string/join " - "))]]
+          (map (partial get sub-header))
+          (remove clojure.string/blank?)
+          (clojure.string/join " - "))]]
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
                  (let [target (if component-wrapped?
@@ -555,15 +558,15 @@
            [:div.editor-form__component-wrapper
             [text-header group-header-text path
              :component-wrapped? true
-             :title (:label value)
-             :show-title? true]]]
+             :sub-header (:label value)
+             :show-sub-header? true]]]
           [:div.editor-form__section_wrapper
            {:class @animation-effect}
            [:div.editor-form__component-wrapper
             [text-header group-header-text path
              :component-wrapped? true
-             :title (:label value)
-             :show-title? @all-folded]
+             :sub-header (:label value)
+             :show-sub-header? @all-folded]
             [:div.editor-form__text-field-wrapper.editor-form__text-field--section
              [:header.editor-form__component-item-header header-label-text]
              (input-fields-with-lang
