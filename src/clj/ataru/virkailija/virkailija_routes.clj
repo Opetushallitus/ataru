@@ -19,6 +19,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.information-request.information-request-service :as information-request]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
@@ -217,11 +218,12 @@
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application       ataru-schema/Application
-                             :events            [ataru-schema/Event]
-                             :review            ataru-schema/Review
-                             :hakukohde-reviews ataru-schema/HakukohdeReviews
-                             :form              ataru-schema/FormWithContent}
+                    :return {:application          ataru-schema/Application
+                             :events               [ataru-schema/Event]
+                             :review               ataru-schema/Review
+                             :hakukohde-reviews    ataru-schema/HakukohdeReviews
+                             :form                 ataru-schema/FormWithContent
+                             :information-requests [ataru-schema/InformationRequest]}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -245,6 +247,13 @@
                          review
                          session
                          organization-service)))
+
+                   (api/POST "/information-request" {session :session}
+                     :body [information-request ataru-schema/InformationRequest]
+                     :summary "Send an information request to an applicant"
+                     :return ataru-schema/InformationRequest
+                     (ok (information-request/store information-request
+                                                    session)))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}

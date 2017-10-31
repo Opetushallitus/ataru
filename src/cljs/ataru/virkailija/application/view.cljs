@@ -219,7 +219,8 @@
 
 (defn application-list-row [application selected?]
   (let [time      (t/time->str (:created-time application))
-        applicant (str (:preferred-name application) " " (:last-name application))]
+        applicant (str (:preferred-name application) " " (:last-name application))
+        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
@@ -232,7 +233,10 @@
      [:span.application-handling__list-row--state
       (or
         (get-review-state-label-by-name application-review-states/application-review-states (:state application))
-        "Tuntematon")]]))
+        "Tuntematon")
+      (when @show-state-email-icon?
+        [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
+         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -474,29 +478,41 @@
       [:span.application-handling__review-state-initials {:data-tooltip name} (str " (" initials ")")])))
 
 (defn event-caption [event]
-  (case (:event-type event)
-    "review-state-change" (get-review-state-label-by-name
-                            application-review-states/application-review-states (:new-review-state event))
-    "updated-by-applicant" "Hakija muokannut hakemusta"
-    "updated-by-virkailija" [:span.application-handling__event-caption
-                             "Virkailija "
-                             (virkailija-initials-span event)
-                             " muokannut hakemusta"]
-    "received-from-applicant" "Hakemus vastaanotettu"
-    "hakukohde-review-state-change" [:span.application-handling__event-caption
-                                     (str
-                                       (->> application-review-states/hakukohde-review-types
-                                            (filter #(= (keyword (:review-key event)) (first %)))
-                                            (first)
-                                            (second))
-                                       ": "
-                                       (get-review-state-label-by-name
-                                         (concat application-review-states/application-hakukohde-review-states
-                                                 application-review-states/application-hakukohde-eligibility-states
-                                                 application-review-states/application-hakukohde-selection-states)
-                                         (:new-review-state event)))
-                                     (virkailija-initials-span event)]
-    "Tuntematon"))
+  (match event
+         {:event-type "review-state-change"}
+         (let [label (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))]
+           (if (= (:new-review-state event) "information-request")
+             [:span.application-handling__event-caption label (virkailija-initials-span event)]
+             label))
+
+         {:event-type "updated-by-applicant"}
+         "Hakija muokannut hakemusta"
+
+         {:event-type "updated-by-virkailija"}
+         [:span.application-handling__event-caption "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
+
+         {:event-type "received-from-applicant"}
+         "Hakemus vastaanotettu"
+
+         {:event-type "hakukohde-review-state-change"}
+         [:span.application-handling__event-caption
+          (str (->> application-review-states/hakukohde-review-types
+                    (filter #(= (keyword (:review-key event)) (first %)))
+                    (first)
+                    (second)) ": "
+               (get-review-state-label-by-name
+                 (concat application-review-states/application-hakukohde-review-states
+                         application-review-states/application-hakukohde-eligibility-states
+                         application-review-states/application-hakukohde-selection-states)
+                 (:new-review-state event)))
+          (virkailija-initials-span event)]
+
+         {:subject _ :message message}
+         [:div.application-handling__multi-line-event-caption
+          [:span.application-handling__event-caption "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
+          [:span.application-handling__event-caption.application-handling__event-caption--extra-info (str "\"" message "\"")]]
+
+         :else "Tuntematon"))
 
 (defn to-event-row
   [time-str caption]
@@ -505,12 +521,12 @@
    [:span.application-handling__event-caption caption]])
 
 (defn event-row [event]
-  (let [time-str      (t/time->short-str (:time event))
-        caption       (event-caption event)]
+  (let [time-str (t/time->short-str (:time event))
+        caption (event-caption event)]
     (to-event-row time-str caption)))
 
 (defn application-review-events []
-  (let [events (subscribe [:state-query [:application :events]])]
+  (let [events (subscribe [:application/events-and-information-requests])]
     (fn []
       (into
         [:div.application-handling__event-list
@@ -563,14 +579,96 @@
       :target "_blank"}
      "Muokkaa hakemusta"]))
 
+(defn- application-information-request-recipient []
+  (let [email (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
+    [:div.application-handling__information-request-row
+     [:div.application-handling__information-request-info-heading "Vastaanottaja:"]
+     [:div @email]]))
+
+(defn- application-information-request-subject []
+  (let [subject (subscribe [:state-query [:application :information-request :subject]])]
+    [:div.application-handling__information-request-row
+     [:div.application-handling__information-request-info-heading "Aihe:"]
+     [:div.application-handling__information-request-text-input-container
+      [:input.application-handling__information-request-text-input
+       {:value     @subject
+        :on-change (fn [event]
+                     (let [subject (-> event .-target .-value)]
+                       (dispatch [:application/set-information-request-subject subject])))}]]]))
+
+(defn- application-information-request-message []
+  (let [message (subscribe [:state-query [:application :information-request :message]])]
+    [:div.application-handling__information-request-row
+     [:textarea.application-handling__information-request-message-area
+      {:value     @message
+       :on-change (fn [event]
+                    (let [message (-> event .-target .-value)]
+                      (dispatch [:application/set-information-request-message message])))}]]))
+
+(defn- application-information-request-submit-button []
+  (let [enabled?      (subscribe [:application/information-request-submit-enabled?])
+        request-state (subscribe [:state-query [:application :information-request :state]])
+        button-text   (reaction (if (= @request-state :submitting)
+                                  "Täydennyspyyntöä lähetetään"
+                                  "Lähetä täydennyspyyntö"))]
+    (fn []
+      [:div.application-handling__information-request-row
+       [:button.application-handling__send-information-request-button
+        {:type     "button"
+         :disabled (not @enabled?)
+         :class    (if @enabled?
+                     "application-handling__send-information-request-button--enabled"
+                     "application-handling__send-information-request-button--disabled")
+         :on-click #(dispatch [:application/submit-information-request])}
+        @button-text]])))
+
+(defn- application-information-request-header []
+  (let [request-state (subscribe [:state-query [:application :information-request :state]])]
+    [:div.application-handling__information-request-header
+     "Lähetä täydennyspyyntö hakijalle"
+     (when (nil? @request-state)
+       [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+        {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])]))
+
+(defn- application-information-request-submitted []
+  [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
+   [:div.application-handling__information-request-submitted-checkmark]
+   [:span.application-handling__information-request-submitted-text "Täydennyspyyntö lähetetty"]])
+
+(defn- application-information-request []
+  (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
+        request-window-open? (reaction (if-some [visible? @window-visible?]
+                                         visible?
+                                         true))
+        request-state        (subscribe [:state-query [:application :information-request :state]])]
+    (fn []
+      (if @request-window-open?
+        (let [container [:div.application-handling__information-request-container]]
+          (if (= @request-state :submitted)
+            (conj container
+                  [application-information-request-submitted])
+            (conj container
+                  [application-information-request-header]
+                  [application-information-request-recipient]
+                  [application-information-request-subject]
+                  [application-information-request-message]
+                  [application-information-request-submit-button])))
+        [:div.application-handling__information-request-show-container-link
+         [:a
+          {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
+          "Lähetä täydennyspyyntö hakijalle"]]))))
+
 (defn application-review []
-  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])]
+  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
+        review-state       (subscribe [:state-query [:application :review :state]])]
     [:div.application-handling__review
      {:class (when (= :fixed @review-positioning)
-               "application-handling__review-floating animated fadeIn")}
+               "application-handling__review-floating")}
      [:div.application-handling__review-inner-container
       [:div.application-handling__review-outer-container
        [application-review-state]
+       (when (= @review-state "information-request")
+         [application-information-request])
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
        [application-review-inputs]

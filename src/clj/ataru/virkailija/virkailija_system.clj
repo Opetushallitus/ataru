@@ -6,7 +6,9 @@
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [hazelcast-caches caches]]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [ataru.background-job.job :as job]
+            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]))
 
 (defn new-system
   ([]
@@ -42,6 +44,8 @@
      :server (component/using
                (server/new-server)
                [:server-setup :handler])
+
+     :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
 
      (mapcat (fn [cache]
                [(keyword (:name cache)) (component/using cache [:hazelcast])])

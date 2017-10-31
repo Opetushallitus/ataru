@@ -187,6 +187,7 @@
    :lang                            s/Str
    :state                           s/Str
    :score                           (s/maybe s/Int)
+   :new-application-modifications   s/Int
    (s/optional-key :form)           s/Int
    (s/optional-key :preferred-name) (s/maybe s/Str)
    (s/optional-key :last-name)      (s/maybe s/Str)
@@ -298,3 +299,13 @@
 
 (s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
                                          (s/optional-key :errorMessage) s/Str})
+
+(s/defschema InformationRequest {:subject                         s/Str
+                                 :message                         s/Str
+                                 :application-key                 s/Str
+                                 (s/optional-key :id)             s/Int
+                                 (s/optional-key :created-time)   #?(:clj  org.joda.time.DateTime
+                                                                     :cljs s/Str)
+                                 (s/optional-key :first-name)     s/Str
+                                 (s/optional-key :last-name)      s/Str})
+

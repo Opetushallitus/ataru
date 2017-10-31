@@ -1,4 +1,4 @@
-(ns ataru.hakija.background-jobs.email-job
+(ns ataru.background-job.email-job
   "You can send any email with this, it's not tied to any particular email-type"
   (:require
     [ataru.config.url-helper :refer [resolve-url]]
@@ -11,15 +11,15 @@
   (resolve-url :ryhmasahkoposti-service))
 
 (defn- send-email [from recipients subject body]
-  (let [url                 (viestintapalvelu-address)
-        wrapped-recipients  (mapv (fn [rcp] {:email rcp}) recipients)
-        response            @(http/post url {:headers {"content-type" "application/json"}
-                                             :body (json/generate-string {:email {:from from
-                                                                                  :subject subject
-                                                                                  :isHtml true
-                                                                                  :body body}
-                                                                          :recipient wrapped-recipients})})]
-    (if (not= 200 (:status response))
+  (let [url                (viestintapalvelu-address)
+        wrapped-recipients (mapv (fn [rcp] {:email rcp}) recipients)
+        response           @(http/post url {:headers {"content-type" "application/json"}
+                                            :body    (json/generate-string {:email     {:from    from
+                                                                                        :subject subject
+                                                                                        :isHtml  true
+                                                                                        :body    body}
+                                                                            :recipient wrapped-recipients})})]
+    (when (not= 200 (:status response))
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-step [{:keys [from recipients subject body]} _]

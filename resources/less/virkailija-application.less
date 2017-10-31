@@ -302,6 +302,14 @@ and (max-width: 1000px) {
   display: inline-block;
 }
 
+.application-handling__list-row-email-icon {
+  margin-left: 10px;
+}
+
+.application-handling__list-row-email-icon--not-selected {
+  color: @blue-text-color;
+}
+
 .application-handling__list-loading-indicator {
   text-align: center;
   width: 100%;
@@ -330,7 +338,8 @@ and (max-width: 1000px) {
   background-color: @very-light-gray;
   min-width: 407px;
   border-top: solid @review-separator-color 1px;
-  padding: 21px;
+  padding: 15px;
+  width: 360px;
   .application-handling-webkit-scrollbar-mixin;
 }
 
@@ -352,7 +361,7 @@ and (max-width: 1000px) {
   position: fixed;
   top: 43px;
   right: 85px;
-  padding-right: 0;
+  padding-right: 8px;
   height: 100%;
   padding-bottom: 50px;
 }
@@ -472,6 +481,150 @@ and (max-width: 1000px) {
 .application-handling__edit-link {
   width: 100%;
   margin-bottom: 10px;
+}
+
+.application-handling__information-request-container {
+  padding: 15px;
+  background-color: @light-gray;
+  border-radius: 3px;
+  margin-bottom: 15px;
+}
+
+.application-handling__information-request-show-container-link {
+  margin-bottom: 15px;
+}
+
+.application-handling__information-request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.application-handling__information-request-header:not(:last-of-type) {
+  margin-bottom: 8px;
+}
+
+.application-handling__information-request-row {
+  position: relative;
+}
+
+.application-handling__information-request-row--checkmark-container {
+  height: 100px;
+}
+
+.application-handling__information-request-row:not(:last-of-type) {
+  display: flex;
+  margin-bottom: 11px;
+}
+
+.application-handling__information-request-close-button {
+  color: #C2C2C2;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.application-handling__information-request-text-input-container {
+  flex-grow: 1;
+}
+
+.application-handling__information-request-text-input {
+  width: 100%;
+  font-size: 14px;
+  padding: 4px 8px;
+  color: #1A1919;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+.application-handling__information-request-message-area {
+  width: 100%;
+  height: 100px;
+  font-size: 14px;
+  padding: 4px 8px;
+  color: #1A1919;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+.application-handling__send-information-request-button {
+  color: @white;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 40px;
+  width: 100%;
+  margin-right: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.application-handling__send-information-request-button--enabled {
+  background-color: @link-color;
+}
+
+.application-handling__send-information-request-button--disabled {
+  background-color: @section-gray-border;
+}
+
+.application-handling__information-request-info-heading {
+  flex-basis: 95px;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  margin-right: 10px;
+}
+
+@information-request-loader-height: 75px;
+@information-request-checkmark-height: @information-request-loader-height - 21px;
+@information-request-checkmark-width: @information-request-checkmark-height / 2;
+
+.application-handling__information-request-submitted-checkmark {
+  animation-duration: 800ms;
+  animation-timing-function: ease;
+  animation-name: checkmark;
+  transform: scaleX(-1) rotate(135deg);
+  opacity: 1;
+  height: @information-request-checkmark-height;
+  width: @information-request-checkmark-width;
+  transform-origin: left top;
+  border-right: 2px solid #60B660;
+  border-top: 2px solid #60B660;
+  content: '';
+  position: absolute;
+  top: 38px;
+  left: 147px;
+}
+
+.application-handling__information-request-submitted-text {
+  position: absolute;
+  top: 78px;
+  left: 83px;
+}
+
+@keyframes checkmark {
+  0% {
+    height: 0;
+    width: 0;
+    opacity: 1;
+  }
+  20% {
+    height: 0;
+    width: @information-request-checkmark-width;
+    opacity: 1;
+  }
+  40% {
+    height: @information-request-checkmark-height;
+    width: @information-request-checkmark-width;
+    opacity: 1;
+  }
+  100% {
+    height: @information-request-checkmark-height;
+    width: @information-request-checkmark-width;
+    opacity: 1;
+  }
 }
 
 .application-handling__review-state-container {
@@ -595,6 +748,15 @@ and (max-width: 1000px) {
   flex: 0 0 100%;
   max-width: 240px;
   font-style: italic;
+}
+
+.application-handling__event-caption--extra-info {
+  color: @gray;
+}
+
+.application-handling__multi-line-event-caption {
+  display: flex;
+  flex-flow: column nowrap;
 }
 
 .application-handling__review-notes {
