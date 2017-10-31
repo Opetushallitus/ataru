@@ -16,10 +16,7 @@
 
 (def ^:private information-request-translations {:hello-text   {:fi "Hei"
                                                                 :sv "Hej"
-                                                                :en "Hi"}
-                                                 :best-regards {:fi "terveisin"
-                                                                :sv "Med vänliga hälsningar"
-                                                                :en "Best Regards"}})
+                                                                :en "Hi"}})
 
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
