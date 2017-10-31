@@ -89,7 +89,6 @@ WHERE a.haku IS NULL
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-list-by-hakukohde
-<<<<<<< HEAD
 WITH latest_information_request_event AS (
     SELECT DISTINCT ON (application_key) * FROM application_events WHERE new_review_state = 'information-request' ORDER BY application_key, time DESC
 ), latest_modification_by_applicant AS (
