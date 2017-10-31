@@ -1,5 +1,8 @@
-(ns ataru.translations.information-request)
+(ns ataru.translations.information-request
+  (:require [ataru.translations.common-translations :as t]))
 
-(def translations {:hello-text {:fi "Hei"
-                                :sv "Hej"
-                                :en "Hi"}})
+(def translations (merge {:hello-text {:fi "Hei"
+                                       :sv "Hej"
+                                       :en "Hi"}}
+                         (select-keys t/translations [:modify-link-text :do-not-share-warning-text])))
+
