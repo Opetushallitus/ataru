@@ -127,16 +127,6 @@
       {:for id}
       (get lang-versions lang-kwd)]]))
 
-(defn- lang-kwd->link [form lang-kwd & [text]]
-  (let [text (if (nil? text)
-               (-> lang-kwd name clojure.string/upper-case)
-               text)]
-    [:a
-     {:key    (str "preview-" (name lang-kwd))
-      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
-      :target "_blank"}
-     text]))
-
 (defn- get-org-name [org]
   (str
    (get-in org [:name :fi])
@@ -191,6 +181,17 @@
       [:div.editor-form__fold-all-label-right
        "Osiot kiinni"]]]))
 
+(defn- preview-link [form lang-kwd & [text]]
+  (let [text (if (nil? text)
+               (-> lang-kwd name clojure.string/upper-case)
+               text)]
+    [:a.editor-form__preview-button-link
+     {:key    (str "preview-" (name lang-kwd))
+      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
+      :target "_blank"}
+     [:i.zmdi.zmdi-open-in-new]
+     [:span.editor-form__preview-button-text text]]))
+
 (defn- form-toolbar [form]
   (let [fixed? (= :fixed @(subscribe [:state-query [:banner :type]]))
         languages @(subscribe [:editor/languages])]
@@ -202,10 +203,10 @@
             (keys lang-versions))]
       (if (= (count languages) 1)
         [:div.editor-form__preview-buttons
-         (lang-kwd->link form (first languages) "Lomakkeen esikatselu")]
+         (preview-link form (first languages) "Lomakkeen esikatselu")]
         [:div.editor-form__preview-buttons
          [:span "Lomakkeen esikatselu:"]
-         (map (partial lang-kwd->link form) languages)])
+         (map (partial preview-link form) languages)])
       [form-owner-organization form]]
      [:div.editor-form__toolbar-right
       [fold-all]]]))

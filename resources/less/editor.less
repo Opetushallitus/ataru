@@ -344,36 +344,31 @@
   display: flex;
   align-items: center;
   margin-left: 15px;
+}
 
-  a {
-    margin-left: 7px;
-    display: inline-block;
-    min-width: 36px;
-    background: @pale-blue;
-    color: #fff;
-    padding: 1px 7px;
-    border-radius: 3px;
-    font-size: 13px;
-    text-align: center;
-    min-width: 50px;
-  }
+.editor-form__preview-button-link {
+  margin-left: 7px;
+  display: inline-block;
+  min-width: 36px;
+  background: @pale-blue;
+  color: #fff;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 13px;
+  text-align: center;
+  min-width: 50px;
 
-  a:first-child {
+  &:first-child {
     margin-left: 0px;
   }
 
-  a:hover{
+  &:hover {
     background: #00b5ef;
   }
+}
 
-  a:before {
-    content: '\f1a3';
-    font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
-    font-size: inherit;
-    text-rendering: auto;
-    -webkit-font-smoothing: antialiased;
-    padding-right: 5px;
-  }
+.editor-form__preview-button-text {
+  margin-left: 5px;
 }
 
 .editor-form__form-toolbar-checkbox {
