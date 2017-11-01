@@ -217,6 +217,46 @@
   [states name]
   (->> states (filter #(= (first %) name)) first second))
 
+(defn- application-selection-state-cell
+  [selected-hakukohde-oid application]
+  [:span.application-handling__list-row-selection
+   (if selected-hakukohde-oid
+     ; if applications are listed by hakukohde, show only selection reviews for that hakukohde
+     (let [relevant-states    (filter #(and
+                                         (= (:requirement %) "selection-state")
+                                         (= (:hakukohde %) selected-hakukohde-oid))
+                                      (:application-hakukohde-reviews application))
+           grouped-selections (group-by :state relevant-states)
+           labels             (map (fn [[state _]]
+                                     (get-review-state-label-by-name
+                                       application-review-states/application-hakukohde-selection-states state))
+                                   grouped-selections)]
+       (clojure.string/join ", " labels))
+     ; otherwise show reviews for all review-targets (form or hakukohde) with counts
+     (let [application-hakukohteet (set (:hakukohde application))
+           has-hakukohteet?        (not (empty? application-hakukohteet))
+           review-targets          (if has-hakukohteet?
+                                     application-hakukohteet
+                                     #{"form"})
+           relevant-states         (filter #(and
+                                              (= (:requirement %) "selection-state")
+                                              (= has-hakukohteet? (not= (:hakukohde %) "form")))
+                                           (:application-hakukohde-reviews application))
+           unreviewed-targets      (when has-hakukohteet?
+                                     (clojure.set/difference review-targets (set (map :hakukohde relevant-states))))
+           padded-relevant-states  (into relevant-states (map
+                                                           (fn [oid] {:requirement "selection-state"
+                                                                      :hakukohde   oid
+                                                                      :state       "incomplete"})
+                                                           unreviewed-targets))
+           grouped-selections      (group-by :state padded-relevant-states)
+           labels                  (map (fn [[state reviews]]
+                                          (str (get-review-state-label-by-name
+                                                 application-review-states/application-hakukohde-selection-states state)
+                                               " (" (count reviews) ")"))
+                                        grouped-selections)]
+       (clojure.string/join ", " labels)))])
+
 (defn application-list-row [application selected?]
   (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
         day                    (first day-date-time)
@@ -241,7 +281,8 @@
         "Tuntematon")
       (when @show-state-email-icon?
         [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
-         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]]))
+         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]
+     [application-selection-state-cell (:oid @selected-hakukohde) application]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
