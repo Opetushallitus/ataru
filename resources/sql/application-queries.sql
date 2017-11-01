@@ -560,11 +560,11 @@ WHERE key IN (select key from applications where id = :id)
       AND id >= :id;
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
-WITH unnested_hakukohde AS (
+WITH filtered_applications AS (
   SELECT
     a.key AS key,
     a.haku AS haku,
-    unnest(a.hakukohde) AS hakukohde,
+    a.hakukohde AS hakukohde,
     ar.state AS state
   FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
@@ -572,19 +572,42 @@ WITH unnested_hakukohde AS (
   JOIN application_reviews AS ar ON a.key = ar.application_key
   WHERE a.haku IS NOT NULL
     AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+), unnested_hakukohde AS (
+  SELECT
+    key,
+    haku,
+    unnest(hakukohde) AS hakukohde,
+    state
+  FROM filtered_applications
+), haku_counts AS (
+  SELECT
+    haku,
+    count(key) AS application_count,
+    sum(CASE WHEN state = 'unprocessed'
+        THEN 1
+        ELSE 0 END) AS unprocessed,
+    sum(CASE WHEN state IN (:incomplete_states)
+        THEN 1
+        ELSE 0 END) AS incomplete
+  FROM filtered_applications
+  GROUP BY haku
 )
 SELECT
-  haku,
-  hakukohde,
-  count(key) AS application_count,
-  sum(CASE WHEN state = 'unprocessed'
+  uhk.haku,
+  uhk.hakukohde,
+  max(hk.application_count) AS haku_application_count,
+  max(hk.unprocessed) AS haku_unprocessed,
+  max(hk.incomplete) AS haku_incomplete,
+  count(uhk.key) AS application_count,
+  sum(CASE WHEN uhk.state = 'unprocessed'
       THEN 1
       ELSE 0 END) AS unprocessed,
-  sum(CASE WHEN state IN (:incomplete_states)
+  sum(CASE WHEN uhk.state IN (:incomplete_states)
       THEN 1
       ELSE 0 END) AS incomplete
-FROM unnested_hakukohde
-GROUP BY haku, hakukohde;
+FROM unnested_hakukohde AS uhk
+JOIN haku_counts AS hk ON hk.haku = uhk.haku
+GROUP BY uhk.haku, uhk.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 SELECT
