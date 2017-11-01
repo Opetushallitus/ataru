@@ -222,15 +222,20 @@
   [:span.application-handling__list-row-selection
    (if selected-hakukohde-oid
      ; if applications are listed by hakukohde, show only selection reviews for that hakukohde
-     (let [relevant-states    (filter #(and
-                                         (= (:requirement %) "selection-state")
-                                         (= (:hakukohde %) selected-hakukohde-oid))
-                                      (:application-hakukohde-reviews application))
-           grouped-selections (group-by :state relevant-states)
-           labels             (map (fn [[state _]]
-                                     (get-review-state-label-by-name
-                                       application-review-states/application-hakukohde-selection-states state))
-                                   grouped-selections)]
+     (let [relevant-states        (filter #(and
+                                             (= (:requirement %) "selection-state")
+                                             (= (:hakukohde %) selected-hakukohde-oid))
+                                          (:application-hakukohde-reviews application))
+           padded-relevant-states (if (empty? relevant-states)
+                                    [{:requirement "selection-state"
+                                      :hakukohde   selected-hakukohde-oid
+                                      :state       "incomplete"}]
+                                    relevant-states)
+           grouped-selections     (group-by :state padded-relevant-states)
+           labels                 (map (fn [[state _]]
+                                         (get-review-state-label-by-name
+                                           application-review-states/application-hakukohde-selection-states state))
+                                       grouped-selections)]
        (clojure.string/join ", " labels))
      ; otherwise show reviews for all review-targets (form or hakukohde) with counts
      (let [application-hakukohteet (set (:hakukohde application))
