@@ -201,13 +201,26 @@
          (show-email-icon-for-application?))))
 
 (re-frame/reg-sub
-  :application/filtered-applications
-  (fn [db _]
-    (let [applications      (-> db :application :applications)
-          states-to-include (-> db :application :filter set)]
-      (filter #(contains? states-to-include (:state %)) applications))))
-
-(re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
+
+(re-frame/reg-sub
+  :application/filtered-applications
+  (fn [db _]
+    (let [applications                (-> db :application :applications)
+          states-to-include           (-> db :application :filter set)
+          selection-states-to-include (-> db :application :selection-filter set)]
+      (filter
+        (fn [application]
+          (and
+            (contains? states-to-include (:state application))
+            (or
+              (not (empty? (clojure.set/intersection
+                             selection-states-to-include
+                             (set (map :state (:application-hakukohde-reviews application))))))
+              (and
+                (contains? selection-states-to-include "incomplete")
+                (< (count (:application-hakukohde-reviews application))
+                   (count (:hakukohde application)))))))
+        applications))))
