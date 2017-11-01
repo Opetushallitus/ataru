@@ -218,16 +218,21 @@
   (->> states (filter #(= (first %) name)) first second))
 
 (defn application-list-row [application selected?]
-  (let [time      (t/time->str (:created-time application))
-        applicant (str (:preferred-name application) " " (:last-name application))
-        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])]
+  (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
+        day                    (first day-date-time)
+        date-time              (->> day-date-time (rest) (clojure.string/join " "))
+        applicant              (str (:last-name application) " " (:preferred-name application))
+        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
+        selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
                   "application-handling__list-row--selected")}
      [:span.application-handling__list-row--applicant
       (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-     [:span.application-handling__list-row--time time]
+     [:span.application-handling__list-row--time
+      [:span.application-handling__list-row--time-day day]
+      [:span date-time]]
      [:span.application-handling__list-row--score
       (or (:score application) "")]
      [:span.application-handling__list-row--state
