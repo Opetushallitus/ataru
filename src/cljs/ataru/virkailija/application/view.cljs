@@ -328,6 +328,15 @@
                                         (map first application-review-states/application-review-states)
                                         []))]))
 
+(defn- toggle-all-hakukohde-selection-state-filters
+  [all-filters-selected?]
+  (util/update-url-with-query-params {:unselected-selection-states nil})
+  (dispatch [:state-update #(assoc-in % [:application :selection-filter]
+                                      (if all-filters-selected?
+                                        (map first application-review-states/application-hakukohde-selection-states)
+                                        []))]))
+
+
 (defn state-filter-controls []
   (let [application-filters    (subscribe [:state-query [:application :filter]])
         review-state-counts    (subscribe [:state-query [:application :review-state-counts]])
@@ -386,7 +395,7 @@
                     [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                              :type      "checkbox"
                              :checked   all-filters-selected?
-                             :on-change #(toggle-all-application-state-filters (not all-filters-selected?))}]
+                             :on-change #(toggle-all-hakukohde-selection-state-filters (not all-filters-selected?))}]
                     [:span "Kaikki"]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
