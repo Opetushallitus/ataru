@@ -182,7 +182,7 @@
                    "Muuta"])
 
                 :confirm
-                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button.animated.flash
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
                  {:on-click (fn []
                               (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
                                     to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
