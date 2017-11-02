@@ -266,7 +266,7 @@
   (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
         day                    (first day-date-time)
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
-        applicant              (str (:last-name application) " " (:preferred-name application))
+        applicant              (str (:last-name application) ", " (:preferred-name application))
         show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
         selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__list-row
