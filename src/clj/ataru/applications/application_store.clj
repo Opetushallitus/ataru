@@ -398,6 +398,11 @@
        (exec-db :db yesql-get-applications-for-form)
        (mapv unwrap-application)))
 
+(defn get-applications-by-keys
+  [application-keys]
+  (mapv unwrap-application
+        (exec-db :db yesql-get-applications-by-keys {:application_keys application-keys})))
+
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [filtered-states :- [s/Str]
    hakukohde-oid :- s/Str]

@@ -374,6 +374,29 @@ SELECT
 FROM application_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-applications-by-keys
+-- Get list of applications by their keys
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id                           AS form,
+  a.created_time,
+  a.content,
+  a.person_oid,
+  ar.state                            AS state,
+  f.key                               AS form_key,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM ataru.public.application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
+FROM latest_applications AS a
+  JOIN application_reviews AS ar ON a.key = ar.application_key
+  JOIN forms AS f ON a.form_id = f.id
+WHERE a.key IN (:application_keys)
+ORDER BY a.created_time DESC;
+
 -- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
 SELECT

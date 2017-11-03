@@ -388,7 +388,7 @@
       (string/replace #"[\s]+" "-")
       (string/replace #"[^\w-]+" "")))
 
-(defn- create-filename [identifying-part]
+(defn create-filename [identifying-part]
   {:pre [(some? identifying-part)]}
   (str
    (sanitize-name identifying-part)

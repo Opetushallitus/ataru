@@ -264,6 +264,19 @@
                                                     session)))
 
                    (api/context "/excel" []
+                     (api/POST "/" {session :session}
+                       :form-params [application-keys :- s/Str
+                                     filename :- s/Str]
+                       :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
+                       {:status  200
+                        :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                  "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
+                        :body    (application-service/get-excel-report-of-applications-by-key
+                                   (clojure.string/split application-keys #",")
+                                   session
+                                   organization-service
+                                   tarjonta-service)})
+
                      (api/GET "/form/:form-key" {session :session}
                               :path-params [form-key :- s/Str]
                               :query-params [{state :- [s/Str] nil}]

@@ -22,36 +22,23 @@
   [:img.application-handling__review-state-selected-icon
    {:src "/lomake-editori/images/icon_check.png"}])
 
-(defn excel-download-link [applications application-filter]
-  (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
-        hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
-        haku         (subscribe [:state-query [:application :selected-haku]])
-        query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
-    (fn [applications application-filter]
-      (when (> (count applications) 0)
-        (let [url (cond
-                    (some? @form-key)
-                    (str "/lomake-editori/api/applications/excel/form/"
-                         @form-key
-                         (query-string application-filter))
-
-                    (some? @hakukohde)
-                    (str "/lomake-editori/api/applications/excel/hakukohde/"
-                         (:oid @hakukohde)
-                         (query-string application-filter))
-
-                    (some? @haku)
-                    (str "/lomake-editori/api/applications/excel/haku/"
-                         (:oid @haku)
-                         (query-string application-filter)))]
-          [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
-           {:href url}
-           "Lataa Excel"])))))
-
-(defn haku-header []
-  (let [header (subscribe [:application/list-heading])]
-    [:div.application-handling__header-haku-name
-     @header]))
+(defn excel-download-link
+  [applications filename]
+  [:div
+   [:form#excel-download-link
+    {:action "/lomake-editori/api/applications/excel"
+     :method "POST"
+     :target "_blank"}
+    [:input {:type  "hidden"
+             :name  "application-keys"
+             :value (clojure.string/join "," (map :key applications))}]
+    [:input {:type  "hidden"
+             :name  "filename"
+             :value filename}]]
+   [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
+    {:on-click (fn [e]
+                 (.submit (.getElementById js/document "excel-download-link")))}
+    "Lataa Excel"]])
 
 (defn- count-for-application-state
   [from-states state]
@@ -199,14 +186,16 @@
 
                 [:div])])])))))
 
-(defn haku-heading [filtered-applications application-filter]
-  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
+(defn haku-heading
+  []
+  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])
+        applications    (subscribe [:application/filtered-applications])
+        header          (subscribe [:application/list-heading])]
     [:div.application-handling__header
-     [haku-header]
+     [:div.application-handling__header-haku-name @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
-      (when @belongs-to-haku
-        [excel-download-link filtered-applications application-filter])]]))
+      (when @belongs-to-haku [excel-download-link @applications @header])]]))
 
 (defn- select-application
   [application-key]
@@ -910,15 +899,14 @@
             [application-review]]])))))
 
 (defn application []
-  (let [application-filter      (subscribe [:state-query [:application :filter]])
-        search-control-all-page (subscribe [:application/search-control-all-page-view?])
+  (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading @filtered-applications @application-filter]
+         [haku-heading]
          [application-list @filtered-applications]
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
