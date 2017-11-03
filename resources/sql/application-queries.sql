@@ -85,7 +85,7 @@ SELECT
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
-   FROM ataru.public.application_hakukohde_reviews ahr
+   FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
@@ -389,7 +389,7 @@ SELECT
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
-   FROM ataru.public.application_hakukohde_reviews ahr
+   FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
