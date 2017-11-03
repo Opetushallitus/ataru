@@ -136,13 +136,22 @@
                    [:application/select-application application-key]
                    [:application/close-application])})))
 
+(defn- extract-unselected-review-states-from-query
+  [query-param states]
+  (-> (cljs-util/extract-query-params)
+      query-param
+      (clojure.string/split #",")
+      (cljs-util/get-unselected-review-states states)))
+
 (defn fetch-applications-fx [db path]
   {:db   (-> db
              (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :filter] (-> (cljs-util/extract-query-params)
-                                                  :unselected-states
-                                                  (clojure.string/split #",")
-                                                  (cljs-util/get-unselected-review-states review-states/application-review-states))))
+             (assoc-in [:application :filter] (extract-unselected-review-states-from-query
+                                                :unselected-states
+                                                review-states/application-review-states))
+             (assoc-in [:application :selection-filter] (extract-unselected-review-states-from-query
+                                                          :unselected-selection-states
+                                                          review-states/application-hakukohde-selection-states)))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
