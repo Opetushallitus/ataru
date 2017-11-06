@@ -428,10 +428,7 @@
   :application/handle-mass-update-application-reviews
   (fn [{:keys [db]} [_ _]]
     (let [db-application (:application db)
-          selected-type  (cond
-                           (:selected-form-key db-application) :selected-form-key
-                           (:selected-haku db-application) :selected-haku
-                           (:selected-hakukohde db-application) :selected-hakukohde)
+          selected-type  @(subscribe [:application/application-list-selected-by])
           selected-id    (if (= :selected-form-key selected-type)
                            (:selected-form-key db-application)
                            (-> db-application selected-type :oid))

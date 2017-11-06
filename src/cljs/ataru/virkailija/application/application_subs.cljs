@@ -20,6 +20,15 @@
          (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
+  :application/application-list-selected-by
+  (fn [db]
+    (let [db-application (:application db)]
+      (cond
+        (:selected-form-key db-application) :selected-form-key
+        (:selected-haku db-application) :selected-haku
+        (:selected-hakukohde db-application) :selected-hakukohde))))
+
+(re-frame/reg-sub
  :application/application-list-belongs-to-haku?
  (fn [db]
    (boolean
