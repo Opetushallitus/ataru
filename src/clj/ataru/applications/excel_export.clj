@@ -16,7 +16,8 @@
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
             [taoensso.timbre :refer [spy debug]]
-            [ataru.application.review-states :as review-states]))
+            [ataru.application.review-states :as review-states]
+            [ataru.application.application-states :as application-states]))
 
 (def tz (t/default-time-zone))
 
@@ -39,23 +40,13 @@
          (filter #(= (first %) state)) first second)
     "Tuntematon"))
 
-(defn- get-review-state-label-by-name
-  [states name]
-  (->> states (filter #(= (first %) name)) first second))
-
 (defn selection-state-formatter
-  [application-review-states]
-  (let [selection-reviews         (filter
-                                    (fn [{:keys [requirement]}]
-                                      (= (name requirement) "selection-state"))
-                                    application-review-states)
-        grouped-selection-reviews (group-by :state selection-reviews)
-        labels                    (map (fn [[state reviews]]
-                                         [(get-review-state-label-by-name
-                                            review-states/application-hakukohde-selection-states state)
-                                          (count reviews)])
-                                       grouped-selection-reviews)]
-    (println "labels" labels)
+  [application]
+  (let [labels (application-states/generate-labels-for-hakukohde-selection-reviews
+                 "selection-state"
+                 review-states/application-hakukohde-selection-states
+                 application
+                 nil)]
     (clojure.string/join
       "\n"
       (map
@@ -88,7 +79,6 @@
     :field     :state
     :format-fn application-state-formatter}
    {:label     "Valinnan tila"
-    :field     :application-hakukohde-reviews
     :format-fn selection-state-formatter}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
@@ -182,7 +172,12 @@
 
 (defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
-    (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
+    (let [meta-value ((or
+                        (:format-fn meta-field)
+                        identity)
+                       ((or (:field meta-field)
+                            identity)
+                         application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
