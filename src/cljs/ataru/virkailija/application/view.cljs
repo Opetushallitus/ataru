@@ -660,9 +660,14 @@
           "Lähetä täydennyspyyntö hakijalle"]]))))
 
 (defn- application-resend-modify-link []
-  (let [recipient (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])]
-    [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--enabled
-     {:on-click #(dispatch [:application/resend-modify-application-link])}
+  (let [recipient (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
+        enabled?  (subscribe [:application/resend-modify-application-link-enabled?])]
+    [:button.application-handling__send-information-request-button
+     {:on-click #(dispatch [:application/resend-modify-application-link])
+      :disabled (not @enabled?)
+      :class    (if @enabled?
+                  "application-handling__send-information-request-button--enabled"
+                  "application-handling__send-information-request-button--disabled")}
      (str "Lähetä muokkauslinkki hakijalle " @recipient)]))
 
 (defn application-review []

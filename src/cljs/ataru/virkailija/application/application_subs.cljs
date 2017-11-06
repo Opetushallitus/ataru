@@ -206,3 +206,8 @@
     (let [applications      (-> db :application :applications)
           states-to-include (-> db :application :filter set)]
       (filter #(contains? states-to-include (:state %)) applications))))
+
+(re-frame/reg-sub
+  :application/resend-modify-application-link-enabled?
+  (fn [db _]
+    (-> db :application :modify-application-link :state nil?)))
