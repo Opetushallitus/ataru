@@ -4,7 +4,6 @@
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
-            [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
@@ -16,7 +15,8 @@
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy debug]]))
+            [taoensso.timbre :refer [spy debug]]
+            [ataru.application.review-states :as review-states]))
 
 (def tz (t/default-time-zone))
 
@@ -32,10 +32,38 @@
   ([date-time]
     (time-formatter date-time modified-time-format)))
 
-(defn state-formatter [state]
+(defn application-state-formatter
+  [state]
   (or
-    (->> application-review-states (filter #(= (first %) state)) first second)
+    (->> review-states/application-review-states
+         (filter #(= (first %) state)) first second)
     "Tuntematon"))
+
+(defn- get-review-state-label-by-name
+  [states name]
+  (->> states (filter #(= (first %) name)) first second))
+
+(defn selection-state-formatter
+  [application-review-states]
+  (let [selection-reviews         (filter
+                                    (fn [{:keys [requirement]}]
+                                      (= (name requirement) "selection-state"))
+                                    application-review-states)
+        grouped-selection-reviews (group-by :state selection-reviews)
+        labels                    (map (fn [[state reviews]]
+                                         [(get-review-state-label-by-name
+                                            review-states/application-hakukohde-selection-states state)
+                                          (count reviews)])
+                                       grouped-selection-reviews)]
+    (println "labels" labels)
+    (clojure.string/join
+      "\n"
+      (map
+        (fn [[label count]]
+          (str label
+               (when (< 1 count)
+                 (str ": " count))))
+        labels))))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -56,9 +84,12 @@
    {:label     "Lähetysaika"
     :field     :created-time
     :format-fn time-formatter}
-   {:label     "Tila"
+   {:label     "Hakemuksen tila"
     :field     :state
-    :format-fn state-formatter}
+    :format-fn application-state-formatter}
+   {:label     "Valinnan tila"
+    :field     :application-hakukohde-reviews
+    :format-fn selection-state-formatter}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
     :format-fn str}])
