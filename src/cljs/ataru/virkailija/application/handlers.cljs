@@ -419,3 +419,13 @@
                                   :to-state         to-state}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+
+(reg-event-fx
+  :application/resend-modify-application-link
+  (fn [{:keys [db]} _]
+    (let [application-key (-> db :application :selected-key)]
+      {:db   (assoc-in db [:application :modify-application-link :state] :submitting)
+       :http {:method              :post
+              :params              {:application-key application-key}
+              :path                (str "/lomake-editori/api/applications/" application-key "/resend-modify-link")
+              :handler-or-dispatch :application/handle-resend-modify-application-link-response}})))

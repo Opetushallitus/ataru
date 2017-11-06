@@ -659,6 +659,14 @@
           {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
           "Lähetä täydennyspyyntö hakijalle"]]))))
 
+(defn- application-resend-modify-link []
+  [:div.application-handling__review-state-container
+   [:a
+    {:on-click (fn [event]
+                 (.preventDefault event)
+                 (dispatch [:application/resend-modify-application-link]))}
+    "Lähetä muokkauslinkki hakijalle"]])
+
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
         review-state       (subscribe [:state-query [:application :review :state]])]
@@ -670,6 +678,7 @@
        [application-review-state]
        (when (= @review-state "information-request")
          [application-information-request])
+       [application-resend-modify-link]
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
        [application-review-inputs]
