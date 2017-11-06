@@ -27,8 +27,7 @@
   [:div
    [:form#excel-download-link
     {:action "/lomake-editori/api/applications/excel"
-     :method "POST"
-     :target "_blank"}
+     :method "POST"}
     [:input {:type  "hidden"
              :name  "application-keys"
              :value (clojure.string/join "," (map :key applications))}]
