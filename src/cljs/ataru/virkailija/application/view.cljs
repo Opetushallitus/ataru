@@ -673,7 +673,8 @@
 (defn- application-resend-modify-link-confirmation []
   (let [state (subscribe [:state-query [:application :modify-application-link :state]])]
     (when (= @state :submitted)
-      [:div.application-handling__resend-modify-link-confirmation.application-handling__button
+      [:div.application-handling__resend-modify-link-confirmation.application-handling__button.animated.fadeIn
+       [:div.application-handling__resend-modify-link-confirmation-indicator]
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
 (defn application-review []
