@@ -435,6 +435,13 @@
   (fn [{:keys [db]} _]
     {:db             (assoc-in db [:application :modify-application-link :state] :submitted)
      :dispatch-later [{:ms       3000
+                       :dispatch [:application/fade-out-resend-modify-application-link-confirmation-dialog]}]}))
+
+(reg-event-fx
+  :application/fade-out-resend-modify-application-link-confirmation-dialog
+  (fn [{:keys [db]} _]
+    {:db (assoc-in db [:application :modify-application-link :state] :disappearing)
+     :dispatch-later [{:ms 1000
                        :dispatch [:application/reset-resend-modify-application-link-state]}]}))
 
 (reg-event-db
