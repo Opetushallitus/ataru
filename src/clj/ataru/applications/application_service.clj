@@ -13,7 +13,8 @@
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.virkailija.user.ldap-client :as ldap]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [ataru.information-request.information-request-store :as information-request-store])
+    [ataru.information-request.information-request-store :as information-request-store]
+    [ataru.hakija.application-email-confirmation :as email])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -169,3 +170,8 @@
       [:edit-applications]))
   (application-store/mass-update-application-states session application-keys from-state to-state)
   {})
+
+(defn send-modify-application-link-email [application-key session organization-service]
+  (when-let [application-id (:id (aac/get-latest-application-by-key application-key session organization-service))]
+    (email/start-email-submit-confirmation-job application-id)
+    true))
