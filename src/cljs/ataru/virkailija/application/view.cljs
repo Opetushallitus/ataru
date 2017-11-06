@@ -16,7 +16,8 @@
     [ataru.cljs-util :as util]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
     [goog.string.format]
-    [ataru.application.review-states :as review-states]))
+    [ataru.application.review-states :as review-states]
+    [ataru.application.application-states :as application-states]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -201,65 +202,23 @@
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
-(defn- get-review-state-label-by-name
-  [states name]
-  (->> states (filter #(= (first %) name)) first second))
-
 (defn- application-selection-state-cell
   [selected-hakukohde-oid application]
-  (into [:span.application-handling__list-row-selection
-         (if selected-hakukohde-oid
-           ; if applications are listed by hakukohde, show only selection reviews for that hakukohde
-           (let [relevant-states        (filter #(and
-                                                   (= (:requirement %) "selection-state")
-                                                   (= (:hakukohde %) selected-hakukohde-oid))
-                                                (:application-hakukohde-reviews application))
-                 padded-relevant-states (if (empty? relevant-states)
-                                          [{:requirement "selection-state"
-                                            :hakukohde   selected-hakukohde-oid
-                                            :state       "incomplete"}]
-                                          relevant-states)
-                 grouped-selections     (group-by :state padded-relevant-states)
-                 labels                 (map (fn [[state _]]
-                                               (get-review-state-label-by-name
-                                                 application-review-states/application-hakukohde-selection-states state))
-                                             grouped-selections)]
-             (map
-               (fn [label]
-                 [:span.application-handling__application-state-cell label])
-               labels))
-           ; otherwise show reviews for all review-targets (form or hakukohde) with counts
-           (let [application-hakukohteet (set (:hakukohde application))
-                 has-hakukohteet?        (not (empty? application-hakukohteet))
-                 review-targets          (if has-hakukohteet?
-                                           application-hakukohteet
-                                           #{"form"})
-                 relevant-states         (filter #(and
-                                                    (= (:requirement %) "selection-state")
-                                                    (= has-hakukohteet? (not= (:hakukohde %) "form")))
-                                                 (:application-hakukohde-reviews application))
-                 unreviewed-targets      (when has-hakukohteet?
-                                           (clojure.set/difference review-targets (set (map :hakukohde relevant-states))))
-                 padded-relevant-states  (into relevant-states (map
-                                                                 (fn [oid] {:requirement "selection-state"
-                                                                            :hakukohde   oid
-                                                                            :state       "incomplete"})
-                                                                 unreviewed-targets))
-                 grouped-selections      (group-by :state padded-relevant-states)
-                 labels                  (map (fn [[state reviews]]
-                                                [(get-review-state-label-by-name
-                                                   application-review-states/application-hakukohde-selection-states state)
-                                                 (count reviews)])
-                                              grouped-selections)]
-             (map
-               (fn [[label count]]
-                 [:span.application-handling__application-state-cell
-                  {:key (str "application-selection-state-cell-" label)}
-                  label
-                  (when (< 1 count)
-                    [:span.application-handling__application-state-cell-count
-                     [:span.application-handling__application-state-cell-count-inner count]])])
-               labels)))]))
+  (let [labels (application-states/generate-labels-for-hakukohde-selection-reviews
+                 "selection-state"
+                 application-review-states/application-hakukohde-selection-states
+                 application
+                 selected-hakukohde-oid)]
+    (into
+      [:span.application-handling__list-row--selection]
+      (map
+        (fn [[label count]]
+          [:span.application-handling__application-state-cell
+           label
+           (when (< 1 count)
+             [:span.application-handling__application-state-cell-count
+              [:span.application-handling__application-state-cell-count-inner count]])])
+        labels))))
 
 (defn application-list-row [application selected?]
   (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
@@ -282,7 +241,8 @@
      [:span.application-handling__list-row--state
       [:span.application-handling__application-state-cell
        (or
-         (get-review-state-label-by-name application-review-states/application-review-states (:state application))
+         (application-states/get-review-state-label-by-name
+           application-review-states/application-review-states (:state application))
          "Tuntematon")]
       (when @show-state-email-icon?
         [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
@@ -492,7 +452,7 @@
                 (opened-review-state-list :state review-state application-review-states/application-review-states))]
          (review-state-selected-row
            list-click
-           (get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
+           (application-states/get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
 
 (defn- find-hakukohde-by-oid
   [hakukohteet hakukohde-oid]
@@ -563,7 +523,7 @@
                   (opened-review-state-list kw review-state-for-current-hakukohde states))]
            (review-state-selected-row
              list-click
-             (get-review-state-label-by-name
+             (application-states/get-review-state-label-by-name
                states
                (or @review-state-for-current-hakukohde (ffirst states)))))]))))
 
@@ -590,7 +550,9 @@
 (defn event-caption [event]
   (match event
          {:event-type "review-state-change"}
-         (let [label (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))]
+         (let [label (application-states/get-review-state-label-by-name
+                       application-review-states/application-review-states
+                       (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
              [:span.application-handling__event-caption label (virkailija-initials-span event)]
              label))
@@ -610,7 +572,7 @@
                     (filter #(= (keyword (:review-key event)) (first %)))
                     (first)
                     (second)) ": "
-               (get-review-state-label-by-name
+               (application-states/get-review-state-label-by-name
                  (concat application-review-states/application-hakukohde-review-states
                          application-review-states/application-hakukohde-eligibility-states
                          application-review-states/application-hakukohde-selection-states)
