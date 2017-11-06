@@ -668,7 +668,8 @@
       :class    (if @enabled?
                   "application-handling__send-information-request-button--enabled"
                   "application-handling__send-information-request-button--disabled")}
-     (str "Lähetä muokkauslinkki hakijalle " @recipient)]))
+     [:span "Lähetä muokkauslinkki hakijalle"]
+     [:span.application-handling__resend-modify-application-link-email-text @recipient]]))
 
 (defn- application-resend-modify-link-confirmation []
   (let [state (subscribe [:state-query [:application :modify-application-link :state]])]
