@@ -521,7 +521,7 @@
    [:span.application-handling__event-caption caption]])
 
 (defn event-row [event]
-  (let [time-str (t/time->short-str (:time event))
+  (let [time-str (t/time->short-str (or (:time event) (:created-time event)))
         caption (event-caption event)]
     (to-event-row time-str caption)))
 
