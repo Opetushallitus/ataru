@@ -425,7 +425,7 @@
     }
 
     function editLink() {
-      return testFrame().find('.application-handling__edit-link')
+      return testFrame().find('.application-handling__link-button.application-handling__button:contains("Muokkaa hakemusta")')
     }
 
     function directFormHakuList() {
