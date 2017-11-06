@@ -263,61 +263,18 @@
                      (ok (information-request/store information-request
                                                     session)))
 
-                   (api/context "/excel" []
-                     (api/POST "/" {session :session}
-                       :form-params [application-keys :- s/Str
-                                     filename :- s/Str]
-                       :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-                       {:status  200
-                        :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                  "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
-                        :body    (application-service/get-excel-report-of-applications-by-key
-                                   (clojure.string/split application-keys #",")
-                                   session
-                                   organization-service
-                                   tarjonta-service)})
-
-                     (api/GET "/form/:form-key" {session :session}
-                              :path-params [form-key :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the form and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-form form-key))}
-                               :body    (application-service/get-excel-report-of-applications-by-form
-                                          form-key
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})
-
-                     (api/GET "/hakukohde/:hakukohde-oid" {session :session}
-                              :path-params [hakukohde-oid :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the hakukohde and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session organization-service tarjonta-service))}
-                               :body    (application-service/get-excel-report-of-applications-by-hakukohde
-                                          hakukohde-oid
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})
-
-                     (api/GET "/haku/:haku-oid" {session :session}
-                              :path-params [haku-oid :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the haku and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session organization-service tarjonta-service))}
-                               :body    (application-service/get-excel-report-of-applications-by-haku
-                                          haku-oid
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})))
+                   (api/POST "/excel" {session :session}
+                     :form-params [application-keys :- s/Str
+                                   filename :- s/Str]
+                     :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
+                     {:status  200
+                      :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
+                      :body    (application-service/get-excel-report-of-applications-by-key
+                                 (clojure.string/split application-keys #",")
+                                 session
+                                 organization-service
+                                 tarjonta-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
