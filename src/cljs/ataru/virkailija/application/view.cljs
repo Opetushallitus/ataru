@@ -574,7 +574,7 @@
 
 (defn- application-modify-link []
   (let [application-key (subscribe [:state-query [:application :selected-key]])]
-    [:a.application-handling__link-button.application-handling__edit-link
+    [:a.application-handling__link-button.application-handling__button
      {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
       :target "_blank"}
      "Muokkaa hakemusta"]))
@@ -662,13 +662,19 @@
 (defn- application-resend-modify-link []
   (let [recipient (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         enabled?  (subscribe [:application/resend-modify-application-link-enabled?])]
-    [:button.application-handling__send-information-request-button
+    [:button.application-handling__send-information-request-button.application-handling__button
      {:on-click #(dispatch [:application/resend-modify-application-link])
       :disabled (not @enabled?)
       :class    (if @enabled?
                   "application-handling__send-information-request-button--enabled"
                   "application-handling__send-information-request-button--disabled")}
      (str "Lähetä muokkauslinkki hakijalle " @recipient)]))
+
+(defn- application-resend-modify-link-confirmation []
+  (let [state (subscribe [:state-query [:application :modify-application-link :state]])]
+    (when (= @state :submitted)
+      [:div.application-handling__resend-modify-link-confirmation.application-handling__button
+       "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
@@ -686,6 +692,7 @@
        [application-review-inputs]
        [application-modify-link]
        [application-resend-modify-link]
+       [application-resend-modify-link-confirmation]
        [application-review-events]]]]))
 
 (defn floating-application-review-placeholder

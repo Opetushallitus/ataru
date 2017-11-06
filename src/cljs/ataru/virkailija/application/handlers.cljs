@@ -429,3 +429,15 @@
               :params              {:application-key application-key}
               :path                (str "/lomake-editori/api/applications/" application-key "/resend-modify-link")
               :handler-or-dispatch :application/handle-resend-modify-application-link-response}})))
+
+(reg-event-fx
+  :application/handle-resend-modify-application-link-response
+  (fn [{:keys [db]} _]
+    {:db             (assoc-in db [:application :modify-application-link :state] :submitted)
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/reset-resend-modify-application-link-state]}]}))
+
+(reg-event-db
+  :application/reset-resend-modify-application-link-state
+  (fn [db _]
+    (assoc-in db [:application :modify-application-link :state] nil)))
