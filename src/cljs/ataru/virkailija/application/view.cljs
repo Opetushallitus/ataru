@@ -660,12 +660,9 @@
           "Lähetä täydennyspyyntö hakijalle"]]))))
 
 (defn- application-resend-modify-link []
-  [:div.application-handling__review-state-container
-   [:a
-    {:on-click (fn [event]
-                 (.preventDefault event)
-                 (dispatch [:application/resend-modify-application-link]))}
-    "Lähetä muokkauslinkki hakijalle"]])
+  [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--enabled
+   {:on-click #(dispatch [:application/resend-modify-application-link])}
+   "Lähetä muokkauslinkki hakijalle"])
 
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
@@ -678,11 +675,11 @@
        [application-review-state]
        (when (= @review-state "information-request")
          [application-information-request])
-       [application-resend-modify-link]
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
        [application-review-inputs]
        [application-modify-link]
+       [application-resend-modify-link]
        [application-review-events]]]]))
 
 (defn floating-application-review-placeholder
