@@ -432,8 +432,11 @@
 
 (reg-event-fx
   :application/handle-resend-modify-application-link-response
-  (fn [{:keys [db]} _]
-    {:db             (assoc-in db [:application :modify-application-link :state] :submitted)
+  (fn [{:keys [db]} [_ response]]
+    {:db             (-> db
+                         (assoc-in [:application :modify-application-link :state] :submitted)
+                         (update-in [:application :events] (fnil identity []))
+                         (update-in [:application :events] #(conj % response)))
      :dispatch-later [{:ms       3000
                        :dispatch [:application/fade-out-resend-modify-application-link-confirmation-dialog]}]}))
 

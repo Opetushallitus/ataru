@@ -507,6 +507,9 @@
                  (:new-review-state event)))
           (virkailija-initials-span event)]
 
+         {:event-type "modification-link-sent"}
+         "Hakemuksen muokkauslinkki lähetetty hakijalle"
+
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
           [:span.application-handling__event-caption "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]

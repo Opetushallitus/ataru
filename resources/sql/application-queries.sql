@@ -532,7 +532,7 @@ JOIN latest_applications AS a ON a.form_id = f.id
 JOIN application_reviews AS ar ON ar.application_key = a.key
 WHERE ar.id = :review_id;
 
--- name: yesql-add-application-event!
+-- name: yesql-add-application-event<!
 -- Add application event
 INSERT INTO application_events (application_key, event_type, new_review_state, virkailija_oid, hakukohde, review_key)
 VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :hakukohde, :review_key);

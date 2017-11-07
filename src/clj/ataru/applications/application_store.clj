@@ -15,7 +15,8 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.dob :as dob]
             [crypto.random :as crypto]
-            [taoensso.timbre :refer [info]]))
+            [taoensso.timbre :refer [info]]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (defqueries "sql/application-queries.sql")
 (defqueries "sql/virkailija-credentials-queries.sql")
@@ -91,7 +92,7 @@
       (audit-log/log {:new       new-application
                       :operation audit-log/operation-new
                       :id        (extract-email new-application)})
-      (yesql-add-application-event! {:application_key  key
+      (yesql-add-application-event<! {:application_key  key
                                      :event_type       "received-from-applicant"
                                      :new_review_state nil
                                      :virkailija_oid   nil
@@ -139,7 +140,7 @@
       (info (str "Updating application with key "
                  (:key old-application)
                  " based on valid application secret, retaining key and secret from previous version"))
-      (yesql-add-application-event! {:application_key  key
+      (yesql-add-application-event<! {:application_key  key
                                      :event_type       (if updated-by-applicant?
                                                          "updated-by-applicant"
                                                          "updated-by-virkailija")
@@ -346,7 +347,7 @@
                                  :virkailija_oid   (:oid virkailija)
                                  :hakukohde        nil
                                  :review_key       nil}]
-          (yesql-add-application-event!
+          (yesql-add-application-event<!
             application-event
             connection)
           (audit-log/log {:new              application-event
@@ -383,7 +384,7 @@
                                                        :review_key       hakukohde-review-requirement
                                                        :hakukohde        (:hakukohde review-to-store)
                                                        :virkailija_oid   (:oid virkailija)}]
-                                  (yesql-add-application-event!
+                                  (yesql-add-application-event<!
                                     hakukohde-event
                                     connection)
                                   (audit-log/log {:new              hakukohde-event
@@ -534,7 +535,7 @@
                                         (if existing-review
                                           (yesql-save-application-review! new-review connection)
                                           (yesql-add-application-review! new-review connection))
-                                        (yesql-add-application-event!
+                                        (yesql-add-application-event<!
                                           application-event
                                           connection)
                                         {:new              application-event
@@ -544,3 +545,18 @@
                                     application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))))
+
+(defn add-application-event [event session]
+  (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
+    (let [conn       {:connection db}
+          virkailija (virkailija-edit/upsert-virkailija session)]
+      (-> {:event_type       nil
+           :new_review_state nil
+           :virkailija_oid   (:oid virkailija)
+           :hakukohde        nil
+           :review_key       nil}
+          (merge (transform-keys ->snake_case event))
+          (yesql-add-application-event<! conn)
+          (dissoc :virkailija_oid)
+          (merge (select-keys virkailija [:first_name :last_name]))
+          (->kebab-case-kw)))))
