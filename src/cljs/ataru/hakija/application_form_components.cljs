@@ -211,7 +211,7 @@
                       (when (or @cannot-edit?
                                 (and last? first-is-empty?))
                         {:disabled true}))]
-                   (when value
+                   (when (and value (not @cannot-edit?))
                      [:a.application__form-repeatable-text--addremove
                       [:i.zmdi.zmdi-close.zmdi-hc-lg
                        {:data-idx (inc idx)
