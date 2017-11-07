@@ -213,11 +213,11 @@
       [:span.application-handling__list-row--selection]
       (map
         (fn [[label count]]
-          [:span.application-handling__application-state-cell
-           label
-           (when (< 1 count)
-             [:span.application-handling__application-state-cell-count
-              [:span.application-handling__application-state-cell-count-inner count]])])
+          [:span.application-handling__selection-state-cell
+           (str
+             label
+             (when (< 1 count)
+               (str " " count)))])
         labels))))
 
 (defn application-list-row [application selected?]
@@ -314,7 +314,7 @@
         [:span.application-handling__filter-state
          [:a
           {:on-click toggle-filter-opened}
-          (str "Tila" (when-not all-filters-selected? " *"))]
+          (str "Hakemus" (when-not all-filters-selected? " *"))]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
