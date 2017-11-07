@@ -317,7 +317,12 @@
        [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
-  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
+  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
+        cannot-edit? (->> children
+                          (map (fn [child]
+                                 @(subscribe [:application/cannot-edit-answer?
+                                              (keyword (:id child))])))
+                          (some identity))]
     [:div.application__question-group
      [scroll-to-anchor field-descriptor]
      [:div
@@ -328,16 +333,17 @@
           field-descriptor
           children
           idx
-          (< 1 @row-count)]))]
-     [:div.application__add-question-group-row
-      [:a {:href     "#"
-           :on-click (fn add-question-group-row [event]
-                       (.preventDefault event)
-                       (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-       [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-       @(subscribe [:application/get-i18n-text {:fi "Lisää"
-                                                :sv "Lägg till"
-                                                :en "Add more"}])]]]))
+          (and (< 1 @row-count) (not cannot-edit?))]))]
+     (when (not cannot-edit?)
+       [:div.application__add-question-group-row
+        [:a {:href     "#"
+             :on-click (fn add-question-group-row [event]
+                         (.preventDefault event)
+                         (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+         [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+         @(subscribe [:application/get-i18n-text {:fi "Lisää"
+                                                  :sv "Lägg till"
+                                                  :en "Add more"}])]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
