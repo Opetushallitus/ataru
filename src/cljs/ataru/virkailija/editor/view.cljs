@@ -127,16 +127,6 @@
       {:for id}
       (get lang-versions lang-kwd)]]))
 
-(defn- lang-kwd->link [form lang-kwd & [text]]
-  (let [text (if (nil? text)
-               (-> lang-kwd name clojure.string/upper-case)
-               text)]
-    [:a
-     {:key    (str "preview-" (name lang-kwd))
-      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
-      :target "_blank"}
-     text]))
-
 (defn- get-org-name [org]
   (str
    (get-in org [:name :fi])
@@ -175,24 +165,51 @@
                             (get-org-name org)])
                          @organizations))])])))))
 
-(defn form-toolbar [form]
-  (let [languages (subscribe [:editor/languages])
-        organizations (subscribe [:state-query [:editor :user-info :organizations]])]
-    (fn [form]
-      (let [languages @languages]
-        [:div.editor-form__toolbar
-         [:div.editor-form__language-controls
-          [:div.editor-form__form-toolbar-checkbox-container
-           (map (fn [lang-kwd]
-                  (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
-                (keys lang-versions))]
-          [:span.editor-form__form-toolbar-header-text
-           (if (= (count languages) 1)
-             (lang-kwd->link form (first languages) "Lomakkeen esikatselu")
-             [:span
-              "Lomakkeen esikatselu  "
-              (map (partial lang-kwd->link form) languages)])]]
-         [form-owner-organization form]]))))
+(defn- fold-all []
+  (let [all-folded? @(subscribe [:editor/all-folded])]
+    [:div.editor-form__fold-all
+     [:div.editor-form__fold-all-slider
+      {:class (if all-folded?
+                "editor-form__fold-all-slider-left"
+                "editor-form__fold-all-slider-right")}
+      [:div.editor-form__fold-all-label-left
+       "Osiot auki"]
+      [:div.editor-form__fold-all-divider
+       {:on-click (if all-folded?
+                    #(dispatch [:editor/unfold-all])
+                    #(dispatch [:editor/fold-all]))}]
+      [:div.editor-form__fold-all-label-right
+       "Osiot kiinni"]]]))
+
+(defn- preview-link [form lang-kwd & [text]]
+  (let [text (if (nil? text)
+               (-> lang-kwd name clojure.string/upper-case)
+               text)]
+    [:a.editor-form__preview-button-link
+     {:key    (str "preview-" (name lang-kwd))
+      :href   (str js/config.applicant.service_url "/hakemus/" (:key form) "?lang=" (name lang-kwd))
+      :target "_blank"}
+     [:i.zmdi.zmdi-open-in-new]
+     [:span.editor-form__preview-button-text text]]))
+
+(defn- form-toolbar [form]
+  (let [fixed? (= :fixed @(subscribe [:state-query [:banner :type]]))
+        languages @(subscribe [:editor/languages])]
+    [:div.editor-form__toolbar
+     [:div.editor-form__toolbar-left
+      [:div.editor-form__language-controls
+       (map (fn [lang-kwd]
+              (lang-checkbox lang-kwd (some? (some #{lang-kwd} languages))))
+            (keys lang-versions))]
+      (if (= (count languages) 1)
+        [:div.editor-form__preview-buttons
+         (preview-link form (first languages) "Lomakkeen esikatselu")]
+        [:div.editor-form__preview-buttons
+         [:span "Lomakkeen esikatselu:"]
+         (map (partial preview-link form) languages)])
+      [form-owner-organization form]]
+     [:div.editor-form__toolbar-right
+      [fold-all]]]))
 
 (defn form-in-use-warning
   [form]
@@ -218,23 +235,23 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
-(defn editor-panel []
-  (let [form         (subscribe [:editor/selected-form])]
-    (fn []
-      (when @form ;; Do not attempt to show form edit controls when there is no selected form (form list is empty)
-        [:div.editor-form__panel-container
-         [close-form]
-         [:div
-          [editor-name]
-          ^{:key (str "form-toolbar-" (:key @form))}
-          [form-toolbar @form]
-          ^{:key (str "form-in-use-warning-" (:key @form))}
-          [form-in-use-warning @form]]
-         [c/editor]]))))
+(defn- editor-panel [form]
+  [:div.editor-form__panel-container
+   [close-form]
+   [:div
+    [editor-name]
+    [form-in-use-warning form]]
+   [c/editor]])
 
 (defn editor []
+  (let [form @(subscribe [:editor/selected-form])]
     [:div
      [:div.editor-form__container.panel-content
       [form-header-row]
       [form-list]]
-     [editor-panel]])
+     (when form
+       ^{:key "editor-panel"}
+       [editor-panel form])
+     (when form
+       ^{:key "form-toolbar"}
+       [form-toolbar form])]))

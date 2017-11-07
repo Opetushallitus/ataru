@@ -183,12 +183,28 @@
               nil)))
 
 (defn- text-header
-  [label path & {:keys [component-wrapped? draggable] :or {draggable true}}]
+  [label path & {:keys [component-wrapped?
+                        draggable
+                        sub-header
+                        show-sub-header?]
+                 :or {draggable true
+                      sub-header nil
+                      show-sub-header? false}}]
   [:div.editor-form__header-wrapper
    {:draggable     draggable
     :on-drag-start (on-drag-start path)
     :on-drag-over  prevent-default}
-   [:header.editor-form__component-header label]
+   [:header.editor-form__component-header
+    [:span.editor-form__component-main-header
+     label]
+    [:span.editor-form__component-sub-header
+     {:class (if show-sub-header?
+               "editor-form__component-sub-header-visible"
+               "editor-form__component-sub-header-hidden")}
+     (->> [:fi :sv :en]
+          (map (partial get sub-header))
+          (remove clojure.string/blank?)
+          (clojure.string/join " - "))]]
    [:a.editor-form__component-header-link
     {:on-click (fn [event]
                  (let [target (if component-wrapped?
@@ -525,6 +541,7 @@
 (defn component-group [content path children]
   (let [languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
+        all-folded        (subscribe [:editor/all-folded])
         animation-effect  (fade-out-effect path)
         group-header-text (case (:fieldClass content)
                             "wrapperElement" "Lomakeosio"
@@ -535,24 +552,38 @@
     (fn [content path children]
       (let [languages @languages
             value     @value]
-        [:div.editor-form__section_wrapper
-         {:class @animation-effect}
-         [:div.editor-form__component-wrapper
-          [text-header group-header-text path :component-wrapped? true]
-          [:div.editor-form__text-field-wrapper.editor-form__text-field--section
-           [:header.editor-form__component-item-header header-label-text]
-           (input-fields-with-lang
-             (fn [lang]
-               [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
-             languages
-             :header? true)]]
-         children
-         [drag-n-drop-spacer (conj path :children (count children))]
-         (case (:fieldClass content)
-           "wrapperElement" [toolbar/add-component (conj path :children (count children))]
-           "questionGroup" [toolbar/question-group-toolbar path
-                            (fn [generate-fn]
-                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))])]))))
+        (if @all-folded
+          [:div.editor-form__section_wrapper
+           {:class @animation-effect}
+           [:div.editor-form__component-wrapper
+            [text-header group-header-text path
+             :component-wrapped? true
+             :sub-header (:label value)
+             :show-sub-header? true]]]
+          [:div.editor-form__section_wrapper
+           {:class @animation-effect}
+           [:div.editor-form__component-wrapper
+            [text-header group-header-text path
+             :component-wrapped? true
+             :sub-header (:label value)
+             :show-sub-header? @all-folded]
+            [:div.editor-form__text-field-wrapper.editor-form__text-field--section
+             [:header.editor-form__component-item-header header-label-text]
+             (input-fields-with-lang
+              (fn [lang]
+                [input-field path lang #(dispatch-sync [:editor/set-component-value
+                                                        (-> % .-target .-value)
+                                                        path
+                                                        :label lang])])
+              languages
+              :header? true)]]
+           children
+           [drag-n-drop-spacer (conj path :children (count children))]
+           (case (:fieldClass content)
+             "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+             "questionGroup" [toolbar/question-group-toolbar path
+                              (fn [generate-fn]
+                                (dispatch [:generate-component generate-fn (conj path :children (count children))]))])])))))
 
 (defn get-leaf-component-labels [component lang]
   (letfn [(recursively-get-labels [component]

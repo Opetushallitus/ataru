@@ -109,3 +109,8 @@
   :editor/belongs-to-hakukohteet-modal-search-term-value
   (fn [db [_ id]]
     (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term-value] "")))
+
+(re-frame/reg-sub
+  :editor/all-folded
+  (fn [db _]
+    (get-in db [:editor :ui :all-folded] false)))

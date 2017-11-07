@@ -29,63 +29,63 @@
                             ^{:key index}
                             [soresu->reagent child (conj (vec path) :children index) :question-group-element? (= (:fieldClass content) "questionGroup")]))]
     (fn [content path & args]
-      [:div
-       [ec/drag-n-drop-spacer path content]
+      (when-let [component
+                 (match content
+                   {:module module}
+                   [ec/module path]
 
-       (match content
-              {:module module}
-              [ec/module path]
+                   {:fieldClass "wrapperElement"
+                    :fieldType  "adjacentfieldset"
+                    :children   children}
+                   [ec/adjacent-fieldset content path (render-children children)]
 
-              {:fieldClass "wrapperElement"
-               :fieldType  "adjacentfieldset"
-               :children   children}
-              [ec/adjacent-fieldset content path (render-children children)]
+                   {:fieldClass "wrapperElement"
+                    :children   children}
+                   [ec/component-group content path (render-children children path)]
 
-              {:fieldClass "wrapperElement"
-               :children   children}
-              [ec/component-group content path (render-children children path)]
+                   {:fieldClass "questionGroup"
+                    :fieldType  "fieldset"
+                    :children   children}
+                   [ec/component-group content path (render-children children path)]
 
-              {:fieldClass "questionGroup"
-               :fieldType  "fieldset"
-               :children   children}
-              [ec/component-group content path (render-children children path)]
+                   {:fieldClass "formField" :fieldType "textField"
+                    :params     {:adjacent true}}
+                   [ec/adjacent-text-field content path]
 
-              {:fieldClass "formField" :fieldType "textField"
-               :params     {:adjacent true}}
-              [ec/adjacent-text-field content path]
+                   {:fieldClass "formField" :fieldType "textField"}
+                   [ec/text-field content path]
 
-              {:fieldClass "formField" :fieldType "textField"}
-              [ec/text-field content path]
+                   {:fieldClass "formField" :fieldType "textArea"}
+                   [ec/text-area content path]
 
-              {:fieldClass "formField" :fieldType "textArea"}
-              [ec/text-area content path]
+                   {:fieldClass "formField" :fieldType "dropdown"}
+                   [ec/dropdown content path args]
 
-              {:fieldClass "formField" :fieldType "dropdown"}
-              [ec/dropdown content path args]
+                   {:fieldClass "formField" :fieldType "multipleChoice"}
+                   [ec/dropdown content path args]
 
-              {:fieldClass "formField" :fieldType "multipleChoice"}
-              [ec/dropdown content path args]
+                   {:fieldClass "infoElement"}
+                   [ec/info-element content path]
 
-              {:fieldClass "infoElement"}
-              [ec/info-element content path]
+                   {:fieldClass "formField"
+                    :fieldType  "singleChoice"}
+                   [ec/dropdown content path args]
 
-              {:fieldClass "formField"
-               :fieldType  "singleChoice"}
-              [ec/dropdown content path args]
+                   {:fieldClass "formField"
+                    :fieldType  "attachment"}
+                   (when attachments-enabled?
+                     [ec/attachment content path])
 
-              {:fieldClass "formField"
-               :fieldType  "attachment"}
-              (if attachments-enabled?
-                [ec/attachment content path]
-                [:div])
+                   {:fieldClass "formField"
+                    :fieldType  "hakukohteet"}
+                   nil
 
-              {:fieldClass "formField"
-               :fieldType  "hakukohteet"}
-              nil
-
-              :else (do
-                      (error content)
-                      (throw "error" content)))])))
+                   :else (do
+                           (error content)
+                           (throw "error" content)))]
+        [:div
+         [ec/drag-n-drop-spacer path content]
+         component]))))
 
 (defn editor []
   (let [form    (subscribe [:editor/selected-form])
