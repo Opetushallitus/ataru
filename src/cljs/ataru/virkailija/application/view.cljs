@@ -312,8 +312,9 @@
       (let [all-filters-selected? (= (count @application-filters)
                                      (count application-review-states/application-review-states))]
         [:span.application-handling__filter-state
-         [:a
+         [:a.application-handling__filter-state-link
           {:on-click toggle-filter-opened}
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
           (str "Hakemus" (when-not all-filters-selected? " *"))]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
@@ -349,8 +350,9 @@
       (let [all-filters-selected? (= (count @state-filters)
                                      (count review-states/application-hakukohde-selection-states))]
         [:span.application-handling__filter-state
-         [:a
+         [:a.application-handling__filter-state-link
           {:on-click toggle-filter-opened}
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
           (str "Valinta" (when-not all-filters-selected? " *"))]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
