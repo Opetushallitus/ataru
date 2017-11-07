@@ -114,7 +114,7 @@
           setTextFieldValue(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field') }, 'Kysymysryhmä: ryhmän otsikko')
         )
         it('adds question group as a followup element', function () {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__component-header').text()).to.equal('Kysymysryhmä')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__component-main-header').text()).to.equal('Kysymysryhmä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__text-field').val()).to.equal('Kysymysryhmä: ryhmän otsikko')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a')).to.have.length(8)
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .form__add-component-toolbar--list-item a:eq(0)').text()).to.equal('Pudotusvalikko')
@@ -138,7 +138,7 @@
           clickElement(function () { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label') })
         )
         it('adds dropdown as element to a question group', function () {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(1)').text()).to.equal('Pudotusvalikko')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(1)').text()).to.equal('Pudotusvalikko')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(1)').val()).to.equal('Kysymysryhmä: pudotusvalikko')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(2)').val()).to.equal('Pudotusvalikko: A')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(3)').val()).to.equal('Pudotusvalikko: B')
@@ -157,7 +157,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(1)') })
         )
         it('adds single choice button as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(2)').text()).to.equal('Painikkeet, yksi valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(2)').text()).to.equal('Painikkeet, yksi valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(4)').val()).to.equal('Kysymysryhmä: painikkeet, yksi valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(5)').val()).to.equal('Painikkeet, yksi valittavissa: A')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(6)').val()).to.equal('Painikkeet, yksi valittavissa: B')
@@ -176,7 +176,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(2)') })
         )
         it('adds multiple choice button as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(3)').text()).to.equal('Lista, monta valittavissa')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(3)').text()).to.equal('Lista, monta valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(7)').val()).to.equal('Kysymysryhmä: lista, monta valittavissa')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(8)').val()).to.equal('Lista, monta valittavissa: A')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(9)').val()).to.equal('Lista, monta valittavissa: B')
@@ -191,7 +191,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(3)') })
         )
         it('adds single-answer text field as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(4)').text()).to.equal('Tekstikenttä')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(4)').text()).to.equal('Tekstikenttä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(10)').val()).to.equal('Tekstikenttä, yksi vastaus')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(3)').prop('checked')).to.equal(true) // required
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(4)').prop('checked')).to.equal(false) // multiple answers
@@ -206,7 +206,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(6)') })
         )
         it('adds multi-answer text field as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(5)').text()).to.equal('Tekstikenttä')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(5)').text()).to.equal('Tekstikenttä')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(11)').val()).to.equal('Tekstikenttä, monta vastausta')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(5)').prop('checked')).to.equal(true) // required
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(6)').prop('checked')).to.equal(true) // multiple answers
@@ -220,7 +220,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox + label:eq(7)') })
         )
         it('adds text area as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(6)').text()).to.equal('Tekstialue')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(6)').text()).to.equal('Tekstialue')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(12)').val()).to.equal('Tekstialue')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(7)').prop('checked')).to.equal(true) // required
         })
@@ -238,7 +238,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(10) + label') })
         )
         it('adds single-answer adjacent text field as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(7)').text()).to.equal('Vierekkäiset tekstikentät')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(7)').text()).to.equal('Vierekkäiset tekstikentät')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(14)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(8)').prop('checked')).to.equal(false) // multiple answers
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(15)').val()).to.equal('Vierekkäiset tekstikentät, yksi vastaus: A')
@@ -262,7 +262,7 @@
           clickElement(function() { return formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(13) + label') })
         )
         it('adds multi-answer adjacent text field as element to a question group', function() {
-          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-header:eq(10)').text()).to.equal('Vierekkäiset tekstikentät')
+          expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__component-main-header:eq(10)').text()).to.equal('Vierekkäiset tekstikentät')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(17)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta')
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__checkbox:eq(11)').prop('checked')).to.equal(true) // multiple answers
           expect(formComponents().find('.editor-form__followup-question-overlay .editor-form__section_wrapper .editor-form__text-field:eq(18)').val()).to.equal('Vierekkäiset tekstikentät, monta vastausta: A')

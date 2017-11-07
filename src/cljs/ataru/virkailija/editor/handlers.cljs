@@ -519,3 +519,13 @@
     (let [path (conj (vec (current-form-content-path db path))
                      :belongs-to-hakukohteet)]
       (update-in db path (fnil (comp vec #(disj % oid) set) [])))))
+
+(reg-event-db
+  :editor/fold-all
+  (fn [db _]
+    (assoc-in db [:editor :ui :all-folded] true)))
+
+(reg-event-db
+  :editor/unfold-all
+  (fn [db _]
+    (assoc-in db [:editor :ui :all-folded] false)))
