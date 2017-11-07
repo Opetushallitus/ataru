@@ -236,6 +236,14 @@
                          (response/temporary-redirect modify-url))
                        (response/bad-request)))
 
+                   (api/POST "/:application-key/resend-modify-link" {session :session}
+                     :path-params [application-key :- String]
+                     :summary "Send the modify application link to the applicant via email"
+                     :return ataru-schema/Event
+                     (if-let [resend-event (application-service/send-modify-application-link-email application-key session organization-service)]
+                       (response/ok resend-event)
+                       (response/bad-request)))
+
                    (api/PUT "/review" {session :session}
                      :summary "Update existing application review"
                      :body [review ataru-schema/Review]

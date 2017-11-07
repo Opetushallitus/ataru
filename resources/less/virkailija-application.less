@@ -346,6 +346,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-outer-container {
   padding-right: 5px;
+  position: relative;
 }
 
 .application-handling__review-inner-container {
@@ -553,13 +554,48 @@ and (max-width: 1000px) {
   border-radius: 3px;
   box-shadow :none;
   padding: 5px;
-  height: 40px;
+  height: 41px;
   width: 100%;
   margin-right: 0;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
   cursor: pointer;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.application-handling__button:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.application-handling__resend-modify-link-confirmation {
+  background-color: @button-green;
+  border-radius: 3px;
+  color: @white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 41px;
+  position: absolute;
+  width: 372px;
+}
+
+.application-handling__resend-modify-link-confirmation-indicator {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid @button-green;
+  position: absolute;
+  left: 32px;
+  top: -10px;
+}
+
+.application-handling__resend-modify-application-link-email-text {
+  font-size: 13px;
 }
 
 .application-handling__send-information-request-button--enabled {

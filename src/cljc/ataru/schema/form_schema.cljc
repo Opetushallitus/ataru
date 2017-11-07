@@ -233,7 +233,8 @@
                          "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"
-                         "hakukohde-review-state-change"))
+                         "hakukohde-review-state-change"
+                         "modification-link-sent"))
 
 (s/defschema Event
   {:event-type                        event-types

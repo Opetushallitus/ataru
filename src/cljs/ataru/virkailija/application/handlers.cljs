@@ -419,3 +419,35 @@
                                   :to-state         to-state}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+
+(reg-event-fx
+  :application/resend-modify-application-link
+  (fn [{:keys [db]} _]
+    (let [application-key (-> db :application :selected-key)]
+      {:db   (assoc-in db [:application :modify-application-link :state] :submitting)
+       :http {:method              :post
+              :params              {:application-key application-key}
+              :path                (str "/lomake-editori/api/applications/" application-key "/resend-modify-link")
+              :handler-or-dispatch :application/handle-resend-modify-application-link-response}})))
+
+(reg-event-fx
+  :application/handle-resend-modify-application-link-response
+  (fn [{:keys [db]} [_ response]]
+    {:db             (-> db
+                         (assoc-in [:application :modify-application-link :state] :submitted)
+                         (update-in [:application :events] (fnil identity []))
+                         (update-in [:application :events] #(conj % response)))
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/fade-out-resend-modify-application-link-confirmation-dialog]}]}))
+
+(reg-event-fx
+  :application/fade-out-resend-modify-application-link-confirmation-dialog
+  (fn [{:keys [db]} _]
+    {:db (assoc-in db [:application :modify-application-link :state] :disappearing)
+     :dispatch-later [{:ms 1000
+                       :dispatch [:application/reset-resend-modify-application-link-state]}]}))
+
+(reg-event-db
+  :application/reset-resend-modify-application-link-state
+  (fn [db _]
+    (assoc-in db [:application :modify-application-link :state] nil)))
