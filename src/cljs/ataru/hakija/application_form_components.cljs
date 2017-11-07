@@ -676,7 +676,12 @@
             translations (get-translations (keyword @language) application-view-translations)
             add-on-click (fn add-adjacent-text-field [event]
                            (.preventDefault event)
-                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
+                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))
+            cannot-edit? (->> (:children field-descriptor)
+                              (map (fn [child]
+                                     @(subscribe [:application/cannot-edit-answer?
+                                                  (keyword (:id child))])))
+                              (some identity))]
         [:div.application__form-field
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
@@ -695,12 +700,13 @@
                                           [label child]]
                                          [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
-                       (when (pos? row-idx)
+                       (when (and (pos? row-idx) (not cannot-edit?))
                          [:a {:data-row-idx row-idx
                               :on-click     remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
-         (when (get-in field-descriptor [:params :repeatable])
+         (when (and (get-in field-descriptor [:params :repeatable])
+                    (not cannot-edit?))
            [:a.application__form-add-new-row
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
