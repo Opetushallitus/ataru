@@ -119,30 +119,30 @@
                        (partial textual-field-change field-descriptor))
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
-                                                   (:valid @answer))]
+                                                   (:valid @answer))
+        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))
+        cannot-edit? @(subscribe [:state-query [:application :answers id :cannot-edit]])]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-text-input-and-validation-errors
-      (let [cannot-view? (and editing (:cannot-view @answer))
-            cannot-edit? (:cannot-edit @answer)]
-        [:input.application__form-text-input
-         (merge {:id          id
-                 :type        "text"
-                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                (non-blank-val (get input-hint @lang)
-                                               (get input-hint @default-lang)))
-                 :class       (str size-class (if show-error?
-                                                " application__form-field-error"
-                                                " application__form-text-input--normal"))
-                 :value       (if cannot-view? "***********" (if idx
-                                                               (get-in @answer [0 :value])
-                                                               (:value @answer)))
-                 :on-blur     on-blur
-                 :on-change   on-change
-                 :required    (is-required-field? field-descriptor)}
-                (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])
+      [:input.application__form-text-input
+       (merge {:id          id
+               :type        "text"
+               :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                              (non-blank-val (get input-hint @lang)
+                                             (get input-hint @default-lang)))
+               :class       (str size-class (if show-error?
+                                              " application__form-field-error"
+                                              " application__form-text-input--normal"))
+               :value       (if cannot-view? "***********" (if idx
+                                                             (get-in @answer [0 :value])
+                                                             (:value @answer)))
+               :on-blur     on-blur
+               :on-change   on-change
+               :required    (is-required-field? field-descriptor)}
+              (when (or disabled cannot-view? cannot-edit?) {:disabled true}))]
       (when (not-empty (:errors @answer))
         [:div.application__validation-error-dialog
          [:div.application__validation-error-dialog__arrow]
