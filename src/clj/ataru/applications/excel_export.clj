@@ -42,19 +42,23 @@
 
 (defn selection-state-formatter
   [application]
-  (let [labels (application-states/generate-labels-for-hakukohde-selection-reviews
-                 "selection-state"
-                 review-states/application-hakukohde-selection-states
-                 application
-                 nil)]
-    (clojure.string/join
-      "\n"
-      (map
-        (fn [[label count]]
-          (str label
-               (when (< 1 count)
-                 (str ": " count))))
-        labels))))
+  (let [selection-states (filter
+                           #(= (:requirement %) "selection-state")
+                           (:application-hakukohde-reviews application))]
+    (if (= 1 (count selection-states))
+      (application-states/get-review-state-label-by-name
+        review-states/application-hakukohde-selection-states
+        (-> (first selection-states) :state))
+      (clojure.string/join
+        "\n"
+        (map
+          (fn [{:keys [hakukohde hakukohde-name state]}]
+            (str hakukohde-name
+                 " (" hakukohde "): "
+                 (application-states/get-review-state-label-by-name
+                   review-states/application-hakukohde-selection-states
+                   state)))
+          selection-states)))))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -366,6 +370,23 @@
                            (add-hakukohde-name tarjonta-service (:lang application) answer)
                            answer)))))
 
+(defn- add-full-hakukohde-selection-reviews
+  [tarjonta-service application]
+  (let [all-reviews            (application-states/get-all-reviews-for-requirement
+                                 "selection-state"
+                                 application
+                                 nil)
+        all-reviews-with-names (map
+                                 (fn [{:keys [hakukohde] :as review}]
+                                   (assoc review
+                                     :hakukohde-name
+                                     (get-hakukohde-name
+                                       tarjonta-service
+                                       (:lang application)
+                                       hakukohde)))
+                                 all-reviews)]
+    (assoc application :application-hakukohde-reviews all-reviews-with-names)))
+
 (defn export-applications [applications tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
@@ -376,6 +397,7 @@
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
+         (map (partial add-full-hakukohde-selection-reviews tarjonta-service))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
