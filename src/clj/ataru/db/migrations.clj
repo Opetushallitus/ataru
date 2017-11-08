@@ -11,7 +11,8 @@
     [ataru.db.db :refer [get-datasource]]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
-    [ataru.config.core :refer [config]]))
+    [ataru.config.core :refer [config]]
+    [ataru.virkailija.component-data.value-transformers :as t]))
 
 (def default-fetch-size 50)
 
@@ -186,6 +187,27 @@
   (doseq [application (migration-app-store/get-all-applications)]
     (create-new-review-state application)))
 
+(defn- dob->dd-mm-yyyy-format []
+  (letfn [(invalid-dob-format? [[day month _]]
+            (or (< (count day) 2)
+                (< (count month) 2)))]
+    (doseq [application (migration-app-store/get-all-applications)
+            :when (->> application
+                       :content
+                       :answers
+                       (filter (comp (partial = "birth-date") :key))
+                       (eduction (map :value)
+                                 (map #(clojure.string/split % #"\.")))
+                       (first)
+                       (invalid-dob-format?))]
+      (let [content (-> application
+                        :content
+                        (update :answers (partial map (fn [answer]
+                                                        (cond-> answer
+                                                          (= (:key answer) "birth-date")
+                                                          (update :value t/birth-date))))))]
+        (info (str "Updating date of birth answer of application " (:id application)))
+        (migration-app-store/update-application-content (:id application) content)))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
@@ -226,6 +248,11 @@
   migrate-application-reviews "1.64"
   "Migrate old per-application reviews to application + hakukohde specific ones"
   (application-reviews->new-model))
+
+(migrations/defmigration
+  migrate-dob-into-dd-mm-yyyy-format "1.70"
+  "Update date of birth from application answers to dd.mm.yyyy format"
+  (dob->dd-mm-yyyy-format))
 
 (defn migrate
   []

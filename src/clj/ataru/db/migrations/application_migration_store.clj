@@ -7,6 +7,7 @@
 (sql/defqueries "sql/migration-1.25-queries.sql")
 (sql/defqueries "sql/migration-1.28-queries.sql")
 (sql/defqueries "sql/migration-1.36-queries.sql")
+(sql/defqueries "sql/migration-1.70-queries.sql")
 
 (defn get-all-applications
   []
@@ -57,3 +58,12 @@
   (db/exec :db yesql-add-haku-to-application! {:application_id application-id
                                                :haku           (:oid haku)
                                                :haku_name      (-> haku :nimi :kieli_fi)}))
+
+(defn update-application-content [application-id content]
+  (db/exec :db yesql-update-application-content! {:id      application-id
+                                                  :content content}))
+
+(defn get-final-person-integration-job-count [application-ids]
+  (-> (db/exec :db yesql-get-final-person-integration-job-iteration-count {:application_ids application-ids})
+      (first)
+      :count))

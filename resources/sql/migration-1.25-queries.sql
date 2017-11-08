@@ -1,5 +1,5 @@
 -- name: yesql-get-all-applications
-select id,key from applications;
+select id,key,content from applications;
 
 -- name: yesql-get-application-events-by-application-id
 select id,application_key from application_events where application_id = :application_id;
