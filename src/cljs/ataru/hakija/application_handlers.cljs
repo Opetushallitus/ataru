@@ -486,9 +486,7 @@
   (fn [{db :db} [_ field value]]
     (let [value    (transform-value value field)
           id       (keyword (:id field))
-          answers  (get-in db [:application :answers])
-          answer   (get answers id)
-          changed? (not= value (:original-value answer))]
+          answers  (get-in db [:application :answers])]
       {:db (-> db
                (assoc-in [:application :answers id :value] value)
                (set-multi-value-changed id))
