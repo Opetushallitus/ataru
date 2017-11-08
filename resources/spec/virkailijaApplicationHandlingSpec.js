@@ -127,24 +127,24 @@
               return firstApplicantName() !== firstApplicantNameBeforeAnySorting
             }))
             .then(clickElement(scoreColumn))
-            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
+            .then(wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna")))
             .then(function() {
-              expectApplicants(["Seija Susanna Kuikeloinen", "Ari Vatanen", "Johanna Irmeli Tyrni"])
+              expectApplicants(["Kuikeloinen, Seija Susanna", "Vatanen, Ari", "Tyrni, Johanna Irmeli"])
             })
             .then(clickElement(scoreColumn))
-            .then(wait.until(firstApplicantNameIs("Johanna Irmeli Tyrni")))
+            .then(wait.until(firstApplicantNameIs("Tyrni, Johanna Irmeli")))
             .then(function() {
-              expectApplicants(["Johanna Irmeli Tyrni", "Ari Vatanen", "Seija Susanna Kuikeloinen"])
+              expectApplicants(["Tyrni, Johanna Irmeli", "Vatanen, Ari", "Kuikeloinen, Seija Susanna"])
             })
             .then(clickElement(applicantColumn))
-            .then(wait.until(firstApplicantNameIs("Ari Vatanen")))
+            .then(wait.until(firstApplicantNameIs("Vatanen, Ari")))
             .then(function() {
-              expectApplicants(["Ari Vatanen", "Johanna Irmeli Tyrni", "Seija Susanna Kuikeloinen"])
+              expectApplicants(["Vatanen, Ari", "Tyrni, Johanna Irmeli", "Kuikeloinen, Seija Susanna"])
             })
             .then(clickElement(applicantColumn))
-            .then(wait.until(firstApplicantNameIs("Seija Susanna Kuikeloinen")))
+            .then(wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna")))
             .then(function() {
-              expectApplicants(["Seija Susanna Kuikeloinen", "Johanna Irmeli Tyrni", "Ari Vatanen"])
+              expectApplicants(["Kuikeloinen, Seija Susanna", "Tyrni, Johanna Irmeli", "Vatanen, Ari"])
             })
             .then(done)
             .fail(done)
@@ -154,7 +154,9 @@
         expect(applicantNames()).to.eql(expected)
       }
 
-      function firstApplicantName() { return applicantNames()[0] }
+      function firstApplicantName() {
+        return applicantNames()[0]
+      }
 
       function firstApplicantNameIs(expected) {
         return function() { return firstApplicantName() === expected }
@@ -240,7 +242,7 @@
         .then(clickElement(searchApplicationsBySsnLink))
         .then(wait.until(ssnSearchFieldHasValue('020202A0202')))
         .then(wait.until(function() {
-          return _.isEqual(applicantNames(), ['Johanna Irmeli Tyrni', 'Seija Susanna Kuikeloinen'])
+          return _.isEqual(applicantNames(), ['Tyrni, Johanna Irmeli', 'Kuikeloinen, Seija Susanna'])
         }))
         .then(done)
         .fail(done)
