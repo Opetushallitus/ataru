@@ -57,10 +57,6 @@ function hakukohdeSearchInput() {
   return testFrame().find('.application__hakukohde-selection-search-input input')
 }
 
-function invalidSections() {
-  return testFrame().find('.application__banner-wrapper-sections-content')
-}
-
 function personInfoModule() {
   return formSections().eq(0)
 }

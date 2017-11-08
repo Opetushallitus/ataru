@@ -170,27 +170,6 @@
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
-(defn wrapper-section-ids-validity [wrapper-sections answers]
-  (let [grouped (util/group-answers-by-wrapperelement wrapper-sections answers)]
-    (into {}
-      (for [[section-id answers] grouped]
-        (do
-          [section-id (bools-all-true
-                        (eduction
-                          (comp
-                            (map first)
-                            (map second)
-                            (filter some?)
-                            (map :valid))
-                          answers))])))))
-
-(defn wrapper-sections-with-validity [wrapper-sections answers]
-  (let [wrapper-section-id->valid (wrapper-section-ids-validity wrapper-sections answers)]
-    (map
-      (fn [wrapper-section]
-        (assoc wrapper-section :valid (get wrapper-section-id->valid (:id wrapper-section))))
-      wrapper-sections)))
-
 (defn application-processing-jatkuva-haku? [application haku]
   (when-let [state (:state application)]
     (and (not= state "unprocessed")
