@@ -102,7 +102,8 @@
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                             :children                                [(s/conditional #(or (= "wrapperElement" (:fieldClass %))
+                                                                                           (= "questionGroup" (:fieldClass %)))
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
