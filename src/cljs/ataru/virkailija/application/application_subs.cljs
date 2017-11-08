@@ -230,6 +230,8 @@
                              (set (map :state (:application-hakukohde-reviews application))))))
               (and
                 (contains? selection-states-to-include "incomplete")
-                (< (count (:application-hakukohde-reviews application))
-                   (count (:hakukohde application)))))))
+                (or
+                  (zero? (count (:application-hakukohde-reviews application)))
+                  (< (count (:application-hakukohde-reviews application))
+                     (count (:hakukohde application))))))))
         applications))))

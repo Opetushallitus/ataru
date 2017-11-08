@@ -18,8 +18,7 @@
                                            (or (nil? selected-hakukohde-oid)
                                                (= (:hakukohde %) selected-hakukohde-oid)))
                                         (:application-hakukohde-reviews application))
-        unreviewed-targets      (when has-hakukohteet?
-                                  (clojure.set/difference review-targets (set (map :hakukohde relevant-states))))]
+        unreviewed-targets      (clojure.set/difference review-targets (set (map :hakukohde relevant-states)))]
     (into relevant-states (map
                             (fn [oid] {:requirement review-requirement-name
                                        :hakukohde   oid
