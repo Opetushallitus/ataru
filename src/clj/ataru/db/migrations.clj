@@ -34,7 +34,9 @@
     form))
 
 (defn- update-birth-date-place-holder []
-  (doseq [form (map #(store/fetch-by-id (:id %)) (store/get-all-forms))]
+  (doseq [form (->> (store/get-all-forms)
+                    (map #(store/fetch-by-id (:id %)))
+                    (sort-by :created-time))]
     (store/create-form-or-increment-version!
      (clojure.walk/prewalk
       (fn [expr]
