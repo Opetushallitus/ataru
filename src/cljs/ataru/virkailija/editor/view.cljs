@@ -169,15 +169,14 @@
   (let [all-folded? @(subscribe [:editor/all-folded])]
     [:div.editor-form__fold-all
      [:div.editor-form__fold-all-slider
-      {:class (if all-folded?
-                "editor-form__fold-all-slider-left"
-                "editor-form__fold-all-slider-right")}
+      (if all-folded?
+        {:class "editor-form__fold-all-slider-left"
+         :on-click #(dispatch [:editor/unfold-all])}
+        {:class "editor-form__fold-all-slider-right"
+         :on-click #(dispatch [:editor/fold-all])})
       [:div.editor-form__fold-all-label-left
        "Osiot auki"]
-      [:div.editor-form__fold-all-divider
-       {:on-click (if all-folded?
-                    #(dispatch [:editor/unfold-all])
-                    #(dispatch [:editor/fold-all]))}]
+      [:div.editor-form__fold-all-divider]
       [:div.editor-form__fold-all-label-right
        "Osiot kiinni"]]]))
 
