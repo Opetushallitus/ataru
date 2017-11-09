@@ -12,7 +12,10 @@
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]
-    [ataru.virkailija.component-data.value-transformers :as t]))
+    [ataru.virkailija.component-data.value-transformers :as t]
+    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+    [ataru.person-service.person-integration :as person-integration]
+    [ataru.background-job.job :as job]))
 
 (def default-fetch-size 50)
 
@@ -189,25 +192,50 @@
 
 (defn- dob->dd-mm-yyyy-format []
   (letfn [(invalid-dob-format? [[day month _]]
-            (or (< (count day) 2)
-                (< (count month) 2)))]
-    (doseq [application (migration-app-store/get-all-applications)
-            :when (->> application
-                       :content
-                       :answers
-                       (filter (comp (partial = "birth-date") :key))
-                       (eduction (map :value)
-                                 (map #(clojure.string/split % #"\.")))
-                       (first)
-                       (invalid-dob-format?))]
-      (let [content (-> application
-                        :content
-                        (update :answers (partial map (fn [answer]
-                                                        (cond-> answer
-                                                          (= (:key answer) "birth-date")
-                                                          (update :value t/birth-date))))))]
-        (info (str "Updating date of birth answer of application " (:id application)))
-        (migration-app-store/update-application-content (:id application) content)))))
+            (and (some? day)
+                 (some? month)
+                 (or (< (count day) 2)
+                     (< (count month) 2))))
+          (application-with-invalid-dob-format? [application]
+            (->> application
+                 :content
+                 :answers
+                 (filter (fn [answer]
+                           (and (= (:key answer) "birth-date")
+                                (not (clojure.string/blank? (:value answer))))))
+                 (eduction (map :value)
+                           (map #(clojure.string/split % #"\.")))
+                 (first)
+                 (invalid-dob-format?)))
+          (->dd-mm-yyyy-format [application]
+            (update-in application [:content :answers] (partial map (fn [answer]
+                                                                      (cond-> answer
+                                                                        (= (:key answer) "birth-date")
+                                                                        (update :value t/birth-date))))))
+          (->applications [applications application]
+            (if-let [application-key (:key application)]
+              (-> applications
+                  (update application-key (fnil identity []))
+                  (update application-key conj application))
+              applications))
+          (latest-application-id [applications]
+            (->> applications
+                 (sort-by :created-time)
+                 (last)
+                 :id))]
+    (let [applications (->> (migration-app-store/get-all-applications)
+                            (filter application-with-invalid-dob-format?)
+                            (map ->dd-mm-yyyy-format)
+                            (reduce ->applications {}))]
+      (doseq [[application-key applications] applications]
+        (doseq [application applications]
+          (info (str "Updating date of birth answer of application " (:id application)))
+          (migration-app-store/update-application-content (:id application) (:content application)))
+        (when-let [application-id (latest-application-id applications)]
+          (info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
+          (job/start-job hakija-jobs/job-definitions
+                         (:type person-integration/job-definition)
+                         {:application-id application-id}))))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"

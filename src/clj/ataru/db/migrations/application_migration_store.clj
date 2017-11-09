@@ -62,8 +62,3 @@
 (defn update-application-content [application-id content]
   (db/exec :db yesql-update-application-content! {:id      application-id
                                                   :content content}))
-
-(defn get-final-person-integration-job-count [application-ids]
-  (-> (db/exec :db yesql-get-final-person-integration-job-iteration-count {:application_ids application-ids})
-      (first)
-      :count))
