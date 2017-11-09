@@ -119,30 +119,30 @@
                        (partial textual-field-change field-descriptor))
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
-                                                   (:valid @answer))]
+                                                   (:valid @answer))
+        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))
+        cannot-edit? @(subscribe [:state-query [:application :answers id :cannot-edit]])]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-text-input-and-validation-errors
-      (let [cannot-view? (and editing (:cannot-view @answer))
-            cannot-edit? (:cannot-edit @answer)]
-        [:input.application__form-text-input
-         (merge {:id          id
-                 :type        "text"
-                 :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                (non-blank-val (get input-hint @lang)
-                                               (get input-hint @default-lang)))
-                 :class       (str size-class (if show-error?
-                                                " application__form-field-error"
-                                                " application__form-text-input--normal"))
-                 :value       (if cannot-view? "***********" (if idx
-                                                               (get-in @answer [0 :value])
-                                                               (:value @answer)))
-                 :on-blur     on-blur
-                 :on-change   on-change
-                 :required    (is-required-field? field-descriptor)}
-                (when (or disabled cannot-view? cannot-edit?) {:disabled true}))])
+      [:input.application__form-text-input
+       (merge {:id          id
+               :type        "text"
+               :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                              (non-blank-val (get input-hint @lang)
+                                             (get input-hint @default-lang)))
+               :class       (str size-class (if show-error?
+                                              " application__form-field-error"
+                                              " application__form-text-input--normal"))
+               :value       (if cannot-view? "***********" (if idx
+                                                             (get-in @answer [0 :value])
+                                                             (:value @answer)))
+               :on-blur     on-blur
+               :on-change   on-change
+               :required    (is-required-field? field-descriptor)}
+              (when (or disabled cannot-view? cannot-edit?) {:disabled true}))]
       (when (not-empty (:errors @answer))
         [:div.application__validation-error-dialog
          [:div.application__validation-error-dialog__arrow]
@@ -211,7 +211,7 @@
                       (when (or @cannot-edit?
                                 (and last? first-is-empty?))
                         {:disabled true}))]
-                   (when value
+                   (when (and value (not @cannot-edit?))
                      [:a.application__form-repeatable-text--addremove
                       [:i.zmdi.zmdi-close.zmdi-hc-lg
                        {:data-idx (inc idx)
@@ -317,7 +317,12 @@
        [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
-  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])]
+  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
+        cannot-edit? (->> children
+                          (map (fn [child]
+                                 @(subscribe [:application/cannot-edit-answer?
+                                              (keyword (:id child))])))
+                          (some identity))]
     [:div.application__question-group
      [scroll-to-anchor field-descriptor]
      [:div
@@ -328,16 +333,17 @@
           field-descriptor
           children
           idx
-          (< 1 @row-count)]))]
-     [:div.application__add-question-group-row
-      [:a {:href     "#"
-           :on-click (fn add-question-group-row [event]
-                       (.preventDefault event)
-                       (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-       [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-       @(subscribe [:application/get-i18n-text {:fi "Lisää"
-                                                :sv "Lägg till"
-                                                :en "Add more"}])]]]))
+          (and (< 1 @row-count) (not cannot-edit?))]))]
+     (when (not cannot-edit?)
+       [:div.application__add-question-group-row
+        [:a {:href     "#"
+             :on-click (fn add-question-group-row [event]
+                         (.preventDefault event)
+                         (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+         [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+         @(subscribe [:application/get-i18n-text {:fi "Lisää"
+                                                  :sv "Lägg till"
+                                                  :en "Add more"}])]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
@@ -670,7 +676,12 @@
             translations (get-translations (keyword @language) application-view-translations)
             add-on-click (fn add-adjacent-text-field [event]
                            (.preventDefault event)
-                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
+                           (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))
+            cannot-edit? (->> (:children field-descriptor)
+                              (map (fn [child]
+                                     @(subscribe [:application/cannot-edit-answer?
+                                                  (keyword (:id child))])))
+                              (some identity))]
         [:div.application__form-field
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
@@ -689,12 +700,13 @@
                                           [label child]]
                                          [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
-                       (when (pos? row-idx)
+                       (when (and (pos? row-idx) (not cannot-edit?))
                          [:a {:data-row-idx row-idx
                               :on-click     remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
-         (when (get-in field-descriptor [:params :repeatable])
+         (when (and (get-in field-descriptor [:params :repeatable])
+                    (not cannot-edit?))
            [:a.application__form-add-new-row
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))

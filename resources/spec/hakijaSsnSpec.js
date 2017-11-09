@@ -15,8 +15,6 @@
       expect(formFields().length).to.equal(13);
       expect(submitButton().prop('disabled')).to.equal(true);
       expect(formHeader().text()).to.equal('SSN_testilomake');
-      expect(invalidSections().find('a').length).to.equal(1);
-      expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
     });
 
     describe('SSN fields visibility', function() {

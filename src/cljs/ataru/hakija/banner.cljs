@@ -118,33 +118,6 @@
        [invalid-field-status @valid-status]
        [sent-indicator @submit-status]])))
 
-(defn wrapper-section-link [ws]
-  (let [lang         (subscribe [:application/form-language])
-        default-lang (subscribe [:application/default-language])]
-    (fn [ws]
-      [:a.application__banner-wrapper-section-link
-       {:href  (str "#scroll-to-" (:id ws))
-        :class (if (:valid ws) "" "application__banner-wrapper-section-link-not-valid")}
-       (or (get-in ws [:label @lang])
-           (get-in ws [:label @default-lang]))])))
-
-(defn wrapper-section [ws]
-  (if (:valid ws)
-    [:div.application__banner-wrapper-section
-     [:img.application__banner-wrapper-section-valid-img {:src "/hakemus/images/icon_check.png"}]
-     [wrapper-section-link ws]]
-    [:div.application__banner-wrapper-section.application__banner-wrapper-section-not-valid
-     [wrapper-section-link ws]]))
-
-(defn wrapper-sections []
-  (let [wrapper-sections (subscribe [:application/wrapper-sections])
-        can-apply?       (subscribe [:application/can-apply?])]
-    (fn []
-      (when (and @wrapper-sections @can-apply?)
-        (into [:div.application__banner-wrapper-sections-content]
-              (mapv wrapper-section @wrapper-sections))))))
-
 (defn banner [] [:div.application__banner-container
                  [:div.application__top-banner-container
-                  [:div.application-top-banner logo [status-controls]]]
-                 [:div.application__banner-wrapper-sections [wrapper-sections]]])
+                  [:div.application-top-banner logo [status-controls]]]])

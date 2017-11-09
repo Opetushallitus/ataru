@@ -1,13 +1,11 @@
 @import "vars";
 @import "mixins";
-@banner-height: 33px;
 @field-margin-left: 245px;
 @form-select-width: 305px;
-@total-banner-height: 130px;
+@total-banner-height: 97px;
 
 .application__banner-container {
   z-index: 10;
-  height: @banner-height;
   display: inline-block;
   position: fixed;
   width: 100%;
@@ -41,36 +39,6 @@
   }
   .logo-elements { display: flex; align-items: center; height: 40px;}
   .logo-text { display: none; }
-}
-.application__banner-wrapper-sections {
-  height: @banner-height;
-  background-color: #128AB3;
-  display: flex;
-  align-items: center;
-}
-.application__banner-wrapper-sections-content {
-  margin: auto;
-  width: @desktop-content-width;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-top: 3px;
-}
-.application__banner-wrapper-section {
-  display: inline-block;
-  margin-right: 25px;
-  font-size: 13px;
-}
-.application__banner-wrapper-section-link {
-  color: white;
-}
-.application__banner-wrapper-section-link:link {
-  text-decoration: none;
-}
-.application__banner-wrapper-section-link-not-valid {
-  opacity: 0.4;
-}
-.application__banner-wrapper-section-valid-img {
-  margin-right: 5px;
 }
 @send-button-width-mobile: 138px;
 
@@ -537,13 +505,16 @@ textarea.application__form-text-input {
   color: @text-color;
 }
 .application__form-text-input__size-small {
-  width: 120px;
+  width: 100%;
+  max-width: 120px;
 }
 .application__form-text-input__size-medium {
-  width: 305px
+  width: 100%;
+  max-width: 305px
 }
 .application__form-text-input__size-large {
-  width: 610px;
+  width: 100%;
+  max-width: 610px;
 }
 .application__form-text-area {
   max-width: 610px;
@@ -738,7 +709,7 @@ textarea.application__form-text-area__size-large {
   flex-flow: column nowrap;
   padding: 20px;
   position: relative;
-  max-width: 600px;
+  max-width: 650px;
 }
 
 .application__form-multi-choice-followups-container .application__form-field {
@@ -895,7 +866,6 @@ and (max-width: @desktop-content-width) {
       font-size: 16px;
     }
   }
-  .application__banner-wrapper-sections { display: none; }
   .application__send-application-button {
     margin-right: 10px;
     width: @send-button-width-mobile;

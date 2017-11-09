@@ -2,7 +2,6 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.hakija.application :refer [answers->valid-status
-                                              wrapper-sections-with-validity
                                               applying-possible?]]))
 
 (re-frame/reg-sub
@@ -16,13 +15,6 @@
     (answers->valid-status (-> db :application :answers)
                            (-> db :application :ui)
                            (-> db :form :content))))
-
-(re-frame/reg-sub
-  :application/wrapper-sections
-  (fn [db]
-    (wrapper-sections-with-validity
-      (:wrapper-sections db)
-      (-> db :application :answers))))
 
 (re-frame/reg-sub
  :application/can-apply?

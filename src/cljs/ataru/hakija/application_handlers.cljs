@@ -103,12 +103,13 @@
   (assoc-in db [:application :submit-status] :submitted))
 
 (defn send-application [db method]
-  {:db       (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
-   :http     {:method        method
-              :url           "/hakemus/api/application"
-              :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
-              :handler       :application/handle-submit-response
-              :error-handler :application/handle-submit-error}})
+  (when-not (-> db :application :submit-status)
+    {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
+     :http {:method        method
+            :url           "/hakemus/api/application"
+            :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
+            :handler       :application/handle-submit-response
+            :error-handler :application/handle-submit-error}}))
 
 (reg-event-db
   :application/handle-submit-response
@@ -329,7 +330,7 @@
                                  (let [answer (match answer
                                                      {:fieldType "multipleChoice"}
                                                      (-> answers
-                                                         (update answer-key (partial merge-multiple-choice-option-values value ))
+                                                         (update answer-key (partial merge-multiple-choice-option-values value))
                                                          (assoc-in [answer-key :valid] true))
 
                                                      {:fieldType "singleChoice"}
