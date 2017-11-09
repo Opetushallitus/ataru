@@ -431,7 +431,7 @@
                             (if (and (nil? hakuOid)
                                      (nil? hakemusOids))
                               (response/bad-request {:error "No haku or application oid provided."})
-                              (if-let [applications (access-controlled-application/vts-applications
+                              (if-let [applications (access-controlled-application/external-applications
                                                      organization-service
                                                      session
                                                      hakuOid

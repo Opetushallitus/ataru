@@ -87,14 +87,14 @@
         #(application-store/get-latest-application-by-key-unrestricted application-key))
       (dissoc :secret)))
 
-(defn vts-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
+(defn external-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
    (constantly nil)
-   #(application-store/get-applications-by-haku
+   #(application-store/applications-for-external-api
      haku-oid
      hakukohde-oid
      hakemus-oids)))
