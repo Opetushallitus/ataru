@@ -15,8 +15,6 @@
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
-        expect(invalidSections().find('a').length).to.equal(2)
-        expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(2)
         expect(formFields().eq(15).find('.application__form-textarea-max-length').text()).to.equal('0 / 2000');
       })
     })
@@ -53,7 +51,6 @@
           expect(formFields().eq(10).find('input').val()).to.equal('JYVÄSKYLÄ')
           expect(formFields().eq(12).find('select').val()).to.equal('FI')
           expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
-          expect(invalidSections().find('a.application__banner-wrapper-section-link-not-valid').length).to.equal(1)
         })
       })
 
