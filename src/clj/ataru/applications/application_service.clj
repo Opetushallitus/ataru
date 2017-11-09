@@ -12,7 +12,9 @@
     [taoensso.timbre :refer [spy debug]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.virkailija.user.ldap-client :as ldap]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
+    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [ataru.information-request.information-request-store :as information-request-store]
+    [ataru.hakija.application-email-confirmation :as email])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -96,11 +98,12 @@
                              (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         application      (populate-koodisto-fields bare-application form)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
-    {:application       (merge application tarjonta-info)
-     :form              form
-     :hakukohde-reviews (parse-application-hakukohde-reviews application-key)
-     :events            (application-store/get-application-events application-key)
-     :review            (application-store/get-application-review application-key)}))
+    {:application          (merge application tarjonta-info)
+     :form                 form
+     :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
+     :events               (application-store/get-application-events application-key)
+     :review               (application-store/get-application-review application-key)
+     :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-form
   [form-key filtered-states session organization-service tarjonta-service]
@@ -151,8 +154,26 @@
       session
       organization-service
       [:edit-applications])
-    (application-store/save-application-review review session)
+    (application-store/save-application-review review session virkailija)
     (save-application-hakukohde-reviews virkailija application-key (:hakukohde-reviews review) session)
     {:review (application-store/get-application-review application-key)
      :events (application-store/get-application-events application-key)
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
+
+(defn mass-update-application-states
+  [session organization-service application-keys from-state to-state]
+  (doseq [application-key application-keys]
+    (aac/check-application-access
+      application-key
+      session
+      organization-service
+      [:edit-applications]))
+  (application-store/mass-update-application-states session application-keys from-state to-state)
+  {})
+
+(defn send-modify-application-link-email [application-key session organization-service]
+  (when-let [application-id (:id (aac/get-latest-application-by-key application-key session organization-service))]
+    (email/start-email-submit-confirmation-job application-id)
+    (application-store/add-application-event {:application-key application-key
+                                              :event-type      "modification-link-sent"}
+                                             session)))

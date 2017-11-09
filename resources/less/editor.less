@@ -151,7 +151,7 @@
 }
 
 .editor-form__panel-container {
-  padding: 20px 85px 15px 85px;
+  padding: 20px 85px 15px + @banner-height 85px;
   position: relative;
 }
 
@@ -184,12 +184,86 @@
 .editor-form__toolbar {
   display: flex;
   justify-content: space-between;
-  font-size: 15px;
-  padding-top: 4px;
+  position: fixed;
+  bottom: 0px;
+  width: 100%;
+  height: @banner-height;
+  background-color: white;
+  box-shadow: @modal-shadow;
+  font-size: 14px;
+}
+
+.editor-form__toolbar-left {
+  display: flex;
+}
+
+.editor-form__toolbar-right {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
 }
 
 .editor-form__language-controls {
   display: flex;
+  margin-left: 15px;
+}
+
+.editor-form__folded {
+  display: none;
+}
+
+.editor-form__fold-all {
+  width: 140px;
+  height: 26px;
+  border-radius: 13px;
+  overflow: hidden;
+}
+
+.editor-form__fold-all-slider {
+  display: flex;
+  width: 280px;
+  height: 26px;
+  border-radius: 13px;
+  align-items: center;
+  transition: transform 0.1s, background-color 0.1s;
+  cursor: pointer;
+}
+
+.editor-form__fold-all-slider-left {
+  transform: translateX(-114px);
+  background-color: @disabled-list-item-color;
+}
+
+.editor-form__fold-all-slider-right {
+  transform: translateX(0px);
+  background-color: @pale-blue;
+}
+
+.editor-form__fold-all-hidden-input {
+  display: none;
+}
+
+.editor-form__fold-all-label-left {
+  margin-left: 37px;
+  min-width: 67px;
+  color: white;
+  cursor: pointer;
+}
+
+.editor-form__fold-all-label-right {
+  min-width: 76px;
+  color: @sg-color-gray;
+  cursor: pointer;
+}
+
+.editor-form__fold-all-divider {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: white;
+  margin-left: 12px;
+  margin-right: 12px;
+  cursor: pointer;
 }
 
 .editor-form__checkbox-with-label {
@@ -206,17 +280,10 @@
   user-select: none;
 }
 
-.editor-form__form-toolbar-checkbox-container {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: flex-start;
-  width: 200px;
-  padding-top: 1px;
-}
-
 .editor-form__owner-control {
   display: flex;
-  line-height: 1.3em;
+  align-items: center;
+  margin-left: 15px;
 }
 
 .editor-form__owner-label {
@@ -235,8 +302,8 @@
 
 .editor-form__form-owner-selection--opened {
   position: absolute;
-  top: 28px;
-  right: 0px;
+  top: -52px;
+  right: -15px;
   min-width: 277px;
   max-width: 330px;
   line-height: 115%;
@@ -252,8 +319,8 @@
 }
 
 .editor-form__owner-selection-arrow-up {
-  top: 13px;
-  right: 20px;
+  top: -16px;
+  right: 5px;
   width: 21px;
   height: 15px;
   position: absolute;
@@ -268,7 +335,7 @@
   height: 10px;
   background: white;
   transform: rotate(135deg);
-  top: 10px;
+  top: -5px;
   left: 7px;
   box-shadow: 0px -1px 3px #b3b3b3;
 }
@@ -277,38 +344,35 @@
   background-color: #e8f3f6;
 }
 
-.editor-form__form-toolbar-header-text {
-  padding: 2px 0 0 15px;
-  font-size: 14px;
-  color: @blue-text-color;
-  margin-left: 20px;
+.editor-form__preview-buttons {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
 }
 
-.editor-form__form-toolbar-header-text a {
+.editor-form__preview-button-link {
   margin-left: 7px;
   display: inline-block;
   min-width: 36px;
-  background: #4194bf;
+  background: @pale-blue;
   color: #fff;
   padding: 1px 7px;
   border-radius: 3px;
   font-size: 13px;
   text-align: center;
   min-width: 50px;
+
+  &:first-child {
+    margin-left: 0px;
+  }
+
+  &:hover {
+    background: lighten(@pale-blue, 5%);
+  }
 }
 
-.editor-form__form-toolbar-header-text a:hover{
-  background: #00b5ef;
-}
-
-.editor-form__form-toolbar-header-text a:before {
-  content: '\f1a3';
-  display: inline-block;
-  font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
-  font-size: inherit;
-  text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-  padding-right: 5px;
+.editor-form__preview-button-text {
+  margin-left: 5px;
 }
 
 .editor-form__form-toolbar-checkbox {
@@ -330,7 +394,6 @@
 .editor-form__section_wrapper {
   border: 1px solid @section-gray-border;
   border-radius: 2px;
-  padding-bottom: 14px;
 }
 
 .editor-form__module-wrapper {
@@ -621,12 +684,31 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__component-header {
+  margin: 0px;
+  padding: 10px 11px 8px 11px;
+}
+
+.editor-form__component-main-header {
   color: @blue-text-color;
   font-size: 16px;
   font-weight: normal;
   text-transform: uppercase;
-  margin: 0px;
-  padding: 10px 11px 8px 11px;
+}
+
+.editor-form__component-sub-header {
+  margin-left: 14px;
+  color: @blue-text-color;
+  font-size: 16px;
+  font-weight: normal;
+  transition: opacity 0.3s;
+}
+
+.editor-form__component-sub-header-hidden {
+  opacity: 0;
+}
+
+.editor-form__component-sub-header-visible {
+  opacity: 1;
 }
 
 .editor-form__draggable-indicator {
@@ -715,9 +797,15 @@ form > div > .editor-form__component-wrapper {
   .editor-form__add-component-toolbar {
     margin-left: 11px;
     margin-right: 11px;
+    margin-bottom: 14px;
   }
 
   .editor-form__drag_n_drop_spacer--dashbox-visible {
+    margin-left: 11px;
+    margin-right: 11px;
+  }
+
+  .editor-form__section_wrapper {
     margin-left: 11px;
     margin-right: 11px;
   }
@@ -728,7 +816,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__drag_n_drop_spacer_container_for_component_group {
-  padding-top: 24px;
+  padding-top: 17px;
 }
 
 .editor-form__drag_n_drop_spacer--dashbox-hidden {

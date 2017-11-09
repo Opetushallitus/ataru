@@ -74,7 +74,7 @@ var wait = {
         if (condition()) {
           deferred.resolve()
         } else if (remaining === 0) {
-          const errorStr = "timeout of " + maxWaitMs + "ms in wait.until for condition:\n" + condition
+          const errorStr = "timeout of " + maxWaitMs + "ms in wait.until for condition:\n" + condition + "\ncaller: " + condition.caller
           console.error(new Error(errorStr))
           deferred.reject(errorStr)
         } else {

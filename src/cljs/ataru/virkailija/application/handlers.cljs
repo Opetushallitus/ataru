@@ -18,7 +18,8 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
-                   (assoc-in [:application :application-list-expanded?] false))]
+                   (assoc-in [:application :application-list-expanded?] false)
+                   (assoc-in [:application :information-request] nil))]
         {:db         db
          :dispatch-n [[:application/stop-autosave]
                       [:application/fetch-application application-key]]}))))
@@ -158,7 +159,7 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review hakukohde-reviews]}]
+(defn update-application-details [db {:keys [form application events review hakukohde-reviews information-requests]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
@@ -166,7 +167,8 @@
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))))
+      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
+      (assoc-in [:application :information-requests] information-requests)))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -338,3 +340,114 @@
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
     (assoc-in db [:application :selected-review-hakukohde] selected-hakukohde-oid)))
+
+(reg-event-db
+  :application/set-information-request-subject
+  (fn [db [_ subject]]
+    (assoc-in db [:application :information-request :subject] subject)))
+
+(reg-event-db
+  :application/set-information-request-message
+  (fn [db [_ message]]
+    (assoc-in db [:application :information-request :message] message)))
+
+(reg-event-fx
+  :application/submit-information-request
+  (fn [{:keys [db]} _]
+    (let [application-key (-> db :application :selected-application-and-form :application :key)]
+      {:db   (assoc-in db [:application :information-request :state] :submitting)
+       :http {:method              :post
+              :path                "/lomake-editori/api/applications/information-request"
+              :params              (-> db :application :information-request
+                                       (select-keys [:message :subject])
+                                       (assoc :application-key application-key))
+              :handler-or-dispatch :application/handle-submit-information-request-response}})))
+
+(reg-event-db
+  :application/set-information-request-window-visibility
+  (fn [db [_ visible?]]
+    (assoc-in db [:application :information-request :visible?] visible?)))
+
+(reg-event-fx
+  :application/handle-submit-information-request-response
+  (fn [{:keys [db]} [_ response]]
+    {:db             (-> db
+                         (assoc-in [:application :information-request] {:state :submitted})
+                         (update-in [:application :information-requests] (fnil identity []))
+                         (update-in [:application :information-requests] #(conj % response)))
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/reset-submit-information-request-state]}]}))
+
+(reg-event-db
+  :application/reset-submit-information-request-state
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)]
+      (-> db
+          (assoc-in [:application :information-request] {:visible? false})
+          (update-in [:application :applications] (partial map (fn [application]
+                                                                 (cond-> application
+                                                                   (= (:key application) application-key)
+                                                                   (assoc :new-application-modifications 0)))))))))
+
+(reg-event-fx
+  :application/handle-mass-update-application-reviews
+  (fn [{:keys [db]} [_ _]]
+    (let [db-application (:application db)
+          selected-type  (cond
+                           (:selected-form-key db-application) :selected-form-key
+                           (:selected-haku db-application) :selected-haku
+                           (:selected-hakukohde db-application) :selected-hakukohde)
+          selected-id    (if (= :selected-form-key selected-type)
+                           (:selected-form-key db-application)
+                           (-> db-application selected-type :oid))
+          dispatch-kw    (case selected-type
+                           :selected-form-key :application/fetch-applications
+                           :selected-haku :application/fetch-applications-by-haku
+                           :selected-hakukohde :application/fetch-applications-by-hakukohde)]
+      (if selected-type
+        {:db db
+         :dispatch [dispatch-kw selected-id]}
+        {:db db}))))
+
+(reg-event-fx
+  :application/mass-update-application-reviews
+  (fn [{:keys [db]} [_ application-keys from-state to-state]]
+    {:db   (assoc-in db [:application :fetching-applications] true)
+     :http {:method              :post
+            :params              {:application-keys application-keys
+                                  :from-state       from-state
+                                  :to-state         to-state}
+            :path                "/lomake-editori/api/applications/mass-update"
+            :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+
+(reg-event-fx
+  :application/resend-modify-application-link
+  (fn [{:keys [db]} _]
+    (let [application-key (-> db :application :selected-key)]
+      {:db   (assoc-in db [:application :modify-application-link :state] :submitting)
+       :http {:method              :post
+              :params              {:application-key application-key}
+              :path                (str "/lomake-editori/api/applications/" application-key "/resend-modify-link")
+              :handler-or-dispatch :application/handle-resend-modify-application-link-response}})))
+
+(reg-event-fx
+  :application/handle-resend-modify-application-link-response
+  (fn [{:keys [db]} [_ response]]
+    {:db             (-> db
+                         (assoc-in [:application :modify-application-link :state] :submitted)
+                         (update-in [:application :events] (fnil identity []))
+                         (update-in [:application :events] #(conj % response)))
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/fade-out-resend-modify-application-link-confirmation-dialog]}]}))
+
+(reg-event-fx
+  :application/fade-out-resend-modify-application-link-confirmation-dialog
+  (fn [{:keys [db]} _]
+    {:db (assoc-in db [:application :modify-application-link :state] :disappearing)
+     :dispatch-later [{:ms 1000
+                       :dispatch [:application/reset-resend-modify-application-link-state]}]}))
+
+(reg-event-db
+  :application/reset-resend-modify-application-link-state
+  (fn [db _]
+    (assoc-in db [:application :modify-application-link :state] nil)))

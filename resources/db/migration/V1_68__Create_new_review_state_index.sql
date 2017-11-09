@@ -1,0 +1,1 @@
+CREATE INDEX application_events_new_review_state_idx ON application_events (new_review_state);

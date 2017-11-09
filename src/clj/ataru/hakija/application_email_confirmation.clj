@@ -6,7 +6,7 @@
     [ataru.applications.application-store :as application-store]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
-    [ataru.hakija.background-jobs.email-job :as email-job]
+    [ataru.background-job.email-job :as email-job]
     [ataru.translations.translation-util :refer [get-translations]]
     [ataru.translations.email-confirmation :as translations]
     [ataru.config.core :refer [config]]))

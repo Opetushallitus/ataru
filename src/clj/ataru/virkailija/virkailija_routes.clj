@@ -5,6 +5,7 @@
             [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.application.review-states :as review-states]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.dob :as dob]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -18,6 +19,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.haku.haku-service :as haku-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.information-request.information-request-service :as information-request]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.koodisto.koodisto :as koodisto]
@@ -170,6 +172,17 @@
                  (api/context "/applications" []
                    :tags ["applications-api"]
 
+                   (api/POST "/mass-update" {session :session}
+                     :body [body {:application-keys [s/Str]
+                                  :from-state       (apply s/enum (map first review-states/application-review-states))
+                                  :to-state         (apply s/enum (map first review-states/application-review-states))}]
+                     :summary "Update list of applications with given state to new state"
+                     (ok (application-service/mass-update-application-states session
+                                                                             organization-service
+                                                                             (:application-keys body)
+                                                                             (:from-state body)
+                                                                             (:to-state body))))
+
                   (api/GET "/list" {session :session}
                            :query-params [{formKey      :- s/Str nil}
                                           {hakukohdeOid :- s/Str nil}
@@ -205,11 +218,12 @@
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application       ataru-schema/Application
-                             :events            [ataru-schema/Event]
-                             :review            ataru-schema/Review
-                             :hakukohde-reviews ataru-schema/HakukohdeReviews
-                             :form              ataru-schema/FormWithContent}
+                    :return {:application          ataru-schema/Application
+                             :events               [ataru-schema/Event]
+                             :review               ataru-schema/Review
+                             :hakukohde-reviews    ataru-schema/HakukohdeReviews
+                             :form                 ataru-schema/FormWithContent
+                             :information-requests [ataru-schema/InformationRequest]}
                     (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -220,6 +234,14 @@
                                              "/hakemus?virkailija-secret="
                                              (:secret virkailija-credentials))]
                          (response/temporary-redirect modify-url))
+                       (response/bad-request)))
+
+                   (api/POST "/:application-key/resend-modify-link" {session :session}
+                     :path-params [application-key :- String]
+                     :summary "Send the modify application link to the applicant via email"
+                     :return ataru-schema/Event
+                     (if-let [resend-event (application-service/send-modify-application-link-email application-key session organization-service)]
+                       (response/ok resend-event)
                        (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
@@ -233,6 +255,13 @@
                          review
                          session
                          organization-service)))
+
+                   (api/POST "/information-request" {session :session}
+                     :body [information-request ataru-schema/InformationRequest]
+                     :summary "Send an information request to an applicant"
+                     :return ataru-schema/InformationRequest
+                     (ok (information-request/store information-request
+                                                    session)))
 
                    (api/context "/excel" []
                      (api/GET "/form/:form-key" {session :session}

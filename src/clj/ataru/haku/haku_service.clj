@@ -18,9 +18,9 @@
                          (.get-haku-name tarjonta-service haku-oid)
                          {:fi haku-oid})
      :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
-     :application-count (apply + (map :application-count rows))
-     :unprocessed       (apply + (map :unprocessed rows))
-     :incomplete        (apply + (map :incomplete rows))}))
+     :application-count (:haku-application-count (first rows))
+     :unprocessed       (:haku-unprocessed (first rows))
+     :incomplete        (:haku-incomplete (first rows))}))
 
 (defn get-haut [session organization-service tarjonta-service]
   (session-orgs/run-org-authorized

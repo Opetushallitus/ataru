@@ -1,5 +1,7 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [cljs-time.core :as t]
+            [re-frame.core :as re-frame]
+            [ataru.util :as u]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -161,3 +163,51 @@
                 :answers
                 :hakukohteet
                 :value])))
+
+(re-frame/reg-sub
+  :application/information-request-submit-enabled?
+  (fn [db _]
+    (let [request-state (-> db :application :information-request :state)]
+      (and (-> db :application :information-request :subject u/not-blank?)
+           (-> db :application :information-request :message u/not-blank?)
+           (nil? request-state)))))
+
+(defn- event-and-information-request-comparator [a b]
+  (let [time-a (or (:time a) (:created-time a))
+        time-b (or (:time b) (:created-time b))]
+    (if (t/before? time-a time-b)
+      -1
+      1)))
+
+(re-frame/reg-sub
+  :application/events-and-information-requests
+  (fn [db _]
+    (->> (concat (-> db :application :events)
+                 (-> db :application :information-requests))
+         (sort event-and-information-request-comparator))))
+
+(defn- show-email-icon-for-application? [application]
+  (and (-> application :new-application-modifications (> 0))
+       (-> application :state (= "information-request"))))
+
+(re-frame/reg-sub
+  :application/show-state-email-icon?
+  (fn [db [_ application-key]]
+    (->> db
+         :application
+         :applications
+         (filter (comp (partial = application-key) :key))
+         (first)
+         (show-email-icon-for-application?))))
+
+(re-frame/reg-sub
+  :application/filtered-applications
+  (fn [db _]
+    (let [applications      (-> db :application :applications)
+          states-to-include (-> db :application :filter set)]
+      (filter #(contains? states-to-include (:state %)) applications))))
+
+(re-frame/reg-sub
+  :application/resend-modify-application-link-enabled?
+  (fn [db _]
+    (-> db :application :modify-application-link :state nil?)))

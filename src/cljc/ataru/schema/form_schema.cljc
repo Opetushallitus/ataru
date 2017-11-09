@@ -102,7 +102,8 @@
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                [(s/conditional #(= "wrapperElement" (:fieldClass %))
+                             :children                                [(s/conditional #(or (= "wrapperElement" (:fieldClass %))
+                                                                                           (= "questionGroup" (:fieldClass %)))
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
@@ -187,6 +188,7 @@
    :lang                            s/Str
    :state                           s/Str
    :score                           (s/maybe s/Int)
+   :new-application-modifications   s/Int
    (s/optional-key :form)           s/Int
    (s/optional-key :preferred-name) (s/maybe s/Str)
    (s/optional-key :last-name)      (s/maybe s/Str)
@@ -232,7 +234,8 @@
                          "updated-by-virkailija"
                          "received-from-applicant"
                          "review-state-change"
-                         "hakukohde-review-state-change"))
+                         "hakukohde-review-state-change"
+                         "modification-link-sent"))
 
 (s/defschema Event
   {:event-type                        event-types
@@ -298,3 +301,13 @@
 
 (s/defschema PermissionCheckResponseDto {:accessAllowed s/Bool
                                          (s/optional-key :errorMessage) s/Str})
+
+(s/defschema InformationRequest {:subject                         s/Str
+                                 :message                         s/Str
+                                 :application-key                 s/Str
+                                 (s/optional-key :id)             s/Int
+                                 (s/optional-key :created-time)   #?(:clj  org.joda.time.DateTime
+                                                                     :cljs s/Str)
+                                 (s/optional-key :first-name)     s/Str
+                                 (s/optional-key :last-name)      s/Str})
+

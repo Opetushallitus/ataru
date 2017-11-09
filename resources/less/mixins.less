@@ -108,3 +108,37 @@ span, p {
     font-style: italic;
   }
 }
+
+.arrow(@direction, @color, @size: 8px, @offset: 50%) {
+  position: relative;
+  &:after,
+  &:before {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+}
+
+.arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = top) {
+  &:after {
+    bottom: 100%;
+    left: @offset;
+    margin-left: -@size;
+
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-bottom: @size solid @color;
+  }
+
+  &:before {
+    bottom: 100%;
+    left: @offset;
+    margin-left: -@size;
+
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-bottom: @size solid;
+    border-bottom-color: @color;
+  }
+}
