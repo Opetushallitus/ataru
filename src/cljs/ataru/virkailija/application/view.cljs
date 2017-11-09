@@ -311,7 +311,7 @@
     (fn []
       (let [all-filters-selected? (= (count @application-filters)
                                      (count application-review-states/application-review-states))]
-        [:span.application-handling__filter-state
+        [:span.application-handling__filter-state.application-handling__filter-state--application-state
          [:a.application-handling__filter-state-link
           {:on-click toggle-filter-opened}
           [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
@@ -355,7 +355,7 @@
           [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
           (str "Valinta" (when-not all-filters-selected? " *"))]
          (when @filter-opened
-           (into [:div.application-handling__filter-state-selection
+           (into [:div.application-handling__filter-state-selection.application-handling__filter-state--selection-state
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
                    {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
                    [:label
@@ -516,6 +516,7 @@
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
+         {:class (str "application-handling__review-state-container-" (name kw))}
          [:div.application-handling__review-header
           {:class (str "application-handling__review-header--" (name kw))} label]
          (if @list-opened
