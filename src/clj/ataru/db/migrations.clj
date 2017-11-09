@@ -33,6 +33,22 @@
         :else expr))
     form))
 
+(defn- update-birth-date-place-holder []
+  (doseq [form (->> (store/get-all-forms)
+                    (map #(store/fetch-by-id (:id %)))
+                    (sort-by :created-time))]
+    (store/create-form-or-increment-version!
+     (clojure.walk/prewalk
+      (fn [expr]
+        (match expr
+          {:id "birth-date"}
+          (assoc-in expr [:params :placeholder]
+                    {:fi "pp.kk.vvvv"
+                     :sv "dd.mm.åååå"
+                     :en "dd.mm.yyyy"})
+          :else expr))
+      form))))
+
 (defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)
         existing-forms    (try
@@ -226,6 +242,11 @@
   migrate-application-reviews "1.64"
   "Migrate old per-application reviews to application + hakukohde specific ones"
   (application-reviews->new-model))
+
+(migrations/defmigration
+  migrate-birth-date-placeholders "1.70"
+  "Add multi lang placeholder texts to birth date question"
+  (update-birth-date-place-holder))
 
 (defn migrate
   []
