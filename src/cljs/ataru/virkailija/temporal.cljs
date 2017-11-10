@@ -9,7 +9,7 @@
 (def ^:private time-formatter (f/formatter "dd.MM.yyyy HH:mm"))
 
 (def days-finnish
-  ["Sunnuntai" "Maanantai" "Tiistai" "Keskiviikko" "Torstai" "Perjantai" "Lauantai"])
+  ["Su" "Ma" "Ti" "Ke" "To" "Pe" "La"])
 
 (def months-finnish
   ["Tammikuu" "Helmikuu" "Maaliskuu" "Huhtikuu" "Toukokuu" "Kesäkuu" "Heinäkuu" "Elokuu" "Syyskuu" "Lokakuu" "Marraskuu" "Joulukuu"])
@@ -46,7 +46,7 @@
 
 (defn time->str [google-date]
   (str (with-dow google-date)
-       "na "
+       " "
        (time->short-str google-date)))
 
 (defn time->long [google-date]

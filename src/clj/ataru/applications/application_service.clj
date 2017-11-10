@@ -105,33 +105,20 @@
      :review               (application-store/get-application-review application-key)
      :information-requests (information-request-store/get-information-requests application-key)}))
 
-(defn get-excel-report-of-applications-by-form
-  [form-key filtered-states session organization-service tarjonta-service]
-  (aac/check-form-access form-key session organization-service [:view-applications :edit-applications])
-  (let [applications (application-store/get-applications-for-form form-key filtered-states)]
-    (ByteArrayInputStream. (excel/export-applications applications tarjonta-service))))
-
-(defn get-excel-report-of-applications-by-hakukohde
-  [hakukohde-oid filtered-states session organization-service tarjonta-service]
-  (let [applications (->> (application-store/get-applications-for-hakukohde filtered-states hakukohde-oid)
-                          (filter (comp #(form-access-control/form-allowed-by-key?
-                                          %
-                                          session
-                                          organization-service
-                                          [:view-applications :edit-applications])
-                                        :form-key)))]
-    (ByteArrayInputStream. (excel/export-applications applications tarjonta-service))))
-
-(defn get-excel-report-of-applications-by-haku
-  [haku-oid filtered-states session organization-service tarjonta-service]
-  (let [applications (->> (application-store/get-applications-for-haku haku-oid filtered-states)
-                          (filter (comp #(form-access-control/form-allowed-by-key?
-                                          %
-                                          session
-                                          organization-service
-                                          [:view-applications :edit-applications])
-                                        :form-key)))]
-    (ByteArrayInputStream. (excel/export-applications applications tarjonta-service))))
+(defn get-excel-report-of-applications-by-key
+  [application-keys session organization-service tarjonta-service]
+  (let [applications         (application-store/get-applications-by-keys application-keys)
+        forms                (->> applications
+                                  (map :form-key)
+                                  (distinct))
+        allowed-forms        (set (filter #(form-access-control/form-allowed-by-key?
+                                             %
+                                             session
+                                             organization-service
+                                             [:view-applications :edit-applications])
+                                          forms))
+        allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)]
+    (ByteArrayInputStream. (excel/export-applications allowed-applications tarjonta-service))))
 
 (defn- save-application-hakukohde-reviews
   [virkailija application-key hakukohde-reviews session]

@@ -46,22 +46,48 @@
     (assoc application field value)
     application))
 
+(defn- update-hakukohde-review-field-of-selected-application-in-list
+  [application selected-application-key hakukohde review-field state]
+  (if (= selected-application-key (:key application))
+    (let [hakukohde-reviews             (or (:application-hakukohde-reviews application) [])
+          reviews-with-existing-removed (remove
+                                          (fn [review]
+                                            (and
+                                              (= (:requirement review) (name review-field))
+                                              (= (:hakukohde review) hakukohde)))
+                                          hakukohde-reviews)
+          new-review                    {:requirement (name review-field)
+                                         :state       state
+                                         :hakukohde   hakukohde}]
+      (assoc application :application-hakukohde-reviews (conj reviews-with-existing-removed new-review)))
+    application))
+
 (reg-event-db
  :application/update-review-field
  (fn [db [_ field value]]
-   (let [selected-key         (get-in db [:application :selected-key])
-         application-list     (get-in db [:application :applications])
-         selected-hakukohde   (get-in db [:application :selected-review-hakukohde])
-         is-hakukohde-review? (-> (map first review-states/hakukohde-review-types)
-                                  (set)
-                                  (contains? field))
-         updated-applications (if (some #{field} [:state :score])
-                                (mapv
-                                 #(update-review-field-of-selected-application-in-list % selected-key field value)
-                                 application-list)
-                                application-list)]
+   (let [selected-key           (get-in db [:application :selected-key])
+         application-list       (get-in db [:application :applications])
+         selected-hakukohde-oid (get-in db [:application :selected-review-hakukohde])
+         is-hakukohde-review?   (-> (map first review-states/hakukohde-review-types)
+                                    (set)
+                                    (contains? field))
+         updated-applications   (cond
+                                  (some #{field} [:state :score])
+                                  (mapv
+                                    #(update-review-field-of-selected-application-in-list % selected-key field value)
+                                    application-list)
+
+                                  is-hakukohde-review?
+                                  (mapv
+                                    #(update-hakukohde-review-field-of-selected-application-in-list % selected-key selected-hakukohde-oid field value)
+                                    application-list)
+
+                                  :else
+                                  application-list)]
      (if is-hakukohde-review?
-       (assoc-in db [:application :review :hakukohde-reviews (keyword selected-hakukohde) field] value)
+       (-> db
+           (assoc-in [:application :review :hakukohde-reviews (keyword selected-hakukohde-oid) field] value)
+           (assoc-in [:application :applications] updated-applications))
        (-> db
            (update-in [:application :review] assoc field value)
            (assoc-in [:application :applications] updated-applications)
@@ -110,13 +136,22 @@
                    [:application/select-application application-key]
                    [:application/close-application])})))
 
+(defn- extract-unselected-review-states-from-query
+  [query-param states]
+  (-> (cljs-util/extract-query-params)
+      query-param
+      (clojure.string/split #",")
+      (cljs-util/get-unselected-review-states states)))
+
 (defn fetch-applications-fx [db path]
   {:db   (-> db
              (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :filter] (-> (cljs-util/extract-query-params)
-                                                  :unselected-states
-                                                  (clojure.string/split #",")
-                                                  cljs-util/get-unselected-review-states)))
+             (assoc-in [:application :filter] (extract-unselected-review-states-from-query
+                                                :unselected-states
+                                                review-states/application-review-states))
+             (assoc-in [:application :selection-filter] (extract-unselected-review-states-from-query
+                                                          :unselected-selection-states
+                                                          review-states/application-hakukohde-selection-states)))
    :http {:method              :get
           :path                path
           :handler-or-dispatch :application/handle-fetch-applications-response}})
@@ -393,10 +428,7 @@
   :application/handle-mass-update-application-reviews
   (fn [{:keys [db]} [_ _]]
     (let [db-application (:application db)
-          selected-type  (cond
-                           (:selected-form-key db-application) :selected-form-key
-                           (:selected-haku db-application) :selected-haku
-                           (:selected-hakukohde db-application) :selected-hakukohde)
+          selected-type  @(subscribe [:application/application-list-selected-by])
           selected-id    (if (= :selected-form-key selected-type)
                            (:selected-form-key db-application)
                            (-> db-application selected-type :oid))
