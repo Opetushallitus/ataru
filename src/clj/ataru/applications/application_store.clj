@@ -484,9 +484,8 @@
 
 (defn- payment-obligation-to-application [application payment-obligations]
   (if-let [obligation (->> (get payment-obligations (:oid application))
-                           (group-by :hakukohde)
-                           (reduce (fn [r [k v]]
-                                     (assoc r k (-> v first :state)))
+                           (reduce (fn [r o]
+                                     (assoc r (:hakukohde o) (:state o)))
                                    {})
                            (not-empty))]
     (assoc application :payment-obligations obligation)
@@ -507,13 +506,13 @@
 (defn- payment-obligations-for-applications [hakemus-oids]
   (->> (exec-db :db
                 yesql-get-payment-obligation-for-applications
-                {:hakemus_oids (cons "" hakemus-oids)})
+                {:hakemus_oids hakemus-oids})
        (group-by :application_key)))
 
 (defn applications-for-external-api
   [haku-oid hakukohde-oid hakemus-oids]
   (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids)
-        payment-obligations (payment-obligations-for-applications hakemus-oids)]
+        payment-obligations (payment-obligations-for-applications (map :oid applications))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
 (defn- unwrap-person-and-hakemus-oid
