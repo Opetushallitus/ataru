@@ -39,8 +39,8 @@
   [[:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
    [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
-   [:selection-state "Valinta" application-hakukohde-selection-states]
-   [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]])
+   [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]
+   [:selection-state "Valinta" application-hakukohde-selection-states]])
 
 ; States where applications are considered "complete" in the application handling UI
 (def complete-states ["processed" "inactivated"])
