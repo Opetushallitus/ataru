@@ -5,11 +5,13 @@
             [ataru.virkailija.editor.handlers-test]
             [ataru.hakija.application-test]
             [ataru.hakija.application-validators-test]
-            [ataru.hakija.rules-test]))
+            [ataru.hakija.rules-test]
+            [ataru.virkailija.component-data.value-transformers-test]))
 
 (doo-tests 'ataru.cljs-util-test
            'ataru.dob-test
            'ataru.virkailija.editor.handlers-test
            'ataru.hakija.application-test
            'ataru.hakija.application-validators-test
-           'ataru.hakija.rules-test)
+           'ataru.hakija.rules-test
+           'ataru.virkailija.component-data.value-transformers-test)

@@ -97,7 +97,7 @@
           "Etunimi",
           "Sukunimi",
           "Suriname",
-          "1.1.1990",
+          "01.01.1990",
           "mies",
           "Paramaribo, Suriname",
           "12345",

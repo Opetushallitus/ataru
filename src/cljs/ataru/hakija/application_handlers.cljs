@@ -12,7 +12,8 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :refer [application-view-translations]]
-            [clojure.data :as d]))
+            [clojure.data :as d]
+            [ataru.virkailija.component-data.value-transformers :as value-transformers]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -475,13 +476,18 @@
         (not (empty? rules))
         (assoc :dispatch [:application/run-rule rules])))))
 
+(defn- transform-value [value field-descriptor]
+  (let [t (case (:id field-descriptor)
+            "birth-date" value-transformers/birth-date
+            identity)]
+    (or (t value) value)))
+
 (reg-event-fx
   :application/set-application-field
   (fn [{db :db} [_ field value]]
-    (let [id       (keyword (:id field))
-          answers  (get-in db [:application :answers])
-          answer   (get answers id)
-          changed? (not= value (:original-value answer))]
+    (let [value    (transform-value value field)
+          id       (keyword (:id field))
+          answers  (get-in db [:application :answers])]
       {:db (-> db
                (assoc-in [:application :answers id :value] value)
                (set-multi-value-changed id :value))
