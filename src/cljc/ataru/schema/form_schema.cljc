@@ -188,7 +188,8 @@
     (concat
       (map first review-states/application-hakukohde-selection-states)
       (map first review-states/application-hakukohde-review-states)
-      (map first review-states/application-hakukohde-eligibility-states))))
+      (map first review-states/application-hakukohde-eligibility-states)
+      (map first review-states/application-payment-obligation-states))))
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
