@@ -467,7 +467,7 @@
                                      (assoc r (:hakukohde o) (:state o)))
                                    {})
                            (not-empty))]
-    (assoc application :payment-obligations obligation)
+    (assoc application :paymentObligations obligation)
     application))
 
 (defn- payment-obligations-for-applications [hakemus-oids]
