@@ -193,9 +193,9 @@
             db
             (:followups option))))
 
-(defn- set-multi-value-changed [db id]
-  (let [{:keys [original-value value values]} (-> db :application :answers id)
-        [new-diff original-diff _] (d/diff value original-value)]
+(defn- set-multi-value-changed [db id value-key]
+  (let [answer (-> db :application :answers id)
+        [new-diff original-diff _] (d/diff (get answer value-key) (:original-value answer))]
     (update-in db [:application :values-changed?] (fn [values]
                                                     (let [values (or values #{})]
                                                       (if (and (empty? new-diff)
@@ -484,7 +484,7 @@
           changed? (not= value (:original-value answer))]
       {:db (-> db
                (assoc-in [:application :answers id :value] value)
-               (set-multi-value-changed id))
+               (set-multi-value-changed id :value))
        :validate {:value value
                   :answers answers
                   :field-descriptor field
@@ -511,7 +511,7 @@
                                (mapv :value values))]
     (-> db
         (assoc-in [:application :answers id :value] value)
-        (set-multi-value-changed id))))
+        (set-multi-value-changed id :value))))
 
 (defn- set-repeatable-application-repeated-field-valid
   [db id group-idx data-idx valid?]
@@ -640,7 +640,7 @@
                               (toggle-multiple-choice-option answer
                                                              (:value option)
                                                              question-group-idx)))
-                 (set-multi-value-changed id))]
+                 (set-multi-value-changed id :value))]
       (if question-group-idx
         {:db db
          :validate-every {:values (get-in db [:application :answers id :value])
@@ -679,7 +679,7 @@
                  (update-in button-path (fn [answer]
                                           (assoc answer :value (mapv (partial mapv :value)
                                                                      (:values answer)))))
-                 (set-multi-value-changed id)
+                 (set-multi-value-changed id :value)
                  (set-single-choice-followup-visibility field-descriptor value))
              (-> db
                  (assoc-in value-path new-value)
@@ -815,7 +815,7 @@
                (update-in path
                           merge
                           {:value response :valid true :status :ready})
-               (set-multi-value-changed (keyword component-id)))
+               (set-multi-value-changed (keyword component-id) :values))
        :validate {:value (get-in db path)
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor
@@ -860,7 +860,7 @@
                           [:application :answers (keyword component-id) :values])
                         (comp vec
                               (partial remove (comp (partial = attachment-key) :key :value))))
-             (set-multi-value-changed (keyword component-id)))
+             (set-multi-value-changed (keyword component-id) :values))
      :dispatch [:application/set-attachment-valid
                 (keyword component-id)
                 (required? field-descriptor)
