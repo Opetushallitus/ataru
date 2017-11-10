@@ -472,7 +472,7 @@
                                                           :person_oids    (cons "" person-oids)})
        (map unwrap-hakurekisteri-application)))
 
-(defn- unwrap-vts-application
+(defn- unwrap-external-application
   [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
   {:oid           key
    :hakuOid       haku
@@ -481,15 +481,39 @@
    :email         email
    :hakukohteet   hakukohde})
 
-(defn get-applications-by-haku
+
+(defn- payment-obligation-to-application [application payment-obligations]
+  (if-let [obligation (->> (get payment-obligations (:oid application))
+                           (reduce (fn [r o]
+                                     (assoc r (:hakukohde o) (:state o)))
+                                   {})
+                           (not-empty))]
+    (assoc application :payment-obligations obligation)
+    application))
+
+(defn- get-external-applications
   [haku-oid hakukohde-oid hakemus-oids]
-  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
-                                                                   ; Empty string to avoid empty parameter lists
-                                                                   :hakukohde_oids (cond-> [""]
-                                                                                           (some? hakukohde-oid)
-                                                                                           (conj hakukohde-oid))
-                                                                   :hakemus_oids   (cons "" hakemus-oids)})
-       (map unwrap-vts-application)))
+  (->> (exec-db :db
+                yesql-applications-by-haku-and-hakukohde-oids
+                {:haku_oid       haku-oid
+                 ; Empty string to avoid empty parameter lists
+                 :hakukohde_oids (cond-> [""]
+                                         (some? hakukohde-oid)
+                                         (conj hakukohde-oid))
+                 :hakemus_oids   (cons "" hakemus-oids)})
+       (map unwrap-external-application)))
+
+(defn- payment-obligations-for-applications [hakemus-oids]
+  (->> (exec-db :db
+                yesql-get-payment-obligation-for-applications
+                {:hakemus_oids hakemus-oids})
+       (group-by :application_key)))
+
+(defn applications-for-external-api
+  [haku-oid hakukohde-oid hakemus-oids]
+  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids)
+        payment-obligations (payment-obligations-for-applications (map :oid applications))]
+    (map #(payment-obligation-to-application % payment-obligations) applications)))
 
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
