@@ -4,6 +4,7 @@
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.application-sorting :as application-sorting]
             [ataru.virkailija.virkailija-ajax :refer [http]]
+            [ataru.application.review-states :as review-states]
             [ataru.util :as util]
             [ataru.cljs-util :as cljs-util]
             [reagent.core :as r]
@@ -51,10 +52,9 @@
    (let [selected-key         (get-in db [:application :selected-key])
          application-list     (get-in db [:application :applications])
          selected-hakukohde   (get-in db [:application :selected-review-hakukohde])
-         is-hakukohde-review? (some #{field} [:language-requirement
-                                              :degree-requirement
-                                              :eligibility-state
-                                              :selection-state])
+         is-hakukohde-review? (-> (map first review-states/hakukohde-review-types)
+                                  (set)
+                                  (contains? field))
          updated-applications (if (some #{field} [:state :score])
                                 (mapv
                                  #(update-review-field-of-selected-application-in-list % selected-key field value)
