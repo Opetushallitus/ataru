@@ -242,7 +242,7 @@
    :asiointikieli                        s/Str
    :hakukohteet                          [s/Str]
    :email                                (s/maybe s/Str)
-   (s/optional-key :payment-obligations) {s/Str s/Str}})
+   (s/optional-key :paymentObligations) {s/Str s/Str}})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
