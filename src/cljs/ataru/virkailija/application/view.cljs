@@ -841,7 +841,8 @@
             (str "Oppija " person-oid)]]])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
-        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
+        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]
+     [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]))
 
 (defn close-application []
   [:a {:href     "#"
