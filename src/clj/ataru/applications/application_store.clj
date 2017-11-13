@@ -492,7 +492,8 @@
                                     :hakukohde_oids (cons "" hakukohde-oids)
                                     :person_oids    (cons "" person-oids)})
                           (map unwrap-hakurekisteri-application))
-        payment-obligations (payment-obligations-for-applications (map :oid applications))]
+        payment-obligations (when (not-empty applications)
+                              (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
 (defn- unwrap-external-application
@@ -519,7 +520,8 @@
 (defn applications-for-external-api
   [haku-oid hakukohde-oid hakemus-oids]
   (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids)
-        payment-obligations (payment-obligations-for-applications (map :oid applications))]
+        payment-obligations (when (not-empty applications)
+                              (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
 (defn- unwrap-person-and-hakemus-oid
