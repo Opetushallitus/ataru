@@ -221,17 +221,20 @@
           states-to-include           (-> db :application :filter set)
           selection-states-to-include (-> db :application :selection-filter set)]
       (filter
-        (fn [application]
-          (and
+       (fn [application]
+         (let [selection-states (->> (:application-hakukohde-reviews application)
+                                     (filter #(= "selection-state" (:requirement %)))
+                                     (map :state))]
+           (and
             (contains? states-to-include (:state application))
             (or
-              (not (empty? (clojure.set/intersection
-                             selection-states-to-include
-                             (set (map :state (:application-hakukohde-reviews application))))))
-              (and
-                (contains? selection-states-to-include "incomplete")
-                (or
-                  (zero? (count (:application-hakukohde-reviews application)))
-                  (< (count (:application-hakukohde-reviews application))
-                     (count (:hakukohde application))))))))
-        applications))))
+             (not (empty? (clojure.set/intersection
+                           selection-states-to-include
+                           (set selection-states))))
+             (and
+              (contains? selection-states-to-include "incomplete")
+              (or
+               (empty? selection-states)
+               (< (count selection-states)
+                  (count (:hakukohde application)))))))))
+       applications))))
