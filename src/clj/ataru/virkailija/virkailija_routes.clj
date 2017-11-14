@@ -26,6 +26,7 @@
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [ataru.statistics.statistics-service :as statistics-service]
+            [ataru.odw.odw-service :as odw-service]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -126,7 +127,11 @@
               (render-file-in-dev (str "spec/" filename ".js") {})
               (route/not-found "Not found")))))
 
-(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
+(defn api-routes [{:keys [organization-service
+                          tarjonta-service
+                          virkailija-tarjonta-service
+                          cache-service
+                          person-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -420,7 +425,12 @@
                                               hakuOid
                                               hakukohdeOids)]
                               (response/ok mapping)
-                              (response/unauthorized {:error "Unauthorized"}))))))
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/odw" []
+                     :summary "Gst odw report"
+                     :query-params [fromDate :- s/Str]
+                     :return {s/Str s/Str}
+                     (odw-service/get-applications-for-odw person-service fromDate)))))
 
 (api/defroutes resource-routes
   (api/undocumented
