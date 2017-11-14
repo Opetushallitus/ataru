@@ -462,13 +462,11 @@
       :secret))
 
 (defn- payment-obligation-to-application [application payment-obligations]
-  (if-let [obligation (->> (get payment-obligations (:oid application))
-                           (reduce (fn [r o]
-                                     (assoc r (:hakukohde o) (:state o)))
-                                   {})
-                           (not-empty))]
-    (assoc application :paymentObligations obligation)
-    application))
+  (let [obligations (reduce (fn [r o]
+                              (assoc r (:hakukohde o) (:state o)))
+                            {}
+                            (get payment-obligations (:oid application)))]
+    (assoc application :paymentObligations obligations)))
 
 (defn- payment-obligations-for-applications [hakemus-oids]
   (->> (exec-db :db

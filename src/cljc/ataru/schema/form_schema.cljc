@@ -237,13 +237,13 @@
    :hakukohteet [s/Str]})
 
 (s/defschema VtsApplication
-  {:oid                                  s/Str              ; (:key application)
-   :hakuOid                              s/Str
-   :henkiloOid                           s/Str
-   :asiointikieli                        s/Str
-   :hakukohteet                          [s/Str]
-   :email                                (s/maybe s/Str)
-   (s/optional-key :paymentObligations) {s/Str s/Str}})
+  {:oid                s/Str ; (:key application)
+   :hakuOid            s/Str
+   :henkiloOid         s/Str
+   :asiointikieli      s/Str
+   :hakukohteet        [s/Str]
+   :email              (s/maybe s/Str)
+   :paymentObligations {s/Str s/Str}})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
