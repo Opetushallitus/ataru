@@ -1,11 +1,13 @@
 (ns ataru.odw.odw-service
   (:require [ataru.applications.application-store :as application-store]
-            [ataru.util :as util]))
+            [ataru.util :as util]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]))
 
 (defn get-applications-for-odw [date]
   (let [applications (application-store/get-applications-by-date date)]
     (map (fn [application]
            (let [answers (-> application :content :answers util/answers-by-key)
+                 hakukohteet (:hakukohde application)
                  person-oid             (:person_oid application)]
              (merge {:person_oid             person-oid
                      :student_oid            person-oid
@@ -30,9 +32,13 @@
                      :Turvakielto nil
                      :SahkoinenViestintaLupa nil}
                     (into {}
-                          (for [index (range 1 7)] ; Hard coded amount in ODW
-                            {(keyword (str "pref" index "_koulutus_oid"))      (str "koulutus" index)
-                             (keyword (str "pref" index "_opetuspiste_oid"))   (str "opetuspiste" index)
+                          (for [index (range 1 7) ; Hard coded amount in ODW
+                                :let [hakukohde-oid (nth hakukohteet index nil)
+                                      hakukohde (when hakukohde-oid (tarjonta-client/get-hakukohde hakukohde-oid))
+                                      koulutus-oid (-> hakukohde :koulutukset first :oid)
+                                      tarjoaja-oid (-> hakukohde :tarjoajaOids first)]]
+                            {(keyword (str "pref" index "_koulutus_oid"))      koulutus-oid
+                             (keyword (str "pref" index "_opetuspiste_oid"))   tarjoaja-oid
                              (keyword (str "pref" index "_sora"))              (str "sora" index)
                              (keyword (str "pref" index "_harkinnanvarainen")) (str "harkinnanvarainen" index)})))))
       applications)))
