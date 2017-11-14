@@ -4,9 +4,9 @@
             [cljs.core.async.macros :refer [go]])
   (:require [ataru.virkailija.routes :as routes]
             [cljs.core.match :refer-macros [match]]
-            [re-frame.core :as re-frame :refer [subscribe dispatch]]
-            [reagent.core :as r]
-            [cljs.core.async :as a :refer  [<! timeout]]
+            [re-frame.core :refer [subscribe dispatch]]
+            [ataru.cljs-util :as cljs-util]
+            [cljs.core.async :refer  [<! timeout]]
             [taoensso.timbre :refer-macros [spy debug]]
             [clojure.string :as string]))
 
@@ -25,12 +25,10 @@
         active?          (reaction (= @active-panel panel-kw))]
     (fn []
       [:div.section-link {:class (name panel-kw)}
-       (if @active?
-         [:span.active-section
-          active-section-arrow
-          (-> panels panel-kw :text)]
-         [:a {:on-click (partial routes/navigate-to-click-handler (str (-> panels panel-kw :href)))}
-          (-> panels panel-kw :text)])])))
+       [:a {:href (-> panels panel-kw :href)}
+        (when @active?
+          active-section-arrow)
+        (-> panels panel-kw :text)]])))
 
 (defn title []
   (fn []
