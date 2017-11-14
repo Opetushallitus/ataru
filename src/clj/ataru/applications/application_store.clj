@@ -595,4 +595,4 @@
           (->kebab-case-kw)))))
 
 (defn get-applications-by-date [date]
-  (->> (exec-db :db yesql-get-applciations-by-created-time {:date date})))
+  (exec-db :db yesql-get-applciations-by-created-time {:date date}))

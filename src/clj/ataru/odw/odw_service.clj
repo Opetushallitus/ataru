@@ -5,9 +5,10 @@
             [ataru.person-service.person-service :as person-service]))
 
 (defn- gender-int-to-string [gender]
-  (if (= "1" gender)
-    "mies"
-    "nainen"))
+  (condp = gender
+    "1" "mies"
+    "2" "nainen"
+    :else nil))
 
 (defn get-applications-for-odw [person-service date]
   (let [applications (application-store/get-applications-by-date date)
@@ -15,9 +16,8 @@
     (map (fn [application]
            (let [answers     (-> application :content :answers util/answers-by-key)
                  hakukohteet (:hakukohde application)
-                 person-oid  (:person_oid application)
                  person      (first (filter #(= person-oid (:oidHenkilo %)) persons))]
-             (merge {:person_oid             person-oid
+             (merge {:person_oid             (:person_oid application)
                      :application_system_oid (:haku application)
                      :postinumero            (-> answers :postal-code :value)
                      :lahiosoite             (-> answers :address :value)

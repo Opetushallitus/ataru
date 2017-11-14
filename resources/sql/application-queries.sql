@@ -808,8 +808,7 @@ WHERE person_oid IS NOT NULL
 ORDER BY created_time DESC;
 
 --name: yesql-get-applciations-by-created-time
-SELECT key, state, haku, hakukohde, person_oid, lang, content
+SELECT key, haku, hakukohde, person_oid, content
 FROM latest_applications
-JOIN application_reviews ON application_key = key
 WHERE created_time > :date::DATE
 ORDER BY created_time DESC
