@@ -180,16 +180,12 @@
                      (s/optional-key :label)       (s/maybe (s/cond-pre
                                                               LocalizedString
                                                               s/Str))})
-(def review-requirements
-  (map (comp name first) review-states/hakukohde-review-types))
 
 (def review-requirement-values
-  (distinct
-    (concat
-      (map first review-states/application-hakukohde-selection-states)
-      (map first review-states/application-hakukohde-review-states)
-      (map first review-states/application-hakukohde-eligibility-states)
-      (map first review-states/application-payment-obligation-states))))
+  (->> review-states/hakukohde-review-types
+       (map last)
+       (mapcat (partial map first))
+       distinct))
 
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
@@ -206,7 +202,7 @@
    (s/optional-key :haku)                          (s/maybe s/Str)
    (s/optional-key :hakukohde)                     (s/maybe [s/Str])
    (s/optional-key :secret)                        s/Str
-   (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-requirements)
+   (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
                                                      :state       (apply s/enum review-requirement-values)
                                                      :hakukohde   s/Str}]}) ; "form" or oid
 

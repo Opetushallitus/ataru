@@ -42,6 +42,9 @@
    [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]
    [:selection-state "Valinta" application-hakukohde-selection-states]])
 
+(def hakukohde-review-type-names
+  (map (comp name first) hakukohde-review-types))
+
 ; States where applications are considered "complete" in the application handling UI
 (def complete-states ["processed" "inactivated"])
 
