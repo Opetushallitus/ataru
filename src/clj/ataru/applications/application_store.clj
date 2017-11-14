@@ -594,5 +594,5 @@
           (merge (select-keys virkailija [:first_name :last_name]))
           (->kebab-case-kw)))))
 
-(defn get-applications-by-date [date]
+(defn get-applications-newer-than [date]
   (exec-db :db yesql-get-applciations-by-created-time {:date date}))

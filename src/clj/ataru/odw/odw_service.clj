@@ -11,13 +11,17 @@
     :else nil))
 
 (defn get-applications-for-odw [person-service date]
-  (let [applications (application-store/get-applications-by-date date)
-        persons      (person-service/get-persons person-service (map :person_oid applications))]
+  (let [applications (application-store/get-applications-newer-than date)
+        persons      (->> (person-service/get-persons person-service (distinct (map :person_oid applications)))
+                          (reduce (fn [res person]
+                                    (assoc res (:oidHenkilo person) person))
+                                  {}))]
     (map (fn [application]
            (let [answers     (-> application :content :answers util/answers-by-key)
                  hakukohteet (:hakukohde application)
-                 person      (first (filter #(= person-oid (:oidHenkilo %)) persons))]
-             (merge {:person_oid             (:person_oid application)
+                 person-oid  (:person_oid application)
+                 person      (get persons person-oid)]
+             (merge {:person_oid             person-oid
                      :application_system_oid (:haku application)
                      :postinumero            (-> answers :postal-code :value)
                      :lahiosoite             (-> answers :address :value)
@@ -34,7 +38,7 @@
                      :syntymaaika            (-> person :syntymaaika)
                      :Turvakielto            (-> person :turvakielto)
                      :hetu                   (-> person :hetu)
-                     :sukupuoli              (gender-int-to-string(-> person :sukupuoli))
+                     :sukupuoli              (gender-int-to-string (-> person :sukupuoli))
                      :Ulk_postiosoite        nil
                      :Ulk_postinumero        nil
                      :Ulk_kunta              nil

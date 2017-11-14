@@ -811,4 +811,5 @@ ORDER BY created_time DESC;
 SELECT key, haku, hakukohde, person_oid, content
 FROM latest_applications
 WHERE created_time > :date::DATE
+AND person_oid IS NOT NULL
 ORDER BY created_time DESC
