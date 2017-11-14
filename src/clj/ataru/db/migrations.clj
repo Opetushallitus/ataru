@@ -7,7 +7,7 @@
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-    [crypto.random :as c]
+    [ataru.util.random :as c]
     [ataru.db.db :refer [get-datasource]]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]

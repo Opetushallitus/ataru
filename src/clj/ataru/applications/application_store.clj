@@ -14,7 +14,7 @@
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [ataru.dob :as dob]
-            [crypto.random :as crypto]
+            [ataru.util.random :as crypto]
             [taoensso.timbre :refer [info]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
