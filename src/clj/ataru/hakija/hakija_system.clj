@@ -6,7 +6,8 @@
             [ataru.http.server :as server]
             [ataru.person-service.person-service :as person-service]
             [environ.core :refer [env]]
-            [ataru.cache.caches :refer [hazelcast-caches caches]]
+            [ataru.cache.caches :refer [hazelcast-caches redis-caches caches]]
+            [ataru.redis :as redis]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
 
@@ -17,6 +18,8 @@
      (Integer/parseInt (get env :ataru-repl-port "3335"))))
   ([http-port repl-port]
    (apply component/system-map
+     :redis (redis/map->Redis {})
+
      :hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})
 
      :cache-service (component/using
@@ -43,6 +46,11 @@
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)
                              [:person-service])
-     (mapcat (fn [cache]
-       [(keyword (:name cache)) (component/using cache [:hazelcast])])
-          hazelcast-caches))))
+
+     (concat
+      (mapcat (fn [cache]
+                [(keyword (:name cache)) (component/using cache [:hazelcast])])
+              hazelcast-caches)
+      (mapcat (fn [cache]
+                [(keyword (:name cache)) (component/using cache [:redis])])
+              redis-caches)))))

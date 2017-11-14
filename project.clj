@@ -69,6 +69,7 @@
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.13"]
                  [com.hazelcast/hazelcast "3.8.4"]
+                 [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
                  [hikari-cp "1.7.6" :exclusions [prismatic/schema]]
                  [ring/ring-mock "0.3.1"]

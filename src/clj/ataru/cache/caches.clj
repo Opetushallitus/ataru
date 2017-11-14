@@ -1,6 +1,8 @@
 (ns ataru.cache.caches
   (:require [ataru.cache.hazelcast-cache :refer [map->BasicCache
-                                                 map->UpdatingCache]])
+                                                 map->UpdatingCache]]
+            [ataru.cache.redis-cache :as redis]
+            [ataru.tarjonta-service.tarjonta-client :as tarjonta-client])
   (:import java.util.concurrent.TimeUnit))
 
 (def hazelcast-caches
@@ -23,4 +25,7 @@
    (map->BasicCache
     {:name "statistics-day" :max-size 500 :ttl 300})])
 
-(def caches hazelcast-caches)
+(def redis-caches
+  [])
+
+(def caches (concat hazelcast-caches redis-caches))
