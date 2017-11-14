@@ -12,7 +12,6 @@
                  hakukohteet (:hakukohde application)
                  person-oid  (:person_oid application)
                  person      (first (filter #(= person-oid (:oidHenkilo %)) persons))]
-             (clojure.pprint/pprint person)
              (merge {:person_oid             person-oid
                      :student_oid            person-oid
                      :application_system_oid (:haku application)
@@ -36,7 +35,7 @@
                      :Turvakielto            nil
                      :SahkoinenViestintaLupa nil}
                     (into {}
-                          (for [index (range 1 7)           ; Hard coded amount in ODW
+                          (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
                                 :let [hakukohde-oid (nth hakukohteet index nil)
                                       hakukohde     (when hakukohde-oid (tarjonta-client/get-hakukohde hakukohde-oid))
                                       koulutus-oid  (-> hakukohde :koulutukset first :oid)

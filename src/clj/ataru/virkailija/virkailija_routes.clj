@@ -26,7 +26,6 @@
             [ataru.applications.excel-export :as excel]
             [ataru.virkailija.user.session-organizations :refer [organization-list]]
             [ataru.statistics.statistics-service :as statistics-service]
-            [ataru.odw.odw-service :as odw-service]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -426,11 +425,17 @@
                                               hakukohdeOids)]
                               (response/ok mapping)
                               (response/unauthorized {:error "Unauthorized"})))
-                   (api/GET "/odw" []
+                   (api/GET "/odw" {session :session}
                      :summary "Gst odw report"
                      :query-params [fromDate :- s/Str]
-                     :return {s/Str s/Str}
-                     (odw-service/get-applications-for-odw person-service fromDate)))))
+                     :return [{s/Keyword (s/maybe s/Str)}]
+                     (if-let [applications (access-controlled-application/get-applications-for-odw
+                                             organization-service
+                                             session
+                                             person-service
+                                             fromDate)]
+                       (response/ok applications)
+                       (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes
   (api/undocumented
