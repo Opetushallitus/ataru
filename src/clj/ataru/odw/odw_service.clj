@@ -39,6 +39,6 @@
                                       tarjoaja-oid (-> hakukohde :tarjoajaOids first)]]
                             {(keyword (str "pref" index "_koulutus_oid"))      koulutus-oid
                              (keyword (str "pref" index "_opetuspiste_oid"))   tarjoaja-oid
-                             (keyword (str "pref" index "_sora"))              (str "sora" index)
-                             (keyword (str "pref" index "_harkinnanvarainen")) (str "harkinnanvarainen" index)})))))
+                             (keyword (str "pref" index "_sora"))              nil
+                             (keyword (str "pref" index "_harkinnanvarainen")) nil})))))
       applications)))
