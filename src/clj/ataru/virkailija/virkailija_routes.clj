@@ -428,7 +428,7 @@
                    (api/GET "/odw" {session :session}
                      :summary "Gst odw report"
                      :query-params [fromDate :- s/Str]
-                     :return [{s/Keyword (s/maybe s/Str)}]
+                     :return [{s/Keyword s/Any}]
                      (if-let [applications (access-controlled-application/get-applications-for-odw
                                              organization-service
                                              session
