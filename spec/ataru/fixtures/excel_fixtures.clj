@@ -41,6 +41,9 @@
                            :form         123
                            :name         "Standalone form"
                            :lang         "fi"
+                           :application-hakukohde-reviews [{:requirement "language-requirement" :state "unreviewed" :hakukohde "form"}
+                                                           {:requirement "degree-requirement" :state "fulfilled" :hakukohde "form"}
+                                                           {:requirement "eligibility-state" :state "uneligible" :hakukohde "form"}]
                            :answers      [{:key       "form_field_0_0"
                                            :label     "Kysymys 1"
                                            :value     "Vastaus 1"
@@ -64,6 +67,7 @@
                                 :hakukohde      ["hakukohde.oid"]
                                 :haku           "haku.oid"
                                 :person-oid     "1.123.345456567123"
+                                :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}]
                                 :answers        [{:key       "form_field_1_0"
                                                   :label     "Kysymys 4"
                                                   :value     "Vastaus 4"
