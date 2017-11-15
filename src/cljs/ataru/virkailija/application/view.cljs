@@ -761,27 +761,25 @@
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
         review-state       (subscribe [:state-query [:application :review :state]])]
-    [:div
-     [:div.application-handling__review
-      {:class (when (= :fixed @review-positioning)
-                "application-handling__review-floating")}
-      [:div.application-handling__review-inner-container
-       [:div.application-handling__review-outer-container
-        [application-review-state]
-        (when (= @review-state "information-request")
-          [application-information-request])
-        [application-hakukohde-selection]
-        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-        [application-review-inputs]
-        [application-modify-link]
-        [application-resend-modify-link]
-        [application-resend-modify-link-confirmation]
-        [application-review-events]]]]]))
-
-(defn floating-application-review-placeholder
-  "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
-  []
-  [:div.application-handling__floating-application-review-placeholder])
+    [:div.application-handling__review-outer
+     {:class (when (= :fixed @review-positioning)
+               "application-handling__review-outer-floating")}
+     [:div.application-handling__review-settings-indicator-outer
+      [:div.application-handling__review-settings-indicator-inner]]
+     [:div.application-handling__review-settings
+      [:div.application-handling__review
+       [:div.application-handling__review-inner-container
+        [:div.application-handling__review-outer-container
+         [application-review-state]
+         (when (= @review-state "information-request")
+           [application-information-request])
+         [application-hakukohde-selection]
+         [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+         [application-review-inputs]
+         [application-modify-link]
+         [application-resend-modify-link]
+         [application-resend-modify-link-confirmation]
+         [application-review-events]]]]]]))
 
 (defn- koulutus->str
   [koulutus]
@@ -874,7 +872,7 @@
             [:div.application-handling__application-contents
              [application-contents @selected-application-and-form]]
             [:span#application-handling__review-position-canary]
-            (when (= :fixed @review-positioning) [floating-application-review-placeholder])
+            ;(when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
 
 (defn application []
