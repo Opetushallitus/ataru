@@ -591,3 +591,6 @@
           (dissoc :virkailija_oid)
           (merge (select-keys virkailija [:first_name :last_name]))
           (->kebab-case-kw)))))
+
+(defn get-applications-newer-than [date]
+  (exec-db :db yesql-get-applciations-by-created-time {:date date}))

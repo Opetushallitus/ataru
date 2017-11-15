@@ -8,7 +8,8 @@
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [environ.core :refer [env]]
             [ataru.background-job.job :as job]
-            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]))
+            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
+            [ataru.person-service.person-service :as person-service]))
 
 (defn new-system
   ([]
@@ -34,9 +35,15 @@
                          (tarjonta-service/new-tarjonta-service)
                          [:cache-service])
 
+     :person-service (person-service/new-person-service)
+
      :handler (component/using
                 (virkailija-routes/new-handler)
-                [:organization-service :virkailija-tarjonta-service :tarjonta-service :cache-service])
+                [:organization-service
+                 :virkailija-tarjonta-service
+                 :tarjonta-service
+                 :cache-service
+                 :person-service])
 
      :server-setup {:port      http-port
                     :repl-port repl-port}

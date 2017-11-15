@@ -126,7 +126,11 @@
               (render-file-in-dev (str "spec/" filename ".js") {})
               (route/not-found "Not found")))))
 
-(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
+(defn api-routes [{:keys [organization-service
+                          tarjonta-service
+                          virkailija-tarjonta-service
+                          cache-service
+                          person-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -420,7 +424,18 @@
                                               hakuOid
                                               hakukohdeOids)]
                               (response/ok mapping)
-                              (response/unauthorized {:error "Unauthorized"}))))))
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/odw" {session :session}
+                     :summary "Gst odw report"
+                     :query-params [fromDate :- s/Str]
+                     :return [{s/Keyword s/Any}]
+                     (if-let [applications (access-controlled-application/get-applications-for-odw
+                                             organization-service
+                                             session
+                                             person-service
+                                             fromDate)]
+                       (response/ok applications)
+                       (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes
   (api/undocumented

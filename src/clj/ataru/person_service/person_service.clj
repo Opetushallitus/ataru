@@ -6,7 +6,10 @@
 
 (defprotocol PersonService
   (create-or-find-person [this person]
-    "Create or find a person in Oppijanumerorekisteri."))
+    "Create or find a person in Oppijanumerorekisteri.")
+
+  (get-persons [this oids]
+    "Find multiple persons from Oppijanumerorekisteri."))
 
 (defrecord IntegratedPersonService []
   component/Lifecycle
@@ -24,7 +27,10 @@
   PersonService
 
   (create-or-find-person [{:keys [oppijanumerorekisteri-cas-client]} application]
-    (person-client/create-or-find-person oppijanumerorekisteri-cas-client application)))
+    (person-client/create-or-find-person oppijanumerorekisteri-cas-client application))
+
+  (get-persons [{:keys [oppijanumerorekisteri-cas-client]} oids]
+    (person-client/get-persons oppijanumerorekisteri-cas-client oids)))
 
 (defrecord FakePersonService []
   component/Lifecycle
@@ -37,7 +43,13 @@
                                         :firstName  "Foo"
                                         :lastName   "Bar"
                                         :email      "foo.bar@mailinator.com"
-                                        :idpEntitys []}))
+                                        :idpEntitys []})
+
+  (get-persons [this person] [{:personOid  "1.2.3.4.5.6"
+                                :firstName  "Foo"
+                                :lastName   "Bar"
+                                :email      "foo.bar@mailinator.com"
+                                :idpEntitys []}]))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

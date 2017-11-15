@@ -36,6 +36,19 @@
                           "response body: "
                           (:body result))))))
 
+(defn get-persons [cas-client oids]
+  (let [result (cas/cas-authenticated-post
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.get-persons) oids)]
+    (match result
+      {:status 200 :body body}
+      (json/parse-string body true)
+
+      :else (throw-error (str "Could not get persons by oid, status: "
+                              (:status result)
+                              "response body: "
+                              (:body result))))))
+
 (s/defschema Response
   {:status                   s/Keyword
    (s/optional-key :message) (s/maybe s/Str)

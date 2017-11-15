@@ -806,3 +806,10 @@ WHERE person_oid IS NOT NULL
   AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
+
+--name: yesql-get-applciations-by-created-time
+SELECT key, haku, hakukohde, person_oid, content
+FROM latest_applications
+WHERE created_time > :date::DATE
+AND person_oid IS NOT NULL
+ORDER BY created_time DESC
