@@ -362,6 +362,25 @@ and (max-width: 1000px) {
   top: -34px;
 }
 
+.application-handling__review-settings-header {
+  position: absolute;
+  top: 5px;
+  left: 15px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.application-handling__review-settings-header-icon {
+  font-size: 24px;
+}
+
+.application-handling__review-settings-header-text {
+  margin-left: 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
 .application-handling__review-settings-indicator-outer {
   z-index: 1;
   position: absolute;
@@ -392,6 +411,7 @@ and (max-width: 1000px) {
   .application-handling-webkit-scrollbar-mixin;
   position: relative;
   z-index: -1;
+  visibility: visible;
 }
 
 .application-handling__review-outer-container {

@@ -483,3 +483,8 @@
   :application/reset-resend-modify-application-link-state
   (fn [db _]
     (assoc-in db [:application :modify-application-link :state] nil)))
+
+(reg-event-db
+  :application/toggle-review-area-settings-visibility
+  (fn [db _]
+    (update-in db [:application :review-settings :visible?] (fnil not false))))
