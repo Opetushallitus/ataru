@@ -241,6 +241,19 @@
    :email              (s/maybe s/Str)
    :paymentObligations {s/Str s/Str}})
 
+(s/defschema HakurekisteriApplication
+  {:oid                s/Str
+   :personOid          s/Str
+   :hakukohteet        [s/Str]
+   :paymentObligations {s/Str s/Str}
+   :kieli              s/Str
+   :email              s/Str
+   :asuinmaa           s/Str
+   :postitoimipaikka   s/Str
+   :postinumero        s/Str
+   :kotikunta          s/Str
+   :lahiosoite         s/Str})
+
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
