@@ -795,6 +795,7 @@ SELECT
   hakukohde,
   person_oid,
   lang,
+  email,
   content
 FROM latest_applications
 JOIN application_reviews ON application_key = key
