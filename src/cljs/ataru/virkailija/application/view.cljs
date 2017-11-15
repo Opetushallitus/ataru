@@ -761,21 +761,22 @@
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
         review-state       (subscribe [:state-query [:application :review :state]])]
-    [:div.application-handling__review
-     {:class (when (= :fixed @review-positioning)
-               "application-handling__review-floating")}
-     [:div.application-handling__review-inner-container
-      [:div.application-handling__review-outer-container
-       [application-review-state]
-       (when (= @review-state "information-request")
-         [application-information-request])
-       [application-hakukohde-selection]
-       [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-       [application-review-inputs]
-       [application-modify-link]
-       [application-resend-modify-link]
-       [application-resend-modify-link-confirmation]
-       [application-review-events]]]]))
+    [:div
+     [:div.application-handling__review
+      {:class (when (= :fixed @review-positioning)
+                "application-handling__review-floating")}
+      [:div.application-handling__review-inner-container
+       [:div.application-handling__review-outer-container
+        [application-review-state]
+        (when (= @review-state "information-request")
+          [application-information-request])
+        [application-hakukohde-selection]
+        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+        [application-review-inputs]
+        [application-modify-link]
+        [application-resend-modify-link]
+        [application-resend-modify-link-confirmation]
+        [application-review-events]]]]]))
 
 (defn floating-application-review-placeholder
   "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
