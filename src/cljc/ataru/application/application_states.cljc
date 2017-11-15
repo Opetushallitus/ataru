@@ -10,9 +10,10 @@
   [review-requirement-name application selected-hakukohde-oid]
   (let [application-hakukohteet (set (:hakukohde application))
         has-hakukohteet?        (not (empty? application-hakukohteet))
-        review-targets          (if has-hakukohteet?
-                                  application-hakukohteet
-                                  #{"form"})
+        review-targets          (cond
+                                  (some? selected-hakukohde-oid) #{selected-hakukohde-oid}
+                                  has-hakukohteet? application-hakukohteet
+                                  :else #{"form"})
         relevant-states         (filter #(and
                                            (= (:requirement %) review-requirement-name)
                                            (= has-hakukohteet? (not= (:hakukohde %) "form"))
