@@ -24,7 +24,7 @@
    {:src "/lomake-editori/images/icon_check.png"}])
 
 (defn excel-download-link
-  [applications filename]
+  [applications selected-hakukohde filename]
   [:div
    [:form#excel-download-link
     {:action "/lomake-editori/api/applications/excel"
@@ -34,7 +34,11 @@
              :value (clojure.string/join "," (map :key applications))}]
     [:input {:type  "hidden"
              :name  "filename"
-             :value filename}]]
+             :value filename}]
+    (when selected-hakukohde
+      [:input {:type  "hidden"
+               :name  "selected-hakukohde"
+               :value selected-hakukohde}])]
    [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
     {:on-click (fn [e]
                  (.submit (.getElementById js/document "excel-download-link")))}
@@ -188,14 +192,15 @@
 
 (defn haku-heading
   []
-  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])
-        applications    (subscribe [:application/filtered-applications])
-        header          (subscribe [:application/list-heading])]
+  (let [belongs-to-haku    (subscribe [:application/application-list-belongs-to-haku?])
+        applications       (subscribe [:application/filtered-applications])
+        header             (subscribe [:application/list-heading])
+        selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__header
      [:div.application-handling__header-haku-name @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
-      (when @belongs-to-haku [excel-download-link @applications @header])]]))
+      (when @belongs-to-haku [excel-download-link @applications (:oid @selected-hakukohde) @header])]]))
 
 (defn- select-application
   [application-key]

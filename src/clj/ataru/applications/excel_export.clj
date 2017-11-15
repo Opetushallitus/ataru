@@ -379,10 +379,10 @@
                            answer)))))
 
 (defn- add-all-hakukohde-reviews
-  [tarjonta-service application]
+  [tarjonta-service selected-hakukohde application]
   (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
                                  application
-                                 nil)
+                                 selected-hakukohde)
         all-reviews-with-names (map
                                  (fn [{:keys [hakukohde] :as review}]
                                    (assoc review
@@ -394,7 +394,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications tarjonta-service]
+(defn export-applications [applications selected-hakukohde tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -404,7 +404,7 @@
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
-         (map (partial add-all-hakukohde-reviews tarjonta-service))
+         (map (partial add-all-hakukohde-reviews tarjonta-service selected-hakukohde))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
