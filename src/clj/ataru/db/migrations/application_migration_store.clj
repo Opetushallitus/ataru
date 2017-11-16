@@ -11,7 +11,9 @@
 
 (defn get-all-applications
   []
-  (mapv (partial t/transform-keys k/->kebab-case-keyword)
+  (mapv (fn [application]
+          (assoc (t/transform-keys k/->kebab-case-keyword application)
+                 :content (:content application)))
         (db/exec :db yesql-get-all-applications {})))
 
 (defn set-application-key-to-application-review
