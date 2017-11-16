@@ -512,11 +512,17 @@
   [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
         list-opened       (r/atom false)
-        list-click        (fn [_] (swap! list-opened not))]
+        list-click        (fn [_] (swap! list-opened not))
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
          {:class (str "application-handling__review-state-container-" (name kw))}
+         (when @settings-visible?
+           [:input.application-handling__review-state-setting-checkbox
+            {:type "checkbox"
+             :on-change #(println "foo")
+             :on-click #(println "click")}])
          [:div.application-handling__review-header
           {:class (str "application-handling__review-header--" (name kw))} label]
          (if @list-opened
@@ -776,18 +782,17 @@
        [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
        [:span.application-handling__review-settings-header-text "Asetukset"]]
       [:div.application-handling__review
-       [:div.application-handling__review-inner-container
-        [:div.application-handling__review-outer-container
-         [application-review-state]
-         (when (= @review-state "information-request")
-           [application-information-request])
-         [application-hakukohde-selection]
-         [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-         [application-review-inputs]
-         [application-modify-link]
-         [application-resend-modify-link]
-         [application-resend-modify-link-confirmation]
-         [application-review-events]]]]]]))
+       [:div.application-handling__review-outer-container
+        [application-review-state]
+        (when (= @review-state "information-request")
+          [application-information-request])
+        [application-hakukohde-selection]
+        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+        [application-review-inputs]
+        [application-modify-link]
+        [application-resend-modify-link]
+        [application-resend-modify-link-confirmation]
+        [application-review-events]]]]]))
 
 (defn- koulutus->str
   [koulutus]

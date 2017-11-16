@@ -343,7 +343,6 @@ and (max-width: 1000px) {
   position: relative;
   margin-left: 35px;
   width: 529px;
-  z-index: 0;
 }
 
 .application-handling__review-outer-floating {
@@ -351,6 +350,9 @@ and (max-width: 1000px) {
   top: 43px;
   right: 85px;
   width: 439px;
+  padding-bottom: 100px;
+  overflow-y: scroll;
+  height: 100%;
 }
 
 .application-handling__review-settings {
@@ -417,10 +419,6 @@ and (max-width: 1000px) {
 .application-handling__review-outer-container {
   padding-right: 5px;
   position: relative;
-}
-
-.application-handling__review-inner-container {
-  overflow-y: auto;
 }
 
 .application-handling__floating-application-review-placeholder {
@@ -519,6 +517,12 @@ and (max-width: 1000px) {
 .application-handling__review-header--points {
   align-self: center;
   margin-bottom: 0;
+}
+
+.application-handling__review-state-setting-checkbox {
+  position: absolute;
+  top: 8px;
+  left: -23px;
 }
 
 .application-handling__review-state-container--columnar {
@@ -767,6 +771,7 @@ and (max-width: 1000px) {
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
+  position: relative;
 }
 
 .application-handling__review-state-container--bottom-border {
