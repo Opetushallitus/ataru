@@ -4,10 +4,11 @@
             [ataru.virkailija.user.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
-            [ataru.cache.caches :refer [hazelcast-caches redis-caches caches]]
+            [ataru.cache.caches :refer [hazelcast-caches redis-caches]]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
             [ataru.redis :as redis]
             [environ.core :refer [env]]
+            [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.person-service.person-service :as person-service]))
@@ -22,13 +23,12 @@
 
      :organization-service (organization-service/new-organization-service)
 
-     :hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})
-
-     :redis (redis/map->Redis {})
-
      :cache-service (component/using
                      {}
-                     (mapv (comp keyword :name) caches))
+                     (mapv (comp keyword :name)
+                           (if (= :redis (-> config :cache :type))
+                             redis-caches
+                             hazelcast-caches)))
 
      :virkailija-tarjonta-service (component/using
                                     (tarjonta-service/new-virkailija-tarjonta-service)
@@ -57,10 +57,12 @@
 
      :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
 
-     (concat
-      (mapcat (fn [cache]
-                [(keyword (:name cache)) (component/using cache [:hazelcast])])
-              hazelcast-caches)
-      (mapcat (fn [cache]
-                [(keyword (:name cache)) (component/using cache [:redis])])
-              redis-caches)))))
+     (if (= :redis (-> config :cache :type))
+       (concat [:redis (redis/map->Redis {})]
+               (mapcat (fn [cache]
+                         [(keyword (:name cache)) (component/using cache [:redis])])
+                       redis-caches))
+       (concat [:hazelcast (map->HazelcastInstance {:configurators hazelcast-caches})]
+               (mapcat (fn [cache]
+                         [(keyword (:name cache)) (component/using cache [:hazelcast])])
+                       hazelcast-caches))))))

@@ -8,6 +8,7 @@
        :schema "public"
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
+ :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :ldap {:server "{{host_ldap}}"
         :port 389
