@@ -1,5 +1,7 @@
 (ns ataru.db.migrations
   (:require
+    [camel-snake-kebab.core :refer [->camelCaseKeyword]]
+    [camel-snake-kebab.extras :refer [transform-keys]]
     [ataru.db.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as application-store]
@@ -253,6 +255,16 @@
                          (:type person-integration/job-definition)
                          {:application-id application-id}))))))
 
+(defn- camel-case-content-keys []
+  (doseq [application (migration-app-store/get-all-applications)]
+    (let [camel-cased-content (transform-keys ->camelCaseKeyword
+                                                (:content application))]
+      (when (not= camel-cased-content (:content application))
+        (info "Camel casing keywords of application" (:id application))
+        (migration-app-store/update-application-content
+         (:id application)
+         camel-cased-content)))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -302,6 +314,11 @@
   migrate-dob-into-dd-mm-yyyy-format "1.71"
   "Update date of birth from application answers to dd.mm.yyyy format"
   (dob->dd-mm-yyyy-format))
+
+(migrations/defmigration
+  migrate-camel-case-content-keys "1.72"
+  "Camel case application content keys"
+  (camel-case-content-keys))
 
 (defn migrate
   []
