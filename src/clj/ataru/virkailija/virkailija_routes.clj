@@ -269,13 +269,15 @@
 
                    (api/POST "/excel" {session :session}
                      :form-params [application-keys :- s/Str
-                                   filename :- s/Str]
+                                   filename :- s/Str
+                                   {selected-hakukohde :- s/Str nil}]
                      :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
                      {:status  200
                       :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
                       :body    (application-service/get-excel-report-of-applications-by-key
                                  (clojure.string/split application-keys #",")
+                                 selected-hakukohde
                                  session
                                  organization-service
                                  tarjonta-service)}))

@@ -40,25 +40,25 @@
          (filter #(= (first %) state)) first second)
     "Tuntematon"))
 
-(defn selection-state-formatter
-  [application]
-  (let [selection-states (filter
-                           #(= (:requirement %) "selection-state")
-                           (:application-hakukohde-reviews application))]
-    (if (= 1 (count selection-states))
-      (application-states/get-review-state-label-by-name
-        review-states/application-hakukohde-selection-states
-        (-> (first selection-states) :state))
+(defn hakukohde-review-formatter
+  [requirement-name application]
+  (let [reviews     (filter
+                      #(= (:requirement %) requirement-name)
+                      (:application-hakukohde-reviews application))
+        requirement (last
+                      (first
+                        (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
+        get-label   (partial application-states/get-review-state-label-by-name requirement)]
+    (if (= 1 (count reviews))
+      (get-label (-> (first reviews) :state))
       (clojure.string/join
         "\n"
         (map
           (fn [{:keys [hakukohde hakukohde-name state]}]
             (str hakukohde-name
                  " (" hakukohde "): "
-                 (application-states/get-review-state-label-by-name
-                   review-states/application-hakukohde-selection-states
-                   state)))
-          selection-states)))))
+                 (get-label state)))
+          reviews)))))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -82,8 +82,16 @@
    {:label     "Hakemuksen tila"
     :field     :state
     :format-fn application-state-formatter}
+   {:label     "Kielitaitovaatimus"
+    :format-fn (partial hakukohde-review-formatter "language-requirement")}
+   {:label     "Tutkinnon kelpoisuus"
+    :format-fn (partial hakukohde-review-formatter "degree-requirement")}
+   {:label     "Hakukelpoisuus"
+    :format-fn (partial hakukohde-review-formatter "eligibility-state")}
+   {:label     "Maksuvelvollisuus"
+    :format-fn (partial hakukohde-review-formatter "payment-obligation")}
    {:label     "Valinnan tila"
-    :format-fn selection-state-formatter}
+    :format-fn (partial hakukohde-review-formatter "selection-state")}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
     :format-fn str}])
@@ -370,12 +378,11 @@
                            (add-hakukohde-name tarjonta-service (:lang application) answer)
                            answer)))))
 
-(defn- add-full-hakukohde-selection-reviews
-  [tarjonta-service application]
-  (let [all-reviews            (application-states/get-all-reviews-for-requirement
-                                 "selection-state"
+(defn- add-all-hakukohde-reviews
+  [tarjonta-service selected-hakukohde application]
+  (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
                                  application
-                                 nil)
+                                 selected-hakukohde)
         all-reviews-with-names (map
                                  (fn [{:keys [hakukohde] :as review}]
                                    (assoc review
@@ -387,7 +394,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications tarjonta-service]
+(defn export-applications [applications selected-hakukohde tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -397,7 +404,7 @@
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
-         (map (partial add-full-hakukohde-selection-reviews tarjonta-service))
+         (map (partial add-all-hakukohde-reviews tarjonta-service selected-hakukohde))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
