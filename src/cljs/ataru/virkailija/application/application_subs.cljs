@@ -245,3 +245,8 @@
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
       enabled-in-state?
       true)))
+
+(re-frame/reg-sub
+  :application/review-state-setting-disabled?
+  (fn [db [_ setting-kwd]]
+    (-> db :application :review-settings :config setting-kwd (= :updating))))

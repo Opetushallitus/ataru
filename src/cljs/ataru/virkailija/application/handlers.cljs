@@ -494,9 +494,14 @@
   (fn [{:keys [db]} [_ setting-kwd]]
     (let [not-or-false (fnil not true)
           enabled?     (-> db :application :review-settings :config setting-kwd not-or-false)]
-      {:db   (assoc-in db [:application :review-settings :config setting-kwd] enabled?)
+      {:db   (assoc-in db [:application :review-settings :config setting-kwd] :updating)
        :http {:method              :post
               :params              {:setting-kwd setting-kwd
                                     :enabled     enabled?}
               :path                "/lomake-editori/api/applications/review-settings"
               :handler-or-dispatch :application/handle-toggle-review-state-setting-response}})))
+
+(reg-event-db
+  :application/handle-toggle-review-state-setting-response
+  (fn [db [_ response]]
+    (assoc-in db [:application :review-settings :config (-> response :setting-kwd keyword)] (:enabled response))))

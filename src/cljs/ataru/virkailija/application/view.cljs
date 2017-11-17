@@ -759,11 +759,13 @@
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
 (defn- review-settings-checkbox [setting-kwd & _]
-  (let [checked? (subscribe [:application/review-state-setting-enabled? setting-kwd])]
+  (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
+        disabled? (subscribe [:application/review-state-setting-disabled? setting-kwd])]
     [:input.application-handling__review-state-setting-checkbox
      {:class     (str "application-handling__review-state-setting-checkbox-" (name setting-kwd))
       :type      "checkbox"
       :checked   @checked?
+      :disabled  @disabled?
       :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
 
 (def ^:private settings-supported-review-states #{:language-requirement
