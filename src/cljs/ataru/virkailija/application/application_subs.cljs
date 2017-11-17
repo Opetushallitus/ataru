@@ -250,3 +250,8 @@
   :application/review-state-setting-disabled?
   (fn [db [_ setting-kwd]]
     (-> db :application :review-settings :config setting-kwd (= :updating))))
+
+(re-frame/reg-sub
+  :application/review-list-visible?
+  (fn [db [_ list-kwd]]
+    (-> db :application :ui/review list-kwd)))

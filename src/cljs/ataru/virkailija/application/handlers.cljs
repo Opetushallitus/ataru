@@ -526,3 +526,8 @@
                  [:application :review-settings :config]
                  merge
                  review-config))))
+
+(reg-event-db
+  :application/toggle-review-list-visibility
+  (fn [db [_ list-kwd]]
+    (update-in db [:application :ui/review list-kwd] (fnil not false))))

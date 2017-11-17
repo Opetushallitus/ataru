@@ -440,10 +440,13 @@
 (defn opened-review-state-list [state-name current-state all-states]
   (mapv (partial review-state-row state-name (or @current-state (ffirst all-states))) all-states))
 
+(defn- toggle-review-list-visibility [list-kwd]
+  (dispatch [:application/toggle-review-list-visibility list-kwd]))
+
 (defn application-review-state []
   (let [review-state (subscribe [:state-query [:application :review :state]])
-        list-opened  (r/atom false)
-        list-click   (fn [evt] (swap! list-opened not))]
+        list-opened  (subscribe [:application/review-list-visible? :review-state])
+        list-click   (partial toggle-review-list-visibility :review-state)]
     (fn []
       [:div.application-handling__review-state-container.application-handling__review-state-container--bottom-border
        [:div.application-handling__review-header "Hakemus"]
@@ -495,8 +498,8 @@
   (let [selected-hakukohde-oid     (subscribe [:state-query [:application :selected-review-hakukohde]])
         haku-hakukohteet           (subscribe [:state-query [:application :hakukohteet]])
         application-hakukohde-oids (subscribe [:state-query [:application :selected-application-and-form :application :hakukohde]])
-        list-opened                (r/atom false)
-        select-list-item           #(swap! list-opened not)]
+        list-opened                (subscribe [:application/review-list-visible? :hakukohde])
+        select-list-item           (partial toggle-review-list-visibility :hakukohde)]
     (fn []
       (when (pos? (count @application-hakukohde-oids))
         [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
@@ -511,8 +514,8 @@
 (defn- application-hakukohde-review-input
   [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
-        list-opened       (r/atom false)
-        list-click        (fn [_] (swap! list-opened not))]
+        list-opened       (subscribe [:application/review-list-visible? kw])
+        list-click        (partial toggle-review-list-visibility kw)]
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
