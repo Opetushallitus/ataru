@@ -329,3 +329,4 @@
 (s/defschema ReviewSetting {:setting-kwd s/Str
                             :enabled     s/Bool})
 
+(s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})

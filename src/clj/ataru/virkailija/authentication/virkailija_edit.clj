@@ -53,3 +53,10 @@
                                             :settings settings}
                                            {:connection conn})
         review-setting))))
+
+(defn get-review-settings [session]
+  (let [virkailija (upsert-virkailija session)]
+    (->> (db/exec :db yesql-get-virkailija {:oid (:oid virkailija)})
+         (eduction (map (partial te/transform-keys t/->kebab-case-keyword))
+                   (map :settings))
+         (first))))

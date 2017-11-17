@@ -10,7 +10,9 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
-            [ataru.url :as url]))
+            [ataru.url :as url]
+            [camel-snake-kebab.core :as c]
+            [camel-snake-kebab.extras :as ce]))
 
 (reg-event-fx
   :application/select-application
@@ -505,3 +507,22 @@
   :application/handle-toggle-review-state-setting-response
   (fn [db [_ response]]
     (assoc-in db [:application :review-settings :config (-> response :setting-kwd keyword)] (:enabled response))))
+
+(reg-event-fx
+  :application/get-virkailija-settings
+  (fn [{:keys [db]} _]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/applications/virkailija-settings"
+            :handler-or-dispatch :application/handle-get-virkailija-settings-response}}))
+
+(reg-event-db
+  :application/handle-get-virkailija-settings-response
+  (fn [db [_ response]]
+    (let [review-config (->> response
+                             (ce/transform-keys c/->kebab-case-keyword)
+                             :review)]
+      (update-in db
+                 [:application :review-settings :config]
+                 merge
+                 review-config))))

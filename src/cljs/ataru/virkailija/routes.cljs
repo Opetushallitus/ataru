@@ -31,7 +31,8 @@
 (defn common-actions-for-applications-route []
   (dispatch [:application/refresh-haut])
   (dispatch [:application/clear-applications-haku-and-form-selections])
-  (dispatch [:set-active-panel :application]))
+  (dispatch [:set-active-panel :application])
+  (dispatch [:application/get-virkailija-settings]))
 
 (defn app-routes []
   (defroute "/lomake-editori/" []

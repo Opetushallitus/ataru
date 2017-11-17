@@ -9,3 +9,6 @@ UPDATE virkailija SET settings = :settings WHERE oid = :oid;
 
 -- name: yesql-get-virkailija-for-update
 SELECT oid, first_name, last_name, settings FROM virkailija WHERE oid = :oid FOR UPDATE;
+
+-- name: yesql-get-virkailija
+SELECT oid, first_name, last_name, settings FROM virkailija WHERE oid = :oid;
