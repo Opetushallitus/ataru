@@ -270,7 +270,8 @@
                    (api/POST "/excel" {session :session}
                      :form-params [application-keys :- s/Str
                                    filename :- s/Str
-                                   {selected-hakukohde :- s/Str nil}]
+                                   {selected-hakukohde :- s/Str nil}
+                                   {CSRF :- s/Str nil}]
                      :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
                      {:status  200
                       :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
