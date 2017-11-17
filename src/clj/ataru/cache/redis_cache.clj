@@ -58,7 +58,7 @@
       (let [key-values (->> keys
                             (mapv (fn [key] [key (fetch (strip-name cache-name key))]))
                             (remove (comp nil? second)))
-            ttls (wcar (:connection-opts redis)
+            ttls (wcar (:connection-opts redis) :as-pipeline
                        (mapv (comp car/pttl first) key-values))]
         (wcar (:connection-opts redis)
               (mapv (fn [[key value] ttl] (car/set key value :px ttl))
