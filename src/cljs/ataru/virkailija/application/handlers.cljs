@@ -489,7 +489,15 @@
 (reg-event-db
   :application/toggle-review-area-settings-visibility
   (fn [db _]
-    (update-in db [:application :review-settings :visible?] (fnil not false))))
+    (let [not-or-true (fnil not false)
+          visible?    (-> db :application :review-settings :visible? not-or-true)
+          keys->false (partial reduce-kv
+                               (fn [config review-key _]
+                                 (assoc config review-key false))
+                               {})]
+      (cond-> (assoc-in db [:application :review-settings :visible?] visible?)
+        visible?
+        (update-in [:application :ui/review] keys->false)))))
 
 (reg-event-fx
   :application/toggle-review-state-setting
