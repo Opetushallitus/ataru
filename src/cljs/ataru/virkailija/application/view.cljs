@@ -38,7 +38,7 @@
              :value filename}]
     (when-let [csrf-token (cljs-util/csrf-token)]
       [:input {:type  "hidden"
-               :name  CSRF
+               :name  "CSRF"
                :value csrf-token}])
     (when selected-hakukohde
       [:input {:type  "hidden"
