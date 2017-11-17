@@ -17,7 +17,8 @@
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
     [goog.string.format]
     [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states]))
+    [ataru.application.application-states :as application-states]
+    [ataru.cljs-util :as cljs-util]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -35,6 +36,10 @@
     [:input {:type  "hidden"
              :name  "filename"
              :value filename}]
+    (when-let [csrf-token (cljs-util/csrf-token)]
+      [:input {:type  "hidden"
+               :name  CSRF
+               :value csrf-token}])
     (when selected-hakukohde
       [:input {:type  "hidden"
                :name  "selected-hakukohde"
