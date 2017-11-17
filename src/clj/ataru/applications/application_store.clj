@@ -16,8 +16,7 @@
             [ataru.dob :as dob]
             [crypto.random :as crypto]
             [taoensso.timbre :refer [info]]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [ataru.koodisto.koodisto :as koodisto]))
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
 (defqueries "sql/application-queries.sql")
 (defqueries "sql/virkailija-credentials-queries.sql")
@@ -476,7 +475,7 @@
        (group-by :application_key)))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang email content]} maatjavaltiot]
+  [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                 key
      :personOid           person_oid
@@ -487,18 +486,16 @@
      :lahiosoite          (-> answers :address :value)
      :postinumero         (-> answers :postal-code :value)
      :postitoimipaikka    (-> answers :postal-office :value)
-     :asuinmaa            (-> answers :country-of-residence :value maatjavaltiot)
+     :asuinmaa            (-> answers :country-of-residence :value)
      :kotikunta           (-> answers :home-town :value)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids]
-  (let [maatjavaltiot       (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
-                                 (reduce (fn [res koodi] (assoc res (:value koodi) (-> koodi :label :fi))) {}))
-        applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
+  (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
                                           {:haku_oid       haku-oid
                                            :hakukohde_oids (cons "" hakukohde-oids)
                                            :person_oids    (cons "" person-oids)})
-                                 (map #(unwrap-hakurekisteri-application % maatjavaltiot)))
+                                 (map unwrap-hakurekisteri-application))
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
