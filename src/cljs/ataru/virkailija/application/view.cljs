@@ -800,6 +800,7 @@
       (when @settings-visible
         [review-settings-checkboxes review-states/hakukohde-review-types])
       [:div.application-handling__review
+       {:class (when @settings-visible "application-handling__review--disabled")}
        [:div.application-handling__review-outer-container
         [application-review-state]
         (when (= @review-state "information-request")
