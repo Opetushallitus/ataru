@@ -790,12 +790,11 @@
     [:div.application-handling__review-outer
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-outer-floating")}
-     (when @settings-visible
-       [:div.application-handling__review-settings-indicator-outer
-        [:div.application-handling__review-settings-indicator-inner]])
      [:div.application-handling__review-settings
       (when-not @settings-visible
         {:style {:visibility "hidden"}})
+      [:div.application-handling__review-settings-indicator-outer
+       [:div.application-handling__review-settings-indicator-inner]]
       [:div.application-handling__review-settings-header
        [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
        [:span.application-handling__review-settings-header-text "Asetukset"]]
