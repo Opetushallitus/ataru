@@ -219,7 +219,7 @@
                     :return ataru-schema/VirkailijaSettings
                     (ok (virkailija-edit/get-review-settings session)))
 
-                  (api/POST "/review-settings" {session :session}
+                  (api/POST "/review-setting" {session :session}
                     :body [review-setting ataru-schema/ReviewSetting]
                     :return ataru-schema/ReviewSetting
                     (ok (virkailija-edit/set-review-setting review-setting session)))

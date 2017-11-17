@@ -500,7 +500,7 @@
        :http {:method              :post
               :params              {:setting-kwd setting-kwd
                                     :enabled     enabled?}
-              :path                "/lomake-editori/api/applications/review-settings"
+              :path                "/lomake-editori/api/applications/review-setting"
               :handler-or-dispatch :application/handle-toggle-review-state-setting-response}})))
 
 (reg-event-db
