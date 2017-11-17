@@ -387,7 +387,7 @@
                      :query-params [{hakuOid :- s/Str nil}
                                     {hakukohdeOids :- [s/Str] nil}
                                     {hakijaOids :- [s/Str] nil}]
-                     ;:return [ataru-schema/???] TODO: Figure out the schema after we know what to return
+                     :return [ataru-schema/HakurekisteriApplication]
                      (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
                        (response/bad-request {:error "No search terms provided."})
                        (if-let [applications (access-controlled-application/hakurekisteri-applications

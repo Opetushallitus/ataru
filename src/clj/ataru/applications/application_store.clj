@@ -475,21 +475,27 @@
        (group-by :application_key)))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang content]}]
+  [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                 key
      :personOid           person_oid
      :applicationSystemId haku
      :kieli               lang
-     :hakukohteet         hakukohde}))
+     :hakukohteet         hakukohde
+     :email               email
+     :lahiosoite          (-> answers :address :value)
+     :postinumero         (-> answers :postal-code :value)
+     :postitoimipaikka    (-> answers :postal-office :value)
+     :asuinmaa            (-> answers :country-of-residence :value)
+     :kotikunta           (-> answers :home-town :value)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids]
-  (let [applications (->> (exec-db :db yesql-applications-for-hakurekisteri
-                                   {:haku_oid       haku-oid
-                                    :hakukohde_oids (cons "" hakukohde-oids)
-                                    :person_oids    (cons "" person-oids)})
-                          (map unwrap-hakurekisteri-application))
+  (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
+                                          {:haku_oid       haku-oid
+                                           :hakukohde_oids (cons "" hakukohde-oids)
+                                           :person_oids    (cons "" person-oids)})
+                                 (map unwrap-hakurekisteri-application))
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
