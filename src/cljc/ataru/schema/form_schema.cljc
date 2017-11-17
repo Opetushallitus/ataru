@@ -248,6 +248,7 @@
    :kieli               s/Str
    :hakukohteet         [s/Str]
    :email               s/Str
+   :matkapuhelin        s/Str
    :lahiosoite          s/Str
    :postinumero         s/Str
    :postitoimipaikka    s/Str

@@ -483,6 +483,7 @@
      :kieli               lang
      :hakukohteet         hakukohde
      :email               email
+     :matkapuhelin        (-> answers :phone :value)
      :lahiosoite          (-> answers :address :value)
      :postinumero         (-> answers :postal-code :value)
      :postitoimipaikka    (-> answers :postal-office :value)
