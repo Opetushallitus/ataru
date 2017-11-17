@@ -758,11 +758,13 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
-(defn- review-settings-checkbox [kw & _]
-  [:input.application-handling__review-state-setting-checkbox
-   {:class     (str "application-handling__review-state-setting-checkbox-" (name kw))
-    :type      "checkbox"
-    :on-change #(println "foo")}])
+(defn- review-settings-checkbox [setting-kwd & _]
+  (let [checked? (subscribe [:application/review-state-setting-enabled? setting-kwd])]
+    [:input.application-handling__review-state-setting-checkbox
+     {:class     (str "application-handling__review-state-setting-checkbox-" (name setting-kwd))
+      :type      "checkbox"
+      :checked   @checked?
+      :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
 
 (def ^:private settings-supported-review-states #{:language-requirement
                                                   :degree-requirement

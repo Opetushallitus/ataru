@@ -274,7 +274,12 @@
                                  (clojure.string/split application-keys #",")
                                  session
                                  organization-service
-                                 tarjonta-service)}))
+                                 tarjonta-service)})
+
+                   (api/POST "/review-settings" {session :session}
+                     :body [review-setting ataru-schema/ReviewSetting]
+                     :return ataru-schema/ReviewSetting
+                     (ok (virkailija-edit/set-review-setting review-setting session))))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}

@@ -238,3 +238,10 @@
                (< (count selection-states)
                   (count (:hakukohde application)))))))))
        applications))))
+
+(re-frame/reg-sub
+  :application/review-state-setting-enabled?
+  (fn [db [_ setting-kwd]]
+    (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
+      enabled-in-state?
+      true)))

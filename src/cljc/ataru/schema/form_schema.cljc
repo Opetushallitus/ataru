@@ -326,3 +326,6 @@
                                  (s/optional-key :first-name)     s/Str
                                  (s/optional-key :last-name)      s/Str})
 
+(s/defschema ReviewSetting {:setting-kwd s/Str
+                            :enabled     s/Bool})
+

@@ -488,3 +488,15 @@
   :application/toggle-review-area-settings-visibility
   (fn [db _]
     (update-in db [:application :review-settings :visible?] (fnil not false))))
+
+(reg-event-fx
+  :application/toggle-review-state-setting
+  (fn [{:keys [db]} [_ setting-kwd]]
+    (let [not-or-false (fnil not true)
+          enabled?     (-> db :application :review-settings :config setting-kwd not-or-false)]
+      {:db   (assoc-in db [:application :review-settings :config setting-kwd] enabled?)
+       :http {:method              :post
+              :params              {:setting-kwd setting-kwd
+                                    :enabled     enabled?}
+              :path                "/lomake-editori/api/applications/review-settings"
+              :handler-or-dispatch :application/handle-toggle-review-state-setting-response}})))

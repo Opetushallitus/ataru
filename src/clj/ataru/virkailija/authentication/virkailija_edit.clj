@@ -2,7 +2,8 @@
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
             [ataru.virkailija.user.ldap-client :as ldap]
-            [ataru.config.core :refer [config]])
+            [ataru.config.core :refer [config]]
+            [ataru.util :as u])
   (:import (java.util UUID)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
@@ -29,3 +30,14 @@
   (-> (db/exec :db yesql-get-virkailija-secret-valid {:virkailija_secret virkailija-secret})
       first
       :valid))
+
+(defn set-review-setting [review-setting session]
+  {:pre [(-> review-setting :setting-kwd u/not-blank?)
+         (-> review-setting :enabled some?)]}
+  (let [virkailija (upsert-virkailija session)
+        settings   (-> virkailija
+                       :settings
+                       (assoc-in [:review (:setting-kwd review-setting)] (:enabled review-setting)))]
+    (db/exec :db yesql-update-virkailija-settings! {:oid      (:oid virkailija)
+                                                    :settings settings})
+    review-setting))
