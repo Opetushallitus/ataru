@@ -254,7 +254,8 @@
    :postitoimipaikka    s/Str
    :asuinmaa            s/Str
    :kotikunta           s/Str
-   :paymentObligations  {s/Str s/Str}})
+   :paymentObligations  {s/Str s/Str}
+   :kkPohjakoulutus     [s/Str]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

@@ -474,6 +474,15 @@
                 {:hakemus_oids hakemus-oids})
        (group-by :application_key)))
 
+(defn- kk-base-educations [answers]
+  (println answers)
+  (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
+        ["avoin" :studies-required-by-higher-education-field]
+        ["ulk" :higher-education-qualification-outside-finland-year-and-date]
+        ["muu" :other-eligibility-year-of-completion]]
+       (remove (fn [[_ id]] (clojure.string/blank? (-> answers id :value first first))))
+       (map first)))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
@@ -488,7 +497,8 @@
      :postinumero         (-> answers :postal-code :value)
      :postitoimipaikka    (-> answers :postal-office :value)
      :asuinmaa            (-> answers :country-of-residence :value)
-     :kotikunta           (-> answers :home-town :value)}))
+     :kotikunta           (-> answers :home-town :value)
+     :kkPohjakoulutus     (kk-base-educations answers)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids]
