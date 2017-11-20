@@ -195,14 +195,62 @@
 
                 [:div])])])))))
 
+(defn- from-multi-lang
+  [text]
+  (some #(get text %) [:fi :sv :en]))
+
+(def all-hakukohteet-label "*")
+
+(defn selected-hakukohde-row
+  [on-click label]
+  [:div.application-handling__header-hakukohde-row.application-handling__header-hakukohde-selected-row
+   {:on-click on-click}
+   (or label all-hakukohteet-label)])
+
+(defn hakukohde-row
+  [list-opened haku hakukohde current-hakukohde]
+  (if (= (:oid hakukohde) (:oid current-hakukohde))
+    (selected-hakukohde-row #() (from-multi-lang (:name hakukohde)))
+    [:div.application-handling__header-hakukohde-row
+     [:a {:href     (str "/lomake-editori/applications"
+                         (if (:oid hakukohde)
+                           (str "/hakukohde/" (:oid hakukohde))
+                           (str "/haku/" (:oid haku))))
+          :on-click #(reset! list-opened false)}
+      (from-multi-lang (:name hakukohde))]]))
+
+(def all-hakukohteet-row-data
+  [{:name {:fi all-hakukohteet-label}
+    :oid  nil}])
+
+(defn haku-applications-heading
+  [[haku selected-hakukohde hakukohteet]]
+  (let [list-opened                (r/atom false)]
+    (fn []
+      [:div.application-handling__header-haku-and-hakukohde
+       [:div.application-handling__header-haku (from-multi-lang (:name haku))]
+       (if @list-opened
+         [:div.application-handling__header-hakukohde-list-opened-anchor
+          (into
+            [:div.application-handling__header-hakukohde-list-opened {:on-click #()}]
+            (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet)))]
+         [selected-hakukohde-row #(swap! list-opened not) (from-multi-lang (:name selected-hakukohde))])])))
+
+(defn selected-applications-heading
+  [haku-data list-heading]
+  (if haku-data
+    [haku-applications-heading haku-data]
+    [:div.application-handling__header-haku-name list-heading]))
+
 (defn haku-heading
   []
   (let [belongs-to-haku    (subscribe [:application/application-list-belongs-to-haku?])
         applications       (subscribe [:application/filtered-applications])
         header             (subscribe [:application/list-heading])
+        haku-header        (subscribe [:application/list-heading-data-for-haku])
         selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__header
-     [:div.application-handling__header-haku-name @header]
+     [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
       (when @belongs-to-haku [excel-download-link @applications (:oid @selected-hakukohde) @header])]]))
@@ -486,7 +534,7 @@
         (:sv name)
         (:en name))))
 
-(defn- opened-hakukohde-list-row
+(defn- opened-review-hakukohde-list-row
   [selected-hakukohde-oid hakukohteet hakukohde-oid]
   (let [hakukohde (find-hakukohde-by-oid hakukohteet hakukohde-oid)
         selected? (= selected-hakukohde-oid hakukohde-oid)]
@@ -499,7 +547,7 @@
      (hakukohde-label hakukohde)]))
 
 
-(defn- selected-hakukohde-row
+(defn- selected-review-hakukohde-row
   [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
   (let [selected-hakukohde                  (find-hakukohde-by-oid haku-hakukohteet selected-hakukohde-oid)
         application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
@@ -528,8 +576,8 @@
            [:div.application-handling__review-state-list-opened-anchor
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-              (map #(opened-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
-           [selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids])]))))
+              (map #(opened-review-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
+           (selected-review-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
