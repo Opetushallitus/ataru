@@ -511,22 +511,35 @@
               (map #(opened-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
            (selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
 
+(defn- review-settings-checkbox [setting-kwd]
+  (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
+        disabled? (subscribe [:application/review-state-setting-disabled? setting-kwd])]
+    [:input.application-handling__review-state-setting-checkbox
+     {:class     (str "application-handling__review-state-setting-checkbox-" (name setting-kwd))
+      :type      "checkbox"
+      :checked   @checked?
+      :disabled  @disabled?
+      :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
+
 (defn- application-hakukohde-review-input
   [label kw states]
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
         list-opened       (subscribe [:application/review-list-visible? kw])
-        list-click        (partial toggle-review-list-visibility kw)]
+        list-click        (partial toggle-review-list-visibility kw)
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
          {:class (str "application-handling__review-state-container-" (name kw))}
+         (when @settings-visible?
+           [review-settings-checkbox kw])
          [:div.application-handling__review-header
           {:class (str "application-handling__review-header--" (name kw))} label]
          (if @list-opened
            [:div.application-handling__review-state-list-opened-anchor
             (into [:div.application-handling__review-state-list-opened
                    {:on-click list-click}]
-                  (opened-review-state-list kw review-state-for-current-hakukohde states))]
+              (opened-review-state-list kw review-state-for-current-hakukohde states))]
            (review-state-selected-row
              list-click
              (application-states/get-review-state-label-by-name
@@ -761,28 +774,6 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
-(defn- review-settings-checkbox [setting-kwd & _]
-  (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
-        disabled? (subscribe [:application/review-state-setting-disabled? setting-kwd])]
-    [:input.application-handling__review-state-setting-checkbox
-     {:class     (str "application-handling__review-state-setting-checkbox-" (name setting-kwd))
-      :type      "checkbox"
-      :checked   @checked?
-      :disabled  @disabled?
-      :on-change #(dispatch [:application/toggle-review-state-setting setting-kwd])}]))
-
-(def ^:private settings-supported-review-states #{:language-requirement
-                                                  :degree-requirement
-                                                  :eligibility-state
-                                                  :payment-obligation})
-
-(defn- review-settings-checkboxes [hakukohde-review-types]
-  (as-> hakukohde-review-types checkboxes
-        (filter (comp settings-supported-review-states first) checkboxes)
-        (map (partial apply review-settings-checkbox) checkboxes)
-        (into [:div] checkboxes)
-        (conj checkboxes [review-settings-checkbox :points])))
-
 (defn application-review []
   (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
         review-state       (subscribe [:state-query [:application :review :state]])
@@ -801,8 +792,6 @@
         [:div.application-handling__review-settings-header
          [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
          [:span.application-handling__review-settings-header-text "Asetukset"]])]
-     ;(when @settings-visible
-     ;  [review-settings-checkboxes review-states/hakukohde-review-types])
      [:div.application-handling__review
       [:div.application-handling__review-outer-container
        [application-review-state]
