@@ -533,25 +533,27 @@
   (let [current-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])
         list-opened       (subscribe [:application/review-list-visible? kw])
         list-click        (partial toggle-review-list-visibility kw)
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        input-visible?    (subscribe [:application/review-state-setting-enabled? kw])]
     (fn []
-      (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
-        [:div.application-handling__review-state-container
-         {:class (str "application-handling__review-state-container-" (name kw))}
-         (when @settings-visible?
-           [review-settings-checkbox kw])
-         [:div.application-handling__review-header
-          {:class (str "application-handling__review-header--" (name kw))} label]
-         (if @list-opened
-           [:div.application-handling__review-state-list-opened-anchor
-            (into [:div.application-handling__review-state-list-opened
-                   {:on-click list-click}]
-              (opened-review-state-list kw review-state-for-current-hakukohde states))]
-           [review-state-selected-row
-             list-click
-             (application-states/get-review-state-label-by-name
-               states
-               (or @review-state-for-current-hakukohde (ffirst states)))])]))))
+      (when (or @settings-visible? @input-visible?)
+        (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
+          [:div.application-handling__review-state-container
+           {:class (str "application-handling__review-state-container-" (name kw))}
+           (when @settings-visible?
+             [review-settings-checkbox kw])
+           [:div.application-handling__review-header
+            {:class (str "application-handling__review-header--" (name kw))} label]
+           (if @list-opened
+             [:div.application-handling__review-state-list-opened-anchor
+              (into [:div.application-handling__review-state-list-opened
+                     {:on-click list-click}]
+                (opened-review-state-list kw review-state-for-current-hakukohde states))]
+             [review-state-selected-row
+              list-click
+              (application-states/get-review-state-label-by-name
+                states
+                (or @review-state-for-current-hakukohde (ffirst states)))])])))))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
@@ -657,7 +659,8 @@
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        input-visible?    (subscribe [:application/review-state-setting-enabled? :points])]
     (fn []
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
@@ -667,17 +670,20 @@
           :on-change (when-not @settings-visible?
                        (partial update-review-field :notes identity))
           :disabled  @settings-visible?}]]
-       [:div.application-handling__review-row
-        [:div.application-handling__review-header.application-handling__review-header--points
-         "Pisteet"]
-        [:input.application-handling__score-input
-         {:type "text"
-          :max-length "2"
-          :size "2"
-          :value (review-field->str review :score)
-          :disabled @settings-visible?
-          :on-change (when-not @settings-visible?
-                       (partial update-review-field :score (partial convert-score @review)))}]]])))
+       (when (or @settings-visible? @input-visible?)
+         [:div.application-handling__review-row
+          (when @settings-visible?
+            [review-settings-checkbox :points])
+          [:div.application-handling__review-header.application-handling__review-header--points
+           "Pisteet"]
+          [:input.application-handling__score-input
+           {:type       "text"
+            :max-length "2"
+            :size       "2"
+            :value      (review-field->str review :score)
+            :disabled   @settings-visible?
+            :on-change  (when-not @settings-visible?
+                          (partial update-review-field :score (partial convert-score @review)))}]])])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
