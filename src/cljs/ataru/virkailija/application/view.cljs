@@ -791,28 +791,30 @@
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-outer-floating")}
      [:div.application-handling__review-settings
-      (when-not @settings-visible
-        {:style {:visibility "hidden"}})
+      {:style (when-not @settings-visible
+                {:visibility "hidden"})
+       :class (when (= :fixed @review-positioning)
+                "application-handling__review-settings-floating")}
       [:div.application-handling__review-settings-indicator-outer
        [:div.application-handling__review-settings-indicator-inner]]
-      [:div.application-handling__review-settings-header
-       [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-       [:span.application-handling__review-settings-header-text "Asetukset"]]
-      (when @settings-visible
-        [review-settings-checkboxes review-states/hakukohde-review-types])
-      [:div.application-handling__review
-       {:class (when @settings-visible "application-handling__review--disabled")}
-       [:div.application-handling__review-outer-container
-        [application-review-state]
-        (when (= @review-state "information-request")
-          [application-information-request])
-        [application-hakukohde-selection]
-        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
-        [application-review-inputs]
-        [application-modify-link]
-        [application-resend-modify-link]
-        [application-resend-modify-link-confirmation]
-        [application-review-events]]]]]))
+      (when (not= :fixed @review-positioning)
+        [:div.application-handling__review-settings-header
+         [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
+         [:span.application-handling__review-settings-header-text "Asetukset"]])]
+     ;(when @settings-visible
+     ;  [review-settings-checkboxes review-states/hakukohde-review-types])
+     [:div.application-handling__review
+      [:div.application-handling__review-outer-container
+       [application-review-state]
+       (when (= @review-state "information-request")
+         [application-information-request])
+       [application-hakukohde-selection]
+       [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+       [application-review-inputs]
+       [application-modify-link]
+       [application-resend-modify-link]
+       [application-resend-modify-link-confirmation]
+       [application-review-events]]]]))
 
 (defn- koulutus->str
   [koulutus]
@@ -888,6 +890,12 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
+(defn- floating-application-review-placeholder
+  "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
+  []
+  [:div.application-handling__floating-application-review-placeholder])
+
+
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
@@ -909,7 +917,7 @@
             [:div.application-handling__application-contents
              [application-contents @selected-application-and-form]]
             [:span#application-handling__review-position-canary]
-            ;(when (= :fixed @review-positioning) [floating-application-review-placeholder])
+            (when (= :fixed @review-positioning) [floating-application-review-placeholder])
             [application-review]]])))))
 
 (defn application []

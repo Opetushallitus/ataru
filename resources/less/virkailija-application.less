@@ -342,14 +342,12 @@ and (max-width: 1000px) {
 .application-handling__review-outer {
   position: relative;
   margin-left: 35px;
-  width: 529px;
 }
 
 .application-handling__review-outer-floating {
   position: fixed;
   top: 43px;
   right: 85px;
-  width: 439px;
   padding-bottom: 100px;
   overflow-y: scroll;
   height: 100%;
@@ -359,9 +357,22 @@ and (max-width: 1000px) {
   border: 1px solid @review-separator-color;
   border-radius: 3px;
   background-color: rgba(255, 255, 255, 0.5);
-  padding: 33px 15px 15px;
-  position: relative;
+  position: absolute;
   top: -34px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.application-handling__review-settings-floating {
+  position: fixed;
+  left: auto;
+  bottom: auto;
+  top: 43px;
+  right: 85px;
+  height: 100%;
+  width: 448px;
 }
 
 .application-handling__review-settings-header {
@@ -404,27 +415,25 @@ and (max-width: 1000px) {
 .application-handling__review {
   color: @text-color;
   font-size: 14px;
-  background-color: @very-light-gray;
-  min-width: 407px;
-  border-top: solid @review-separator-color 1px;
-  padding: 15px;
-  width: 360px;
+  width: 448px;
+  padding: 0 15px 15px 30px;
   .application-handling-webkit-scrollbar-mixin;
   position: relative;
   visibility: visible;
 }
 
-.application-handling__review--disabled {
-  z-index: -1;
-}
-
 .application-handling__review-outer-container {
   padding-right: 5px;
   position: relative;
+  border-top: solid @review-separator-color 1px;
+  padding-top: 15px;
+  background-color: @very-light-gray;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .application-handling__floating-application-review-placeholder {
-  width: 679px;
+  width: 779px;
   visibility: hidden;
 }
 
