@@ -446,13 +446,12 @@
         :class    "application-handling__review-state-row--enabled"})
      [icon-check] label]))
 
-(defn review-state-row [state-name current-review-state review-state]
-  (let [[review-state-id review-state-label] review-state]
-    (if (= current-review-state review-state-id)
-      [review-state-selected-row #() review-state-label]
-      [:div.application-handling__review-state-row
-       {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
-       review-state-label])))
+(defn review-state-row [state-name current-review-state [review-state-id review-state-label]]
+  (if (= current-review-state review-state-id)
+    [review-state-selected-row #() review-state-label]
+    [:div.application-handling__review-state-row
+     {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
+     review-state-label]))
 
 (defn opened-review-state-list [state-name current-state all-states]
   (mapv (partial review-state-row state-name (or @current-state (ffirst all-states))) all-states))
