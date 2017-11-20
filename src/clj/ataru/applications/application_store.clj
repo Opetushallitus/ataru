@@ -475,7 +475,6 @@
        (group-by :application_key)))
 
 (defn- kk-base-educations [answers]
-  (println answers)
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
         ["avoin" :studies-required-by-higher-education-field]
         ["ulk" :higher-education-qualification-outside-finland-year-and-date]
