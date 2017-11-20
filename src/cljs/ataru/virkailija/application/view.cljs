@@ -425,14 +425,17 @@
   [readonly-contents/readonly-fields form application])
 
 (defn review-state-selected-row [on-click label]
-  [:div.application-handling__review-state-row.application-handling__review-state-selected-row
-   {:on-click on-click}
-   [icon-check] label])
+  (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
+    [:div.application-handling__review-state-row.application-handling__review-state-selected-row
+     (when-not @settings-visible?
+       {:on-click on-click
+        :class    "application-handling__review-state-row--enabled"})
+     [icon-check] label]))
 
 (defn review-state-row [state-name current-review-state review-state]
   (let [[review-state-id review-state-label] review-state]
     (if (= current-review-state review-state-id)
-      (review-state-selected-row #() review-state-label)
+      [review-state-selected-row #() review-state-label]
       [:div.application-handling__review-state-row
        {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
        review-state-label])))
@@ -455,9 +458,9 @@
           (into [:div.application-handling__review-state-list-opened
                  {:on-click list-click}]
                 (opened-review-state-list :state review-state application-review-states/application-review-states))]
-         (review-state-selected-row
+         [review-state-selected-row
            list-click
-           (application-states/get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
+           (application-states/get-review-state-label-by-name application-review-states/application-review-states @review-state)])])))
 
 (defn- find-hakukohde-by-oid
   [hakukohteet hakukohde-oid]
@@ -486,10 +489,14 @@
 (defn- selected-hakukohde-row
   [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
   (let [selected-hakukohde                  (find-hakukohde-by-oid haku-hakukohteet selected-hakukohde-oid)
-        application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))]
+        application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
+        settings-visible?                   (subscribe [:state-query [:application :review-settings :visible?]])]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde.application-handling__review-state-selected-row-hakukohde
-     {:on-click (if application-has-multiple-hakukohde? on-click identity)
-      :class (if (not application-has-multiple-hakukohde?) "application-handling__review-state-row-hakukohde--single-option")}
+     {:on-click (when (and application-has-multiple-hakukohde?
+                           (not @settings-visible?))
+                  on-click)
+      :class (str (when-not application-has-multiple-hakukohde? "application-handling__review-state-row-hakukohde--single-option")
+                  (when-not @settings-visible? " application-handling__review-state-row--enabled"))}
      [icon-check]
      (hakukohde-label selected-hakukohde)]))
 
@@ -509,7 +516,7 @@
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
               (map #(opened-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
-           (selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
+           [selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids])]))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
@@ -540,11 +547,11 @@
             (into [:div.application-handling__review-state-list-opened
                    {:on-click list-click}]
               (opened-review-state-list kw review-state-for-current-hakukohde states))]
-           (review-state-selected-row
+           [review-state-selected-row
              list-click
              (application-states/get-review-state-label-by-name
                states
-               (or @review-state-for-current-hakukohde (ffirst states)))))]))))
+               (or @review-state-for-current-hakukohde (ffirst states)))])]))))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
@@ -647,16 +654,19 @@
       maybe-number)))
 
 (defn application-review-inputs []
-  (let [review (subscribe [:state-query [:application :review]])
+  (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
-        review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))]
+        review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
     (fn []
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header "Muistiinpanot"]
         [:textarea.application-handling__review-notes
-         {:value (review-field->str review :notes)
-          :on-change (partial update-review-field :notes identity)}]]
+         {:value     (review-field->str review :notes)
+          :on-change (when-not @settings-visible?
+                       (partial update-review-field :notes identity))
+          :disabled  @settings-visible?}]]
        [:div.application-handling__review-row
         [:div.application-handling__review-header.application-handling__review-header--points
          "Pisteet"]
@@ -665,12 +675,18 @@
           :max-length "2"
           :size "2"
           :value (review-field->str review :score)
-          :on-change (partial update-review-field :score (partial convert-score @review))}]]])))
+          :disabled @settings-visible?
+          :on-change (when-not @settings-visible?
+                       (partial update-review-field :score (partial convert-score @review)))}]]])))
 
 (defn- application-modify-link []
-  (let [application-key (subscribe [:state-query [:application :selected-key]])]
+  (let [application-key   (subscribe [:state-query [:application :selected-key]])
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
     [:a.application-handling__link-button.application-handling__button
-     {:href   (str "/lomake-editori/api/applications/" @application-key "/modify")
+     {:href   (when-not @settings-visible?
+                (str "/lomake-editori/api/applications/" @application-key "/modify"))
+      :class  (when @settings-visible?
+                "application-handling__button--disabled")
       :target "_blank"}
      "Muokkaa hakemusta"]))
 
@@ -755,14 +771,18 @@
           "Lähetä täydennyspyyntö hakijalle"]]))))
 
 (defn- application-resend-modify-link []
-  (let [recipient (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
-        enabled?  (subscribe [:application/resend-modify-application-link-enabled?])]
+  (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
+        enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])]
     [:button.application-handling__send-information-request-button.application-handling__button
      {:on-click #(dispatch [:application/resend-modify-application-link])
-      :disabled (not @enabled?)
-      :class    (if @enabled?
-                  "application-handling__send-information-request-button--enabled"
-                  "application-handling__send-information-request-button--disabled")}
+      :disabled (or (not @enabled?) @settings-visible?)
+      :class    (str (if @enabled?
+                       "application-handling__send-information-request-button--enabled"
+                       "application-handling__send-information-request-button--disabled")
+                     (if @settings-visible?
+                       " application-handling__send-information-request-button--cursor-default"
+                       " application-handling__send-information-request-button--cursor-pointer"))}
      [:span "Lähetä muokkauslinkki hakijalle"]
      [:span.application-handling__resend-modify-application-link-email-text @recipient]]))
 

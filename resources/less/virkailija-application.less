@@ -656,11 +656,14 @@ and (max-width: 1000px) {
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
-  cursor: pointer;
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+}
+
+.application-handling__button--disabled {
+  cursor: auto;
 }
 
 .application-handling__button:not(:last-child) {
@@ -700,6 +703,14 @@ and (max-width: 1000px) {
 
 .application-handling__send-information-request-button--disabled {
   background-color: @section-gray-border;
+}
+
+.application-handling__send-information-request-button--cursor-pointer {
+  cursor: pointer;
+}
+
+.application-handling__send-information-request-button--cursor-default {
+  cursor: default;
 }
 
 .application-handling__information-request-info-heading {
@@ -812,9 +823,9 @@ and (max-width: 1000px) {
   padding: 11px 11px 11px 32px;
   margin-bottom: 3px;
   width: 219px;
-  cursor: pointer;
   box-shadow: @modal-shadow;
   background: @white;
+  cursor: default;
 }
 
 .application-handling__review-state-row--mass-update {
@@ -823,10 +834,13 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row--disabled {
   color: @sg-gray-lighten-3;
-  cursor: default;
 }
 
-.application-handling__review-state-row:hover {
+.application-handling__review-state-row--enabled {
+  cursor: pointer;
+}
+
+.application-handling__review-state-row--enabled:hover {
   background-color: #e8f3f6;
 }
 
