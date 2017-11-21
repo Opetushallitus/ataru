@@ -215,12 +215,17 @@
   [:a.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
    {:key "selected-hakukohde-row"
     :on-click on-click}
+   [icon-check]
    (or label all-hakukohteet-label)])
+
+(defn hakukohde->label
+  [name application-count]
+  (str (from-multi-lang name) (when application-count (str " (" application-count ")"))))
 
 (defn hakukohde-row
   [list-opened haku {:keys [oid name application-count] :as hakukohde} current-hakukohde]
   (if (= oid (:oid current-hakukohde))
-    (selected-hakukohde-row #(reset! list-opened false) (from-multi-lang name))
+    (selected-hakukohde-row #(reset! list-opened false) (hakukohde->label name application-count))
     [:a.application-handling__dropdown-box-item
      {:key      (str "hakukohde-row-" oid)
       :href     (str "/lomake-editori/applications"
@@ -228,7 +233,7 @@
                        (str "/hakukohde/" oid)
                        (str "/haku/" (:oid haku))))
       :on-click #(reset! list-opened false)}
-     (str (from-multi-lang name) (when application-count (str " (" application-count ")")))]))
+     (hakukohde->label name application-count)]))
 
 (def all-hakukohteet-row-data
   [{:name {:fi all-hakukohteet-label}
