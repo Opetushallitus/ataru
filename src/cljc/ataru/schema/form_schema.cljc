@@ -211,6 +211,7 @@
    :form                                s/Int
    :lang                                s/Str
    :answers                             [Answer]
+   (s/optional-key :turvakielto)        s/Bool
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
    (s/optional-key :hakukohde)          (s/maybe [s/Str])

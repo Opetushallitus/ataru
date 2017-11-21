@@ -228,7 +228,11 @@
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews
                              :form                 ataru-schema/FormWithContent
                              :information-requests [ataru-schema/InformationRequest]}
-                    (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
+                    (ok (application-service/get-application-with-human-readable-koodis application-key
+                                                                                        session
+                                                                                        organization-service
+                                                                                        tarjonta-service
+                                                                                        person-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
                      :path-params [application-key :- String]

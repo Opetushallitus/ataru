@@ -1,20 +1,21 @@
 (ns ataru.applications.application-service
   (:require
-    [ataru.applications.application-access-control :as aac]
-    [ataru.forms.form-access-control :as form-access-control]
-    [ataru.forms.form-store :as form-store]
-    [ataru.koodisto.koodisto :as koodisto]
-    [ataru.applications.application-store :as application-store]
-    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-    [ataru.applications.excel-export :as excel]
-    [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
-    [ataru.hakija.hakija-form-service :as hakija-form-service]
-    [taoensso.timbre :refer [spy debug]]
-    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-    [ataru.virkailija.user.ldap-client :as ldap]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [ataru.information-request.information-request-store :as information-request-store]
-    [ataru.hakija.application-email-confirmation :as email])
+   [ataru.applications.application-access-control :as aac]
+   [ataru.forms.form-access-control :as form-access-control]
+   [ataru.forms.form-store :as form-store]
+   [ataru.koodisto.koodisto :as koodisto]
+   [ataru.applications.application-store :as application-store]
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.applications.excel-export :as excel]
+   [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
+   [ataru.hakija.hakija-form-service :as hakija-form-service]
+   [taoensso.timbre :refer [spy debug]]
+   [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+   [ataru.virkailija.user.ldap-client :as ldap]
+   [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+   [ataru.information-request.information-request-store :as information-request-store]
+   [ataru.hakija.application-email-confirmation :as email]
+   [ataru.person-service.person-service :as person-service])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -86,7 +87,7 @@
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-key session organization-service tarjonta-service]
+  [application-key session organization-service tarjonta-service person-client]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
                           tarjonta-service
@@ -96,9 +97,15 @@
                              form-store/fetch-by-id
                              (populate-hakukohde-answer-options tarjonta-info)
                              (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        application      (populate-koodisto-fields bare-application form)]
+        application      (populate-koodisto-fields bare-application form)
+        turvakielto      (->> (:person-oid application)
+                              (person-service/get-person person-client)
+                              :turvakielto
+                              boolean)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
-    {:application          (merge application tarjonta-info)
+    {:application          (-> application
+                               (assoc :turvakielto turvakielto)
+                               (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
      :events               (application-store/get-application-events application-key)

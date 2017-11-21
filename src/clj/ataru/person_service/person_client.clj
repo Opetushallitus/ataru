@@ -49,6 +49,19 @@
                               "response body: "
                               (:body result))))))
 
+(defn get-person [cas-client oid]
+  (let [result (cas/cas-authenticated-get
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.get-person oid))]
+    (match result
+      {:status 200 :body body}
+      (json/parse-string body true)
+
+      :else (throw-error (str "Could not get person by oid " oid ", "
+                              "status: " (:status result)
+                              "response body: "
+                              (:body result))))))
+
 (s/defschema Response
   {:status                   s/Keyword
    (s/optional-key :message) (s/maybe s/Str)

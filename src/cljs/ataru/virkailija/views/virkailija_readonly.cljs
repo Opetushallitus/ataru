@@ -90,6 +90,9 @@
       [:div.application__wrapper-element.application__wrapper-element--border
        [:div.application__wrapper-heading
         [:h2 (-> content :label lang)]
+        (when (and (= (:module content) "person-info")
+                   (:turvakielto application))
+          [:p.security-block "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui))])))
