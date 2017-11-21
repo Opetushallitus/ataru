@@ -258,6 +258,19 @@
    :paymentObligations  {s/Str s/Str}
    :kkPohjakoulutus     [s/Str]})
 
+(s/defschema OnrApplication
+  {:oid          s/Str
+   :haku         (s/maybe s/Str)
+   :form         s/Str
+   :kansalaisuus s/Str
+   :aidinkieli   s/Str
+   :matkapuhelin s/Str
+   :email        s/Str
+   :lahiosoite   s/Str
+   :postinumero  s/Str
+   :passinNumero (s/maybe s/Str)
+   :idTunnus     (s/maybe s/Str)})
+
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"

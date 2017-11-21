@@ -813,4 +813,15 @@ SELECT key, haku, hakukohde, person_oid, content
 FROM latest_applications
 WHERE created_time > :date::DATE
 AND person_oid IS NOT NULL
-ORDER BY created_time DESC
+ORDER BY created_time DESC;
+
+--name: yesql-onr-applications
+SELECT a.key AS key,
+       a.haku AS haku,
+       f.key AS form,
+       a.email AS email,
+       a.content AS content
+FROM latest_applications AS a
+JOIN forms AS f ON f.id = a.form_id
+WHERE a.person_oid = :person_oid
+ORDER BY a.created_time DESC;

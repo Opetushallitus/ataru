@@ -387,6 +387,15 @@
                                                    person-oid)]
                               (response/ok applications)
                               (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/onr/applications/:person-oid" {session :session}
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OnrApplication]
+                            (if-let [applications (access-controlled-application/onr-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
                    (api/GET "/hakurekisteri/applications" {session :session}
                      :summary "Get the latest versions of applications."
                      :query-params [{hakuOid :- s/Str nil}
