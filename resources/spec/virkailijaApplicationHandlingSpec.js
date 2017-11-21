@@ -361,7 +361,7 @@
           wait.until(function () {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
-          wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')),
+          wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')),
           clickElement(applicationStateFilterLink)
         );
 
