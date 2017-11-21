@@ -36,7 +36,7 @@
                      :etunimet               (-> person :etunimet)
                      :kutsumanimi            (-> person :kutsumanimi)
                      :syntymaaika            (-> person :syntymaaika)
-                     :Turvakielto            (-> person :turvakielto)
+                     :turvakielto            (-> person :turvakielto)
                      :hetu                   (-> person :hetu)
                      :sukupuoli              (gender-int-to-string (-> person :sukupuoli))
                      :Ulk_postiosoite        nil

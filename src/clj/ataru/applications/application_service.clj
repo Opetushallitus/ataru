@@ -84,6 +84,14 @@
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
+(defn get-person [application person-client]
+  (let [person-from-onr (->> (:person-oid application)
+                             (person-service/get-person person-client))]
+    {:oid         (:person-oid application)
+     :turvakielto (-> person-from-onr :turvakielto boolean)
+     :yksiloity   (or (-> person-from-onr :yksiloity)
+                      (-> person-from-onr :yksiloityVTJ))}))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
@@ -98,13 +106,11 @@
                              (populate-hakukohde-answer-options tarjonta-info)
                              (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         application      (populate-koodisto-fields bare-application form)
-        turvakielto      (->> (:person-oid application)
-                              (person-service/get-person person-client)
-                              :turvakielto
-                              boolean)]
+        person           (get-person application person-client)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application          (-> application
-                               (assoc :turvakielto turvakielto)
+                               (dissoc :person-oid)
+                               (assoc :person person)
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)

@@ -91,7 +91,7 @@
        [:div.application__wrapper-heading
         [:h2 (-> content :label lang)]
         (when (and (= (:module content) "person-info")
-                   (:turvakielto application))
+                   (-> application :person :turvakielto))
           [:p.security-block "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]

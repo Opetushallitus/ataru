@@ -206,12 +206,17 @@
                                                      :state       (apply s/enum review-requirement-values)
                                                      :hakukohde   s/Str}]}) ; "form" or oid
 
+(s/defschema Person
+  {:oid         (s/maybe s/Str)
+   :turvakielto s/Bool
+   :yksiloity   s/Bool})
+
 (s/defschema Application
   {(s/optional-key :key)                s/Str
    :form                                s/Int
    :lang                                s/Str
    :answers                             [Answer]
-   (s/optional-key :turvakielto)        s/Bool
+   :person                              Person
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
    (s/optional-key :hakukohde)          (s/maybe [s/Str])
@@ -221,8 +226,7 @@
    (s/optional-key :secret)             s/Str
    (s/optional-key :virkailija-secret)  s/Str
    (s/optional-key :form-key)           s/Str
-   (s/optional-key :tarjonta)           FormTarjontaMetadata
-   (s/optional-key :person-oid)         (s/maybe s/Str)})
+   (s/optional-key :tarjonta)           FormTarjontaMetadata})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str

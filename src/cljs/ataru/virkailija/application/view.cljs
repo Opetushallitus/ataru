@@ -878,7 +878,8 @@
         birth-date         (get-in answers [:birth-date :value])
         hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
         applications-count (:applications-count application)
-        person-oid         (:person-oid application)]
+        person-oid         (-> application :person :oid)
+        yksiloity          (-> application :person :yksiloity)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       [:div.application-handling__review-area-main-heading-person-info
@@ -901,7 +902,12 @@
             :target "_blank"}
            [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
            [:span.application-handling__review-area-main-heading-person-oid
-            (str "Oppija " person-oid)]]])]
+            (str "Oppija " person-oid)]]
+           (when-not yksiloity
+          [:a.individualization
+           {:href ""
+            :target "_blank"}
+           "Yksilöinti tekemättä!"])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]
