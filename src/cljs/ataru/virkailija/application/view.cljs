@@ -199,25 +199,25 @@
   [text]
   (some #(get text %) [:fi :sv :en]))
 
-(def all-hakukohteet-label "*")
+(def all-hakukohteet-label "(kaikki hakukohteet)")
 
 (defn selected-hakukohde-row
   [on-click label]
-  [:div.application-handling__header-hakukohde-row.application-handling__header-hakukohde-selected-row
+  [:div.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
    {:on-click on-click}
    (or label all-hakukohteet-label)])
 
 (defn hakukohde-row
   [list-opened haku hakukohde current-hakukohde]
   (if (= (:oid hakukohde) (:oid current-hakukohde))
-    (selected-hakukohde-row #() (from-multi-lang (:name hakukohde)))
-    [:div.application-handling__header-hakukohde-row
-     [:a {:href     (str "/lomake-editori/applications"
-                         (if (:oid hakukohde)
-                           (str "/hakukohde/" (:oid hakukohde))
-                           (str "/haku/" (:oid haku))))
-          :on-click #(reset! list-opened false)}
-      (from-multi-lang (:name hakukohde))]]))
+    (selected-hakukohde-row #(reset! list-opened false) (from-multi-lang (:name hakukohde)))
+    [:a.application-handling__dropdown-box-item
+     {:href     (str "/lomake-editori/applications"
+                     (if (:oid hakukohde)
+                       (str "/hakukohde/" (:oid hakukohde))
+                       (str "/haku/" (:oid haku))))
+      :on-click #(reset! list-opened false)}
+     (from-multi-lang (:name hakukohde))]))
 
 (def all-hakukohteet-row-data
   [{:name {:fi all-hakukohteet-label}
@@ -230,10 +230,10 @@
       [:div.application-handling__header-haku-and-hakukohde
        [:div.application-handling__header-haku (from-multi-lang (:name haku))]
        (if @list-opened
-         [:div.application-handling__header-hakukohde-list-opened-anchor
+         [:div.application-handling__dropdown-box-wrapper
           (into
-            [:div.application-handling__header-hakukohde-list-opened {:on-click #()}]
-            (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet)))]
+            [:div.application-handling__dropdown-box-opened
+             (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
          [selected-hakukohde-row #(swap! list-opened not) (from-multi-lang (:name selected-hakukohde))])])))
 
 (defn selected-applications-heading
