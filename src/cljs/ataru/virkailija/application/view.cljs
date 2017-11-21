@@ -199,25 +199,36 @@
   [text]
   (some #(get text %) [:fi :sv :en]))
 
-(def all-hakukohteet-label "(kaikki hakukohteet)")
+(def all-hakukohteet-label "Kaikki hakukohteet")
+
+(defn closed-hakukohde-row
+  [on-click label]
+  [:div.application-handling__dropdown-box-closed
+   {:key "closed-selected-hakukohde-row"
+    :on-click on-click}
+   [:i.zmdi.zmdi-chevron-down]
+   [:p.application-handling__dropdown-box-closed-label
+    (or label all-hakukohteet-label)]])
 
 (defn selected-hakukohde-row
   [on-click label]
-  [:div.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
-   {:on-click on-click}
+  [:a.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
+   {:key "selected-hakukohde-row"
+    :on-click on-click}
    (or label all-hakukohteet-label)])
 
 (defn hakukohde-row
-  [list-opened haku hakukohde current-hakukohde]
-  (if (= (:oid hakukohde) (:oid current-hakukohde))
-    (selected-hakukohde-row #(reset! list-opened false) (from-multi-lang (:name hakukohde)))
+  [list-opened haku {:keys [oid name] :as hakukohde} current-hakukohde]
+  (if (= oid (:oid current-hakukohde))
+    (selected-hakukohde-row #(reset! list-opened false) (from-multi-lang name))
     [:a.application-handling__dropdown-box-item
-     {:href     (str "/lomake-editori/applications"
-                     (if (:oid hakukohde)
-                       (str "/hakukohde/" (:oid hakukohde))
+     {:key      (str "hakukohde-row-" oid)
+      :href     (str "/lomake-editori/applications"
+                     (if oid
+                       (str "/hakukohde/" oid)
                        (str "/haku/" (:oid haku))))
       :on-click #(reset! list-opened false)}
-     (from-multi-lang (:name hakukohde))]))
+     (from-multi-lang name)]))
 
 (def all-hakukohteet-row-data
   [{:name {:fi all-hakukohteet-label}
@@ -234,7 +245,7 @@
           (into
             [:div.application-handling__dropdown-box-opened
              (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
-         [selected-hakukohde-row #(swap! list-opened not) (from-multi-lang (:name selected-hakukohde))])])))
+         [closed-hakukohde-row #(swap! list-opened not) (from-multi-lang (:name selected-hakukohde))])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]

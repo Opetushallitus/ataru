@@ -41,6 +41,7 @@
   padding-top: 0;
   border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
+  padding-bottom: 10px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -1347,16 +1348,22 @@ th.application__readonly-adjacent--header {
   }
 }
 
+.application-handling__header-haku {
+  font-size: 20px;
+  .semibold;
+}
+
 .application-handling__dropdown-box-item {
   position: relative;
   height: 44px;
   color: @text-color;
-  padding: 11px 11px 11px 32px;
+  padding: 11px 20px;
   margin-bottom: 3px;
   cursor: pointer;
   box-shadow: @modal-shadow;
   background: @white;
   display: block;
+  width: 100%;
 }
 
 .application-handling__dropdown-box-item--selected {
@@ -1396,4 +1403,15 @@ th.application__readonly-adjacent--header {
 
 .application-handling__dropdown-box-wrapper {
   height: 52px;
+}
+
+.application-handling__dropdown-box-closed {
+  color: @pale-blue;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.application-handling__dropdown-box-closed-label {
+  margin-left: 7px;
+  display: inline;
 }
