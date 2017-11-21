@@ -83,7 +83,11 @@
                                     application-list)
 
                                   :else
-                                  application-list)]
+                                  application-list)
+         db                     (cond-> db
+                                  (and (= field :state)
+                                       (= value "information-request"))
+                                  (assoc-in [:application :information-request :visible?] true))]
      (if is-hakukohde-review?
        (-> db
            (assoc-in [:application :review :hakukohde-reviews (keyword selected-hakukohde-oid) field] value)
@@ -126,7 +130,8 @@
                  (assoc-in [:application :applications] applications)
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications))
-                 (assoc-in [:application :sort] application-sorting/initial-sort))
+                 (assoc-in [:application :sort] application-sorting/initial-sort)
+                 (assoc-in [:application :information-request] nil))
           application-key (if (= 1 (count applications))
                             (-> applications first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
