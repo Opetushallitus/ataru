@@ -941,8 +941,9 @@
      [:div.application-handling__review-area-main-heading-container
       [:div.application-handling__review-area-main-heading-person-info
        [:div.application-handling__review-area-main-heading-name-row
-        [:h2.application-handling__review-area-main-heading
-         (str pref-name " " last-name ", " (or ssn birth-date))]
+        (when pref-name
+          [:h2.application-handling__review-area-main-heading
+           (str last-name ", " pref-name " — " (or ssn birth-date))])
         (when (> applications-count 1)
           [:a.application-handling__review-area-main-heading-applications-link
            {:on-click (fn [_]
