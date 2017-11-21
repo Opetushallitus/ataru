@@ -905,9 +905,10 @@
             (str "Oppija " person-oid)]]
            (when-not yksiloity
           [:a.individualization
-           {:href ""
+           {:href (str "/authentication-henkiloui/html/henkilo/" person-oid "/duplikaatit")
             :target "_blank"}
-           "Yksilöinti tekemättä!"])])]
+           [:i.zmdi.zmdi-account-o]
+           [:span "Käy tarkastamassa hakijan tiedot ja tee yksilöinti."]])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]

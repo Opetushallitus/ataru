@@ -482,6 +482,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading-person-oid-row {
   margin-top: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .application-handling__review-area-main-heading-person-icon {
@@ -1041,8 +1043,20 @@ and (max-width: 1000px) {
 }
 
 .individualization {
+  .arrow(left, #9FD466, 8px, 8px);
+  align-items: center;
+  background: #9FD466;
+  border-radius: 3px;
+  color: white;
+  display: flex;
+  font-size: 13px;
   margin-left: 10px;
-  color: #c31f1fc4;
+  padding: 4px 7px 4px 4px;
+
+  i {
+    font-size: 26px;
+    margin: 0 6px 0 4px;
+  }
 }
 
 .application__wrapper-element--border {
