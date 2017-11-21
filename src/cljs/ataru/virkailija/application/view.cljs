@@ -218,7 +218,7 @@
    (or label all-hakukohteet-label)])
 
 (defn hakukohde-row
-  [list-opened haku {:keys [oid name] :as hakukohde} current-hakukohde]
+  [list-opened haku {:keys [oid name application-count] :as hakukohde} current-hakukohde]
   (if (= oid (:oid current-hakukohde))
     (selected-hakukohde-row #(reset! list-opened false) (from-multi-lang name))
     [:a.application-handling__dropdown-box-item
@@ -228,7 +228,7 @@
                        (str "/hakukohde/" oid)
                        (str "/haku/" (:oid haku))))
       :on-click #(reset! list-opened false)}
-     (from-multi-lang name)]))
+     (str (from-multi-lang name) (when application-count (str " (" application-count ")")))]))
 
 (def all-hakukohteet-row-data
   [{:name {:fi all-hakukohteet-label}
