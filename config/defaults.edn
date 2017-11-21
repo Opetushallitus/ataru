@@ -5,6 +5,7 @@
                   :server-name   "localhost"
                   :port-number   5432
                   :schema        "public"}
+ :cache          {:type :hazelcast}
  :session        {:timeout 28800}
  :public-config  {:applicant        {:service_url "http://localhost:8351"}
                   :virkailija       {:service_url "http://localhost:8350/lomake-editori/"}

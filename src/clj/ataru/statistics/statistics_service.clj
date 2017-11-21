@@ -14,9 +14,20 @@
     (update-in m keys inc)
     (assoc-in m keys 1)))
 
-(defn- get-and-parse-application-stats
-  [start-time time-period]
-  (let [group-by-fn  (time-period category-formatters)
+(defn- earlier-at-midnight
+  [period-fn period-num date-time]
+  (-> date-time
+      (time/minus (period-fn period-num))
+      (time/with-time-at-start-of-day)))
+
+(defn get-and-parse-application-stats
+  [time-period]
+  (let [now        (time/now)
+        start-time (case time-period
+                     :month (earlier-at-midnight time/months 1 now)
+                     :week (earlier-at-midnight time/weeks 1 now)
+                     :day (earlier-at-midnight time/days 1 now))
+        group-by-fn  (time-period category-formatters)
         applications (store/get-application-stats start-time)]
     (reduce
       (fn [acc application]
@@ -32,19 +43,7 @@
       {:TOTAL {:form-name "Yhteensä" :counts {}}}
       applications)))
 
-(defn- earlier-at-midnight
-  [period-fn period-num date-time]
-  (-> date-time
-      (time/minus (period-fn period-num))
-      (time/with-time-at-start-of-day)))
-
 (defn get-application-stats
   [cache-service time-period]
-  (let [cache-key  (keyword (str "statistics-" (name time-period)))
-        entry-key  :applications
-        now        (time/now)
-        start-time (case time-period
-                     :month (earlier-at-midnight time/months 1 now)
-                     :week (earlier-at-midnight time/weeks 1 now)
-                     :day (earlier-at-midnight time/days 1 now))]
-    (cache/cache-get-or-fetch cache-service cache-key entry-key #(get-and-parse-application-stats start-time time-period))))
+  (let [cache-key (keyword (str "statistics-" (name time-period)))]
+    (cache/cache-get-or-fetch cache-service cache-key time-period #(get-and-parse-application-stats time-period))))
