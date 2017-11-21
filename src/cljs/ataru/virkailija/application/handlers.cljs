@@ -407,7 +407,8 @@
   :application/handle-submit-information-request-response
   (fn [{:keys [db]} [_ response]]
     {:db             (-> db
-                         (assoc-in [:application :information-request] {:state :submitted})
+                         (assoc-in [:application :information-request] {:state    :submitted
+                                                                        :visible? true})
                          (update-in [:application :information-requests] (fnil identity []))
                          (update-in [:application :information-requests] #(conj % response)))
      :dispatch-later [{:ms       3000

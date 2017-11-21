@@ -729,7 +729,7 @@
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
                                          visible?
-                                         true))
+                                         false))
         request-state        (subscribe [:state-query [:application :information-request :state]])]
     (fn []
       (if @request-window-open?
