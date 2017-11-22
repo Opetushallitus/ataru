@@ -231,7 +231,7 @@
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application          ataru-schema/Application
+                    :return {:application          ataru-schema/VirkailijaApplicationReview
                              :events               [ataru-schema/Event]
                              :review               ataru-schema/Review
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews

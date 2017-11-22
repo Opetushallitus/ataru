@@ -38,11 +38,14 @@
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
     (person-client/get-person oppijanumerorekisteri-cas-client oid)))
 
-(def fake-person {:personOid  "1.2.3.4.5.6"
-                  :firstName  "Foo"
-                  :lastName   "Bar"
-                  :email      "foo.bar@mailinator.com"
-                  :idpEntitys []})
+(def fake-person {:personOid    "1.2.3.4.5.6"
+                  :firstName    "Foo"
+                  :lastName     "Bar"
+                  :email        "foo.bar@mailinator.com"
+                  :idpEntitys   []
+                  :turvakielto  false
+                  :yksiloity    false
+                  :yksiloityVTJ false})
 
 (defrecord FakePersonService []
   component/Lifecycle
