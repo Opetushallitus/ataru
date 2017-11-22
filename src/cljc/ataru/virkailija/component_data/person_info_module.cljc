@@ -98,7 +98,9 @@
                    :size "S"
                    :id :birth-date
                    :validators [:past-date :required])
-                 {:params {:placeholder {:fi "pp.kk.vvvv"}}})
+                 {:params {:placeholder {:fi "pp.kk.vvvv"
+                                         :sv "dd.mm.åååå"
+                                         :en "dd.mm.yyyy"}}})
      (gender-section)]))
 
 (defn- ssn-birthdate-gender-wrapper []

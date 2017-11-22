@@ -30,11 +30,20 @@
    ["eligible" "Hakukelpoinen"]
    ["uneligible" "Ei hakukelpoinen"]])
 
+(def application-payment-obligation-states
+  [["unreviewed" "Tarkastamatta"]
+   ["obligated" "Velvollinen"]
+   ["not-obligated" "Ei velvollinen"]])
+
 (def hakukohde-review-types
   [[:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
    [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
+   [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]
    [:selection-state "Valinta" application-hakukohde-selection-states]])
+
+(def hakukohde-review-type-names
+  (map (comp name first) hakukohde-review-types))
 
 ; States where applications are considered "complete" in the application handling UI
 (def complete-states ["processed" "inactivated"])

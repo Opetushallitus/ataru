@@ -4,7 +4,6 @@
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
             [ataru.util.language-label :as label]
-            [ataru.application.review-states :refer [application-review-states]]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
@@ -16,7 +15,9 @@
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy debug]]))
+            [taoensso.timbre :refer [spy debug]]
+            [ataru.application.review-states :as review-states]
+            [ataru.application.application-states :as application-states]))
 
 (def tz (t/default-time-zone))
 
@@ -32,10 +33,32 @@
   ([date-time]
     (time-formatter date-time modified-time-format)))
 
-(defn state-formatter [state]
+(defn application-state-formatter
+  [state]
   (or
-    (->> application-review-states (filter #(= (first %) state)) first second)
+    (->> review-states/application-review-states
+         (filter #(= (first %) state)) first second)
     "Tuntematon"))
+
+(defn hakukohde-review-formatter
+  [requirement-name application]
+  (let [reviews     (filter
+                      #(= (:requirement %) requirement-name)
+                      (:application-hakukohde-reviews application))
+        requirement (last
+                      (first
+                        (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
+        get-label   (partial application-states/get-review-state-label-by-name requirement)]
+    (if (= 1 (count reviews))
+      (get-label (-> (first reviews) :state))
+      (clojure.string/join
+        "\n"
+        (map
+          (fn [{:keys [hakukohde hakukohde-name state]}]
+            (str hakukohde-name
+                 " (" hakukohde "): "
+                 (get-label state)))
+          reviews)))))
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
@@ -56,9 +79,19 @@
    {:label     "Lähetysaika"
     :field     :created-time
     :format-fn time-formatter}
-   {:label     "Tila"
+   {:label     "Hakemuksen tila"
     :field     :state
-    :format-fn state-formatter}
+    :format-fn application-state-formatter}
+   {:label     "Kielitaitovaatimus"
+    :format-fn (partial hakukohde-review-formatter "language-requirement")}
+   {:label     "Tutkinnon kelpoisuus"
+    :format-fn (partial hakukohde-review-formatter "degree-requirement")}
+   {:label     "Hakukelpoisuus"
+    :format-fn (partial hakukohde-review-formatter "eligibility-state")}
+   {:label     "Maksuvelvollisuus"
+    :format-fn (partial hakukohde-review-formatter "payment-obligation")}
+   {:label     "Valinnan tila"
+    :format-fn (partial hakukohde-review-formatter "selection-state")}
    {:label     "Hakijan henkilö-OID"
     :field     :person-oid
     :format-fn str}])
@@ -151,7 +184,12 @@
 
 (defn- write-application! [writer application headers application-meta-fields form]
   (doseq [meta-field application-meta-fields]
-    (let [meta-value ((or (:format-fn meta-field) identity) ((:field meta-field) application))]
+    (let [meta-value ((or
+                        (:format-fn meta-field)
+                        identity)
+                       ((or (:field meta-field)
+                            identity)
+                         application))]
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [column          (:column (first (filter #(= (:key answer) (:id %)) headers)))
@@ -340,7 +378,23 @@
                            (add-hakukohde-name tarjonta-service (:lang application) answer)
                            answer)))))
 
-(defn export-applications [applications tarjonta-service]
+(defn- add-all-hakukohde-reviews
+  [tarjonta-service selected-hakukohde application]
+  (let [all-reviews            (application-states/get-all-reviews-for-all-requirements
+                                 application
+                                 selected-hakukohde)
+        all-reviews-with-names (map
+                                 (fn [{:keys [hakukohde] :as review}]
+                                   (assoc review
+                                     :hakukohde-name
+                                     (get-hakukohde-name
+                                       tarjonta-service
+                                       (:lang application)
+                                       hakukohde)))
+                                 all-reviews)]
+    (assoc application :application-hakukohde-reviews all-reviews-with-names)))
+
+(defn export-applications [applications selected-hakukohde tarjonta-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -350,6 +404,7 @@
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names tarjonta-service))
+         (map (partial add-all-hakukohde-reviews tarjonta-service selected-hakukohde))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
                          form     (get-latest-form-by-key form-key)]
@@ -388,7 +443,7 @@
       (string/replace #"[\s]+" "-")
       (string/replace #"[^\w-]+" "")))
 
-(defn- create-filename [identifying-part]
+(defn create-filename [identifying-part]
   {:pre [(some? identifying-part)]}
   (str
    (sanitize-name identifying-part)

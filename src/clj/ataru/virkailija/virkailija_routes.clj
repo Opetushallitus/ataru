@@ -126,7 +126,11 @@
               (render-file-in-dev (str "spec/" filename ".js") {})
               (route/not-found "Not found")))))
 
-(defn api-routes [{:keys [organization-service tarjonta-service virkailija-tarjonta-service cache-service]}]
+(defn api-routes [{:keys [organization-service
+                          tarjonta-service
+                          virkailija-tarjonta-service
+                          cache-service
+                          person-service]}]
     (api/context "/api" []
                  :tags ["form-api"]
 
@@ -224,7 +228,11 @@
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews
                              :form                 ataru-schema/FormWithContent
                              :information-requests [ataru-schema/InformationRequest]}
-                    (ok (application-service/get-application-with-human-readable-koodis application-key session organization-service tarjonta-service)))
+                    (ok (application-service/get-application-with-human-readable-koodis application-key
+                                                                                        session
+                                                                                        organization-service
+                                                                                        tarjonta-service
+                                                                                        person-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
                      :path-params [application-key :- String]
@@ -263,48 +271,21 @@
                      (ok (information-request/store information-request
                                                     session)))
 
-                   (api/context "/excel" []
-                     (api/GET "/form/:form-key" {session :session}
-                              :path-params [form-key :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the form and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-form form-key))}
-                               :body    (application-service/get-excel-report-of-applications-by-form
-                                          form-key
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})
-
-                     (api/GET "/hakukohde/:hakukohde-oid" {session :session}
-                              :path-params [hakukohde-oid :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the hakukohde and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-hakukohde hakukohde-oid session organization-service tarjonta-service))}
-                               :body    (application-service/get-excel-report-of-applications-by-hakukohde
-                                          hakukohde-oid
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})
-
-                     (api/GET "/haku/:haku-oid" {session :session}
-                              :path-params [haku-oid :- s/Str]
-                              :query-params [{state :- [s/Str] nil}]
-                              :summary "Return Excel export of the haku and applications for it."
-                              {:status  200
-                               :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                         "Content-Disposition" (str "attachment; filename=" (excel/filename-by-haku haku-oid session organization-service tarjonta-service))}
-                               :body    (application-service/get-excel-report-of-applications-by-haku
-                                          haku-oid
-                                          state
-                                          session
-                                          organization-service
-                                          tarjonta-service)})))
+                   (api/POST "/excel" {session :session}
+                     :form-params [application-keys :- s/Str
+                                   filename :- s/Str
+                                   {selected-hakukohde :- s/Str nil}
+                                   {CSRF :- s/Str nil}]
+                     :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
+                     {:status  200
+                      :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
+                      :body    (application-service/get-excel-report-of-applications-by-key
+                                 (clojure.string/split application-keys #",")
+                                 selected-hakukohde
+                                 session
+                                 organization-service
+                                 tarjonta-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
@@ -406,12 +387,21 @@
                                                    person-oid)]
                               (response/ok applications)
                               (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/onr/applications/:person-oid" {session :session}
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OnrApplication]
+                            (if-let [applications (access-controlled-application/onr-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
                    (api/GET "/hakurekisteri/applications" {session :session}
                      :summary "Get the latest versions of applications."
                      :query-params [{hakuOid :- s/Str nil}
                                     {hakukohdeOids :- [s/Str] nil}
                                     {hakijaOids :- [s/Str] nil}]
-                     ;:return [ataru-schema/???] TODO: Figure out the schema after we know what to return
+                     :return [ataru-schema/HakurekisteriApplication]
                      (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
                        (response/bad-request {:error "No search terms provided."})
                        (if-let [applications (access-controlled-application/hakurekisteri-applications
@@ -431,7 +421,7 @@
                             (if (and (nil? hakuOid)
                                      (nil? hakemusOids))
                               (response/bad-request {:error "No haku or application oid provided."})
-                              (if-let [applications (access-controlled-application/vts-applications
+                              (if-let [applications (access-controlled-application/external-applications
                                                      organization-service
                                                      session
                                                      hakuOid
@@ -450,7 +440,18 @@
                                               hakuOid
                                               hakukohdeOids)]
                               (response/ok mapping)
-                              (response/unauthorized {:error "Unauthorized"}))))))
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/odw" {session :session}
+                     :summary "Gst odw report"
+                     :query-params [fromDate :- s/Str]
+                     :return [{s/Keyword s/Any}]
+                     (if-let [applications (access-controlled-application/get-applications-for-odw
+                                             organization-service
+                                             session
+                                             person-service
+                                             fromDate)]
+                       (response/ok applications)
+                       (response/unauthorized {:error "Unauthorized"}))))))
 
 (api/defroutes resource-routes
   (api/undocumented

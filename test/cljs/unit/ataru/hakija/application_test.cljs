@@ -3,8 +3,7 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               answers->valid-status
                                               create-application-to-submit
-                                              extract-wrapper-sections
-                                              wrapper-sections-with-validity]]
+                                              extract-wrapper-sections]]
             [ataru.util :as util]))
 
 (def form1
@@ -248,28 +247,3 @@
   {:G__2  {:valid false}
    :G__14 {:valid true}
    :G__25 {:valid true}})
-
-(deftest wrapper-sections-with-validity-is-correctly-constructed
-  (let [wrapper-sections '({:id "w1"
-                            :label {:fi "osio1", :sv ""}
-                            :children [{:id :f1}
-                                       {:id :f2}]}
-                           {:id "w2"
-                            :label {:fi "osio2", :sv ""}
-                            :children [{:id :f3}
-                                       {:id :f4}
-                                       {:id :f5}]})
-        answers {:f1 {:valid true}
-                 :f2 {:valid false}
-                 :f3 {:valid true}
-                 :f4 {:valid true}
-                 :f5 {:valid true}}
-        expected '({:id "w1" :valid false :label {:fi "osio1", :sv ""}
-                    :children [{:id :f1}
-                               {:id :f2}]}
-                   {:id "w2" :valid true :label {:fi "osio2", :sv ""}
-                    :children [{:id :f3}
-                               {:id :f4}
-                               {:id :f5}]})
-        result (wrapper-sections-with-validity wrapper-sections answers)]
-    (is (= expected result))))

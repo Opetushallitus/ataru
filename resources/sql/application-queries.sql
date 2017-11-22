@@ -78,9 +78,18 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key) AS new_application_modifications
 FROM latest_applications AS a
 JOIN application_reviews ar ON a.key = ar.application_key
 JOIN forms AS f ON f.id = a.form_id
@@ -106,10 +115,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -136,10 +154,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -166,10 +193,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -196,10 +232,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -226,10 +271,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -256,10 +310,19 @@ SELECT
   a.preferred_name,
   a.last_name,
   a.created_time,
+  a.haku,
+  a.hakukohde,
   ar.state                               AS state,
   ar.score                               AS score,
   a.form_id                              AS form,
-  (SELECT COUNT(*) FROM new_application_modifications am WHERE am.application_key = a.key) AS new_application_modifications
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+  (SELECT COUNT(*)
+   FROM new_application_modifications am
+   WHERE am.application_key = a.key)  AS new_application_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
@@ -310,6 +373,30 @@ SELECT
   application_key
 FROM application_reviews
 WHERE application_key = :application_key;
+
+-- name: yesql-get-applications-by-keys
+-- Get list of applications by their keys
+SELECT
+  a.id,
+  a.key,
+  a.lang,
+  a.form_id                           AS form,
+  a.created_time,
+  a.content,
+  a.person_oid,
+  a.hakukohde,
+  ar.state                            AS state,
+  f.key                               AS form_key,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
+FROM latest_applications AS a
+  JOIN application_reviews AS ar ON a.key = ar.application_key
+  JOIN forms AS f ON a.form_id = f.id
+WHERE a.key IN (:application_keys)
+ORDER BY a.created_time DESC;
 
 -- name: yesql-get-applications-for-form
 -- Gets applications only for forms (omits hakukohde applications)
@@ -650,6 +737,13 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-payment-obligation-for-applications
+SELECT DISTINCT ON (application_key, hakukohde) application_key, hakukohde, state
+FROM application_hakukohde_reviews
+WHERE application_key IN (:hakemus_oids)
+AND requirement = 'payment-obligation'
+ORDER BY application_key, hakukohde, id DESC;
+
 -- name: yesql-upsert-application-hakukohde-review!
 INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde)
 VALUES (:application_key, :requirement, :state, :hakukohde)
@@ -701,6 +795,7 @@ SELECT
   hakukohde,
   person_oid,
   lang,
+  email,
   content
 FROM latest_applications
 JOIN application_reviews ON application_key = key
@@ -712,3 +807,21 @@ WHERE person_oid IS NOT NULL
   AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
+
+--name: yesql-get-applciations-by-created-time
+SELECT key, haku, hakukohde, person_oid, content
+FROM latest_applications
+WHERE created_time > :date::DATE
+AND person_oid IS NOT NULL
+ORDER BY created_time DESC;
+
+--name: yesql-onr-applications
+SELECT a.key AS key,
+       a.haku AS haku,
+       f.key AS form,
+       a.email AS email,
+       a.content AS content
+FROM latest_applications AS a
+JOIN forms AS f ON f.id = a.form_id
+WHERE a.person_oid = :person_oid
+ORDER BY a.created_time DESC;

@@ -35,7 +35,8 @@ SELECT
   created_by,
   created_time,
   languages,
-  deleted
+  deleted,
+  organization_oid
 FROM forms
 WHERE id = :id;
 

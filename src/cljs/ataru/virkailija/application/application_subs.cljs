@@ -20,6 +20,15 @@
          (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
+  :application/application-list-selected-by
+  (fn [db]
+    (let [db-application (:application db)]
+      (cond
+        (:selected-form-key db-application) :selected-form-key
+        (:selected-haku db-application) :selected-haku
+        (:selected-hakukohde db-application) :selected-hakukohde))))
+
+(re-frame/reg-sub
  :application/application-list-belongs-to-haku?
  (fn [db]
    (boolean
@@ -201,13 +210,31 @@
          (show-email-icon-for-application?))))
 
 (re-frame/reg-sub
-  :application/filtered-applications
-  (fn [db _]
-    (let [applications      (-> db :application :applications)
-          states-to-include (-> db :application :filter set)]
-      (filter #(contains? states-to-include (:state %)) applications))))
-
-(re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
+
+(re-frame/reg-sub
+  :application/filtered-applications
+  (fn [db _]
+    (let [applications                (-> db :application :applications)
+          states-to-include           (-> db :application :filter set)
+          selection-states-to-include (-> db :application :selection-filter set)]
+      (filter
+       (fn [application]
+         (let [selection-states (->> (:application-hakukohde-reviews application)
+                                     (filter #(= "selection-state" (:requirement %)))
+                                     (map :state))]
+           (and
+            (contains? states-to-include (:state application))
+            (or
+             (not (empty? (clojure.set/intersection
+                           selection-states-to-include
+                           (set selection-states))))
+             (and
+              (contains? selection-states-to-include "incomplete")
+              (or
+               (empty? selection-states)
+               (< (count selection-states)
+                  (count (:hakukohde application)))))))))
+       applications))))

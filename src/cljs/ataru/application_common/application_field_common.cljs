@@ -13,6 +13,13 @@
     "birthplace"})
 (def contains-required-validators? (partial contains? required-validators))
 
+(defn render-paragraphs [s]
+  (->> (clojure.string/split s "\n")
+       (remove clojure.string/blank?)
+       (map-indexed (fn [i p]
+                      ^{:key (str "paragraph-" i)}
+                      [:p.application__text-field-paragraph p]))))
+
 (defn is-required-field?
   [field-descriptor]
   (if (contains? field-descriptor :children)

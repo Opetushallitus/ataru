@@ -7,10 +7,13 @@
 (sql/defqueries "sql/migration-1.25-queries.sql")
 (sql/defqueries "sql/migration-1.28-queries.sql")
 (sql/defqueries "sql/migration-1.36-queries.sql")
+(sql/defqueries "sql/migration-1.71-queries.sql")
 
 (defn get-all-applications
   []
-  (mapv (partial t/transform-keys k/->kebab-case-keyword)
+  (mapv (fn [application]
+          (assoc (t/transform-keys k/->kebab-case-keyword application)
+                 :content (:content application)))
         (db/exec :db yesql-get-all-applications {})))
 
 (defn set-application-key-to-application-review
@@ -57,3 +60,7 @@
   (db/exec :db yesql-add-haku-to-application! {:application_id application-id
                                                :haku           (:oid haku)
                                                :haku_name      (-> haku :nimi :kieli_fi)}))
+
+(defn update-application-content [application-id content]
+  (db/exec :db yesql-update-application-content! {:id      application-id
+                                                  :content content}))

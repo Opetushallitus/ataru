@@ -146,21 +146,15 @@ and (max-width: 1000px) {
   position: relative;
 }
 
-.application-handling__filter-state a {
-  background: #4194bf;
+.application-handling__filter-state-link {
+  background: @hyper-blue;
   color: #fff;
-  padding: 1px 6px;
+  padding: 2px 10px;
   border-radius: 3px;
 }
 
-.application-handling__filter-state a:before {
-  content: '\f108';
-  display: inline-block;
-  font: normal normal normal 14px/1 'Material-Design-Iconic-Font';
-  font-size: inherit;
-  text-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-  padding-right: 5px;
+.application-handling__filter-state-link-icon {
+  margin-right: 5px;
 }
 
 .application-handling__filter-state-selection {
@@ -237,13 +231,16 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row {
-  padding: 0.5em;
+  padding: 7px 8px 8px 8px;
   margin: 0;
   display: block;
+  font-size: 15px;
+  line-height: 15px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  overflow-x: hidden;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -258,6 +255,7 @@ and (max-width: 1000px) {
 .application-handling__list-header {
   color: #5E5E5E;
   font-size: 14px;
+  overflow-x: visible;
 }
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
@@ -283,12 +281,17 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--applicant {
-  width: 40%;
+  width: 25%;
   display: inline-block;
 }
 
 .application-handling__list-row--time {
-  width: 30%;
+  width: 15%;
+  display: inline-block;
+}
+
+.application-handling__list-row--time-day {
+  width: 25px;
   display: inline-block;
 }
 
@@ -299,6 +302,11 @@ and (max-width: 1000px) {
 
 .application-handling__list-row--state {
   width: 20%;
+  display: inline-block;
+}
+
+.application-handling__list-row--selection {
+  width: 30%;
   display: inline-block;
 }
 
@@ -436,7 +444,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-header--language-requirement,
 .application-handling__review-header--degree-requirement,
-.application-handling__review-header--eligibility-state {
+.application-handling__review-header--eligibility-state,
+.application-handling__review-header--payment-obligation {
   font-weight: normal;
 }
 
@@ -918,7 +927,14 @@ and (max-width: 1000px) {
     text-transform: uppercase;
     display: inline-block;
   }
+
+  .security-block {
+    color: #c31f1fc4;
+    font-size: 14px;
+    margin: 0;
+  }
 }
+
 
 .application__wrapper-element--border {
   border-top: solid 1px @review-separator-color;
@@ -1195,4 +1211,33 @@ th.application__readonly-adjacent--header {
 
 .application-handling__application-contents {
   width: 100%;
+}
+
+.application-handling__mass-edit-review-states-submit-button--confirm {
+  margin-top: 10px;
+  background-color: @sg-color-red;
+}
+
+.application-handling__application-state-cell {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.application-handling__selection-state-cell {
+  font-size: 12px;
+  border-radius: 4px;
+  background-color: @medium-pale-blue;
+  padding: 2px 8px;
+  margin-right: 8px;
+  text-transform: uppercase;
+  color: white;
+}
+
+.application__text-field-paragraph {
+  &:first-child {
+    margin-top: 0px;
+  }
+  &:last-child {
+    margin-bottom: 0px;
+  }
 }

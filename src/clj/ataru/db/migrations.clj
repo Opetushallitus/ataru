@@ -1,5 +1,7 @@
 (ns ataru.db.migrations
   (:require
+    [camel-snake-kebab.core :refer [->camelCaseKeyword]]
+    [camel-snake-kebab.extras :refer [transform-keys]]
     [ataru.db.flyway-migration :as migrations]
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as application-store]
@@ -7,11 +9,15 @@
     [ataru.virkailija.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-    [crypto.random :as c]
+    [ataru.util.random :as c]
     [ataru.db.db :refer [get-datasource]]
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
-    [ataru.config.core :refer [config]]))
+    [ataru.config.core :refer [config]]
+    [ataru.virkailija.component-data.value-transformers :as t]
+    [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+    [ataru.person-service.person-integration :as person-integration]
+    [ataru.background-job.job :as job]))
 
 (def default-fetch-size 50)
 
@@ -32,6 +38,22 @@
         new-person-info-module
         :else expr))
     form))
+
+(defn- update-birth-date-place-holder []
+  (doseq [form (->> (store/get-all-forms)
+                    (map #(store/fetch-by-id (:id %)))
+                    (sort-by :created-time))]
+    (store/create-form-or-increment-version!
+     (clojure.walk/prewalk
+      (fn [expr]
+        (match expr
+          {:id "birth-date"}
+          (assoc-in expr [:params :placeholder]
+                    {:fi "pp.kk.vvvv"
+                     :sv "dd.mm.åååå"
+                     :en "dd.mm.yyyy"})
+          :else expr))
+      form))))
 
 (defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)
@@ -186,6 +208,62 @@
   (doseq [application (migration-app-store/get-all-applications)]
     (create-new-review-state application)))
 
+(defn- dob->dd-mm-yyyy-format []
+  (letfn [(invalid-dob-format? [[day month _]]
+            (and (some? day)
+                 (some? month)
+                 (or (< (count day) 2)
+                     (< (count month) 2))))
+          (application-with-invalid-dob-format? [application]
+            (->> application
+                 :content
+                 :answers
+                 (filter (fn [answer]
+                           (and (= (:key answer) "birth-date")
+                                (not (clojure.string/blank? (:value answer))))))
+                 (eduction (map :value)
+                           (map #(clojure.string/split % #"\.")))
+                 (first)
+                 (invalid-dob-format?)))
+          (->dd-mm-yyyy-format [application]
+            (update-in application [:content :answers] (partial map (fn [answer]
+                                                                      (cond-> answer
+                                                                        (= (:key answer) "birth-date")
+                                                                        (update :value t/birth-date))))))
+          (->applications [applications application]
+            (if-let [application-key (:key application)]
+              (-> applications
+                  (update application-key (fnil identity []))
+                  (update application-key conj application))
+              applications))
+          (latest-application-id [applications]
+            (->> applications
+                 (sort-by :created-time)
+                 (last)
+                 :id))]
+    (let [applications (->> (migration-app-store/get-all-applications)
+                            (filter application-with-invalid-dob-format?)
+                            (map ->dd-mm-yyyy-format)
+                            (reduce ->applications {}))]
+      (doseq [[application-key applications] applications]
+        (doseq [application applications]
+          (info (str "Updating date of birth answer of application " (:id application)))
+          (migration-app-store/update-application-content (:id application) (:content application)))
+        (when-let [application-id (latest-application-id applications)]
+          (info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
+          (job/start-job hakija-jobs/job-definitions
+                         (:type person-integration/job-definition)
+                         {:application-id application-id}))))))
+
+(defn- camel-case-content-keys []
+  (doseq [application (migration-app-store/get-all-applications)]
+    (let [camel-cased-content (transform-keys ->camelCaseKeyword
+                                                (:content application))]
+      (when (not= camel-cased-content (:content application))
+        (info "Camel casing keywords of application" (:id application))
+        (migration-app-store/update-application-content
+         (:id application)
+         camel-cased-content)))))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
@@ -226,6 +304,21 @@
   migrate-application-reviews "1.64"
   "Migrate old per-application reviews to application + hakukohde specific ones"
   (application-reviews->new-model))
+
+(migrations/defmigration
+  migrate-birth-date-placeholders "1.70"
+  "Add multi lang placeholder texts to birth date question"
+  (update-birth-date-place-holder))
+
+(migrations/defmigration
+  migrate-dob-into-dd-mm-yyyy-format "1.71"
+  "Update date of birth from application answers to dd.mm.yyyy format"
+  (dob->dd-mm-yyyy-format))
+
+(migrations/defmigration
+  migrate-camel-case-content-keys "1.72"
+  "Camel case application content keys"
+  (camel-case-content-keys))
 
 (defn migrate
   []

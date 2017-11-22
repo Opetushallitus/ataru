@@ -9,8 +9,7 @@
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [goog.string.format]
-            [ataru.application.review-states :refer [application-review-states]])
+            [goog.string.format])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -178,9 +177,9 @@
     (.replaceState js/history nil nil new-url)))
 
 (defn get-unselected-review-states
-  [unselected-states]
+  [unselected-states all-states]
   (clojure.set/difference
-    (->> application-review-states
+    (->> all-states
          (map first)
          set)
     (set unselected-states)))

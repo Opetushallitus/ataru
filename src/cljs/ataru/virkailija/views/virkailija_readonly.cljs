@@ -16,6 +16,7 @@
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
                                                                        get-value
+                                                                       render-paragraphs
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
@@ -38,11 +39,11 @@
             [:ul.application__form-field-list
              (for [value values]
                ^{:key value}
-               [:li value])]
+               [:li (render-paragraphs value)])]
             (sequential? values)
-            (first values)
+            (render-paragraphs (first values))
             :else
-            values))]])
+            (render-paragraphs values)))]])
 
 (defn- attachment-list [attachments]
   [:div
@@ -89,6 +90,9 @@
       [:div.application__wrapper-element.application__wrapper-element--border
        [:div.application__wrapper-heading
         [:h2 (-> content :label lang)]
+        (when (and (= (:module content) "person-info")
+                   (:turvakielto application))
+          [:p.security-block "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui))])))

@@ -3,7 +3,8 @@
    [ataru.virkailija.user.session-organizations :as session-orgs]
    [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+   [ataru.odw.odw-service :as odw-service]))
 
 (defn check-form-access [form-key session organization-service rights]
   (when-not
@@ -87,14 +88,14 @@
         #(application-store/get-latest-application-by-key-unrestricted application-key))
       (dissoc :secret)))
 
-(defn vts-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
+(defn external-applications [organization-service session haku-oid hakukohde-oid hakemus-oids]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
    (constantly nil)
-   #(application-store/get-applications-by-haku
+   #(application-store/applications-for-external-api
      haku-oid
      hakukohde-oid
      hakemus-oids)))
@@ -131,3 +132,21 @@
    (constantly nil)
    #(application-store/get-full-application-list-by-person-oid-for-omatsivut
      person-oid)))
+
+(defn onr-applications [organization-service session person-oid]
+  (session-orgs/run-org-authorized
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   (constantly nil)
+   #(application-store/onr-applications person-oid)))
+
+(defn get-applications-for-odw [organization-service session person-service from-date]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(odw-service/get-applications-for-odw person-service from-date)))

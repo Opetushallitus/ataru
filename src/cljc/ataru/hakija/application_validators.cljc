@@ -31,7 +31,24 @@
          [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
           [:strong email]
           " on varmasti oikein."]
-         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]}])
+         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
+    :sv [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hej " preferred-name "!")
+               "Hej!")]
+         [:p "Vi märkte att "
+          [:strong "du redan har skickat en ansökning"]
+          " i denna ansökan och därför kan du inte skicka en annan
+          ansökning."]
+         [:p "Om du vill "
+          [:strong "ändra din ansökning"]
+          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
+          du skickade din tidigare ansökning."]
+         [:p "Kontrollera även att e-postadressen du har angett "
+          [:strong email]
+          " säkert är korrekt."]
+         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
+         söker till."]]}])
 
 (defn- email-applied-error-when-modifying
   [email preferred-name]
@@ -42,22 +59,44 @@
          [:p "Antamallasi sähköpostiosoitteella "
           [:strong email]
           " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
-          on varmasti oikein."]]}])
+          on varmasti oikein."]]
+    :sv [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hej " preferred-name "!")
+               "Hej!")]
+         [:p "En ansökning med den e-postadress du angett "
+          [:strong email]
+          " har redan gjorts. Kontrollera att e-postadressen du har angett
+          säkert är korrekt."]]}])
 
 (defn- ssn-applied-error
   [preferred-name]
   [{:fi [:div
-          [:p (if (not (clojure.string/blank? preferred-name))
-                (str "Hei " preferred-name "!")
-                "Hei!")]
-          [:p "Huomasimme, että "
-           [:strong "olet jo lähettänyt hakemuksen"]
-           " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
-          [:p "Jos haluat "
-           [:strong "muuttaa hakemustasi"]
-           " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen. Ongelmatilanteissa ole yhteydessä
-         hakemaasi oppilaitokseen."]]}])
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hei " preferred-name "!")
+               "Hei!")]
+         [:p "Huomasimme, että "
+          [:strong "olet jo lähettänyt hakemuksen"]
+          " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+         [:p "Jos haluat "
+          [:strong "muuttaa hakemustasi"]
+          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
+           jättäessäsi edellisen hakemuksen."]
+         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
+    :sv [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Hej " preferred-name "!")
+               "Hej!")]
+         [:p "Vi märkte att "
+          [:strong "du redan har skickat en ansökning"]
+          " i denna ansökan och därför kan du inte skicka en annan
+           ansökning."]
+         [:p "Om du vill "
+          [:strong "ändra din ansökning"]
+          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
+           du skickade din tidigare ansökning."]
+         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
+         söker till."]]}])
 
 (defn ^:private required?
   [value _ _]

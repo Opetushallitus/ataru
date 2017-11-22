@@ -16,42 +16,38 @@
     [ataru.cljs-util :as util]
     [ataru.virkailija.application.application-search-control :refer [application-search-control]]
     [goog.string.format]
-    [ataru.application.review-states :as review-states]))
+    [ataru.application.review-states :as review-states]
+    [ataru.application.application-states :as application-states]
+    [ataru.cljs-util :as cljs-util]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
    {:src "/lomake-editori/images/icon_check.png"}])
 
-(defn excel-download-link [applications application-filter]
-  (let [form-key     (subscribe [:state-query [:application :selected-form-key]])
-        hakukohde    (subscribe [:state-query [:application :selected-hakukohde]])
-        haku         (subscribe [:state-query [:application :selected-haku]])
-        query-string (fn [filters] (str "?state=" (string/join "&state=" (map name filters))))]
-    (fn [applications application-filter]
-      (when (> (count applications) 0)
-        (let [url (cond
-                    (some? @form-key)
-                    (str "/lomake-editori/api/applications/excel/form/"
-                         @form-key
-                         (query-string application-filter))
-
-                    (some? @hakukohde)
-                    (str "/lomake-editori/api/applications/excel/hakukohde/"
-                         (:oid @hakukohde)
-                         (query-string application-filter))
-
-                    (some? @haku)
-                    (str "/lomake-editori/api/applications/excel/haku/"
-                         (:oid @haku)
-                         (query-string application-filter)))]
-          [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
-           {:href url}
-           "Lataa Excel"])))))
-
-(defn haku-header []
-  (let [header (subscribe [:application/list-heading])]
-    [:div.application-handling__header-haku-name
-     @header]))
+(defn excel-download-link
+  [applications selected-hakukohde filename]
+  [:div
+   [:form#excel-download-link
+    {:action "/lomake-editori/api/applications/excel"
+     :method "POST"}
+    [:input {:type  "hidden"
+             :name  "application-keys"
+             :value (clojure.string/join "," (map :key applications))}]
+    [:input {:type  "hidden"
+             :name  "filename"
+             :value filename}]
+    (when-let [csrf-token (cljs-util/csrf-token)]
+      [:input {:type  "hidden"
+               :name  "CSRF"
+               :value csrf-token}])
+    (when selected-hakukohde
+      [:input {:type  "hidden"
+               :name  "selected-hakukohde"
+               :value selected-hakukohde}])]
+   [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
+    {:on-click (fn [e]
+                 (.submit (.getElementById js/document "excel-download-link")))}
+    "Lataa Excel"]])
 
 (defn- count-for-application-state
   [from-states state]
@@ -182,7 +178,7 @@
                    "Muuta"])
 
                 :confirm
-                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button.animated.flash
+                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
                  {:on-click (fn []
                               (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
                                     to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
@@ -199,44 +195,69 @@
 
                 [:div])])])))))
 
-(defn haku-heading [filtered-applications application-filter]
-  (let [belongs-to-haku (subscribe [:application/application-list-belongs-to-haku?])]
+(defn haku-heading
+  []
+  (let [belongs-to-haku    (subscribe [:application/application-list-belongs-to-haku?])
+        applications       (subscribe [:application/filtered-applications])
+        header             (subscribe [:application/list-heading])
+        selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__header
-     [haku-header]
+     [:div.application-handling__header-haku-name @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
-      (when @belongs-to-haku
-        [excel-download-link filtered-applications application-filter])]]))
+      (when @belongs-to-haku [excel-download-link @applications (:oid @selected-hakukohde) @header])]]))
 
 (defn- select-application
   [application-key]
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
-(defn- get-review-state-label-by-name
-  [states name]
-  (->> states (filter #(= (first %) name)) first second))
+(defn- application-selection-state-cell
+  [selected-hakukohde-oid application]
+  (let [labels (application-states/generate-labels-for-hakukohde-selection-reviews
+                 "selection-state"
+                 application-review-states/application-hakukohde-selection-states
+                 application
+                 selected-hakukohde-oid)]
+    (into
+      [:span.application-handling__list-row--selection]
+      (map
+        (fn [[label count]]
+          [:span.application-handling__selection-state-cell
+           (str
+             label
+             (when (< 1 count)
+               (str " " count)))])
+        labels))))
 
 (defn application-list-row [application selected?]
-  (let [time      (t/time->str (:created-time application))
-        applicant (str (:preferred-name application) " " (:last-name application))
-        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])]
+  (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
+        day                    (first day-date-time)
+        date-time              (->> day-date-time (rest) (clojure.string/join " "))
+        applicant              (str (:last-name application) ", " (:preferred-name application))
+        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
+        selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
                   "application-handling__list-row--selected")}
      [:span.application-handling__list-row--applicant
       (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-     [:span.application-handling__list-row--time time]
+     [:span.application-handling__list-row--time
+      [:span.application-handling__list-row--time-day day]
+      [:span date-time]]
      [:span.application-handling__list-row--score
       (or (:score application) "")]
      [:span.application-handling__list-row--state
-      (or
-        (get-review-state-label-by-name application-review-states/application-review-states (:state application))
-        "Tuntematon")
+      [:span.application-handling__application-state-cell
+       (or
+         (application-states/get-review-state-label-by-name
+           application-review-states/application-review-states (:state application))
+         "Tuntematon")]
       (when @show-state-email-icon?
         [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
-         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]]))
+         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]
+     [application-selection-state-cell (:oid @selected-hakukohde) application]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -251,22 +272,45 @@
                 [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
 
-(defn toggle-filter [application-filters review-state-id selected]
+(defn toggle-application-state-filter
+  [application-filters review-state-id selected]
   (let [new-application-filter (if selected
                                  (remove #(= review-state-id %) application-filters)
-                                 (conj application-filters review-state-id))
-        all-filters-selected?  (= (count (first application-review-states/application-review-states)) (count new-application-filter))]
+                                 (conj application-filters review-state-id))]
     (util/update-url-with-query-params
-     {:unselected-states (clojure.string/join "," (util/get-unselected-review-states new-application-filter))})
+     {:unselected-states (clojure.string/join ","
+                                              (util/get-unselected-review-states
+                                                new-application-filter
+                                                review-states/application-review-states))})
     (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
 
+(defn toggle-hakukohde-selection-filter
+  [hakukohde-filters filter-id selected?]
+  (let [new-selection-filter (if selected?
+                                 (remove #(= filter-id %) hakukohde-filters)
+                                 (conj hakukohde-filters filter-id))]
+    (util/update-url-with-query-params
+      {:unselected-selection-states (clojure.string/join ","
+                                                         (util/get-unselected-review-states
+                                                           new-selection-filter
+                                                           review-states/application-hakukohde-selection-states))})
+    (dispatch [:state-update #(assoc-in % [:application :selection-filter] new-selection-filter)])))
 
-(defn- toggle-all-filters [all-filters-selected?]
+(defn- toggle-all-application-state-filters [all-filters-selected?]
   (util/update-url-with-query-params {:unselected-states nil})
   (dispatch [:state-update #(assoc-in % [:application :filter]
                                       (if all-filters-selected?
                                         (map first application-review-states/application-review-states)
                                         []))]))
+
+(defn- toggle-all-hakukohde-selection-state-filters
+  [all-filters-selected?]
+  (util/update-url-with-query-params {:unselected-selection-states nil})
+  (dispatch [:state-update #(assoc-in % [:application :selection-filter]
+                                      (if all-filters-selected?
+                                        (map first application-review-states/application-hakukohde-selection-states)
+                                        []))]))
+
 
 (defn state-filter-controls []
   (let [application-filters    (subscribe [:state-query [:application :filter]])
@@ -277,10 +321,11 @@
     (fn []
       (let [all-filters-selected? (= (count @application-filters)
                                      (count application-review-states/application-review-states))]
-        [:span.application-handling__filter-state
-         [:a
+        [:span.application-handling__filter-state.application-handling__filter-state--application-state
+         [:a.application-handling__filter-state-link
           {:on-click toggle-filter-opened}
-          (str "Tila" (when-not all-filters-selected? " *"))]
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
+          (str "Hakemus" (when-not all-filters-selected? " *"))]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
@@ -289,22 +334,58 @@
                     [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                              :type      "checkbox"
                              :checked   all-filters-selected?
-                             :on-change #(toggle-all-filters (not all-filters-selected?))}]
+                             :on-change #(toggle-all-application-state-filters (not all-filters-selected?))}]
                     [:span "Kaikki"]]]]
                  (mapv
-                   (fn [review-state]
-                     (let [review-state-id (first review-state)
-                           filter-selected (some #{review-state-id} @application-filters)]
+                   (fn [[review-state-id review-state-label]]
+                     (let [filter-selected (some #{review-state-id} @application-filters)]
                        [:div.application-handling__filter-state-selection-row
                         {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
                         [:label
                          [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                                   :type      "checkbox"
                                   :checked   (boolean filter-selected)
-                                  :on-change #(toggle-filter @application-filters review-state-id filter-selected)}]
-                         [:span (str (second review-state)
+                                  :on-change #(toggle-application-state-filter @application-filters review-state-id filter-selected)}]
+                         [:span (str review-state-label
                                   " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
                    application-review-states/application-review-states)))
+         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
+
+(defn selection-state-filter-controls
+  []
+  (let [state-filters        (subscribe [:state-query [:application :selection-filter]])
+        filter-opened        (r/atom false)
+        toggle-filter-opened #(swap! filter-opened not)]
+    (fn []
+      (let [all-filters-selected? (= (count @state-filters)
+                                     (count review-states/application-hakukohde-selection-states))]
+        [:span.application-handling__filter-state
+         [:a.application-handling__filter-state-link
+          {:on-click toggle-filter-opened}
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
+          (str "Valinta" (when-not all-filters-selected? " *"))]
+         (when @filter-opened
+           (into [:div.application-handling__filter-state-selection.application-handling__filter-state--selection-state
+                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
+                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
+                   [:label
+                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                             :type      "checkbox"
+                             :checked   all-filters-selected?
+                             :on-change #(toggle-all-hakukohde-selection-state-filters (not all-filters-selected?))}]
+                    [:span "Kaikki"]]]]
+                 (mapv
+                   (fn [[review-state-id review-state-label]]
+                     (let [filter-selected (some #{review-state-id} @state-filters)]
+                       [:div.application-handling__filter-state-selection-row
+                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
+                        [:label
+                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                  :type      "checkbox"
+                                  :checked   (boolean filter-selected)
+                                  :on-change #(toggle-hakukohde-selection-filter @state-filters review-state-id filter-selected)}]
+                         [:span review-state-label]]]))
+                   application-review-states/application-hakukohde-selection-states)))
          (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
@@ -345,7 +426,8 @@
        :score
        "application-handling__list-row--score"
        "Pisteet"]
-      [:span.application-handling__list-row--state [state-filter-controls]]]
+      [:span.application-handling__list-row--state [state-filter-controls]]
+      [:span.application-handling__list-row--selection [selection-state-filter-controls]]]
      (when-not @fetching
        [application-list-contents applications])]))
 
@@ -382,7 +464,7 @@
                 (opened-review-state-list :state review-state application-review-states/application-review-states))]
          (review-state-selected-row
            list-click
-           (get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
+           (application-states/get-review-state-label-by-name application-review-states/application-review-states @review-state)))])))
 
 (defn- find-hakukohde-by-oid
   [hakukohteet hakukohde-oid]
@@ -444,6 +526,7 @@
     (fn []
       (let [review-state-for-current-hakukohde (subscribe [:state-query [:application :review :hakukohde-reviews (keyword @current-hakukohde) kw]])]
         [:div.application-handling__review-state-container
+         {:class (str "application-handling__review-state-container-" (name kw))}
          [:div.application-handling__review-header
           {:class (str "application-handling__review-header--" (name kw))} label]
          (if @list-opened
@@ -453,7 +536,7 @@
                   (opened-review-state-list kw review-state-for-current-hakukohde states))]
            (review-state-selected-row
              list-click
-             (get-review-state-label-by-name
+             (application-states/get-review-state-label-by-name
                states
                (or @review-state-for-current-hakukohde (ffirst states)))))]))))
 
@@ -480,7 +563,9 @@
 (defn event-caption [event]
   (match event
          {:event-type "review-state-change"}
-         (let [label (get-review-state-label-by-name application-review-states/application-review-states (:new-review-state event))]
+         (let [label (application-states/get-review-state-label-by-name
+                       application-review-states/application-review-states
+                       (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
              [:span.application-handling__event-caption label (virkailija-initials-span event)]
              label))
@@ -500,10 +585,11 @@
                     (filter #(= (keyword (:review-key event)) (first %)))
                     (first)
                     (second)) ": "
-               (get-review-state-label-by-name
+               (application-states/get-review-state-label-by-name
                  (concat application-review-states/application-hakukohde-review-states
                          application-review-states/application-hakukohde-eligibility-states
-                         application-review-states/application-hakukohde-selection-states)
+                         application-review-states/application-hakukohde-selection-states
+                         application-review-states/application-payment-obligation-states)
                  (:new-review-state event)))
           (virkailija-initials-span event)]
 
@@ -643,7 +729,7 @@
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
                                          visible?
-                                         true))
+                                         false))
         request-state        (subscribe [:state-query [:application :information-request :state]])]
     (fn []
       (if @request-window-open?
@@ -800,15 +886,14 @@
             [application-review]]])))))
 
 (defn application []
-  (let [application-filter      (subscribe [:state-query [:application :filter]])
-        search-control-all-page (subscribe [:application/search-control-all-page-view?])
+  (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
         filtered-applications   (subscribe [:application/filtered-applications])]
     [:div
      [:div.application-handling__overview
       [application-search-control]
       (when (not @search-control-all-page)
         [:div.application-handling__bottom-wrapper.select_application_list
-         [haku-heading @filtered-applications @application-filter]
+         [haku-heading]
          [application-list @filtered-applications]
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)

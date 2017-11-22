@@ -181,26 +181,37 @@
                                                               LocalizedString
                                                               s/Str))})
 
+(def review-requirement-values
+  (->> review-states/hakukohde-review-types
+       (map last)
+       (mapcat (partial map first))
+       distinct))
+
 ;; Header-level info about application, doesn't contain the actual answers
 (s/defschema ApplicationInfo
-  {:id                              s/Int
-   :key                             s/Str
-   :lang                            s/Str
-   :state                           s/Str
-   :score                           (s/maybe s/Int)
-   :new-application-modifications   s/Int
-   (s/optional-key :form)           s/Int
-   (s/optional-key :preferred-name) (s/maybe s/Str)
-   (s/optional-key :last-name)      (s/maybe s/Str)
-   (s/optional-key :created-time)   org.joda.time.DateTime
-   (s/optional-key :haku)           (s/maybe s/Str)
-   (s/optional-key :secret)         s/Str})
+  {:id                                             s/Int
+   :key                                            s/Str
+   :lang                                           s/Str
+   :state                                          s/Str
+   :score                                          (s/maybe s/Int)
+   :new-application-modifications                  s/Int
+   (s/optional-key :form)                          s/Int
+   (s/optional-key :preferred-name)                (s/maybe s/Str)
+   (s/optional-key :last-name)                     (s/maybe s/Str)
+   (s/optional-key :created-time)                  org.joda.time.DateTime
+   (s/optional-key :haku)                          (s/maybe s/Str)
+   (s/optional-key :hakukohde)                     (s/maybe [s/Str])
+   (s/optional-key :secret)                        s/Str
+   (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
+                                                     :state       (apply s/enum review-requirement-values)
+                                                     :hakukohde   s/Str}]}) ; "form" or oid
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
    :form                                s/Int
    :lang                                s/Str
    :answers                             [Answer]
+   (s/optional-key :turvakielto)        s/Bool
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
    (s/optional-key :hakukohde)          (s/maybe [s/Str])
@@ -223,12 +234,42 @@
    :hakukohteet [s/Str]})
 
 (s/defschema VtsApplication
-  {:oid           s/Str ; (:key application)
-   :hakuOid       s/Str
-   :henkiloOid    s/Str
-   :asiointikieli s/Str
-   :hakukohteet   [s/Str]
-   :email         (s/maybe s/Str)})
+  {:oid                s/Str ; (:key application)
+   :hakuOid            s/Str
+   :henkiloOid         s/Str
+   :asiointikieli      s/Str
+   :hakukohteet        [s/Str]
+   :email              (s/maybe s/Str)
+   :paymentObligations {s/Str s/Str}})
+
+(s/defschema HakurekisteriApplication
+  {:oid                 s/Str
+   :personOid           s/Str
+   :applicationSystemId s/Str
+   :kieli               s/Str
+   :hakukohteet         [s/Str]
+   :email               s/Str
+   :matkapuhelin        s/Str
+   :lahiosoite          s/Str
+   :postinumero         s/Str
+   :postitoimipaikka    s/Str
+   :asuinmaa            s/Str
+   :kotikunta           s/Str
+   :paymentObligations  {s/Str s/Str}
+   :kkPohjakoulutus     [s/Str]})
+
+(s/defschema OnrApplication
+  {:oid          s/Str
+   :haku         (s/maybe s/Str)
+   :form         s/Str
+   :kansalaisuus s/Str
+   :aidinkieli   s/Str
+   :matkapuhelin s/Str
+   :email        s/Str
+   :lahiosoite   s/Str
+   :postinumero  s/Str
+   :passinNumero (s/maybe s/Str)
+   :idTunnus     (s/maybe s/Str)})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

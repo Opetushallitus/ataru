@@ -14,7 +14,7 @@
             [yesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [ataru.dob :as dob]
-            [crypto.random :as crypto]
+            [ataru.util.random :as crypto]
             [taoensso.timbre :refer [info]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]))
 
@@ -258,6 +258,26 @@
                 {:person_oid person-oid})
        (map ->kebab-case-kw)))
 
+(defn- unwrap-onr-application
+  [{:keys [key haku form email content]}]
+  (let [answers (answers-by-key (:answers content))]
+    {:oid          key
+     :haku         haku
+     :form         form
+     :kansalaisuus (-> answers :nationality :value)
+     :aidinkieli   (-> answers :language :value)
+     :matkapuhelin (-> answers :phone :value)
+     :email        email
+     :lahiosoite   (-> answers :address :value)
+     :postinumero  (-> answers :postal-code :value)
+     :passinNumero (-> answers :passport-number :value)
+     :idTunnus     (-> answers :national-id-number :value)}))
+
+(defn onr-applications [person-oid]
+  (->> (exec-db :db yesql-onr-applications
+                {:person_oid person-oid})
+       (map unwrap-onr-application)))
+
 (defn has-ssn-applied [haku-oid ssn]
   (->> (exec-db :db yesql-has-ssn-applied {:haku_oid haku-oid
                                            :ssn ssn})
@@ -398,6 +418,11 @@
        (exec-db :db yesql-get-applications-for-form)
        (mapv unwrap-application)))
 
+(defn get-applications-by-keys
+  [application-keys]
+  (mapv unwrap-application
+        (exec-db :db yesql-get-applications-by-keys {:application_keys application-keys})))
+
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [filtered-states :- [s/Str]
    hakukohde-oid :- s/Str]
@@ -456,23 +481,56 @@
       (first)
       :secret))
 
+(defn- payment-obligation-to-application [application payment-obligations]
+  (let [obligations (reduce (fn [r o]
+                              (assoc r (:hakukohde o) (:state o)))
+                            {}
+                            (get payment-obligations (:oid application)))]
+    (assoc application :paymentObligations obligations)))
+
+(defn- payment-obligations-for-applications [hakemus-oids]
+  (->> (exec-db :db
+                yesql-get-payment-obligation-for-applications
+                {:hakemus_oids hakemus-oids})
+       (group-by :application_key)))
+
+(defn- kk-base-educations [answers]
+  (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
+        ["avoin" :studies-required-by-higher-education-field]
+        ["ulk" :higher-education-qualification-outside-finland-year-and-date]
+        ["muu" :other-eligibility-year-of-completion]]
+       (remove (fn [[_ id]] (clojure.string/blank? (-> answers id :value first first))))
+       (map first)))
+
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang content]}]
+  [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                 key
      :personOid           person_oid
      :applicationSystemId haku
      :kieli               lang
-     :hakukohteet         hakukohde}))
+     :hakukohteet         hakukohde
+     :email               email
+     :matkapuhelin        (-> answers :phone :value)
+     :lahiosoite          (-> answers :address :value)
+     :postinumero         (-> answers :postal-code :value)
+     :postitoimipaikka    (-> answers :postal-office :value)
+     :asuinmaa            (-> answers :country-of-residence :value)
+     :kotikunta           (-> answers :home-town :value)
+     :kkPohjakoulutus     (kk-base-educations answers)}))
 
 (defn get-hakurekisteri-applications
   [haku-oid hakukohde-oids person-oids]
-  (->> (exec-db :db yesql-applications-for-hakurekisteri {:haku_oid       haku-oid
-                                                          :hakukohde_oids (cons "" hakukohde-oids)
-                                                          :person_oids    (cons "" person-oids)})
-       (map unwrap-hakurekisteri-application)))
+  (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
+                                          {:haku_oid       haku-oid
+                                           :hakukohde_oids (cons "" hakukohde-oids)
+                                           :person_oids    (cons "" person-oids)})
+                                 (map unwrap-hakurekisteri-application))
+        payment-obligations (when (not-empty applications)
+                              (payment-obligations-for-applications (map :oid applications)))]
+    (map #(payment-obligation-to-application % payment-obligations) applications)))
 
-(defn- unwrap-vts-application
+(defn- unwrap-external-application
   [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
   {:oid           key
    :hakuOid       haku
@@ -481,15 +539,24 @@
    :email         email
    :hakukohteet   hakukohde})
 
-(defn get-applications-by-haku
+(defn- get-external-applications
   [haku-oid hakukohde-oid hakemus-oids]
-  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
-                                                                   ; Empty string to avoid empty parameter lists
-                                                                   :hakukohde_oids (cond-> [""]
-                                                                                           (some? hakukohde-oid)
-                                                                                           (conj hakukohde-oid))
-                                                                   :hakemus_oids   (cons "" hakemus-oids)})
-       (map unwrap-vts-application)))
+  (->> (exec-db :db
+                yesql-applications-by-haku-and-hakukohde-oids
+                {:haku_oid       haku-oid
+                 ; Empty string to avoid empty parameter lists
+                 :hakukohde_oids (cond-> [""]
+                                         (some? hakukohde-oid)
+                                         (conj hakukohde-oid))
+                 :hakemus_oids   (cons "" hakemus-oids)})
+       (map unwrap-external-application)))
+
+(defn applications-for-external-api
+  [haku-oid hakukohde-oid hakemus-oids]
+  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids)
+        payment-obligations (when (not-empty applications)
+                              (payment-obligations-for-applications (map :oid applications)))]
+    (map #(payment-obligation-to-application % payment-obligations) applications)))
 
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
@@ -560,3 +627,6 @@
           (dissoc :virkailija_oid)
           (merge (select-keys virkailija [:first_name :last_name]))
           (->kebab-case-kw)))))
+
+(defn get-applications-newer-than [date]
+  (exec-db :db yesql-get-applciations-by-created-time {:date date}))
