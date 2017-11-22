@@ -44,7 +44,7 @@
                   :email        "foo.bar@mailinator.com"
                   :idpEntitys   []
                   :turvakielto  false
-                  :yksiloity    false
+                  :yksiloity    true
                   :yksiloityVTJ false})
 
 (defrecord FakePersonService []
@@ -58,7 +58,12 @@
 
   (get-persons [this oids] [fake-person])
 
-  (get-person [this oid] fake-person))
+  (get-person [this oid]
+    (condp = oid
+      "2.2.2" (merge fake-person
+                     {:turvakielto true
+                      :yksiloity   false})
+      fake-person)))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

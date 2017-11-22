@@ -114,6 +114,7 @@
 (def application2 {:form 1,
                    :lang "fi",
                    :key  "application-key2",
+                   :person-oid "2.2.2"
                    :answers
                          [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value     "39",
@@ -134,6 +135,7 @@
 (def application3 {:form 1,
                    :lang "fi",
                    :key  "application-key3",
+                   :person-oid "1.2.3.4.5.6",
                    :answers
                          [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae",
                            :value     "47",
