@@ -52,17 +52,17 @@
     :en [:div
          [:p (if (not (clojure.string/blank? preferred-name))
                (str "Dear " preferred-name ",")
-               "Dear,")]
+               "Dear applicant,")]
          [:p "we noticed that "
           [:strong "you have already submitted an application"]
           " to this admission. Therefore, you cannot submit another
           application to the same admission."]
          [:p "If you want to "
           [:strong "make changes"]
-          " to your previous application, you can do so, by clicking the link
+          " to your previous application, you can do so by clicking the link
           in the confirmation email you have received with your earlier
           application."]
-         [:p "Please also check, that the email address "
+         [:p "Please also check that the email address "
           [:strong email]
           " you have given is correct."]
          [:p "If you have any problems, please contact the educational
@@ -89,7 +89,7 @@
     :en [:div
          [:p (if (not (clojure.string/blank? preferred-name))
                (str "Dear " preferred-name ",")
-               "Dear,")]
+               "Dear applicant,")]
          [:p "the email address "
           [:strong email]
           " you have given in your application has already been used by
@@ -127,7 +127,7 @@
     :en [:div
          [:p (if (not (clojure.string/blank? preferred-name))
                (str "Dear " preferred-name ",")
-               "Dear,")]
+               "Dear applicant,")]
          [:p "we noticed that "
           [:strong "you have already submitted an application"]
           " to this admission. Therefore, you cannot submit another
