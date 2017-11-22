@@ -172,7 +172,7 @@
 
 (defn application-processing-jatkuva-haku? [application haku]
   (when-let [state (:state application)]
-    (and (not= state "unprocessed")
+    (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:is-jatkuva-haku? haku))))
 
 (defn applying-possible? [form application]

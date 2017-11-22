@@ -68,7 +68,7 @@
 
 (defn processing-in-jatkuva-haku? [application-key tarjonta-info]
   (let [state (:state (application-store/get-application-review application-key))]
-    (and (not= state "unprocessed")
+    (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
 (defn- get-hakuaika-end
