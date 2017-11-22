@@ -208,7 +208,9 @@
     :on-click on-click}
    [:i.zmdi.zmdi-chevron-down]
    [:p.application-handling__dropdown-box-closed-label
-    (or label all-hakukohteet-label)]])
+    (if (clojure.string/blank? label)
+      all-hakukohteet-label
+      label)]])
 
 (defn selected-hakukohde-row
   [on-click label]
@@ -219,13 +221,16 @@
    (or label all-hakukohteet-label)])
 
 (defn hakukohde->label
-  [name application-count]
-  (str (from-multi-lang name) (when application-count (str " (" application-count ")"))))
+  [hakukohde]
+  (str
+    (from-multi-lang (:name hakukohde))
+    (when-let [application-count (:application-count hakukohde)]
+      (str " (" application-count ")"))))
 
 (defn hakukohde-row
-  [list-opened haku {:keys [oid name application-count] :as hakukohde} current-hakukohde]
+  [list-opened haku {:keys [oid] :as hakukohde} current-hakukohde]
   (if (= oid (:oid current-hakukohde))
-    (selected-hakukohde-row #(reset! list-opened false) (hakukohde->label name application-count))
+    (selected-hakukohde-row #(reset! list-opened false) (hakukohde->label hakukohde))
     [:a.application-handling__dropdown-box-item
      {:key      (str "hakukohde-row-" oid)
       :href     (str "/lomake-editori/applications"
@@ -233,7 +238,7 @@
                        (str "/hakukohde/" oid)
                        (str "/haku/" (:oid haku))))
       :on-click #(reset! list-opened false)}
-     (hakukohde->label name application-count)]))
+     (hakukohde->label hakukohde)]))
 
 (def all-hakukohteet-row-data
   [{:name {:fi all-hakukohteet-label}
@@ -250,7 +255,7 @@
           (into
             [:div.application-handling__dropdown-box-opened
              (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
-         [closed-hakukohde-row #(swap! list-opened not) (from-multi-lang (:name selected-hakukohde))])])))
+         [closed-hakukohde-row #(swap! list-opened not) (hakukohde->label selected-hakukohde)])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
