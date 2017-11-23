@@ -4,7 +4,7 @@
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.946"]
                  [reagent "0.8.0-alpha1"]
-                 [re-frame "0.10.1"]
+                 [re-frame "0.10.2"]
                  [secretary "1.2.3"]
                  [com.andrewmcveigh/cljs-time "0.5.1"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
