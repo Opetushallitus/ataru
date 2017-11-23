@@ -660,7 +660,7 @@
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?    (subscribe [:application/review-state-setting-enabled? :points])]
+        input-visible?    (subscribe [:application/review-state-setting-enabled? :score])]
     (fn []
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
@@ -673,7 +673,7 @@
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?
-            [review-settings-checkbox :points])
+            [review-settings-checkbox :score])
           [:div.application-handling__review-header.application-handling__review-header--points
            "Pisteet"]
           [:input.application-handling__score-input
