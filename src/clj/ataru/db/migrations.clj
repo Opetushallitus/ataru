@@ -146,7 +146,7 @@
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
-              (store/create-form-or-increment-version! (:organization-oid form))))))
+              (store/create-form-or-increment-version!)))))
 
 (defn followups-to-vectored-followups-like-all-of-them
   []
