@@ -226,7 +226,8 @@
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
         applicant              (str (:last-name application) ", " (:preferred-name application))
         show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
-        selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])]
+        selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])
+        score-visible?         (subscribe [:application/review-state-setting-enabled? :score])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
@@ -236,8 +237,9 @@
      [:span.application-handling__list-row--time
       [:span.application-handling__list-row--time-day day]
       [:span date-time]]
-     [:span.application-handling__list-row--score
-      (or (:score application) "")]
+     (when @score-visible?
+       [:span.application-handling__list-row--score
+        (or (:score application) "")])
      [:span.application-handling__list-row--state
       [:span.application-handling__application-state-cell
        (or
@@ -401,7 +403,8 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
-  (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
+  (let [fetching       (subscribe [:state-query [:application :fetching-applications]])
+        score-visible? (subscribe [:application/review-state-setting-enabled? :score])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [application-list-basic-column-header
@@ -412,10 +415,11 @@
        :created-time
        "application-handling__list-row--time"
        "Saapunut"]
-      [application-list-basic-column-header
-       :score
-       "application-handling__list-row--score"
-       "Pisteet"]
+      (when @score-visible?
+        [application-list-basic-column-header
+         :score
+         "application-handling__list-row--score"
+         "Pisteet"])
       [:span.application-handling__list-row--state [state-filter-controls]]
       [:span.application-handling__list-row--selection [selection-state-filter-controls]]]
      (when-not @fetching
