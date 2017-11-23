@@ -104,10 +104,19 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
+
+(def person-info-fields #{"first-name" "preferred-name" "last-name" "gender"})
+
+
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer-path  (cond-> [:application :answers id]
-                       idx (concat [:values idx]))
+        cannot-edit? (and editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
+        answer-path  (if cannot-edit?
+                       [:application :person id]
+                       (cond-> [:application :answers id]
+                               idx (concat [:values idx])
+                               :always (concat [:value])))
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -120,8 +129,7 @@
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
                                                    (:valid @answer))
-        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))
-        cannot-edit? @(subscribe [:state-query [:application :answers id :cannot-edit]])]
+        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
@@ -131,14 +139,16 @@
        (merge {:id          id
                :type        "text"
                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                              (non-blank-val (get input-hint @lang)
-                                             (get input-hint @default-lang)))
-               :class       (str size-class (if show-error?
-                                              " application__form-field-error"
-                                              " application__form-text-input--normal"))
-               :value       (if cannot-view? "***********" (if idx
-                                                             (get-in @answer [0 :value])
-                                                             (:value @answer)))
+                              (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
+               :class       (str size-class
+                                 (if show-error?
+                                   " application__form-field-error"
+                                   " application__form-text-input--normal"))
+               :value       (if cannot-view?
+                              "***********"
+                              (if idx
+                                (get-in @answer [0])
+                                @answer))
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
