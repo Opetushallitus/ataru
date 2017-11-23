@@ -224,16 +224,17 @@
    (s/optional-key :person-oid)         (s/maybe s/Str)})
 
 (s/defschema Person
-  {:oid            (s/maybe s/Str)
-   :turvakielto    s/Bool
-   :yksiloity      s/Bool
-   :preferred-name s/Str
-   :last-name      s/Str
-   :ssn            s/Str
-   :birth-date     s/Str
-   :gender         s/Str})
+  {:oid                         (s/maybe s/Str)
+   :turvakielto                 s/Bool
+   :yksiloity                   s/Bool
+   :first-name                  s/Str
+   :preferred-name              s/Str
+   :last-name                   s/Str
+   :gender                      s/Str
+   (s/optional-key :ssn)        s/Str
+   (s/optional-key :birth-date) s/Str})
 
-(s/defschema VirkailijaApplicationReview
+(s/defschema ApplicationWithPerson
   (-> Application
       (dissoc :person-oid)
       (assoc :person Person)))

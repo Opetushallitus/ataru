@@ -520,6 +520,7 @@ WHERE a.key = :application_key;
 -- name: yesql-get-latest-application-by-secret
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.form_id AS form,

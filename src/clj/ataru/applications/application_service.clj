@@ -88,20 +88,22 @@
 
 (defn- person-info-from-application [application]
   (let [answers (util/answers-by-key (:answers application))]
-    {:preferred-name (-> answers :preferred-name :value)
+    {:first-name     (-> answers :first-name :value)
+     :preferred-name (-> answers :preferred-name :value)
      :last-name      (-> answers :last-name :value)
      :ssn            (-> answers :ssn :value)
      :birth-date     (-> answers :birth-date :value)
      :gender         (-> answers :gender :value)}))
 
 (defn- person-info-from-onr-person [person]
-  {:preferred-name (:kutsumanimi person)
+  {:first-name     (:etunimet person)
+   :preferred-name (:kutsumanimi person)
    :last-name      (:sukunimi person)
    :ssn            (:hetu person)
    :birth-date     (-> person :syntymaaika bd-converter/convert-to-finnish-format)
    :gender         (-> person :sukupuoli util/gender-int-to-string)})
 
-(defn- get-person [application person-client]
+(defn get-person [application person-client]
   (let [person-from-onr (->> (:person-oid application)
                              (person-service/get-person person-client))
         yksiloity       (or (-> person-from-onr :yksiloity)
