@@ -47,7 +47,7 @@
                  [org.postgresql/postgresql "42.1.4"]
                  [clj-time "0.14.2"]
                  [cheshire/cheshire "5.8.0"]
-                 [selmer "1.11.0"]
+                 [selmer "1.11.3"]
                  [metosin/ring-http-response "0.9.0"]
                  ;; These two explicit dependencies are required to force
                  ;; newer, fixed versions of those which come with Scala Cas Client
