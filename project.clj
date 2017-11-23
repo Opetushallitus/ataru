@@ -196,7 +196,7 @@
                                                [figwheel-sidecar "0.5.14"]
                                                [refactor-nrepl "2.3.1"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                               [reloaded.repl "0.2.3"]
+                                               [reloaded.repl "0.2.4"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.4"]]
                               :plugins        [[refactor-nrepl "2.3.0"]
