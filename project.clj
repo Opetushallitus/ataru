@@ -11,7 +11,7 @@
                  [cljs-ajax "0.7.3"]
                  [binaryage/devtools "0.9.7"]
                  [re-frisk "0.5.2"]
-                 [venantius/accountant "0.2.0"]
+                 [venantius/accountant "0.2.3"]
                  [com.cemerick/url "0.1.1"]
 
                  ;clojure/clojurescript
