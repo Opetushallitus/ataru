@@ -70,7 +70,7 @@
                  [com.hazelcast/hazelcast "3.9"]
                  [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.7.6" :exclusions [prismatic/schema]]
+                 [hikari-cp "1.8.2" :exclusions [prismatic/schema]]
                  [ring/ring-mock "0.3.1"]
                  [speclj "3.3.2"]]
 
