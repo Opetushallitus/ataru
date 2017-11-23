@@ -219,6 +219,15 @@
                              (some? name)
                              (ok (access-controlled-application/get-application-list-by-name name session organization-service))))
 
+                  (api/GET "/virkailija-settings" {session :session}
+                    :return ataru-schema/VirkailijaSettings
+                    (ok (virkailija-edit/get-review-settings session)))
+
+                  (api/POST "/review-setting" {session :session}
+                    :body [review-setting ataru-schema/ReviewSetting]
+                    :return ataru-schema/ReviewSetting
+                    (ok (virkailija-edit/set-review-setting review-setting session)))
+
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
