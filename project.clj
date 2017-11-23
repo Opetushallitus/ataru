@@ -32,7 +32,7 @@
                  [fi.vm.sade/auditlogger "5.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [http-kit "2.2.0"]
-                 [ring "1.6.2"]
+                 [ring "1.6.3"]
                  [ring/ring-defaults "0.3.1"]
                  [ring/ring-json "0.4.0"]
                  [ring-ratelimit "0.2.2"]
