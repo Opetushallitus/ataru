@@ -15,7 +15,9 @@
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
    [ataru.hakija.application-email-confirmation :as email]
-   [ataru.person-service.person-service :as person-service])
+   [ataru.person-service.person-service :as person-service]
+   [ataru.util :as util]
+   [ataru.person-service.birth-date-converter :as bd-converter])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -84,13 +86,34 @@
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
-(defn get-person [application person-client]
+(defn- person-info-from-application [application]
+  (let [answers (util/answers-by-key (:answers application))]
+    {:preferred-name (-> answers :preferred-name :value)
+     :last-name      (-> answers :last-name :value)
+     :ssn            (-> answers :ssn :value)
+     :birth-date     (-> answers :birth-date :value)
+     :gender         (-> answers :gender :value)}))
+
+(defn- person-info-from-onr-person [person]
+  {:preferred-name (:kutsumanimi person)
+   :last-name      (:sukunimi person)
+   :ssn            (:hetu person)
+   :birth-date     (-> person :syntymaaika bd-converter/convert-to-finnish-format)
+   :gender         (-> person :sukupuoli util/gender-int-to-string)})
+
+(defn- get-person [application person-client]
   (let [person-from-onr (->> (:person-oid application)
-                             (person-service/get-person person-client))]
-    {:oid         (:person-oid application)
-     :turvakielto (-> person-from-onr :turvakielto boolean)
-     :yksiloity   (or (-> person-from-onr :yksiloity)
-                      (-> person-from-onr :yksiloityVTJ))}))
+                             (person-service/get-person person-client))
+        yksiloity       (or (-> person-from-onr :yksiloity)
+                            (-> person-from-onr :yksiloityVTJ))
+        person-info     (if yksiloity
+                          (person-info-from-onr-person person-from-onr)
+                          (person-info-from-application application))]
+    (merge
+     {:oid         (:person-oid application)
+      :turvakielto (-> person-from-onr :turvakielto boolean)
+      :yksiloity   yksiloity}
+     person-info)))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
