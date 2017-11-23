@@ -193,7 +193,7 @@
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[com.cemerick/piggieback "0.2.2"]
-                                               [figwheel-sidecar "0.5.13"]
+                                               [figwheel-sidecar "0.5.14"]
                                                [refactor-nrepl "2.3.1"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.3"]
