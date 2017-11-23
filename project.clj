@@ -43,7 +43,7 @@
                  [camel-snake-kebab "0.4.0"]
                  [environ "1.1.0"]
                  [org.clojure/core.async "0.3.465"]
-                 [org.clojure/java.jdbc "0.7.1"]
+                 [org.clojure/java.jdbc "0.7.3"]
                  [org.postgresql/postgresql "42.1.4"]
                  [clj-time "0.14.0"]
                  [cheshire/cheshire "5.8.0"]
