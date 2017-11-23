@@ -17,7 +17,6 @@
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.7"]
                  [com.taoensso/timbre "4.10.0"]
-                 [org.clojure/core.async "0.3.442"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [metosin/schema-tools "0.9.1"]
                  [medley "1.0.0"]
