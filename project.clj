@@ -199,7 +199,7 @@
                                                [reloaded.repl "0.2.4"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.4"]]
-                              :plugins        [[refactor-nrepl "2.3.0"]
+                              :plugins        [[refactor-nrepl "2.3.1"]
                                                [lein-cljfmt "0.5.7"]
                                                [lein-kibit "0.1.5"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
