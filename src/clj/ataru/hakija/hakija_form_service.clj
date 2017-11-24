@@ -49,8 +49,8 @@
           (koodisto/populate-form-koodisto-fields)))))
 
 (defn fetch-form-by-haku-oid
-  [tarjonta-service haku-oid]
-  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service haku-oid)
+  [tarjonta-service ohjausparametrit-service haku-oid]
+  (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service haku-oid)
         form-keys     (->> (-> tarjonta-info :tarjonta :hakukohteet)
                            (map :form-key)
                            (distinct)
@@ -69,9 +69,9 @@
       (warn "could not find local form for haku" haku-oid "with keys" (pr-str form-keys)))))
 
 (defn fetch-form-by-hakukohde-oid
-  [tarjonta-service hakukohde-oid]
+  [tarjonta-service ohjausparametrit-service hakukohde-oid]
   (let [hakukohde (.get-hakukohde tarjonta-service hakukohde-oid)
-        form      (fetch-form-by-haku-oid tarjonta-service (:hakuOid hakukohde))]
+        form      (fetch-form-by-haku-oid tarjonta-service ohjausparametrit-service (:hakuOid hakukohde))]
     (when form
       (-> form
           (assoc-in [:tarjonta :default-hakukohde] (tarjonta-parser/parse-hakukohde tarjonta-service hakukohde))))))

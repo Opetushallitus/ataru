@@ -3,6 +3,7 @@
                                                  map->UpdatingCache]]
             [ataru.cache.redis-cache :as redis]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
+            [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as s])
   (:import java.util.concurrent.TimeUnit))
 
@@ -14,6 +15,8 @@
       :period   [15 TimeUnit/MINUTES]})
    (map->BasicCache
      {:name "haku" :max-size 10000 :ttl 3600})
+   (map->BasicCache
+     {:name "ohjausparametrit" :max-size 10000 :ttl 3600})
    (map->UpdatingCache
      {:name     "koulutus"
       :max-size 10000
@@ -35,6 +38,10 @@
    (redis/map->BasicCache
      {:name  "haku"
       :fetch tarjonta-client/get-haku
+      :ttl   [1 TimeUnit/HOURS]})
+   (redis/map->BasicCache
+     {:name  "ohjausparametrit"
+      :fetch ohjausparametrit-client/get-ohjausparametrit
       :ttl   [1 TimeUnit/HOURS]})
    (redis/map->UpdatingCache
      {:name   "koulutus"

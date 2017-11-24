@@ -11,7 +11,8 @@
             [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
-            [ataru.person-service.person-service :as person-service]))
+            [ataru.person-service.person-service :as person-service]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (defn new-system
   ([]
@@ -38,6 +39,10 @@
                          (tarjonta-service/new-tarjonta-service)
                          [:cache-service])
 
+     :ohjausparametrit-service (component/using
+                                 (ohjausparametrit-service/new-ohjausparametrit-service)
+                                 [:cache-service])
+
      :person-service (person-service/new-person-service)
 
      :handler (component/using
@@ -45,6 +50,7 @@
                 [:organization-service
                  :virkailija-tarjonta-service
                  :tarjonta-service
+                 :ohjausparametrit-service
                  :cache-service
                  :person-service])
 

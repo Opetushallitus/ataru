@@ -4,7 +4,8 @@
             [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [speclj.core :refer :all])
+            [speclj.core :refer :all]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
   (:import [java.io FileOutputStream File]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
@@ -37,7 +38,10 @@
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
      (try
        (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
-         (->> (j2ee/export-applications ~(second bindings) nil (tarjonta-service/new-tarjonta-service))
+         (->> (j2ee/export-applications ~(second bindings)
+                                        nil
+                                        (tarjonta-service/new-tarjonta-service)
+                                        (ohjausparametrit-service/new-ohjausparametrit-service))
               (.write output#)))
        ~@body
        (finally

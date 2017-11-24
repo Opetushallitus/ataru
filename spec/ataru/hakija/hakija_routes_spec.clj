@@ -13,7 +13,8 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [yesql.core :as sql]
-            [ataru.fixtures.form :as form-fixtures]))
+            [ataru.fixtures.form :as form-fixtures]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -33,6 +34,7 @@
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
                  .start
                  :routes))
 

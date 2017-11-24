@@ -337,9 +337,9 @@
       (subs 0 30))))
 
 (defn- inject-haku-info
-  [tarjonta-service application]
+  [tarjonta-service ohjausparametrit-service application]
   (merge application
-         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application))))
+         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application))))
 
 (defn set-column-widths [workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
@@ -394,7 +394,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications selected-hakukohde tarjonta-service]
+(defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -426,7 +426,7 @@
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
-                               (map (partial inject-haku-info tarjonta-service))
+                               (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
                                                 (write-application! row-writer application headers application-meta-fields form))))

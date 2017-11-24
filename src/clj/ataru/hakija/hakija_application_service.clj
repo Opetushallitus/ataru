@@ -203,9 +203,9 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
-(defn- validate-and-store [tarjonta-service application store-fn is-modify?]
+(defn- validate-and-store [tarjonta-service ohjausparametrit-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
-                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
+                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application)))
         form               (-> application
                                (:form)
                                (form-store/fetch-by-id)
@@ -263,22 +263,22 @@
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
 
-(defn handle-application-submit [tarjonta-service application]
+(defn handle-application-submit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application submitted:" application)
   (let [{passed?        :passed?
          application-id :application-id
          :as            result}
-        (validate-and-store tarjonta-service application application-store/add-application false)]
+        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/add-application false)]
     (if passed?
       (start-submit-jobs application-id)
       result)))
 
-(defn handle-application-edit [tarjonta-service application]
+(defn handle-application-edit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application edited:" application)
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application true)
+        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
