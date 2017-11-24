@@ -52,7 +52,8 @@
             [org.httpkit.client :as http]
             [medley.core :refer [map-kv]]
             [ataru.cache.cache-service :as cache]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [ataru.person-service.person-service :as person-service])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
 
@@ -197,27 +198,45 @@
                                           {name         :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (cond
-                             (some? formKey)
-                             (ok (application-service/get-application-list-by-form formKey session organization-service))
+                           (let [applications (-> (cond
+                                                    (some? formKey)
+                                                    (application-service/get-application-list-by-form formKey session organization-service)
 
-                             (some? hakukohdeOid)
-                             (ok (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service))
+                                                    (some? hakukohdeOid)
+                                                    (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service)
 
-                             (some? hakuOid)
-                             (ok (access-controlled-application/get-application-list-by-haku hakuOid session organization-service))
+                                                    (some? hakuOid)
+                                                    (access-controlled-application/get-application-list-by-haku hakuOid session organization-service)
 
-                             (some? ssn)
-                             (ok (access-controlled-application/get-application-list-by-ssn ssn session organization-service))
+                                                    (some? ssn)
+                                                    (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
 
-                             (some? dob)
-                             (let [dob (dob/str->dob dob)]
-                               (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))
+                                                    (some? dob)
+                                                    (let [dob (dob/str->dob dob)]
+                                                      (access-controlled-application/get-application-list-by-dob dob session organization-service))
 
-                             (some? email)
-                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))
-                             (some? name)
-                             (ok (access-controlled-application/get-application-list-by-name name session organization-service))))
+                                                    (some? email)
+                                                    (access-controlled-application/get-application-list-by-email email session organization-service)
+
+                                                    (some? name)
+                                                    (access-controlled-application/get-application-list-by-name name session organization-service))
+                                                  :applications)
+                                 persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
+                                                   (reduce (fn [res person]
+                                                             (assoc res (:oidHenkilo person) person))
+                                                           {}))]
+                             (println (count applications))
+                             (response/ok {:applications (for [application applications
+                                                               :let [person      (get persons (:person-oid application))
+                                                                     yksiloity   (or (-> person :yksiloity)
+                                                                                     (-> person :yksiloityVTJ))
+                                                                     person-info (if yksiloity
+                                                                                   {:preferred-name (:kutsumanimi person)
+                                                                                    :last-name      (:sukunimi person)}
+                                                                                   (select-keys application [:preferred-name :last-name]))]]
+                                                           (-> application
+                                                               (assoc :person person-info)
+                                                               (dissoc :person-oid)))})))
 
                   (api/GET "/virkailija-settings" {session :session}
                     :return ataru-schema/VirkailijaSettings

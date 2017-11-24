@@ -66,6 +66,21 @@
         .fail(done)
       });
 
+      it('shows yksilointitieto for application', function(done) {
+        clickElement(firstApplication)()
+          .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
+          .then(function() {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
+          })
+          .then(clickElement(thirdApplication))
+          .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+          .then(function () {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
+            done()
+          })
+          .fail(done)
+      });
+
       describe('successfully changes selection state', function() {
         before(
           wait.until(function() { return selectionStateSelected().text() === "Kesken" }),
@@ -79,21 +94,6 @@
           expect(thirdApplication().parent().find('.application-handling__selection-state-cell').text()).to.equal("Hyväksytty")
         })
       })
-
-      it('shows yksilointitieto for application', function(done) {
-        clickElement(firstApplication)()
-          .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
-          .then(function() {
-            expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
-          })
-          .then(clickElement(thirdApplication))
-          .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
-          .then(function () {
-            expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
-            done()
-          })
-          .fail(done)
-      });
 
       function selectionStateSelected() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-selected-row') }
 

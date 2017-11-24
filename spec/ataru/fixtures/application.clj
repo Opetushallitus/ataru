@@ -143,6 +143,7 @@
                                    :lang "fi",
                                    :id 1
                                    :secret "asdfgh"
+                                   :person-oid "1.2.3.4.5.6"
                                    :answers [{:key "b0839467-a6e8-4294-b5cc-830756bbda8a",
                                               :value "Vastaus tekstikysymykseen",
                                               :fieldType "textField",

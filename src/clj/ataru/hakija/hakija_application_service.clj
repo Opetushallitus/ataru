@@ -313,6 +313,7 @@
                              (application-store/get-latest-application-by-secret)
                              (flag-uneditable-answers tarjonta-service)
                              (attachments-metadata->answers))
+
         person (when application
                  (-> (application-service/get-person application person-client)
                      (dissoc :ssn :birth-date)))]

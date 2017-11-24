@@ -91,67 +91,92 @@
                                          :params     {},
                                          :fieldType  "textField"}]})
 
-(def application1 {:form 1,
-                   :lang "fi",
-                   :key  "application-key1",
-                   :answers
-                         [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae",
-                           :value     "47",
-                           :fieldType "textField",}
-                          {:fieldType "textField",
-                           :key       "preferred-name",
-                           :value     "Seija Susanna"}
-                          {:fieldType "textField",
-                           :key       "last-name",
-                           :value     "Kuikeloinen"}
-                          {:fieldType "textField",
-                           :key       "ssn",
-                           :value     "020202A0202"}
-                          {:fieldType "textField",
-                           :key       "email",
-                           :value     "seija.kuikeloinen@gmail.com"}]})
+(def application1 {:form       1
+                   :lang       "fi"
+                   :key        "application-key1"
+                   :person-oid "1.1.1"
+                   :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                 :value     "47"
+                                 :fieldType "textField"}
+                                {:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Seija Susanna"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Kuikeloinen"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "020202A0202"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "seija.kuikeloinen@gmail.com"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     "Seija Susanna"}
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "2"}]})
 
-(def application2 {:form 1,
-                   :lang "fi",
-                   :key  "application-key2",
+(def application2 {:form       1
+                   :lang       "fi"
+                   :key        "application-key2"
                    :person-oid "2.2.2"
-                   :answers
-                         [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae",
-                           :value     "39",
-                           :fieldType "textField",}
-                          {:fieldType "textField",
-                           :key       "preferred-name",
-                           :value     "Ari"}
-                          {:fieldType "textField",
-                           :key       "last-name",
-                           :value     "Vatanen"}
-                          {:fieldType "textField",
-                           :key       "ssn",
-                           :value     "141196-933S"}
-                          {:fieldType "textField",
-                           :key       "email",
-                           :value     "ari.vatanen@iki.fi"}]})
+                   :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                 :value     "39"
+                                 :fieldType "textField"}
+                                {:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Ari"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Vatanen"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "141196-933S"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "ari.vatanen@iki.fi"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     "Aki"}
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "1"}]})
 
-(def application3 {:form 1,
-                   :lang "fi",
-                   :key  "application-key3",
-                   :person-oid "1.2.3.4.5.6",
-                   :answers
-                         [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae",
-                           :value     "47",
-                           :fieldType "textField",}
-                          {:fieldType "textField",
-                           :key       "preferred-name",
-                           :value     "Johanna Irmeli"}
-                          {:fieldType "textField",
-                           :key       "last-name",
-                           :value     "Tyrni"}
-                          {:fieldType "textField",
-                           :key       "ssn",
-                           :value     "020202A0202"}
-                          {:fieldType "textField",
-                           :key       "email",
-                           :value     "seija.kuikeloinen@gmail.com"}]})
+(def application3 {:form       1
+                   :lang       "fi"
+                   :key        "application-key3"
+                   :person-oid "1.2.3.4.5.6"
+                   :answers    [{:key       "c2e4536c-1cdb-4450-b019-1b38856296ae"
+                                 :value     "47"
+                                 :fieldType "textField"}
+                                {:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Johanna Irmeli"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Tyrni"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "020202A0202"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "seija.kuikeloinen@gmail.com"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     "Johanna Irmeli"}
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "2"}]})
 
 (defn init-db-fixture []
   (form-store/create-new-form! form1 (:key form1))

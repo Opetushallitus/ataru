@@ -411,7 +411,7 @@
           wait.until(function() {
             var flasher = testFrame().find('.top-banner .flasher')
             return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
-          }, 5000)
+          }, 10000)
         )
         it('notification shows success', function() {
           expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')

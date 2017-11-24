@@ -73,6 +73,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -110,6 +111,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -149,6 +151,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -188,6 +191,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -227,6 +231,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -266,6 +271,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -305,6 +311,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
