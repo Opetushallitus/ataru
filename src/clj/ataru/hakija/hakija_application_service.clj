@@ -79,9 +79,9 @@
 (defn- only-attachments-editable?
   [answer application tarjonta-service]
   (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
-    (and (when hakuaika-end
-           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period)))
-         (not= (:fieldType answer) "attachment"))))
+    (and (not= (:fieldType answer) "attachment")
+         (when hakuaika-end
+           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period))))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
