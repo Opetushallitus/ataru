@@ -74,17 +74,45 @@
     (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
-(defn- get-hakuaika-end
+(defn- get-hakuaika
   [application tarjonta-service ohjausparametrit-service]
-  (when tarjonta-service
-    (:end (get-hakuaikas tarjonta-service ohjausparametrit-service application))))
+  (when (and tarjonta-service ohjausparametrit-service)
+    (get-hakuaikas tarjonta-service ohjausparametrit-service application)))
+
+(defn person-info-field? [answer-kw]
+  (contains? #{:first-name
+               :preferred-name
+               :last-name
+               :phone
+               :country-of-residence
+               :address
+               :postal-code
+               :city
+               :have-finnish-ssn
+               :passport-number
+               :nationality
+               :birth-date
+               :birthplace
+               :language
+               :national-id-number
+               :gender
+               :postal-office
+               :home-town}
+             answer-kw))
 
 (defn- editing-forbidden-by-hakuaika-end?
   [answer application tarjonta-service ohjausparametrit-service]
-  (let [hakuaika-end (get-hakuaika-end application tarjonta-service ohjausparametrit-service)]
-    (and (not= (:fieldType answer) "attachment")
-         (when hakuaika-end
-           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period))))))
+  (let [hakuaika           (get-hakuaika application tarjonta-service ohjausparametrit-service)
+        answer-kw          (-> answer :key keyword)
+        hakukierros-end    (some-> hakuaika :hakukierros-end t/from-long)
+        person-info-field? (person-info-field? answer-kw)]
+    (cond (and hakukierros-end (time/after? hakukierros-end (time/now)))
+          (do
+            (println (str "answer-kw: " answer-kw ", person-info-field: " person-info-field?))
+            (not person-info-field?))
+
+          (and (:end hakuaika) (not= (:fieldType answer) "attachment"))
+          (util/after-apply-end-within-days? (:end hakuaika) (attachment-modify-grace-period)))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
@@ -145,33 +173,33 @@
   [uneditable-answers new-answers old-answers]
   ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
   (keep (fn [answer]
-         (let [answer-key (:key answer)
-               answer-with-key #(= (:key %) answer-key)
-               old-answer (->> old-answers
-                               (filter answer-with-key)
-                               (first))
-               new-label  (->> new-answers
-                               (filter answer-with-key)
-                               (first)
-                               :label)]
-           (when old-answer
-             ;Sometimes old an answer doesn't exist: old application, new question in form (flag-uneditable-answers)
-             (merge old-answer {:label new-label}))))
-       uneditable-answers))
+          (let [answer-key      (:key answer)
+                answer-with-key #(= (:key %) answer-key)
+                old-answer      (->> old-answers
+                                     (filter answer-with-key)
+                                     (first))
+                new-label       (->> new-answers
+                                     (filter answer-with-key)
+                                     (first)
+                                     :label)]
+            (when old-answer
+              ;Sometimes old an answer doesn't exist: old application, new question in form (flag-uneditable-answers)
+              (merge old-answer {:label new-label}))))
+        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
   [old-application new-application tarjonta-service ohjausparametrit-service]
-  (let [new-answers                 (-> new-application
-                                        (flag-uneditable-answers tarjonta-service ohjausparametrit-service)
-                                        :answers)
-        uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
-        uneditable-answers          (filter uneditable-or-unviewable new-answers)
-        editable-answers            (remove uneditable-or-unviewable new-answers)
-        merged-answers              (into editable-answers
-                                          (uneditable-answers-with-labels-from-new
-                                            uneditable-answers
-                                            new-answers
-                                            (:answers old-application)))]
+  (let [new-answers              (-> new-application
+                                     (flag-uneditable-answers tarjonta-service ohjausparametrit-service)
+                                     :answers)
+        uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
+        uneditable-answers       (filter uneditable-or-unviewable new-answers)
+        editable-answers         (remove uneditable-or-unviewable new-answers)
+        merged-answers           (into editable-answers
+                                       (uneditable-answers-with-labels-from-new
+                                         uneditable-answers
+                                         new-answers
+                                         (:answers old-application)))]
     (assoc new-application :answers merged-answers)))
 
 (defn- flatten-attachment-keys [application]
@@ -201,7 +229,7 @@
   (let [old-values-by-key (into {} (map (juxt :key :value)
                                         (:answers old-application)))]
     (update new-application :answers
-            (partial map (partial set-original-value old-values-by-key)))))
+      (partial map (partial set-original-value old-values-by-key)))))
 
 (defn- has-applied
   [haku-oid identifier]
@@ -225,9 +253,9 @@
                              (merge-uneditable-answers-from-previous latest-application application tarjonta-service ohjausparametrit-service)
                              application)
         validation-result  (validator/valid-application?
-                            has-applied
-                            (set-original-values latest-application final-application)
-                            form)
+                             has-applied
+                             (set-original-values latest-application final-application)
+                             form)
         virkailija-secret  (valid-virkailija-secret application)]
     (cond
       (and (not (nil? virkailija-secret))
@@ -259,9 +287,9 @@
         (store-and-log final-application store-fn)))))
 
 (defn- start-submit-jobs [application-id]
-  (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                             (:type person-integration/job-definition)
-                                             {:application-id application-id})
+  (let [person-service-job-id       (job/start-job hakija-jobs/job-definitions
+                                                   (:type person-integration/job-definition)
+                                                   {:application-id application-id})
         attachment-finalizer-job-id (job/start-job hakija-jobs/job-definitions
                                                    (:type attachment-finalizer-job/job-definition)
                                                    {:application-id application-id})]
@@ -282,9 +310,9 @@
 
 (defn handle-application-edit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application edited:" application)
-  (let [{passed? :passed?
+  (let [{passed?        :passed?
          application-id :application-id
-         :as validation-result}
+         :as            validation-result}
         (validate-and-store tarjonta-service ohjausparametrit-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
