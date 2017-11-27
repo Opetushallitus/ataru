@@ -5,7 +5,7 @@
    [ataru.forms.form-store :as form-store]))
 
 (defn- raw-haku-row->hakukohde [tarjonta-service raw-haku-row]
-  (merge (select-keys raw-haku-row [:application-count :unprocessed :incomplete])
+  (merge (select-keys raw-haku-row [:application-count :unprocessed :incomplete :haku])
          {:oid (:hakukohde raw-haku-row)
           :name (or
                  (.get-hakukohde-name tarjonta-service (:hakukohde raw-haku-row))

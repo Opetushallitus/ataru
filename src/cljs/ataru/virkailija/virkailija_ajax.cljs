@@ -30,7 +30,7 @@
 (defn- redirect [url]
   (set! (.. js/window -location -href) url))
 
-(defn http [method path handler-or-dispatch & {:keys [override-args handler-args]}]
+(defn http [method path handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
   (let [f (case method
             :get    GET
             :post   POST
@@ -50,30 +50,33 @@
                :keywords?       true
                :error-handler   (fn [request]
                                   (match request
-                                    {:status 401
-                                     :response {:redirect url}}
-                                    (redirect url)
+                                         {:status   401
+                                          :response {:redirect url}}
+                                         (redirect url)
 
-                                    :else
-                                    (error-handler request)))
+                                         :else
+                                         (error-handler request)))
                :handler         (comp (fn [response]
                                         (dispatch [:flasher {:loading? false
                                                              :message
-                                                             (match method
-                                                               (:or :post :put) "Kaikki muutokset tallennettu"
-                                                               :delete "Tiedot poistettu"
-                                                               :else nil)}])
+                                                                       (match method
+                                                                              (:or :post :put) "Kaikki muutokset tallennettu"
+                                                                              :delete "Tiedot poistettu"
+                                                                              :else nil)}])
                                         (match [handler-or-dispatch]
                                                [(dispatch-keyword :guard keyword?)] (dispatch [dispatch-keyword response handler-args])
                                                [nil] nil
                                                :else (dispatch [:state-update (fn [db] (handler-or-dispatch db response handler-args))])))
-                                      temporal/parse-times)}
+                                      (if skip-parse-times?
+                                        identity
+                                        temporal/parse-times))}
               (when (util/include-csrf-header? method)
                 (when-let [csrf-token (util/csrf-token)]
                   {:headers {"CSRF" csrf-token}}))
               override-args))))
 
-(defn post [path params handler-or-dispatch & {:keys [override-args handler-args]}]
+(defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times?]}]
   (http :post path handler-or-dispatch
         :override-args (merge override-args {:params params})
-        :handler-args handler-args))
+        :handler-args handler-args
+        :skip-parse-times? skip-parse-times?))

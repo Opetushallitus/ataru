@@ -20,6 +20,23 @@
          (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
+  :application/list-heading-data-for-haku
+  (fn [db]
+    (let [selected-haku      (get-in db [:application :selected-haku])
+          selected-hakukohde (get-in db [:application :selected-hakukohde])]
+      (cond
+        selected-haku [selected-haku
+                       nil
+                       (:hakukohteet selected-haku)]
+        selected-hakukohde (let [selected-haku (->> db
+                                                    :application :haut :tarjonta-haut
+                                                    (filter #(= (:oid %) (:haku selected-hakukohde)))
+                                                    (first))]
+                             [selected-haku
+                              selected-hakukohde
+                              (:hakukohteet selected-haku)])))))
+
+(re-frame/reg-sub
   :application/application-list-selected-by
   (fn [db]
     (let [db-application (:application db)]

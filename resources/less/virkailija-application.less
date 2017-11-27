@@ -41,6 +41,7 @@
   padding-top: 0;
   border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
+  padding-bottom: 10px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -822,7 +823,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row {
   position: relative;
-  color: #2a2a2a;
+  color: @text-color;
   padding: 11px 11px 11px 32px;
   margin-bottom: 3px;
   width: 219px;
@@ -1345,4 +1346,69 @@ th.application__readonly-adjacent--header {
   &:last-child {
     margin-bottom: 0px;
   }
+}
+
+.application-handling__header-haku {
+  font-size: 20px;
+  .semibold;
+}
+
+.application-handling__dropdown-box-item {
+  position: relative;
+  height: 44px;
+  color: @text-color;
+  padding: 12px 32px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  box-shadow: @modal-shadow;
+  background: @white;
+  display: block;
+  width: 100%;
+  font-size: 14px;
+}
+
+.application-handling__dropdown-box-item--selected {
+  color: @text-color;
+  border-radius: 3px;
+  margin-left: 0;
+  margin-bottom: 8px;
+  display: inline-block;
+  padding-left: 25px;
+}
+
+.application-handling__dropdown-box-container {
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.application-handling__dropdown-box-opened {
+  background-color: @very-light-gray;
+  border-radius: 3px;
+  box-shadow: @modal-shadow;
+  z-index: 10;
+  position: absolute;
+}
+
+.application-handling__dropdown-box-opened .application-handling__dropdown-box-item {
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.application-handling__dropdown-box-item:hover {
+  background-color: #e8f3f6;
+}
+
+.application-handling__dropdown-box-item-link {
+  color: @text-color;
+}
+
+.application-handling__dropdown-box-closed {
+  color: @pale-blue;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.application-handling__dropdown-box-closed-label {
+  margin-left: 7px;
+  display: inline;
 }

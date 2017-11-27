@@ -281,11 +281,24 @@
   (some (comp (partial = "attachment") :fieldType second)
         (get-in db [:application :selected-application-and-form :application :answers])))
 
+(defn- parse-application-times
+  [response]
+  (let [answers                    (-> response :application :answers)
+        form-content               (-> response :form :content)
+        without-answers-or-content (-> response
+                                       (update-in [:application] dissoc :answers)
+                                       (update-in [:form] dissoc :content))
+        with-times                 (ataru.virkailija.temporal/parse-times without-answers-or-content)]
+    (-> with-times
+        (assoc-in [:application :answers] answers)
+        (assoc-in [:form :content] form-content))))
+
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
-    (let [db (update-application-details db response)]
-      {:db db
+    (let [response-with-parsed-times (parse-application-times response)
+          db                         (update-application-details db response-with-parsed-times)]
+      {:db       db
        :dispatch (if (and (fc/feature-enabled? :attachment)
                           (application-has-attachments? db))
                    [:application/fetch-application-attachment-metadata]
@@ -300,7 +313,8 @@
       {:db   db
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
-              :handler-or-dispatch :application/handle-fetch-application}})))
+              :handler-or-dispatch :application/handle-fetch-application
+              :skip-parse-times? true}})))
 
 (reg-event-db
   :application/start-autosave
@@ -364,7 +378,8 @@
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut}}))
+            :handler-or-dispatch :editor/handle-refresh-haut
+            :skip-parse-times?   true}}))
 
 (reg-event-fx
   :application/navigate

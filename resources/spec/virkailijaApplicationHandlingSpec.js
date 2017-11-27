@@ -48,20 +48,20 @@
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
         .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
-        .then(wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')))
+        .then(wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')))
         .then(function() {
           expect(reviewNotes().val()).to.equal('')
         })
         .then(setTextFieldValue(score, scoreForKuikeloinen))
         .then(clickElement(firstApplication))
-        .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
+        .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
         .then(function () {
           expect(reviewNotes().val()).to.equal('Reipas kaveri');
           expect(score().val()).to.equal(scoreForVatanen + '');
           done()
         })
         .then(clickElement(thirdApplication))
-        .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+        .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
         .then(setTextFieldValue(score, scoreForTyrni))
         .fail(done)
       });
@@ -361,7 +361,7 @@
           wait.until(function () {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
-          wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')),
+          wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')),
           clickElement(applicationStateFilterLink)
         );
 

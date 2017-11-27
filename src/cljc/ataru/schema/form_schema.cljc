@@ -311,7 +311,8 @@
                                          :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
-                                         :incomplete        s/Int})
+                                         :incomplete        s/Int
+                                         :haku              s/Str})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              LocalizedStringOptional

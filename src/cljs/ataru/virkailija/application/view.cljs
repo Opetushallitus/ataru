@@ -195,14 +195,85 @@
 
                 [:div])])])))))
 
+(defn- from-multi-lang
+  [text]
+  (some #(get text %) [:fi :sv :en]))
+
+(def all-hakukohteet-label "Kaikki hakukohteet")
+
+(defn closed-hakukohde-row
+  [on-click label]
+  [:div.application-handling__dropdown-box-closed
+   {:key "closed-selected-hakukohde-row"
+    :on-click on-click}
+   [:i.zmdi.zmdi-chevron-down]
+   [:p.application-handling__dropdown-box-closed-label
+    (if (clojure.string/blank? label)
+      all-hakukohteet-label
+      label)]])
+
+(defn selected-hakukohde-row
+  [on-click label]
+  [:a.application-handling__dropdown-box-item.application-handling__dropdown-box-item--selected
+   {:key "selected-hakukohde-row"
+    :on-click on-click}
+   [icon-check]
+   (or label all-hakukohteet-label)])
+
+(defn hakukohde->label
+  [hakukohde]
+  (str
+    (from-multi-lang (:name hakukohde))
+    (when-let [application-count (:application-count hakukohde)]
+      (str " (" application-count ")"))))
+
+(defn hakukohde-row
+  [close-list haku {:keys [oid] :as hakukohde} current-hakukohde]
+  (if (= oid (:oid current-hakukohde))
+    (selected-hakukohde-row close-list (hakukohde->label hakukohde))
+    [:a.application-handling__dropdown-box-item
+     {:key      (str "hakukohde-row-" oid)
+      :href     (str "/lomake-editori/applications"
+                     (if oid
+                       (str "/hakukohde/" oid)
+                       (str "/haku/" (:oid haku))))
+      :on-click close-list}
+     (hakukohde->label hakukohde)]))
+
+(def all-hakukohteet-row-data
+  [{:name {:fi all-hakukohteet-label}
+    :oid  nil}])
+
+(defn haku-applications-heading
+  [[haku selected-hakukohde hakukohteet]]
+  (let [list-opened (r/atom false)
+        open-list   #(reset! list-opened true)
+        close-list  #(reset! list-opened false)]
+    (fn []
+      [:div.application-handling__header-haku-and-hakukohde
+       [:div.application-handling__header-haku (from-multi-lang (:name haku))]
+       (if @list-opened
+         [:div.application-handling__dropdown-box-wrapper
+          (into
+            [:div.application-handling__dropdown-box-opened
+             (map #(hakukohde-row close-list haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
+         [closed-hakukohde-row open-list (hakukohde->label selected-hakukohde)])])))
+
+(defn selected-applications-heading
+  [haku-data list-heading]
+  (if haku-data
+    [haku-applications-heading haku-data]
+    [:div.application-handling__header-haku-name list-heading]))
+
 (defn haku-heading
   []
   (let [belongs-to-haku    (subscribe [:application/application-list-belongs-to-haku?])
         applications       (subscribe [:application/filtered-applications])
         header             (subscribe [:application/list-heading])
+        haku-header        (subscribe [:application/list-heading-data-for-haku])
         selected-hakukohde (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__header
-     [:div.application-handling__header-haku-name @header]
+     [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
       [mass-update-applications-link]
       (when @belongs-to-haku [excel-download-link @applications (:oid @selected-hakukohde) @header])]]))
@@ -446,13 +517,12 @@
         :class    "application-handling__review-state-row--enabled"})
      [icon-check] label]))
 
-(defn review-state-row [state-name current-review-state review-state]
-  (let [[review-state-id review-state-label] review-state]
-    (if (= current-review-state review-state-id)
-      [review-state-selected-row #() review-state-label]
-      [:div.application-handling__review-state-row
-       {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
-       review-state-label])))
+(defn review-state-row [state-name current-review-state [review-state-id review-state-label]]
+  (if (= current-review-state review-state-id)
+    [review-state-selected-row #() review-state-label]
+    [:div.application-handling__review-state-row
+     {:on-click #(dispatch [:application/update-review-field state-name review-state-id])}
+     review-state-label]))
 
 (defn opened-review-state-list [state-name current-state all-states]
   (mapv (partial review-state-row state-name (or @current-state (ffirst all-states))) all-states))
@@ -487,7 +557,7 @@
         (:sv name)
         (:en name))))
 
-(defn- opened-hakukohde-list-row
+(defn- opened-review-hakukohde-list-row
   [selected-hakukohde-oid hakukohteet hakukohde-oid]
   (let [hakukohde (find-hakukohde-by-oid hakukohteet hakukohde-oid)
         selected? (= selected-hakukohde-oid hakukohde-oid)]
@@ -500,7 +570,7 @@
      (hakukohde-label hakukohde)]))
 
 
-(defn- selected-hakukohde-row
+(defn- selected-review-hakukohde-row
   [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
   (let [selected-hakukohde                  (find-hakukohde-by-oid haku-hakukohteet selected-hakukohde-oid)
         application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
@@ -529,8 +599,8 @@
            [:div.application-handling__review-state-list-opened-anchor
             (into
               [:div.application-handling__review-state-list-opened {:on-click select-list-item}]
-              (map #(opened-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
-           [selected-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids])]))))
+              (map #(opened-review-hakukohde-list-row @selected-hakukohde-oid @haku-hakukohteet %) @application-hakukohde-oids))]
+           (selected-review-hakukohde-row @selected-hakukohde-oid select-list-item @haku-hakukohteet @application-hakukohde-oids))]))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
@@ -883,8 +953,9 @@
      [:div.application-handling__review-area-main-heading-container
       [:div.application-handling__review-area-main-heading-person-info
        [:div.application-handling__review-area-main-heading-name-row
-        [:h2.application-handling__review-area-main-heading
-         (str pref-name " " last-name ", " (or ssn birth-date))]
+        (when pref-name
+          [:h2.application-handling__review-area-main-heading
+           (str last-name ", " pref-name " — " (or ssn birth-date))])
         (when (> applications-count 1)
           [:a.application-handling__review-area-main-heading-applications-link
            {:on-click (fn [_]
