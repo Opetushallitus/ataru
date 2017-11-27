@@ -273,9 +273,13 @@
      :passinNumero (-> answers :passport-number :value)
      :idTunnus     (-> answers :national-id-number :value)}))
 
-(defn onr-applications [person-oid]
+(defn onr-applications [person-oid organizations]
   (->> (exec-db :db yesql-onr-applications
-                {:person_oid person-oid})
+                {:person_oid person-oid
+                 :query_type (if (nil? organizations) "ALL" "ORGS")
+                 :authorized_organization_oids (if (nil? organizations)
+                                                 [""]
+                                                 organizations)})
        (map unwrap-onr-application)))
 
 (defn has-ssn-applied [haku-oid ssn]

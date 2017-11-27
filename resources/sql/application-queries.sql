@@ -823,5 +823,7 @@ SELECT a.key AS key,
        a.content AS content
 FROM latest_applications AS a
 JOIN forms AS f ON f.id = a.form_id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;

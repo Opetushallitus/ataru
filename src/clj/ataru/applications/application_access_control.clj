@@ -139,8 +139,8 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
-   (constantly nil)
-   #(application-store/onr-applications person-oid)))
+   #(application-store/onr-applications person-oid %)
+   #(application-store/onr-applications person-oid nil)))
 
 (defn get-applications-for-odw [organization-service session person-service from-date]
   (session-orgs/run-org-authorized
