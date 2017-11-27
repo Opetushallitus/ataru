@@ -228,16 +228,16 @@
       (str " (" application-count ")"))))
 
 (defn hakukohde-row
-  [list-opened haku {:keys [oid] :as hakukohde} current-hakukohde]
+  [close-list haku {:keys [oid] :as hakukohde} current-hakukohde]
   (if (= oid (:oid current-hakukohde))
-    (selected-hakukohde-row #(reset! list-opened false) (hakukohde->label hakukohde))
+    (selected-hakukohde-row close-list (hakukohde->label hakukohde))
     [:a.application-handling__dropdown-box-item
      {:key      (str "hakukohde-row-" oid)
       :href     (str "/lomake-editori/applications"
                      (if oid
                        (str "/hakukohde/" oid)
                        (str "/haku/" (:oid haku))))
-      :on-click #(reset! list-opened false)}
+      :on-click close-list}
      (hakukohde->label hakukohde)]))
 
 (def all-hakukohteet-row-data
@@ -246,7 +246,9 @@
 
 (defn haku-applications-heading
   [[haku selected-hakukohde hakukohteet]]
-  (let [list-opened                (r/atom false)]
+  (let [list-opened (r/atom false)
+        open-list   #(reset! list-opened true)
+        close-list  #(reset! list-opened false)]
     (fn []
       [:div.application-handling__header-haku-and-hakukohde
        [:div.application-handling__header-haku (from-multi-lang (:name haku))]
@@ -254,8 +256,8 @@
          [:div.application-handling__dropdown-box-wrapper
           (into
             [:div.application-handling__dropdown-box-opened
-             (map #(hakukohde-row list-opened haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
-         [closed-hakukohde-row #(swap! list-opened not) (hakukohde->label selected-hakukohde)])])))
+             (map #(hakukohde-row close-list haku % selected-hakukohde) (into all-hakukohteet-row-data hakukohteet))])]
+         [closed-hakukohde-row open-list (hakukohde->label selected-hakukohde)])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
