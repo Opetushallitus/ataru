@@ -50,11 +50,11 @@
 
 (defn- get-application
   ([secret]
-   (get-application secret nil))
-  ([secret tarjonta-service]
+   (get-application secret nil nil))
+  ([secret tarjonta-service ohjausparametrit-service]
    (let [application (-> secret
                          (application-store/get-latest-application-by-secret)
-                         (application-service/flag-uneditable-answers tarjonta-service)
+                         (application-service/flag-uneditable-answers tarjonta-service ohjausparametrit-service)
                          (attachments-metadata->answers))]
      (if application
        (do
@@ -181,7 +181,7 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/Application
       (cond (not-blank? secret)
-            (get-application secret tarjonta-service)
+            (get-application secret tarjonta-service ohjausparametrit-service)
 
             (not-blank? virkailija-secret)
             (get-application-by-virkailija-secret virkailija-secret)

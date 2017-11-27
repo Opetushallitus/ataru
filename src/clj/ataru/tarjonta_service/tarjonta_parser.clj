@@ -73,6 +73,7 @@
           (some? ohjausparametrit-service)]}
    (when haku-oid
      (let [haku            (.get-haku tarjonta-service haku-oid)
+           ohjausparametrit (.get-parametri ohjausparametrit-service haku-oid)
            hakukohteet     (->> included-hakukohde-oids
                                 (map #(.get-hakukohde tarjonta-service %))
                                 (map #(parse-hakukohde tarjonta-service %))
@@ -87,9 +88,10 @@
                                max-hakukohteet)
            :hakuaika-dates   (assoc (hakuaika/get-hakuaika-info
                                       (first hakukohteet)
-                                      haku) ; TODO take into account each hakukohde time?
+                                      haku ; TODO take into account each hakukohde time?
+                                      ohjausparametrit)
                                     :hakukierros-end
-                                    (->> haku-oid (.get-parametri ohjausparametrit-service) :PH_HKP :date))
+                                    (-> ohjausparametrit :PH_HKP :date))
            :is-jatkuva-haku? (jatkuva-haku? haku)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service ohjausparametrit-service haku-oid]
