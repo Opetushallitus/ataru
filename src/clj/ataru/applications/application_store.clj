@@ -388,13 +388,13 @@
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn save-application-hakukohde-review
-  [virkailija application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
+  [virkailija application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
                                                                :requirement     hakukohde-review-requirement
                                                                :state           hakukohde-review-state
-                                                               :hakukohde       hakukohde}
+                                                               :hakukohde       hakukohde-oid}
                                   existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
                                   existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
                                   username                    (get-in session [:identity :username])
