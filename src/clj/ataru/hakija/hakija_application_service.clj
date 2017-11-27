@@ -77,7 +77,7 @@
   (when tarjonta-service
     (:end (get-hakuaikas tarjonta-service ohjausparametrit-service application))))
 
-(defn- only-attachments-editable?
+(defn- editing-forbidden-by-hakuaika-end?
   [answer application tarjonta-service ohjausparametrit-service]
   (let [hakuaika-end (get-hakuaika-end application tarjonta-service ohjausparametrit-service)]
     (and (not= (:fieldType answer) "attachment")
@@ -118,7 +118,7 @@
 (defn- answer-uneditable? [answer application tarjonta-service ohjausparametrit-service]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (only-attachments-editable? answer application tarjonta-service ohjausparametrit-service))))
+        (editing-forbidden-by-hakuaika-end? answer application tarjonta-service ohjausparametrit-service))))
 
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service]
