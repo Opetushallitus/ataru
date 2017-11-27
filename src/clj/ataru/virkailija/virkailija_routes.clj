@@ -128,6 +128,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          ohjausparametrit-service
                           virkailija-tarjonta-service
                           cache-service
                           person-service]}]
@@ -241,6 +242,7 @@
                                                                                         session
                                                                                         organization-service
                                                                                         tarjonta-service
+                                                                                        ohjausparametrit-service
                                                                                         person-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -294,7 +296,8 @@
                                  selected-hakukohde
                                  session
                                  organization-service
-                                 tarjonta-service)}))
+                                 tarjonta-service
+                                 ohjausparametrit-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}

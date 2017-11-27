@@ -13,7 +13,8 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [yesql.core :as sql]
-            [ataru.fixtures.form :as form-fixtures]))
+            [ataru.fixtures.form :as form-fixtures]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -33,6 +34,7 @@
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
                  .start
                  :routes))
 
@@ -103,7 +105,7 @@
        :value))
 
 (defn- hakuaika-ended-within-grace-period
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
@@ -112,7 +114,7 @@
      :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
 (defn- hakuaika-ended-grace-period-passed
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
@@ -126,7 +128,7 @@
   (describe "POST application"
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                    hakuaika/get-hakuaika-info                            (fn [_ _] {:on true})]
+                    hakuaika/get-hakuaika-info                            (fn [_ _ _] {:on true})]
         (spec)))
 
     (before

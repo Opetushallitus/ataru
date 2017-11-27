@@ -46,6 +46,7 @@
 (defn any-hakuaika-on? [haku]
   (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
 
-(defn get-hakuaika-info [hakukohde haku]
-  (let [{start :start end :end :as interval} (parse-hakuaika hakukohde haku)]
-    (assoc interval :on (hakuaika-on start end))))
+(defn get-hakuaika-info [hakukohde haku ohjausparametrit]
+  (as-> (parse-hakuaika hakukohde haku) {:keys [start end] :as interval}
+        (assoc interval :on (hakuaika-on start end))
+        (assoc interval :hakukierros-end (-> ohjausparametrit :PH_HKP :date))))

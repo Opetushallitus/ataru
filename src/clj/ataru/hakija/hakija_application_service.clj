@@ -40,12 +40,13 @@
       (:hakukohde application)))
 
 (defn- get-hakuaikas
-  [tarjonta-service application]
+  [tarjonta-service ohjausparametrit-service application]
   (let [application-hakukohde (-> application get-hakukohteet first) ; TODO check apply times for each hakukohde separately?
         hakukohde             (when application-hakukohde (get-hakukohde tarjonta-service application-hakukohde))
         haku-oid              (:hakuOid hakukohde)
-        haku                  (when haku-oid (get-haku tarjonta-service haku-oid))]
-    (hakuaika/get-hakuaika-info hakukohde haku)))
+        haku                  (when haku-oid (get-haku tarjonta-service haku-oid))
+        ohjausparametrit      (when haku-oid (.get-parametri ohjausparametrit-service haku-oid))]
+    (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit)))
 
 (defn- attachment-modify-grace-period
   []
@@ -55,11 +56,11 @@
 
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
-  [tarjonta-service application]
+  [tarjonta-service ohjausparametrit-service application]
   (let [hakukohteet (get-hakukohteet application)]
     (if (empty? hakukohteet)
       true                                                  ;; plain form, always allowed to apply
-      (let [hakuaikas (get-hakuaikas tarjonta-service application)]
+      (let [hakuaikas (get-hakuaikas tarjonta-service ohjausparametrit-service application)]
         (or (:on hakuaikas)
             (util/after-apply-end-within-days? (:end hakuaikas) (attachment-modify-grace-period)))))))
 
@@ -68,20 +69,20 @@
 
 (defn processing-in-jatkuva-haku? [application-key tarjonta-info]
   (let [state (:state (application-store/get-application-review application-key))]
-    (and (not= state "unprocessed")
+    (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
 
 (defn- get-hakuaika-end
-  [application tarjonta-service]
+  [application tarjonta-service ohjausparametrit-service]
   (when tarjonta-service
-    (:end (get-hakuaikas tarjonta-service application))))
+    (:end (get-hakuaikas tarjonta-service ohjausparametrit-service application))))
 
 (defn- only-attachments-editable?
-  [answer application tarjonta-service]
-  (let [hakuaika-end (get-hakuaika-end application tarjonta-service)]
-    (and (when hakuaika-end
-           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period)))
-         (not= (:fieldType answer) "attachment"))))
+  [answer application tarjonta-service ohjausparametrit-service]
+  (let [hakuaika-end (get-hakuaika-end application tarjonta-service ohjausparametrit-service)]
+    (and (not= (:fieldType answer) "attachment")
+         (when hakuaika-end
+           (util/after-apply-end-within-days? hakuaika-end (attachment-modify-grace-period))))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
@@ -114,8 +115,13 @@
         questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
     (map dummy-answer-to-unanswered-question questions-without-answers)))
 
+(defn- answer-uneditable? [answer application tarjonta-service ohjausparametrit-service]
+  (let [answer-kw (-> answer :key keyword)]
+    (or (contains? editing-forbidden-person-info-field-ids answer-kw)
+        (only-attachments-editable? answer application tarjonta-service ohjausparametrit-service))))
+
 (defn flag-uneditable-answers
-  [{:keys [answers] :as application} tarjonta-service]
+  [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service]
   (assoc application
     :answers
     (map
@@ -129,8 +135,7 @@
                  (contains? viewing-forbidden-person-info-field-ids answer-kw))
             (merge {:cannot-view true :value nil})
 
-            (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-                (only-attachments-editable? answer application tarjonta-service))
+            (answer-uneditable? answer application tarjonta-service ohjausparametrit-service)
             (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
 
@@ -153,9 +158,9 @@
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [old-application new-application tarjonta-service]
+  [old-application new-application tarjonta-service ohjausparametrit-service]
   (let [new-answers                 (-> new-application
-                                        (flag-uneditable-answers tarjonta-service)
+                                        (flag-uneditable-answers tarjonta-service ohjausparametrit-service)
                                         :answers)
         uneditable-or-unviewable    #(or (:cannot-edit %) (:cannot-view %))
         uneditable-answers          (filter uneditable-or-unviewable new-answers)
@@ -203,19 +208,19 @@
       (:has-applied (application-store/has-ssn-applied haku-oid (:ssn identifier)))
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
-(defn- validate-and-store [tarjonta-service application store-fn is-modify?]
+(defn- validate-and-store [tarjonta-service ohjausparametrit-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
-                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application)))
+                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application)))
         form               (-> application
                                (:form)
                                (form-store/fetch-by-id)
                                (hakija-form-service/inject-hakukohde-component-if-missing)
                                (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        allowed            (allowed-to-apply? tarjonta-service application)
+        allowed            (allowed-to-apply? tarjonta-service ohjausparametrit-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
-                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
+                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service ohjausparametrit-service)
                              application)
         validation-result  (validator/valid-application?
                             has-applied
@@ -263,22 +268,22 @@
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
     {:passed? true :id application-id}))
 
-(defn handle-application-submit [tarjonta-service application]
+(defn handle-application-submit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application submitted:" application)
   (let [{passed?        :passed?
          application-id :application-id
          :as            result}
-        (validate-and-store tarjonta-service application application-store/add-application false)]
+        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/add-application false)]
     (if passed?
       (start-submit-jobs application-id)
       result)))
 
-(defn handle-application-edit [tarjonta-service application]
+(defn handle-application-edit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application edited:" application)
   (let [{passed? :passed?
          application-id :application-id
          :as validation-result}
-        (validate-and-store tarjonta-service application application-store/update-application true)
+        (validate-and-store tarjonta-service ohjausparametrit-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (do
