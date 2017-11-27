@@ -114,6 +114,11 @@
         questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
     (map dummy-answer-to-unanswered-question questions-without-answers)))
 
+(defn- answer-uneditable? [answer application tarjonta-service]
+  (let [answer-kw (-> answer :key keyword)]
+    (or (contains? editing-forbidden-person-info-field-ids answer-kw)
+        (only-attachments-editable? answer application tarjonta-service))))
+
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service]
   (assoc application
@@ -129,8 +134,7 @@
                  (contains? viewing-forbidden-person-info-field-ids answer-kw))
             (merge {:cannot-view true :value nil})
 
-            (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-                (only-attachments-editable? answer application tarjonta-service))
+            (answer-uneditable? answer application tarjonta-service)
             (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
 
