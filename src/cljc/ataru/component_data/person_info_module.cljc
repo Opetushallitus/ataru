@@ -1,4 +1,4 @@
-  (ns ataru.virkailija.component-data.person-info-module
+  (ns ataru.component-data.person-info-module
     (:require [ataru.virkailija.component-data.component :as component]
               [clojure.walk]))
 
