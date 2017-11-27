@@ -13,7 +13,7 @@
             [ataru.translations.translation-util :refer [get-translations]]
             [ataru.translations.application-view :refer [application-view-translations]]
             [clojure.data :as d]
-            [ataru.virkailija.component-data.value-transformers :as value-transformers]))
+            [ataru.component-data.value-transformers :as value-transformers]))
 
 (defn initialize-db [_ _]
   {:form        nil

@@ -4,7 +4,7 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
             [taoensso.timbre :refer [warn]]
-            [ataru.virkailija.component-data.component :as component]))
+            [ataru.component-data.component :as component]))
 
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"

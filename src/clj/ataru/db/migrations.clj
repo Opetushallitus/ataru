@@ -6,7 +6,7 @@
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as application-store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
-    [ataru.virkailija.component-data.person-info-module :as person-info-module]
+    [ataru.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [ataru.util.random :as c]
@@ -14,7 +14,7 @@
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]
-    [ataru.virkailija.component-data.value-transformers :as t]
+    [ataru.component-data.value-transformers :as t]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.background-job.job :as job]))

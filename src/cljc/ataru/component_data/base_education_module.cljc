@@ -1,6 +1,6 @@
-(ns ataru.virkailija.component-data.base-education-module
+(ns ataru.component-data.base-education-module
   (:require [ataru.util :as u]
-            [ataru.virkailija.component-data.component :as component]))
+            [ataru.component-data.component :as component]))
 
 (defn module []
   (merge (component/form-section)
