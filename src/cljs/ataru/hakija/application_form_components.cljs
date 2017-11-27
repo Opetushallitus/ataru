@@ -107,15 +107,13 @@
 
 (def person-info-fields #{"first-name" "preferred-name" "last-name" "gender"})
 
-
-
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
         cannot-edit? (and editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
         answer-path  (if cannot-edit?
                        [:application :person id]
                        (cond-> [:application :answers id]
-                               idx (concat [:values idx])
+                               idx (concat [:values idx 0])
                                :always (concat [:value])))
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
@@ -146,9 +144,7 @@
                                    " application__form-text-input--normal"))
                :value       (if cannot-view?
                               "***********"
-                              (if idx
-                                (get-in @answer [0])
-                                @answer))
+                              @answer)
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
