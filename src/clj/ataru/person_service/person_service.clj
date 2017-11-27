@@ -51,6 +51,7 @@
                       :sukunimi     "Ihminen"
                       :syntymaaika  "1941-06-16"
                       :sukupuoli    "2"
+                      :kansalaisuus [{:kansalaisuusKoodi "246"}]
                       :turvakielto  false
                       :yksiloity    false
                       :yksiloityVTJ false})

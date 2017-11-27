@@ -896,19 +896,19 @@
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
           [:a
-           {:href (str "/authentication-henkiloui/html/henkilo/"
-                       person-oid
-                       "?permissionCheckService=ATARU")
+           {:href   (str "/authentication-henkiloui/html/henkilo/"
+                         person-oid
+                         "?permissionCheckService=ATARU")
             :target "_blank"}
            [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
            [:span.application-handling__review-area-main-heading-person-oid
             (str "Oppija " person-oid)]]
-           (when-not yksiloity
-          [:a.individualization
-           {:href (str "/authentication-henkiloui/html/henkilo/" person-oid "/duplikaatit")
-            :target "_blank"}
-           [:i.zmdi.zmdi-account-o]
-           [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
+          (when-not yksiloity
+            [:a.individualization
+             {:href   (str "/authentication-henkiloui/html/henkilo/" person-oid "/duplikaatit")
+              :target "_blank"}
+             [:i.zmdi.zmdi-account-o]
+             [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]

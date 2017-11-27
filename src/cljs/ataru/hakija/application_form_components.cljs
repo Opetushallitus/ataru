@@ -104,13 +104,9 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
-
-(def person-info-fields #{"first-name" "preferred-name" "last-name" "gender"})
-
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        cannot-edit? (and editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
-        answer-path  (if cannot-edit?
+        answer-path  (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
                        [:application :person id]
                        (cond-> [:application :answers id]
                                idx (concat [:values idx 0])
@@ -127,7 +123,8 @@
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
                                                    (:valid @answer))
-        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
+        cannot-edit? (and @editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
+        cannot-view? (and @editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
@@ -379,8 +376,12 @@
                                    (:answers @application)
                                    (get (answer-key field-descriptor))
                                    :cannot-edit)))
-        value-path   (cond-> [:application :answers (answer-key field-descriptor)]
-                       idx (concat [:values idx 0]))
+        id (answer-key field-descriptor)
+        value-path   (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+                       [:application :person id]
+                       (cond-> [:application :answers id]
+                         idx (concat [:values idx 0])
+                         :always (concat [:value])))
         value        (subscribe [:state-query value-path])
         on-change    (fn [e]
                        (dispatch [:application/dropdown-change
@@ -398,7 +399,7 @@
         [:span.application__form-select-arrow])
       [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
        {:id        (:id field-descriptor)
-        :value     (or (:value @value) "")
+        :value     (or @value "")
         :on-change on-change
         :disabled  @disabled?
         :required  (is-required-field? field-descriptor)}
@@ -418,7 +419,7 @@
              [:option {:value option-value} label]))
          (:options field-descriptor)))]]
      (when-not idx
-       (dropdown-followups field-descriptor (:value @value)))]))
+       (dropdown-followups field-descriptor @value))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container

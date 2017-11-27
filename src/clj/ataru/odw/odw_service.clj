@@ -32,7 +32,7 @@
                      :syntymaaika            (-> person :syntymaaika)
                      :turvakielto            (-> person :turvakielto)
                      :hetu                   (-> person :hetu)
-                     :sukupuoli              (util/gender-int-to-string (-> person :sukupuoli))
+                     :sukupuoli              (-> person :sukupuoli util/gender-int-to-string)
                      :Ulk_postiosoite        nil
                      :Ulk_postinumero        nil
                      :Ulk_kunta              nil

@@ -118,7 +118,10 @@
                                  :value     "29.10.1984"}
                                 {:fieldType "dropdown"
                                  :key       "gender"
-                                 :value     "2"}]})
+                                 :value     "2"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     "246"}]})
 
 (def application2 {:form       1
                    :lang       "fi"
@@ -147,7 +150,10 @@
                                  :value     "29.10.1984"}
                                 {:fieldType "dropdown"
                                  :key       "gender"
-                                 :value     "1"}]})
+                                 :value     "1"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     "246"}]})
 
 (def application3 {:form       1
                    :lang       "fi"
@@ -176,7 +182,10 @@
                                  :value     "29.10.1984"}
                                 {:fieldType "dropdown"
                                  :key       "gender"
-                                 :value     "2"}]})
+                                 :value     "2"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     "246"}]})
 
 (defn init-db-fixture []
   (form-store/create-new-form! form1 (:key form1))

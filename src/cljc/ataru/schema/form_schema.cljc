@@ -233,7 +233,8 @@
    :preferred-name              s/Str
    :last-name                   s/Str
    :gender                      s/Str
-   (s/optional-key :ssn)        s/Str
+   :nationality                 s/Str
+   (s/optional-key :ssn)        (s/maybe s/Str)
    (s/optional-key :birth-date) s/Str})
 
 (s/defschema ApplicationWithPerson

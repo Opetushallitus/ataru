@@ -93,7 +93,8 @@
      :last-name      (-> answers :last-name :value)
      :ssn            (-> answers :ssn :value)
      :birth-date     (-> answers :birth-date :value)
-     :gender         (-> answers :gender :value)}))
+     :gender         (-> answers :gender :value)
+     :nationality    (-> answers :nationality :value)}))
 
 (defn- person-info-from-onr-person [person]
   {:first-name     (:etunimet person)
@@ -101,7 +102,8 @@
    :last-name      (:sukunimi person)
    :ssn            (:hetu person)
    :birth-date     (-> person :syntymaaika bd-converter/convert-to-finnish-format)
-   :gender         (-> person :sukupuoli util/gender-int-to-string)})
+   :gender         (-> person :sukupuoli)
+   :nationality    (-> person :kansalaisuus first :kansalaisuusKoodi)})
 
 (defn get-person [application person-client]
   (let [person-from-onr (->> (:person-oid application)
