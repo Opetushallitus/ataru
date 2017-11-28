@@ -155,7 +155,7 @@
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [old-application new-application tarjonta-service]
+  [new-application old-application tarjonta-service]
   (let [new-answers                 (-> new-application
                                         (flag-uneditable-answers tarjonta-service)
                                         :answers)
@@ -217,7 +217,9 @@
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
-                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
+                             (-> application
+                                 (merge-uneditable-answers-from-previous latest-application tarjonta-service)
+                                 (assoc :person-oid (:person-oid latest-application)))
                              application)
         validation-result  (validator/valid-application?
                             has-applied
