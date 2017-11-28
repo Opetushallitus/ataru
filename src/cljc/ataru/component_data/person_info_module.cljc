@@ -146,7 +146,7 @@
 
 (defn- city-component
   []
-  (text-field {:fi "Kaupunki" :sv "Stad" :en "City"}
+  (text-field {:fi "Kaupunki ja maa" :sv "Stad och land" :en "City and country"}
               :id :city
               :validators [:city]
               :exclude-from-answers-if-hidden true))

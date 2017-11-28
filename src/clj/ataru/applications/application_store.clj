@@ -258,6 +258,30 @@
                 {:person_oid person-oid})
        (map ->kebab-case-kw)))
 
+(defn- unwrap-onr-application
+  [{:keys [key haku form email content]}]
+  (let [answers (answers-by-key (:answers content))]
+    {:oid          key
+     :haku         haku
+     :form         form
+     :kansalaisuus (-> answers :nationality :value)
+     :aidinkieli   (-> answers :language :value)
+     :matkapuhelin (-> answers :phone :value)
+     :email        email
+     :lahiosoite   (-> answers :address :value)
+     :postinumero  (-> answers :postal-code :value)
+     :passinNumero (-> answers :passport-number :value)
+     :idTunnus     (-> answers :national-id-number :value)}))
+
+(defn onr-applications [person-oid organizations]
+  (->> (exec-db :db yesql-onr-applications
+                {:person_oid person-oid
+                 :query_type (if (nil? organizations) "ALL" "ORGS")
+                 :authorized_organization_oids (if (nil? organizations)
+                                                 [""]
+                                                 organizations)})
+       (map unwrap-onr-application)))
+
 (defn has-ssn-applied [haku-oid ssn]
   (->> (exec-db :db yesql-has-ssn-applied {:haku_oid haku-oid
                                            :ssn ssn})

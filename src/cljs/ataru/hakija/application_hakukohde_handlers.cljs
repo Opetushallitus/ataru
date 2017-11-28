@@ -71,7 +71,11 @@
   :application/hakukohde-add-selection
   (fn [{db :db} [_ hakukohde-oid]]
     (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
-          new-hakukohde-values (conj selected-hakukohteet {:valid true :value hakukohde-oid})
+          not-yet-selected? (every? #(not= hakukohde-oid (:value %))
+                                    selected-hakukohteet)
+          new-hakukohde-values (cond-> selected-hakukohteet
+                                 not-yet-selected?
+                                 (conj {:valid true :value hakukohde-oid}))
           db (-> db
                  (assoc-in [:application :answers :hakukohteet :values]
                            new-hakukohde-values)

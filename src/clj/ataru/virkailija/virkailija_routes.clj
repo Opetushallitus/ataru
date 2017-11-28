@@ -220,6 +220,15 @@
                              (some? name)
                              (ok (access-controlled-application/get-application-list-by-name name session organization-service))))
 
+                  (api/GET "/virkailija-settings" {session :session}
+                    :return ataru-schema/VirkailijaSettings
+                    (ok (virkailija-edit/get-review-settings session)))
+
+                  (api/POST "/review-setting" {session :session}
+                    :body [review-setting ataru-schema/ReviewSetting]
+                    :return ataru-schema/ReviewSetting
+                    (ok (virkailija-edit/set-review-setting review-setting session)))
+
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
@@ -385,6 +394,15 @@
                             :path-params [person-oid :- (api/describe s/Str "Person OID")]
                             :return [ataru-schema/OmatsivutApplication]
                             (if-let [applications (access-controlled-application/omatsivut-applications
+                                                   organization-service
+                                                   session
+                                                   person-oid)]
+                              (response/ok applications)
+                              (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/onr/applications/:person-oid" {session :session}
+                            :path-params [person-oid :- (api/describe s/Str "Person OID")]
+                            :return [ataru-schema/OnrApplication]
+                            (if-let [applications (access-controlled-application/onr-applications
                                                    organization-service
                                                    session
                                                    person-oid)]

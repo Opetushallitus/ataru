@@ -10,7 +10,9 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
-            [ataru.url :as url]))
+            [ataru.url :as url]
+            [camel-snake-kebab.core :as c]
+            [camel-snake-kebab.extras :as ce]))
 
 (reg-event-fx
   :application/select-application
@@ -279,11 +281,24 @@
   (some (comp (partial = "attachment") :fieldType second)
         (get-in db [:application :selected-application-and-form :application :answers])))
 
+(defn- parse-application-times
+  [response]
+  (let [answers                    (-> response :application :answers)
+        form-content               (-> response :form :content)
+        without-answers-or-content (-> response
+                                       (update-in [:application] dissoc :answers)
+                                       (update-in [:form] dissoc :content))
+        with-times                 (ataru.virkailija.temporal/parse-times without-answers-or-content)]
+    (-> with-times
+        (assoc-in [:application :answers] answers)
+        (assoc-in [:form :content] form-content))))
+
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
-    (let [db (update-application-details db response)]
-      {:db db
+    (let [response-with-parsed-times (parse-application-times response)
+          db                         (update-application-details db response-with-parsed-times)]
+      {:db       db
        :dispatch (if (and (fc/feature-enabled? :attachment)
                           (application-has-attachments? db))
                    [:application/fetch-application-attachment-metadata]
@@ -298,7 +313,8 @@
       {:db   db
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
-              :handler-or-dispatch :application/handle-fetch-application}})))
+              :handler-or-dispatch :application/handle-fetch-application
+              :skip-parse-times? true}})))
 
 (reg-event-db
   :application/start-autosave
@@ -362,7 +378,8 @@
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut}}))
+            :handler-or-dispatch :editor/handle-refresh-haut
+            :skip-parse-times?   true}}))
 
 (reg-event-fx
   :application/navigate
@@ -489,3 +506,57 @@
   :application/reset-resend-modify-application-link-state
   (fn [db _]
     (assoc-in db [:application :modify-application-link :state] nil)))
+
+(reg-event-db
+  :application/toggle-review-area-settings-visibility
+  (fn [db _]
+    (let [not-or-true (fnil not false)
+          visible?    (-> db :application :review-settings :visible? not-or-true)
+          keys->false (partial reduce-kv
+                               (fn [config review-key _]
+                                 (assoc config review-key false))
+                               {})]
+      (cond-> (assoc-in db [:application :review-settings :visible?] visible?)
+        visible?
+        (update-in [:application :ui/review] keys->false)))))
+
+(reg-event-fx
+  :application/toggle-review-state-setting
+  (fn [{:keys [db]} [_ setting-kwd]]
+    (let [not-or-false (fnil not true)
+          enabled?     (-> db :application :review-settings :config setting-kwd not-or-false)]
+      {:db   (assoc-in db [:application :review-settings :config setting-kwd] :updating)
+       :http {:method              :post
+              :params              {:setting-kwd setting-kwd
+                                    :enabled     enabled?}
+              :path                "/lomake-editori/api/applications/review-setting"
+              :handler-or-dispatch :application/handle-toggle-review-state-setting-response}})))
+
+(reg-event-db
+  :application/handle-toggle-review-state-setting-response
+  (fn [db [_ response]]
+    (assoc-in db [:application :review-settings :config (-> response :setting-kwd keyword)] (:enabled response))))
+
+(reg-event-fx
+  :application/get-virkailija-settings
+  (fn [{:keys [db]} _]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/applications/virkailija-settings"
+            :handler-or-dispatch :application/handle-get-virkailija-settings-response}}))
+
+(reg-event-db
+  :application/handle-get-virkailija-settings-response
+  (fn [db [_ response]]
+    (let [review-config (->> response
+                             (ce/transform-keys c/->kebab-case-keyword)
+                             :review)]
+      (update-in db
+                 [:application :review-settings :config]
+                 merge
+                 review-config))))
+
+(reg-event-db
+  :application/toggle-review-list-visibility
+  (fn [db [_ list-kwd]]
+    (update-in db [:application :ui/review list-kwd] (fnil not false))))

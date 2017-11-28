@@ -1,5 +1,5 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment]
+  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment Row$MissingCellPolicy]
            [java.io ByteArrayOutputStream]
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
@@ -113,7 +113,7 @@
   (when-let [v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet row)
             (.createRow sheet row))
-        (.getCell column Row/CREATE_NULL_AS_BLANK)
+        (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
         (set-cell-style workbook)
         (.setCellValue v)))
   sheet)

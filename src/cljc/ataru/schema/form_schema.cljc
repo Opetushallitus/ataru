@@ -259,6 +259,19 @@
    :paymentObligations  {s/Str s/Str}
    :kkPohjakoulutus     [s/Str]})
 
+(s/defschema OnrApplication
+  {:oid          s/Str
+   :haku         (s/maybe s/Str)
+   :form         s/Str
+   :kansalaisuus s/Str
+   :aidinkieli   s/Str
+   :matkapuhelin s/Str
+   :email        s/Str
+   :lahiosoite   s/Str
+   :postinumero  s/Str
+   :passinNumero (s/maybe s/Str)
+   :idTunnus     (s/maybe s/Str)})
+
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
                          "received-from-applicant"
@@ -299,7 +312,8 @@
                                          :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
-                                         :incomplete        s/Int})
+                                         :incomplete        s/Int
+                                         :haku              s/Str})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              LocalizedStringOptional
@@ -340,3 +354,7 @@
                                  (s/optional-key :first-name)     s/Str
                                  (s/optional-key :last-name)      s/Str})
 
+(s/defschema ReviewSetting {:setting-kwd s/Str
+                            :enabled     s/Bool})
+
+(s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})

@@ -20,6 +20,23 @@
          (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))
 
 (re-frame/reg-sub
+  :application/list-heading-data-for-haku
+  (fn [db]
+    (let [selected-haku      (get-in db [:application :selected-haku])
+          selected-hakukohde (get-in db [:application :selected-hakukohde])]
+      (cond
+        selected-haku [selected-haku
+                       nil
+                       (:hakukohteet selected-haku)]
+        selected-hakukohde (let [selected-haku (->> db
+                                                    :application :haut :tarjonta-haut
+                                                    (filter #(= (:oid %) (:haku selected-hakukohde)))
+                                                    (first))]
+                             [selected-haku
+                              selected-hakukohde
+                              (:hakukohteet selected-haku)])))))
+
+(re-frame/reg-sub
   :application/application-list-selected-by
   (fn [db]
     (let [db-application (:application db)]
@@ -238,3 +255,20 @@
                (< (count selection-states)
                   (count (:hakukohde application)))))))))
        applications))))
+
+(re-frame/reg-sub
+  :application/review-state-setting-enabled?
+  (fn [db [_ setting-kwd]]
+    (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
+      enabled-in-state?
+      true)))
+
+(re-frame/reg-sub
+  :application/review-state-setting-disabled?
+  (fn [db [_ setting-kwd]]
+    (-> db :application :review-settings :config setting-kwd (= :updating))))
+
+(re-frame/reg-sub
+  :application/review-list-visible?
+  (fn [db [_ list-kwd]]
+    (-> db :application :ui/review list-kwd)))
