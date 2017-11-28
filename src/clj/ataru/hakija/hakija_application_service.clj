@@ -84,10 +84,11 @@
          (not= (:fieldType answer) "attachment"))))
 
 (defn- dummy-answer-to-unanswered-question
-  [question]
-  (assoc (select-keys question [:id :fieldType :label])
-         :value
-         ""))
+  [{:keys [id fieldType label]}]
+  {:key       id
+   :fieldType fieldType
+   :label     label
+   :value     ""})
 
 (defn- filter-questions-without-answers
   [answers-by-key form-fields]
