@@ -102,17 +102,21 @@
 
 (defn- editing-forbidden-by-hakuaika-end?
   [answer application tarjonta-service ohjausparametrit-service]
-  (let [hakuaika           (get-hakuaika application tarjonta-service ohjausparametrit-service)
-        answer-kw          (-> answer :key keyword)
-        hakukierros-end    (some-> hakuaika :hakukierros-end t/from-long)
-        person-info-field? (person-info-field? answer-kw)]
-    (cond (and hakukierros-end (time/after? hakukierros-end (time/now)))
-          (do
-            (println (str "answer-kw: " answer-kw ", person-info-field: " person-info-field?))
-            (not person-info-field?))
-
-          (and (:end hakuaika) (not= (:fieldType answer) "attachment"))
-          (util/after-apply-end-within-days? (:end hakuaika) (attachment-modify-grace-period)))))
+  (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
+        answer-kw           (-> answer :key keyword)
+        hakuaika-end        (some-> hakuaika :end t/from-long)
+        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period))))
+        hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
+        person-info-field?  (person-info-field? answer-kw)
+        past?               (fn [t] (when t (time/after? (time/now) t)))]
+    (cond (past? hakukierros-end)
+          true
+          (past? attachment-edit-end)
+          (not person-info-field?)
+          (past? hakuaika-end)
+          (not (or person-info-field?
+                   (= "attachment" (:fieldType answer))))
+          :else false)))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
