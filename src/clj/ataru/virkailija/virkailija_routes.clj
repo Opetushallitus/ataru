@@ -225,7 +225,6 @@
                                                    (reduce (fn [res person]
                                                              (assoc res (:oidHenkilo person) person))
                                                            {}))]
-                             (println (count applications))
                              (response/ok {:applications (for [application applications
                                                                :let [person      (get persons (:person-oid application))
                                                                      yksiloity   (or (-> person :yksiloity)
