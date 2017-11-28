@@ -96,14 +96,25 @@
      :gender         (-> answers :gender :value)
      :nationality    (-> answers :nationality :value)}))
 
+(defn get-country-by-code [code]
+  (if-let [country (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
+                        (filter #(= code (:value %)))
+                        first
+                        :label
+                        :fi)]
+    country
+    "99"))
+
 (defn- person-info-from-onr-person [person]
-  {:first-name     (:etunimet person)
-   :preferred-name (:kutsumanimi person)
-   :last-name      (:sukunimi person)
-   :ssn            (:hetu person)
-   :birth-date     (-> person :syntymaaika bd-converter/convert-to-finnish-format)
-   :gender         (-> person :sukupuoli)
-   :nationality    (-> person :kansalaisuus first :kansalaisuusKoodi)})
+  {:first-name         (:etunimet person)
+   :preferred-name     (:kutsumanimi person)
+   :last-name          (:sukunimi person)
+   :ssn                (:hetu person)
+   :birth-date         (-> person :syntymaaika bd-converter/convert-to-finnish-format)
+   :gender             (-> person :sukupuoli)
+   :gender-string      (-> person :sukupuoli util/gender-int-to-string)
+   :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "99"))
+   :nationality-string (-> person :kansalaisuus first :kansalaisuusKoodi get-country-by-code)})
 
 (defn get-person [application person-client]
   (let [person-from-onr (->> (:person-oid application)
