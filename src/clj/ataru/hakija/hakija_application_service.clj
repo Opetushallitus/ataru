@@ -270,8 +270,11 @@
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
     (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)))
 
-(defn- start-virkailija-edit-jobs [virkailija-secret]
-  (invalidate-virkailija-credentials virkailija-secret))
+(defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
+  (invalidate-virkailija-credentials virkailija-secret)
+  (when (nil? (:person-oid application))
+    (log/info "Started person creation job (to person service) with job id"
+              (start-person-creation-job application-id))))
 
 (defn- start-hakija-edit-jobs [application-id]
   (application-email/start-email-edit-confirmation-job application-id))
@@ -287,13 +290,15 @@
 
 (defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)
-  (let [{:keys [passed? id]
+  (let [{:keys [passed? id application]
          :as   result}
         (validate-and-store tarjonta-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
     (when passed?
       (if virkailija-secret
-        (start-virkailija-edit-jobs virkailija-secret)
+        (start-virkailija-edit-jobs virkailija-secret
+                                    id
+                                    application)
         (start-hakija-edit-jobs id)))
     result))
 
