@@ -31,7 +31,7 @@
   (let [application-id (store-fn application)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
-     :application-id application-id}))
+     :id application-id}))
 
 (defn- get-hakukohteet [application]
   (or (->> application
@@ -267,33 +267,28 @@
                                                    {:application-id application-id})]
     (application-email/start-email-submit-confirmation-job application-id)
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
-    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
-    {:passed? true :id application-id}))
+    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
-  (let [{passed?        :passed?
-         application-id :application-id
-         :as            result}
+  (let [{:keys [passed? id]
+         :as   result}
         (validate-and-store tarjonta-service application application-store/add-application false)]
-    (if passed?
-      (start-submit-jobs application-id)
-      result)))
+    (when passed?
+      (start-submit-jobs id))
+    result))
 
 (defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)
-  (let [{passed? :passed?
-         application-id :application-id
-         :as validation-result}
+  (let [{:keys [passed? id]
+         :as   result}
         (validate-and-store tarjonta-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
-    (if passed?
-      (do
-        (if virkailija-secret
-          (invalidate-virkailija-credentials virkailija-secret)
-          (application-email/start-email-edit-confirmation-job application-id))
-        {:passed? true :id application-id})
-      validation-result)))
+    (when passed?
+      (if virkailija-secret
+        (invalidate-virkailija-credentials virkailija-secret)
+        (application-email/start-email-edit-confirmation-job id)))
+    result))
 
 (defn save-application-feedback
   [feedback]
