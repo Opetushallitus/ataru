@@ -253,10 +253,13 @@
         (remove-orphan-attachments final-application latest-application)
         (store-and-log final-application store-fn)))))
 
+(defn- start-person-creation-job [application-id]
+  (job/start-job hakija-jobs/job-definitions
+                 (:type person-integration/job-definition)
+                 {:application-id application-id}))
+
 (defn- start-submit-jobs [application-id]
-  (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                             (:type person-integration/job-definition)
-                                             {:application-id application-id})
+  (let [person-service-job-id (start-person-creation-job application-id)
         attachment-finalizer-job-id (job/start-job hakija-jobs/job-definitions
                                                    (:type attachment-finalizer-job/job-definition)
                                                    {:application-id application-id})]
