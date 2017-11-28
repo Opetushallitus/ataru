@@ -73,7 +73,9 @@
 (defrecord CachedTarjontaService [cache-service]
   TarjontaService
   (get-hakukohde [this hakukohde-oid]
-    (cache/cache-get-or-fetch cache-service :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid)))
+    (when-let [hakukohde (cache/cache-get-or-fetch cache-service :hakukohde hakukohde-oid #(client/get-hakukohde hakukohde-oid))]
+      (when-not (= (:tila hakukohde) "PERUTTU")
+        hakukohde)))
 
   (get-hakukohde-name [this hakukohde-oid]
     (when-let [hakukohde (.get-hakukohde this hakukohde-oid)]
