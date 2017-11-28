@@ -31,7 +31,8 @@
   (let [application-id (store-fn application)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
-     :id application-id}))
+     :id application-id
+     :application application}))
 
 (defn- get-hakukohteet [application]
   (or (->> application
