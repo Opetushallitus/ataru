@@ -6,7 +6,7 @@
                                        :en "Application period"}
    :not-within-application-period     {:fi "hakuaika ei ole käynnissä"
                                        :sv "inte inom ansökningstiden"
-                                       :en "not within application period"}
+                                       :en "application period currently not ongoing"}
    :application-processed-cant-modify {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                        :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                        :en "This application has been processed and can no longer be modified"}
