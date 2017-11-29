@@ -97,7 +97,7 @@
                :home-town}
              answer-kw))
 
-(defn- editing-forbidden-by-hakuaika-end?
+(defn- editing-allowed-by-hakuaika?
   [answer application tarjonta-service ohjausparametrit-service]
   (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
         answer-kw           (-> answer :key keyword)
@@ -105,15 +105,12 @@
         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period))))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         person-info-field?  (person-info-field? answer-kw)
-        past?               (fn [t] (when t (time/after? (time/now) t)))]
-    (cond (past? hakukierros-end)
-          true
-          (past? attachment-edit-end)
-          (not person-info-field?)
-          (past? hakuaika-end)
-          (not (or person-info-field?
-                   (= "attachment" (:fieldType answer))))
-          :else false)))
+        before?             (fn [t] (when t (time/before? (time/now) t)))]
+    (or (before? hakuaika-end)
+        (and (before? attachment-edit-end)
+             (= "attachment" (:fieldType answer)))
+        (and (before? hakukierros-end)
+             person-info-field?))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
@@ -149,7 +146,7 @@
 (defn- answer-uneditable? [answer application tarjonta-service ohjausparametrit-service]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (editing-forbidden-by-hakuaika-end? answer application tarjonta-service ohjausparametrit-service))))
+        (not (editing-allowed-by-hakuaika? answer application tarjonta-service ohjausparametrit-service)))))
 
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service]
