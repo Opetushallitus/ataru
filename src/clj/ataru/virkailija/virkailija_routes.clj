@@ -235,8 +235,7 @@
                                                                                    (select-keys application [:preferred-name :last-name]))]]
                                                            (-> application
                                                                (assoc :person person-info)
-                                                               (dissoc :person-oid)))})))
-
+                                                               (dissoc :person-oid :preferred-name :last-name)))})))
                   (api/GET "/virkailija-settings" {session :session}
                     :return ataru-schema/VirkailijaSettings
                     (ok (virkailija-edit/get-review-settings session)))

@@ -198,8 +198,6 @@
    :person                                         {:preferred-name s/Str
                                                     :last-name      s/Str}
    (s/optional-key :form)                          s/Int
-   (s/optional-key :preferred-name)                (s/maybe s/Str)
-   (s/optional-key :last-name)                     (s/maybe s/Str)
    (s/optional-key :created-time)                  org.joda.time.DateTime
    (s/optional-key :haku)                          (s/maybe s/Str)
    (s/optional-key :hakukohde)                     (s/maybe [s/Str])

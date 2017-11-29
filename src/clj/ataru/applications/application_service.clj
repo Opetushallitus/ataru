@@ -97,13 +97,16 @@
      :nationality    (-> answers :nationality :value)}))
 
 (defn get-country-by-code [code]
-  (if-let [country (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
-                        (filter #(= code (:value %)))
-                        first
-                        :label
-                        :fi)]
-    country
-    "99"))
+  (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
+       (filter #(= code (:value %)))
+       first
+       :label
+       :fi))
+
+(defn populate-person-koodisto-fields [person]
+  (-> person
+      (update :gender util/gender-int-to-string)
+      (update :nationality get-country-by-code)))
 
 (defn- person-info-from-onr-person [person]
   {:first-name         (:etunimet person)
@@ -112,9 +115,7 @@
    :ssn                (:hetu person)
    :birth-date         (-> person :syntymaaika bd-converter/convert-to-finnish-format)
    :gender             (-> person :sukupuoli)
-   :gender-string      (-> person :sukupuoli util/gender-int-to-string)
-   :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "99"))
-   :nationality-string (-> person :kansalaisuus first :kansalaisuusKoodi get-country-by-code)})
+   :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
 
 (defn get-person [application person-client]
   (let [person-from-onr (->> (:person-oid application)
@@ -148,7 +149,9 @@
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application          (-> application
                                (dissoc :person-oid)
-                               (assoc :person person)
+                               (assoc :person (if (:yksiloity person)
+                                                (populate-person-koodisto-fields person)
+                                                person))
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)

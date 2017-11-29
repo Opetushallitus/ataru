@@ -33,11 +33,7 @@
     (let [id (keyword (:id field-descriptor))
           use-onr-info? (contains? (:person application) id)
           values (if use-onr-info?
-                   (-> application
-                       :person
-                       (get (if (-> application :person :yksiloity)
-                              (keyword (str (:id field-descriptor) "-string"))
-                              id)))
+                   (-> application :person id)
                    (cond-> (get-value (-> application :answers id) group-idx)
                      (and (predefined-value-answer? field-descriptor)
                           (not (contains? field-descriptor :koodisto-source)))
