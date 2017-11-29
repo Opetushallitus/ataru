@@ -2,7 +2,8 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -239,8 +240,8 @@
 
 (s/defschema ApplicationWithPerson
   (-> Application
-      (dissoc :person-oid)
-      (assoc :person Person)))
+      (st/dissoc :person-oid)
+      (st/assoc :person Person)))
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
