@@ -66,6 +66,21 @@
         .fail(done)
       });
 
+      it('shows yksilointitieto for application', function(done) {
+        clickElement(firstApplication)()
+          .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
+          .then(function() {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
+          })
+          .then(clickElement(thirdApplication))
+          .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+          .then(function () {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
+            done()
+          })
+          .fail(done)
+      });
+
       describe('successfully changes selection state', function() {
         before(
           wait.until(function() { return selectionStateSelected().text() === "Kesken" }),
@@ -131,7 +146,7 @@
       }
     });
 
-    describe ('Application sorting', function () {
+    describe('Application sorting', function () {
       it('Sorting by sortable columns works', function(done) {
         var firstApplicantNameBeforeAnySorting = null;
         wait.until(applicantNamesExist)()

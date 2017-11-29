@@ -23,7 +23,9 @@
    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
    [ataru.virkailija.authentication.virkailija-edit :refer [invalidate-virkailija-credentials virkailija-secret-valid?]]
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-   [ataru.config.core :refer [config]]))
+   [ataru.config.core :refer [config]]
+   [ataru.applications.application-service :as application-service]
+   [ataru.person-service.person-service :as person-service]))
 
 (defn- store-and-log [application store-fn]
   (let [application-id (store-fn application)]
@@ -292,3 +294,29 @@
   [feedback]
   (log/info "Saving feedback" feedback)
   (application-store/add-application-feedback feedback))
+
+(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
+  (cond-> answer
+          (= fieldType "attachment")
+          (update :value (fn [value]
+                           (if (and (vector? value)
+                                    (not (empty? value))
+                                    (every? vector? value))
+                             (map file-store/get-metadata value)
+                             (file-store/get-metadata value))))))
+
+(defn attachments-metadata->answers [application]
+  (update application :answers (partial map attachment-metadata->answer)))
+
+(defn get-latest-application-by-secret [secret tarjonta-service person-client]
+  (let [application (-> secret
+                             (application-store/get-latest-application-by-secret)
+                             (flag-uneditable-answers tarjonta-service)
+                             (attachments-metadata->answers))
+
+        person (when application
+                 (-> (application-service/get-person application person-client)
+                     (dissoc :ssn :birth-date)))]
+    (-> application
+        (assoc :person person)
+        (dissoc :person-oid))))

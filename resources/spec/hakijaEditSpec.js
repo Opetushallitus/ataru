@@ -99,20 +99,20 @@
 
     describe('changing values to be invalid', function () {
       before(
-        setNthFieldInputValue(1, '420noscope'),
+        setNthFieldInputValue(1, '420noscope'), //cannot be edited, no error!
         setNthFieldValue(23, 'textarea', ''),
         clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto')
       )
 
       it('shows invalidity errors', function () {
-        expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 2 tietoa')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
     })
 
     describe('change values and save', function () {
       before(
-        setNthFieldInputValue(1, 'Tokanimi'),
+        setNthFieldInputValue(1, 'Tokanimi'), // cannot be edited, should not be edited in virkailija edit spec.
         setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(26, 'Toinen vaihtoehto'),
         clickElement(function () {

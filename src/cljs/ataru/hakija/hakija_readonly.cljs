@@ -45,9 +45,11 @@
                        (replace-with-option-label (:options field-descriptor) lang))]
           (cond (and (sequential? values) (< 1 (count values)))
                 [:ul.application__form-field-list
-                 (for [value values]
-                   ^{:key value}
-                   [:li (render-paragraphs value)])]
+                 (map-indexed
+                  (fn [i value]
+                    ^{:key (str (:id field-descriptor) i)}
+                    [:li (render-paragraphs value)])
+                  values)]
                 (sequential? values)
                 (render-paragraphs (first values))
                 :else

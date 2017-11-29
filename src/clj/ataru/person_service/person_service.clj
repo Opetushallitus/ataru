@@ -38,11 +38,23 @@
   (get-person [{:keys [oppijanumerorekisteri-cas-client]} oid]
     (person-client/get-person oppijanumerorekisteri-cas-client oid)))
 
-(def fake-person {:personOid  "1.2.3.4.5.6"
-                  :firstName  "Foo"
-                  :lastName   "Bar"
-                  :email      "foo.bar@mailinator.com"
-                  :idpEntitys []})
+(def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
+                  :firstName    "Foo"
+                  :lastName     "Bar"
+                  :email        "foo.bar@mailinator.com"
+                  :idpEntitys   []})
+
+(def fake-onr-person {:oidHenkilo   "1.2.3.4.5.6"
+                      :hetu         "020202A0202"
+                      :etunimet     "Testi"
+                      :kutsumanimi  "Testi"
+                      :sukunimi     "Ihminen"
+                      :syntymaaika  "1941-06-16"
+                      :sukupuoli    "2"
+                      :kansalaisuus [{:kansalaisuusKoodi "246"}]
+                      :turvakielto  false
+                      :yksiloity    false
+                      :yksiloityVTJ false})
 
 (defrecord FakePersonService []
   component/Lifecycle
@@ -51,11 +63,24 @@
   (start [this] this)
   (stop [this] this)
 
-  (create-or-find-person [this person] fake-person)
+  (create-or-find-person [this person] fake-person-from-creation)
 
-  (get-persons [this oids] [fake-person])
+  (get-persons [this oids]
+    (map #(merge fake-onr-person
+                  {:oidHenkilo %})
+         oids))
 
-  (get-person [this oid] fake-person))
+  (get-person [this oid]
+    (condp = oid
+      "2.2.2" (merge fake-onr-person
+                     {:turvakielto true
+                      :yksiloity   true
+                      :etunimet    "Ari"
+                      :kutsumanimi "Ari"
+                      :sukunimi    "Vatanen"
+                      :hetu         "141196-933S"})
+      (merge fake-onr-person
+             {:oidHenkilo oid}))))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode

@@ -483,6 +483,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading-person-oid-row {
   margin-top: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .application-handling__review-area-main-heading-person-icon {
@@ -1041,6 +1043,22 @@ and (max-width: 1000px) {
   }
 }
 
+.individualization {
+  .arrow(left, @light-green, 8px, 8px);
+  align-items: center;
+  background: @light-green;
+  border-radius: 3px;
+  color: white;
+  display: flex;
+  font-size: 13px;
+  margin-left: 10px;
+  padding: 4px 7px 4px 4px;
+
+  i {
+    font-size: 26px;
+    margin: 0 6px 0 4px;
+  }
+}
 
 .application__wrapper-element--border {
   border-top: solid 1px @review-separator-color;
@@ -1340,6 +1358,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__text-field-paragraph {
+  display: inline-block;
   &:first-child {
     margin-top: 0px;
   }

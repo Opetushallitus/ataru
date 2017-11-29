@@ -2,7 +2,7 @@
   (:require [ataru.middleware.cache-control :as cache-control]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
-            [ataru.hakija.hakija-application-service :as application-service]
+            [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
@@ -35,39 +35,25 @@
 (defn- deleted? [{:keys [deleted]}]
   (true? deleted))
 
-(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
-  (cond-> answer
-    (= fieldType "attachment")
-    (update :value (fn [value]
-                     (if (and (vector? value)
-                              (not (empty? value))
-                              (every? vector? value))
-                       (map file-store/get-metadata value)
-                       (file-store/get-metadata value))))))
-
-(defn- attachments-metadata->answers [application]
-  (update application :answers (partial map attachment-metadata->answer)))
-
 (defn- get-application
-  ([secret]
-   (get-application secret nil))
-  ([secret tarjonta-service]
-   (let [application (-> secret
-                         (application-store/get-latest-application-by-secret)
-                         (application-service/flag-uneditable-answers tarjonta-service)
-                         (attachments-metadata->answers))]
+  ([secret person-client]
+   (get-application secret nil person-client))
+  ([secret tarjonta-service person-client]
+   (let [application (hakija-application-service/get-latest-application-by-secret secret
+                                                                                  tarjonta-service
+                                                                                  person-client)]
      (if application
        (do
          (info (str "Getting application " (:id application) " with answers"))
          (response/ok application))
-       (do
-         (info (str "Failed to get application belonging by secret, returning HTTP 404"))
-         (response/not-found {}))))))
+     (do
+       (info (str "Failed to get application by secret, returning HTTP 404"))
+       (response/not-found {}))))))
 
-(defn- get-application-by-virkailija-secret [virkailija-secret]
+(defn- get-application-by-virkailija-secret [virkailija-secret person-client]
   (if (virkailija-secret-valid? virkailija-secret)
     (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
-      (get-application hakija-secret))
+      (get-application hakija-secret person-client))
     (response/bad-request {:error "Attempted to edit hakemus with invalid virkailija secret."})))
 
 (defn- handle-client-error [error-details]
@@ -114,7 +100,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn api-routes [tarjonta-service]
+(defn api-routes [tarjonta-service person-service]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -144,7 +130,7 @@
     (api/POST "/feedback" []
       :summary "Add feedback sent by applicant"
       :body [feedback ataru-schema/ApplicationFeedback]
-      (if-let [saved-application (application-service/save-application-feedback feedback)]
+      (if-let [saved-application (hakija-application-service/save-application-feedback feedback)]
         (do
           (flowdock-client/send-application-feedback saved-application)
           (response/ok {:id (:id saved-application)}))
@@ -152,7 +138,7 @@
     (api/POST "/application" []
       :summary "Submit application"
       :body [application ataru-schema/Application]
-      (match (application-service/handle-application-submit
+      (match (hakija-application-service/handle-application-submit
               tarjonta-service
               application)
         {:passed? false :failures failures}
@@ -163,7 +149,7 @@
     (api/PUT "/application" []
       :summary "Edit application"
       :body [application ataru-schema/Application]
-      (match (application-service/handle-application-edit
+      (match (hakija-application-service/handle-application-edit
               tarjonta-service
               application)
         {:passed? false :failures failures}
@@ -175,12 +161,12 @@
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
                      {virkailija-secret :- s/Str nil}]
-      :return ataru-schema/Application
+      :return ataru-schema/ApplicationWithPerson
       (cond (not-blank? secret)
-            (get-application secret tarjonta-service)
+            (get-application secret tarjonta-service person-service)
 
             (not-blank? virkailija-secret)
-            (get-application-by-virkailija-secret virkailija-secret)
+            (get-application-by-virkailija-secret virkailija-secret person-service)
 
             :else
             (response/bad-request)))
@@ -261,7 +247,8 @@
                               (api/routes
                                (api/context "/hakemus" []
                                   test-routes
-                                  (api-routes (:tarjonta-service this))
+                                  (api-routes (:tarjonta-service this)
+                                              (:person-service this))
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []

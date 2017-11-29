@@ -2,7 +2,8 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -195,9 +196,9 @@
    :state                                          s/Str
    :score                                          (s/maybe s/Int)
    :new-application-modifications                  s/Int
+   :person                                         {:preferred-name s/Str
+                                                    :last-name      s/Str}
    (s/optional-key :form)                          s/Int
-   (s/optional-key :preferred-name)                (s/maybe s/Str)
-   (s/optional-key :last-name)                     (s/maybe s/Str)
    (s/optional-key :created-time)                  org.joda.time.DateTime
    (s/optional-key :haku)                          (s/maybe s/Str)
    (s/optional-key :hakukohde)                     (s/maybe [s/Str])
@@ -211,7 +212,6 @@
    :form                                s/Int
    :lang                                s/Str
    :answers                             [Answer]
-   (s/optional-key :turvakielto)        s/Bool
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
    (s/optional-key :hakukohde)          (s/maybe [s/Str])
@@ -223,6 +223,25 @@
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
+
+(s/defschema Person
+  {:oid                                 (s/maybe s/Str)
+   :turvakielto                         s/Bool
+   :yksiloity                           s/Bool
+   :first-name                          s/Str
+   :preferred-name                      s/Str
+   :last-name                           s/Str
+   :gender                              s/Str
+   :nationality                         s/Str
+   (s/optional-key :gender-string)      s/Str
+   (s/optional-key :nationality-string) s/Str
+   (s/optional-key :ssn)                (s/maybe s/Str)
+   (s/optional-key :birth-date)         s/Str})
+
+(s/defschema ApplicationWithPerson
+  (-> Application
+      (st/dissoc :person-oid)
+      (st/assoc :person Person)))
 
 (s/defschema OmatsivutApplication
   {:oid s/Str

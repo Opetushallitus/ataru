@@ -305,7 +305,7 @@
   (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
         day                    (first day-date-time)
         date-time              (->> day-date-time (rest) (clojure.string/join " "))
-        applicant              (str (:last-name application) ", " (:preferred-name application))
+        applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
         selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])
         score-visible?         (subscribe [:application/review-state-setting-enabled? :score])]
@@ -941,14 +941,15 @@
 
 (defn application-heading [application]
   (let [answers            (:answers application)
-        pref-name          (-> answers :preferred-name :value)
-        last-name          (-> answers :last-name :value)
-        ssn                (get-in answers [:ssn :value])
+        pref-name          (-> application :person :preferred-name)
+        last-name          (-> application :person :last-name)
+        ssn                (-> application :person :ssn)
+        birth-date         (-> application :person :birth-date)
+        person-oid         (-> application :person :oid)
+        yksiloity          (-> application :person :yksiloity)
         email              (get-in answers [:email :value])
-        birth-date         (get-in answers [:birth-date :value])
         hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
-        applications-count (:applications-count application)
-        person-oid         (:person-oid application)]
+        applications-count (:applications-count application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       [:div.application-handling__review-area-main-heading-person-info
@@ -966,13 +967,19 @@
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
           [:a
-           {:href (str "/authentication-henkiloui/html/henkilo/"
-                       person-oid
-                       "?permissionCheckService=ATARU")
+           {:href   (str "/authentication-henkiloui/html/henkilo/"
+                         person-oid
+                         "?permissionCheckService=ATARU")
             :target "_blank"}
            [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
            [:span.application-handling__review-area-main-heading-person-oid
-            (str "Oppija " person-oid)]]])]
+            (str "Oppija " person-oid)]]
+          (when-not yksiloity
+            [:a.individualization
+             {:href   (str "/authentication-henkiloui/html/henkilo/" person-oid "/duplikaatit")
+              :target "_blank"}
+             [:i.zmdi.zmdi-account-o]
+             [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
         (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]
