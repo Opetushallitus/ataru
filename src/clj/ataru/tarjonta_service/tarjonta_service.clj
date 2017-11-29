@@ -85,7 +85,7 @@
     (some->> (client/hakukohde-search haku-oid organization-oid)
              parse-search-result
              (map :oid)
-             (map (partial get-hakukohde this))
+             (keep (partial get-hakukohde this))
              (mapv parse-hakukohde)))
 
   (get-haku [this haku-oid]
