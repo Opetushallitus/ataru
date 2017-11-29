@@ -644,7 +644,7 @@
 
 (defn- application-hakukohde-review-inputs
   [review-types]
-  (into [:div]
+  (into [:div.application-handling__review-hakukohde-inputs]
         (mapv (fn [[kw label states]]
                 [application-hakukohde-review-input label kw states])
               review-types)))

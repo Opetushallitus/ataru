@@ -523,6 +523,16 @@ and (max-width: 1000px) {
   margin-bottom: 15px;
 }
 
+.application-handling__review-hakukohde-inputs {
+  border-left: 1px solid @section-gray-border;
+  padding-left: 10px;
+}
+
+.application-handling__review-state-container-processing-state {
+  border-bottom: 1px solid @review-separator-color;
+  padding-bottom: 5px;
+}
+
 .application-handling__review-header--language-requirement,
 .application-handling__review-header--degree-requirement,
 .application-handling__review-header--eligibility-state,
@@ -1034,10 +1044,9 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-inputs {
-  margin-bottom: 20px;
-  padding: 20px 0px 10px;
-  border-bottom: 1px solid @review-separator-color;
   border-top: 1px solid @review-separator-color;
+  margin-bottom: 20px;
+  padding-top: 10px;
 }
 
 .application-handling__score-input {
@@ -1555,7 +1564,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__review-deactivate-toggle-slider-right {
   transform: translateX(0px);
-  background-color: @pale-blue;
+  background-color: @button-green;
 }
 
 .application-handling__review-deactivate-toggle-hidden-input {
