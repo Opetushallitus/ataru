@@ -569,6 +569,7 @@
   (fn [db [_ list-kwd]]
     (update-in db [:application :ui/review list-kwd] (fnil not false))))
 
+<<<<<<< HEAD
 (reg-event-fx
   :application/add-review-note
   (fn [{:keys [db]} [_ note]]
@@ -617,3 +618,13 @@
     (let [note-with-id (comp (partial = (:id resp)) :id)
           remove-note  (comp vec (partial remove note-with-id))]
       (update-in db [:application :review-notes] remove-note))))
+
+(def application-active-state (-> review-states/application-review-states (first) (first)))
+(def application-inactive-state (-> review-states/application-review-states (last) (first)))
+
+(reg-event-db
+  :application/set-application-activeness
+  (fn [db [_ active?]]
+    (assoc-in db [:application :review :state] (if active?
+                                                 application-active-state
+                                                 application-inactive-state))))

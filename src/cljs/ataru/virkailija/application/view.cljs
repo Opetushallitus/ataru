@@ -530,21 +530,24 @@
 (defn- toggle-review-list-visibility [list-kwd]
   (dispatch [:application/toggle-review-list-visibility list-kwd]))
 
-(defn application-review-state []
-  (let [review-state (subscribe [:state-query [:application :review :state]])
-        list-opened  (subscribe [:application/review-list-visible? :review-state])
-        list-click   (partial toggle-review-list-visibility :review-state)]
+(defn- application-deactivate-toggle
+  []
+  (let [state (subscribe [:state-query [:application :review :state]])]
     (fn []
-      [:div.application-handling__review-state-container.application-handling__review-state-container--bottom-border
-       [:div.application-handling__review-header "Hakemus"]
-       (if @list-opened
-         [:div.application-handling__review-state-list-opened-anchor
-          (into [:div.application-handling__review-state-list-opened
-                 {:on-click list-click}]
-                (opened-review-state-list :state review-state application-review-states/application-review-states))]
-         [review-state-selected-row
-           list-click
-           (application-states/get-review-state-label-by-name application-review-states/application-review-states @review-state)])])))
+      [:div.application-handling__review-deactivate-row
+       [:span.application-handling__review-deactivate-label (str "Hakemuksen tila")]
+       [:div.application-handling__review-deactivate-toggle
+        [:div.application-handling__review-deactivate-toggle-slider
+         (if (= "active" @state)
+           {:class    "application-handling__review-deactivate-toggle-slider-right"
+            :on-click #(dispatch [:application/set-application-activeness false])}
+           {:class    "application-handling__review-deactivate-toggle-slider-left"
+            :on-click #(dispatch [:application/set-application-activeness true])})
+         [:div.application-handling__review-deactivate-toggle-label-left
+          "Aktiivinen"]
+         [:div.application-handling__review-deactivate-toggle-divider]
+         [:div.application-handling__review-deactivate-toggle-label-right
+          "Passiivinen"]]]])))
 
 (defn- find-hakukohde-by-oid
   [hakukohteet hakukohde-oid]
@@ -962,7 +965,6 @@
          [:span.application-handling__review-settings-header-text "Asetukset"]])]
      [:div.application-handling__review
       [:div.application-handling__review-outer-container
-       [application-review-state]
        (when (= @review-state "information-request")
          [application-information-request])
        [application-hakukohde-selection]
@@ -971,6 +973,7 @@
        [application-modify-link]
        [application-resend-modify-link]
        [application-resend-modify-link-confirmation]
+       [application-deactivate-toggle]
        [application-review-events]]]]))
 
 (defn- koulutus->str
