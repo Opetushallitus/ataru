@@ -68,12 +68,12 @@
 
       it('shows yksilointitieto for application', function(done) {
         clickElement(firstApplication)()
-          .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
+          .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
           .then(function() {
             expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
           })
           .then(clickElement(thirdApplication))
-          .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+          .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
           .then(function () {
             expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
             done()
