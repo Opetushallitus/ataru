@@ -60,12 +60,8 @@
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service ohjausparametrit-service application]
-  (let [hakukohteet (get-hakukohteet application)]
-    (if (empty? hakukohteet)
-      true                                                  ;; plain form, always allowed to apply
-      (let [hakuaikas (get-hakuaikas tarjonta-service ohjausparametrit-service application)]
-        (or (:on hakuaikas)
-            (util/after-apply-end-within-days? (:end hakuaikas) (attachment-modify-grace-period)))))))
+  (or (empty? (get-hakukohteet application))
+      (:on (get-hakuaikas tarjonta-service ohjausparametrit-service application))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -275,7 +271,8 @@
            (empty? (:hakukohde application)))
       {:passed? false :failures ["Hakukohde must be specified"]}
 
-      (not allowed)
+      (and (not is-modify?)
+           (not allowed))
       not-allowed-reply
 
       (and is-modify?
