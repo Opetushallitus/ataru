@@ -27,6 +27,7 @@
                                [_
                                 {:keys [secret virkailija-secret]}
                                 {:keys [answers
+                                        person
                                         form-key
                                         lang
                                         haku
@@ -41,6 +42,7 @@
                    (assoc-in [:application secret-kwd] secret-val)
                    (assoc-in [:application :state] state)
                    (assoc-in [:application :hakukohde] hakukohde)
+                   (assoc-in [:application :person] person)
                    (assoc-in [:form :selected-language] (or (keyword lang) :fi))
                    (assoc-in [:form :hakukohde-name] hakukohde-name))
      :dispatch (if haku

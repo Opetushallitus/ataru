@@ -106,8 +106,11 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer-path  (cond-> [:application :answers id]
-                       idx (concat [:values idx]))
+        answer-path  (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+                       [:application :person id]
+                       (cond-> [:application :answers id]
+                               idx (concat [:values idx 0])
+                               :always (concat [:value])))
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -120,8 +123,8 @@
         show-error?  (show-text-field-error-class? field-descriptor
                                                    (:value @answer)
                                                    (:valid @answer))
-        cannot-view? (and editing @(subscribe [:state-query [:application :answers id :cannot-view]]))
-        cannot-edit? @(subscribe [:state-query [:application :answers id :cannot-edit]])]
+        cannot-edit? (and @editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
+        cannot-view? (and @editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
@@ -131,14 +134,14 @@
        (merge {:id          id
                :type        "text"
                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                              (non-blank-val (get input-hint @lang)
-                                             (get input-hint @default-lang)))
-               :class       (str size-class (if show-error?
-                                              " application__form-field-error"
-                                              " application__form-text-input--normal"))
-               :value       (if cannot-view? "***********" (if idx
-                                                             (get-in @answer [0 :value])
-                                                             (:value @answer)))
+                              (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
+               :class       (str size-class
+                                 (if show-error?
+                                   " application__form-field-error"
+                                   " application__form-text-input--normal"))
+               :value       (if cannot-view?
+                              "***********"
+                              @answer)
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
@@ -373,8 +376,12 @@
                                    (:answers @application)
                                    (get (answer-key field-descriptor))
                                    :cannot-edit)))
-        value-path   (cond-> [:application :answers (answer-key field-descriptor)]
-                       idx (concat [:values idx 0]))
+        id (answer-key field-descriptor)
+        value-path   (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+                       [:application :person id]
+                       (cond-> [:application :answers id]
+                         idx (concat [:values idx 0])
+                         :always (concat [:value])))
         value        (subscribe [:state-query value-path])
         on-change    (fn [e]
                        (dispatch [:application/dropdown-change
@@ -392,7 +399,7 @@
         [:span.application__form-select-arrow])
       [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
        {:id        (:id field-descriptor)
-        :value     (or (:value @value) "")
+        :value     (or @value "")
         :on-change on-change
         :disabled  @disabled?
         :required  (is-required-field? field-descriptor)}
@@ -412,7 +419,7 @@
              [:option {:value option-value} label]))
          (:options field-descriptor)))]]
      (when-not idx
-       (dropdown-followups field-descriptor (:value @value)))]))
+       (dropdown-followups field-descriptor @value))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container

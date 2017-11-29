@@ -75,9 +75,8 @@
      (let [haku            (.get-haku tarjonta-service haku-oid)
            ohjausparametrit (.get-parametri ohjausparametrit-service haku-oid)
            hakukohteet     (->> included-hakukohde-oids
-                                (map #(.get-hakukohde tarjonta-service %))
-                                (map #(parse-hakukohde tarjonta-service %))
-                                (remove nil?))
+                                (keep #(.get-hakukohde tarjonta-service %))
+                                (map #(parse-hakukohde tarjonta-service %)))
            max-hakukohteet (:maxHakukohdes haku)]
        (when (pos? (count hakukohteet))                     ;; If tarjonta doesn't return hakukohde, let's not return a crippled map here
          {:tarjonta

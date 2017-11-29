@@ -4,15 +4,9 @@
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.person-service.person-service :as person-service]))
 
-(defn- gender-int-to-string [gender]
-  (condp = gender
-    "1" "mies"
-    "2" "nainen"
-    :else nil))
-
 (defn get-applications-for-odw [person-service date]
   (let [applications (application-store/get-applications-newer-than date)
-        persons      (->> (person-service/get-persons person-service (distinct (map :person_oid applications)))
+        persons      (->> (person-service/get-persons person-service (distinct (keep :person_oid applications)))
                           (reduce (fn [res person]
                                     (assoc res (:oidHenkilo person) person))
                                   {}))]
@@ -36,9 +30,9 @@
                      :etunimet               (-> person :etunimet)
                      :kutsumanimi            (-> person :kutsumanimi)
                      :syntymaaika            (-> person :syntymaaika)
-                     :Turvakielto            (-> person :turvakielto)
+                     :turvakielto            (-> person :turvakielto)
                      :hetu                   (-> person :hetu)
-                     :sukupuoli              (gender-int-to-string (-> person :sukupuoli))
+                     :sukupuoli              (-> person :sukupuoli util/gender-int-to-string)
                      :Ulk_postiosoite        nil
                      :Ulk_postinumero        nil
                      :Ulk_kunta              nil

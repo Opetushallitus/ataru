@@ -37,7 +37,7 @@
         })
         var expectedValues = [
           "Etunimi Tokanimi",
-          "Tokanimi",
+          "Etunimi",
           "Sukunimi",
           "Suomi",
           "***********",

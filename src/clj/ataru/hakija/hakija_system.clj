@@ -35,9 +35,11 @@
                                  (ohjausparametrit-service/new-ohjausparametrit-service)
                                  [:cache-service])
 
+     :person-service       (person-service/new-person-service)
+
      :handler              (component/using
                              (handler/new-handler)
-                             [:tarjonta-service :ohjausparametrit-service])
+                             [:tarjonta-service :ohjausparametrit-service :person-service])
 
      :server-setup         {:port      http-port
                             :repl-port repl-port}
@@ -45,8 +47,6 @@
      :server               (component/using
                              (server/new-server)
                              [:server-setup :handler])
-
-     :person-service       (person-service/new-person-service)
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)

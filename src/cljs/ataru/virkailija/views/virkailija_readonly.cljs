@@ -30,16 +30,21 @@
    [:label.application__form-field-label
     (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
    [:div.application__form-field-value
-    (let [answer (get-in application [:answers (keyword (:id field-descriptor))])
-          values (cond-> (get-value answer group-idx)
-                   (and (predefined-value-answer? field-descriptor)
-                        (not (contains? field-descriptor :koodisto-source)))
-                   (replace-with-option-label (:options field-descriptor) lang))]
+    (let [id (keyword (:id field-descriptor))
+          use-onr-info? (contains? (:person application) id)
+          values (if use-onr-info?
+                   (-> application :person id)
+                   (cond-> (get-value (-> application :answers id) group-idx)
+                     (and (predefined-value-answer? field-descriptor)
+                          (not (contains? field-descriptor :koodisto-source)))
+                     (replace-with-option-label (:options field-descriptor) lang)))]
       (cond (and (sequential? values) (< 1 (count values)))
             [:ul.application__form-field-list
-             (for [value values]
-               ^{:key value}
-               [:li (render-paragraphs value)])]
+             (map-indexed
+              (fn [i value]
+                ^{:key (str id i)}
+                [:li (render-paragraphs value)])
+              values)]
             (sequential? values)
             (render-paragraphs (first values))
             :else
@@ -91,7 +96,7 @@
        [:div.application__wrapper-heading
         [:h2 (-> content :label lang)]
         (when (and (= (:module content) "person-info")
-                   (:turvakielto application))
+                   (-> application :person :turvakielto))
           [:p.security-block "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]

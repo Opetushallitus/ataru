@@ -14,7 +14,8 @@
             [speclj.core :refer :all]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.person-service.person-service :as person-service]))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -35,6 +36,7 @@
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
                  (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
+                 (assoc :person-service (person-service/new-person-service))
                  .start
                  :routes))
 
@@ -182,7 +184,7 @@
       (with-get-response "asdfgh" resp
         (should= 200 (:status resp))
         (let [answers (-> resp :body :answers)]
-          (should= 1 (count (filter cannot-edit? answers)))
+          (should= 5 (count (filter cannot-edit? answers)))
           (should= 1 (count (filter cannot-view? answers))))))
 
     (it "should get application with hakuaika ended"
