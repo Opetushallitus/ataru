@@ -846,7 +846,6 @@ FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
-  AND hakukohde != '{}'
   AND haku = :haku_oid
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
