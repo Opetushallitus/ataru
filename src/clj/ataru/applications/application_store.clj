@@ -295,7 +295,13 @@
        ->kebab-case-kw))
 
 (defn get-application-review [application-key]
-  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+  (->> (exec-db :db yesql-get-application-review {:application_key application-key})
+       (first)
+       (->kebab-case-kw)))
+
+(defn get-application-review-notes [application-key]
+  (->> (exec-db :db yesql-get-application-review-notes {:application_key application-key})
+       (map ->kebab-case-kw)))
 
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
