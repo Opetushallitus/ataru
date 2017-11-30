@@ -48,7 +48,6 @@
 
   (around [spec]
     (with-redefs [application-store/get-application-review (fn [& _] fixtures/application-review)
-                  application-store/get-application-review-notes (fn [& _] [fixtures/application-review-note])
                   form-store/fetch-by-id (fn [id]
                                            (case id
                                              123 fixtures/form

@@ -219,7 +219,7 @@
                               (count application-meta-fields))
         notes-column       (inc prev-header-count)
         score-column       (inc notes-column)
-        notes              (application-store/get-application-review-notes application-key)
+        notes              (:notes application-review)
         score              (:score application-review)]
     (when (not-empty notes)
       (->> notes
