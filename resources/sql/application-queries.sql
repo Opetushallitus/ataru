@@ -383,7 +383,7 @@ WHERE application_key = :application_key;
 -- name: yesql-get-application-review-notes
 SELECT rn.created_time, rn.application_key, rn.notes, v.first_name, v.last_name
 FROM application_review_notes rn
-INNER JOIN virkailija v ON rn.virkailija_oid = v.oid
+LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
 WHERE rn.application_key = :application_key
 ORDER BY rn.created_time DESC;
 
