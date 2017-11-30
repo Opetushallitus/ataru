@@ -56,13 +56,12 @@
       form))))
 
 (defn refresh-person-info-modules []
-  (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (try
-                            (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
-                            (catch Exception _ []))]
-    (doseq [form existing-forms]
-      (let [changed-form (update-person-info-module new-person-module form)]
-        (store/create-form-or-increment-version! changed-form)))))
+  (let [new-person-module (person-info-module/person-info-module)]
+    (doseq [form (->> (store/get-all-forms)
+                      (map #(store/fetch-by-id (:id %)))
+                      (sort-by :created-time))]
+      (store/create-form-or-increment-version!
+       (update-person-info-module new-person-module form)))))
 
 (defn application-id->application-key
   "Make application_events to refer to applications using
@@ -319,6 +318,11 @@
   migrate-camel-case-content-keys "1.72"
   "Camel case application content keys"
   (camel-case-content-keys))
+
+(migrations/defmigration
+  migrate-person-info-module "1.74"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
 
 (defn migrate
   []

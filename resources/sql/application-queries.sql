@@ -450,6 +450,7 @@ ORDER BY a.created_time DESC;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -544,6 +545,7 @@ WHERE a.secret = :secret;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,

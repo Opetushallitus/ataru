@@ -31,7 +31,8 @@
   (let [application-id (store-fn application)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
-     :application-id application-id}))
+     :id application-id
+     :application application}))
 
 (defn- get-hakukohteet [application]
   (or (->> application
@@ -155,7 +156,7 @@
        uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [old-application new-application tarjonta-service]
+  [new-application old-application tarjonta-service]
   (let [new-answers                 (-> new-application
                                         (flag-uneditable-answers tarjonta-service)
                                         :answers)
@@ -217,7 +218,9 @@
         allowed            (allowed-to-apply? tarjonta-service application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
-                             (merge-uneditable-answers-from-previous latest-application application tarjonta-service)
+                             (-> application
+                                 (merge-uneditable-answers-from-previous latest-application tarjonta-service)
+                                 (assoc :person-oid (:person-oid latest-application)))
                              application)
         validation-result  (validator/valid-application?
                             has-applied
@@ -253,42 +256,51 @@
         (remove-orphan-attachments final-application latest-application)
         (store-and-log final-application store-fn)))))
 
+(defn- start-person-creation-job [application-id]
+  (job/start-job hakija-jobs/job-definitions
+                 (:type person-integration/job-definition)
+                 {:application-id application-id}))
+
 (defn- start-submit-jobs [application-id]
-  (let [person-service-job-id (job/start-job hakija-jobs/job-definitions
-                                             (:type person-integration/job-definition)
-                                             {:application-id application-id})
+  (let [person-service-job-id (start-person-creation-job application-id)
         attachment-finalizer-job-id (job/start-job hakija-jobs/job-definitions
                                                    (:type attachment-finalizer-job/job-definition)
                                                    {:application-id application-id})]
     (application-email/start-email-submit-confirmation-job application-id)
     (log/info "Started person creation job (to person service) with job id" person-service-job-id)
-    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)
-    {:passed? true :id application-id}))
+    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)))
+
+(defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
+  (invalidate-virkailija-credentials virkailija-secret)
+  (when (nil? (:person-oid application))
+    (log/info "Started person creation job (to person service) with job id"
+              (start-person-creation-job application-id))))
+
+(defn- start-hakija-edit-jobs [application-id]
+  (application-email/start-email-edit-confirmation-job application-id))
 
 (defn handle-application-submit [tarjonta-service application]
   (log/info "Application submitted:" application)
-  (let [{passed?        :passed?
-         application-id :application-id
-         :as            result}
+  (let [{:keys [passed? id]
+         :as   result}
         (validate-and-store tarjonta-service application application-store/add-application false)]
-    (if passed?
-      (start-submit-jobs application-id)
-      result)))
+    (when passed?
+      (start-submit-jobs id))
+    result))
 
 (defn handle-application-edit [tarjonta-service application]
   (log/info "Application edited:" application)
-  (let [{passed? :passed?
-         application-id :application-id
-         :as validation-result}
+  (let [{:keys [passed? id application]
+         :as   result}
         (validate-and-store tarjonta-service application application-store/update-application true)
         virkailija-secret (:virkailija-secret application)]
-    (if passed?
-      (do
-        (if virkailija-secret
-          (invalidate-virkailija-credentials virkailija-secret)
-          (application-email/start-email-edit-confirmation-job application-id))
-        {:passed? true :id application-id})
-      validation-result)))
+    (when passed?
+      (if virkailija-secret
+        (start-virkailija-edit-jobs virkailija-secret
+                                    id
+                                    application)
+        (start-hakija-edit-jobs id)))
+    result))
 
 (defn save-application-feedback
   [feedback]
