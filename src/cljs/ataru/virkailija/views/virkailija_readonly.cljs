@@ -97,7 +97,9 @@
         [:h2 (-> content :label lang)]
         (when (and (= (:module content) "person-info")
                    (-> application :person :turvakielto))
-          [:p.security-block "Henkilöllä turvakielto!"])
+          [:p.security-block
+           [:i.zmdi.zmdi-account-o]
+           "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui))])))
