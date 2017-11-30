@@ -61,7 +61,9 @@
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
   [tarjonta-service ohjausparametrit-service application]
   (or (empty? (get-hakukohteet application))
-      (:on (get-hakuaikas tarjonta-service ohjausparametrit-service application))))
+      (:on (get-hakuaikas tarjonta-service
+                          ohjausparametrit-service
+                          application))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -106,7 +108,8 @@
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         person-info-field?  (person-info-field? answer-kw)
         before?             (fn [t] (when t (time/before? (time/now) t)))]
-    (or (before? hakuaika-end)
+    (or (empty? (get-hakukohteet application))
+        (before? hakuaika-end)
         (and (before? attachment-edit-end)
              (= "attachment" (:fieldType answer)))
         (and (before? hakukierros-end)
