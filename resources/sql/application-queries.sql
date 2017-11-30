@@ -375,7 +375,6 @@ SELECT
   id,
   modified_time,
   state,
-  notes,
   score,
   application_key
 FROM application_reviews
@@ -640,7 +639,6 @@ INSERT INTO application_reviews (application_key, state) VALUES (:application_ke
 -- Save modifications for existing review record
 UPDATE application_reviews
 SET
-  notes         = :notes,
   score         = :score,
   modified_time = now(),
   state         = :state

@@ -218,9 +218,7 @@
                                (count application-meta-fields))
         notes-column        (inc prev-header-count)
         score-column        (inc notes-column)
-        notes               (:notes application-review)
         score               (:score application-review)]
-    (when notes (writer 0 notes-column notes))
     (when score (writer 0 score-column score))))
 
 (defn- form-label? [form-element]
