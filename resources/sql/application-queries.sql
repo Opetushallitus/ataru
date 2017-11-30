@@ -835,3 +835,20 @@ JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
+
+--name: yesql-tilastokeskus-applications
+SELECT
+  haku AS haku_oid,
+  key AS hakemus_oid,
+  person_oid hekilo_oid,
+  state AS hakemus_tila,
+  hakukohde AS hakukohde_oids,
+  lang AS kieli
+FROM latest_applications
+  JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND hakukohde != '{}'
+  AND haku = :haku_oid
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

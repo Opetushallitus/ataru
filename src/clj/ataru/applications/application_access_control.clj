@@ -150,3 +150,12 @@
     (constantly nil)
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service from-date)))
+
+(defn get-applications-for-tilastokeskus [organization-service session haku-oid]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/get-application-info-for-tilastokeskus haku-oid)))

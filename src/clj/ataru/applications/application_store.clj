@@ -634,3 +634,6 @@
 
 (defn get-applications-newer-than [date]
   (exec-db :db yesql-get-applciations-by-created-time {:date date}))
+
+(defn get-application-info-for-tilastokeskus [haku-oid]
+  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
