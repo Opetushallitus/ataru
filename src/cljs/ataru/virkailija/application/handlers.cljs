@@ -232,7 +232,6 @@
                                           :override-args {:params (select-keys current [:id
                                                                                         :application-id
                                                                                         :application-key
-                                                                                        :notes
                                                                                         :score
                                                                                         :state
                                                                                         :hakukohde-reviews])}))})))
