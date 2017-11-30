@@ -347,9 +347,6 @@
                        yesql-organization-oids-of-applications-of-persons
                        {:person_oids person-oids})))))
 
-(defn get-application-review-organization-oid [review-id]
-  (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
-
 (defn save-application-review [review session virkailija]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection       {:connection conn}
