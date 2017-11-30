@@ -841,9 +841,7 @@ SELECT
   haku AS haku_oid,
   key AS hakemus_oid,
   person_oid hekilo_oid,
-  state AS hakemus_tila,
-  hakukohde AS hakukohde_oids,
-  lang AS kieli
+  hakukohde AS hakukohde_oids
 FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL

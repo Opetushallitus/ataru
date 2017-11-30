@@ -294,9 +294,7 @@
   {:hakemus_oid    s/Str
    :haku_oid       s/Str
    :hekilo_oid     s/Str
-   :hakemus_tila   s/Str
-   :hakukohde_oids (s/maybe [s/Str])
-   :kieli          s/Str})
+   :hakukohde_oids (s/maybe [s/Str])})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
