@@ -199,7 +199,7 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-response :post resp application-fixtures/person-info-form-application
+      (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
         (should= 200 (:status resp))
         (should (have-application-in-db (get-in resp [:body :id])))))
 
@@ -209,7 +209,7 @@
 
     (it "should get application"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
-        (with-get-response "asdfgh" resp
+        (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
             (should= 5 (count (filter cannot-edit? answers)))
@@ -217,7 +217,7 @@
 
     (it "should get application with hakuaika ended"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
-        (with-get-response "asdfgh" resp
+        (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
             (should= 1 (count (remove cannot-edit? answers)))
@@ -226,7 +226,7 @@
 
     (it "should get application with hakuaika ended but hakukierros ongoing"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
-        (with-get-response "asdfgh" resp
+        (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
             (should= 6 (count (remove cannot-edit? answers)))
