@@ -4,37 +4,38 @@
     [cheshire.core :as json]
     [org.httpkit.client :as http]
     [taoensso.timbre :refer [warn info]]
-    [clojure.string :as string]))
-
-(defn- do-request
-  [url]
-  (info "Fetching from tarjonta:" url)
-  (let [response @(http/get url)
-        status   (:status response)
-        result   (when (= 200 status)
-                   (-> response :body (json/parse-string true) :result))]
-    (if result
-      result
-      (warn "Tarjonta API request failed" url status))))
+    [clojure.string :as string]
+    [ataru.util.http-util :as h]))
 
 (defn get-hakukohde
   [hakukohde-oid]
-  (do-request (resolve-url :tarjonta-service.hakukohde hakukohde-oid)))
+  (-> :tarjonta-service.hakukohde
+      (resolve-url hakukohde-oid)
+      (h/do-request)
+      :result))
 
 (defn hakukohde-search
   [haku-oid organization-oid]
-  (do-request (resolve-url :tarjonta-service.hakukohde.search
-                           {"hakuOid" haku-oid
-                            "defaultTarjoaja" organization-oid
-                            "organisationOid" organization-oid})))
+  (-> :tarjonta-service.hakukohde.search
+      (resolve-url {"hakuOid"         haku-oid
+                    "defaultTarjoaja" organization-oid
+                    "organisationOid" organization-oid})
+      (h/do-request)
+      :result))
 
 (defn get-haku
   [haku-oid]
-  (do-request (resolve-url :tarjonta-service.haku haku-oid)))
+  (-> :tarjonta-service.haku
+      (resolve-url haku-oid)
+      (h/do-request)
+      :result))
 
 (defn get-koulutus
   [koulutus-oid]
-  (do-request (resolve-url :tarjonta-service.koulutus koulutus-oid)))
+  (-> :tarjonta-service.koulutus
+      (resolve-url koulutus-oid)
+      (h/do-request)
+      :result))
 
 (defn get-forms-in-use
   [organization-oids]

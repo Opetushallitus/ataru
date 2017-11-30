@@ -6,7 +6,7 @@
             [ataru.hakija.application-test]
             [ataru.hakija.application-validators-test]
             [ataru.hakija.rules-test]
-            [ataru.virkailija.component-data.value-transformers-test]))
+            [ataru.component-data.value-transformers-test]))
 
 (doo-tests 'ataru.cljs-util-test
            'ataru.dob-test
@@ -14,4 +14,4 @@
            'ataru.hakija.application-test
            'ataru.hakija.application-validators-test
            'ataru.hakija.rules-test
-           'ataru.virkailija.component-data.value-transformers-test)
+           'ataru.component-data.value-transformers-test)

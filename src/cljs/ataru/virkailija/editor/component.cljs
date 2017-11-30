@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.virkailija.component-data.component :as component]
+  (:require [ataru.component-data.component :as component]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]

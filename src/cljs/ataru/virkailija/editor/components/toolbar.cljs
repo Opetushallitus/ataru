@@ -1,7 +1,7 @@
 (ns ataru.virkailija.editor.components.toolbar
   (:require
-   [ataru.virkailija.component-data.component :as component]
-   [ataru.virkailija.component-data.base-education-module :as base-education-module]
+   [ataru.component-data.component :as component]
+   [ataru.component-data.base-education-module :as base-education-module]
    [ataru.feature-config :as fc]
    [re-frame.core :refer [dispatch]]
    [taoensso.timbre :refer-macros [spy debug]]))

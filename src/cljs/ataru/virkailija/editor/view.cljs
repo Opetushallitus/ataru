@@ -5,7 +5,7 @@
             [ataru.cljs-util :refer [debounce-subscribe wrap-scroll-to]]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
-            [ataru.virkailija.component-data.component :as component]
+            [ataru.component-data.component :as component]
             [ataru.virkailija.temporal :refer [time->str]]
             [ataru.virkailija.routes :as routes]
             [taoensso.timbre :refer-macros [spy debug]]))

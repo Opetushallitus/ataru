@@ -5,8 +5,8 @@
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [ataru.db.db :as db]
-            [ataru.virkailija.component-data.component :as component]
-            [ataru.virkailija.component-data.person-info-module :as person-info-module]
+            [ataru.component-data.component :as component]
+            [ataru.component-data.person-info-module :as person-info-module]
             [ataru.config.core :refer [config]]
             [ataru.db.migrations :as migrations]))
 

@@ -7,8 +7,8 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.virkailija.form-sorting :refer [sort-by-time-and-deletedness]]
             [ataru.virkailija.autosave :as autosave]
-            [ataru.virkailija.component-data.component :as component]
-            [ataru.virkailija.component-data.person-info-module :as pm]
+            [ataru.component-data.component :as component]
+            [ataru.component-data.person-info-module :as pm]
             [ataru.virkailija.dev.lomake :as dev]
             [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
@@ -47,7 +47,7 @@
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])
-          component     (ataru.virkailija.component-data.component/dropdown-option)]
+          component     (ataru.component-data.component/dropdown-option)]
       (->
         (update-in db dropdown-path into [component])
         (assoc-in [:editor :ui (:id component) :focus?] true)))))
