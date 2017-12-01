@@ -217,19 +217,32 @@
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
+; TODO refactor:
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
-    (let [applications                (-> db :application :applications)
-          states-to-include           (-> db :application :filter set)
-          selection-states-to-include (-> db :application :selection-filter set)]
+    (let [applications                 (-> db :application :applications)
+          processing-states-to-include (-> db :application :filter set)
+          selection-states-to-include  (-> db :application :selection-filter set)
+          get-states                   (fn [application requirement-name]
+                                         (->> (:application-hakukohde-reviews application)
+                                              (filter #(= requirement-name (:requirement %)))
+                                              (map :state)))]
       (filter
         (fn [application]
-          (let [selection-states (->> (:application-hakukohde-reviews application)
-                                      (filter #(= "selection-state" (:requirement %)))
-                                      (map :state))]
+          (let [processing-states (get-states application "processing-state")
+                selection-states  (get-states application "selection-state")]
             (and
-              (contains? states-to-include (:state application))
+              (or
+                (not (empty? (clojure.set/intersection
+                               processing-states-to-include
+                               (set processing-states))))
+                (and
+                  (contains? processing-states-to-include "unprocessed")
+                  (or
+                    (empty? processing-states)
+                    (< (count processing-states)
+                       (count (:hakukohde application))))))
               (or
                 (not (empty? (clojure.set/intersection
                                selection-states-to-include

@@ -157,7 +157,7 @@
              (assoc-in [:application :fetching-applications] true)
              (assoc-in [:application :filter] (extract-unselected-review-states-from-query
                                                 :unselected-states
-                                                review-states/application-review-states))
+                                                review-states/application-hakukohde-processing-states))
              (assoc-in [:application :selection-filter] (extract-unselected-review-states-from-query
                                                           :unselected-selection-states
                                                           review-states/application-hakukohde-selection-states)))
