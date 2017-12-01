@@ -5,13 +5,16 @@
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]))
 
-(def logo-image
-  [:div.logo])
-
-(def logo-text
-  [:span.logo-text "Opintopolku.fi"])
-
-(def logo [:div.logo-elements logo-image logo-text])
+(defn logo []
+  (let [lang (subscribe [:application/form-language])]
+    [:img.logo
+     (case @lang
+       :fi {:src "/hakemus/images/opintopolku_large-fi.png"
+            :alt "Opintopolku.fi"}
+       :sv {:src "/hakemus/images/opintopolku_large-sv.png"
+            :alt "Studieinfo.fi"}
+       :en {:src "/hakemus/images/opintopolku_large-en.png"
+            :alt "Studyinfo.fi"})]))
 
 (defn- form-field-type [form-fields key]
   (->> form-fields
@@ -120,4 +123,4 @@
 
 (defn banner [] [:div.application__banner-container
                  [:div.application__top-banner-container
-                  [:div.application-top-banner logo [status-controls]]]])
+                  [:div.application-top-banner [logo] [status-controls]]]])
