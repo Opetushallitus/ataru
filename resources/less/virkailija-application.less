@@ -567,6 +567,33 @@ and (max-width: 1000px) {
   display: block;
 }
 
+.application-handling__review-note {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  background-color: @review-note-background-color;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-bottom: 15px;
+}
+
+.application-handling__review-note-column {
+  flex: 0 1 60%;
+  font-style: italic;
+  font-size: 16px;
+}
+
+.application-handling__review-details-column {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  color: @gray-of-the-beast;
+}
+
+.application-handling__review-details-icon {
+  font-size: 26px;
+}
+
 .application-handling__link-button {
   background-color: @link-color;
   border-radius: 3px;

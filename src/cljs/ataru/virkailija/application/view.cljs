@@ -739,6 +739,8 @@
       :else
       maybe-number)))
 
+(def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
+
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
@@ -749,11 +751,19 @@
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header "Muistiinpanot"]
-        [:textarea.application-handling__review-notes
-         {:value     (review-field->str review :notes)
-          :on-change (when-not @settings-visible?
-                       (partial update-review-field :notes identity))
-          :disabled  @settings-visible?}]]
+        (map-indexed (fn [idx {:keys [notes first-name last-name created-time application-key]}]
+                       (let [key (str application-key "-" idx)
+                             name (if (and first-name last-name)
+                                    (str first-name " " last-name)
+                                    "Virkailija ei tiedossa")]
+                         ^{:key key}
+                         [:div.application-handling__review-note
+                          [:span.application-handling__review-note-column notes]
+                          [:div.application-handling__review-details-column
+                           [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
+                           [:span name]
+                           [:span (f/unparse-local date-format created-time)]]]))
+                     (:notes @review))]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?
