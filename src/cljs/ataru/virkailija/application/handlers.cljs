@@ -322,7 +322,7 @@
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
               :handler-or-dispatch :application/handle-fetch-application
-              :skip-parse-times? true}})))
+              :skip-parse-times?   true}})))
 
 (reg-event-db
   :application/start-autosave
@@ -367,7 +367,11 @@
         (assoc-in [:application :selected-haku] haku))))
 
 (defn get-hakukohteet-from-haut [haut]
-  (flatten (map :hakukohteet (:tarjonta-haut haut))))
+  (->> (:tarjonta-haut haut)
+       (map :hakukohteet)
+       (flatten)
+       (map (fn [hakukohde] [(keyword (:oid hakukohde)) hakukohde]))
+       (into {})))
 
 (defn get-forms-from-haut [haut]
   (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))

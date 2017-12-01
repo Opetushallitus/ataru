@@ -39,14 +39,4 @@
     #(get-all-reviews-for-requirement % application selected-hakukohde-oid)
     review-states/hakukohde-review-type-names))
 
-(defn generate-labels-for-hakukohde-selection-reviews
-  [review-requirement-name states application selected-hakukohde-oid]
-  (map (fn [[state reviews]]
-         [(get-review-state-label-by-name states state)
-          (count reviews)])
-       (group-by :state
-                 (get-all-reviews-for-requirement
-                   review-requirement-name
-                   application
-                   selected-hakukohde-oid))))
 

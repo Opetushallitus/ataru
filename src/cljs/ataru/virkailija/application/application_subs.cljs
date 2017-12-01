@@ -212,20 +212,6 @@
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
 
-(defn- show-email-icon-for-application? [application]
-  (and (-> application :new-application-modifications (> 0))
-       (-> application :state (= "information-request"))))
-
-(re-frame/reg-sub
-  :application/show-state-email-icon?
-  (fn [db [_ application-key]]
-    (->> db
-         :application
-         :applications
-         (filter (comp (partial = application-key) :key))
-         (first)
-         (show-email-icon-for-application?))))
-
 (re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
   (fn [db _]
@@ -238,23 +224,23 @@
           states-to-include           (-> db :application :filter set)
           selection-states-to-include (-> db :application :selection-filter set)]
       (filter
-       (fn [application]
-         (let [selection-states (->> (:application-hakukohde-reviews application)
-                                     (filter #(= "selection-state" (:requirement %)))
-                                     (map :state))]
-           (and
-            (contains? states-to-include (:state application))
-            (or
-             (not (empty? (clojure.set/intersection
-                           selection-states-to-include
-                           (set selection-states))))
-             (and
-              (contains? selection-states-to-include "incomplete")
+        (fn [application]
+          (let [selection-states (->> (:application-hakukohde-reviews application)
+                                      (filter #(= "selection-state" (:requirement %)))
+                                      (map :state))]
+            (and
+              (contains? states-to-include (:state application))
               (or
-               (empty? selection-states)
-               (< (count selection-states)
-                  (count (:hakukohde application)))))))))
-       applications))))
+                (not (empty? (clojure.set/intersection
+                               selection-states-to-include
+                               (set selection-states))))
+                (and
+                  (contains? selection-states-to-include "incomplete")
+                  (or
+                    (empty? selection-states)
+                    (< (count selection-states)
+                       (count (:hakukohde application)))))))))
+        applications))))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?

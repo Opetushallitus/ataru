@@ -18,7 +18,8 @@
     [goog.string.format]
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
-    [ataru.cljs-util :as cljs-util]))
+    [ataru.cljs-util :as cljs-util]
+    [medley.core :refer [find-first]]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -119,7 +120,7 @@
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
-        all-states                  (reduce (fn [acc [state _]]
+        all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
                                            review-states/application-review-states)]
@@ -283,54 +284,64 @@
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
-(defn- application-selection-state-cell
-  [selected-hakukohde-oid application]
-  (let [labels (application-states/generate-labels-for-hakukohde-selection-reviews
-                 "selection-state"
-                 application-review-states/application-hakukohde-selection-states
-                 application
-                 selected-hakukohde-oid)]
+(defn review-label-for-hakukohde
+  [reviews states hakukohde-oid requirement]
+  (application-states/get-review-state-label-by-name
+    states
+    (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
+                              (= (:requirement %) requirement))
+                        reviews))))
+
+(defn applications-hakukohde-rows
+  [application all-hakukohteet selected-hakukohde]
+  (let [application-hakukohde-oids    (:hakukohde application)
+        application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
-      [:span.application-handling__list-row--selection]
+      [:div.application-habndling-list-row-hakukohteet-wrapper]
       (map
-        (fn [[label count]]
-          [:span.application-handling__selection-state-cell
-           (str
-             label
-             (when (< 1 count)
-               (str " " count)))])
-        labels))))
+        (fn [hakukohde-oid]
+          (let [hakukohde ((keyword hakukohde-oid) all-hakukohteet)]
+            [:div.application-handling__list-row-hakukohde
+             [:span.application-handling__application-hakukohde-cell
+              (from-multi-lang (:name hakukohde))]
+             [:span.application-handling__hakukohde-state-cell
+              [:span.application-handling__hakukohde-state
+               (or
+                 (review-label-for-hakukohde
+                   application-hakukohde-reviews
+                   application-review-states/application-hakukohde-processing-states
+                   hakukohde-oid
+                   "processing-state")
+                 "Kesken")]]
+             [:span.application-handling__hakukohde-selection-cell
+              [:span.application-handling__hakukohde-selection
+               (or
+                 (review-label-for-hakukohde
+                   application-hakukohde-reviews
+                   application-review-states/application-hakukohde-selection-states
+                   hakukohde-oid
+                   "selection-state")
+                 "Kesken")]]]))
+        application-hakukohde-oids))))
 
 (defn application-list-row [application selected?]
-  (let [day-date-time          (clojure.string/split (t/time->str (:created-time application)) #"\s")
-        day                    (first day-date-time)
-        date-time              (->> day-date-time (rest) (clojure.string/join " "))
-        applicant              (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
-        show-state-email-icon? (subscribe [:application/show-state-email-icon? (:key application)])
-        selected-hakukohde     (subscribe [:state-query [:application :selected-hakukohde]])
-        score-visible?         (subscribe [:application/review-state-setting-enabled? :score])]
+  (let [day-date-time           (clojure.string/split (t/time->str (:created-time application)) #"\s")
+        day                     (first day-date-time)
+        date-time               (->> day-date-time (rest) (clojure.string/join " "))
+        applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
+        hakukohteet             (subscribe [:state-query [:application :hakukohteet]])
+        selected-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
                   "application-handling__list-row--selected")}
-     [:span.application-handling__list-row--applicant
-      (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-     [:span.application-handling__list-row--time
-      [:span.application-handling__list-row--time-day day]
-      [:span date-time]]
-     (when @score-visible?
-       [:span.application-handling__list-row--score
-        (or (:score application) "")])
-     [:span.application-handling__list-row--state
-      [:span.application-handling__application-state-cell
-       (or
-         (application-states/get-review-state-label-by-name
-           application-review-states/application-review-states (:state application))
-         "Tuntematon")]
-      (when @show-state-email-icon?
-        [:i.zmdi.zmdi-email.application-handling__list-row-email-icon
-         (when-not selected? {:class "application-handling__list-row-email-icon--not-selected"})])]
-     [application-selection-state-cell (:oid @selected-hakukohde) application]]))
+     [:div.application-handling__list-row-person-info
+      [:span.application-handling__list-row--applicant
+       (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
+      [:span.application-handling__list-row--time
+       [:span.application-handling__list-row--time-day day]
+       [:span date-time]]]
+     [applications-hakukohde-rows application @hakukohteet selected-hakukohde]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -484,8 +495,7 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
-  (let [fetching       (subscribe [:state-query [:application :fetching-applications]])
-        score-visible? (subscribe [:application/review-state-setting-enabled? :score])]
+  (let [fetching       (subscribe [:state-query [:application :fetching-applications]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [application-list-basic-column-header
@@ -496,11 +506,6 @@
        :created-time
        "application-handling__list-row--time"
        "Saapunut"]
-      (when @score-visible?
-        [application-list-basic-column-header
-         :score
-         "application-handling__list-row--score"
-         "Pisteet"])
       [:span.application-handling__list-row--state [state-filter-controls]]
       [:span.application-handling__list-row--selection [selection-state-filter-controls]]]
      (when-not @fetching
@@ -549,10 +554,6 @@
          [:div.application-handling__review-deactivate-toggle-label-right
           "Passiivinen"]]]])))
 
-(defn- find-hakukohde-by-oid
-  [hakukohteet hakukohde-oid]
-  (first (filter #(= (:oid %) hakukohde-oid) hakukohteet)))
-
 (defn- hakukohde-label
   [hakukohde]
   (let [name (:name hakukohde)]
@@ -562,7 +563,7 @@
 
 (defn- opened-review-hakukohde-list-row
   [selected-hakukohde-oid hakukohteet hakukohde-oid]
-  (let [hakukohde (find-hakukohde-by-oid hakukohteet hakukohde-oid)
+  (let [hakukohde ((keyword hakukohde-oid) hakukohteet)
         selected? (= selected-hakukohde-oid hakukohde-oid)]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde
      {:data-hakukohde-oid hakukohde-oid
@@ -575,7 +576,7 @@
 
 (defn- selected-review-hakukohde-row
   [selected-hakukohde-oid on-click haku-hakukohteet application-hakukohde-oids]
-  (let [selected-hakukohde                  (find-hakukohde-by-oid haku-hakukohteet selected-hakukohde-oid)
+  (let [selected-hakukohde                  ((keyword selected-hakukohde-oid) haku-hakukohteet)
         application-has-multiple-hakukohde? (< 1 (count application-hakukohde-oids))
         settings-visible?                   (subscribe [:state-query [:application :review-settings :visible?]])]
     [:div.application-handling__review-state-row.application-handling__review-state-row-hakukohde.application-handling__review-state-selected-row-hakukohde
@@ -941,9 +942,13 @@
        "Muokkauslinkki lähetetty hakijalle sähköpostilla"])))
 
 (defn application-review []
-  (let [review-positioning (subscribe [:state-query [:application :review-positioning]])
-        review-state       (subscribe [:state-query [:application :review :state]])
-        settings-visible   (subscribe [:state-query [:application :review-settings :visible?]])]
+  (let [review-positioning      (subscribe [:state-query [:application :review-positioning]])
+        hakukohde-review-states (subscribe [:state-query [:application :review :hakukohde-reviews]])
+        in-info-request-state?  (some?
+                                  (find-first
+                                    #(= (:processing-state (val %)) "information-request")
+                                    @hakukohde-review-states))
+        settings-visible        (subscribe [:state-query [:application :review-settings :visible?]])]
     [:div.application-handling__review-outer
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-outer-floating")}
@@ -965,10 +970,10 @@
          [:span.application-handling__review-settings-header-text "Asetukset"]])]
      [:div.application-handling__review
       [:div.application-handling__review-outer-container
-       (when (= @review-state "information-request")
-         [application-information-request])
        [application-hakukohde-selection]
        [application-hakukohde-review-inputs review-states/hakukohde-review-types]
+       (when in-info-request-state?
+         [application-information-request])
        [application-review-inputs]
        [application-modify-link]
        [application-resend-modify-link]
@@ -1000,7 +1005,7 @@
   (into [:ul.application-handling__hakukohteet-list]
         (map hakukohteet-list-row hakukohteet)))
 
-(defn application-heading [application]
+(defn application-heading [application hakukohteet-by-oid]
   (let [answers            (:answers application)
         pref-name          (-> application :person :preferred-name)
         last-name          (-> application :person :last-name)
@@ -1009,7 +1014,6 @@
         person-oid         (-> application :person :oid)
         yksiloity          (-> application :person :yksiloity)
         email              (get-in answers [:email :value])
-        hakukohteet-by-oid (into {} (map (fn [h] [(:oid h) h]) (-> application :tarjonta :hakukohteet)))
         applications-count (:applications-count application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
@@ -1067,7 +1071,8 @@
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
         included-in-filter            (fn [review-state filter] (some #{review-state} filter))
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        review-positioning            (subscribe [:state-query [:application :review-positioning]])]
+        review-positioning            (subscribe [:state-query [:application :review-positioning]])
+        hakukohteet                   (subscribe [:state-query [:application :hakukohteet]])]
     (fn [applications]
       (let [application        (:application @selected-application-and-form)]
         (when (and (included-in-filter @review-state @application-filter)
@@ -1075,7 +1080,7 @@
                    (not @expanded?))
           [:div.application-handling__detail-container
            [close-application]
-           [application-heading application]
+           [application-heading application @hakukohteet]
            [:div.application-handling__review-area
             [:div.application-handling__application-contents
              [application-contents @selected-application-and-form]]
