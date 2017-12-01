@@ -298,10 +298,16 @@
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
                  (fn [lang]
-                   [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
+                   [input-field
+                    (concat path [:params :info-text])
+                    lang
+                    #(dispatch-sync [:editor/set-component-value
+                                     (-> % .-target .-value)
+                                     path :params :info-text :label lang])
+                    {:tag :textarea}])
                  @languages)
                (map (fn [field]
-                      (into field [[:div.editor-form__markdown-anchor
+                      (into field [[:div.editor-form__info-addon-markdown-anchor
                                     (markdown-help)]]))))])])))
 
 (defn- get-val [event]
