@@ -499,10 +499,10 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__info-addon-inputs {
-  padding-left: 26px;
   padding-top: 10px;
   .editor-form__text-field {
-    width: 408px;
+    height: 70px;
+    width: 434px;
   }
 }
 
@@ -977,6 +977,15 @@ form > div > .editor-form__component-wrapper {
 
 textarea.editor-form__text-field ~ .editor-form__markdown-anchor {
   height: 115px;
+  display: none;
+}
+
+.editor-form__text-field:focus ~ .editor-form__info-addon-markdown-anchor {
+  display: block;
+}
+
+.editor-form__info-addon-markdown-anchor {
+  height: 70px;
   display: none;
 }
 
