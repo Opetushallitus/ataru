@@ -324,6 +324,11 @@
   "Update person info module structure in existing forms"
   (refresh-person-info-modules))
 
+(migrations/defmigration
+  migrate-person-info-module "1.75"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
+
 (defn migrate
   []
  (migrations/migrate :db "db.migration" "ataru.db.migrations"))

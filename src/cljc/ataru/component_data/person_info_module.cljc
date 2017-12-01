@@ -67,7 +67,7 @@
   (-> (component/dropdown)
       (merge {:label {:fi "Onko sinulla suomalainen henkilötunnus?"
                       :sv "Har du en finländsk personbeteckning?"
-                      :en "Do you have a Finnish social security number?"}
+                      :en "Do you have a Finnish personal identity code?"}
               :rules {:toggle-ssn-based-fields :ssn}
               :no-blank-option true
               :exclude-from-answers true
@@ -77,7 +77,7 @@
 
 (defn ^:private ssn-component
   []
-  (assoc (text-field {:fi "Henkilötunnus" :sv "Personbeteckning" :en "Social security number"} :size "S" :id :ssn)
+  (assoc (text-field {:fi "Henkilötunnus" :sv "Personbeteckning" :en "Personal identity code"} :size "S" :id :ssn)
          :rules {:update-gender-and-birth-date-based-on-ssn :gender}
          :validators [:ssn :required]))
 
