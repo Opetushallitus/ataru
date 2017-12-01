@@ -205,7 +205,7 @@
 
 (defn- application-reviews->new-model
   []
-  (doseq [application (migration-app-store/get-latest-versions-of-all-applications)]
+  (doseq [application (migration-app-store/get-all-applications)]
     (create-new-review-state application)))
 
 (defn- dob->dd-mm-yyyy-format []
