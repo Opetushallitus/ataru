@@ -43,7 +43,7 @@
    (close-application db)))
 
 (defn review-state-counts [applications]
-  (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
+  (frequencies (map :state applications)))
 
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
