@@ -102,8 +102,11 @@
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style [cell workbook]
+(defn- set-cell-style [cell value workbook]
   (let [cell-style (.createCellStyle workbook)]
+    (when (and (string? value)
+               (contains? #{\= \+ \- \@} (first value)))
+      (.setQuotePrefixed cell-style true))
     (.setWrapText cell-style true)
     (.setVerticalAlignment cell-style VerticalAlignment/TOP)
     (.setCellStyle cell cell-style)
@@ -114,7 +117,7 @@
     (-> (or (.getRow sheet row)
             (.createRow sheet row))
         (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
-        (set-cell-style workbook)
+        (set-cell-style value workbook)
         (.setCellValue v)))
   sheet)
 
