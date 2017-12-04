@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">Your application has been received</span>
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Your application options are:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+          <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          If you wish to edit your application or change the study programmes
+          you're applying to, you can use the link above and make the changes
+          {% if hakukohteet|not-empty %} within the application period{% endif
+          %}. Do not share the link with others. If you are using a public or
+          shared computer, remember to log out of the email application.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          If you have Finnish online banking credentials, an electronic
+          ID-card or mobile certificate, you can also log in
+          at <a href="https://www.studyinfo.fi">Studyinfo.fi</a> and make the
+          changes in the My Studyinfo -service within the application period.
+          In addition to making changes to your study programmes, if you have
+          access to the My Studyinfo -service you can also view the admission
+          results and confirm the study place. You can also print your
+          application in the My Studyinfo -service.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          This is an automatically generated email, please do not reply.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Best regards,
+          <br />
+          Studyinfo
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>

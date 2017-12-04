@@ -156,7 +156,7 @@
 
   (describe "POST application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
                     hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
@@ -192,7 +192,7 @@
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])]
         (spec)))
 
     (before-all
@@ -235,8 +235,8 @@
 
     (describe "PUT application"
       (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job (fn [_])
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                      application-email/start-email-edit-confirmation-job (fn [_ _])
                       application-service/remove-orphan-attachments (fn [_ _])
                       hakuaika/get-hakuaika-info hakuaika-ongoing]
           (spec)))
@@ -265,8 +265,8 @@
 
     (describe "PUT application after hakuaika ended"
       (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job   (fn [_])
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                      application-email/start-email-edit-confirmation-job   (fn [_ _])
                       application-service/remove-orphan-attachments         (fn [_ _])]
           (spec)))
 
@@ -303,8 +303,8 @@
 
   (describe "Tests for a more complicated form"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                    application-email/start-email-edit-confirmation-job (fn [_])
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    application-email/start-email-edit-confirmation-job (fn [_ _])
                     application-service/remove-orphan-attachments (fn [_ _])
                     hakuaika/get-hakuaika-info hakuaika-ongoing]
         (spec)))
