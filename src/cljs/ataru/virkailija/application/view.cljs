@@ -322,7 +322,7 @@
                    hakukohde-oid
                    "selection-state")
                  "Kesken")]]]))
-        application-hakukohde-oids))))
+        (or application-hakukohde-oids ["form"])))))
 
 (defn application-list-row [application selected?]
   (let [day-date-time           (clojure.string/split (t/time->str (:created-time application)) #"\s")
