@@ -303,6 +303,7 @@
           (let [hakukohde ((keyword hakukohde-oid) all-hakukohteet)]
             [:div.application-handling__list-row-hakukohde
              [:span.application-handling__application-hakukohde-cell
+              {:on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state
@@ -1068,17 +1069,13 @@
 (defn application-review-area [applications]
   (let [selected-key                  (subscribe [:state-query [:application :selected-key]])
         selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        review-state                  (subscribe [:state-query [:application :review :state]])
-        application-filter            (subscribe [:state-query [:application :filter]])
         belongs-to-current-form       (fn [key applications] (first (filter #(= key (:key %)) applications)))
-        included-in-filter            (fn [review-state filter] (some #{review-state} filter))
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
         review-positioning            (subscribe [:state-query [:application :review-positioning]])
         hakukohteet                   (subscribe [:state-query [:application :hakukohteet]])]
     (fn [applications]
       (let [application        (:application @selected-application-and-form)]
-        (when (and (included-in-filter @review-state @application-filter)
-                   (belongs-to-current-form @selected-key applications)
+        (when (and (belongs-to-current-form @selected-key applications)
                    (not @expanded?))
           [:div.application-handling__detail-container
            [close-application]
