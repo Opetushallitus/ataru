@@ -561,6 +561,7 @@ and (max-width: 1000px) {
 .application-handling__review-row {
   display: flex;
   position: relative;
+  margin-bottom: 10px;
 }
 
 .application-handling__review-row--nocolumn {
@@ -592,6 +593,37 @@ and (max-width: 1000px) {
 
 .application-handling__review-details-icon {
   font-size: 26px;
+}
+
+.application-handling__review-row--comments {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application-handling__review-comment-input {
+  font-size: 14px;
+  padding: 6px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+  flex-grow: 1;
+}
+
+.application-handling__review-comment-submit-button {
+  background-color: @link-color;
+  color: @white;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  margin-left: 10px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 130px;
 }
 
 .application-handling__link-button {
@@ -975,7 +1007,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-inputs {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding-top: 20px;
   border-top: 1px solid @review-separator-color;
 }

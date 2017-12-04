@@ -741,6 +741,14 @@
 
 (def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
 
+(defn- application-review-comment-input []
+  [:div.application-handling__review-row.application-handling__review-row--comments
+   [:input.application-handling__review-comment-input
+    {:type "text"}]
+   [:button.application-handling__review-comment-submit-button
+    {:type "button"}
+    "Lisää"]])
+
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
@@ -764,6 +772,7 @@
                            [:span name]
                            [:span (f/unparse-local date-format created-time)]]]))
                      (:notes @review))]
+       [application-review-comment-input]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?
