@@ -10,8 +10,8 @@
 (def application-hakukohde-processing-states
   [["unprocessed" "Käsittelemättä"]
    ["processing" "Käsittelyssä"]
-   ["invited-to-interview" "Kutsuttu haastatteluun"]
-   ["invited-to-exam" "Kutsuttu valintakokeeseen"]
+   ["invited-to-interview" "Kutsuttu haast."]
+   ["invited-to-exam" "Kutsuttu valintak."]
    ["evaluating" "Arvioinnissa"]
    ["processed" "Käsitelty"]
    ["information-request" "Täydennyspyyntö"]])
