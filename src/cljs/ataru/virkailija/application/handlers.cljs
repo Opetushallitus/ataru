@@ -7,6 +7,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.util :as util]
             [ataru.cljs-util :as cljs-util]
+            [ataru.virkailija.temporal :as temporal]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
@@ -127,19 +128,24 @@
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
+(defn- parse-application-time
+  [application]
+  (assoc application :created-time (temporal/str->googdate (:created-time application))))
+
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications]}]]
-    (let [db (-> db
-                 (assoc-in [:application :applications] applications)
+    (let [applications-with-times (map parse-application-time applications)
+          db (-> db
+                 (assoc-in [:application :applications] applications-with-times)
                  (assoc-in [:application :fetching-applications] false)
-                 (assoc-in [:application :review-state-counts] (review-state-counts applications))
+                 (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
                  (assoc-in [:application :information-request] nil))
-          application-key (if (= 1 (count applications))
-                            (-> applications first :key)
+          application-key (if (= 1 (count applications-with-times))
+                            (-> applications-with-times first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
-                              (some #{query-key} (map :key applications))))]
+                              (some #{query-key} (map :key applications-with-times))))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key]
@@ -163,6 +169,7 @@
                                                           review-states/application-hakukohde-selection-states)))
    :http {:method              :get
           :path                path
+          :skip-parse-times?   true
           :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
