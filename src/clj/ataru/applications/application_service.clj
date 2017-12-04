@@ -118,8 +118,8 @@
    :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
 
 (defn get-person [application person-client]
-  (let [person-from-onr (->> (:person-oid application)
-                             (person-service/get-person person-client))
+  (let [person-from-onr (when-let [oid (:person-oid application)]
+                          (person-service/get-person person-client oid))
         yksiloity       (or (-> person-from-onr :yksiloity)
                             (-> person-from-onr :yksiloityVTJ))
         person-info     (if yksiloity
@@ -128,7 +128,7 @@
     (merge
      {:oid         (:person-oid application)
       :turvakielto (-> person-from-onr :turvakielto boolean)
-      :yksiloity   yksiloity}
+      :yksiloity   (boolean yksiloity)}
      person-info)))
 
 (defn get-application-with-human-readable-koodis
