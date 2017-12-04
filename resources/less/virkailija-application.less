@@ -39,7 +39,6 @@
   display: flex;
   justify-content: space-between;
   padding-top: 0;
-  border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
   padding-bottom: 10px;
   -webkit-user-select: none;
@@ -242,6 +241,7 @@ and (max-width: 1000px) {
   -ms-user-select: none;
   user-select: none;
   overflow-x: hidden;
+  border-bottom: 1px solid @review-separator-color;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -261,8 +261,7 @@ and (max-width: 1000px) {
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
   border-radius: 3px;
-  background-color: @selected-blue;
-  color: #fff;
+  background-color: @application-form-list-background-color;
 }
 
 .application-handling__list-header:hover {
@@ -282,13 +281,14 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--applicant {
-  width: 25%;
+  width: 30%;
   display: inline-block;
 }
 
 .application-handling__list-row--time {
-  width: 45%;
+  width: 40%;
   display: inline-block;
+  color: @sg-color-gray-2;
 }
 
 .application-handling__list-row--time-day {
@@ -299,11 +299,13 @@ and (max-width: 1000px) {
 .application-handling__list-row--state {
   width: 15%;
   display: inline-block;
+  margin-left: -3px;
 }
 
 .application-handling__list-row--selection {
   width: 15%;
   display: inline-block;
+  margin-left: -3px;
 }
 
 .application-handling__list-row-email-icon {
@@ -312,6 +314,16 @@ and (max-width: 1000px) {
 
 .application-handling__list-row-email-icon--not-selected {
   color: @blue-text-color;
+}
+
+.application-handling__list-row-hakukohde {
+  padding-bottom: 2px;
+  margin-top: 1px;
+  padding-left: 5px;
+}
+
+.application-handling__list-row-hakukohde:hover {
+  background-color: @very-light-gray;
 }
 
 .application-handling__list-loading-indicator {
@@ -1446,6 +1458,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__application-hakukohde-cell {
   font-size: 12px;
+  color: @sg-color-gray-2;
   width: 70%;
   display: inline-block;
 }
