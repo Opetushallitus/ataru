@@ -741,13 +741,23 @@
 
 (def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
 
-(defn- application-review-comment-input []
-  [:div.application-handling__review-row.application-handling__review-row--comments
-   [:input.application-handling__review-comment-input
-    {:type "text"}]
-   [:button.application-handling__review-comment-submit-button
-    {:type "button"}
-    "Lisää"]])
+(defn- application-review-note-input []
+  (let [input-value     (r/atom "")
+        button-enabled? (reaction (-> @input-value clojure.string/blank? not))]
+    (fn []
+      [:div.application-handling__review-row.application-handling__review-row--notes-row
+       [:input.application-handling__review-note-input
+        {:type      "text"
+         :on-change #(reset! input-value (.. % -target -value))}]
+       [:button.application-handling__review-note-submit-button
+        {:type     "button"
+         :class    (if @button-enabled?
+                     "application-handling__review-note-submit-button--enabled"
+                     "application-handling__review-note-submit-button--disabled")
+         :disabled (not @button-enabled?)
+         :on-click (fn [_]
+                     (dispatch [:application/add-review-note @input-value]))}
+        "Lisää"]])))
 
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
@@ -772,7 +782,7 @@
                            [:span name]
                            [:span (f/unparse-local date-format created-time)]]]))
                      (:notes @review))]
-       [application-review-comment-input]
+       [application-review-note-input]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?

@@ -12,7 +12,8 @@
             [ataru.feature-config :as fc]
             [ataru.url :as url]
             [camel-snake-kebab.core :as c]
-            [camel-snake-kebab.extras :as ce]))
+            [camel-snake-kebab.extras :as ce]
+            [cljs-time.core :as t]))
 
 (reg-event-fx
   :application/select-application
@@ -559,3 +560,26 @@
   :application/toggle-review-list-visibility
   (fn [db [_ list-kwd]]
     (update-in db [:application :ui/review list-kwd] (fnil not false))))
+
+(reg-event-fx
+  :application/add-review-note
+  (fn [{:keys [db]} [_ note]]
+    (let [application-key (-> db :application :selected-key)
+          db              (-> db
+                              (update-in [:application :review :notes]
+                                         (fnil (fn [notes]
+                                                 (conj notes {:application-key application-key
+                                                              :notes           note
+                                                              :created-time    (t/now)}))
+                                               [])))
+          note-idx        (-> db :application :review :notes count (- 1))]
+      {:db   db
+       :http {:method              :post
+              :params              {:notes           note
+                                    :application-key application-key}
+              :path                "/lomake-editori/api/applications/notes"
+              :handler-or-dispatch :application/handle-add-review-note-response
+              :handler-args        {:note-idx note-idx}}})))
+
+(reg-event-db :application/handle-add-review-note-response
+  identity)

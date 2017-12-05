@@ -595,12 +595,12 @@ and (max-width: 1000px) {
   font-size: 26px;
 }
 
-.application-handling__review-row--comments {
+.application-handling__review-row--notes-row {
   display: flex;
   flex-flow: row nowrap;
 }
 
-.application-handling__review-comment-input {
+.application-handling__review-note-input {
   font-size: 14px;
   padding: 6px;
   border: 1px solid @section-gray-border;
@@ -608,8 +608,7 @@ and (max-width: 1000px) {
   flex-grow: 1;
 }
 
-.application-handling__review-comment-submit-button {
-  background-color: @link-color;
+.application-handling__review-note-submit-button {
   color: @white;
   border-radius: 3px;
   box-shadow :none;
@@ -624,6 +623,15 @@ and (max-width: 1000px) {
   align-items: center;
   justify-content: center;
   flex: 0 1 130px;
+}
+
+.application-handling__review-note-submit-button--disabled {
+  background-color: @section-gray-border
+}
+
+.application-handling__review-note-submit-button--enabled {
+  background-color: @link-color;
+  cursor: pointer;
 }
 
 .application-handling__link-button {
