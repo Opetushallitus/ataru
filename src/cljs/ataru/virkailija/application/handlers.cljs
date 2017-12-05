@@ -572,23 +572,26 @@
   :application/add-review-note
   (fn [{:keys [db]} [_ note]]
     (let [application-key (-> db :application :selected-key)
-          db              (-> db
-                              (update-in [:application :review-notes]
-                                         (fnil (fn [notes]
-                                                 (conj notes {:application-key application-key
-                                                              :notes           note
-                                                              :created-time    (t/now)}))
-                                               [])))
-          note-idx        (-> db :application :review-notes count (- 1))]
+          db              (update-in db [:application :review-notes] (fnil identity []))]
       {:db   db
        :http {:method              :post
               :params              {:notes           note
                                     :application-key application-key}
               :path                "/lomake-editori/api/applications/notes"
-              :handler-or-dispatch :application/handle-add-review-note-response
-              :handler-args        {:note-idx note-idx}}})))
+              :handler-or-dispatch :application/handle-add-review-note-response}})))
 
-(reg-event-db :application/handle-add-review-note-response
-  (fn [db [_ resp args]]
-    (let [note-idx (:note-idx args)]
-      (assoc-in db [:application :review-notes note-idx] resp))))
+(reg-event-fx :application/handle-add-review-note-response
+  (fn [{:keys [db]} [_ resp]]
+    (let [resp (assoc resp :animated? true)
+          db   (update-in db [:application :review-notes] conj resp)]
+      {:db             db
+       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations]}]})))
+
+(reg-event-db :application/reset-review-note-animations
+  (fn [db]
+    {:post [(-> % :application :review-notes vector?)]}
+    (letfn [(remove-animation [note]
+              (dissoc note :animated?))]
+      (update-in db
+                 [:application :review-notes]
+                 (partial mapv remove-animation)))))

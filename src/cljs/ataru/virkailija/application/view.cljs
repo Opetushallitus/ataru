@@ -765,9 +765,12 @@
                                  (str (:first-name @note) " " (:last-name @note))
                                  "Virkailija ei tiedossa"))
         created-time (reaction (f/unparse-local date-format (:created-time @note)))
-        notes        (reaction (:notes @note))]
+        notes        (reaction (:notes @note))
+        animated?    (reaction (:animated? @note))]
     (fn [_]
       [:div.application-handling__review-note
+       (when @animated?
+         {:class "animated fadeIn"})
        [:span.application-handling__review-note-column @notes]
        [:div.application-handling__review-details-column
         [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
