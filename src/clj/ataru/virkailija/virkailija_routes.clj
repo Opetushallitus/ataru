@@ -278,6 +278,15 @@
                        (response/ok resend-event)
                        (response/bad-request)))
 
+                   (api/POST "/notes" {session :session}
+                     :summary "Add new review note for the application"
+                     :return ataru-schema/ReviewNote
+                     :body [note {:notes           s/Str
+                                  :application-key s/Str}]
+                     (if-let [note (application-service/add-review-note note session organization-service)]
+                       (response/ok note)
+                       (response/bad-request)))
+
                    (api/PUT "/review" {session :session}
                      :summary "Update existing application review"
                      :body [review ataru-schema/Review]

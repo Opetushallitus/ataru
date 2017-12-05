@@ -840,3 +840,7 @@ JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
+
+--name: yesql-add-review-note<!
+INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
+VALUES (:application_key, :notes, :virkailija_oid);

@@ -218,3 +218,10 @@
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
+
+(defn add-review-note [note session organization-service]
+  (aac/check-application-access (:application-key note)
+                                session
+                                organization-service
+                                [:view-applications :edit-applications])
+  (application-store/add-review-note note session))

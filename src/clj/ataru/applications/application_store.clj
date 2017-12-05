@@ -642,3 +642,14 @@
 
 (defn get-applications-newer-than [date]
   (exec-db :db yesql-get-applciations-by-created-time {:date date}))
+
+(defn add-review-note [note session]
+  {:pre [(-> note :application-key clojure.string/blank? not)
+         (-> note :notes clojure.string/blank? not)]}
+  (let [virkailija (-> session virkailija-edit/upsert-virkailija)]
+    (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
+                                              :notes           (:notes note)
+                                              :virkailija_oid  (:oid virkailija)})
+        (merge (select-keys virkailija [:first_name :last_name]))
+        (dissoc :virkailija_oid :id)
+        (->kebab-case-kw))))
