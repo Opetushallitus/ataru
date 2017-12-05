@@ -106,12 +106,13 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer-path  (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
-                       [:application :person id]
-                       (cond-> [:application :answers id]
-                               idx (concat [:values idx 0])
-                               :always (concat [:value])))
-        answer       (subscribe [:state-query answer-path])
+        answer       (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+                       {:value @(subscribe [:state-query
+                                            [:application :person id]])
+                        :valid true}
+                       @(subscribe [:state-query
+                                    (cond-> [:application :answers id]
+                                      idx (concat [:values idx 0]))]))
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size         (get-in field-descriptor [:params :size])
@@ -121,8 +122,8 @@
                        (partial multi-value-field-change field-descriptor 0 idx)
                        (partial textual-field-change field-descriptor))
         show-error?  (show-text-field-error-class? field-descriptor
-                                                   (:value @answer)
-                                                   (:valid @answer))
+                                                   (:value answer)
+                                                   (:valid answer))
         cannot-edit? (and @editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
         cannot-view? (and @editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
     [div-kwd
@@ -141,12 +142,12 @@
                                    " application__form-text-input--normal"))
                :value       (if cannot-view?
                               "***********"
-                              @answer)
+                              (:value answer))
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
               (when (or disabled cannot-view? cannot-edit?) {:disabled true}))]
-      (when (not-empty (:errors @answer))
+      (when (not-empty (:errors answer))
         [:div.application__validation-error-dialog
          [:div.application__validation-error-dialog__arrow]
          [:div.application__validation-error-dialog__box
@@ -155,7 +156,7 @@
                           (with-meta (non-blank-val (get error @lang)
                                                     (get error @default-lang))
                             {:key (str "error-" idx)}))
-                        (:errors @answer)))]])]]))
+                        (:errors answer)))]])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
