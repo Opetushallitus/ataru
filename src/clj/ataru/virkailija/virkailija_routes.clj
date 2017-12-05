@@ -251,6 +251,7 @@
                     :return {:application          ataru-schema/ApplicationWithPerson
                              :events               [ataru-schema/Event]
                              :review               ataru-schema/Review
+                             :review-notes         [ataru-schema/ReviewNote]
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews
                              :form                 ataru-schema/FormWithContent
                              :information-requests [ataru-schema/InformationRequest]}

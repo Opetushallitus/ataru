@@ -157,6 +157,7 @@
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
      :events               (application-store/get-application-events application-key)
      :review               (application-store/get-application-review application-key)
+     :review-notes         (application-store/get-application-review-notes application-key)
      :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-key

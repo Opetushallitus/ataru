@@ -202,13 +202,20 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review hakukohde-reviews information-requests]}]
+(defn update-application-details [db {:keys [form
+                                             application
+                                             events
+                                             review
+                                             hakukohde-reviews
+                                             information-requests
+                                             review-notes]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
+      (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
       (assoc-in [:application :information-requests] information-requests)))
@@ -566,13 +573,13 @@
   (fn [{:keys [db]} [_ note]]
     (let [application-key (-> db :application :selected-key)
           db              (-> db
-                              (update-in [:application :review :notes]
+                              (update-in [:application :review-notes]
                                          (fnil (fn [notes]
                                                  (conj notes {:application-key application-key
                                                               :notes           note
                                                               :created-time    (t/now)}))
                                                [])))
-          note-idx        (-> db :application :review :notes count (- 1))]
+          note-idx        (-> db :application :review-notes count (- 1))]
       {:db   db
        :http {:method              :post
               :params              {:notes           note
@@ -584,4 +591,4 @@
 (reg-event-db :application/handle-add-review-note-response
   (fn [db [_ resp args]]
     (let [note-idx (:note-idx args)]
-      (assoc-in db [:application :review :notes note-idx] resp))))
+      (assoc-in db [:application :review-notes note-idx] resp))))

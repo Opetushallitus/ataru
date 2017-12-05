@@ -760,7 +760,7 @@
         "Lisää"]])))
 
 (defn- application-review-note [note-idx]
-  (let [note         (subscribe [:state-query [:application :review :notes note-idx]])
+  (let [note         (subscribe [:state-query [:application :review-notes note-idx]])
         name         (reaction (if (and (:first-name @note) (:last-name @note))
                                  (str (:first-name @note) " " (:last-name @note))
                                  "Virkailija ei tiedossa"))
@@ -779,14 +779,13 @@
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?    (subscribe [:application/review-state-setting-enabled? :score])]
+        input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
+        notes-count       (subscribe [:application/review-notes-count])]
     (fn []
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header "Muistiinpanot"]
-        (->> (:notes @review)
-             (count)
-             (range)
+        (->> (range @notes-count)
              (map (fn [idx]
                     ^{:key (str "application-review-note-" idx)}
                     [application-review-note idx])))]

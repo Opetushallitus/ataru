@@ -272,3 +272,9 @@
   :application/review-list-visible?
   (fn [db [_ list-kwd]]
     (-> db :application :ui/review list-kwd)))
+
+(re-frame/reg-sub
+  :application/review-notes-count
+  (fn [db]
+    (or (-> db :application :review-notes count)
+        0)))

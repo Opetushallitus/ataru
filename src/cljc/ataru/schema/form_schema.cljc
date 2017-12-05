@@ -330,7 +330,6 @@
    (s/optional-key :modified-time)     org.joda.time.DateTime
    :state                              s/Str
    (s/optional-key :score)             (s/maybe s/Int)
-   (s/optional-key :notes)             [ReviewNote]
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
