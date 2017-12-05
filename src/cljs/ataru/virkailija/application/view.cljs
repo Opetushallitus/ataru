@@ -759,6 +759,21 @@
                      (dispatch [:application/add-review-note @input-value]))}
         "Lisää"]])))
 
+(defn- application-review-note [note-idx]
+  (let [note         (subscribe [:state-query [:application :review :notes note-idx]])
+        name         (reaction (if (and (:first-name @note) (:last-name @note))
+                                 (str (:first-name @note) " " (:last-name @note))
+                                 "Virkailija ei tiedossa"))
+        created-time (reaction (f/unparse-local date-format (:created-time @note)))
+        notes        (reaction (:notes @note))]
+    (fn [_]
+      [:div.application-handling__review-note
+       [:span.application-handling__review-note-column @notes]
+       [:div.application-handling__review-details-column
+        [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
+        [:span @name]
+        [:span @created-time]]])))
+
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
@@ -769,19 +784,12 @@
       [:div.application-handling__review-inputs
        [:div.application-handling__review-row--nocolumn
         [:div.application-handling__review-header "Muistiinpanot"]
-        (map-indexed (fn [idx {:keys [notes first-name last-name created-time application-key]}]
-                       (let [key (str application-key "-" idx)
-                             name (if (and first-name last-name)
-                                    (str first-name " " last-name)
-                                    "Virkailija ei tiedossa")]
-                         ^{:key key}
-                         [:div.application-handling__review-note
-                          [:span.application-handling__review-note-column notes]
-                          [:div.application-handling__review-details-column
-                           [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
-                           [:span name]
-                           [:span (f/unparse-local date-format created-time)]]]))
-                     (:notes @review))]
+        (->> (:notes @review)
+             (count)
+             (range)
+             (map (fn [idx]
+                    ^{:key (str "application-review-note-" idx)}
+                    [application-review-note idx])))]
        [application-review-note-input]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
