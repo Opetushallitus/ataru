@@ -301,7 +301,6 @@
 (defn get-application-review [application-key]
   (letfn [(notes->application-review [application-review]
             (let [notes (get-application-review-notes application-key)]
-              (println (str "notes count: " (count notes)))
               (assoc application-review :notes notes)))]
     (->> (exec-db :db yesql-get-application-review {:application_key application-key})
          (map ->kebab-case-kw)
