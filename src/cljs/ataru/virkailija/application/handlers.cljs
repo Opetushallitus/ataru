@@ -582,4 +582,6 @@
               :handler-args        {:note-idx note-idx}}})))
 
 (reg-event-db :application/handle-add-review-note-response
-  identity)
+  (fn [db [_ resp args]]
+    (let [note-idx (:note-idx args)]
+      (assoc-in db [:application :review :notes note-idx] resp))))
