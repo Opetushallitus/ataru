@@ -109,7 +109,8 @@
         answer-path  (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
                        [:application :person id]
                        (cond-> [:application :answers id]
-                               idx (concat [:values idx 0])))
+                               idx (concat [:values idx 0])
+                               :always (concat [:value])))
         answer       (subscribe [:state-query answer-path])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
@@ -140,7 +141,7 @@
                                    " application__form-text-input--normal"))
                :value       (if cannot-view?
                               "***********"
-                              (:value @answer))
+                              @answer)
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
