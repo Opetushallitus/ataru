@@ -10,8 +10,6 @@
                                               create-application-to-submit
                                               extract-wrapper-sections]]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.translations.translation-util :refer [get-translations]]
-            [ataru.translations.application-view :refer [application-view-translations]]
             [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]))
 
@@ -952,8 +950,7 @@
   :application/set-page-title
   (fn [{:keys [db]}]
     (let [lang-kw       (keyword (-> db :form :selected-language))
-          translations  (get-translations lang-kw application-view-translations)
-          title-prefix  (:page-title translations)
+          title-prefix  (util/get-translation :page-title)
           title-suffix  (or
                           (lang-kw (-> db :form :tarjonta :haku-name))
                           (-> db :form :name))]

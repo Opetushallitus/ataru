@@ -1,6 +1,6 @@
-(ns ataru.translations.translations)
+(ns ataru.translations.texts)
 
-(def application-view-translations
+(def translation-mapping
   {:application-period                {:fi "Hakuaika"
                                        :sv "Ansökningstid"
                                        :en "Application period"}
@@ -19,10 +19,16 @@
    :remove-row                        {:fi "Poista rivi"
                                        :sv "Ta bort rad"
                                        :en "Remove row"}
+   :remove                            {:fi "Poista"
+                                       :sv "Ta bort"
+                                       :en "Remove"}
    :add-more                          {:fi "Lisää..."
                                        :sv "Lägg till..."
                                        :en "Add more..."}
-   :add-more-questiongroup            {:fi "Lisää"
+   :add-more-button                   {:fi "Lisää"
+                                       :sv "Lägg till"
+                                       :en "Add"}
+   :add                               {:fi "Lisää"
                                        :sv "Lägg till"
                                        :en "Add more"}
    :add-attachment                    {:fi "Lisää liite..."
@@ -115,4 +121,9 @@
    :do-not-share-warning-text         {:fi "Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
                                        :en "Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application."
                                        :sv "Dela inte länken vidare till utomstående. Om du använder en offentlig dator, kom ihåg att logga ut från e-postprogrammet."}
-   })
+   :search-application-options        {:fi "Etsi tämän haun koulutuksia"
+                                       :sv "Sök ansökningsmål i denna ansökan"
+                                       :en "Search for application options"}
+   :add-application-option            {:fi "Lisää hakukohde"
+                                       :sv "Lägg till ansökningsmål"
+                                       :en "Add application option"}})

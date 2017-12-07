@@ -341,7 +341,7 @@
                          (.preventDefault event)
                          (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         (get-translation :add-more-questiongroup)]])]))
+         (get-translation :add-more-button)]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
