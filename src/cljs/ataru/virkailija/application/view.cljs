@@ -743,7 +743,9 @@
 
 (defn- application-review-note-input []
   (let [input-value     (r/atom "")
-        button-enabled? (reaction (-> @input-value clojure.string/blank? not))]
+        review-notes    (subscribe [:state-query [:application :review-notes]])
+        button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
+                                       (every? (comp not :animated?) @review-notes)))]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
        [:input.application-handling__review-note-input
