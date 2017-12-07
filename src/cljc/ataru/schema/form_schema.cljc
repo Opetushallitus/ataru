@@ -138,10 +138,11 @@
    :is-jatkuva-haku?                   s/Bool
    :can-submit-multiple-applications   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde
-   (s/optional-key :hakuaika-dates)    {:start                s/Int
-                                        (s/optional-key :end) (s/maybe s/Int)
-                                        :on                   s/Bool
-                                        :hakukierros-end      (s/maybe s/Int)}})
+   (s/optional-key :hakuaika-dates)    {:start                               s/Int
+                                        (s/optional-key :end)                (s/maybe s/Int)
+                                        :on                                  s/Bool
+                                        :hakukierros-end                     (s/maybe s/Int)
+                                        :attachment-modify-grace-period-days (s/maybe s/Int)}})
 
 (s/defschema Haku
   {:oid s/Str

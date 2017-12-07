@@ -49,4 +49,7 @@
 (defn get-hakuaika-info [hakukohde haku ohjausparametrit]
   (as-> (parse-hakuaika hakukohde haku) {:keys [start end] :as interval}
         (assoc interval :on (hakuaika-on start end))
+        (assoc interval
+               :attachment-modify-grace-period-days
+               (-> ohjausparametrit :PH_LMT :value))
         (assoc interval :hakukierros-end (-> ohjausparametrit :PH_HKP :date))))
