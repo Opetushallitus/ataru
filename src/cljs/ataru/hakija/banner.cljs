@@ -4,7 +4,7 @@
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
-            [ataru.translations.translation-util :refer [get-translation]]))
+            [ataru.cljs-util :refer [get-translation]]))
 
 (defn logo []
   (let [lang (subscribe [:application/form-language])]
@@ -27,7 +27,6 @@
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
-        invalid-fields-text (get-translation :check-answers @lang)
         default-lang        (subscribe [:application/default-language])
         form-fields         (reaction (util/flatten-form-fields @(subscribe [:state-query [:form :content]])))]
     (fn [valid-status]
@@ -35,9 +34,9 @@
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
-          (first invalid-fields-text)
+          (first (get-translation :check-answers))
           [:b (count (:invalid-fields valid-status))]
-          (last invalid-fields-text)]
+          (last (get-translation :check-answers))]
          (when @show-details
            [:div
             [:div.application__invalid-fields-arrow-up]
@@ -52,30 +51,27 @@
                        (:invalid-fields valid-status)))])]))))
 
 (defn sent-indicator [submit-status]
-  (let [lang              (subscribe [:application/form-language])
-        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
+  (let [virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])]
     (fn [submit-status]
       (match [submit-status @virkailija-secret]
-             [:submitting _] [:div.application__sent-indicator (get-translation :application-sending @lang)]
+             [:submitting _] [:div.application__sent-indicator (get-translation :application-sending)]
              [:submitted (_ :guard #(nil? %))]
-             [:div.application__sent-indicator.animated.fadeIn (get-translation :application-confirmation @lang)]
+             [:div.application__sent-indicator.animated.fadeIn (get-translation :application-confirmation)]
              :else nil))))
 
 (defn- edit-text [hakija-secret
-                  virkailija-secret
-                  lang]
+                  virkailija-secret]
   (cond (some? hakija-secret)
-        (get-translation :application-hakija-edit-text lang)
+        (get-translation :application-hakija-edit-text)
 
         (some? virkailija-secret)
-        (get-translation :application-virkailija-edit-text lang)
+        (get-translation :application-virkailija-edit-text)
 
         :else
-        (get-translation :hakija-new-text lang)))
+        (get-translation :hakija-new-text)))
 
 (defn send-button-or-placeholder [valid-status submit-status]
-  (let [lang              (subscribe [:application/form-language])
-        secret            (subscribe [:state-query [:application :secret]])
+  (let [secret            (subscribe [:state-query [:application :secret]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         editing           (reaction (or (some? @secret) (some? @virkailija-secret)))
         values-changed?   (subscribe [:state-query [:application :values-changed?]])]
@@ -83,7 +79,7 @@
       (match submit-status
              :submitted [:div.application__sent-placeholder.animated.fadeIn
                          [:i.zmdi.zmdi-check]
-                         [:span.application__sent-placeholder-text (get-translation (if @virkailija-secret :modifications-saved :application-sent) @lang)]]
+                         [:span.application__sent-placeholder-text (get-translation (if @virkailija-secret :modifications-saved :application-sent))]]
              :else [:button.application__send-application-button
                     {:disabled (or (not (:valid valid-status))
                                    (contains? #{:submitting :submitted} submit-status)
@@ -91,7 +87,7 @@
                      :on-click #(if @editing
                                   (dispatch [:application/edit])
                                   (dispatch [:application/submit]))}
-                    (edit-text @secret @virkailija-secret @lang)]))))
+                    (edit-text @secret @virkailija-secret)]))))
 
 (defn status-controls []
   (let [valid-status         (subscribe [:application/valid-status])
