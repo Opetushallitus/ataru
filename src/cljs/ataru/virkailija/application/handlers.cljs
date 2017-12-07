@@ -572,18 +572,24 @@
   :application/add-review-note
   (fn [{:keys [db]} [_ note]]
     (let [application-key (-> db :application :selected-key)
-          db              (update-in db [:application :review-notes] (fnil identity []))]
+          note-idx        (-> db :application :review-notes count)
+          db              (-> db
+                              (update-in [:application :review-notes]
+                                         (cljs-util/vector-of-length (inc note-idx)))
+                              (assoc-in [:application :review-notes note-idx] {:created-time (t/now)
+                                                                               :notes        note
+                                                                               :animated?    true}))]
       {:db   db
        :http {:method              :post
               :params              {:notes           note
                                     :application-key application-key}
               :path                "/lomake-editori/api/applications/notes"
-              :handler-or-dispatch :application/handle-add-review-note-response}})))
+              :handler-or-dispatch :application/handle-add-review-note-response
+              :handler-args        {:note-idx note-idx}}})))
 
 (reg-event-fx :application/handle-add-review-note-response
-  (fn [{:keys [db]} [_ resp]]
-    (let [resp (assoc resp :animated? true)
-          db   (update-in db [:application :review-notes] conj resp)]
+  (fn [{:keys [db]} [_ resp args]]
+    (let [db (update-in db [:application :review-notes (:note-idx args)] merge resp)]
       {:db             db
        :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations]}]})))
 
