@@ -742,7 +742,7 @@
 (def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
 
 (defn- application-review-note-input []
-  (let [input-value     (r/atom "")
+  (let [input-value     (subscribe [:state-query [:application :review-comment]])
         review-notes    (subscribe [:state-query [:application :review-notes]])
         button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
                                        (every? (comp not :animated?) @review-notes)))]
@@ -750,7 +750,10 @@
       [:div.application-handling__review-row.application-handling__review-row--notes-row
        [:input.application-handling__review-note-input
         {:type      "text"
-         :on-change #(reset! input-value (.. % -target -value))}]
+         :value     @input-value
+         :on-change (fn [event]
+                      (let [review-comment (.. event -target -value)]
+                        (dispatch [:application/set-review-comment-value review-comment])))}]
        [:button.application-handling__review-note-submit-button
         {:type     "button"
          :class    (if @button-enabled?

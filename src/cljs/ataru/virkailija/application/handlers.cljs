@@ -22,6 +22,7 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :review-comment] nil)
                    (assoc-in [:application :application-list-expanded?] false)
                    (assoc-in [:application :information-request] nil))]
         {:db         db
@@ -578,7 +579,8 @@
                                          (cljs-util/vector-of-length (inc note-idx)))
                               (assoc-in [:application :review-notes note-idx] {:created-time (t/now)
                                                                                :notes        note
-                                                                               :animated?    true}))]
+                                                                               :animated?    true})
+                              (assoc-in [:application :review-comment] nil))]
       {:db   db
        :http {:method              :post
               :params              {:notes           note
@@ -596,3 +598,7 @@
 (reg-event-db :application/reset-review-note-animations
   (fn [db [_ note-idx]]
     (update-in db [:application :review-notes note-idx] dissoc :animated?)))
+
+(reg-event-db :application/set-review-comment-value
+  (fn [db [_ review-comment]]
+    (assoc-in db [:application :review-comment] review-comment)))
