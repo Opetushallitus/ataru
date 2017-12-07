@@ -46,6 +46,8 @@
         var scoreForTyrni = scoreForKuikeloinen - 10;
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
+        .then(clickElement(reviewNotesSubmitButton))
+        .then(wait.until(function() { return testFrame().find('.application-handling__review-details-icon + span:eq(0)').text() === 'Veijo Virkailija' }))
         .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
         .then(wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')))
@@ -56,7 +58,7 @@
         .then(clickElement(firstApplication))
         .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
         .then(function () {
-          expect(reviewNotes().val()).to.equal('Reipas kaveri');
+          expect(testFrame().find('.application-handling__review-details-icon + span:eq(0)').text()).to.equal('Veijo Virkailija');
           expect(score().val()).to.equal(scoreForVatanen + '');
           done()
         })
@@ -105,7 +107,9 @@
 
       function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Tyrni)') }
 
-      function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
+      function reviewNotes() { return testFrame().find('.application-handling__review-note-input') }
+
+      function reviewNotesSubmitButton() { return testFrame().find('.application-handling__review-note-submit-button') }
 
       function score() { return testFrame().find('.application-handling__score-input') }
 
