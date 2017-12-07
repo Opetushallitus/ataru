@@ -126,4 +126,10 @@
                                        :en "Search for application options"}
    :add-application-option            {:fi "Lisää hakukohde"
                                        :sv "Lägg till ansökningsmål"
-                                       :en "Add application option"}})
+                                       :en "Add application option"}
+   :file-upload-failed                {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                                       :en "File failed to upload, try again"
+                                       :sv "Fil inte laddat, försök igen"}
+   :file-type-forbidden               {:fi "Tiedostoa ei ladattu, yritä uudelleen"
+                                       :en "File failed to upload, try again"
+                                       :sv "Fil inte laddat, försök igen"}})
