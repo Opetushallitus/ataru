@@ -54,4 +54,28 @@
                                        :sv "Tack för din respons!"}
    :page-title                        {:fi "Opintopolku – hakulomake"
                                        :en "Studyinfo – application form"
-                                       :sv "Studieinfo – ansökningsblankett"}})
+                                       :sv "Studieinfo – ansökningsblankett"}
+   :application-sending               {:fi "Hakemusta lähetetään"
+                                       :sv "Ansökan skickas"
+                                       :en "The application is being sent"}
+   :application-confirmation          {:fi "Saat vahvistuksen sähköpostiisi"
+                                       :sv "Du får en bekräftelse till din e-post"
+                                       :en "Confirmation email will be sent to the email address you've provided"}
+   :application-sent                  {:fi "Hakemus lähetetty"
+                                       :sv "Ansökan har skickats"
+                                       :en "The application has been sent"}
+   :modifications-saved               {:fi "Muutokset tallennettu"
+                                       :sv "Ändringarna har sparats"
+                                       :en "The modifications have been saved"}
+   :application-hakija-edit-text      {:fi "LÄHETÄ MUUTOKSET"
+                                       :sv "SCICKA FÖRÄNDRINGAR"
+                                       :en "SEND MODIFICATIONS"}
+   :application-virkailija-edit-text  {:fi "TALLENNA MUUTOKSET"
+                                       :sv "SPARA FÖRÄNDRINGAR"
+                                       :en "SAVE MODIFICATIONS"}
+   :hakija-new-text                   {:fi "LÄHETÄ HAKEMUS"
+                                       :sv "SKICKA ANSÖKAN"
+                                       :en "SEND APPLICATION"}
+   :check-answers                     {:fi ["Tarkista " " tietoa"]
+                                       :sv ["Check " " answers"]
+                                       :en ["Kontrollera " " uppgifter"]}})
