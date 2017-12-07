@@ -22,6 +22,12 @@
    :add-more                          {:fi "Lisää..."
                                        :sv "Lägg till..."
                                        :en "Add more..."}
+   :add-more-questiongroup            {:fi "Lisää"
+                                       :sv "Lägg till"
+                                       :en "Add more"}
+   :add-attachment                    {:fi "Lisää liite..."
+                                       :en "Upload attachment..."
+                                       :sv "Ladda upp bilagan..."}
    :feedback-header                   {:fi "Hei, kerro vielä mitä pidit hakulomakkeesta!"
                                        :en "Hi! Care to take a moment to rate our application form?"
                                        :sv "Hej, berätta ännu vad du tyckte om ansökningsblanketten?"}
@@ -77,5 +83,8 @@
                                        :sv "SKICKA ANSÖKAN"
                                        :en "SEND APPLICATION"}
    :check-answers                     {:fi ["Tarkista " " tietoa"]
-                                       :sv ["Check " " answers"]
-                                       :en ["Kontrollera " " uppgifter"]}})
+                                       :sv ["Kontrollera " " uppgifter"]
+                                       :en ["Check " " answers"]}
+   :file-size-info                    {:fi "Tiedoston maksimikoko on 10 MB"
+                                       :en "Maximum file size is 10 MB"
+                                       :sv "Den maximala filstorleken är 10 MB"}})

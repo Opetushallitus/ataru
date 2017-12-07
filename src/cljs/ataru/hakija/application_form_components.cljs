@@ -4,9 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.translations.translation-util :refer [get-translations]]
-            [ataru.translations.application-view :refer [application-view-translations]]
-            [ataru.cljs-util :as cljs-util :refer [console-log]]
+            [ataru.cljs-util :as cljs-util :refer [console-log get-translation]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
@@ -194,8 +192,7 @@
                   (when @cannot-edit?
                     {:disabled true}))]])
             (map-indexed
-              (let [first-is-empty? (empty? (first (map :value @values)))
-                    translations    (get-translations (keyword @lang) application-view-translations)]
+              (let [first-is-empty? (empty? (first (map :value @values)))]
                 (fn [idx {:keys [value last?]}]
                   [:div.application__form-repeatable-text-wrap
                    [:input.application__form-text-input
@@ -210,8 +207,7 @@
                       (when (and (not last?) (empty? value))
                         {:on-blur on-blur})
                       (when last?
-                        {:placeholder
-                         (:add-more translations)})
+                        {:placeholder (get-translation :add-more)})
                       (when (or @cannot-edit?
                                 (and last? first-is-empty?))
                         {:disabled true}))]
@@ -345,9 +341,7 @@
                          (.preventDefault event)
                          (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         @(subscribe [:application/get-i18n-text {:fi "Lisää"
-                                                  :sv "Lägg till"
-                                                  :en "Add more"}])]])]))
+         (get-translation :add-more-questiongroup)]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
@@ -562,14 +556,8 @@
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text (case language
-                                                        :fi "Lisää liite..."
-                                                        :en "Upload attachment..."
-                                                        :sv "Ladda upp bilagan...")]]
-     (let [file-size-info-text (case language
-                                 :fi "Tiedoston maksimikoko on 10 MB"
-                                 :en "Maximum file size is 10 MB"
-                                 :sv "Den maximala filstorleken är 10 MB")
+      [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
+     (let [file-size-info-text (get-translation :file-size-info)
            size-error-path     (if question-group-idx
                                  [:application :answers (keyword component-id) :errors question-group-idx :too-big]
                                  [:application :answers (keyword component-id) :errors :too-big])
@@ -681,7 +669,6 @@
                             (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))]
     (fn [field-descriptor & {question-group-idx :idx}]
       (let [row-amount   (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
-            translations (get-translations (keyword @language) application-view-translations)
             add-on-click (fn add-adjacent-text-field [event]
                            (.preventDefault event)
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))
@@ -711,13 +698,13 @@
                        (when (and (pos? row-idx) (not cannot-edit?))
                          [:a {:data-row-idx row-idx
                               :on-click     remove-on-click}
-                          [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
+                          [:span.application__form-adjacent-row--mobile-only (get-translation :remove-row)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (and (get-in field-descriptor [:params :repeatable])
                     (not cannot-edit?))
            [:a.application__form-add-new-row
             {:on-click add-on-click}
-            [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
+            [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
 
 (defn- feature-enabled? [{:keys [fieldType]}]
   (or (not= fieldType "attachment")
