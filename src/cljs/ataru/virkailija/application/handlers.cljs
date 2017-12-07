@@ -591,13 +591,8 @@
   (fn [{:keys [db]} [_ resp args]]
     (let [db (update-in db [:application :review-notes (:note-idx args)] merge resp)]
       {:db             db
-       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations]}]})))
+       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:note-idx args)]}]})))
 
 (reg-event-db :application/reset-review-note-animations
-  (fn [db]
-    {:post [(-> % :application :review-notes vector?)]}
-    (letfn [(remove-animation [note]
-              (dissoc note :animated?))]
-      (update-in db
-                 [:application :review-notes]
-                 (partial mapv remove-animation)))))
+  (fn [db [_ note-idx]]
+    (update-in db [:application :review-notes note-idx] dissoc :animated?)))
