@@ -325,7 +325,8 @@
   {s/Keyword hakukohde-review-types-schema})
 
 (s/defschema ReviewNote
-  {:application-key               s/Str
+  {:id                            s/Int
+   :application-key               s/Str
    :notes                         s/Str
    :first-name                    (s/maybe s/Str)
    :last-name                     (s/maybe s/Str)
