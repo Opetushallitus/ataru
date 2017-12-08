@@ -781,7 +781,14 @@
        [:div.application-handling__review-details-column
         [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
         [:span @name]
-        [:span @created-time]]])))
+        [:span @created-time]
+        [:div.application-handling__review-details-icons
+         [:a.application-handling__review-details-remove-link
+          {:href     "#"
+           :on-click (fn [event]
+                       (.preventDefault event)
+                       (dispatch [:application/remove-review-note note-idx]))}
+          [:i.zmdi.zmdi-close]]]]])))
 
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])

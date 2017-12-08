@@ -602,3 +602,11 @@
 (reg-event-db :application/set-review-comment-value
   (fn [db [_ review-comment]]
     (assoc-in db [:application :review-comment] review-comment)))
+
+(reg-event-db :application/remove-review-note
+  (fn [db [_ note-idx]]
+    (update-in db
+               [:application :review-notes]
+               (fn [notes]
+                 (vec (concat (subvec notes 0 note-idx)
+                              (subvec notes (inc note-idx))))))))
