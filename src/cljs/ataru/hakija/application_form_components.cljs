@@ -114,6 +114,7 @@
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size         (get-in field-descriptor [:params :size])
+        type         (get-in field-descriptor [:params :type])
         size-class   (text-field-size->class size)
         on-blur      #(dispatch [:application/textual-field-blur field-descriptor])
         on-change    (if idx
@@ -131,7 +132,7 @@
      [:div.application__form-text-input-and-validation-errors
       [:input.application__form-text-input
        (merge {:id          id
-               :type        "text"
+               :type        (or type "text")
                :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
                               (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
                :class       (str size-class
