@@ -1,6 +1,6 @@
 (ns ataru.component-data.base-education-module
   (:require [ataru.util :as u]
-            [ataru.translations.texts :refer [base-education-module-texts]]
+            [ataru.translations.texts :refer [base-education-module-texts general-texts]]
             [ataru.component-data.component :as component]))
 
 (defn module []
@@ -142,7 +142,7 @@
                             {:label      (:have-you-completed base-education-module-texts)
                              :id         "upper-secondary-school-completed"
                              :params     {},
-                             :options    [{:label     (:yes base-education-module-texts)
+                             :options    [{:label     (:yes general-texts)
                                            :value     "Ja",
                                            :followups [{:id              "upper-secondary-school-completed-country",
                                                         :label           {:en "Choose country", :fi "Valitse suoritusmaa", :sv " Välj land"},
@@ -152,5 +152,5 @@
                                                         :fieldClass      "formField",
                                                         :validators      ["required"]
                                                         :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]}
-                                          {:label (:no base-education-module-texts), :value "Nej"}],
+                                          {:label (:no general-texts), :value "Nej"}],
                              :validators ["required"]})]}))

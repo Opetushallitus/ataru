@@ -134,6 +134,14 @@
                                        :en "File failed to upload, try again"
                                        :sv "Fil inte laddat, försök igen"}})
 
+(def general-texts
+  {:yes {:en "Yes"
+         :fi "Kyllä"
+         :sv "Ja"}
+   :no  {:en "No"
+         :fi "En"
+         :sv "Nej"}})
+
 (def base-education-module-texts
   {:title                            {:fi "Koulutustausta"
                                       :sv "Utbildningsbakgrund"
@@ -189,12 +197,77 @@
    :have-you-completed               {:en "Have you completed general upper secondary education or vocational qualification?",
                                       :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?",
                                       :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
-   :yes                              {:en "Yes"
-                                      :fi "Kyllä"
-                                      :sv "Ja"}
    :choose-country                   {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification, but are in the process of doing so, please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
                                       :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti-tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
-                                      :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte land där du avlagt högskoleexamen."}
-   :no                               {:en "No"
-                                      :fi "En"
-                                      :sv "Nej"}})
+                                      :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte land där du avlagt högskoleexamen."}})
+
+(def person-info-module-texts
+  {:forenames            {:fi "Etunimet"
+                          :sv "Förnamn"
+                          :en "Forenames"}
+   :main-forename        {:fi "Kutsumanimi"
+                          :sv "Tilltalsnamn"
+                          :en "Main forename"}
+   :surname              {:fi "Sukunimi"
+                          :sv "Efternamn"
+                          :en "Surname"}
+   :nationality          {:fi "Kansalaisuus"
+                          :sv "Medborgarskap"
+                          :en "Nationality"}
+   :country-of-residence {:fi "Asuinmaa"
+                          :sv "Boningsland"
+                          :en "Country of residence"}
+   :have-finnish-ssn     {:fi "Onko sinulla suomalainen henkilötunnus?"
+                          :sv "Har du en finländsk personbeteckning?"
+                          :en "Do you have a Finnish personal identity code?"}
+   :ssn                  {:fi "Henkilötunnus"
+                          :sv "Personbeteckning"
+                          :en "Personal identity code"}
+   :gender               {:fi "Sukupuoli"
+                          :sv "Kön"
+                          :en "Gender"}
+   :birth-date           {:fi "Syntymäaika"
+                          :sv "Födelsetid"
+                          :en "Date of birth"}
+   :passport-number      {:fi "Passin numero"
+                          :sv "Passnummer"
+                          :en "Passport number"}
+   :national-id-number   {:fi "Kansallinen ID-tunnus"
+                          :sv "Nationellt ID-signum"
+                          :en "National ID number"}
+   :birthplace           {:fi "Syntymäpaikka ja -maa"
+                          :sv "Födelseort och -land"
+                          :en "Place and country of birth"}
+   :email                {:fi "Sähköpostiosoite"
+                          :sv "E-postadress"
+                          :en "E-mail address"}
+   :phone                {:fi "Matkapuhelin"
+                          :sv "Mobiltelefonnummer"
+                          :en "Mobile phone number"}
+   :address              {:fi "Katuosoite"
+                          :sv "Näraddress"
+                          :en "Address"}
+   :home-town            {:fi "Kotikunta"
+                          :sv "Hemkommun"
+                          :en "Home town"}
+   :city                 {:fi "Kaupunki ja maa"
+                          :sv "Stad och land"
+                          :en "City and country"}
+   :postal-code          {:fi "Postinumero"
+                          :sv "Postnummer"
+                          :en "Postal code"}
+   :postal-office        {:fi "Postitoimipaikka"
+                          :sv "Postkontor"
+                          :en "Postal office"}
+   :language             {:fi "Äidinkieli"
+                          :sv "Modersmål"
+                          :en "Native language"}
+   :label                {:fi "Henkilötiedot"
+                          :sv "Personuppgifter"
+                          :en "Personal information"}
+   :label-amendment      {:fi "(Osio lisätään automaattisesti lomakkeelle)"
+                          :sv "Partitionen automatiskt lägga formen"
+                          :en "The section will be automatically added to the application"}
+   :date-formats         {:fi "pp.kk.vvvv"
+                          :sv "dd.mm.åååå"
+                          :en "dd.mm.yyyy"}})
