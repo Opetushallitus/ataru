@@ -68,9 +68,12 @@
          (= "Jatkuva haku"))))
 
 (defn parse-tarjonta-info-by-haku
-  ([tarjonta-service haku-oid included-hakukohde-oids]
+  ([tarjonta-service ohjausparametrit-service haku-oid included-hakukohde-oids]
+   {:pre [(some? tarjonta-service)
+          (some? ohjausparametrit-service)]}
    (when haku-oid
      (let [haku            (.get-haku tarjonta-service haku-oid)
+           ohjausparametrit (.get-parametri ohjausparametrit-service haku-oid)
            hakukohteet     (->> included-hakukohde-oids
                                 (keep #(.get-hakukohde tarjonta-service %))
                                 (map #(parse-hakukohde tarjonta-service %)))
@@ -82,14 +85,20 @@
            :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
-           :hakuaika-dates   (hakuaika/get-hakuaika-info
-                              (first hakukohteet)
-                              haku)                         ; TODO take into account each hakukohde time?
+           :hakuaika-dates   (assoc (hakuaika/get-hakuaika-info
+                                      (first hakukohteet)
+                                      haku ; TODO take into account each hakukohde time?
+                                      ohjausparametrit)
+                                    :hakukierros-end
+                                    (-> ohjausparametrit :PH_HKP :date))
            :is-jatkuva-haku? (jatkuva-haku? haku)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
-  ([tarjonta-service haku-oid]
+  ([tarjonta-service ohjausparametrit-service haku-oid]
    (when haku-oid
-     (parse-tarjonta-info-by-haku tarjonta-service haku-oid (or (->> haku-oid
-                                                                     (.get-haku tarjonta-service)
-                                                                     :hakukohdeOids)
-                                                                [])))))
+     (parse-tarjonta-info-by-haku tarjonta-service
+                                  ohjausparametrit-service
+                                  haku-oid
+                                  (or (->> haku-oid
+                                           (.get-haku tarjonta-service)
+                                           :hakukohdeOids)
+                                      [])))))

@@ -1,6 +1,6 @@
-(ns ataru.virkailija.component-data.value-transformers-spec
+(ns ataru.component-data.value-transformers-spec
   (:require [speclj.core :refer :all]
-            [ataru.virkailija.component-data.value-transformers :as t]))
+            [ataru.component-data.value-transformers :as t]))
 
 (describe "transforming date of birth into dd.mm.yyyy format"
   (tags :unit)

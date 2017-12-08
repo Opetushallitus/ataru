@@ -4,9 +4,7 @@
             [reagent.ratom :refer-macros [reaction]]
             [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
-            [ataru.translations.translation-util :refer [get-translations]]
-            [ataru.translations.application-view :refer [application-view-translations]]
-            [ataru.cljs-util :as cljs-util :refer [console-log]]
+            [ataru.cljs-util :as cljs-util :refer [console-log get-translation]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.application-common.application-field-common
              :refer
@@ -106,12 +104,13 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer-path  (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
-                       [:application :person id]
-                       (cond-> [:application :answers id]
-                               idx (concat [:values idx 0])
-                               :always (concat [:value])))
-        answer       (subscribe [:state-query answer-path])
+        answer       (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+                       {:value @(subscribe [:state-query
+                                            [:application :person id]])
+                        :valid true}
+                       @(subscribe [:state-query
+                                    (cond-> [:application :answers id]
+                                      idx (concat [:values idx 0]))]))
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         size         (get-in field-descriptor [:params :size])
@@ -121,8 +120,8 @@
                        (partial multi-value-field-change field-descriptor 0 idx)
                        (partial textual-field-change field-descriptor))
         show-error?  (show-text-field-error-class? field-descriptor
-                                                   (:value @answer)
-                                                   (:valid @answer))
+                                                   (:value answer)
+                                                   (:valid answer))
         cannot-edit? (and @editing @(subscribe [:state-query [:application :answers id :cannot-edit]]))
         cannot-view? (and @editing @(subscribe [:state-query [:application :answers id :cannot-view]]))]
     [div-kwd
@@ -141,12 +140,12 @@
                                    " application__form-text-input--normal"))
                :value       (if cannot-view?
                               "***********"
-                              @answer)
+                              (:value answer))
                :on-blur     on-blur
                :on-change   on-change
                :required    (is-required-field? field-descriptor)}
               (when (or disabled cannot-view? cannot-edit?) {:disabled true}))]
-      (when (not-empty (:errors @answer))
+      (when (not-empty (:errors answer))
         [:div.application__validation-error-dialog
          [:div.application__validation-error-dialog__arrow]
          [:div.application__validation-error-dialog__box
@@ -155,7 +154,7 @@
                           (with-meta (non-blank-val (get error @lang)
                                                     (get error @default-lang))
                             {:key (str "error-" idx)}))
-                        (:errors @answer)))]])]]))
+                        (:errors answer)))]])]]))
 
 (defn repeatable-text-field [field-descriptor & {:keys [div-kwd] :or {div-kwd :div.application__form-field}}]
   (let [id           (keyword (:id field-descriptor))
@@ -193,8 +192,7 @@
                   (when @cannot-edit?
                     {:disabled true}))]])
             (map-indexed
-              (let [first-is-empty? (empty? (first (map :value @values)))
-                    translations    (get-translations (keyword @lang) application-view-translations)]
+              (let [first-is-empty? (empty? (first (map :value @values)))]
                 (fn [idx {:keys [value last?]}]
                   [:div.application__form-repeatable-text-wrap
                    [:input.application__form-text-input
@@ -209,8 +207,7 @@
                       (when (and (not last?) (empty? value))
                         {:on-blur on-blur})
                       (when last?
-                        {:placeholder
-                         (:add-more translations)})
+                        {:placeholder (get-translation :add-more)})
                       (when (or @cannot-edit?
                                 (and last? first-is-empty?))
                         {:disabled true}))]
@@ -344,9 +341,7 @@
                          (.preventDefault event)
                          (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
          [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         @(subscribe [:application/get-i18n-text {:fi "Lisää"
-                                                  :sv "Lägg till"
-                                                  :en "Add more"}])]])]))
+         (get-translation :add-more-button)]])]))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
@@ -561,14 +556,8 @@
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
-      [:span.application__form-upload-button-add-text (case language
-                                                        :fi "Lisää liite..."
-                                                        :en "Upload attachment..."
-                                                        :sv "Ladda upp bilagan...")]]
-     (let [file-size-info-text (case language
-                                 :fi "Tiedoston maksimikoko on 10 MB"
-                                 :en "Maximum file size is 10 MB"
-                                 :sv "Den maximala filstorleken är 10 MB")
+      [:span.application__form-upload-button-add-text (get-translation :add-attachment)]]
+     (let [file-size-info-text (get-translation :file-size-info)
            size-error-path     (if question-group-idx
                                  [:application :answers (keyword component-id) :errors question-group-idx :too-big]
                                  [:application :answers (keyword component-id) :errors :too-big])
@@ -680,7 +669,6 @@
                             (dispatch [:application/remove-adjacent-field field-descriptor row-idx])))]
     (fn [field-descriptor & {question-group-idx :idx}]
       (let [row-amount   (subscribe [:application/adjacent-field-row-amount field-descriptor question-group-idx])
-            translations (get-translations (keyword @language) application-view-translations)
             add-on-click (fn add-adjacent-text-field [event]
                            (.preventDefault event)
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))
@@ -710,13 +698,13 @@
                        (when (and (pos? row-idx) (not cannot-edit?))
                          [:a {:data-row-idx row-idx
                               :on-click     remove-on-click}
-                          [:span.application__form-adjacent-row--mobile-only (:remove-row translations)]
+                          [:span.application__form-adjacent-row--mobile-only (get-translation :remove-row)]
                           [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])])))]
          (when (and (get-in field-descriptor [:params :repeatable])
                     (not cannot-edit?))
            [:a.application__form-add-new-row
             {:on-click add-on-click}
-            [:i.zmdi.zmdi-plus-square] (str " " (:add-row translations))])]))))
+            [:i.zmdi.zmdi-plus-square] (str " " (get-translation :add-row))])]))))
 
 (defn- feature-enabled? [{:keys [fieldType]}]
   (or (not= fieldType "attachment")

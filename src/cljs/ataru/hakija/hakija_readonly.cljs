@@ -10,8 +10,6 @@
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [ataru.cljs-util :refer [console-log]]
-            [ataru.translations.application-view :refer [application-view-translations]]
-            [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint

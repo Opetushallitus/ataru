@@ -10,8 +10,6 @@
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [ataru.cljs-util :refer [console-log]]
-            [ataru.translations.application-view :refer [application-view-translations]]
-            [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -97,7 +95,9 @@
         [:h2 (-> content :label lang)]
         (when (and (= (:module content) "person-info")
                    (-> application :person :turvakielto))
-          [:p.security-block "Henkilöllä turvakielto!"])
+          [:p.security-block
+           [:i.zmdi.zmdi-account-o]
+           "Henkilöllä turvakielto!"])
         [scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
          (child-fields children application lang @ui))])))

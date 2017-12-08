@@ -1,4 +1,4 @@
-(ns ataru.virkailija.component-data.component
+(ns ataru.component-data.component
   (:require [ataru.util :as util]))
 
 (defn text-field
@@ -61,7 +61,7 @@
    in the editor side. If used WITHOUT a :module keyword associated to it,
    the editor UI will fail at ataru.virkailija.editor.core/soresu->reagent.
 
-   Please see ataru.virkailija.component-data.person-info-module for example."
+   Please see ataru.component-data.person-info-module for example."
   [child-components]
   {:fieldClass "wrapperElement"
    :fieldType  "rowcontainer"

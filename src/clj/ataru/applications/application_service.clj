@@ -118,8 +118,8 @@
    :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
 
 (defn get-person [application person-client]
-  (let [person-from-onr (->> (:person-oid application)
-                             (person-service/get-person person-client))
+  (let [person-from-onr (when-let [oid (:person-oid application)]
+                          (person-service/get-person person-client oid))
         yksiloity       (or (-> person-from-onr :yksiloity)
                             (-> person-from-onr :yksiloityVTJ))
         person-info     (if yksiloity
@@ -128,16 +128,17 @@
     (merge
      {:oid         (:person-oid application)
       :turvakielto (-> person-from-onr :turvakielto boolean)
-      :yksiloity   yksiloity}
+      :yksiloity   (boolean yksiloity)}
      person-info)))
 
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-key session organization-service tarjonta-service person-client]
+  [application-key session organization-service tarjonta-service ohjausparametrit-service person-client]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
                           tarjonta-service
+                          ohjausparametrit-service
                           (:haku bare-application)
                           (:hakukohde bare-application))
         form             (-> (:form bare-application)
@@ -161,7 +162,7 @@
      :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde session organization-service tarjonta-service]
+  [application-keys selected-hakukohde session organization-service tarjonta-service ohjausparametrit-service]
   (let [applications         (application-store/get-applications-by-keys application-keys)
         forms                (->> applications
                                   (map :form-key)
@@ -173,7 +174,7 @@
                                              [:view-applications :edit-applications])
                                           forms))
         allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)]
-    (ByteArrayInputStream. (excel/export-applications allowed-applications selected-hakukohde tarjonta-service))))
+    (ByteArrayInputStream. (excel/export-applications allowed-applications selected-hakukohde tarjonta-service ohjausparametrit-service))))
 
 (defn- save-application-hakukohde-reviews
   [virkailija application-key hakukohde-reviews session]

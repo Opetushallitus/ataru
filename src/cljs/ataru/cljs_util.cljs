@@ -9,7 +9,8 @@
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [goog.string.format])
+            [goog.string.format]
+            [ataru.translations.translation-util :as translation-util])
   (:import [goog.net Cookies]))
 
 (defn console-log [& args]
@@ -205,3 +206,6 @@
 (defn vector-of-length [target-length]
   (comp (partial resize-vector target-length)
         (fnil identity [])))
+
+(defn get-translation [key]
+  (translation-util/get-translation key @(subscribe [:application/form-language])))

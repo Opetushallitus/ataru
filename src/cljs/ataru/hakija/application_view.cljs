@@ -3,9 +3,7 @@
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
-            [ataru.cljs-util :as util]
-            [ataru.translations.translation-util :refer [get-translations]]
-            [ataru.translations.application-view :as translations]
+            [ataru.cljs-util :as util :refer [get-translation]]
             [ataru.hakija.application :refer [application-processing-jatkuva-haku?]]
             [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
@@ -42,19 +40,16 @@
         apply-start-date  (-> form :tarjonta :hakuaika-dates :start)
         apply-end-date    (-> form :tarjonta :hakuaika-dates :end)
         hakuaika-on       (-> form :tarjonta :hakuaika-dates :on)
-        translations      (get-translations
-                            (keyword selected-lang)
-                            translations/application-view-translations)
         apply-dates       (when haku-name
                             (if (and apply-start-date apply-end-date)
-                              (str (:application-period translations)
+                              (str (get-translation :application-period)
                                    " "
                                    (millis->str apply-start-date)
                                    " - "
                                    (millis->str apply-end-date)
                                    (when (and (not hakuaika-on) (nil? @virkailija-secret))
-                                     (str " (" (:not-within-application-period translations) ")")))
-                              (:continuous-period translations)))]
+                                     (str " (" (get-translation :not-within-application-period) ")")))
+                              (get-translation :continuous-period)))]
     (fn [form]
       [:div
        [:div.application__header-container
@@ -77,7 +72,7 @@
                   (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
-           (:application-processed-cant-modify translations)]])])))
+           (get-translation :application-processed-cant-modify)]])])))
 
 (defn readonly-fields [form]
   (let [application (subscribe [:state-query [:application]])]
@@ -129,10 +124,7 @@
         show-feedback? (reaction (and (= :submitted @submit-status)
                                       (not @hidden?)))]
     (fn []
-      (let [translations (get-translations
-                           (keyword (:selected-language @form))
-                           translations/application-view-translations)
-            rated?       (= :rating-given @rating-status)
+      (let [rated?       (= :rating-given @rating-status)
             submitted?   (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
@@ -141,7 +133,7 @@
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
-              [:h2.application-feedback-form__header (:feedback-header translations)])
+              [:h2.application-feedback-form__header (get-translation :feedback-header)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -160,13 +152,13 @@
                (let [stars-selected (or @stars @star-hovered)]
                  (if (and (int? stars-selected)
                           (< 0 stars-selected 6))
-                   (get (:feedback-ratings translations) stars-selected)
+                   (get (get-translation :feedback-ratings) stars-selected)
                    (gstring/unescapeEntities "&nbsp;")))])
             (when (not submitted?)
               [:div.application-feedback-form__text-feedback-container
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
-                 :placeholder (:feedback-text-placeholder translations)
+                 :placeholder (get-translation :feedback-text-placeholder)
                  :max-length  2000}]])
             (when (and (not submitted?)
                      rated?)
@@ -174,15 +166,17 @@
                {:on-click (fn [evt]
                             (.preventDefault evt)
                             (dispatch [:application/rating-feedback-submit]))}
-               (:feedback-send translations)])
+               (get-translation :feedback-send)])
             (when (and (not submitted?)
                        (not rated?))
               [:a.application__send-feedback-button.application__send-feedback-button--disabled
-               (:feedback-send translations)])
+               (get-translation :feedback-send)])
             (when (not submitted?)
-              [:div.application-feedback-form__disclaimer (:feedback-disclaimer translations)])
+              [:div.application-feedback-form__disclaimer (get-translation :feedback-disclaimer)])
             (when submitted?
-              [:div.application__thanks [:i.zmdi.zmdi-thumb-up.application__thanks-icon] [:span.application__thanks-text (:feedback-thanks translations)]])]])))))
+              [:div.application__thanks
+               [:i.zmdi.zmdi-thumb-up.application__thanks-icon]
+               [:span.application__thanks-text (get-translation :feedback-thanks)]])]])))))
 
 (defn error-display []
   (let [error-message (subscribe [:state-query [:error :message]])

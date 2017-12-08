@@ -333,11 +333,10 @@
     (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-latest-version-of-application-for-edit
-  [{secret :secret
-    virkailija-sercret :virkailija-secret :as application}]
+  [{:keys [secret virkailija-secret]}]
   (if secret
     (get-latest-application-by-secret secret)
-    (get-latest-application-for-virkailija-edit virkailija-sercret)))
+    (get-latest-application-for-virkailija-edit virkailija-secret)))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
@@ -648,3 +647,6 @@
         (merge (select-keys virkailija [:first_name :last_name]))
         (dissoc :virkailija_oid :id)
         (->kebab-case-kw))))
+
+(defn get-application-info-for-tilastokeskus [haku-oid]
+  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))

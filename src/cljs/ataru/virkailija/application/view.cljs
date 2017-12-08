@@ -1011,7 +1011,7 @@
        (when person-oid
          [:div.application-handling__review-area-main-heading-person-oid-row
           [:a
-           {:href   (str "/authentication-henkiloui/html/henkilo/"
+           {:href   (str "/henkilo-ui/oppija/"
                          person-oid
                          "?permissionCheckService=ATARU")
             :target "_blank"}
@@ -1020,7 +1020,7 @@
             (str "Oppija " person-oid)]]
           (when-not yksiloity
             [:a.individualization
-             {:href   (str "/authentication-henkiloui/html/henkilo/" person-oid "/duplikaatit")
+             {:href   (str "/henkilo-ui/oppija/" person-oid "/duplikaatit")
               :target "_blank"}
              [:i.zmdi.zmdi-account-o]
              [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]

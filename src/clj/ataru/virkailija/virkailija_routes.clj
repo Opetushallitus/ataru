@@ -129,6 +129,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          ohjausparametrit-service
                           virkailija-tarjonta-service
                           cache-service
                           person-service]}]
@@ -259,6 +260,7 @@
                                                                                         session
                                                                                         organization-service
                                                                                         tarjonta-service
+                                                                                        ohjausparametrit-service
                                                                                         person-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -321,7 +323,8 @@
                                  selected-hakukohde
                                  session
                                  organization-service
-                                 tarjonta-service)}))
+                                 tarjonta-service
+                                 ohjausparametrit-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
@@ -486,6 +489,15 @@
                                              session
                                              person-service
                                              fromDate)]
+                       (response/ok applications)
+                       (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/tilastokeskus" {session :session}
+                     :summary "Get application info for tilastokeskus"
+                     :query-params [hakuOid :- s/Str]
+                     :return [ataru-schema/TilastokeskusApplication]
+                     (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
+                                                                                                             session
+                                                                                                             hakuOid)]
                        (response/ok applications)
                        (response/unauthorized {:error "Unauthorized"}))))))
 

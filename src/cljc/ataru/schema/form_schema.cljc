@@ -140,7 +140,8 @@
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde
    (s/optional-key :hakuaika-dates)    {:start                s/Int
                                         (s/optional-key :end) (s/maybe s/Int)
-                                        :on                   s/Bool}})
+                                        :on                   s/Bool
+                                        :hakukierros-end      (s/maybe s/Int)}})
 
 (s/defschema Haku
   {:oid s/Str
@@ -289,6 +290,12 @@
    :postinumero  s/Str
    :passinNumero (s/maybe s/Str)
    :idTunnus     (s/maybe s/Str)})
+
+(s/defschema TilastokeskusApplication
+  {:hakemus_oid    s/Str
+   :haku_oid       s/Str
+   :hekilo_oid     s/Str
+   :hakukohde_oids [s/Str]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

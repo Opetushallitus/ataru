@@ -460,6 +460,7 @@ section.editor-form > div > .editor-form__component-wrapper {
 .editor-form__info-addon-wrapper {
   padding: 0px 14px 20px;
   .editor-form__info-addon-checkbox {
+    display: flex;
     label {
       color: @blue-text-color;
       cursor: pointer;
@@ -499,10 +500,10 @@ section.editor-form > div > .editor-form__component-wrapper {
 }
 
 .editor-form__info-addon-inputs {
-  padding-left: 26px;
   padding-top: 10px;
   .editor-form__text-field {
-    width: 408px;
+    height: 70px;
+    width: 434px;
   }
 }
 
@@ -652,7 +653,6 @@ form > div > .editor-form__component-wrapper {
 
 .editor-form__checkbox-container {
   display: flex;
-  align-items: baseline;
   margin: 0px;
   margin-bottom: 10px;
 }
@@ -787,7 +787,7 @@ form > div > .editor-form__component-wrapper {
 }
 
 .infoelement textarea {
-    height: 110px;
+    height: 115px;
     width: 700px;
     background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  4%);
     margin-bottom: 6px;
@@ -872,9 +872,6 @@ form > div > .editor-form__component-wrapper {
   padding: 10px;
   display: block;
   width: 100%;
-}
-
-.editor-form__info-addon-checkbox {
 }
 
 .editor-form__info-addon-inputs {
@@ -980,6 +977,15 @@ textarea.editor-form__text-field ~ .editor-form__markdown-anchor {
   display: none;
 }
 
+.editor-form__text-field:focus ~ .editor-form__info-addon-markdown-anchor {
+  display: block;
+}
+
+.editor-form__info-addon-markdown-anchor {
+  height: 70px;
+  display: none;
+}
+
 input.editor-form__text-field ~ .editor-form__markdown-anchor {
   height: 42px;
   display: none;
@@ -1004,7 +1010,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   z-index: 1; /* On mobile (narrow screen) section line is above this container without this */
   position: absolute;
   top: 0;
-  left: 0;
+  left: 9px;
   background-color: white;
   color: @sg-color-gray;
   min-width: 170px;
@@ -1019,7 +1025,7 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 
 .editor-form__markdown-help-arrow-left {
   top: 10px;
-  left: -21px;
+  left: -12px;
   width: 21px;
   height: 15px;
   position: absolute;

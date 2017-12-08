@@ -456,6 +456,7 @@ ORDER BY a.created_time DESC;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -550,6 +551,7 @@ WHERE a.secret = :secret;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -844,3 +846,17 @@ ORDER BY a.created_time DESC;
 --name: yesql-add-review-note<!
 INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
 VALUES (:application_key, :notes, :virkailija_oid);
+
+--name: yesql-tilastokeskus-applications
+SELECT
+  haku AS haku_oid,
+  key AS hakemus_oid,
+  person_oid hekilo_oid,
+  hakukohde AS hakukohde_oids
+FROM latest_applications
+  JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND haku = :haku_oid
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

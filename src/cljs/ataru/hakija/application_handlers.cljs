@@ -10,10 +10,8 @@
                                               create-application-to-submit
                                               extract-wrapper-sections]]
             [taoensso.timbre :refer-macros [spy debug]]
-            [ataru.translations.translation-util :refer [get-translations]]
-            [ataru.translations.application-view :refer [application-view-translations]]
             [clojure.data :as d]
-            [ataru.virkailija.component-data.value-transformers :as value-transformers]))
+            [ataru.component-data.value-transformers :as value-transformers]))
 
 (defn initialize-db [_ _]
   {:form        nil
@@ -841,12 +839,8 @@
   (fn [{:keys [db]} [_ field-descriptor component-id attachment-idx filename file retries question-group-idx response]]
     (let [rate-limited? (rate-limit-error? response)
           current-error (if rate-limited?
-                          {:fi "Tiedostoa ei ladattu, yritä uudelleen"
-                           :en "File failed to upload, try again"
-                           :sv "Fil inte laddat, försök igen"}
-                          {:fi "Kielletty tiedostomuoto"
-                           :en "File type forbidden"
-                           :sv "Förbjudet filformat"})]
+                          (util/get-translation :file-upload-failed)
+                          (util/get-translation :file-type-forbidden))]
       (if (and rate-limited? (< retries 3))
         {:db db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment field-descriptor component-id attachment-idx file retries question-group-idx]
@@ -952,8 +946,7 @@
   :application/set-page-title
   (fn [{:keys [db]}]
     (let [lang-kw       (keyword (-> db :form :selected-language))
-          translations  (get-translations lang-kw application-view-translations)
-          title-prefix  (:page-title translations)
+          title-prefix  (util/get-translation :page-title)
           title-suffix  (or
                           (lang-kw (-> db :form :tarjonta :haku-name))
                           (-> db :form :name))]

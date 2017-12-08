@@ -1,5 +1,5 @@
-(ns ataru.virkailija.component-data.value-transformers-test
-  (:require [ataru.virkailija.component-data.value-transformers :as t])
+(ns ataru.component-data.value-transformers-test
+  (:require [ataru.component-data.value-transformers :as t])
   (:require-macros [cljs.test :refer [deftest is]]))
 
 (deftest transforms-dob-string

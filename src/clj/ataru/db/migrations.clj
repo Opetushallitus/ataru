@@ -6,7 +6,7 @@
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as application-store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
-    [ataru.virkailija.component-data.person-info-module :as person-info-module]
+    [ataru.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [ataru.util.random :as c]
@@ -14,7 +14,7 @@
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]
-    [ataru.virkailija.component-data.value-transformers :as t]
+    [ataru.component-data.value-transformers :as t]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.background-job.job :as job]
@@ -57,13 +57,12 @@
       form))))
 
 (defn refresh-person-info-modules []
-  (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (try
-                            (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
-                            (catch Exception _ []))]
-    (doseq [form existing-forms]
-      (let [changed-form (update-person-info-module new-person-module form)]
-        (store/create-form-or-increment-version! changed-form)))))
+  (let [new-person-module (person-info-module/person-info-module)]
+    (doseq [form (->> (store/get-all-forms)
+                      (map #(store/fetch-by-id (:id %)))
+                      (sort-by :created-time))]
+      (store/create-form-or-increment-version!
+       (update-person-info-module new-person-module form)))))
 
 (defn application-id->application-key
   "Make application_events to refer to applications using
@@ -329,7 +328,17 @@
   (camel-case-content-keys))
 
 (migrations/defmigration
-  migrate-application-review-notes-to-own-table "1.75"
+  migrate-person-info-module "1.74"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
+
+(migrations/defmigration
+  migrate-person-info-module "1.75"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
+
+(migrations/defmigration
+  migrate-application-review-notes-to-own-table "1.77"
   "Migrate application review notes to application_review_notes table"
   (review-notes->own-table))
 
