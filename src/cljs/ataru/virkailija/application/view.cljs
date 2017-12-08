@@ -412,7 +412,7 @@
          [:a.application-handling__filter-state-link
           {:on-click toggle-filter-opened}
           [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
-          (str "Hakemus" (when-not all-filters-selected? " *"))]
+          (str "Käsittelyvaihe" (when-not all-filters-selected? " *"))]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all

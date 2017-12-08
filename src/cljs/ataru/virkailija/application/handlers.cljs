@@ -42,8 +42,19 @@
  (fn [db [_ _]]
    (close-application db)))
 
-(defn review-state-counts [applications]
-  (frequencies (map :state applications)))
+(defn review-state-counts
+  [applications review-state]
+  (reduce
+    (fn [acc {:keys [application-hakukohde-reviews]}]
+      (merge-with
+        +
+        acc
+        (frequencies
+          (map
+            :state
+            (filter #(= review-state (:review-state %)) application-hakukohde-reviews)))))
+    {}
+    applications))
 
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
