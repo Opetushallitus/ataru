@@ -769,7 +769,8 @@
         name         (reaction (if (and (:first-name @note) (:last-name @note))
                                  (str (:first-name @note) " " (:last-name @note))
                                  "Virkailija ei tiedossa"))
-        created-time (reaction (f/unparse-local date-format (:created-time @note)))
+        created-time (reaction (when-let [created-time (:created-time @note)]
+                                 (f/unparse-local date-format created-time)))
         notes        (reaction (:notes @note))
         animated?    (reaction (:animated? @note))]
     (fn [_]

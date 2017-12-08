@@ -46,6 +46,7 @@
         var scoreForTyrni = scoreForKuikeloinen - 10;
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
+        .then(wait.until(function() { return reviewNotesSubmitButton().attr('disabled') !== 'disabled' }))
         .then(clickElement(reviewNotesSubmitButton))
         .then(wait.until(function() { return testFrame().find('.application-handling__review-details-icon + span:eq(0)').text() === 'Veijo Virkailija' }))
         .then(setTextFieldValue(score, scoreForVatanen))
