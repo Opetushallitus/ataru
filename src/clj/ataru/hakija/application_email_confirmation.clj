@@ -8,7 +8,6 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.background-job.email-job :as email-job]
     [ataru.translations.translation-util :refer [get-translations]]
-    [ataru.translations.email-confirmation :as translations]
     [ataru.config.core :refer [config]]))
 
 (defn- get-differing-translations [raw-translations translation-mappings]
@@ -16,9 +15,7 @@
 
 (defn create-email [application-id translation-mappings]
   (let [application      (application-store/get-application application-id)
-        raw-translations (get-translations
-                          (keyword (:lang application))
-                          translations/email-confirmation-translations)
+        raw-translations (get-translations (keyword (:lang application)))
         translations     (merge
                            raw-translations
                            (get-differing-translations raw-translations translation-mappings))
