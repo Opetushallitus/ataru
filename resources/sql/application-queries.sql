@@ -384,7 +384,7 @@ WHERE application_key = :application_key;
 SELECT rn.id, rn.created_time, rn.application_key, rn.notes, v.first_name, v.last_name
 FROM application_review_notes rn
 LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
-WHERE rn.application_key = :application_key
+WHERE rn.application_key = :application_key AND (removed IS NULL OR removed > NOW())
 ORDER BY rn.created_time ASC;
 
 -- name: yesql-get-applications-by-keys
@@ -848,7 +848,7 @@ INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
 VALUES (:application_key, :notes, :virkailija_oid);
 
 -- name: yesql-remove-review-note!
-DELETE FROM application_review_notes WHERE id = :id;
+UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
 
 --name: yesql-tilastokeskus-applications
 SELECT

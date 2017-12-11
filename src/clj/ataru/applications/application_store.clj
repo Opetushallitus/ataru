@@ -645,7 +645,7 @@
                                               :notes           (:notes note)
                                               :virkailija_oid  (:oid virkailija)})
         (merge (select-keys virkailija [:first_name :last_name]))
-        (dissoc :virkailija_oid)
+        (dissoc :virkailija_oid :removed)
         (->kebab-case-kw))))
 
 (defn get-application-info-for-tilastokeskus [haku-oid]
