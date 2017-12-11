@@ -111,6 +111,10 @@
   (when (not @element-visible)
     (reset! submit-button-state :submit)))
 
+(defn- from-multi-lang
+  [text]
+  (some #(get text %) [:fi :sv :en]))
+
 (defn- mass-update-applications-link
   []
   (let [element-visible?           (r/atom false)
@@ -120,19 +124,20 @@
         selected-from-review-state (r/atom nil)
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
+        haku-header                (subscribe [:application/list-heading-data-for-haku])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
                                            review-states/application-review-states)]
     (fn []
       (when-not (empty? @filtered-applications)
-        (let [from-states       (reduce
-                                  (fn [acc {:keys [state]}]
-                                    (if (contains? acc state)
-                                      (update acc state inc)
-                                      (assoc acc state 1)))
-                                  all-states
-                                  @filtered-applications)]
+        (let [from-states (reduce
+                            (fn [acc {:keys [state]}]
+                              (if (contains? acc state)
+                                (update acc state inc)
+                                (assoc acc state 1)))
+                            all-states
+                            @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
            [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled
             {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state not)}
@@ -143,6 +148,13 @@
                {:on-click #(toggle-mass-update-popup-visibility element-visible? submit-button-state false)}
                [:i.zmdi.zmdi-close]]
               [:h4.application-handling__mass-edit-review-states-heading.application-handling__mass-edit-review-states-heading--title "Massamuutos"]
+              (when-let [[haku hakukohde] @haku-header]
+                [:p
+                 (from-multi-lang (:name haku))
+                 (when (:name hakukohde)
+                   (str
+                     ", "
+                     (from-multi-lang (:name hakukohde))))])
               [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
 
               (if @from-list-open?
@@ -195,10 +207,6 @@
                  "Vahvista muutos"]
 
                 [:div])])])))))
-
-(defn- from-multi-lang
-  [text]
-  (some #(get text %) [:fi :sv :en]))
 
 (def all-hakukohteet-label "Kaikki hakukohteet")
 
