@@ -847,6 +847,9 @@ ORDER BY a.created_time DESC;
 INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
 VALUES (:application_key, :notes, :virkailija_oid);
 
+-- name: yesql-remove-review-note!
+DELETE FROM application_review_notes WHERE id = :id;
+
 --name: yesql-tilastokeskus-applications
 SELECT
   haku AS haku_oid,

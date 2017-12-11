@@ -227,3 +227,6 @@
                                 organization-service
                                 [:view-applications :edit-applications])
   (application-store/add-review-note note session))
+
+(defn remove-review-note [note-id]
+  (application-store/remove-review-note note-id))

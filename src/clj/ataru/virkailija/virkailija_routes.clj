@@ -290,6 +290,14 @@
                        (response/ok note)
                        (response/bad-request)))
 
+                   (api/DELETE "/notes/:note-id" []
+                     :summary "Remove note"
+                     :return {:id s/Int}
+                     :path-params [note-id :- s/Int]
+                     (if-let [note-id (application-service/remove-review-note note-id)]
+                       (response/ok {:id note-id})
+                       (response/bad-request)))
+
                    (api/PUT "/review" {session :session}
                      :summary "Update existing application review"
                      :body [review ataru-schema/Review]

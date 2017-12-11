@@ -603,10 +603,17 @@
   (fn [db [_ review-comment]]
     (assoc-in db [:application :review-comment] review-comment)))
 
-(reg-event-db :application/remove-review-note
-  (fn [db [_ note-idx]]
-    (update-in db
-               [:application :review-notes]
-               (fn [notes]
-                 (vec (concat (subvec notes 0 note-idx)
-                              (subvec notes (inc note-idx))))))))
+(reg-event-fx :application/remove-review-note
+  (fn [{:keys [db]} [_ note-idx]]
+    (let [note-id (-> db :application :review-notes (get note-idx) :id)
+          db      (assoc-in db [:application :review-notes note-idx :state] :removing)]
+      {:db   db
+       :http {:method              :delete
+              :path                (str "/lomake-editori/api/applications/notes/" note-id)
+              :handler-or-dispatch :application/handle-remove-review-note-response}})))
+
+(reg-event-db :application/handle-remove-review-note-response
+  (fn [db [_ resp]]
+    (let [note-with-id (comp (partial = (:id resp)) :id)
+          remove-note  (comp vec (partial remove note-with-id))]
+      (update-in db [:application :review-notes] remove-note))))

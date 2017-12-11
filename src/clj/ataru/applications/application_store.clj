@@ -650,3 +650,7 @@
 
 (defn get-application-info-for-tilastokeskus [haku-oid]
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
+
+(defn remove-review-note [note-id]
+  (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
+    note-id))

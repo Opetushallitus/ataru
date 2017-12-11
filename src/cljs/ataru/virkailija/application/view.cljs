@@ -772,8 +772,9 @@
         created-time (reaction (when-let [created-time (:created-time @note)]
                                  (f/unparse-local date-format created-time)))
         notes        (reaction (:notes @note))
-        animated?    (reaction (:animated? @note))]
-    (fn [_]
+        animated?    (reaction (:animated? @note))
+        disabled?    (reaction (-> @note :state some?))]
+    (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
@@ -785,6 +786,7 @@
         [:div.application-handling__review-details-icons
          [:a.application-handling__review-details-remove-link
           {:href     "#"
+           :class    (when @disabled? "application-handling__review-details-remove-link--disabled")
            :on-click (fn [event]
                        (.preventDefault event)
                        (dispatch [:application/remove-review-note note-idx]))}
