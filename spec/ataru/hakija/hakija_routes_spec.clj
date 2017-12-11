@@ -205,7 +205,7 @@
 
     (it "should not get application with wrong secret"
       (with-get-response "asdfasfas" resp
-        (should= 500 (:status resp))))
+        (should= 404 (:status resp))))
 
     (it "should get application"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
