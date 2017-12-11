@@ -64,7 +64,7 @@
 
 (defn- review-state-label
   [state-name]
-  (second (first (filter #(= (first %) state-name) review-states/application-review-states))))
+  (second (first (filter #(= (first %) state-name) review-states/application-hakukohde-processing-states))))
 
 (defn- review-label-with-count
   [label count]
@@ -128,14 +128,15 @@
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
-                                           review-states/application-review-states)]
+                                           review-states/application-hakukohde-processing-states)]
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
-                            (fn [acc {:keys [state]}]
-                              (if (contains? acc state)
-                                (update acc state inc)
-                                (assoc acc state 1)))
+                            (fn [acc {:keys [application-hakukohde-reviews]}]
+                              (merge-with
+                                +
+                                acc
+                                (frequencies (map :state (filter #(= "processing-state" (:requirement %)) application-hakukohde-reviews)))))
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
@@ -193,10 +194,23 @@
                 :confirm
                 [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
                  {:on-click (fn []
-                              (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                    to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
+                              (let [from-state-name              (selected-or-default-mass-review-state selected-from-review-state from-states)
+                                    to-state-name                (selected-or-default-mass-review-state selected-to-review-state all-states)
+                                    hakukohde-in-from-state-keys (->> @filtered-applications
+                                                                      (filter (fn [{:keys [application-hakukohde-reviews]}]
+                                                                                (let [processing-state (:state
+                                                                                                         (find-first
+                                                                                                           #(= "processing-state" (:requirement %))
+                                                                                                           application-hakukohde-reviews))]
+                                                                                  (or
+                                                                                    (= from-state-name
+                                                                                       processing-state)
+                                                                                    (and (= from-state-name
+                                                                                            review-states/initial-application-hakukohde-processing-state)
+                                                                                         (nil? processing-state))))))
+                                                                      (map :key))]
                                 (dispatch [:application/mass-update-application-reviews
-                                           (map :key (filter #(= (:state %) from-state-name) @filtered-applications))
+                                           hakukohde-in-from-state-keys
                                            from-state-name
                                            to-state-name])
                                 (reset! selected-from-review-state nil)

@@ -583,10 +583,10 @@
        (into {})))
 
 (defn- assert-correct-from-state-for-review
-  [application-review from-state]
-  (assert (or (= (:state application-review) from-state)
-              (and (nil? (:state application-review))
-                   (= from-state ataru.application.review-states/initial-application-review-state)))))
+  [application-hakukohde-review from-state]
+  (assert (or (= (:state application-hakukohde-review) from-state)
+              (and (nil? (:state application-hakukohde-review))
+                   (= from-state ataru.application.review-states/initial-application-hakukohde-processing-state)))))
 
 (defn mass-update-application-states
   [session application-keys from-state to-state]
@@ -595,7 +595,10 @@
                                   username         (get-in session [:identity :username])
                                   organization-oid (get-in session [:identity :organizations 0 :oid])]
                               (mapv (fn [application-key]
-                                      (let [existing-review   (get-application-review application-key)
+                                      (let [existing-review   (->>
+                                                                (get-application-hakukohde-reviews application-key)
+                                                                (filter #(= "processing-state" (:requirement %)))
+                                                                (first))
                                             new-review        (if existing-review
                                                                 (transform-keys ->snake_case
                                                                                 (-> existing-review
@@ -610,9 +613,7 @@
                                                                :hakukohde        nil
                                                                :review_key       nil}]
                                         (assert-correct-from-state-for-review existing-review from-state)
-                                        (if existing-review
-                                          (yesql-save-application-review! new-review connection)
-                                          (yesql-add-application-review! new-review connection))
+                                        (yesql-upsert-application-hakukohde-review! new-review connection)
                                         (yesql-add-application-event<!
                                           application-event
                                           connection)

@@ -16,6 +16,8 @@
    ["processed" "Käsitelty"]
    ["information-request" "Täydennyspyyntö"]])
 
+(def initial-application-hakukohde-processing-state "unprocessed")
+
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
    ["selection-proposal" "Valintaesitys"]
