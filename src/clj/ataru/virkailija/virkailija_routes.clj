@@ -276,7 +276,11 @@
                      :path-params [application-key :- String]
                      :summary "Send the modify application link to the applicant via email"
                      :return ataru-schema/Event
-                     (if-let [resend-event (application-service/send-modify-application-link-email application-key session organization-service)]
+                     (if-let [resend-event (application-service/send-modify-application-link-email
+                                            application-key
+                                            session
+                                            organization-service
+                                            tarjonta-service)]
                        (response/ok resend-event)
                        (response/bad-request)))
 

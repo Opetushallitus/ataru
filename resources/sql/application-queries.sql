@@ -475,6 +475,7 @@ SELECT
   form_id AS form,
   created_time,
   content,
+  hakukohde,
   person_oid,
   secret
 FROM applications

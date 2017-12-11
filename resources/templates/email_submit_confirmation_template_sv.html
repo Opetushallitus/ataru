@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">Din ansökan har mottagits</span>
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Dina ansökningsönskemål är:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+          <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Om du vill ändra dina ansökningsönskemål eller ansökan, kan du göra
+          ändringar via följande länken ovan {% if hakukohteet|not-empty %}
+          under ansökningstiden{% endif %}. Dela inte länken vidare till
+          utomstående. Om du använder en offentlig dator, kom ihåg att logga
+          ut från e-postprogrammet.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Om du har nätbankskoder, mobilcertifikat eller ett elektroniskt
+          ID-kort, kan du alternativt logga in
+          i <a href="https://www.studieinfo.fi">Studieinfo.fi</a> och under
+          ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I
+          tjänsten kan du också, se antagningsresultaten och ta emot
+          studieplatsen.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Svara inte på detta meddelande, det har skickats automatiskt.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Med vänliga hälsningar,
+          <br />
+          Studieinfo
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>
