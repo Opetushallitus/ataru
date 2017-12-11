@@ -319,11 +319,18 @@
   (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
         application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
-      [:div.application-habndling-list-row-hakukohteet-wrapper
+      [:div.application-handling-list-row-hakukohteet-wrapper
        {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
-          (let [hakukohde ((keyword hakukohde-oid) all-hakukohteet)]
+          (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
+                show-state-email-icon? (and
+                                         (< 0 (:new-application-modifications application))
+                                         (->> application
+                                              :application-hakukohde-reviews
+                                              (filter #(and (= (:requirement %) "processing-state")
+                                                            (= (:state %) "information-request")))
+                                              (seq)))]
             [:div.application-handling__list-row-hakukohde
              [:span.application-handling__application-hakukohde-cell
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
@@ -337,7 +344,9 @@
                    application-review-states/application-hakukohde-processing-states
                    hakukohde-oid
                    "processing-state")
-                 "Käsittelemättä")]]
+                 "Käsittelemättä")
+               (when show-state-email-icon?
+                 [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              [:span.application-handling__hakukohde-selection-cell
               [:span.application-handling__hakukohde-selection
                (or
