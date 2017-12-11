@@ -81,10 +81,7 @@
     (get-hakuaikas tarjonta-service ohjausparametrit-service application)))
 
 (defn editable-person-info-field? [answer-kw]
-  (contains? #{:first-name
-               :preferred-name
-               :last-name
-               :phone
+  (contains? #{:phone
                :country-of-residence
                :address
                :postal-code
