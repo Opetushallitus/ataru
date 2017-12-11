@@ -589,23 +589,19 @@ and (max-width: 1000px) {
   flex-flow: column nowrap;
   align-items: center;
   color: @gray-of-the-beast;
+  position: relative;
 }
 
 .application-handling__review-details-icon {
   font-size: 26px;
 }
 
-.application-handling__review-details-icons {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-}
-
 .application-handling__review-details-remove-link {
   color: @gray-of-the-beast;
   margin-top: 10px;
+  position: absolute;
+  top: -16px;
+  right: -7px;
 }
 
 .application-handling__review-details-remove-link:hover {
