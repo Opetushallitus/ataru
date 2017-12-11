@@ -43,7 +43,7 @@
    (close-application db)))
 
 (defn review-state-counts
-  [applications review-state]
+  [applications]
   (reduce
     (fn [acc {:keys [application-hakukohde-reviews]}]
       (merge-with
@@ -52,7 +52,11 @@
         (frequencies
           (map
             :state
-            (filter #(= review-state (:review-state %)) application-hakukohde-reviews)))))
+            (or
+              (->> application-hakukohde-reviews
+                   (filter #(= "processing-state" (:requirement %)))
+                   (not-empty))
+              [{:requirement "processing-state" :state "unprocessed"}])))))
     {}
     applications))
 
