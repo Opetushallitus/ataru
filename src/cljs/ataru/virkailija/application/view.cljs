@@ -316,10 +316,11 @@
 
 (defn applications-hakukohde-rows
   [application all-hakukohteet selected-hakukohde]
-  (let [application-hakukohde-oids    (:hakukohde application)
+  (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
         application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
-      [:div.application-habndling-list-row-hakukohteet-wrapper]
+      [:div.application-habndling-list-row-hakukohteet-wrapper
+       {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
           (let [hakukohde ((keyword hakukohde-oid) all-hakukohteet)]
@@ -346,7 +347,7 @@
                    hakukohde-oid
                    "selection-state")
                  "Kesken")]]]))
-        (or application-hakukohde-oids ["form"])))))
+        application-hakukohde-oids))))
 
 (defn application-list-row [application selected?]
   (let [day-date-time           (clojure.string/split (t/time->str (:created-time application)) #"\s")
