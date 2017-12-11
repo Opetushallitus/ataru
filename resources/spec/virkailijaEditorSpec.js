@@ -406,6 +406,20 @@
         })
       })
 
+      describe('text field with numeric input', function() {
+        before(
+          clickComponentMenuItem('Tekstikenttä'),
+          setTextFieldValue(function() { return formComponents().eq(16).find('.editor-form__text-field').eq(0) }, 'Numeerinen tekstikenttä'),
+          clickElement(function() { return formComponents().eq(16).find('.editor-form__button-group:eq(1) div:eq(1) label')})
+        );
+
+        it('has expected contents', function() {
+          expect(formComponents()).to.have.length(17);
+          expect(formComponents().eq(16).find('.editor-form__text-field:first').val()).to.equal('Numeerinen tekstikenttä');
+          expect(formComponents().eq(16).find('.editor-form__button-group:eq(1) div:eq(1) input').prop('checked')).to.equal(true);
+        })
+      });
+
       describe('autosave', function () {
         before(
           wait.until(function() {

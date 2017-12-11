@@ -352,9 +352,12 @@
         type-buttons      ["text" "number"]
         type-button-ids   (reduce (fn [acc btn] (assoc acc btn (str type-group-id "-" btn))) {} type-buttons)
         input-type-change (fn [new-type]
-                            (dispatch-sync [:editor/set-component-value new-type path :params :type]))]
+                            (dispatch-sync [:editor/set-component-value new-type path :params :type])
+                            (dispatch [(if (= new-type "number")
+                                         :editor/add-validator
+                                         :editor/remove-validator) "numeric" path]))]
     [:div
-     [:header.editor-form__component-item-header "Tekstikentän tyyppi"]
+     [:header.editor-form__component-item-header "Kentän tyyppi"]
      [:div.editor-form__button-group
       (doall (for [[btn-name btn-id] type-button-ids]
                ^{:key (str btn-id "-radio")}

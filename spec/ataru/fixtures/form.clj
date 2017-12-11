@@ -145,7 +145,14 @@
                                   :id "164954b5-7b23-4774-bd44-dee14071316b"
                                   :params {}
                                   :options []
-                                  :fieldType "attachment"}]})
+                                  :fieldType "attachment"}
+                                 {:id "5c4e87e0-f56d-4402-ab90-1b4d0b8bdf7d"
+                                  :label {:fi "Numeerinen tekstikenttä"
+                                          :sv ""}
+                                  :params {:type "number"}
+                                  :fieldType "textField"
+                                  :fieldClass "formField"
+                                  :validators ["numeric"]}]})
 
 (def more-questions
   [{:fieldClass "formField"

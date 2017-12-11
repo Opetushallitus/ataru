@@ -288,6 +288,11 @@
     (every? string? value) value
     (every? map? value) (map :value value)))
 
+(defn- numeric?
+  [value _ _]
+  (or (nil? value)
+      (-> value read-string number?)))
+
 (defn- hakukohteet?
   [value _ field-descriptor]
   (let [hakukohde-options          (:options field-descriptor)
@@ -308,7 +313,8 @@
                       :birthplace      birthplace?
                       :home-town       home-town?
                       :city            city?
-                      :hakukohteet     hakukohteet?})
+                      :hakukohteet     hakukohteet?
+                      :numeric         numeric?})
 
 (def async-validators {:ssn ssn?
                        :email email?})

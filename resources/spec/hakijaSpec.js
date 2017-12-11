@@ -11,7 +11,7 @@
         wait.until(function() { return formSections().length == 2 })
       )
       it('with complete form', function() {
-        expect(formFields().length).to.equal(26)
+        expect(formFields().length).to.equal(27)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
@@ -103,8 +103,10 @@
           return formFields().eq(31).find('.application__form-add-new-row')
         }),
         setNthFieldSubInputValue(31, 3, 'A2'),
-        setNthFieldSubInputValue(31, 5, 'C2')
-      )
+        setNthFieldSubInputValue(31, 5, 'C2'),
+        setNthFieldInputValue(32, 'asdfaafa232'), // make sure that only numeric values are accepted
+        setNthFieldInputValue(32, 232)
+      );
       it('works and validates correctly', function() {
         expect(invalidFieldsStatus().length).to.equal(0)
         expect(submitButton().prop('disabled')).to.equal(false)
@@ -150,7 +152,8 @@
                               "",
                               "Ensimmäinen vaihtoehto",
                               "Jatkokysymys AJatkokysymys B",
-                              "Pudotusvalikon 1. kysymys"]
+                              "Pudotusvalikon 1. kysymys",
+                              "232"];
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function(e) { return $(e).text() })
         var expectedTabularValues = ["A1", "B1", "C1", "A2", "", "C2", "A1", "B1", "C1", "A2", "", "C2", "Vasen vierekkäinen", "Oikea vierekkäinen", "A1", "B1", "C1", "A2", "", "C2"]
