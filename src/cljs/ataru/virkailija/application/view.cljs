@@ -765,27 +765,27 @@
         "Lisää"]])))
 
 (defn- application-review-note [note-idx]
-  (let [note         (subscribe [:state-query [:application :review-notes note-idx]])
-        name         (reaction (if (and (:first-name @note) (:last-name @note))
-                                 (str (:first-name @note) " " (:last-name @note))
-                                 "Virkailija ei tiedossa"))
-        created-time (reaction (when-let [created-time (:created-time @note)]
-                                 (f/unparse-local date-format created-time)))
-        notes        (reaction (:notes @note))
-        animated?    (reaction (:animated? @note))
-        disabled?    (reaction (-> @note :state some?))]
+  (let [note             (subscribe [:state-query [:application :review-notes note-idx]])
+        name             (reaction (if (and (:first-name @note) (:last-name @note))
+                                     (str (:first-name @note) " " (:last-name @note))
+                                     "Virkailija ei tiedossa"))
+        created-time     (reaction (when-let [created-time (:created-time @note)]
+                                     (f/unparse-local date-format created-time)))
+        notes            (reaction (:notes @note))
+        animated?        (reaction (:animated? @note))
+        remove-disabled? (reaction (or (-> @note :state some?)
+                                       (-> @note :id not)))]
     (fn [note-idx]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
        [:span.application-handling__review-note-column @notes]
        [:div.application-handling__review-details-column
-        [:i.zmdi.zmdi-account-o.application-handling__review-details-icon]
         [:span @name]
         [:span @created-time]
         [:a.application-handling__review-details-remove-link
          {:href     "#"
-          :class    (when @disabled? "application-handling__review-details-remove-link--disabled")
+          :class    (when @remove-disabled? "application-handling__review-details-remove-link--disabled")
           :on-click (fn [event]
                       (.preventDefault event)
                       (dispatch [:application/remove-review-note note-idx]))}
@@ -800,13 +800,6 @@
         notes-count       (subscribe [:application/review-notes-count])]
     (fn []
       [:div.application-handling__review-inputs
-       [:div.application-handling__review-row--nocolumn
-        [:div.application-handling__review-header "Muistiinpanot"]
-        (->> (range @notes-count)
-             (map (fn [idx]
-                    ^{:key (str "application-review-note-" idx)}
-                    [application-review-note idx])))]
-       [application-review-note-input]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?
@@ -820,7 +813,14 @@
             :value      (review-field->str review :score)
             :disabled   @settings-visible?
             :on-change  (when-not @settings-visible?
-                          (partial update-review-field :score (partial convert-score @review)))}]])])))
+                          (partial update-review-field :score (partial convert-score @review)))}]])
+       [:div.application-handling__review-row--nocolumn
+        [:div.application-handling__review-header "Muistiinpanot"]
+        (->> (range @notes-count)
+             (map (fn [idx]
+                    ^{:key (str "application-review-note-" idx)}
+                    [application-review-note idx])))]
+       [application-review-note-input]])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
