@@ -311,7 +311,8 @@
           (let [hakukohde ((keyword hakukohde-oid) all-hakukohteet)]
             [:div.application-handling__list-row-hakukohde
              [:span.application-handling__application-hakukohde-cell
-              {:on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
+              {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
+               :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state
@@ -339,7 +340,7 @@
         date-time               (->> day-date-time (rest) (clojure.string/join " "))
         applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         hakukohteet             (subscribe [:state-query [:application :hakukohteet]])
-        selected-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])]
+        selected-hakukohde      (subscribe [:state-query [:application :selected-review-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
       :class    (when selected?
@@ -350,7 +351,7 @@
       [:span.application-handling__list-row--time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]]
-     [applications-hakukohde-rows application @hakukohteet selected-hakukohde]]))
+     [applications-hakukohde-rows application @hakukohteet @selected-hakukohde]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
