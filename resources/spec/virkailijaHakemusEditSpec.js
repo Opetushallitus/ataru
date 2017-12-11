@@ -14,7 +14,7 @@
         })
       )
       it('with complete form', function () {
-        expect(formFields().length).to.equal(30)
+        expect(formFields().length).to.equal(31)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -62,7 +62,8 @@
           "",
           "",
           "Toinen vaihtoehto",
-          "Pudotusvalikon 1. kysymys"
+          "Pudotusvalikon 1. kysymys",
+          "232"
         ]
 
         var tabularValues = _.map(testFrame().find('.application__form-field table td'), function (e) {

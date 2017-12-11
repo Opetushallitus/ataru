@@ -33,6 +33,7 @@
                                           (assoc-in [:answers 12 :value] "ruotsi")
                                           (assoc-in [:answers 2 :value] "edited@foo.com")
                                           (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
+(def application-invalid-numeric-value (assoc-in application-fixtures/person-info-form-application [:answers 14 :value] "efafasdf"))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
@@ -178,6 +179,19 @@
         (should= 400 (:status resp))
         (should= {:failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
 
+
+    (it "should not validate application with non-numeric value for a numeric field"
+      (with-response :post resp application-invalid-numeric-value
+        (should= 400 (:status resp))
+        (should= {:failures
+                  {:5c4e87e0-f56d-4402-ab90-1b4d0b8bdf7d
+                   {:key            "5c4e87e0-f56d-4402-ab90-1b4d0b8bdf7d",
+                    :value          "efafasdf",
+                    :fieldType      "textField",
+                    :label          {:fi "Numeerinen tekstikenttä", :sv ""},
+                    :original-value nil,
+                    :passed?        false}}} (:body resp))))
+
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
     (add-failing-post-spec "should not validate form with invalid email field" application-invalid-email-field)
@@ -221,7 +235,7 @@
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
             (should= 1 (count (remove cannot-edit? answers)))
-            (should= 14 (count (filter cannot-edit? answers)))
+            (should= 15 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers)))))))
 
     (it "should get application with hakuaika ended but hakukierros ongoing"
@@ -230,7 +244,7 @@
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
             (should= 6 (count (remove cannot-edit? answers)))
-            (should= 9 (count (filter cannot-edit? answers)))
+            (should= 10 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers))))))))
 
     (describe "PUT application"
@@ -337,13 +351,13 @@
 
     (it "should not update dropdown answer when required followups are not answered"
       (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
-                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+                                   (assoc-in [:answers 19 :value] "eka vaihtoehto"))
         (should= 400 (:status resp))
         (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
 
     (it "should update dropdown answer"
       (with-response :put resp (-> application-fixtures/person-info-form-application-with-more-modified-answers
-                                   (assoc-in [:answers 18 :value] "eka vaihtoehto"))
+                                   (assoc-in [:answers 19 :value] "eka vaihtoehto"))
         (should= 200 (:status resp))
         (let [id          (-> resp :body :id)
               application (get-application-by-id id)]

@@ -169,7 +169,8 @@
                                              {:key "first-name", :value "Aku Petteri", :fieldType "textField", :label {:fi "Etunimet", :sv "Förnamn"}}
                                              {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
                                              {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
-                                             {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}]})
+                                             {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}
+                                             {:key "5c4e87e0-f56d-4402-ab90-1b4d0b8bdf7d" :value "232" :fieldType "textField" :label {:fi "Numeerinen tekstikenttä" :sv ""}}]})
 
 (def person-info-form-application-with-extra-answer
   (update person-info-form-application
@@ -202,8 +203,8 @@
 
 (def person-info-form-application-with-modified-answers
   (-> person-info-form-application-with-more-answers
-      (update-in [:answers 15 :value] conj "Toistuva pakollinen 4")
-      (assoc-in [:answers 16 :value] "modified-attachment-id")
+      (update-in [:answers 16 :value] conj "Toistuva pakollinen 4")
+      (assoc-in [:answers 17 :value] "modified-attachment-id")
       (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
                                            :value     "Vierekkäinen vastaus 2"
                                            :fieldType "textField"}

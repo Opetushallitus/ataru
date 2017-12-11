@@ -313,17 +313,81 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
+
+(defn text-component-size-chooser [path size-label]
+  (let [size             (subscribe [:editor/get-component-value path :params :size])
+        radio-group-id   (util/new-uuid)
+        radio-buttons    ["S" "M" "L"]
+        radio-button-ids (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
+        size-change      (fn [new-size]
+                           (dispatch-sync [:editor/set-component-value new-size path :params :size]))]
+    [:div
+     [:header.editor-form__component-item-header size-label]
+     [:div.editor-form__button-group
+      (doall (for [[btn-name btn-id] radio-button-ids]
+               ^{:key (str btn-id "-radio")}
+               [:div.editor-form__button-container
+                [:input.editor-form__button
+                 {:type      "radio"
+                  :value     btn-name
+                  :checked   (or
+                              (= @size btn-name)
+                              (and
+                               (nil? @size)
+                               (= "M" btn-name)))
+                  :name      radio-group-id
+                  :id        btn-id
+                  :on-change (fn [] (size-change btn-name))}]
+                [:label
+                 {:for   btn-id
+                  :class (match btn-name
+                                "S" "editor-form__button--left-edge"
+                                "L" "editor-form__button--right-edge"
+                                :else nil)}
+                 btn-name]]))]]))
+
+(defn text-component-type-chooser [path]
+  (let [input-type        (subscribe [:editor/get-component-value path :params :type])
+        type-group-id     (util/new-uuid)
+        type-buttons      ["text" "number"]
+        type-button-ids   (reduce (fn [acc btn] (assoc acc btn (str type-group-id "-" btn))) {} type-buttons)
+        input-type-change (fn [new-type]
+                            (dispatch-sync [:editor/set-component-value new-type path :params :type])
+                            (dispatch [(if (= new-type "number")
+                                         :editor/add-validator
+                                         :editor/remove-validator) "numeric" path]))]
+    [:div
+     [:header.editor-form__component-item-header "Kentän tyyppi"]
+     [:div.editor-form__button-group
+      (doall (for [[btn-name btn-id] type-button-ids]
+               ^{:key (str btn-id "-radio")}
+               [:div.editor-form__button-container
+                [:input.editor-form__button
+                 {:type      "radio"
+                  :value     btn-name
+                  :checked   (or
+                              (= @input-type btn-name)
+                              (and
+                               (nil? @input-type)
+                               (= "text" btn-name)))
+                  :name      type-group-id
+                  :id        btn-id
+                  :on-change (fn [] (input-type-change btn-name))}]
+                [:label
+                 {:for   btn-id
+                  :class (match btn-name
+                                "text" "editor-form__button--left-edge"
+                                "number" "editor-form__button--right-edge"
+                                :else nil)}
+                 (case btn-name
+                   "text" "Teksti"
+                   "number" "Numero")]]))]]))
+
 (defn text-component [initial-content path & {:keys [header-label size-label]}]
   (let [languages         (subscribe [:editor/languages])
-        size              (subscribe [:editor/get-component-value path :params :size])
         max-length        (subscribe [:editor/get-component-value path :params :max-length])
-        radio-group-id    (util/new-uuid)
-        radio-buttons     ["S" "M" "L"]
-        radio-button-ids  (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
         max-length-change (fn [new-val]
                             (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
-        size-change       (fn [new-size]
-                            (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
         animation-effect  (fade-out-effect path)]
     (fn [initial-content path & {:keys [header-label size-label]}]
@@ -339,35 +403,14 @@
            @languages
            :header? true)]
         [:div.editor-form__button-wrapper
-         [:header.editor-form__component-item-header size-label]
-         [:div.editor-form__button-group
-          (doall (for [[btn-name btn-id] radio-button-ids]
-                   ^{:key (str btn-id "-radio")}
-                   [:div
-                    [:input.editor-form__button
-                     {:type      "radio"
-                      :value     btn-name
-                      :checked   (or
-                                  (= @size btn-name)
-                                  (and
-                                    (nil? @size)
-                                    (= "M" btn-name)))
-                      :name      radio-group-id
-                      :id        btn-id
-                      :on-change (fn [] (size-change btn-name))}]
-                    [:label
-                     {:for   btn-id
-                      :class (match btn-name
-                               "S" "editor-form__button--left-edge"
-                               "L" "editor-form__button--right-edge"
-                               :else nil)}
-                     btn-name]]))]
-         (when text-area?
+         (text-component-size-chooser path size-label)
+         (if text-area?
            [:div.editor-form__max-length-container
             [:header.editor-form__component-item-header "Max. merkkimäärä"]
             [:input.editor-form__text-field.editor-form__text-field-auto-width
-             {:value @max-length
-              :on-change #(max-length-change (get-val %))}]])]
+             {:value     @max-length
+              :on-change #(max-length-change (get-val %))}]]
+           (text-component-type-chooser path))]
         [:div.editor-form__checkbox-wrapper
          [required-checkbox path initial-content]
          (when-not text-area?

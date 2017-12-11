@@ -587,6 +587,7 @@ form > div > .editor-form__component-wrapper {
   flex-flow: column nowrap;
   flex: initial;
   padding: 10px 14px 20px;
+  width: 247px;
 }
 
 .editor-form__button-group {
@@ -596,20 +597,25 @@ form > div > .editor-form__component-wrapper {
   position: relative;
 }
 
+.editor-form__button-container {
+  flex-basis: 0;
+  flex-grow: 1;
+}
+
 .editor-form__button {
   display: none;
 }
 
 .editor-form__button + label {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 43px;
-  width: 72px;
-  cursor: pointer;
   background-color: @not-selected-button-background;
   color: @not-selected-button-text;
+  cursor: pointer;
+  display: flex;
+  height: 43px;
+  justify-content: center;
   margin-right: 1px;
+  width: 100%;
 }
 
 .editor-form__button--large + label {
