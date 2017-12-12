@@ -9,7 +9,7 @@
 (sql/defqueries "sql/migration-1.36-queries.sql")
 (sql/defqueries "sql/migration-1.71-queries.sql")
 (sql/defqueries "sql/migration-1.75-queries.sql")
-(sql/defqueries "sql/migration-1.78-queries.sql")
+(sql/defqueries "sql/migration-1.80-queries.sql")
 
 (defn get-all-applications
   []

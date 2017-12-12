@@ -370,7 +370,7 @@
   (review-notes->own-table))
 
 (migrations/defmigration
-  migrate-application-states-to-hakukohteet "1.78"
+  migrate-application-states-to-hakukohteet "1.80"
   "Move (most) application states to be hakukohde specific"
   (application-states-to-hakukohteet))
 
