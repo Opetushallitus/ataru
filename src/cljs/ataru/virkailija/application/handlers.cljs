@@ -12,7 +12,8 @@
             [ataru.feature-config :as fc]
             [ataru.url :as url]
             [camel-snake-kebab.core :as c]
-            [camel-snake-kebab.extras :as ce]))
+            [camel-snake-kebab.extras :as ce]
+            [cljs-time.core :as t]))
 
 (reg-event-fx
   :application/select-application
@@ -21,6 +22,7 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :review-comment] nil)
                    (assoc-in [:application :application-list-expanded?] false)
                    (assoc-in [:application :information-request] nil))]
         {:db         db
@@ -201,13 +203,20 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review hakukohde-reviews information-requests]}]
+(defn update-application-details [db {:keys [form
+                                             application
+                                             events
+                                             review
+                                             hakukohde-reviews
+                                             information-requests
+                                             review-notes]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
+      (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
       (assoc-in [:application :information-requests] information-requests)))
@@ -232,7 +241,6 @@
                                           :override-args {:params (select-keys current [:id
                                                                                         :application-id
                                                                                         :application-key
-                                                                                        :notes
                                                                                         :score
                                                                                         :state
                                                                                         :hakukohde-reviews])}))})))
@@ -560,3 +568,52 @@
   :application/toggle-review-list-visibility
   (fn [db [_ list-kwd]]
     (update-in db [:application :ui/review list-kwd] (fnil not false))))
+
+(reg-event-fx
+  :application/add-review-note
+  (fn [{:keys [db]} [_ note]]
+    (let [application-key (-> db :application :selected-key)
+          note-idx        (-> db :application :review-notes count)
+          db              (-> db
+                              (update-in [:application :review-notes]
+                                         (cljs-util/vector-of-length (inc note-idx)))
+                              (assoc-in [:application :review-notes note-idx] {:created-time (t/now)
+                                                                               :notes        note
+                                                                               :animated?    true})
+                              (assoc-in [:application :review-comment] nil))]
+      {:db   db
+       :http {:method              :post
+              :params              {:notes           note
+                                    :application-key application-key}
+              :path                "/lomake-editori/api/applications/notes"
+              :handler-or-dispatch :application/handle-add-review-note-response
+              :handler-args        {:note-idx note-idx}}})))
+
+(reg-event-fx :application/handle-add-review-note-response
+  (fn [{:keys [db]} [_ resp args]]
+    (let [db (update-in db [:application :review-notes (:note-idx args)] merge resp)]
+      {:db             db
+       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:note-idx args)]}]})))
+
+(reg-event-db :application/reset-review-note-animations
+  (fn [db [_ note-idx]]
+    (update-in db [:application :review-notes note-idx] dissoc :animated?)))
+
+(reg-event-db :application/set-review-comment-value
+  (fn [db [_ review-comment]]
+    (assoc-in db [:application :review-comment] review-comment)))
+
+(reg-event-fx :application/remove-review-note
+  (fn [{:keys [db]} [_ note-idx]]
+    (let [note-id (-> db :application :review-notes (get note-idx) :id)
+          db      (assoc-in db [:application :review-notes note-idx :state] :removing)]
+      {:db   db
+       :http {:method              :delete
+              :path                (str "/lomake-editori/api/applications/notes/" note-id)
+              :handler-or-dispatch :application/handle-remove-review-note-response}})))
+
+(reg-event-db :application/handle-remove-review-note-response
+  (fn [db [_ resp]]
+    (let [note-with-id (comp (partial = (:id resp)) :id)
+          remove-note  (comp vec (partial remove note-with-id))]
+      (update-in db [:application :review-notes] remove-note))))

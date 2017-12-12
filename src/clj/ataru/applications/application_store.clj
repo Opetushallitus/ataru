@@ -294,8 +294,14 @@
        first
        ->kebab-case-kw))
 
+(defn get-application-review-notes [application-key]
+  (->> (exec-db :db yesql-get-application-review-notes {:application_key application-key})
+       (map ->kebab-case-kw)))
+
 (defn get-application-review [application-key]
-  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+  (->> (exec-db :db yesql-get-application-review {:application_key application-key})
+       (map ->kebab-case-kw)
+       (first)))
 
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
@@ -345,9 +351,6 @@
               (exec-db :db
                        yesql-organization-oids-of-applications-of-persons
                        {:person_oids person-oids})))))
-
-(defn get-application-review-organization-oid [review-id]
-  (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
 (defn save-application-review [review session virkailija]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -634,5 +637,20 @@
 (defn get-applications-newer-than [date]
   (exec-db :db yesql-get-applciations-by-created-time {:date date}))
 
+(defn add-review-note [note session]
+  {:pre [(-> note :application-key clojure.string/blank? not)
+         (-> note :notes clojure.string/blank? not)]}
+  (let [virkailija (-> session virkailija-edit/upsert-virkailija)]
+    (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
+                                              :notes           (:notes note)
+                                              :virkailija_oid  (:oid virkailija)})
+        (merge (select-keys virkailija [:first_name :last_name]))
+        (dissoc :virkailija_oid :removed)
+        (->kebab-case-kw))))
+
 (defn get-application-info-for-tilastokeskus [haku-oid]
   (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
+
+(defn remove-review-note [note-id]
+  (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
+    note-id))

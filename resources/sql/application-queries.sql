@@ -375,11 +375,17 @@ SELECT
   id,
   modified_time,
   state,
-  notes,
   score,
   application_key
 FROM application_reviews
 WHERE application_key = :application_key;
+
+-- name: yesql-get-application-review-notes
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, v.first_name, v.last_name
+FROM application_review_notes rn
+LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
+WHERE rn.application_key = :application_key AND (removed IS NULL OR removed > NOW())
+ORDER BY rn.created_time ASC;
 
 -- name: yesql-get-applications-by-keys
 -- Get list of applications by their keys
@@ -643,7 +649,6 @@ INSERT INTO application_reviews (application_key, state) VALUES (:application_ke
 -- Save modifications for existing review record
 UPDATE application_reviews
 SET
-  notes         = :notes,
   score         = :score,
   modified_time = now(),
   state         = :state
@@ -838,6 +843,13 @@ JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
+
+--name: yesql-add-review-note<!
+INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
+VALUES (:application_key, :notes, :virkailija_oid);
+
+-- name: yesql-remove-review-note!
+UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
 
 --name: yesql-tilastokeskus-applications
 SELECT

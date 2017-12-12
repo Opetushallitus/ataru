@@ -8,6 +8,7 @@
 (sql/defqueries "sql/migration-1.28-queries.sql")
 (sql/defqueries "sql/migration-1.36-queries.sql")
 (sql/defqueries "sql/migration-1.71-queries.sql")
+(sql/defqueries "sql/migration-1.75-queries.sql")
 
 (defn get-all-applications
   []
@@ -64,3 +65,14 @@
 (defn update-application-content [application-id content]
   (db/exec :db yesql-update-application-content! {:id      application-id
                                                   :content content}))
+
+(defn get-all-application-reviews []
+  (->> (db/exec :db yesql-get-all-application-reviews {})
+       (map (partial t/transform-keys k/->kebab-case-keyword))))
+
+(defn create-application-review-note [note]
+  {:pre [(-> note :application-key clojure.string/blank? not)
+         (-> note :notes clojure.string/blank? not)]}
+  (->> note
+       (t/transform-keys k/->snake_case_keyword)
+       (db/exec :db yesql-create-application-review-note!)))

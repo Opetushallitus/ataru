@@ -324,13 +324,20 @@
 (s/defschema HakukohdeReviews
   {s/Keyword hakukohde-review-types-schema})
 
+(s/defschema ReviewNote
+  {:id                            s/Int
+   :application-key               s/Str
+   :notes                         s/Str
+   :first-name                    (s/maybe s/Str)
+   :last-name                     (s/maybe s/Str)
+   (s/optional-key :created-time) org.joda.time.DateTime})
+
 (s/defschema Review
   {:id                                 s/Int
    :application-key                    s/Str
    (s/optional-key :modified-time)     org.joda.time.DateTime
    :state                              s/Str
    (s/optional-key :score)             (s/maybe s/Int)
-   :notes                              (s/maybe s/Str)
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str

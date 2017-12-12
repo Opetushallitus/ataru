@@ -158,6 +158,7 @@
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
      :events               (application-store/get-application-events application-key)
      :review               (application-store/get-application-review application-key)
+     :review-notes         (application-store/get-application-review-notes application-key)
      :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-key
@@ -219,3 +220,13 @@
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
+
+(defn add-review-note [note session organization-service]
+  (aac/check-application-access (:application-key note)
+                                session
+                                organization-service
+                                [:view-applications :edit-applications])
+  (application-store/add-review-note note session))
+
+(defn remove-review-note [note-id]
+  (application-store/remove-review-note note-id))

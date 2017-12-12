@@ -7,10 +7,25 @@
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-fx :http
-  (fn [{:keys [method path params handler-or-dispatch skip-parse-times?]}]
+  (fn [{:keys [method
+               path
+               params
+               handler-or-dispatch
+               skip-parse-times?
+               handler-args]}]
     (case method
-      :post (http/post path params handler-or-dispatch :skip-parse-times? skip-parse-times?)
-      (http/http method path handler-or-dispatch :skip-parse-times? skip-parse-times?))))
+      :post
+      (http/post path
+                 params
+                 handler-or-dispatch
+                 :skip-parse-times? skip-parse-times?
+                 :handler-args handler-args)
+
+      (http/http method
+                 path
+                 handler-or-dispatch
+                 :skip-parse-times? skip-parse-times?
+                 :handler-args handler-args))))
 
 (re-frame/reg-fx :stop-autosave
   (fn stop-autosave [autosave-fn]

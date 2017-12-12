@@ -17,7 +17,8 @@
     [ataru.component-data.value-transformers :as t]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
-    [ataru.background-job.job :as job]))
+    [ataru.background-job.job :as job]
+    [ataru.db.db :as db]))
 
 (def default-fetch-size 50)
 
@@ -264,6 +265,13 @@
          (:id application)
          camel-cased-content)))))
 
+(defn- review-notes->own-table []
+  (doseq [review-note (->> (migration-app-store/get-all-application-reviews)
+                           (filter (comp not clojure.string/blank? :notes)))]
+    (let [application-key (:application-key review-note)]
+      (info (str "Migrating review notes of application " application-key))
+      (migration-app-store/create-application-review-note review-note))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -328,6 +336,11 @@
   migrate-person-info-module "1.75"
   "Update person info module structure in existing forms"
   (refresh-person-info-modules))
+
+(migrations/defmigration
+  migrate-application-review-notes-to-own-table "1.77"
+  "Migrate application review notes to application_review_notes table"
+  (review-notes->own-table))
 
 (defn migrate
   []

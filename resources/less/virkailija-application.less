@@ -520,7 +520,7 @@ and (max-width: 1000px) {
 .application-handling__review-header {
   color: @text-color;
   .semibold;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
 }
 
 .application-handling__review-header--language-requirement,
@@ -561,10 +561,96 @@ and (max-width: 1000px) {
 .application-handling__review-row {
   display: flex;
   position: relative;
+  margin-bottom: 10px;
 }
 
 .application-handling__review-row--nocolumn {
   display: block;
+}
+
+.application-handling__review-note {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  background-color: @review-note-background-color;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-bottom: 15px;
+}
+
+.application-handling__review-note-column {
+  flex: 0 1 60%;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.application-handling__review-details-column {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  color: @gray-of-the-beast;
+  position: relative;
+  font-size: 13px;
+}
+
+.application-handling__review-details-icon {
+  font-size: 26px;
+}
+
+.application-handling__review-details-remove-link {
+  color: @gray-of-the-beast;
+  margin-top: 10px;
+  position: absolute;
+  top: -20px;
+  right: -13px;
+}
+
+.application-handling__review-details-remove-link:hover {
+  color: @link-color;
+}
+
+.application-handling__review-details-remove-link--disabled {
+  pointer-events: none;
+  cursor: auto;
+}
+
+.application-handling__review-row--notes-row {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application-handling__review-note-input {
+  font-size: 14px;
+  padding: 6px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+  flex-grow: 1;
+}
+
+.application-handling__review-note-submit-button {
+  color: @white;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  margin-left: 10px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 130px;
+}
+
+.application-handling__review-note-submit-button--disabled {
+  background-color: @section-gray-border
+}
+
+.application-handling__review-note-submit-button--enabled {
+  background-color: @link-color;
+  cursor: pointer;
 }
 
 .application-handling__link-button {
@@ -948,7 +1034,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-inputs {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding-top: 20px;
   border-top: 1px solid @review-separator-color;
 }

@@ -252,6 +252,7 @@
                     :return {:application          ataru-schema/ApplicationWithPerson
                              :events               [ataru-schema/Event]
                              :review               ataru-schema/Review
+                             :review-notes         [ataru-schema/ReviewNote]
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews
                              :form                 ataru-schema/FormWithContent
                              :information-requests [ataru-schema/InformationRequest]}
@@ -282,6 +283,23 @@
                                             organization-service
                                             tarjonta-service)]
                        (response/ok resend-event)
+                       (response/bad-request)))
+
+                   (api/POST "/notes" {session :session}
+                     :summary "Add new review note for the application"
+                     :return ataru-schema/ReviewNote
+                     :body [note {:notes           s/Str
+                                  :application-key s/Str}]
+                     (if-let [note (application-service/add-review-note note session organization-service)]
+                       (response/ok note)
+                       (response/bad-request)))
+
+                   (api/DELETE "/notes/:note-id" []
+                     :summary "Remove note"
+                     :return {:id s/Int}
+                     :path-params [note-id :- s/Int]
+                     (if-let [note-id (application-service/remove-review-note note-id)]
+                       (response/ok {:id note-id})
                        (response/bad-request)))
 
                    (api/PUT "/review" {session :session}

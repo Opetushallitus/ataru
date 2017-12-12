@@ -215,15 +215,20 @@
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (when (and value column)
         (writer 0 (+ column (count application-meta-fields)) value))))
-  (let [application-review  (application-store/get-application-review (:key application))
-        beef-header-count   (- (apply max (map :column headers)) (count review-headers))
-        prev-header-count   (+ beef-header-count
-                               (count application-meta-fields))
-        notes-column        (inc prev-header-count)
-        score-column        (inc notes-column)
-        notes               (:notes application-review)
-        score               (:score application-review)]
-    (when notes (writer 0 notes-column notes))
+  (let [application-key              (:key application)
+        application-review (application-store/get-application-review application-key)
+        beef-header-count  (- (apply max (map :column headers)) (count review-headers))
+        prev-header-count  (+ beef-header-count
+                              (count application-meta-fields))
+        notes-column       (inc prev-header-count)
+        score-column       (inc notes-column)
+        notes              (:notes application-review)
+        score              (:score application-review)]
+    (when (not-empty notes)
+      (->> notes
+           (map :notes)
+           (clojure.string/join "\n")
+           (writer 0 notes-column)))
     (when score (writer 0 score-column score))))
 
 (defn- form-label? [form-element]

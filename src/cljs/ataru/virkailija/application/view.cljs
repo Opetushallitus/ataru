@@ -739,21 +739,67 @@
       :else
       maybe-number)))
 
+(def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
+
+(defn- application-review-note-input []
+  (let [input-value     (subscribe [:state-query [:application :review-comment]])
+        review-notes    (subscribe [:state-query [:application :review-notes]])
+        button-enabled? (reaction (and (-> @input-value clojure.string/blank? not)
+                                       (every? (comp not :animated?) @review-notes)))]
+    (fn []
+      [:div.application-handling__review-row.application-handling__review-row--notes-row
+       [:input.application-handling__review-note-input
+        {:type      "text"
+         :value     @input-value
+         :on-change (fn [event]
+                      (let [review-comment (.. event -target -value)]
+                        (dispatch [:application/set-review-comment-value review-comment])))}]
+       [:button.application-handling__review-note-submit-button
+        {:type     "button"
+         :class    (if @button-enabled?
+                     "application-handling__review-note-submit-button--enabled"
+                     "application-handling__review-note-submit-button--disabled")
+         :disabled (not @button-enabled?)
+         :on-click (fn [_]
+                     (dispatch [:application/add-review-note @input-value]))}
+        "Lisää"]])))
+
+(defn- application-review-note [note-idx]
+  (let [note             (subscribe [:state-query [:application :review-notes note-idx]])
+        name             (reaction (if (and (:first-name @note) (:last-name @note))
+                                     (str (:first-name @note) " " (:last-name @note))
+                                     "Virkailija ei tiedossa"))
+        created-time     (reaction (when-let [created-time (:created-time @note)]
+                                     (f/unparse-local date-format created-time)))
+        notes            (reaction (:notes @note))
+        animated?        (reaction (:animated? @note))
+        remove-disabled? (reaction (or (-> @note :state some?)
+                                       (-> @note :id not)))]
+    (fn [note-idx]
+      [:div.application-handling__review-note
+       (when @animated?
+         {:class "animated fadeIn"})
+       [:span.application-handling__review-note-column @notes]
+       [:div.application-handling__review-details-column
+        [:span @name]
+        [:span @created-time]
+        [:a.application-handling__review-details-remove-link
+         {:href     "#"
+          :class    (when @remove-disabled? "application-handling__review-details-remove-link--disabled")
+          :on-click (fn [event]
+                      (.preventDefault event)
+                      (dispatch [:application/remove-review-note note-idx]))}
+         [:i.zmdi.zmdi-close]]]])))
+
 (defn application-review-inputs []
   (let [review            (subscribe [:state-query [:application :review]])
         ; React doesn't like null, it leaves the previous value there, hence:
         review-field->str (fn [review field] (if-let [notes (field @review)] notes ""))
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?    (subscribe [:application/review-state-setting-enabled? :score])]
+        input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
+        notes-count       (subscribe [:application/review-notes-count])]
     (fn []
       [:div.application-handling__review-inputs
-       [:div.application-handling__review-row--nocolumn
-        [:div.application-handling__review-header "Muistiinpanot"]
-        [:textarea.application-handling__review-notes
-         {:value     (review-field->str review :notes)
-          :on-change (when-not @settings-visible?
-                       (partial update-review-field :notes identity))
-          :disabled  @settings-visible?}]]
        (when (or @settings-visible? @input-visible?)
          [:div.application-handling__review-row
           (when @settings-visible?
@@ -767,7 +813,14 @@
             :value      (review-field->str review :score)
             :disabled   @settings-visible?
             :on-change  (when-not @settings-visible?
-                          (partial update-review-field :score (partial convert-score @review)))}]])])))
+                          (partial update-review-field :score (partial convert-score @review)))}]])
+       [:div.application-handling__review-row--nocolumn
+        [:div.application-handling__review-header "Muistiinpanot"]
+        (->> (range @notes-count)
+             (map (fn [idx]
+                    ^{:key (str "application-review-note-" idx)}
+                    [application-review-note idx])))]
+       [application-review-note-input]])))
 
 (defn- application-modify-link []
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
