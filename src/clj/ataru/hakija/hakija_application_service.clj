@@ -87,14 +87,8 @@
                :address
                :postal-code
                :city
-               :have-finnish-ssn
-               :passport-number
-               :nationality
                :birth-date
                :birthplace
-               :language
-               :national-id-number
-               :gender
                :postal-office
                :home-town}
              answer-kw))
