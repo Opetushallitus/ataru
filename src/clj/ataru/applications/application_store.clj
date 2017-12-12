@@ -9,6 +9,8 @@
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
+            [clj-time.format :as f]
+            [clj-time.coerce :as c]
             [schema.core :as s]
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
@@ -509,10 +511,11 @@
        (map first)))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang email content]}]
+  [{:keys [key haku hakukohde person_oid lang email content ssn]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                 key
      :personOid           person_oid
+     :hetu                ssn
      :applicationSystemId haku
      :kieli               lang
      :hakukohteet         hakukohde
@@ -526,12 +529,16 @@
      :kkPohjakoulutus     (kk-base-educations answers)}))
 
 (defn get-hakurekisteri-applications
-  [haku-oid hakukohde-oids person-oids]
+  [haku-oid hakukohde-oids person-oids modified-after]
   (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
                                           {:haku_oid       haku-oid
                                            :hakukohde_oids (cons "" hakukohde-oids)
-                                           :person_oids    (cons "" person-oids)})
+                                           :person_oids    (cons "" person-oids)
+                                           :modified_after (->> modified-after
+                                                                (f/parse (f/formatter "yyyyMMddHHmm"))
+                                                                (c/to-sql-date))})
                                  (map unwrap-hakurekisteri-application))
+        _ (clojure.pprint/pprint applications)
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))

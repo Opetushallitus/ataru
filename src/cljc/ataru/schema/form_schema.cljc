@@ -265,6 +265,7 @@
 (s/defschema HakurekisteriApplication
   {:oid                 s/Str
    :personOid           s/Str
+   :hetu                (s/maybe s/Str)
    :applicationSystemId s/Str
    :kieli               s/Str
    :hakukohteet         [s/Str]
@@ -272,9 +273,9 @@
    :matkapuhelin        s/Str
    :lahiosoite          s/Str
    :postinumero         s/Str
-   :postitoimipaikka    s/Str
+   :postitoimipaikka    (s/maybe s/Str)
    :asuinmaa            s/Str
-   :kotikunta           s/Str
+   :kotikunta           (s/maybe s/Str)
    :paymentObligations  {s/Str s/Str}
    :kkPohjakoulutus     [s/Str]})
 

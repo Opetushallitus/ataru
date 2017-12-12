@@ -811,6 +811,7 @@ SELECT
   hakukohde,
   person_oid,
   lang,
+  ssn,
   email,
   content
 FROM latest_applications
@@ -821,6 +822,7 @@ WHERE person_oid IS NOT NULL
   -- Parameter list contains empty string to avoid empty lists
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
   AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
+  AND (:modified_after::text IS NULL OR created_time > :modified_after::TIMESTAMPTZ)
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 

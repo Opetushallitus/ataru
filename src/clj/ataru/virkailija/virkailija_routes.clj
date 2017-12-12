@@ -451,16 +451,18 @@
                      :summary "Get the latest versions of applications."
                      :query-params [{hakuOid :- s/Str nil}
                                     {hakukohdeOids :- [s/Str] nil}
-                                    {hakijaOids :- [s/Str] nil}]
+                                    {hakijaOids :- [s/Str] nil}
+                                    {modifiedAfter :- s/Str nil}]
                      :return [ataru-schema/HakurekisteriApplication]
-                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
+                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids modifiedAfter])
                        (response/bad-request {:error "No search terms provided."})
                        (if-let [applications (access-controlled-application/hakurekisteri-applications
                                                organization-service
                                                session
                                                hakuOid
                                                hakukohdeOids
-                                               hakijaOids)]
+                                               hakijaOids
+                                               modifiedAfter)]
                          (response/ok applications)
                          (response/unauthorized {:error "Unauthorized"}))))
                    (api/GET "/applications" {session :session}
