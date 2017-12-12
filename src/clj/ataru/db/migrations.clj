@@ -282,11 +282,8 @@
             state  (:state review)]
         (when (and
                 (not (contains? new-application-states state))
-                (contains? new-hakukohde-states state)
-                (<= (count hakukohde) 1))
-          (let [hakukohde-oid-or-form (if (= 1 (count hakukohde))
-                                        (first hakukohde)
-                                        "form")]
+                (contains? new-hakukohde-states state))
+          (doseq [hakukohde-oid-or-form (or (not-empty hakukohde) ["form"])]
             (println "Creating new hakukohde-review" (:key application) (:id application) "->" hakukohde-oid-or-form state)
             (application-store/save-application-hakukohde-review
               nil
