@@ -944,6 +944,11 @@
     [:div.application-handling__review-outer
      {:class (when (= :fixed @review-positioning)
                "application-handling__review-outer-floating")}
+     [:a.application-handling__review-area-settings-link
+      {:on-click (fn [event]
+                   (.preventDefault event)
+                   (dispatch [:application/toggle-review-area-settings-visibility]))}
+      [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]
      [:div.application-handling__review-settings
       {:style (when-not @settings-visible
                 {:visibility "hidden"})
@@ -1035,12 +1040,7 @@
              [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
       (when (and (not (contains? (:answers application) :hakukohteet))
                  (not-empty hakukohteet-by-oid))
-        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]
-      [:a.application-handling__review-area-settings-link
-       {:on-click (fn [event]
-                    (.preventDefault event)
-                    (dispatch [:application/toggle-review-area-settings-visibility]))}
-       [:i.application-handling__review-area-settings-button.zmdi.zmdi-settings]]]))
+        (hakukohteet-list (map hakukohteet-by-oid (:hakukohde application))))]]))
 
 (defn close-application []
   [:a {:href     "#"
