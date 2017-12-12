@@ -132,11 +132,15 @@
     (fn []
       (when-not (empty? @filtered-applications)
         (let [from-states (reduce
-                            (fn [acc {:keys [application-hakukohde-reviews]}]
+                            (fn [acc application]
                               (merge-with
                                 +
                                 acc
-                                (frequencies (map :state (filter #(= "processing-state" (:requirement %)) application-hakukohde-reviews)))))
+                                (frequencies
+                                  (map :state
+                                       (filter
+                                         #(= "processing-state" (:requirement %))
+                                         (application-states/get-all-reviews-for-all-requirements application nil))))))
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
@@ -156,7 +160,7 @@
                    (str
                      ", "
                      (from-multi-lang (:name hakukohde))))])
-              [:h4.application-handling__mass-edit-review-states-heading "Hakemukset tilasta"]
+              [:h4.application-handling__mass-edit-review-states-heading "Tilasta"]
 
               (if @from-list-open?
                 [:div.application-handling__review-state-list-opened-anchor
