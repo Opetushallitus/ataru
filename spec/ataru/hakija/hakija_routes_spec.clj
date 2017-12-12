@@ -212,7 +212,7 @@
         (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
-            (should= 5 (count (filter cannot-edit? answers)))
+            (should= 6 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers)))))))
 
     (it "should get application with hakuaika ended"
@@ -285,8 +285,8 @@
             (should= 200 (:status resp))
             (let [id (-> resp :body :id)
                   application (get-application-by-id id)]
-              (should= "ruotsi" (get-answer application "language"))
-              (should= "aku@ankkalinna.com" (get-answer application "email"))
+              (should= "suomi" (get-answer application "language"))
+              (should= "edited@foo.com" (get-answer application "email"))
               (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
                        (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 

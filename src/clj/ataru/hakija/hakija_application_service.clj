@@ -80,23 +80,15 @@
   (when (and tarjonta-service ohjausparametrit-service)
     (get-hakuaikas tarjonta-service ohjausparametrit-service application)))
 
-(defn person-info-field? [answer-kw]
-  (contains? #{:first-name
-               :preferred-name
-               :last-name
+(defn editable-person-info-field? [answer-kw]
+  (contains? #{:email
                :phone
                :country-of-residence
                :address
                :postal-code
                :city
-               :have-finnish-ssn
-               :passport-number
-               :nationality
                :birth-date
                :birthplace
-               :language
-               :national-id-number
-               :gender
                :postal-office
                :home-town}
              answer-kw))
@@ -108,7 +100,7 @@
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period))))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
-        person-info-field?  (person-info-field? answer-kw)
+        person-info-field?  (editable-person-info-field? answer-kw)
         before?             (fn [t] (when t (time/before? (time/now) t)))]
     (or (empty? (get-hakukohteet application))
         (before? hakuaika-end)

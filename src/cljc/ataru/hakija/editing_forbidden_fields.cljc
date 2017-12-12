@@ -6,4 +6,7 @@
                                                :first-name
                                                :preferred-name
                                                :last-name
-                                               :gender})
+                                               :gender
+                                               :passport-number
+                                               :national-id-number
+                                               :language})
