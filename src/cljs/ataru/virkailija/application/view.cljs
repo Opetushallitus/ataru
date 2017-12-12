@@ -706,20 +706,20 @@
                        application-review-states/application-review-states
                        (:new-review-state event))]
            (if (= (:new-review-state event) "information-request")
-             [:span.application-handling__event-caption label (virkailija-initials-span event)]
+             [:span.application-handling__event-caption--inner label (virkailija-initials-span event)]
              label))
 
          {:event-type "updated-by-applicant"}
          "Hakija muokannut hakemusta"
 
          {:event-type "updated-by-virkailija"}
-         [:span.application-handling__event-caption "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
+         [:span.application-handling__event-caption--inner "Virkailija " (virkailija-initials-span event) " muokannut hakemusta"]
 
          {:event-type "received-from-applicant"}
          "Hakemus vastaanotettu"
 
          {:event-type "hakukohde-review-state-change"}
-         [:span.application-handling__event-caption
+         [:span.application-handling__event-caption--inner
           (str (->> application-review-states/hakukohde-review-types
                     (filter #(= (keyword (:review-key event)) (first %)))
                     (first)
@@ -737,8 +737,8 @@
 
          {:subject _ :message message}
          [:div.application-handling__multi-line-event-caption
-          [:span.application-handling__event-caption "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
-          [:span.application-handling__event-caption.application-handling__event-caption--extra-info (str "\"" message "\"")]]
+          [:span.application-handling__event-caption--inner "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
+          [:span.application-handling__event-caption--inner.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
          :else "Tuntematon"))
 
