@@ -725,10 +725,10 @@
                     (first)
                     (second)) ": "
                (application-states/get-review-state-label-by-name
-                 (concat application-review-states/application-hakukohde-review-states
-                         application-review-states/application-hakukohde-eligibility-states
-                         application-review-states/application-hakukohde-selection-states
-                         application-review-states/application-payment-obligation-states)
+                 (->> application-review-states/hakukohde-review-types
+                      (map last)
+                      (apply concat)
+                      (distinct))
                  (:new-review-state event)))
           (virkailija-initials-span event)]
 
