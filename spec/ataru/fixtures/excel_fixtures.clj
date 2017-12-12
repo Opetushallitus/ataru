@@ -37,7 +37,7 @@
 (def application-for-form {:id           9432
                            :key          "application_9432_key"
                            :created-time (c/date-time 2016 6 15 12 34 56)
-                           :state        "unprocessed"
+                           :state        "active"
                            :form         123
                            :name         "Standalone form"
                            :lang         "fi"
@@ -60,14 +60,15 @@
 (def application-for-hakukohde {:id             3424
                                 :key            "application_3424_key"
                                 :created-time   (c/date-time 2016 6 15 12 34 56)
-                                :state          "processing"
+                                :state          "active"
                                 :form           321
                                 :name           "Form with hakukohde and haku"
                                 :lang           "fi"
                                 :hakukohde      ["hakukohde.oid"]
                                 :haku           "haku.oid"
                                 :person-oid     "1.123.345456567123"
-                                :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}]
+                                :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
+                                                                {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
                                 :answers        [{:key       "form_field_1_0"
                                                   :label     "Kysymys 4"
                                                   :value     "Vastaus 4"
@@ -83,6 +84,6 @@
 
 (def application-review {:id              1
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"
-                         :state           "unprocessed"
+                         :state           "active"
                          :notes           [{:id    342
                                             :notes "Some notes about the applicant"}]})
