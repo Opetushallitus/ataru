@@ -25,7 +25,6 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]
-            [ataru.virkailija.authentication.virkailija-edit :refer [virkailija-secret-valid?]]
             [ataru.test-utils :refer [get-test-vars-params]])
   (:import [ring.swagger.upload Upload]
            [java.io InputStream]))
@@ -36,26 +35,17 @@
   (true? deleted))
 
 (defn- get-application
-  ([secret person-client]
-   (get-application secret nil nil person-client))
-  ([secret tarjonta-service ohjausparametrit-service person-client]
-   (let [application (hakija-application-service/get-latest-application-by-secret secret
-                                                                                  tarjonta-service
-                                                                                  ohjausparametrit-service
-                                                                                  person-client)]
-     (if application
-       (do
-         (info (str "Getting application " (:id application) " with answers"))
-         (response/ok application))
-     (do
-       (info (str "Failed to get application by secret, returning HTTP 404"))
-       (response/not-found {}))))))
-
-(defn- get-application-by-virkailija-secret [virkailija-secret person-client]
-  (if (virkailija-secret-valid? virkailija-secret)
-    (let [hakija-secret (application-store/get-hakija-secret-by-virkailija-secret virkailija-secret)]
-      (get-application hakija-secret person-client))
-    (response/bad-request {:error "Attempted to edit hakemus with invalid virkailija secret."})))
+  [secret tarjonta-service ohjausparametrit-service person-client]
+  (let [application (hakija-application-service/get-latest-application-by-secret secret
+                                                                                 tarjonta-service
+                                                                                 ohjausparametrit-service
+                                                                                 person-client)]
+    (cond (some? application)
+          (response/ok application)
+          (:virkailija secret)
+          (response/bad-request {:error "Invalid virkailija secret"})
+          :else
+          (response/not-found {:error "No application found"}))))
 
 (defn- handle-client-error [error-details]
   (client-error/log-client-error error-details)
@@ -168,13 +158,19 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPerson
       (cond (not-blank? secret)
-            (get-application secret tarjonta-service ohjausparametrit-service person-service)
+            (get-application {:hakija secret}
+                             tarjonta-service
+                             ohjausparametrit-service
+                             person-service)
 
             (not-blank? virkailija-secret)
-            (get-application-by-virkailija-secret virkailija-secret person-service)
+            (get-application {:virkailija virkailija-secret}
+                             tarjonta-service
+                             ohjausparametrit-service
+                             person-service)
 
             :else
-            (response/bad-request)))
+            (response/bad-request {:error "No secret given"})))
     (api/context "/files" []
       (api/POST "/" []
         :summary "Upload a file"

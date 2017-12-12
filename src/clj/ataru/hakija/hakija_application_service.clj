@@ -2,6 +2,7 @@
   (:require
     [taoensso.timbre :as log]
     [clojure.core.async :as async]
+    [clojure.core.match :refer [match]]
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.hakija.application-email-confirmation :as application-email]
@@ -147,13 +148,21 @@
         questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
     (map dummy-answer-to-unanswered-question questions-without-answers)))
 
-(defn- answer-uneditable? [answer application tarjonta-service ohjausparametrit-service]
+(defn- answer-uneditable? [answer
+                           application
+                           tarjonta-service
+                           ohjausparametrit-service
+                           virkailija?]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (not (editing-allowed-by-hakuaika? answer application tarjonta-service ohjausparametrit-service)))))
+        (not (or virkailija?
+                 (editing-allowed-by-hakuaika? answer
+                                               application
+                                               tarjonta-service
+                                               ohjausparametrit-service))))))
 
 (defn flag-uneditable-answers
-  [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service]
+  [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service virkailija?]
   (assoc application
     :answers
     (map
@@ -167,7 +176,11 @@
                  (contains? viewing-forbidden-person-info-field-ids answer-kw))
             (merge {:cannot-view true :value nil})
 
-            (answer-uneditable? answer application tarjonta-service ohjausparametrit-service)
+            (answer-uneditable? answer
+                                application
+                                tarjonta-service
+                                ohjausparametrit-service
+                                virkailija?)
             (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
 
@@ -190,9 +203,15 @@
         uneditable-answers))
 
 (defn- merge-uneditable-answers-from-previous
-  [new-application old-application tarjonta-service ohjausparametrit-service]
+  [new-application
+   old-application
+   tarjonta-service
+   ohjausparametrit-service
+   virkailija?]
   (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers tarjonta-service ohjausparametrit-service)
+                                     (flag-uneditable-answers tarjonta-service
+                                                              ohjausparametrit-service
+                                                              virkailija?)
                                      :answers)
         uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
         uneditable-answers       (filter uneditable-or-unviewable new-answers)
@@ -250,17 +269,20 @@
                                (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         allowed            (allowed-to-apply? tarjonta-service ohjausparametrit-service application)
+        virkailija-secret  (valid-virkailija-secret application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         final-application  (if is-modify?
                              (-> application
-                                 (merge-uneditable-answers-from-previous latest-application tarjonta-service ohjausparametrit-service)
+                                 (merge-uneditable-answers-from-previous latest-application
+                                                                         tarjonta-service
+                                                                         ohjausparametrit-service
+                                                                         (some? virkailija-secret))
                                  (assoc :person-oid (:person-oid latest-application)))
                              application)
         validation-result  (validator/valid-application?
                              has-applied
                              (set-original-values latest-application final-application)
-                             form)
-        virkailija-secret  (valid-virkailija-secret application)]
+                             form)]
     (cond
       (and (not (nil? virkailija-secret))
            (not (virkailija-secret-valid? virkailija-secret)))
@@ -357,15 +379,28 @@
 (defn attachments-metadata->answers [application]
   (update application :answers (partial map attachment-metadata->answer)))
 
-(defn get-latest-application-by-secret [secret tarjonta-service ohjausparametrit-service person-client]
-  (let [application (-> secret
-                             (application-store/get-latest-application-by-secret)
-                             (flag-uneditable-answers tarjonta-service ohjausparametrit-service)
-                             (attachments-metadata->answers))
-
-        person (when application
-                 (-> (application-service/get-person application person-client)
-                     (dissoc :ssn :birth-date)))]
-    (-> application
-        (assoc :person person)
-        (dissoc :person-oid))))
+(defn get-latest-application-by-secret [secret
+                                        tarjonta-service
+                                        ohjausparametrit-service
+                                        person-client]
+  (let [[virkailija? hakija-secret] (match [secret]
+                                      [{:virkailija s}]
+                                      [true
+                                       (when (virkailija-edit/virkailija-secret-valid? s)
+                                         (application-store/get-hakija-secret-by-virkailija-secret s))]
+                                      [{:hakija s}]
+                                      [false s]
+                                      :else
+                                      [false nil])
+        application                 (some-> hakija-secret
+                                            application-store/get-latest-application-by-secret
+                                            (flag-uneditable-answers tarjonta-service
+                                                                     ohjausparametrit-service
+                                                                     virkailija?)
+                                            attachments-metadata->answers)
+        person                      (some-> application
+                                            (application-service/get-person person-client)
+                                            (dissoc :ssn :birth-date))]
+    (some-> application
+            (assoc :person person)
+            (dissoc :person-oid))))
