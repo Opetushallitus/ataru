@@ -19,7 +19,8 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]])
+            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
+            [ataru.hakija.onr-fields :as onr-fields])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -104,7 +105,9 @@
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
-        answer       (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+        answer       (if (and @editing
+                              (contains? editing-forbidden-person-info-field-ids id)
+                              (contains? onr-fields/onr-fields id))
                        {:value @(subscribe [:state-query
                                             [:application :person id]])
                         :valid true}
@@ -364,15 +367,19 @@
   (let [application  (subscribe [:state-query [:application]])
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
+        id           (keyword (:id field-descriptor))
         disabled?    (reaction (or
                                  (and @editing
-                                      (contains? editing-forbidden-person-info-field-ids (keyword (:id field-descriptor))))
+                                      (contains? editing-forbidden-person-info-field-ids id)
+                                      (contains? onr-fields/onr-fields id))
                                  (->
                                    (:answers @application)
                                    (get (answer-key field-descriptor))
                                    :cannot-edit)))
-        id (answer-key field-descriptor)
-        value-path   (if (and @editing (some #{id} editing-forbidden-person-info-field-ids))
+        id           (answer-key field-descriptor)
+        value-path   (if (and @editing
+                              (contains? editing-forbidden-person-info-field-ids id)
+                              (contains? onr-fields/onr-fields id))
                        [:application :person id]
                        (cond-> [:application :answers id]
                          idx (concat [:values idx 0])
