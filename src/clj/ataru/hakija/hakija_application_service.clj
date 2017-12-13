@@ -235,6 +235,10 @@
                                 (filter (comp not (partial contains? new-attachments))))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
+    (when (> (count orphan-attachments) 0)
+      (application-store/add-application-event {:event-type      "updated-attachment"
+                                                :application-key (:key old-application)}
+                                               nil))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
