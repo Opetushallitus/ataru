@@ -105,7 +105,7 @@
                                   :else
                                   application-list)
          db                     (cond-> db
-                                  (and (= field :state)
+                                  (and (= field :processing-state)
                                        (= value "information-request"))
                                   (assoc-in [:application :information-request :visible?] true))]
      (if is-hakukohde-review?
