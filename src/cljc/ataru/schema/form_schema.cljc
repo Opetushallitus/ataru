@@ -308,7 +308,8 @@
                          "received-from-applicant"
                          "review-state-change"
                          "hakukohde-review-state-change"
-                         "modification-link-sent"))
+                         "modification-link-sent"
+                         "updated-attachment"))
 
 (s/defschema Event
   {:event-type                        event-types
