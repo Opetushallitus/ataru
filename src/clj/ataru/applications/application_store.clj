@@ -511,11 +511,10 @@
        (map first)))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang email content ssn]}]
+  [{:keys [key haku hakukohde person_oid lang email content]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid                 key
      :personOid           person_oid
-     :hetu                ssn
      :applicationSystemId haku
      :kieli               lang
      :hakukohteet         hakukohde
@@ -534,11 +533,10 @@
                                           {:haku_oid       haku-oid
                                            :hakukohde_oids (cons "" hakukohde-oids)
                                            :person_oids    (cons "" person-oids)
-                                           :modified_after (->> modified-after
-                                                                (f/parse (f/formatter "yyyyMMddHHmm"))
-                                                                (c/to-sql-date))})
+                                           :modified_after (some->> modified-after
+                                                                    (f/parse (f/formatter "yyyyMMddHHmm"))
+                                                                    (c/to-sql-date))})
                                  (map unwrap-hakurekisteri-application))
-        _ (clojure.pprint/pprint applications)
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))

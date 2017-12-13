@@ -811,7 +811,6 @@ SELECT
   hakukohde,
   person_oid,
   lang,
-  ssn,
   email,
   content
 FROM latest_applications
