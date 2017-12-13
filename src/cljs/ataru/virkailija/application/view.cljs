@@ -700,6 +700,9 @@
           [:span.application-handling__event-caption "Täydennyspyyntö lähetetty" (virkailija-initials-span event)]
           [:span.application-handling__event-caption.application-handling__event-caption--extra-info (str "\"" message "\"")]]
 
+         {:event-type "updated-attachment"}
+         "Hakija päivitti liitetiedostoja"
+
          :else "Tuntematon"))
 
 (defn to-event-row

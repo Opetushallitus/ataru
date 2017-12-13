@@ -148,6 +148,10 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
     JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
+), attachment_modifications AS (
+  SELECT amod.application_key
+    FROM application_events amod
+    WHERE amod.event_type = 'updated-attachment'
 )
 SELECT
   a.id,
@@ -169,7 +173,8 @@ SELECT
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
   (SELECT COUNT(*)
    FROM new_application_modifications am
-   WHERE am.application_key = a.key)  AS new_application_modifications
+   WHERE am.application_key = a.key)  AS new_application_modifications,
+  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id

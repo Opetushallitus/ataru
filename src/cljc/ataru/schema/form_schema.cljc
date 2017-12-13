@@ -206,7 +206,8 @@
    (s/optional-key :secret)                        s/Str
    (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
                                                      :state       (apply s/enum review-requirement-values)
-                                                     :hakukohde   s/Str}]}) ; "form" or oid
+                                                     :hakukohde   s/Str}] ; "form" or oid
+   :attachment-modifications                       s/Int})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
@@ -302,7 +303,8 @@
                          "received-from-applicant"
                          "review-state-change"
                          "hakukohde-review-state-change"
-                         "modification-link-sent"))
+                         "modification-link-sent"
+                         "updated-attachment"))
 
 (s/defschema Event
   {:event-type                        event-types
