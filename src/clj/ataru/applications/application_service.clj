@@ -151,9 +151,9 @@
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application          (-> application
                                (dissoc :person-oid)
-                               (assoc :person (filter-vals some? (if (:yksiloity person)
-                                                                   (populate-person-koodisto-fields person)
-                                                                   person)))
+                               (assoc :person (if (:yksiloity person)
+                                                (populate-person-koodisto-fields person)
+                                                person))
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
