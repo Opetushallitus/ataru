@@ -205,14 +205,14 @@
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
 
 (defn mass-update-application-states
-  [session organization-service application-keys from-state to-state]
+  [session organization-service application-keys hakukohde-oid from-state to-state]
   (doseq [application-key application-keys]
     (aac/check-application-access
       application-key
       session
       organization-service
       [:edit-applications]))
-  (application-store/mass-update-application-states session application-keys from-state to-state)
+  (application-store/mass-update-application-states session application-keys hakukohde-oid from-state to-state)
   {})
 
 (defn send-modify-application-link-email [application-key session organization-service tarjonta-service]

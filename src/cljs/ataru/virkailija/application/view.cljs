@@ -125,6 +125,7 @@
         selected-to-review-state   (r/atom nil)
         filtered-applications      (subscribe [:application/filtered-applications])
         haku-header                (subscribe [:application/list-heading-data-for-haku])
+        selected-hakukohde-oid     (subscribe [:state-query [:application :selected-hakukohde :oid]])
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
@@ -140,7 +141,7 @@
                                   (map :state
                                        (filter
                                          #(= "processing-state" (:requirement %))
-                                         (application-states/get-all-reviews-for-all-requirements application nil))))))
+                                         (application-states/get-all-reviews-for-all-requirements application @selected-hakukohde-oid))))))
                             all-states
                             @filtered-applications)]
           [:span.application-handling__mass-edit-review-states-container
@@ -200,21 +201,9 @@
                  {:on-click (fn []
                               (let [from-state-name              (selected-or-default-mass-review-state selected-from-review-state from-states)
                                     to-state-name                (selected-or-default-mass-review-state selected-to-review-state all-states)
-                                    hakukohde-in-from-state-keys (->> @filtered-applications
-                                                                      (filter (fn [{:keys [application-hakukohde-reviews]}]
-                                                                                (let [processing-state (:state
-                                                                                                         (find-first
-                                                                                                           #(= "processing-state" (:requirement %))
-                                                                                                           application-hakukohde-reviews))]
-                                                                                  (or
-                                                                                    (= from-state-name
-                                                                                       processing-state)
-                                                                                    (and (= from-state-name
-                                                                                            review-states/initial-application-hakukohde-processing-state)
-                                                                                         (nil? processing-state))))))
-                                                                      (map :key))]
+                                    application-keys             (map :key @filtered-applications)]
                                 (dispatch [:application/mass-update-application-reviews
-                                           hakukohde-in-from-state-keys
+                                           application-keys
                                            from-state-name
                                            to-state-name])
                                 (reset! selected-from-review-state nil)

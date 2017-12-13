@@ -528,7 +528,12 @@ SELECT
                                  JOIN latest_forms AS lf ON lf.key = f.key
                                  WHERE aa.email = a.email
                                    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-  END AS applications_count
+  END AS applications_count,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM latest_applications AS a
 WHERE a.key = :application_key;
 

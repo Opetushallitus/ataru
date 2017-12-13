@@ -505,7 +505,8 @@
      :http {:method              :post
             :params              {:application-keys application-keys
                                   :from-state       from-state
-                                  :to-state         to-state}
+                                  :to-state         to-state
+                                  :hakukohde-oid    (-> db :application :selected-hakukohde :oid)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 

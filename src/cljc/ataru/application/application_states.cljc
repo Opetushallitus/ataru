@@ -38,5 +38,3 @@
   (mapcat
     #(get-all-reviews-for-requirement % application selected-hakukohde-oid)
     review-states/hakukohde-review-type-names))
-
-

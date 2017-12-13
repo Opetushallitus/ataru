@@ -180,12 +180,14 @@
 
                    (api/POST "/mass-update" {session :session}
                      :body [body {:application-keys [s/Str]
+                                  :hakukohde-oid    (s/maybe s/Str)
                                   :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
                                   :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
                      :summary "Update list of application-hakukohde with given state to new state"
                      (ok (application-service/mass-update-application-states session
                                                                              organization-service
                                                                              (:application-keys body)
+                                                                             (:hakukohde-oid body)
                                                                              (:from-state body)
                                                                              (:to-state body))))
 
