@@ -596,7 +596,6 @@
   (fn [db [_ list-kwd]]
     (update-in db [:application :ui/review list-kwd] (fnil not false))))
 
-<<<<<<< HEAD
 (reg-event-fx
   :application/add-review-note
   (fn [{:keys [db]} [_ note]]
