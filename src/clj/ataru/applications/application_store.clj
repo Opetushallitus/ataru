@@ -323,6 +323,16 @@
       (first)
       (unwrap-application)))
 
+(defn get-latest-application-by-key-with-hakukohde-reviews
+  [application-key]
+  (-> (exec-db :db
+               yesql-get-latest-application-by-key-with-hakukohde-reviews
+               {:application_key              application-key
+                :query_type                   "ALL"
+                :authorized_organization_oids [""]})
+      (first)
+      (unwrap-application)))
+
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
                               (first)
@@ -585,7 +595,7 @@
 
 (defn- update-hakukohde-process-state!
   [connection username organization-oid hakukohde-oid from-state to-state application-key]
-  (let [application      (get-latest-application-by-key-unrestricted application-key)
+  (let [application      (get-latest-application-by-key-with-hakukohde-reviews application-key)
         existing-reviews (filter
                            #(= (:state %) from-state)
                            (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oid))

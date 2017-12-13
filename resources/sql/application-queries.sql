@@ -528,7 +528,38 @@ SELECT
                                  JOIN latest_forms AS lf ON lf.key = f.key
                                  WHERE aa.email = a.email
                                    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
-  END AS applications_count,
+  END AS applications_count
+FROM latest_applications AS a
+WHERE a.key = :application_key;
+
+-- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
+SELECT
+  id,
+  key,
+  lang,
+  form_id                             AS form,
+  created_time,
+  content,
+  hakukohde,
+  haku,
+  person_oid,
+  secret,
+  CASE
+  WHEN ssn IS NOT NULL
+    THEN (SELECT count(*)
+          FROM latest_applications AS aa
+            JOIN forms AS f ON f.id = aa.form_id
+            JOIN latest_forms AS lf ON lf.key = f.key
+          WHERE aa.ssn = a.ssn
+                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+  WHEN email IS NOT NULL
+    THEN (SELECT count(*)
+          FROM latest_applications AS aa
+            JOIN forms AS f ON f.id = aa.form_id
+            JOIN latest_forms AS lf ON lf.key = f.key
+          WHERE aa.email = a.email
+                AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids)))
+  END                                 AS applications_count,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
