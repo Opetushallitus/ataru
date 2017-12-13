@@ -54,10 +54,11 @@
     (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit)))
 
 (defn- attachment-modify-grace-period
-  []
-  (-> config
-      :public-config
-      (get :attachment-modify-grace-period-days 14)))
+  [hakuaika]
+  (or (:attachment-modify-grace-period-days hakuaika)
+      (-> config
+          :public-config
+          (get :attachment-modify-grace-period-days 14))))
 
 (defn- allowed-to-apply?
   "If there is a hakukohde the user is applying to, check that hakuaika is on"
@@ -98,7 +99,7 @@
   (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
         answer-kw           (-> answer :key keyword)
         hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period))))
+        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         person-info-field?  (editable-person-info-field? answer-kw)
         before?             (fn [t] (when t (time/before? (time/now) t)))]
