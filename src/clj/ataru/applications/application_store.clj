@@ -9,6 +9,8 @@
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
+            [clj-time.format :as f]
+            [clj-time.coerce :as c]
             [schema.core :as s]
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
@@ -526,11 +528,14 @@
      :kkPohjakoulutus     (kk-base-educations answers)}))
 
 (defn get-hakurekisteri-applications
-  [haku-oid hakukohde-oids person-oids]
+  [haku-oid hakukohde-oids person-oids modified-after]
   (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
                                           {:haku_oid       haku-oid
                                            :hakukohde_oids (cons "" hakukohde-oids)
-                                           :person_oids    (cons "" person-oids)})
+                                           :person_oids    (cons "" person-oids)
+                                           :modified_after (some->> modified-after
+                                                                    (f/parse (f/formatter "yyyyMMddHHmm"))
+                                                                    (c/to-sql-date))})
                                  (map unwrap-hakurekisteri-application))
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]

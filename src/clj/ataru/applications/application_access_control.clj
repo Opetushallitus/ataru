@@ -100,7 +100,7 @@
      hakukohde-oid
      hakemus-oids)))
 
-(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids]
+(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids modified-after]
   (session-orgs/run-org-authorized
     session
     organization-service
@@ -110,7 +110,8 @@
     #(application-store/get-hakurekisteri-applications
        haku-oid
        hakukohde-oids
-       person-oids)))
+       person-oids
+       modified-after)))
 
 (defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oids]
   (session-orgs/run-org-authorized

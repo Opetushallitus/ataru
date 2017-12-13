@@ -272,9 +272,9 @@
    :matkapuhelin        s/Str
    :lahiosoite          s/Str
    :postinumero         s/Str
-   :postitoimipaikka    s/Str
+   :postitoimipaikka    (s/maybe s/Str)
    :asuinmaa            s/Str
-   :kotikunta           s/Str
+   :kotikunta           (s/maybe s/Str)
    :paymentObligations  {s/Str s/Str}
    :kkPohjakoulutus     [s/Str]})
 
