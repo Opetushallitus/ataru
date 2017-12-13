@@ -386,7 +386,7 @@
         )
 
         it('has expected data in applications and popup', function() {
-          expect(applicationStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
           expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
           expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä')
         })
@@ -436,11 +436,11 @@
       describe('updates applications', function () {
         before(
           wait.until(function() {
-            return applicationStates().length > 0
+            return applicationHakukohdeStates().length > 0
           })
         )
         it('to selected state', function() {
-          expect(applicationStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
         })
       })
     })
@@ -479,8 +479,8 @@
       return testFrame().find('.application-handling__mass-edit-review-states-popup')
     }
 
-    function applicationStates() {
-      return _.map(testFrame().find('.application-handling__list-row--state').slice(1), function(o) {
+    function applicationHakukohdeStates() {
+      return _.map(testFrame().find('.application-handling__hakukohde-state'), function(o) {
         return $(o).text()
       })
     }
