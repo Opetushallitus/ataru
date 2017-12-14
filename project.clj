@@ -10,7 +10,7 @@
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.7.3"]
                  [binaryage/devtools "0.9.8"]
-                 [re-frisk "0.5.2"]
+                 [re-frisk "0.5.3"]
                  [venantius/accountant "0.2.3"]
                  [com.cemerick/url "0.1.1"]
 
