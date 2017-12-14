@@ -856,7 +856,7 @@ UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
 SELECT
   haku AS haku_oid,
   key AS hakemus_oid,
-  person_oid hekilo_oid,
+  person_oid henkilo_oid,
   hakukohde AS hakukohde_oids
 FROM latest_applications
   JOIN application_reviews ON application_key = key

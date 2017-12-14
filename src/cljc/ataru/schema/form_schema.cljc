@@ -295,7 +295,7 @@
 (s/defschema TilastokeskusApplication
   {:hakemus_oid    s/Str
    :haku_oid       s/Str
-   :hekilo_oid     s/Str
+   :henkilo_oid    s/Str
    :hakukohde_oids [s/Str]})
 
 (def event-types (s/enum "updated-by-applicant"
