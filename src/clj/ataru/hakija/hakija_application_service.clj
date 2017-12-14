@@ -235,11 +235,16 @@
                                 (filter (comp not (partial contains? new-attachments))))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
-    (when (not-empty orphan-attachments)
-      (application-store/add-application-event {:event-type      "updated-attachment"
-                                                :application-key (:key old-application)}
-                                               nil))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
+
+(defn- add-event-for-updated-attachments [new-application old-application]
+  (when (not-empty (clojure.set/difference
+                    (set (flatten-attachment-keys new-application))
+                    (set (flatten-attachment-keys old-application))))
+    (application-store/add-application-event
+     {:event-type      "updated-attachment"
+      :application-key (:key old-application)}
+     nil)))
 
 (defn- valid-virkailija-secret [{:keys [virkailija-secret]}]
   (when (virkailija-edit/virkailija-secret-valid? virkailija-secret)
@@ -315,6 +320,9 @@
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
+        (when is-modify?
+          (add-event-for-updated-attachments final-application
+                                             latest-application))
         (store-and-log final-application store-fn)))))
 
 (defn- start-person-creation-job [application-id]
