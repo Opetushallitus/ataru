@@ -113,13 +113,13 @@
           clickComponentMenuItem('Tekstikenttä'),
           setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__text-field') }, 'Ensimmäinen kysymys'),
           clickElement(function() { return formComponents().eq(0).find('.editor-form__info-addon-checkbox label') }),
-          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__info-addon-inputs input') }, 'Ensimmäisen kysymyksen ohjeteksti')
+          setTextFieldValue(function() { return formComponents().eq(0).find('.editor-form__info-addon-inputs textarea') }, 'Ensimmäisen kysymyksen ohjeteksti')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(1)
           expect(formComponents().eq(0).find('.editor-form__text-field').val()).to.equal('Ensimmäinen kysymys')
           expect(formComponents().eq(0).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
-          expect(formComponents().eq(0).find('.editor-form__info-addon-inputs input').val()).to.equal('Ensimmäisen kysymyksen ohjeteksti')
+          expect(formComponents().eq(0).find('.editor-form__info-addon-inputs textarea').val()).to.equal('Ensimmäisen kysymyksen ohjeteksti')
           expect(formComponents().eq(0).find('.editor-form__button-group input:checked').val()).to.equal('M')
           expect(formComponents().eq(0).find('.editor-form__checkbox-container input').prop('checked')).to.equal(false)
         })
@@ -147,13 +147,13 @@
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field-auto-width')}, '2000'),
           setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__text-field')}, 'Toinen kysymys'),
           clickElement(function() { return formComponents().eq(2).find('.editor-form__info-addon-checkbox label') }),
-          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__info-addon-inputs input') }, 'Toisen kysymyksen ohjeteksti')
+          setTextFieldValue(function() { return formComponents().eq(2).find('.editor-form__info-addon-inputs textarea') }, 'Toisen kysymyksen ohjeteksti')
         )
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(3)
           expect(formComponents().eq(2).find('.editor-form__text-field').val()).to.equal('Toinen kysymys')
           expect(formComponents().eq(2).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
-          expect(formComponents().eq(2).find('.editor-form__info-addon-inputs input').val()).to.equal('Toisen kysymyksen ohjeteksti')
+          expect(formComponents().eq(2).find('.editor-form__info-addon-inputs textarea').val()).to.equal('Toisen kysymyksen ohjeteksti')
           expect(formComponents().eq(2).find('.editor-form__button-group input:checked').val()).to.equal('L')
           expect(formComponents().eq(2).find('.editor-form__max-length-container input').val()).to.equal('2000')
           expect(formComponents().eq(2).find('.editor-form__checkbox-container input').prop('checked')).to.equal(true)
@@ -171,7 +171,7 @@
           setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__text-field:last')}, 'Kolmas vaihtoehto'),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__add-dropdown-item a') }),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__info-addon-checkbox label') }),
-          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-addon-inputs input') }, 'Kolmannen kysymyksen ohjeteksti'),
+          setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__info-addon-inputs textarea') }, 'Kolmannen kysymyksen ohjeteksti'),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question:eq(2) a') }),
           clickElement(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay a:contains("Tekstikenttä")') }),
           setTextFieldValue(function() { return formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field') }, "Jatkokysymys")
@@ -186,7 +186,7 @@
           })
           expect(options).to.eql(["Ensimmäinen vaihtoehto", "Toinen vaihtoehto", "Kolmas vaihtoehto", ""])
           expect(formComponents().eq(3).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
-          expect(formComponents().eq(3).find('.editor-form__info-addon-inputs input').val()).to.equal('Kolmannen kysymyksen ohjeteksti')
+          expect(formComponents().eq(3).find('.editor-form__info-addon-inputs textarea').val()).to.equal('Kolmannen kysymyksen ohjeteksti')
           expect(formComponents().eq(3).find('.editor-form__followup-question-overlay input.editor-form__text-field').val()).to.equal("Jatkokysymys")
         })
       })
@@ -288,13 +288,13 @@
           clickInfoTextCheckbox(function() { return formComponents().eq(9) }),
           setTextFieldValue(function() { return formComponents().eq(9).find('.editor-form__text-field') }, 'Infoteksti'),
           setTextFieldValue(function() {
-            return formComponents().eq(9).find('.editor-form__info-addon-inputs input').eq(0) }, 'oikeen pitka infoteksti sitten tassa.')
+            return formComponents().eq(9).find('.editor-form__info-addon-inputs textarea').eq(0) }, 'oikeen pitka infoteksti sitten tassa.')
         )
 
         it('has expected contents', function() {
           expect(formComponents()).to.have.length(10)
           expect(formComponents().eq(9).find('.editor-form__info-addon-checkbox input').prop('checked')).to.equal(true)
-          expect(formComponents().eq(9).find('.editor-form__info-addon-inputs input').eq(0).val()).to.equal('oikeen pitka infoteksti sitten tassa.')
+          expect(formComponents().eq(9).find('.editor-form__info-addon-inputs textarea').eq(0).val()).to.equal('oikeen pitka infoteksti sitten tassa.')
         })
       })
 
@@ -411,7 +411,7 @@
           wait.until(function() {
             var flasher = testFrame().find('.top-banner .flasher')
             return flasher.css('opacity') !== "0" && flasher.find('span:visible').text() === 'Kaikki muutokset tallennettu'
-          }, 5000)
+          }, 10000)
         )
         it('notification shows success', function() {
           expect(testFrame().find('.top-banner .flasher span').text()).to.equal('Kaikki muutokset tallennettu')

@@ -46,24 +46,42 @@
         var scoreForTyrni = scoreForKuikeloinen - 10;
 
         setTextFieldValue(reviewNotes, 'Reipas kaveri')()
+        .then(wait.until(function() { return reviewNotesSubmitButton().attr('disabled') !== 'disabled' }))
+        .then(clickElement(reviewNotesSubmitButton))
+        .then(wait.until(function() { return testFrame().find('.application-handling__review-details-column > span:eq(0)').text() === 'Veijo Virkailija' }))
         .then(setTextFieldValue(score, scoreForVatanen))
         .then(clickElement(secondApplication))
-        .then(wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')))
+        .then(wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')))
         .then(function() {
           expect(reviewNotes().val()).to.equal('')
         })
         .then(setTextFieldValue(score, scoreForKuikeloinen))
         .then(clickElement(firstApplication))
-        .then(wait.until(applicationHeadingIs('Ari Vatanen, 141196-933S')))
+        .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
         .then(function () {
-          expect(reviewNotes().val()).to.equal('Reipas kaveri');
+          expect(testFrame().find('.application-handling__review-details-column > span:eq(0)').text()).to.equal('Veijo Virkailija');
           expect(score().val()).to.equal(scoreForVatanen + '');
           done()
         })
         .then(clickElement(thirdApplication))
-        .then(wait.until(applicationHeadingIs('Johanna Irmeli Tyrni, 020202A0202')))
+        .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
         .then(setTextFieldValue(score, scoreForTyrni))
         .fail(done)
+      });
+
+      it('shows yksilointitieto for application', function(done) {
+        clickElement(firstApplication)()
+          .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
+          .then(function() {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(false);
+          })
+          .then(clickElement(thirdApplication))
+          .then(wait.until(applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')))
+          .then(function () {
+            expect(elementExists(testFrame().find('.individualization'))).to.equal(true);
+            done()
+          })
+          .fail(done)
       });
 
       describe('successfully changes selection state', function() {
@@ -90,7 +108,9 @@
 
       function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Tyrni)') }
 
-      function reviewNotes() { return testFrame().find('.application-handling__review-notes') }
+      function reviewNotes() { return testFrame().find('.application-handling__review-note-input') }
+
+      function reviewNotesSubmitButton() { return testFrame().find('.application-handling__review-note-submit-button') }
 
       function score() { return testFrame().find('.application-handling__score-input') }
 
@@ -131,7 +151,7 @@
       }
     });
 
-    describe ('Application sorting', function () {
+    describe('Application sorting', function () {
       it('Sorting by sortable columns works', function(done) {
         var firstApplicantNameBeforeAnySorting = null;
         wait.until(applicantNamesExist)()
@@ -361,7 +381,7 @@
           wait.until(function () {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
-          wait.until(applicationHeadingIs('Seija Susanna Kuikeloinen, 020202A0202')),
+          wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')),
           clickElement(applicationStateFilterLink)
         );
 

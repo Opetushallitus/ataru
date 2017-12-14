@@ -1,7 +1,8 @@
 (ns ataru.hakija.application-hakukohde-component
   (:require
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [ataru.application-common.application-field-common :refer [scroll-to-anchor]]))
+    [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
+    [ataru.cljs-util :refer [get-translation]]))
 
 (defn index-of [s val from-index]
   (clojure.string/index-of (clojure.string/lower-case s)
@@ -71,10 +72,7 @@
     {:on-click           hakukohde-remove-event-handler
      :data-hakukohde-oid hakukohde-oid
      :role               "button"}
-    @(subscribe [:application/get-i18n-text
-                 {:fi "Poista"
-                  :sv "Ta bort"
-                  :en "Remove"}])]])
+    (get-translation :remove)]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -118,20 +116,14 @@
             :aria-labelledby  aria-header-id
             :aria-describedby aria-description-id
             :aria-disabled    true}
-           @(subscribe [:application/get-i18n-text
-                        {:fi "Lisää"
-                         :sv "Lägg till"
-                         :en "Add"}])]
+           (get-translation :add)]
           [:a.application__hakukohde-select-button
            {:on-click           hakukohde-select-event-handler
             :role               "button"
             :data-hakukohde-oid hakukohde-oid
             :aria-labelledby    aria-header-id
             :aria-describedby   aria-description-id}
-           @(subscribe [:application/get-i18n-text
-                        {:fi "Lisää"
-                         :sv "Lägg till"
-                         :en "Add"}])]))]]))
+           (get-translation :add)]))]]))
 
 (defn- hakukohde-selection-search
   []
@@ -145,14 +137,8 @@
       [:div.application__hakukohde-selection-search-input.application__form-text-input-box
        [:input.application__form-text-input-in-box
         {:on-change   hakukohde-query-change-event-handler
-         :title @(subscribe [:application/get-i18n-text
-                             {:fi "Etsi tämän haun koulutuksia"
-                              :sv "Sök ansökningsmål i denna ansökan"
-                              :en "Search for application options"}])
-         :placeholder @(subscribe [:application/get-i18n-text
-                                   {:fi "Etsi tämän haun koulutuksia"
-                                    :sv "Sök ansökningsmål i denna ansökan"
-                                    :en "Search for application options"}])
+         :title (get-translation :search-application-options)
+         :placeholder (get-translation :search-application-options)
          :value       hakukohde-query}]
        (when (not (empty? hakukohde-query))
          [:div.application__form-clear-text-input-in-box
@@ -182,10 +168,7 @@
       [:div.application__hakukohde-row.application__hakukohde-row--search-toggle
        [:a.application__hakukohde-selection-open-search
         {:on-click hakukohde-search-toggle-event-handler}
-        @(subscribe [:application/get-i18n-text
-                     {:fi "Lisää hakukohde"
-                      :sv "Lägg till ansökningsmål"
-                      :en "Add application option"}])]
+        (get-translation :add-application-option)]
        (when-let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
          [:span.application__hakukohde-selection-max-label (str "(max. " max-hakukohteet ")")])
        (when @(subscribe [:application/show-hakukohde-search])

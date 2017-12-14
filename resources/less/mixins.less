@@ -142,3 +142,15 @@ span, p {
     border-bottom-color: @color;
   }
 }
+
+.arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = left) {
+  &:after {
+    left: 0;
+    bottom: @offset;
+    margin-left: -@size;
+
+    border-top: @size solid transparent;
+    border-bottom: @size solid transparent;
+    border-right: @size solid @color;
+  }
+}

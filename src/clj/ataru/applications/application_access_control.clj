@@ -100,7 +100,7 @@
      hakukohde-oid
      hakemus-oids)))
 
-(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids]
+(defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids modified-after]
   (session-orgs/run-org-authorized
     session
     organization-service
@@ -110,7 +110,8 @@
     #(application-store/get-hakurekisteri-applications
        haku-oid
        hakukohde-oids
-       person-oids)))
+       person-oids
+       modified-after)))
 
 (defn application-key-to-person-oid [organization-service session haku-oid hakukohde-oids]
   (session-orgs/run-org-authorized
@@ -139,8 +140,8 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
-   (constantly nil)
-   #(application-store/onr-applications person-oid)))
+   #(application-store/onr-applications person-oid %)
+   #(application-store/onr-applications person-oid nil)))
 
 (defn get-applications-for-odw [organization-service session person-service from-date]
   (session-orgs/run-org-authorized
@@ -150,3 +151,12 @@
     (constantly nil)
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service from-date)))
+
+(defn get-applications-for-tilastokeskus [organization-service session haku-oid]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/get-application-info-for-tilastokeskus haku-oid)))

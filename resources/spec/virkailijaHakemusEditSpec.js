@@ -37,7 +37,7 @@
         })
         var expectedValues = [
           "Etunimi Tokanimi",
-          "Tokanimi",
+          "Etunimi",
           "Sukunimi",
           "Suomi",
           "***********",
@@ -84,7 +84,7 @@
       )
 
       it('shows error', function() {
-        expect(testFrame().find('.application__error-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Attempted to edit hakemus with invalid virkailija secret."}}')
+        expect(testFrame().find('.application__error-display').text()).to.include('{:status 400, :status-text "Bad Request", :failure :error, :response {:error "Invalid virkailija secret"}}')
       })
     })
   });

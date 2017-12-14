@@ -48,7 +48,25 @@
           [:strong email]
           " säkert är korrekt."]
          [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]}])
+         söker till."]]
+    :en [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Dear " preferred-name ",")
+               "Dear applicant,")]
+         [:p "we noticed that "
+          [:strong "you have already submitted an application"]
+          " to this admission. Therefore, you cannot submit another
+          application to the same admission."]
+         [:p "If you want to "
+          [:strong "make changes"]
+          " to your previous application, you can do so by clicking the link
+          in the confirmation email you have received with your earlier
+          application."]
+         [:p "Please also check that the email address "
+          [:strong email]
+          " you have given is correct."]
+         [:p "If you have any problems, please contact the educational
+         institution."]]}])
 
 (defn- email-applied-error-when-modifying
   [email preferred-name]
@@ -67,7 +85,16 @@
          [:p "En ansökning med den e-postadress du angett "
           [:strong email]
           " har redan gjorts. Kontrollera att e-postadressen du har angett
-          säkert är korrekt."]]}])
+          säkert är korrekt."]]
+    :en [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Dear " preferred-name ",")
+               "Dear applicant,")]
+         [:p "the email address "
+          [:strong email]
+          " you have given in your application has already been used by
+          another applicant. Please check that the email address you have
+          given is correct."]]}])
 
 (defn- ssn-applied-error
   [preferred-name]
@@ -96,7 +123,22 @@
           " hittar du bearbetningslänken i e-postmeddelandet som du fick när
            du skickade din tidigare ansökning."]
          [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]}])
+         söker till."]]
+    :en [:div
+         [:p (if (not (clojure.string/blank? preferred-name))
+               (str "Dear " preferred-name ",")
+               "Dear applicant,")]
+         [:p "we noticed that "
+          [:strong "you have already submitted an application"]
+          " to this admission. Therefore, you cannot submit another
+          application to the same admission."]
+         [:p "If you want to "
+          [:strong "make changes"]
+          " to your previous application, you can do so, by clicking the link
+          in the confirmation email you have received with your earlier
+          application."]
+         [:p "If you have any problems, please contact the educational
+         institution."]]}])
 
 (defn ^:private required?
   [value _ _]

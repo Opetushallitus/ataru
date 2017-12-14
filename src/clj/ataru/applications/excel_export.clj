@@ -1,5 +1,5 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment]
+  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment Row$MissingCellPolicy]
            [java.io ByteArrayOutputStream]
            [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFCell XSSFCellStyle])
   (:require [ataru.forms.form-store :as form-store]
@@ -102,8 +102,11 @@
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style [cell workbook]
+(defn- set-cell-style [cell value workbook]
   (let [cell-style (.createCellStyle workbook)]
+    (when (and (string? value)
+               (contains? #{\= \+ \- \@} (first value)))
+      (.setQuotePrefixed cell-style true))
     (.setWrapText cell-style true)
     (.setVerticalAlignment cell-style VerticalAlignment/TOP)
     (.setCellStyle cell cell-style)
@@ -113,8 +116,8 @@
   (when-let [v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet row)
             (.createRow sheet row))
-        (.getCell column Row/CREATE_NULL_AS_BLANK)
-        (set-cell-style workbook)
+        (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
+        (set-cell-style value workbook)
         (.setCellValue v)))
   sheet)
 
@@ -212,15 +215,20 @@
                             (raw-values->human-readable-value form application (:key answer) value-or-values))]
       (when (and value column)
         (writer 0 (+ column (count application-meta-fields)) value))))
-  (let [application-review  (application-store/get-application-review (:key application))
-        beef-header-count   (- (apply max (map :column headers)) (count review-headers))
-        prev-header-count   (+ beef-header-count
-                               (count application-meta-fields))
-        notes-column        (inc prev-header-count)
-        score-column        (inc notes-column)
-        notes               (:notes application-review)
-        score               (:score application-review)]
-    (when notes (writer 0 notes-column notes))
+  (let [application-key              (:key application)
+        application-review (application-store/get-application-review application-key)
+        beef-header-count  (- (apply max (map :column headers)) (count review-headers))
+        prev-header-count  (+ beef-header-count
+                              (count application-meta-fields))
+        notes-column       (inc prev-header-count)
+        score-column       (inc notes-column)
+        notes              (:notes application-review)
+        score              (:score application-review)]
+    (when (not-empty notes)
+      (->> notes
+           (map :notes)
+           (clojure.string/join "\n")
+           (writer 0 notes-column)))
     (when score (writer 0 score-column score))))
 
 (defn- form-label? [form-element]
@@ -337,9 +345,9 @@
       (subs 0 30))))
 
 (defn- inject-haku-info
-  [tarjonta-service application]
+  [tarjonta-service ohjausparametrit-service application]
   (merge application
-         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service (:haku application))))
+         (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application))))
 
 (defn set-column-widths [workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
@@ -394,7 +402,7 @@
                                  all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
-(defn export-applications [applications selected-hakukohde tarjonta-service]
+(defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
   (let [workbook                (XSSFWorkbook.)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -426,7 +434,7 @@
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
-                               (map (partial inject-haku-info tarjonta-service))
+                               (map (partial inject-haku-info tarjonta-service ohjausparametrit-service))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)]
                                                 (write-application! row-writer application headers application-meta-fields form))))

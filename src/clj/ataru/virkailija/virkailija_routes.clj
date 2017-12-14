@@ -52,7 +52,8 @@
             [org.httpkit.client :as http]
             [medley.core :refer [map-kv]]
             [ataru.cache.cache-service :as cache]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit])
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [ataru.person-service.person-service :as person-service])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
 
@@ -128,6 +129,7 @@
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
+                          ohjausparametrit-service
                           virkailija-tarjonta-service
                           cache-service
                           person-service]}]
@@ -197,34 +199,60 @@
                                           {name         :- s/Str nil}]
                            :summary "Return applications header-level info for form"
                            :return {:applications [ataru-schema/ApplicationInfo]}
-                           (cond
-                             (some? formKey)
-                             (ok (application-service/get-application-list-by-form formKey session organization-service))
+                           (let [applications (-> (cond
+                                                    (some? formKey)
+                                                    (application-service/get-application-list-by-form formKey session organization-service)
 
-                             (some? hakukohdeOid)
-                             (ok (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service))
+                                                    (some? hakukohdeOid)
+                                                    (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service)
 
-                             (some? hakuOid)
-                             (ok (access-controlled-application/get-application-list-by-haku hakuOid session organization-service))
+                                                    (some? hakuOid)
+                                                    (access-controlled-application/get-application-list-by-haku hakuOid session organization-service)
 
-                             (some? ssn)
-                             (ok (access-controlled-application/get-application-list-by-ssn ssn session organization-service))
+                                                    (some? ssn)
+                                                    (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
 
-                             (some? dob)
-                             (let [dob (dob/str->dob dob)]
-                               (ok (access-controlled-application/get-application-list-by-dob dob session organization-service)))
+                                                    (some? dob)
+                                                    (let [dob (dob/str->dob dob)]
+                                                      (access-controlled-application/get-application-list-by-dob dob session organization-service))
 
-                             (some? email)
-                             (ok (access-controlled-application/get-application-list-by-email email session organization-service))
-                             (some? name)
-                             (ok (access-controlled-application/get-application-list-by-name name session organization-service))))
+                                                    (some? email)
+                                                    (access-controlled-application/get-application-list-by-email email session organization-service)
+
+                                                    (some? name)
+                                                    (access-controlled-application/get-application-list-by-name name session organization-service))
+                                                  :applications)
+                                 persons      (->> (person-service/get-persons person-service (distinct (keep :person-oid applications)))
+                                                   (reduce (fn [res person]
+                                                             (assoc res (:oidHenkilo person) person))
+                                                           {}))]
+                             (response/ok {:applications (for [application applications
+                                                               :let [person      (get persons (:person-oid application))
+                                                                     yksiloity   (or (-> person :yksiloity)
+                                                                                     (-> person :yksiloityVTJ))
+                                                                     person-info (if yksiloity
+                                                                                   {:preferred-name (:kutsumanimi person)
+                                                                                    :last-name      (:sukunimi person)}
+                                                                                   (select-keys application [:preferred-name :last-name]))]]
+                                                           (-> application
+                                                               (assoc :person person-info)
+                                                               (dissoc :person-oid :preferred-name :last-name)))})))
+                  (api/GET "/virkailija-settings" {session :session}
+                    :return ataru-schema/VirkailijaSettings
+                    (ok (virkailija-edit/get-review-settings session)))
+
+                  (api/POST "/review-setting" {session :session}
+                    :body [review-setting ataru-schema/ReviewSetting]
+                    :return ataru-schema/ReviewSetting
+                    (ok (virkailija-edit/set-review-setting review-setting session)))
 
                   (api/GET "/:application-key" {session :session}
                     :path-params [application-key :- String]
                     :summary "Return application details needed for application review, including events and review data"
-                    :return {:application          ataru-schema/Application
+                    :return {:application          ataru-schema/ApplicationWithPerson
                              :events               [ataru-schema/Event]
                              :review               ataru-schema/Review
+                             :review-notes         [ataru-schema/ReviewNote]
                              :hakukohde-reviews    ataru-schema/HakukohdeReviews
                              :form                 ataru-schema/FormWithContent
                              :information-requests [ataru-schema/InformationRequest]}
@@ -232,6 +260,7 @@
                                                                                         session
                                                                                         organization-service
                                                                                         tarjonta-service
+                                                                                        ohjausparametrit-service
                                                                                         person-service)))
 
                    (api/GET "/:application-key/modify" {session :session}
@@ -248,8 +277,29 @@
                      :path-params [application-key :- String]
                      :summary "Send the modify application link to the applicant via email"
                      :return ataru-schema/Event
-                     (if-let [resend-event (application-service/send-modify-application-link-email application-key session organization-service)]
+                     (if-let [resend-event (application-service/send-modify-application-link-email
+                                            application-key
+                                            session
+                                            organization-service
+                                            tarjonta-service)]
                        (response/ok resend-event)
+                       (response/bad-request)))
+
+                   (api/POST "/notes" {session :session}
+                     :summary "Add new review note for the application"
+                     :return ataru-schema/ReviewNote
+                     :body [note {:notes           s/Str
+                                  :application-key s/Str}]
+                     (if-let [note (application-service/add-review-note note session organization-service)]
+                       (response/ok note)
+                       (response/bad-request)))
+
+                   (api/DELETE "/notes/:note-id" []
+                     :summary "Remove note"
+                     :return {:id s/Int}
+                     :path-params [note-id :- s/Int]
+                     (if-let [note-id (application-service/remove-review-note note-id)]
+                       (response/ok {:id note-id})
                        (response/bad-request)))
 
                    (api/PUT "/review" {session :session}
@@ -285,7 +335,8 @@
                                  selected-hakukohde
                                  session
                                  organization-service
-                                 tarjonta-service)}))
+                                 tarjonta-service
+                                 ohjausparametrit-service)}))
 
                  (api/context "/cache" []
                    (api/POST "/clear/:cache" {session :session}
@@ -400,16 +451,18 @@
                      :summary "Get the latest versions of applications."
                      :query-params [{hakuOid :- s/Str nil}
                                     {hakukohdeOids :- [s/Str] nil}
-                                    {hakijaOids :- [s/Str] nil}]
+                                    {hakijaOids :- [s/Str] nil}
+                                    {modifiedAfter :- s/Str nil}]
                      :return [ataru-schema/HakurekisteriApplication]
-                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids])
+                     (if (every? nil? [hakuOid hakukohdeOids hakijaOids modifiedAfter])
                        (response/bad-request {:error "No search terms provided."})
                        (if-let [applications (access-controlled-application/hakurekisteri-applications
                                                organization-service
                                                session
                                                hakuOid
                                                hakukohdeOids
-                                               hakijaOids)]
+                                               hakijaOids
+                                               modifiedAfter)]
                          (response/ok applications)
                          (response/unauthorized {:error "Unauthorized"}))))
                    (api/GET "/applications" {session :session}
@@ -450,6 +503,15 @@
                                              session
                                              person-service
                                              fromDate)]
+                       (response/ok applications)
+                       (response/unauthorized {:error "Unauthorized"})))
+                   (api/GET "/tilastokeskus" {session :session}
+                     :summary "Get application info for tilastokeskus"
+                     :query-params [hakuOid :- s/Str]
+                     :return [ataru-schema/TilastokeskusApplication]
+                     (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
+                                                                                                             session
+                                                                                                             hakuOid)]
                        (response/ok applications)
                        (response/unauthorized {:error "Unauthorized"}))))))
 

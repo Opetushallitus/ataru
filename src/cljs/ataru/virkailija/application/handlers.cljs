@@ -10,7 +10,10 @@
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
-            [ataru.url :as url]))
+            [ataru.url :as url]
+            [camel-snake-kebab.core :as c]
+            [camel-snake-kebab.extras :as ce]
+            [cljs-time.core :as t]))
 
 (reg-event-fx
   :application/select-application
@@ -19,6 +22,7 @@
       (let [db (-> db
                    (assoc-in [:application :selected-key] application-key)
                    (assoc-in [:application :selected-application-and-form] nil)
+                   (assoc-in [:application :review-comment] nil)
                    (assoc-in [:application :application-list-expanded?] false)
                    (assoc-in [:application :information-request] nil))]
         {:db         db
@@ -199,13 +203,20 @@
         answer-map (into {} (map (fn [answer] [(keyword (:key answer)) answer])) answers)]
     (assoc application :answers answer-map)))
 
-(defn update-application-details [db {:keys [form application events review hakukohde-reviews information-requests]}]
+(defn update-application-details [db {:keys [form
+                                             application
+                                             events
+                                             review
+                                             hakukohde-reviews
+                                             information-requests
+                                             review-notes]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
         {:form        form
          :application (answers-indexed application)})
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
+      (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
       (assoc-in [:application :information-requests] information-requests)))
@@ -230,7 +241,6 @@
                                           :override-args {:params (select-keys current [:id
                                                                                         :application-id
                                                                                         :application-key
-                                                                                        :notes
                                                                                         :score
                                                                                         :state
                                                                                         :hakukohde-reviews])}))})))
@@ -279,11 +289,24 @@
   (some (comp (partial = "attachment") :fieldType second)
         (get-in db [:application :selected-application-and-form :application :answers])))
 
+(defn- parse-application-times
+  [response]
+  (let [answers                    (-> response :application :answers)
+        form-content               (-> response :form :content)
+        without-answers-or-content (-> response
+                                       (update-in [:application] dissoc :answers)
+                                       (update-in [:form] dissoc :content))
+        with-times                 (ataru.virkailija.temporal/parse-times without-answers-or-content)]
+    (-> with-times
+        (assoc-in [:application :answers] answers)
+        (assoc-in [:form :content] form-content))))
+
 (reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
-    (let [db (update-application-details db response)]
-      {:db db
+    (let [response-with-parsed-times (parse-application-times response)
+          db                         (update-application-details db response-with-parsed-times)]
+      {:db       db
        :dispatch (if (and (fc/feature-enabled? :attachment)
                           (application-has-attachments? db))
                    [:application/fetch-application-attachment-metadata]
@@ -298,7 +321,8 @@
       {:db   db
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
-              :handler-or-dispatch :application/handle-fetch-application}})))
+              :handler-or-dispatch :application/handle-fetch-application
+              :skip-parse-times? true}})))
 
 (reg-event-db
   :application/start-autosave
@@ -362,7 +386,8 @@
     {:db   db
      :http {:method              :get
             :path                "/lomake-editori/api/haut"
-            :handler-or-dispatch :editor/handle-refresh-haut}}))
+            :handler-or-dispatch :editor/handle-refresh-haut
+            :skip-parse-times?   true}}))
 
 (reg-event-fx
   :application/navigate
@@ -489,3 +514,106 @@
   :application/reset-resend-modify-application-link-state
   (fn [db _]
     (assoc-in db [:application :modify-application-link :state] nil)))
+
+(reg-event-db
+  :application/toggle-review-area-settings-visibility
+  (fn [db _]
+    (let [not-or-true (fnil not false)
+          visible?    (-> db :application :review-settings :visible? not-or-true)
+          keys->false (partial reduce-kv
+                               (fn [config review-key _]
+                                 (assoc config review-key false))
+                               {})]
+      (cond-> (assoc-in db [:application :review-settings :visible?] visible?)
+        visible?
+        (update-in [:application :ui/review] keys->false)))))
+
+(reg-event-fx
+  :application/toggle-review-state-setting
+  (fn [{:keys [db]} [_ setting-kwd]]
+    (let [not-or-false (fnil not true)
+          enabled?     (-> db :application :review-settings :config setting-kwd not-or-false)]
+      {:db   (assoc-in db [:application :review-settings :config setting-kwd] :updating)
+       :http {:method              :post
+              :params              {:setting-kwd setting-kwd
+                                    :enabled     enabled?}
+              :path                "/lomake-editori/api/applications/review-setting"
+              :handler-or-dispatch :application/handle-toggle-review-state-setting-response}})))
+
+(reg-event-db
+  :application/handle-toggle-review-state-setting-response
+  (fn [db [_ response]]
+    (assoc-in db [:application :review-settings :config (-> response :setting-kwd keyword)] (:enabled response))))
+
+(reg-event-fx
+  :application/get-virkailija-settings
+  (fn [{:keys [db]} _]
+    {:db   db
+     :http {:method              :get
+            :path                "/lomake-editori/api/applications/virkailija-settings"
+            :handler-or-dispatch :application/handle-get-virkailija-settings-response}}))
+
+(reg-event-db
+  :application/handle-get-virkailija-settings-response
+  (fn [db [_ response]]
+    (let [review-config (->> response
+                             (ce/transform-keys c/->kebab-case-keyword)
+                             :review)]
+      (update-in db
+                 [:application :review-settings :config]
+                 merge
+                 review-config))))
+
+(reg-event-db
+  :application/toggle-review-list-visibility
+  (fn [db [_ list-kwd]]
+    (update-in db [:application :ui/review list-kwd] (fnil not false))))
+
+(reg-event-fx
+  :application/add-review-note
+  (fn [{:keys [db]} [_ note]]
+    (let [application-key (-> db :application :selected-key)
+          note-idx        (-> db :application :review-notes count)
+          db              (-> db
+                              (update-in [:application :review-notes]
+                                         (cljs-util/vector-of-length (inc note-idx)))
+                              (assoc-in [:application :review-notes note-idx] {:created-time (t/now)
+                                                                               :notes        note
+                                                                               :animated?    true})
+                              (assoc-in [:application :review-comment] nil))]
+      {:db   db
+       :http {:method              :post
+              :params              {:notes           note
+                                    :application-key application-key}
+              :path                "/lomake-editori/api/applications/notes"
+              :handler-or-dispatch :application/handle-add-review-note-response
+              :handler-args        {:note-idx note-idx}}})))
+
+(reg-event-fx :application/handle-add-review-note-response
+  (fn [{:keys [db]} [_ resp args]]
+    (let [db (update-in db [:application :review-notes (:note-idx args)] merge resp)]
+      {:db             db
+       :dispatch-later [{:ms 1000 :dispatch [:application/reset-review-note-animations (:note-idx args)]}]})))
+
+(reg-event-db :application/reset-review-note-animations
+  (fn [db [_ note-idx]]
+    (update-in db [:application :review-notes note-idx] dissoc :animated?)))
+
+(reg-event-db :application/set-review-comment-value
+  (fn [db [_ review-comment]]
+    (assoc-in db [:application :review-comment] review-comment)))
+
+(reg-event-fx :application/remove-review-note
+  (fn [{:keys [db]} [_ note-idx]]
+    (let [note-id (-> db :application :review-notes (get note-idx) :id)
+          db      (assoc-in db [:application :review-notes note-idx :state] :removing)]
+      {:db   db
+       :http {:method              :delete
+              :path                (str "/lomake-editori/api/applications/notes/" note-id)
+              :handler-or-dispatch :application/handle-remove-review-note-response}})))
+
+(reg-event-db :application/handle-remove-review-note-response
+  (fn [db [_ resp]]
+    (let [note-with-id (comp (partial = (:id resp)) :id)
+          remove-note  (comp vec (partial remove note-with-id))]
+      (update-in db [:application :review-notes] remove-note))))

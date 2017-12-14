@@ -41,6 +41,7 @@
   padding-top: 0;
   border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
+  padding-bottom: 10px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -340,44 +341,122 @@ and (max-width: 1000px) {
   min-height: 1200px; // floating review bar must be shorter than review area
 }
 
+.application-handling__review-outer {
+  position: relative;
+  margin-left: 35px;
+}
+
+.application-handling__review-outer-floating {
+  position: fixed;
+  top: 43px;
+  right: 85px;
+  padding-bottom: 100px;
+  overflow-y: scroll;
+  height: 100%;
+}
+
+.application-handling__review-settings {
+  border: 1px solid @review-separator-color;
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  top: -34px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.application-handling__review-settings-floating {
+  position: fixed;
+  left: auto;
+  bottom: auto;
+  top: 43px;
+  right: 85px;
+  height: 100%;
+  width: 448px;
+}
+
+.application-handling__review-settings-header {
+  position: absolute;
+  top: 5px;
+  left: 15px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+}
+
+.application-handling__review-settings-header-icon {
+  font-size: 24px;
+}
+
+.application-handling__review-settings-header-text {
+  margin-left: 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.application-handling__review-settings-indicator-outer {
+  position: absolute;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 12px solid @review-separator-color;
+  right: 23px;
+  top: -12px;
+}
+
+.application-handling__review-settings-indicator-inner {
+  position: absolute;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 10px solid white;
+  top: 2px;
+  left: -12px;
+}
+
 .application-handling__review {
   color: @text-color;
   font-size: 14px;
-  background-color: @very-light-gray;
-  min-width: 407px;
-  border-top: solid @review-separator-color 1px;
-  padding: 15px;
-  width: 360px;
-  margin-left: 35px;
+  width: 448px;
+  padding: 0 15px 15px 30px;
   .application-handling-webkit-scrollbar-mixin;
+  position: relative;
+  visibility: visible;
 }
 
 .application-handling__review-outer-container {
   padding-right: 5px;
   position: relative;
-}
-
-.application-handling__review-inner-container {
-  height: 100%;
-  overflow-y: auto;
+  border-top: solid @review-separator-color 1px;
+  padding-top: 15px;
+  background-color: @very-light-gray;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .application-handling__floating-application-review-placeholder {
-  width: 679px;
+  width: 779px;
   visibility: hidden;
 }
 
-.application-handling__review-floating {
-  position: fixed;
-  top: 43px;
-  right: 85px;
-  padding-right: 8px;
-  height: 100%;
-  padding-bottom: 50px;
+.application-handling__review-area-settings-link {
+  position: absolute;
+  top: -82px;
+  right: 25px;
+}
+
+.application-handling__review-area-settings-button {
+  color: @gray;
+  font-size: 32px;
+  cursor: pointer;
 }
 
 .application__handling-heading {
-  margin-bottom: 15px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
 }
 
 .application-handling__review-area-main-heading-container {
@@ -404,6 +483,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-main-heading-person-oid-row {
   margin-top: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .application-handling__review-area-main-heading-person-icon {
@@ -439,7 +520,7 @@ and (max-width: 1000px) {
 .application-handling__review-header {
   color: @text-color;
   .semibold;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
 }
 
 .application-handling__review-header--language-requirement,
@@ -452,6 +533,17 @@ and (max-width: 1000px) {
 .application-handling__review-header--points {
   align-self: center;
   margin-bottom: 0;
+}
+
+.application-handling__review-settings-checkbox-container {
+  position: relative;
+}
+
+.application-handling__review-state-setting-checkbox {
+  position: absolute;
+  left: -28px;
+  top: 8px;
+  z-index: 1;
 }
 
 .application-handling__review-state-container--columnar {
@@ -468,10 +560,97 @@ and (max-width: 1000px) {
 
 .application-handling__review-row {
   display: flex;
+  position: relative;
+  margin-bottom: 10px;
 }
 
 .application-handling__review-row--nocolumn {
   display: block;
+}
+
+.application-handling__review-note {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  background-color: @review-note-background-color;
+  border-radius: 10px;
+  padding: 10px 20px;
+  margin-bottom: 15px;
+}
+
+.application-handling__review-note-column {
+  flex: 0 1 60%;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.application-handling__review-details-column {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  color: @gray-of-the-beast;
+  position: relative;
+  font-size: 13px;
+}
+
+.application-handling__review-details-icon {
+  font-size: 26px;
+}
+
+.application-handling__review-details-remove-link {
+  color: @gray-of-the-beast;
+  margin-top: 10px;
+  position: absolute;
+  top: -20px;
+  right: -13px;
+}
+
+.application-handling__review-details-remove-link:hover {
+  color: @link-color;
+}
+
+.application-handling__review-details-remove-link--disabled {
+  pointer-events: none;
+  cursor: auto;
+}
+
+.application-handling__review-row--notes-row {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.application-handling__review-note-input {
+  font-size: 14px;
+  padding: 6px;
+  border: 1px solid @section-gray-border;
+  border-radius: 2px;
+  flex-grow: 1;
+}
+
+.application-handling__review-note-submit-button {
+  color: @white;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  margin-left: 10px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 130px;
+}
+
+.application-handling__review-note-submit-button--disabled {
+  background-color: @section-gray-border
+}
+
+.application-handling__review-note-submit-button--enabled {
+  background-color: @link-color;
+  cursor: pointer;
 }
 
 .application-handling__link-button {
@@ -569,11 +748,14 @@ and (max-width: 1000px) {
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
-  cursor: pointer;
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   justify-content: center;
+}
+
+.application-handling__button--disabled {
+  cursor: auto;
 }
 
 .application-handling__button:not(:last-child) {
@@ -613,6 +795,14 @@ and (max-width: 1000px) {
 
 .application-handling__send-information-request-button--disabled {
   background-color: @section-gray-border;
+}
+
+.application-handling__send-information-request-button--cursor-pointer {
+  cursor: pointer;
+}
+
+.application-handling__send-information-request-button--cursor-default {
+  cursor: default;
 }
 
 .application-handling__information-request-info-heading {
@@ -700,6 +890,7 @@ and (max-width: 1000px) {
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
+  position: relative;
 }
 
 .application-handling__review-state-container--bottom-border {
@@ -720,13 +911,13 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row {
   position: relative;
-  color: #2a2a2a;
+  color: @text-color;
   padding: 11px 11px 11px 32px;
   margin-bottom: 3px;
   width: 219px;
-  cursor: pointer;
   box-shadow: @modal-shadow;
   background: @white;
+  cursor: default;
 }
 
 .application-handling__review-state-row--mass-update {
@@ -735,10 +926,13 @@ and (max-width: 1000px) {
 
 .application-handling__review-state-row--disabled {
   color: @sg-gray-lighten-3;
-  cursor: default;
 }
 
-.application-handling__review-state-row:hover {
+.application-handling__review-state-row--enabled {
+  cursor: pointer;
+}
+
+.application-handling__review-state-row--enabled:hover {
   background-color: #e8f3f6;
 }
 
@@ -841,7 +1035,8 @@ and (max-width: 1000px) {
 
 .application-handling__review-inputs {
   margin-bottom: 20px;
-  padding-top: 20px;
+  padding: 20px 0px 10px;
+  border-bottom: 1px solid @review-separator-color;
   border-top: 1px solid @review-separator-color;
 }
 
@@ -929,12 +1124,39 @@ and (max-width: 1000px) {
   }
 
   .security-block {
-    color: #c31f1fc4;
+    align-items: center;
+    background-color: @individualization-red;
+    border-radius: 3px;
+    color: white;
+    display: flex;
     font-size: 14px;
-    margin: 0;
+    margin: 0 25px 0 0;
+    padding: 3px 8px 3px 3px;
+    position: relative;
+
+    i {
+      font-size: 26px;
+      margin: 0 6px 0 5px;
+    }
   }
 }
 
+.individualization {
+  .arrow(left, @light-green, 8px, 8px);
+  align-items: center;
+  background: @light-green;
+  border-radius: 3px;
+  color: white;
+  display: flex;
+  font-size: 13px;
+  margin-left: 10px;
+  padding: 4px 7px 4px 4px;
+
+  i {
+    font-size: 26px;
+    margin: 0 6px 0 4px;
+  }
+}
 
 .application__wrapper-element--border {
   border-top: solid 1px @review-separator-color;
@@ -1234,10 +1456,76 @@ th.application__readonly-adjacent--header {
 }
 
 .application__text-field-paragraph {
+  display: inline-block;
   &:first-child {
     margin-top: 0px;
   }
   &:last-child {
     margin-bottom: 0px;
   }
+}
+
+.application-handling__header-haku {
+  font-size: 20px;
+  .semibold;
+}
+
+.application-handling__dropdown-box-item {
+  position: relative;
+  height: 44px;
+  color: @text-color;
+  padding: 12px 32px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  box-shadow: @modal-shadow;
+  background: @white;
+  display: block;
+  width: 100%;
+  font-size: 14px;
+}
+
+.application-handling__dropdown-box-item--selected {
+  color: @text-color;
+  border-radius: 3px;
+  margin-left: 0;
+  margin-bottom: 8px;
+  display: inline-block;
+  padding-left: 25px;
+}
+
+.application-handling__dropdown-box-container {
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.application-handling__dropdown-box-opened {
+  background-color: @very-light-gray;
+  border-radius: 3px;
+  box-shadow: @modal-shadow;
+  z-index: 10;
+  position: absolute;
+}
+
+.application-handling__dropdown-box-opened .application-handling__dropdown-box-item {
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.application-handling__dropdown-box-item:hover {
+  background-color: #e8f3f6;
+}
+
+.application-handling__dropdown-box-item-link {
+  color: @text-color;
+}
+
+.application-handling__dropdown-box-closed {
+  color: @pale-blue;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.application-handling__dropdown-box-closed-label {
+  margin-left: 7px;
+  display: inline;
 }

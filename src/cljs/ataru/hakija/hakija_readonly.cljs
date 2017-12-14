@@ -10,8 +10,6 @@
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [ataru.cljs-util :refer [console-log]]
-            [ataru.translations.application-view :refer [application-view-translations]]
-            [ataru.translations.translation-util :refer [get-translations]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :refer [answer-key
                                                                        required-hint
@@ -45,9 +43,11 @@
                        (replace-with-option-label (:options field-descriptor) lang))]
           (cond (and (sequential? values) (< 1 (count values)))
                 [:ul.application__form-field-list
-                 (for [value values]
-                   ^{:key value}
-                   [:li (render-paragraphs value)])]
+                 (map-indexed
+                  (fn [i value]
+                    ^{:key (str (:id field-descriptor) i)}
+                    [:li (render-paragraphs value)])
+                  values)]
                 (sequential? values)
                 (render-paragraphs (first values))
                 :else

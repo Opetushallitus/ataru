@@ -172,8 +172,15 @@
 
 (defn application-processing-jatkuva-haku? [application haku]
   (when-let [state (:state application)]
-    (and (not= state "unprocessed")
+    (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:is-jatkuva-haku? haku))))
+
+(defn- attachment-modify-grace-period-days
+  [hakuaika]
+  (or (:attachment-modify-grace-period-days hakuaika)
+      (-> js/config
+          js->clj
+          (get "attachment-modify-grace-period-days" 14))))
 
 (defn applying-possible? [form application]
   (cond
@@ -186,9 +193,8 @@
     (and
       (:editing? application)
       (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
-                                         (-> js/config
-                                             js->clj
-                                             (get "attachment-modify-grace-period-days" 14))))
+                                         (attachment-modify-grace-period-days
+                                          (-> form :tarjonta :hakuaika-dates))))
     true
 
     ;; When applying to hakukohde, hakuaika must be on

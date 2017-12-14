@@ -2,7 +2,8 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -137,9 +138,11 @@
    :is-jatkuva-haku?                   s/Bool
    :can-submit-multiple-applications   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde
-   (s/optional-key :hakuaika-dates)    {:start                s/Int
-                                        (s/optional-key :end) (s/maybe s/Int)
-                                        :on                   s/Bool}})
+   (s/optional-key :hakuaika-dates)    {:start                               s/Int
+                                        (s/optional-key :end)                (s/maybe s/Int)
+                                        :on                                  s/Bool
+                                        :hakukierros-end                     (s/maybe s/Int)
+                                        :attachment-modify-grace-period-days (s/maybe s/Int)}})
 
 (s/defschema Haku
   {:oid s/Str
@@ -195,9 +198,9 @@
    :state                                          s/Str
    :score                                          (s/maybe s/Int)
    :new-application-modifications                  s/Int
+   :person                                         {:preferred-name s/Str
+                                                    :last-name      s/Str}
    (s/optional-key :form)                          s/Int
-   (s/optional-key :preferred-name)                (s/maybe s/Str)
-   (s/optional-key :last-name)                     (s/maybe s/Str)
    (s/optional-key :created-time)                  org.joda.time.DateTime
    (s/optional-key :haku)                          (s/maybe s/Str)
    (s/optional-key :hakukohde)                     (s/maybe [s/Str])
@@ -211,7 +214,6 @@
    :form                                s/Int
    :lang                                s/Str
    :answers                             [Answer]
-   (s/optional-key :turvakielto)        s/Bool
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
    (s/optional-key :hakukohde)          (s/maybe [s/Str])
@@ -223,6 +225,25 @@
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)})
+
+(s/defschema Person
+  {:oid                                 (s/maybe s/Str)
+   :turvakielto                         s/Bool
+   :yksiloity                           s/Bool
+   :first-name                          s/Str
+   :preferred-name                      s/Str
+   :last-name                           s/Str
+   :gender                              s/Str
+   :nationality                         s/Str
+   (s/optional-key :gender-string)      s/Str
+   (s/optional-key :nationality-string) s/Str
+   (s/optional-key :ssn)                (s/maybe s/Str)
+   (s/optional-key :birth-date)         s/Str})
+
+(s/defschema ApplicationWithPerson
+  (-> Application
+      (st/dissoc :person-oid)
+      (st/assoc :person Person)))
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
@@ -252,9 +273,9 @@
    :matkapuhelin        s/Str
    :lahiosoite          s/Str
    :postinumero         s/Str
-   :postitoimipaikka    s/Str
+   :postitoimipaikka    (s/maybe s/Str)
    :asuinmaa            s/Str
-   :kotikunta           s/Str
+   :kotikunta           (s/maybe s/Str)
    :paymentObligations  {s/Str s/Str}
    :kkPohjakoulutus     [s/Str]})
 
@@ -270,6 +291,12 @@
    :postinumero  s/Str
    :passinNumero (s/maybe s/Str)
    :idTunnus     (s/maybe s/Str)})
+
+(s/defschema TilastokeskusApplication
+  {:hakemus_oid    s/Str
+   :haku_oid       s/Str
+   :hekilo_oid     s/Str
+   :hakukohde_oids [s/Str]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
@@ -298,20 +325,28 @@
 (s/defschema HakukohdeReviews
   {s/Keyword hakukohde-review-types-schema})
 
+(s/defschema ReviewNote
+  {:id                            s/Int
+   :application-key               s/Str
+   :notes                         s/Str
+   :first-name                    (s/maybe s/Str)
+   :last-name                     (s/maybe s/Str)
+   (s/optional-key :created-time) org.joda.time.DateTime})
+
 (s/defschema Review
   {:id                                 s/Int
    :application-key                    s/Str
    (s/optional-key :modified-time)     org.joda.time.DateTime
    :state                              s/Str
    (s/optional-key :score)             (s/maybe s/Int)
-   :notes                              (s/maybe s/Str)
    (s/optional-key :hakukohde-reviews) HakukohdeReviews})
 
 (s/defschema ApplicationCountsHakukohde {:oid               s/Str
                                          :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
-                                         :incomplete        s/Int})
+                                         :incomplete        s/Int
+                                         :haku              s/Str})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              LocalizedStringOptional
@@ -352,3 +387,7 @@
                                  (s/optional-key :first-name)     s/Str
                                  (s/optional-key :last-name)      s/Str})
 
+(s/defschema ReviewSetting {:setting-kwd s/Str
+                            :enabled     s/Bool})
+
+(s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})

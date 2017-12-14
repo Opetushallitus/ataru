@@ -13,7 +13,9 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [yesql.core :as sql]
-            [ataru.fixtures.form :as form-fixtures]))
+            [ataru.fixtures.form :as form-fixtures]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.person-service.person-service :as person-service]))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -28,11 +30,14 @@
 (def application-edited-email (assoc-in application-fixtures/person-info-form-application [:answers 2 :value] "edited@foo.com"))
 (def application-edited-ssn (assoc-in application-fixtures/person-info-form-application [:answers 8 :value] "020202A0202"))
 (def application-for-hakukohde-edited (-> application-fixtures/person-info-form-application-for-hakukohde
+                                          (assoc-in [:answers 12 :value] "ruotsi")
                                           (assoc-in [:answers 2 :value] "edited@foo.com")
                                           (assoc-in [:answers 14 :value] ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"])))
 
 (def handler (-> (routes/new-handler)
                  (assoc :tarjonta-service (tarjonta-service/new-tarjonta-service))
+                 (assoc :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
+                 (assoc :person-service (person-service/new-person-service))
                  .start
                  :routes))
 
@@ -102,8 +107,14 @@
        first
        :value))
 
+(defn- hakuaika-ongoing
+  [_ _ _]
+  {:on true
+   :start (- (System/currentTimeMillis) (* 2 24 3600 1000))
+   :end (+ (System/currentTimeMillis) (* 2 24 3600 1000))})
+
 (defn- hakuaika-ended-within-grace-period
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
@@ -111,8 +122,18 @@
      :start (- (System/currentTimeMillis) (* start 24 3600 1000))
      :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
+(defn- hakuaika-ended-within-grace-period-hakukierros-ongoing
+  [_ _ _]
+  (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
+        start             (* 2 edit-grace-period)
+        end               (quot edit-grace-period 2)]
+    {:on    false
+     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))
+     :hakukierros-end (+ (System/currentTimeMillis) (* 2 24 3600 1000))}))
+
 (defn- hakuaika-ended-grace-period-passed
-  [_ _]
+  [_ _ _]
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
@@ -120,13 +141,23 @@
      :start (- (System/currentTimeMillis) (* start 24 3600 1000))
      :end   (- (System/currentTimeMillis) (* end 24 3600 1000))}))
 
+(defn- hakuaika-ended-grace-period-passed-hakukierros-ongoing
+  [_ _ _]
+  (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
+        start             (* 2 edit-grace-period)
+        end               (+ edit-grace-period 1)]
+    {:on    false
+     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))
+     :hakukierros-end (+ (System/currentTimeMillis) (* 2 24 3600 1000))}))
+
 (describe "/application"
   (tags :unit :hakija-routes)
 
   (describe "POST application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                    hakuaika/get-hakuaika-info                            (fn [_ _] {:on true})]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
     (before
@@ -161,44 +192,53 @@
 
   (describe "GET application"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])]
         (spec)))
 
     (before-all
       (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
     (it "should create"
-      (with-response :post resp application-fixtures/person-info-form-application
+      (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
         (should= 200 (:status resp))
         (should (have-application-in-db (get-in resp [:body :id])))))
 
     (it "should not get application with wrong secret"
       (with-get-response "asdfasfas" resp
-        (should= 500 (:status resp))))
+        (should= 404 (:status resp))))
 
     (it "should get application"
-      (with-get-response "asdfgh" resp
-        (should= 200 (:status resp))
-        (let [answers (-> resp :body :answers)]
-          (should= 1 (count (filter cannot-edit? answers)))
-          (should= 1 (count (filter cannot-view? answers))))))
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+        (with-get-response "12345" resp
+          (should= 200 (:status resp))
+          (let [answers (-> resp :body :answers)]
+            (should= 6 (count (filter cannot-edit? answers)))
+            (should= 1 (count (filter cannot-view? answers)))))))
 
     (it "should get application with hakuaika ended"
       (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
-        (with-get-response "asdfgh" resp
+        (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
-            (should= 1 (count (filter #(not (cannot-edit? %)) answers)))
-            ;; Take -1 here since the form has one more quesiton than this application has answers to, and the extra
-            ;; question on the form happens to be an attachment
-            (should= (- (count answers) 1 ) (count (filter cannot-edit? answers)))
+            (should= 1 (count (remove cannot-edit? answers)))
+            (should= 14 (count (filter cannot-edit? answers)))
+            (should= 1 (count (filter cannot-view? answers)))))))
+
+    (it "should get application with hakuaika ended but hakukierros ongoing"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+        (with-get-response "12345" resp
+          (should= 200 (:status resp))
+          (let [answers (-> resp :body :answers)]
+            (should= 6 (count (remove cannot-edit? answers)))
+            (should= 9 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers))))))))
 
     (describe "PUT application"
       (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job (fn [_])
-                      application-service/remove-orphan-attachments (fn [_ _])]
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                      application-email/start-email-edit-confirmation-job (fn [_ _])
+                      application-service/remove-orphan-attachments (fn [_ _])
+                      hakuaika/get-hakuaika-info hakuaika-ongoing]
           (spec)))
 
       (before-all
@@ -225,9 +265,8 @@
 
     (describe "PUT application after hakuaika ended"
       (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                      application-email/start-email-edit-confirmation-job   (fn [_])
-                      hakuaika/get-hakuaika-info                            hakuaika-ended-within-grace-period
+        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                      application-email/start-email-edit-confirmation-job   (fn [_ _])
                       application-service/remove-orphan-attachments         (fn [_ _])]
           (spec)))
 
@@ -235,29 +274,39 @@
         (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
       (it "should create"
-        (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
-          (should= 200 (:status resp))
-          (should (have-application-in-db (get-in resp [:body :id])))))
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+          (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
+            (should= 200 (:status resp))
+            (should (have-application-in-db (get-in resp [:body :id]))))))
 
-      (it "should allow application edit after hakuaika within 10 days and only changes to attachments"
-        (with-response :put resp application-for-hakukohde-edited
-          (should= 200 (:status resp))
-          (let [id (-> resp :body :id)
-                application (get-application-by-id id)]
-            (should= "aku@ankkalinna.com" (get-answer application "email"))
-            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"] (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))
+      (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing]
+          (with-response :put resp application-for-hakukohde-edited
+            (should= 200 (:status resp))
+            (let [id (-> resp :body :id)
+                  application (get-application-by-id id)]
+              (should= "suomi" (get-answer application "language"))
+              (should= "edited@foo.com" (get-answer application "email"))
+              (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
+                       (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
-      (it "should not allow application edit after hakuaika"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed]
+      (it "should allow application edit after grace period and only changes to limited person info"
+        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
           (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
-            (should= 400 (:status resp))
-            (should= {:failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]} (:body resp))))))
+            (should= 200 (:status resp))
+            (let [id (-> resp :body :id)
+                  application (get-application-by-id id)]
+              (should= "suomi" (get-answer application "language"))
+              (should= "aku@ankkalinna.com" (get-answer application "email"))
+              (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
+                       (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
 
   (describe "Tests for a more complicated form"
     (around [spec]
-      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_])
-                    application-email/start-email-edit-confirmation-job (fn [_])
-                    application-service/remove-orphan-attachments (fn [_ _])]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    application-email/start-email-edit-confirmation-job (fn [_ _])
+                    application-service/remove-orphan-attachments (fn [_ _])
+                    hakuaika/get-hakuaika-info hakuaika-ongoing]
         (spec)))
 
     (before-all
@@ -289,8 +338,8 @@
     (it "should not update dropdown answer when required followups are not answered"
       (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
                                    (assoc-in [:answers 18 :value] "eka vaihtoehto"))
-      (should= 400 (:status resp))
-      (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
+        (should= 400 (:status resp))
+        (should= {:failures {:dropdown-followup-2 {:passed? false}}} (:body resp))))
 
     (it "should update dropdown answer"
       (with-response :put resp (-> application-fixtures/person-info-form-application-with-more-modified-answers

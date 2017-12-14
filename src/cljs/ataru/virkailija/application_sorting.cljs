@@ -14,8 +14,8 @@
 (defn- applicant-sort [order-fn x y]
   (order-fn
    (compare
-    (clojure.string/lower-case (:last-name x))
-    (clojure.string/lower-case (:last-name y)))))
+    (clojure.string/lower-case (-> x :person :last-name))
+    (clojure.string/lower-case (-> y :person :last-name)))))
 
 (def application-sort-column-fns
   {:score

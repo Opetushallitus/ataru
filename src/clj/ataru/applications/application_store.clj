@@ -9,6 +9,8 @@
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
+            [clj-time.format :as f]
+            [clj-time.coerce :as c]
             [schema.core :as s]
             [ataru.db.db :as db]
             [yesql.core :refer [defqueries]]
@@ -273,9 +275,13 @@
      :passinNumero (-> answers :passport-number :value)
      :idTunnus     (-> answers :national-id-number :value)}))
 
-(defn onr-applications [person-oid]
+(defn onr-applications [person-oid organizations]
   (->> (exec-db :db yesql-onr-applications
-                {:person_oid person-oid})
+                {:person_oid person-oid
+                 :query_type (if (nil? organizations) "ALL" "ORGS")
+                 :authorized_organization_oids (if (nil? organizations)
+                                                 [""]
+                                                 organizations)})
        (map unwrap-onr-application)))
 
 (defn has-ssn-applied [haku-oid ssn]
@@ -290,8 +296,14 @@
        first
        ->kebab-case-kw))
 
+(defn get-application-review-notes [application-key]
+  (->> (exec-db :db yesql-get-application-review-notes {:application_key application-key})
+       (map ->kebab-case-kw)))
+
 (defn get-application-review [application-key]
-  (->kebab-case-kw (first (exec-db :db yesql-get-application-review {:application_key application-key}))))
+  (->> (exec-db :db yesql-get-application-review {:application_key application-key})
+       (map ->kebab-case-kw)
+       (first)))
 
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
@@ -323,11 +335,10 @@
     (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-latest-version-of-application-for-edit
-  [{secret :secret
-    virkailija-sercret :virkailija-secret :as application}]
+  [{:keys [secret virkailija-secret]}]
   (if secret
     (get-latest-application-by-secret secret)
-    (get-latest-application-for-virkailija-edit virkailija-sercret)))
+    (get-latest-application-for-virkailija-edit virkailija-secret)))
 
 (defn get-application-events [application-key]
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-events {:application_key application-key})))
@@ -342,9 +353,6 @@
               (exec-db :db
                        yesql-organization-oids-of-applications-of-persons
                        {:person_oids person-oids})))))
-
-(defn get-application-review-organization-oid [review-id]
-  (:organization_oid (first (exec-db :db yesql-get-application-review-organization-by-id {:review_id review-id}))))
 
 (defn save-application-review [review session virkailija]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -520,11 +528,14 @@
      :kkPohjakoulutus     (kk-base-educations answers)}))
 
 (defn get-hakurekisteri-applications
-  [haku-oid hakukohde-oids person-oids]
+  [haku-oid hakukohde-oids person-oids modified-after]
   (let [applications        (->> (exec-db :db yesql-applications-for-hakurekisteri
                                           {:haku_oid       haku-oid
                                            :hakukohde_oids (cons "" hakukohde-oids)
-                                           :person_oids    (cons "" person-oids)})
+                                           :person_oids    (cons "" person-oids)
+                                           :modified_after (some->> modified-after
+                                                                    (f/parse (f/formatter "yyyyMMddHHmm"))
+                                                                    (c/to-sql-date))})
                                  (map unwrap-hakurekisteri-application))
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
@@ -630,3 +641,21 @@
 
 (defn get-applications-newer-than [date]
   (exec-db :db yesql-get-applciations-by-created-time {:date date}))
+
+(defn add-review-note [note session]
+  {:pre [(-> note :application-key clojure.string/blank? not)
+         (-> note :notes clojure.string/blank? not)]}
+  (let [virkailija (-> session virkailija-edit/upsert-virkailija)]
+    (-> (exec-db :db yesql-add-review-note<! {:application_key (:application-key note)
+                                              :notes           (:notes note)
+                                              :virkailija_oid  (:oid virkailija)})
+        (merge (select-keys virkailija [:first_name :last_name]))
+        (dissoc :virkailija_oid :removed)
+        (->kebab-case-kw))))
+
+(defn get-application-info-for-tilastokeskus [haku-oid]
+  (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid}))
+
+(defn remove-review-note [note-id]
+  (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
+    note-id))

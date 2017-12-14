@@ -73,6 +73,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -110,6 +111,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -149,6 +151,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -188,6 +191,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -227,6 +231,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -266,6 +271,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -305,6 +311,7 @@ WITH latest_information_request_event AS (
 )
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.preferred_name,
@@ -368,11 +375,17 @@ SELECT
   id,
   modified_time,
   state,
-  notes,
   score,
   application_key
 FROM application_reviews
 WHERE application_key = :application_key;
+
+-- name: yesql-get-application-review-notes
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, v.first_name, v.last_name
+FROM application_review_notes rn
+LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
+WHERE rn.application_key = :application_key AND (removed IS NULL OR removed > NOW())
+ORDER BY rn.created_time ASC;
 
 -- name: yesql-get-applications-by-keys
 -- Get list of applications by their keys
@@ -443,6 +456,7 @@ ORDER BY a.created_time DESC;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -467,6 +481,7 @@ SELECT
   form_id AS form,
   created_time,
   content,
+  hakukohde,
   person_oid,
   secret
 FROM applications
@@ -520,6 +535,7 @@ WHERE a.key = :application_key;
 -- name: yesql-get-latest-application-by-secret
 SELECT
   a.id,
+  a.person_oid,
   a.key,
   a.lang,
   a.form_id AS form,
@@ -536,6 +552,7 @@ WHERE a.secret = :secret;
 SELECT
   a.id,
   a.key,
+  a.person_oid,
   a.lang,
   a.form_id AS form,
   a.created_time,
@@ -632,7 +649,6 @@ INSERT INTO application_reviews (application_key, state) VALUES (:application_ke
 -- Save modifications for existing review record
 UPDATE application_reviews
 SET
-  notes         = :notes,
   score         = :score,
   modified_time = now(),
   state         = :state
@@ -805,6 +821,7 @@ WHERE person_oid IS NOT NULL
   -- Parameter list contains empty string to avoid empty lists
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
   AND (array_length(ARRAY[:person_oids], 1) < 2 OR person_oid IN (:person_oids))
+  AND (:modified_after::text IS NULL OR created_time > :modified_after::TIMESTAMPTZ)
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 
@@ -823,5 +840,28 @@ SELECT a.key AS key,
        a.content AS content
 FROM latest_applications AS a
 JOIN forms AS f ON f.id = a.form_id
+JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid = :person_oid
+  AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
+
+--name: yesql-add-review-note<!
+INSERT INTO application_review_notes (application_key, notes, virkailija_oid)
+VALUES (:application_key, :notes, :virkailija_oid);
+
+-- name: yesql-remove-review-note!
+UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
+
+--name: yesql-tilastokeskus-applications
+SELECT
+  haku AS haku_oid,
+  key AS hakemus_oid,
+  person_oid hekilo_oid,
+  hakukohde AS hakukohde_oids
+FROM latest_applications
+  JOIN application_reviews ON application_key = key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND haku = :haku_oid
+  AND state <> 'inactivated'
+ORDER BY created_time DESC;

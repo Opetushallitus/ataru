@@ -1,8 +1,15 @@
-(ns ataru.person-service.birth-date-converter)
+(ns ataru.person-service.birth-date-converter
+  (:require [clj-time.format :as f]))
 
-(def finnish-date-regex #"(\d{1,2})\.(\d{1,2})\.(\d{4})")
+(def finnish-format (f/formatter "dd.MM.yyyy"))
+(def default-format (f/formatters :year-month-day))
 
 (defn convert-birth-date [finnish-format-date]
-  {:post [(not= % "--")]} ;; When no match for finnish date, this would result in "--"
-  (let [[_ day month year] (re-find finnish-date-regex finnish-format-date)]
-    (str year "-" month "-" day)))
+  (->> finnish-format-date
+       (f/parse finnish-format)
+       (f/unparse default-format)))
+
+(defn convert-to-finnish-format [yyyy-mm-dd-date]
+  (->> yyyy-mm-dd-date
+       (f/parse default-format)
+       (f/unparse finnish-format)))

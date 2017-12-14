@@ -1,5 +1,5 @@
 (ns ataru.virkailija.editor.component
-  (:require [ataru.virkailija.component-data.component :as component]
+  (:require [ataru.component-data.component :as component]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
@@ -298,10 +298,16 @@
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang
                  (fn [lang]
-                   [input-field (concat path [:params :info-text]) lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :label lang])])
+                   [input-field
+                    (concat path [:params :info-text])
+                    lang
+                    #(dispatch-sync [:editor/set-component-value
+                                     (-> % .-target .-value)
+                                     path :params :info-text :label lang])
+                    {:tag :textarea}])
                  @languages)
                (map (fn [field]
-                      (into field [[:div.editor-form__markdown-anchor
+                      (into field [[:div.editor-form__info-addon-markdown-anchor
                                     (markdown-help)]]))))])])))
 
 (defn- get-val [event]

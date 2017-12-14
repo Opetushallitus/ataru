@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">Hakemuksesi on vastaanotettu</span>
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Hakutoiveesi ovat:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+          <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Voit muuttaa hakutoiveitasi tai katsella ja muokata hakemustasi {%
+          if hakukohteet|not-empty %} hakuaikana{% endif %} yllä olevan linkin
+          kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä
+          tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Jos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen
+          henkilökortti, voit vaihtoehtoisesti kirjautua sisään
+          <a href="https://www.opintopolku.fi">Opintopolku.fi</a>:ssä, ja
+          tehdä muutoksia hakutoiveisiisi tai hakemukseesi Oma Opintopolku
+          -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi
+          nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Älä vastaa tähän viestiin - viesti on lähetetty automaattisesti.
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ystävällisin terveisin
+          <br />
+          Opintopolku
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>

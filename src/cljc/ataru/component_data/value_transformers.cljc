@@ -1,4 +1,4 @@
-(ns ataru.virkailija.component-data.value-transformers
+(ns ataru.component-data.value-transformers
   #?(:cljs (:require [goog.string :as gstring])))
 
 (def ^:private dob-pattern #"^(\d{1,2})\.(\d{1,2})\.(\d{4})$")

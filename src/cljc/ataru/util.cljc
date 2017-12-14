@@ -11,6 +11,12 @@
                :cljs [cljs-time.coerce :refer [from-long]]))
   (:import #?(:clj [java.util UUID])))
 
+(defn gender-int-to-string [gender]
+  (condp = gender
+    "1" "mies"
+    "2" "nainen"
+    :else nil))
+
 (defn map-kv [m f]
   (reduce-kv #(assoc %1 %2 (f %3)) {} m))
 

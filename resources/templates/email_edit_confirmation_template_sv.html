@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ändringarna i din ansökan har mottagits. Under ansökningstiden kan
+          du ändra dina ansökningsönskemål eller ansökan via följande
+          länk: <a style="color: #0093C4;"
+          href="{{application-url|safe}}">{{application-url|safe}}</a>. Dela
+          inte länken vidare till utomstående.
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Dina ansökningsmål:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Svara inte på detta meddelande, det har skickats automatiskt.
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

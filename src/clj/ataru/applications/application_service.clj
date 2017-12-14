@@ -15,7 +15,9 @@
    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
    [ataru.information-request.information-request-store :as information-request-store]
    [ataru.hakija.application-email-confirmation :as email]
-   [ataru.person-service.person-service :as person-service])
+   [ataru.person-service.person-service :as person-service]
+   [ataru.util :as util]
+   [ataru.person-service.birth-date-converter :as bd-converter])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -84,13 +86,59 @@
     {}
     (application-store/get-application-hakukohde-reviews application-key)))
 
+(defn- person-info-from-application [application]
+  (let [answers (util/answers-by-key (:answers application))]
+    {:first-name     (-> answers :first-name :value)
+     :preferred-name (-> answers :preferred-name :value)
+     :last-name      (-> answers :last-name :value)
+     :ssn            (-> answers :ssn :value)
+     :birth-date     (-> answers :birth-date :value)
+     :gender         (-> answers :gender :value)
+     :nationality    (-> answers :nationality :value)}))
+
+(defn get-country-by-code [code]
+  (->> (koodisto/get-koodisto-options "maatjavaltiot2" 1)
+       (filter #(= code (:value %)))
+       first
+       :label
+       :fi))
+
+(defn populate-person-koodisto-fields [person]
+  (-> person
+      (update :gender util/gender-int-to-string)
+      (update :nationality get-country-by-code)))
+
+(defn- person-info-from-onr-person [person]
+  {:first-name         (:etunimet person)
+   :preferred-name     (:kutsumanimi person)
+   :last-name          (:sukunimi person)
+   :ssn                (:hetu person)
+   :birth-date         (-> person :syntymaaika bd-converter/convert-to-finnish-format)
+   :gender             (-> person :sukupuoli)
+   :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
+
+(defn get-person [application person-client]
+  (let [person-from-onr (when-let [oid (:person-oid application)]
+                          (person-service/get-person person-client oid))
+        yksiloity       (or (-> person-from-onr :yksiloity)
+                            (-> person-from-onr :yksiloityVTJ))
+        person-info     (if yksiloity
+                          (person-info-from-onr-person person-from-onr)
+                          (person-info-from-application application))]
+    (merge
+     {:oid         (:person-oid application)
+      :turvakielto (-> person-from-onr :turvakielto boolean)
+      :yksiloity   (boolean yksiloity)}
+     person-info)))
+
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [application-key session organization-service tarjonta-service person-client]
+  [application-key session organization-service tarjonta-service ohjausparametrit-service person-client]
   (let [bare-application (aac/get-latest-application-by-key application-key session organization-service)
         tarjonta-info    (tarjonta-parser/parse-tarjonta-info-by-haku
                           tarjonta-service
+                          ohjausparametrit-service
                           (:haku bare-application)
                           (:hakukohde bare-application))
         form             (-> (:form bare-application)
@@ -98,22 +146,23 @@
                              (populate-hakukohde-answer-options tarjonta-info)
                              (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
         application      (populate-koodisto-fields bare-application form)
-        turvakielto      (->> (:person-oid application)
-                              (person-service/get-person person-client)
-                              :turvakielto
-                              boolean)]
+        person           (get-person application person-client)]
     (aac/check-application-access application-key session organization-service [:view-applications :edit-applications])
     {:application          (-> application
-                               (assoc :turvakielto turvakielto)
+                               (dissoc :person-oid)
+                               (assoc :person (if (:yksiloity person)
+                                                (populate-person-koodisto-fields person)
+                                                person))
                                (merge tarjonta-info))
      :form                 form
      :hakukohde-reviews    (parse-application-hakukohde-reviews application-key)
      :events               (application-store/get-application-events application-key)
      :review               (application-store/get-application-review application-key)
+     :review-notes         (application-store/get-application-review-notes application-key)
      :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde session organization-service tarjonta-service]
+  [application-keys selected-hakukohde session organization-service tarjonta-service ohjausparametrit-service]
   (let [applications         (application-store/get-applications-by-keys application-keys)
         forms                (->> applications
                                   (map :form-key)
@@ -125,7 +174,7 @@
                                              [:view-applications :edit-applications])
                                           forms))
         allowed-applications (filter #(contains? allowed-forms (:form-key %)) applications)]
-    (ByteArrayInputStream. (excel/export-applications allowed-applications selected-hakukohde tarjonta-service))))
+    (ByteArrayInputStream. (excel/export-applications allowed-applications selected-hakukohde tarjonta-service ohjausparametrit-service))))
 
 (defn- save-application-hakukohde-reviews
   [virkailija application-key hakukohde-reviews session]
@@ -165,9 +214,19 @@
   (application-store/mass-update-application-states session application-keys from-state to-state)
   {})
 
-(defn send-modify-application-link-email [application-key session organization-service]
+(defn send-modify-application-link-email [application-key session organization-service tarjonta-service]
   (when-let [application-id (:id (aac/get-latest-application-by-key application-key session organization-service))]
-    (email/start-email-submit-confirmation-job application-id)
+    (email/start-email-submit-confirmation-job tarjonta-service application-id)
     (application-store/add-application-event {:application-key application-key
                                               :event-type      "modification-link-sent"}
                                              session)))
+
+(defn add-review-note [note session organization-service]
+  (aac/check-application-access (:application-key note)
+                                session
+                                organization-service
+                                [:view-applications :edit-applications])
+  (application-store/add-review-note note session))
+
+(defn remove-review-note [note-id]
+  (application-store/remove-review-note note-id))

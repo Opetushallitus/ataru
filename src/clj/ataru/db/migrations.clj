@@ -6,7 +6,7 @@
     [ataru.forms.form-store :as store]
     [ataru.applications.application-store :as application-store]
     [ataru.db.migrations.application-migration-store :as migration-app-store]
-    [ataru.virkailija.component-data.person-info-module :as person-info-module]
+    [ataru.component-data.person-info-module :as person-info-module]
     [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
     [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
     [ataru.util.random :as c]
@@ -14,10 +14,11 @@
     [clojure.core.match :refer [match]]
     [taoensso.timbre :refer [spy debug info error]]
     [ataru.config.core :refer [config]]
-    [ataru.virkailija.component-data.value-transformers :as t]
+    [ataru.component-data.value-transformers :as t]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
-    [ataru.background-job.job :as job]))
+    [ataru.background-job.job :as job]
+    [ataru.db.db :as db]))
 
 (def default-fetch-size 50)
 
@@ -56,13 +57,12 @@
       form))))
 
 (defn refresh-person-info-modules []
-  (let [new-person-module (person-info-module/person-info-module)
-        existing-forms    (try
-                            (map #(store/fetch-by-id (:id %)) (store/get-all-forms))
-                            (catch Exception _ []))]
-    (doseq [form existing-forms]
-      (let [changed-form (update-person-info-module new-person-module form)]
-        (store/create-form-or-increment-version! changed-form)))))
+  (let [new-person-module (person-info-module/person-info-module)]
+    (doseq [form (->> (store/get-all-forms)
+                      (map #(store/fetch-by-id (:id %)))
+                      (sort-by :created-time))]
+      (store/create-form-or-increment-version!
+       (update-person-info-module new-person-module form)))))
 
 (defn application-id->application-key
   "Make application_events to refer to applications using
@@ -146,7 +146,7 @@
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
-              (store/create-form-or-increment-version! (:organization-oid form))))))
+              (store/create-form-or-increment-version!)))))
 
 (defn followups-to-vectored-followups-like-all-of-them
   []
@@ -265,6 +265,13 @@
          (:id application)
          camel-cased-content)))))
 
+(defn- review-notes->own-table []
+  (doseq [review-note (->> (migration-app-store/get-all-application-reviews)
+                           (filter (comp not clojure.string/blank? :notes)))]
+    (let [application-key (:application-key review-note)]
+      (info (str "Migrating review notes of application " application-key))
+      (migration-app-store/create-application-review-note review-note))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -319,6 +326,21 @@
   migrate-camel-case-content-keys "1.72"
   "Camel case application content keys"
   (camel-case-content-keys))
+
+(migrations/defmigration
+  migrate-person-info-module "1.74"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
+
+(migrations/defmigration
+  migrate-person-info-module "1.75"
+  "Update person info module structure in existing forms"
+  (refresh-person-info-modules))
+
+(migrations/defmigration
+  migrate-application-review-notes-to-own-table "1.77"
+  "Migrate application review notes to application_review_notes table"
+  (review-notes->own-table))
 
 (defn migrate
   []

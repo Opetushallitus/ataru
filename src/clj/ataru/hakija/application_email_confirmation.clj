@@ -7,39 +7,61 @@
     [ataru.background-job.job :as job]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.background-job.email-job :as email-job]
-    [ataru.translations.translation-util :refer [get-translations]]
-    [ataru.translations.email-confirmation :as translations]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.config.core :refer [config]]))
 
-(defn- get-differing-translations [raw-translations translation-mappings]
-  (into {} (map (fn [[key value]] [value (key raw-translations)]) translation-mappings)))
+(defn- modify-link [secret]
+  (-> config
+      (get-in [:public-config :applicant :service_url])
+      (str "/hakemus?modify=" secret)))
 
-(defn create-email [application-id translation-mappings]
-  (let [application      (application-store/get-application application-id)
-        raw-translations (get-translations
-                          (keyword (:lang application))
-                          translations/email-confirmation-translations)
-        translations     (merge
-                           raw-translations
-                           (get-differing-translations raw-translations translation-mappings))
-        subject          (:subject translations)
-        recipient        (-> (filter #(= "email" (:key %)) (:answers application)) first :value)
-        service-url      (get-in config [:public-config :applicant :service_url])
-        application-url  (str service-url "/hakemus?modify=" (:secret application))
-        body             (selmer/render-file
-                           "templates/email_confirmation_template.html"
-                           (merge {:application-url application-url}
-                             translations))]
+(defn- hakukohde-names [tarjonta-service lang hakukohde-oids]
+  (->> hakukohde-oids
+       (map #(tarjonta-service/get-hakukohde-name tarjonta-service %))
+       (map #(some % [lang :fi :sv :en]))))
+
+(defn- create-email [tarjonta-service subject template-name application-id]
+  (let [application     (application-store/get-application application-id)
+        lang            (keyword (:lang application))
+        subject         (subject lang)
+        recipient       (->> (:answers application)
+                             (filter #(= "email" (:key %)))
+                             first
+                             :value)
+        application-url (modify-link (:secret application))
+        body            (selmer/render-file
+                         (template-name lang)
+                         {:hakukohteet (hakukohde-names tarjonta-service
+                                                        lang
+                                                        (:hakukohde application))
+                          :application-url application-url})]
     {:from       "no-reply@opintopolku.fi"
      :recipients [recipient]
      :subject    subject
      :body       body}))
 
-(defn start-email-job [application-id translation-mappings]
-  (let [email    (create-email
-                  application-id
-                  translation-mappings)
-        job-type (:type email-job/job-definition)
+(defn- create-submit-email [tarjonta-service application-id]
+  (create-email tarjonta-service
+                {:fi "Opintopolku: hakemuksesi on vastaanotettu"
+                 :sv "Studieinfo: Din ansökan har mottagits"
+                 :en "Studyinfo: Your application has been received"}
+                #(str "templates/email_submit_confirmation_template_"
+                      (name %)
+                      ".html")
+                application-id))
+
+(defn- create-edit-email [tarjonta-service application-id]
+  (create-email tarjonta-service
+                {:fi "Opintopolku: Muutokset hakemukseesi on tallennettu"
+                 :sv "Studieinfo: Dina ändringar har lagrats i din ansökan"
+                 :en "Studyinfo: The changes to your application have been saved"}
+                #(str "templates/email_edit_confirmation_template_"
+                      (name %)
+                      ".html")
+                application-id))
+
+(defn start-email-job [application-id email]
+  (let [job-type (:type email-job/job-definition)
         job-id   (job/start-job
                   hakija-jobs/job-definitions
                   job-type
@@ -47,10 +69,12 @@
     (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
     (log/info email)))
 
-(defn start-email-submit-confirmation-job [application-id]
-  (start-email-job application-id {:application-received-text    :application-action-text
-                                   :application-received-subject :subject}))
+(defn start-email-submit-confirmation-job [tarjonta-service application-id]
+  (start-email-job application-id
+                   (create-submit-email tarjonta-service
+                                        application-id)))
 
-(defn start-email-edit-confirmation-job [application-id]
-  (start-email-job application-id {:application-edited-text    :application-action-text
-                                   :application-edited-subject :subject}))
+(defn start-email-edit-confirmation-job [tarjonta-service application-id]
+  (start-email-job application-id
+                   (create-edit-email tarjonta-service
+                                      application-id)))

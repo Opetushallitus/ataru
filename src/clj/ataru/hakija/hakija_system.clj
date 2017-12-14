@@ -10,7 +10,8 @@
             [ataru.redis :as redis]
             [ataru.config.core :refer [config]]
             [ataru.cache.hazelcast :refer [map->HazelcastInstance]]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]))
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]))
 
 (defn new-system
   ([]
@@ -30,9 +31,15 @@
                          (tarjonta-service/new-tarjonta-service)
                          [:cache-service])
 
+     :ohjausparametrit-service (component/using
+                                 (ohjausparametrit-service/new-ohjausparametrit-service)
+                                 [:cache-service])
+
+     :person-service       (person-service/new-person-service)
+
      :handler              (component/using
                              (handler/new-handler)
-                             [:tarjonta-service])
+                             [:tarjonta-service :ohjausparametrit-service :person-service])
 
      :server-setup         {:port      http-port
                             :repl-port repl-port}
@@ -40,8 +47,6 @@
      :server               (component/using
                              (server/new-server)
                              [:server-setup :handler])
-
-     :person-service       (person-service/new-person-service)
 
      :job-runner           (component/using
                              (job/new-job-runner hakija-jobs/job-definitions)

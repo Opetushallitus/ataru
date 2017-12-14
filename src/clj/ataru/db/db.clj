@@ -27,34 +27,34 @@
 (defonce datasource (atom {}))
 
 (defn get-datasource [ds-key]
-                     (swap! datasource (fn [datasources]
-                                         (if (not (contains? datasources ds-key))
-                                           (let [ds (make-datasource (datasource-spec ds-key))]
-                                             (assoc datasources ds-key ds))
-                                           datasources)))
-                     (ds-key @datasource))
+  (swap! datasource (fn [datasources]
+                      (if (not (contains? datasources ds-key))
+                        (let [ds (make-datasource (datasource-spec ds-key))]
+                          (assoc datasources ds-key ds))
+                        datasources)))
+  (ds-key @datasource))
 
 (defn get-next-exception-or-original [original-exception]
-                                     (try (.getNextException original-exception)
-                                          (catch IllegalArgumentException iae
-                                            original-exception)))
+  (try (.getNextException original-exception)
+       (catch IllegalArgumentException iae
+         original-exception)))
 
 (defn clear-db! [ds-key schema-name]
-                (let [ds-key (keyword ds-key)]
-                  (if (:allow-db-clear? (:server config))
-                    (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
-                                              [(str "drop schema if exists " schema-name " cascade")
-                                               (str "create schema " schema-name)])
-                         (catch Exception e (log/error (get-next-exception-or-original e) (.toString e))))
-                    (throw (RuntimeException. (str "Clearing database is not allowed! "
-                                                   "check that you run with correct mode. "
-                                                   "Current config name is " (config-name)))))))
+  (let [ds-key (keyword ds-key)]
+    (if (:allow-db-clear? (:server config))
+      (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
+             [(str "drop schema if exists " schema-name " cascade")
+              (str "create schema " schema-name)])
+           (catch Exception e (log/error (get-next-exception-or-original e) (.toString e))))
+      (throw (RuntimeException. (str "Clearing database is not allowed! "
+                                     "check that you run with correct mode. "
+                                     "Current config name is " (config-name)))))))
 
 (defmacro exec [ds-key query params]
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-                             (~query ~params {:connection connection#})))
+     (~query ~params {:connection connection#})))
 
 (defmacro exec-all [ds-key query-list]
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-                             (last (for [[query# params#] (partition 2 ~query-list)]
-                                     (query# params# {:connection connection#})))))
+     (last (for [[query# params#] (partition 2 ~query-list)]
+             (query# params# {:connection connection#})))))
