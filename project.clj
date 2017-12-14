@@ -1,5 +1,5 @@
 (defproject ataru "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.946"]
@@ -9,8 +9,8 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.7.3"]
-                 [binaryage/devtools "0.9.7"]
-                 [re-frisk "0.5.2"]
+                 [binaryage/devtools "0.9.8"]
+                 [re-frisk "0.5.3"]
                  [venantius/accountant "0.2.3"]
                  [com.cemerick/url "0.1.1"]
 
@@ -60,17 +60,18 @@
                  [org.http4s/http4s-json4s-native_2.11 "0.10.1" :upgrade false]
                  ;; And naturally this exclusion is important as well
                  [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
-                 [ring.middleware.logger "0.5.0"]
+                 [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
+                 [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]
                  [org.clojars.pntblnk/clj-ldap "0.0.15"]
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/tools.nrepl "0.2.13"]
-                 [com.hazelcast/hazelcast "3.9"]
+                 [com.hazelcast/hazelcast "3.9.1"]
                  [com.taoensso/carmine "2.16.0"]
                  [pandect "0.6.1"]
-                 [hikari-cp "1.8.2" :exclusions [prismatic/schema]]
+                 [hikari-cp "2.0.0" :exclusions [prismatic/schema]]
                  [ring/ring-mock "0.3.2"]
                  [speclj "3.3.2"]]
 
