@@ -235,7 +235,7 @@
                                 (filter (comp not (partial contains? new-attachments))))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
-    (when (> (count orphan-attachments) 0)
+    (when (not-empty orphan-attachments)
       (application-store/add-application-event {:event-type      "updated-attachment"
                                                 :application-key (:key old-application)}
                                                nil))
