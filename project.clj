@@ -1,5 +1,5 @@
 (defproject ataru "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.9.946"]
@@ -60,7 +60,8 @@
                  [org.http4s/http4s-json4s-native_2.11 "0.10.1" :upgrade false]
                  ;; And naturally this exclusion is important as well
                  [oph/clj-util "0.1.0" :exclusions [org.http4s/blaze-http_2.11]]
-                 [ring.middleware.logger "0.5.0"]
+                 [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
+                 [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.apache.poi/poi-ooxml "3.17"]

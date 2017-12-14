@@ -3,10 +3,10 @@
   (:require [ataru.config.core :refer [config]]
             [clojure.tools.logging :as log]
             [ataru.db.db :as db])
-  (import (org.flywaydb.core Flyway)
-          (org.flywaydb.core.api.migration.jdbc JdbcMigration)
-          (org.flywaydb.core.api.migration MigrationInfoProvider)
-          (org.flywaydb.core.api MigrationVersion)))
+  (:import [org.flywaydb.core Flyway]
+           [org.flywaydb.core.api.migration.jdbc JdbcMigration]
+           [org.flywaydb.core.api.migration MigrationInfoProvider]
+           [org.flywaydb.core.api MigrationVersion]))
 
 (defn migrate [ds-key & migration-paths]
               (let [schema-name (-> config ds-key :schema)
