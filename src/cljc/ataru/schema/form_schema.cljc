@@ -208,7 +208,7 @@
    (s/optional-key :application-hakukohde-reviews) [{:requirement (apply s/enum review-states/hakukohde-review-type-names)
                                                      :state       (apply s/enum review-requirement-values)
                                                      :hakukohde   s/Str}] ; "form" or oid
-   :attachment-modifications                       s/Int})
+   :latest-attachment-modification-time            (s/maybe org.joda.time.DateTime)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str

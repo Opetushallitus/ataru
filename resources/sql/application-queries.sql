@@ -70,10 +70,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -95,10 +96,11 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key) AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
 JOIN application_reviews ar ON a.key = ar.application_key
 JOIN forms AS f ON f.id = a.form_id
+LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE a.haku IS NULL
   AND f.key = :form_key
 ORDER BY a.created_time DESC;
@@ -113,10 +115,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -139,11 +142,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE :hakukohde_oid = ANY (a.hakukohde)
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
@@ -158,10 +162,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
     JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-  SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -184,11 +189,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE a.haku = :haku_oid
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
@@ -203,10 +209,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -229,11 +236,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE a.ssn = :ssn
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
@@ -248,10 +256,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -274,11 +283,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE a.dob = :dob
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
@@ -293,10 +303,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -319,11 +330,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE a.email = :email
   AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
@@ -338,10 +350,11 @@ WITH latest_information_request_event AS (
     FROM latest_information_request_event ir
       JOIN latest_modification_by_applicant up ON ir.application_key = up.application_key
     WHERE ir.time < up.time
-), attachment_modifications AS (
-    SELECT amod.application_key
-    FROM application_events amod
-    WHERE amod.event_type = 'updated-attachment'
+), latest_attachment_event AS (
+    SELECT application_key, MAX(time) AS latest_attachment_modification_time
+    FROM application_events
+    WHERE event_type = 'updated-attachment'
+    GROUP BY application_key
 )
 SELECT
   a.id,
@@ -364,11 +377,12 @@ SELECT
   (SELECT COUNT(*)
    FROM new_application_modifications am
    WHERE am.application_key = a.key)  AS new_application_modifications,
-  (SELECT COUNT(*) FROM attachment_modifications amod WHERE amod.application_key = a.key) AS attachment_modifications
+  le.latest_attachment_modification_time
 FROM latest_applications AS a
   JOIN application_reviews AS ar ON a.key = ar.application_key
   JOIN forms AS f ON a.form_id = f.id
   JOIN latest_forms AS lf ON lf.key = f.key
+  LEFT JOIN latest_attachment_event le ON a.key = le.application_key
 WHERE to_tsvector('simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery(:name)
       AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ORDER BY a.created_time DESC;
