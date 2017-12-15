@@ -366,13 +366,9 @@
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         id           (keyword (:id field-descriptor))
-        disabled?    (reaction (or
-                                 (and @editing
-                                      (contains? editing-forbidden-person-info-field-ids id))
-                                 (->
-                                   (:answers @application)
-                                   (get (answer-key field-descriptor))
-                                   :cannot-edit)))
+        disabled?    (-> (:answers @application)
+                         (get (answer-key field-descriptor))
+                         :cannot-edit)
         id           (answer-key field-descriptor)
         value-path   (if (and @editing
                               (contains? editing-forbidden-person-info-field-ids id))
@@ -393,13 +389,13 @@
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-select-wrapper
-      (when (not @disabled?)
+      (when (not disabled?)
         [:span.application__form-select-arrow])
-      [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+      [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
        {:id        (:id field-descriptor)
         :value     (or @value "")
         :on-change on-change
-        :disabled  @disabled?
+        :disabled  disabled?
         :required  (is-required-field? field-descriptor)}
        (concat
         (when
