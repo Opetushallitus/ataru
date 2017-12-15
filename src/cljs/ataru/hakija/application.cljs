@@ -174,33 +174,5 @@
     (and (nil? (some #{state} ["unprocessed" "information-request"]))
          (:jatkuva-haku? hakuaika))))
 
-(defn- attachment-modify-grace-period-days
-  [hakuaika]
-  (or (:attachment-modify-grace-period-days hakuaika)
-      (-> js/config
-          js->clj
-          (get "attachment-modify-grace-period-days" 14))))
-
 (defn applying-possible? [form application]
-  (cond
-    (:virkailija-secret application)
-    true
-
-    (application-processing-jatkuva-haku? application
-                                          (-> form :tarjonta :hakuaika-dates))
-    false
-
-    (and
-      (:editing? application)
-      (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
-                                         (attachment-modify-grace-period-days
-                                          (-> form :tarjonta :hakuaika-dates))))
-    true
-
-    ;; When applying to hakukohde, hakuaika must be on
-    (-> form :tarjonta)
-    (-> form :tarjonta :hakuaika-dates :on)
-
-    ;; Applying to direct form haku
-    :else
-    true))
+  (get-in form [:tarjonta :hakuaika-dates :on] true))

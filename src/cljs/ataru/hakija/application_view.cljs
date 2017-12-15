@@ -81,15 +81,10 @@
     (fn [form]
       [readonly-view/readonly-fields form @application])))
 
-(defn render-fields [form]
-  (let [submit-status (subscribe [:state-query [:application :submit-status]])
-        editing?      (subscribe [:state-query [:application :editing?]])
-        can-apply?    (subscribe [:application/can-apply?])]
+(defn- render-fields [form]
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn [form]
-      (if (or (= :submitted @submit-status)
-              (and
-                @editing?
-                (not @can-apply?)))
+      (if (= :submitted @submit-status)
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf
