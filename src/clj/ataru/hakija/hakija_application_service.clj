@@ -105,17 +105,22 @@
   [answer application tarjonta-service ohjausparametrit-service]
   (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
         answer-kw           (-> answer :key keyword)
+        hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         person-info-field?  (editable-person-info-field? answer-kw)
-        before?             (fn [t] (when t (time/before? (time/now) t)))]
+        after?              (fn [t] (or (nil? t)
+                                        (time/after? (time/now) t)))
+        before?             (fn [t] (and (some? t)
+                                         (time/before? (time/now) t)))]
     (or (empty? (get-hakukohteet application))
-        (before? hakuaika-end)
-        (and (before? attachment-edit-end)
-             (= "attachment" (:fieldType answer)))
-        (and (before? hakukierros-end)
-             person-info-field?))))
+        (and (after? hakuaika-start)
+             (or (before? hakuaika-end)
+                 (and (before? attachment-edit-end)
+                      (= "attachment" (:fieldType answer)))
+                 (and (before? hakukierros-end)
+                      person-info-field?))))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
