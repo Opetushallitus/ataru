@@ -137,17 +137,20 @@
 
 (defn- answer-uneditable? [answer
                            application
+                           state
                            hakuaika
                            virkailija?]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (not (or virkailija?
-                 (editing-allowed-by-hakuaika? answer
-                                               application
-                                               hakuaika))))))
+        (if virkailija?
+          false
+          (or (in-processing-state-in-jatkuva-haku? hakuaika state)
+              (not (editing-allowed-by-hakuaika? answer
+                                                 application
+                                                 hakuaika)))))))
 
 (defn flag-uneditable-answers
-  [{:keys [answers] :as application} hakuaika virkailija?]
+  [{:keys [answers] :as application} state hakuaika virkailija?]
   (assoc application
     :answers
     (map
@@ -163,6 +166,7 @@
 
             (answer-uneditable? answer
                                 application
+                                state
                                 hakuaika
                                 virkailija?)
             (merge {:cannot-edit true}))))
@@ -189,10 +193,12 @@
 (defn- merge-uneditable-answers-from-previous
   [new-application
    old-application
+   state
    hakuaika
    virkailija?]
   (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers hakuaika
+                                     (flag-uneditable-answers state
+                                                              hakuaika
                                                               virkailija?)
                                      :answers)
         uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
@@ -256,9 +262,14 @@
         allowed            (allowed-to-apply? tarjonta-service ohjausparametrit-service application)
         virkailija-secret  (valid-virkailija-secret application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
+        state              (some-> latest-application
+                                   :key
+                                   application-store/get-application-review
+                                   :state)
         final-application  (if is-modify?
                              (-> application
                                  (merge-uneditable-answers-from-previous latest-application
+                                                                         state
                                                                          hakuaika
                                                                          (some? virkailija-secret))
                                  (assoc :person-oid (:person-oid latest-application)))
@@ -286,7 +297,7 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (processing-in-jatkuva-haku? (:key latest-application) hakuaika))
+           (in-processing-state-in-jatkuva-haku? hakuaika state))
       not-allowed-reply
 
       (not (:passed? validation-result))
@@ -378,6 +389,10 @@
                                       [false nil])
         application                 (when (some? hakija-secret)
                                       (application-store/get-latest-application-by-secret hakija-secret))
+        state                       (some-> application
+                                            :key
+                                            application-store/get-application-review
+                                            :state)
         hakuaika                    (when (some? application)
                                       (get-hakuaikas tarjonta-service
                                                      ohjausparametrit-service
@@ -386,7 +401,7 @@
                                             (application-service/get-person person-client)
                                             (dissoc :ssn :birth-date))]
     (some-> application
-            (flag-uneditable-answers hakuaika virkailija?)
+            (flag-uneditable-answers state hakuaika virkailija?)
             attachments-metadata->answers
             (assoc :person person)
             (dissoc :person-oid))))
