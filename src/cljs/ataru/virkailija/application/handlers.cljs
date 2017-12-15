@@ -152,7 +152,9 @@
 
 (defn- parse-application-time
   [application]
-  (assoc application :created-time (temporal/str->googdate (:created-time application))))
+  (-> application
+      (update :created-time temporal/str->googdate)
+      (update :latest-attachment-modification-time temporal/str->googdate)))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
