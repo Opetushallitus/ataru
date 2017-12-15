@@ -5,7 +5,9 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [reagent.ratom :refer-macros [reaction]]
     [reagent.core :as r]
+    [cljs-time.core :as time]
     [cljs-time.format :as f]
+    [cljs-time.coerce :as tc]
     [taoensso.timbre :refer-macros [spy debug]]
     [ataru.virkailija.application.handlers]
     [ataru.virkailija.application.application-subs]
@@ -308,6 +310,10 @@
                               (= (:requirement %) requirement))
                         reviews))))
 
+(defn- after? [this-gdate that-long]
+  (let [that (some-> that-long tc/from-long)]
+    (and this-gdate that (time/after? this-gdate that))))
+
 (defn applications-hakukohde-rows
   [application all-hakukohteet selected-hakukohde]
   (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
@@ -318,13 +324,13 @@
       (map
         (fn [hakukohde-oid]
           (let [hakukohde              (-> hakukohde-oid keyword all-hakukohteet)
-                show-state-email-icon? (and
-                                         (< 0 (:new-application-modifications application))
-                                         (->> application
-                                              :application-hakukohde-reviews
-                                              (filter #(and (= (:requirement %) "processing-state")
-                                                            (= (:state %) "information-request")))
-                                              (seq)))]
+                show-state-email-icon? (or (after? (-> application :latest-attachment-modification-time)
+                                                   (-> application :tarjonta :hakuaika-dates :end))
+                                           (->> application
+                                                :application-hakukohde-reviews
+                                                (filter #(and (= (:requirement %) "processing-state")
+                                                              (= (:state %) "information-request")))
+                                                (seq)))]
             [:div.application-handling__list-row-hakukohde
              [:span.application-handling__application-hakukohde-cell
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")

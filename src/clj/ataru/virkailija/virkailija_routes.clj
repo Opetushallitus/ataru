@@ -218,7 +218,11 @@
                                                     (access-controlled-application/get-application-list-by-hakukohde hakukohdeOid session organization-service)
 
                                                     (some? hakuOid)
-                                                    (access-controlled-application/get-application-list-by-haku hakuOid session organization-service)
+                                                    (access-controlled-application/get-application-list-by-haku hakuOid
+                                                                                                                session
+                                                                                                                organization-service
+                                                                                                                tarjonta-service
+                                                                                                                ohjausparametrit-service)
 
                                                     (some? ssn)
                                                     (access-controlled-application/get-application-list-by-ssn ssn session organization-service)
