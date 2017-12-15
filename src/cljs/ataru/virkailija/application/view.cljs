@@ -317,7 +317,7 @@
        {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
-          (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
+          (let [hakukohde              (-> hakukohde-oid keyword all-hakukohteet)
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
                                          (->> application
