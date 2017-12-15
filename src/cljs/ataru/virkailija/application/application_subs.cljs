@@ -217,42 +217,46 @@
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
-; TODO refactor:
+(defn- filter-applications-by-state
+  [states states-to-include default-state]
+  (or
+    (not (empty? (clojure.set/intersection
+                   states-to-include
+                   (set states))))
+    (and
+      (contains? states-to-include default-state)
+      (or
+        (empty? states)
+        (< (count states)
+           (count (:hakukohde application)))))))
+
+(defn- filter-by-hakukohde-review
+  [application requirement-name default-state-name states-to-include]
+  (let [states (->> (:application-hakukohde-reviews application)
+                    (filter #(= requirement-name (:requirement %)))
+                    (map :state))]
+    (or
+      (not (empty? (clojure.set/intersection
+                     states-to-include
+                     (set states))))
+      (and
+        (contains? states-to-include default-state-name)
+        (or
+          (empty? processing-states)
+          (< (count processing-states)
+             (count (:hakukohde application))))))))
+
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
     (let [applications                 (-> db :application :applications)
           processing-states-to-include (-> db :application :filter set)
-          selection-states-to-include  (-> db :application :selection-filter set)
-          get-states                   (fn [application requirement-name]
-                                         (->> (:application-hakukohde-reviews application)
-                                              (filter #(= requirement-name (:requirement %)))
-                                              (map :state)))]
+          selection-states-to-include  (-> db :application :selection-filter set)]
       (filter
         (fn [application]
-          (let [processing-states (get-states application "processing-state")
-                selection-states  (get-states application "selection-state")]
-            (and
-              (or
-                (not (empty? (clojure.set/intersection
-                               processing-states-to-include
-                               (set processing-states))))
-                (and
-                  (contains? processing-states-to-include "unprocessed")
-                  (or
-                    (empty? processing-states)
-                    (< (count processing-states)
-                       (count (:hakukohde application))))))
-              (or
-                (not (empty? (clojure.set/intersection
-                               selection-states-to-include
-                               (set selection-states))))
-                (and
-                  (contains? selection-states-to-include "incomplete")
-                  (or
-                    (empty? selection-states)
-                    (< (count selection-states)
-                       (count (:hakukohde application)))))))))
+          (and
+            (filter-by-hakukohde-review application "processing-state" "unprocessed" processing-states-to-include)
+            (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)))
         applications))))
 
 (re-frame/reg-sub
