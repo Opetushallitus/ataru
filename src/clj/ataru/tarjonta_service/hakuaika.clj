@@ -20,6 +20,9 @@
       current-hakuaika
       (last hakuaikas))))
 
+(defn- jatkuva-haku? [haku]
+  (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03"))
+
 (defn- parse-hakuaika
   "Hakuaika from hakuaika can override hakuaika from haku. Haku may have multiple hakuaikas defined."
   [hakukohde haku]
@@ -52,4 +55,5 @@
         (assoc interval
                :attachment-modify-grace-period-days
                (-> ohjausparametrit :PH_LMT :value))
+        (assoc interval :jatkuva-haku? (jatkuva-haku? haku))
         (assoc interval :hakukierros-end (-> ohjausparametrit :PH_HKP :date))))

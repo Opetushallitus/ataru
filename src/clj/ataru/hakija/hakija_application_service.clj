@@ -73,16 +73,16 @@
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
 
 (defn processing-in-jatkuva-haku?
-  [application-key tarjonta-info]
+  [application-key hakuaika]
   (let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
     (and
-      (-> tarjonta-info :tarjonta :is-jatkuva-haku?)
-      (not-empty
-        (filter
-          #(and
-             (= "processing-state" (:requirement %))
-             (contains? #{"unprocessed" "information-request"} (:state %)))
-          application-hakukohde-reviews)))))
+     (:jatkuva-haku? hakuaika)
+     (not-empty
+       (filter
+         #(and
+           (= "processing-state" (:requirement %))
+           (contains? #{"unprocessed" "information-request"} (:state %)))
+         application-hakukohde-reviews)))))
 
 (defn- editing-allowed-by-hakuaika?
   [answer application hakuaika]
@@ -286,7 +286,7 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (processing-in-jatkuva-haku? (:key latest-application) tarjonta-info))
+           (processing-in-jatkuva-haku? (:key latest-application) hakuaika))
       not-allowed-reply
 
       (not (:passed? validation-result))

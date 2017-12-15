@@ -169,10 +169,10 @@
 
 (defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
 
-(defn application-processing-jatkuva-haku? [application haku]
+(defn application-processing-jatkuva-haku? [application hakuaika]
   (when-let [state (:state application)]
     (and (nil? (some #{state} ["unprocessed" "information-request"]))
-         (:is-jatkuva-haku? haku))))
+         (:jatkuva-haku? hakuaika))))
 
 (defn- attachment-modify-grace-period-days
   [hakuaika]
@@ -186,7 +186,8 @@
     (:virkailija-secret application)
     true
 
-    (application-processing-jatkuva-haku? application (:tarjonta form))
+    (application-processing-jatkuva-haku? application
+                                          (-> form :tarjonta :hakuaika-dates))
     false
 
     (and

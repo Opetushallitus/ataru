@@ -68,7 +68,9 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (and (application-processing-jatkuva-haku? @application (:tarjonta form))
+       (when (and (application-processing-jatkuva-haku?
+                   @application
+                   (-> form :tarjonta :hakuaika-dates))
                   (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
