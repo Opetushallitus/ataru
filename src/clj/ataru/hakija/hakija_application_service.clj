@@ -52,7 +52,8 @@
         haku-oid              (:hakuOid hakukohde)
         haku                  (when haku-oid (get-haku tarjonta-service haku-oid))
         ohjausparametrit      (when haku-oid (.get-parametri ohjausparametrit-service haku-oid))]
-    (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit)))
+    (when (every? some? [haku hakukohde])
+      (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit))))
 
 (defn- attachment-modify-grace-period
   [hakuaika]
@@ -60,14 +61,6 @@
       (-> config
           :public-config
           (get :attachment-modify-grace-period-days 14))))
-
-(defn- allowed-to-apply?
-  "If there is a hakukohde the user is applying to, check that hakuaika is on"
-  [tarjonta-service ohjausparametrit-service application]
-  (or (empty? (get-hakukohteet application))
-      (:on (get-hakuaikas tarjonta-service
-                          ohjausparametrit-service
-                          application))))
 
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
@@ -258,7 +251,6 @@
                                (hakija-form-service/inject-hakukohde-component-if-missing)
                                (hakukohde/populate-hakukohde-answer-options tarjonta-info)
                                (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        allowed            (allowed-to-apply? tarjonta-service ohjausparametrit-service application)
         virkailija-secret  (valid-virkailija-secret application)
         latest-application (application-store/get-latest-version-of-application-for-edit application)
         state              (some-> latest-application
@@ -291,7 +283,8 @@
       {:passed? false :failures ["Hakukohde must be specified"]}
 
       (and (not is-modify?)
-           (not allowed))
+           (and (some? hakuaika)
+                (not (:on hakuaika))))
       not-allowed-reply
 
       (and is-modify?
