@@ -19,7 +19,7 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
+            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]
             [ataru.hakija.onr-fields :as onr-fields])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 

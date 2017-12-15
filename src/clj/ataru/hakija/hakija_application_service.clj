@@ -16,8 +16,9 @@
     [ataru.hakija.validator :as validator]
     [ataru.application.review-states :refer [complete-states]]
     [ataru.applications.application-store :as application-store]
-    [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids
-                                                   editing-forbidden-person-info-field-ids]]
+    [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
+                                             editing-forbidden-person-info-field-ids
+                                             editing-allowed-person-info-field-ids]]
     [ataru.application.field-types :as types]
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
@@ -88,19 +89,6 @@
   (when (and tarjonta-service ohjausparametrit-service)
     (get-hakuaikas tarjonta-service ohjausparametrit-service application)))
 
-(defn editable-person-info-field? [answer-kw]
-  (contains? #{:email
-               :phone
-               :country-of-residence
-               :address
-               :postal-code
-               :city
-               :birth-date
-               :birthplace
-               :postal-office
-               :home-town}
-             answer-kw))
-
 (defn- editing-allowed-by-hakuaika?
   [answer application tarjonta-service ohjausparametrit-service]
   (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
@@ -109,7 +97,6 @@
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
-        person-info-field?  (editable-person-info-field? answer-kw)
         after?              (fn [t] (or (nil? t)
                                         (time/after? (time/now) t)))
         before?             (fn [t] (and (some? t)
@@ -120,7 +107,8 @@
                  (and (before? attachment-edit-end)
                       (= "attachment" (:fieldType answer)))
                  (and (before? hakukierros-end)
-                      person-info-field?))))))
+                      (contains? editing-allowed-person-info-field-ids
+                                 answer-kw)))))))
 
 (defn- dummy-answer-to-unanswered-question
   [{:keys [id fieldType label]}]
