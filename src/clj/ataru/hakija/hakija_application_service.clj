@@ -84,15 +84,9 @@
              (contains? #{"unprocessed" "information-request"} (:state %)))
           application-hakukohde-reviews)))))
 
-(defn- get-hakuaika
-  [application tarjonta-service ohjausparametrit-service]
-  (when (and tarjonta-service ohjausparametrit-service)
-    (get-hakuaikas tarjonta-service ohjausparametrit-service application)))
-
 (defn- editing-allowed-by-hakuaika?
-  [answer application tarjonta-service ohjausparametrit-service]
-  (let [hakuaika            (get-hakuaika application tarjonta-service ohjausparametrit-service)
-        answer-kw           (-> answer :key keyword)
+  [answer application hakuaika]
+  (let [answer-kw           (-> answer :key keyword)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
         attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
@@ -143,19 +137,17 @@
 
 (defn- answer-uneditable? [answer
                            application
-                           tarjonta-service
-                           ohjausparametrit-service
+                           hakuaika
                            virkailija?]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
         (not (or virkailija?
                  (editing-allowed-by-hakuaika? answer
                                                application
-                                               tarjonta-service
-                                               ohjausparametrit-service))))))
+                                               hakuaika))))))
 
 (defn flag-uneditable-answers
-  [{:keys [answers] :as application} tarjonta-service ohjausparametrit-service virkailija?]
+  [{:keys [answers] :as application} hakuaika virkailija?]
   (assoc application
     :answers
     (map
@@ -171,8 +163,7 @@
 
             (answer-uneditable? answer
                                 application
-                                tarjonta-service
-                                ohjausparametrit-service
+                                hakuaika
                                 virkailija?)
             (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
@@ -198,12 +189,10 @@
 (defn- merge-uneditable-answers-from-previous
   [new-application
    old-application
-   tarjonta-service
-   ohjausparametrit-service
+   hakuaika
    virkailija?]
   (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers tarjonta-service
-                                                              ohjausparametrit-service
+                                     (flag-uneditable-answers hakuaika
                                                               virkailija?)
                                      :answers)
         uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
@@ -255,6 +244,9 @@
 (defn- validate-and-store [tarjonta-service ohjausparametrit-service application store-fn is-modify?]
   (let [tarjonta-info      (when (:haku application)
                              (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application)))
+        hakuaika           (get-hakuaikas tarjonta-service
+                                          ohjausparametrit-service
+                                          application)
         form               (-> application
                                (:form)
                                (form-store/fetch-by-id)
@@ -267,8 +259,7 @@
         final-application  (if is-modify?
                              (-> application
                                  (merge-uneditable-answers-from-previous latest-application
-                                                                         tarjonta-service
-                                                                         ohjausparametrit-service
+                                                                         hakuaika
                                                                          (some? virkailija-secret))
                                  (assoc :person-oid (:person-oid latest-application)))
                              application)
@@ -385,15 +376,17 @@
                                       [false s]
                                       :else
                                       [false nil])
-        application                 (some-> hakija-secret
-                                            application-store/get-latest-application-by-secret
-                                            (flag-uneditable-answers tarjonta-service
-                                                                     ohjausparametrit-service
-                                                                     virkailija?)
-                                            attachments-metadata->answers)
+        application                 (when (some? hakija-secret)
+                                      (application-store/get-latest-application-by-secret hakija-secret))
+        hakuaika                    (when (some? application)
+                                      (get-hakuaikas tarjonta-service
+                                                     ohjausparametrit-service
+                                                     application))
         person                      (some-> application
                                             (application-service/get-person person-client)
                                             (dissoc :ssn :birth-date))]
     (some-> application
+            (flag-uneditable-answers hakuaika virkailija?)
+            attachments-metadata->answers
             (assoc :person person)
             (dissoc :person-oid))))
