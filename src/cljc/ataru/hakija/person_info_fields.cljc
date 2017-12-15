@@ -28,14 +28,12 @@
 (def editing-forbidden-person-info-field-ids
   (clojure.set/union
    viewing-forbidden-person-info-field-ids
-   #{:nationality
-     :have-finnish-ssn
-     :first-name
+   #{:first-name
      :preferred-name
      :last-name
+     :nationality
+     :have-finnish-ssn
      :gender
-     :passport-number
-     :national-id-number
      :language}))
 
 (def editing-allowed-person-info-field-ids
