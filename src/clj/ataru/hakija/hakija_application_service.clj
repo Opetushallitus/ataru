@@ -142,12 +142,11 @@
                            virkailija?]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (if virkailija?
-          false
-          (or (in-processing-state-in-jatkuva-haku? hakuaika state)
-              (not (editing-allowed-by-hakuaika? answer
-                                                 application
-                                                 hakuaika)))))))
+        (not (or virkailija?
+                 (and (not (in-processing-state-in-jatkuva-haku? hakuaika state))
+                      (editing-allowed-by-hakuaika? answer
+                                                    application
+                                                    hakuaika)))))))
 
 (defn flag-uneditable-answers
   [{:keys [answers] :as application} state hakuaika virkailija?]
