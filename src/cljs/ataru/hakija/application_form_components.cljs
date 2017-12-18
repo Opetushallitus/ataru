@@ -370,8 +370,10 @@
                          (get (answer-key field-descriptor))
                          :cannot-edit)
         id           (answer-key field-descriptor)
+        use-onr-info? (contains? (:person application) id)
         value-path   (if (and @editing
-                              (contains? editing-forbidden-person-info-field-ids id))
+                              (contains? editing-forbidden-person-info-field-ids id)
+                              use-onr-info?)
                        [:application :person id]
                        (cond-> [:application :answers id]
                          idx (concat [:values idx 0])
