@@ -167,8 +167,6 @@
                      (not= (:fieldType %) "adjacentfieldset")))
        (map #(select-keys % [:id :label :children]))))
 
-(defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
-
 (defn application-processing-jatkuva-haku? [application hakuaika]
   (when-let [state (:state application)]
     (and (nil? (some #{state} ["unprocessed" "information-request"]))

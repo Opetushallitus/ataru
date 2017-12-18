@@ -46,9 +46,6 @@
     :else
     false))
 
-(defn any-hakuaika-on? [haku]
-  (some true? (map #(hakuaika-on (:alkuPvm %) (:loppuPvm %)) (:hakuaikas haku))))
-
 (defn get-hakuaika-info [hakukohde haku ohjausparametrit]
   (as-> (parse-hakuaika hakukohde haku) {:keys [start end] :as interval}
         (assoc interval :on (hakuaika-on start end))
