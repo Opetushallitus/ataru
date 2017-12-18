@@ -75,12 +75,9 @@
            :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
-           :hakuaika-dates   (assoc (hakuaika/get-hakuaika-info
-                                      (first hakukohteet)
-                                      haku ; TODO take into account each hakukohde time?
-                                      ohjausparametrit)
-                                    :hakukierros-end
-                                    (-> ohjausparametrit :PH_HKP :date))
+           :hakuaika-dates   (hakuaika/get-hakuaika-info (first hakukohteet)
+                                                         haku ; TODO take into account each hakukohde time?
+                                                         ohjausparametrit)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service ohjausparametrit-service haku-oid]
    (when haku-oid
