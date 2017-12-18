@@ -949,12 +949,18 @@ and (max-width: 1000px) {
   cursor: default;
 }
 
+.application-handling__review-state-row:hover {
+  background-color: @application-form-list-background-color;
+  cursor: pointer;
+}
+
 .application-handling__review-state-row--mass-update {
   width: 270px;
 }
 
 .application-handling__review-state-row--disabled {
   color: @sg-gray-lighten-3;
+  cursor: auto;
 }
 
 .application-handling__review-state-row--enabled {
@@ -962,7 +968,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-row--enabled:hover {
-  background-color: #e8f3f6;
+  background-color: @application-form-list-background-color
 }
 
 .application-handling__review-state-row--disabled:hover {
