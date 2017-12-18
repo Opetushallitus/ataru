@@ -212,7 +212,7 @@
         (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
-            (should= 6 (count (filter cannot-edit? answers)))
+            (should= 7 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers)))))))
 
     (it "should get application with hakuaika ended"
