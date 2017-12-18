@@ -1,7 +1,8 @@
 (ns ataru.virkailija.application.application-subs
   (:require [cljs-time.core :as t]
             [re-frame.core :as re-frame]
-            [ataru.util :as u]))
+            [ataru.util :as u]
+            [ataru.application.review-states :as review-states]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -242,7 +243,7 @@
       (filter
         (fn [application]
           (and
-            (filter-by-hakukohde-review application "processing-state" "unprocessed" processing-states-to-include)
+            (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
             (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)))
         applications))))
 

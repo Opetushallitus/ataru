@@ -42,21 +42,22 @@
  (fn [db [_ _]]
    (close-application db)))
 
+(defn- processing-state-counts-for-application
+  [{:keys [application-hakukohde-reviews]}]
+  (frequencies
+    (map
+      :state
+      (or
+        (->> application-hakukohde-reviews
+             (filter #(= "processing-state" (:requirement %)))
+             (not-empty))
+        [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}]))))
+
 (defn review-state-counts
   [applications]
   (reduce
-    (fn [acc {:keys [application-hakukohde-reviews]}]
-      (merge-with
-        +
-        acc
-        (frequencies
-          (map
-            :state
-            (or
-              (->> application-hakukohde-reviews
-                   (filter #(= "processing-state" (:requirement %)))
-                   (not-empty))
-              [{:requirement "processing-state" :state "unprocessed"}])))))
+    (fn [acc application]
+      (merge-with + acc (processing-state-counts-for-application application)))
     {}
     applications))
 
