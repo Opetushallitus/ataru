@@ -178,7 +178,7 @@
                                      (first)
                                      :label)]
             (when old-answer
-              ;Sometimes old an answer doesn't exist: old application, new question in form (flag-uneditable-answers)
+              ;Sometimes an old answer doesn't exist: old application <-> new question in form (flag-uneditable-answers)
               (merge old-answer {:label new-label}))))
         uneditable-answers))
 
