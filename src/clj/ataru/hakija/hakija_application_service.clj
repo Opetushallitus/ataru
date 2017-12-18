@@ -80,7 +80,7 @@
         (filter
           #(and
              (= "processing-state" (:requirement %))
-             (contains #{"unprocessed" "information-request"} (:state %)))
+             (contains? #{"unprocessed" "information-request"} (:state %)))
           application-hakukohde-reviews)))))
 
 (defn- get-hakuaika
