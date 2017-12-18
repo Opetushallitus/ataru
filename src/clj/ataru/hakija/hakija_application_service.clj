@@ -146,19 +146,15 @@
       (fn [answer]
         (let [answer-kw (keyword (:key answer))]
           (cond-> answer
-            (and (not (or (and (seq? (:value answer))
-                               (empty? (:value answer)))
-                          (and (string? (:value answer))
-                               (clojure.string/blank? (:value answer)))))
-                 (contains? viewing-forbidden-person-info-field-ids answer-kw))
-            (merge {:cannot-view true :value nil})
+                  (contains? viewing-forbidden-person-info-field-ids answer-kw)
+                  (merge {:cannot-view true :value nil})
 
-            (answer-uneditable? answer
-                                application
-                                state
-                                hakuaika
-                                virkailija?)
-            (merge {:cannot-edit true}))))
+                  (answer-uneditable? answer
+                                      application
+                                      state
+                                      hakuaika
+                                      virkailija?)
+                  (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
 
 (defn- uneditable-answers-with-labels-from-new
