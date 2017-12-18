@@ -135,12 +135,15 @@
                                        :sv "Fil inte laddat, försök igen"}})
 
 (def general-texts
-  {:yes {:en "Yes"
-         :fi "Kyllä"
-         :sv "Ja"}
-   :no  {:en "No"
-         :fi "En"
-         :sv "Nej"}})
+  {:yes      {:en "Yes"
+              :fi "Kyllä"
+              :sv "Ja"}
+   :no       {:en "No"
+              :fi "Ei"
+              :sv "Nej"}
+   :have-not {:en "No"
+              :fi "En"
+              :sv "Nej"}})
 
 (def base-education-module-texts
   {:title                            {:fi "Koulutustausta"
