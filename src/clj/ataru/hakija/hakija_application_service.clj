@@ -62,10 +62,7 @@
           :public-config
           (get :attachment-modify-grace-period-days 14))))
 
-(def not-allowed-reply {:passed? false
-                        :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
-
-(defn processing-in-jatkuva-haku?
+(defn in-processing-state-in-jatkuva-haku?
   [application-key hakuaika]
   (let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
     (and
@@ -285,12 +282,12 @@
       (and (not is-modify?)
            (and (some? hakuaika)
                 (not (:on hakuaika))))
-      not-allowed-reply
+      {:passed? false :failures ["Application period is not open."]}
 
       (and is-modify?
            (not virkailija-secret)
            (in-processing-state-in-jatkuva-haku? hakuaika state))
-      not-allowed-reply
+      {:passed false :failures ["Application is in review state and cannot be modified."]}
 
       (not (:passed? validation-result))
       validation-result
