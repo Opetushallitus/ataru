@@ -217,19 +217,6 @@
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
-(defn- filter-applications-by-state
-  [states states-to-include default-state]
-  (or
-    (not (empty? (clojure.set/intersection
-                   states-to-include
-                   (set states))))
-    (and
-      (contains? states-to-include default-state)
-      (or
-        (empty? states)
-        (< (count states)
-           (count (:hakukohde application)))))))
-
 (defn- filter-by-hakukohde-review
   [application requirement-name default-state-name states-to-include]
   (let [states (->> (:application-hakukohde-reviews application)
