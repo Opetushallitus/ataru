@@ -71,10 +71,17 @@
 (def not-allowed-reply {:passed? false
                         :failures ["Not allowed to apply (not within hakuaika or review state is in complete states)"]})
 
-(defn processing-in-jatkuva-haku? [application-key tarjonta-info]
-  (let [state (:state (application-store/get-application-review application-key))]
-    (and (nil? (some #{state} ["unprocessed" "information-request"]))
-         (:is-jatkuva-haku? (:tarjonta tarjonta-info)))))
+(defn processing-in-jatkuva-haku?
+  [application-key tarjonta-info]
+  (let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
+    (and
+      (-> tarjonta-info :tarjonta :is-jatkuva-haku?)
+      (not-empty
+        (filter
+          #(and
+             (= "processing-state" (:requirement %))
+             (contains #{"unprocessed" "information-request"} (:state %)))
+          application-hakukohde-reviews)))))
 
 (defn- get-hakuaika
   [application tarjonta-service ohjausparametrit-service]
