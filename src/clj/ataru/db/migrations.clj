@@ -18,7 +18,7 @@
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.background-job.job :as job]
-    [ataru.db.db :as db]))
+    [ataru.application.review-states :as review-states]))
 
 (def default-fetch-size 50)
 
@@ -272,6 +272,33 @@
       (info (str "Migrating review notes of application " application-key))
       (migration-app-store/create-application-review-note review-note))))
 
+(defn- application-states-to-hakukohteet
+  []
+  (let [states->set            #(->> % (map first) (set))
+        new-application-states (states->set review-states/application-review-states)
+        new-hakukohde-states   (states->set review-states/application-hakukohde-processing-states)]
+    (doseq [{:keys [hakukohde key] :as application} (migration-app-store/get-latest-versions-of-all-applications)]
+      (let [review (application-store/get-application-review key)
+            state  (:state review)]
+        (when (and
+                (not (contains? new-application-states state))
+                (contains? new-hakukohde-states state))
+          (doseq [hakukohde-oid-or-form (or (not-empty hakukohde) ["form"])]
+            (println "Creating new hakukohde-review" (:key application) (:id application) "->" hakukohde-oid-or-form state)
+            (application-store/save-application-hakukohde-review
+              nil
+              key
+              hakukohde-oid-or-form
+              "processing-state"
+              state
+              fake-session)))
+        (let [new-application-state (if (= state "inactivated")
+                                      "inactivated"
+                                      "active")]
+          (when (not= new-application-state state)
+            (println "Updating application review state" key (:id application) state "->" new-application-state)
+            (migration-app-store/set-application-state key new-application-state)))))))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -341,6 +368,11 @@
   migrate-application-review-notes-to-own-table "1.77"
   "Migrate application review notes to application_review_notes table"
   (review-notes->own-table))
+
+(migrations/defmigration
+  migrate-application-states-to-hakukohteet "1.80"
+  "Move (most) application states to be hakukohde specific"
+  (application-states-to-hakukohteet))
 
 (defn migrate
   []

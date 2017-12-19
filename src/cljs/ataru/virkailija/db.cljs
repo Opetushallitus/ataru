@@ -12,7 +12,7 @@
                                         ; Initial active panel on page load.
    :active-panel :editor
    :application  {:review              {}
-                  :filter              (mapv first review-states/application-review-states)
+                  :filter              (mapv first review-states/application-hakukohde-processing-states)
                   :selection-filter    (mapv first review-states/application-hakukohde-selection-states)
                   :sort                application-sorting/initial-sort
                   :application-list-expanded? true}

@@ -7,6 +7,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.util :as util]
             [ataru.cljs-util :as cljs-util]
+            [ataru.virkailija.temporal :as temporal]
             [reagent.core :as r]
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
@@ -41,8 +42,24 @@
  (fn [db [_ _]]
    (close-application db)))
 
-(defn review-state-counts [applications]
-  (into {} (map (fn [[state values]] [state (count values)]) (group-by :state applications))))
+(defn- processing-state-counts-for-application
+  [{:keys [application-hakukohde-reviews]}]
+  (frequencies
+    (map
+      :state
+      (or
+        (->> application-hakukohde-reviews
+             (filter #(= "processing-state" (:requirement %)))
+             (not-empty))
+        [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}]))))
+
+(defn review-state-counts
+  [applications]
+  (reduce
+    (fn [acc application]
+      (merge-with + acc (processing-state-counts-for-application application)))
+    {}
+    applications))
 
 (defn- update-review-field-of-selected-application-in-list
   [application selected-application-key field value]
@@ -89,7 +106,7 @@
                                   :else
                                   application-list)
          db                     (cond-> db
-                                  (and (= field :state)
+                                  (and (= field :processing-state)
                                        (= value "information-request"))
                                   (assoc-in [:application :information-request :visible?] true))]
      (if is-hakukohde-review?
@@ -127,19 +144,24 @@
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id :descending)))))))
 
+(defn- parse-application-time
+  [application]
+  (assoc application :created-time (temporal/str->googdate (:created-time application))))
+
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications]}]]
-    (let [db (-> db
-                 (assoc-in [:application :applications] applications)
+    (let [applications-with-times (map parse-application-time applications)
+          db (-> db
+                 (assoc-in [:application :applications] applications-with-times)
                  (assoc-in [:application :fetching-applications] false)
-                 (assoc-in [:application :review-state-counts] (review-state-counts applications))
+                 (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
                  (assoc-in [:application :information-request] nil))
-          application-key (if (= 1 (count applications))
-                            (-> applications first :key)
+          application-key (if (= 1 (count applications-with-times))
+                            (-> applications-with-times first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
-                              (some #{query-key} (map :key applications))))]
+                              (some #{query-key} (map :key applications-with-times))))]
       {:db       db
        :dispatch (if application-key
                    [:application/select-application application-key]
@@ -157,12 +179,13 @@
              (assoc-in [:application :fetching-applications] true)
              (assoc-in [:application :filter] (extract-unselected-review-states-from-query
                                                 :unselected-states
-                                                review-states/application-review-states))
+                                                review-states/application-hakukohde-processing-states))
              (assoc-in [:application :selection-filter] (extract-unselected-review-states-from-query
                                                           :unselected-selection-states
                                                           review-states/application-hakukohde-selection-states)))
    :http {:method              :get
           :path                path
+          :skip-parse-times?   true
           :handler-or-dispatch :application/handle-fetch-applications-response}})
 
 (reg-event-fx
@@ -322,7 +345,7 @@
        :http {:method              :get
               :path                (str "/lomake-editori/api/applications/" application-id)
               :handler-or-dispatch :application/handle-fetch-application
-              :skip-parse-times? true}})))
+              :skip-parse-times?   true}})))
 
 (reg-event-db
   :application/start-autosave
@@ -367,7 +390,11 @@
         (assoc-in [:application :selected-haku] haku))))
 
 (defn get-hakukohteet-from-haut [haut]
-  (flatten (map :hakukohteet (:tarjonta-haut haut))))
+  (->> (:tarjonta-haut haut)
+       (map :hakukohteet)
+       (flatten)
+       (map (fn [hakukohde] [(keyword (:oid hakukohde)) hakukohde]))
+       (into {})))
 
 (defn get-forms-from-haut [haut]
   (into {} (map (fn [form-haku] [(:key form-haku) form-haku]) (:direct-form-haut haut))))
@@ -479,7 +506,8 @@
      :http {:method              :post
             :params              {:application-keys application-keys
                                   :from-state       from-state
-                                  :to-state         to-state}
+                                  :to-state         to-state
+                                  :hakukohde-oid    (-> db :application :selected-hakukohde :oid)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 
@@ -617,3 +645,13 @@
     (let [note-with-id (comp (partial = (:id resp)) :id)
           remove-note  (comp vec (partial remove note-with-id))]
       (update-in db [:application :review-notes] remove-note))))
+
+(def application-active-state (-> review-states/application-review-states (first) (first)))
+(def application-inactive-state (-> review-states/application-review-states (last) (first)))
+
+(reg-event-db
+  :application/set-application-activeness
+  (fn [db [_ active?]]
+    (assoc-in db [:application :review :state] (if active?
+                                                 application-active-state
+                                                 application-inactive-state))))

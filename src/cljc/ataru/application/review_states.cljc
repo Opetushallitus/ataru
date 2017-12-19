@@ -2,16 +2,21 @@
   (:require [clojure.set :refer [difference]]))
 
 (def application-review-states
+  [["active" "Aktiivinen"]
+   ["inactivated" "Passiivinen"]])
+
+(def initial-application-review-state "active")
+
+(def application-hakukohde-processing-states
   [["unprocessed" "Käsittelemättä"]
    ["processing" "Käsittelyssä"]
-   ["invited-to-interview" "Kutsuttu haastatteluun"]
-   ["invited-to-exam" "Kutsuttu valintakokeeseen"]
+   ["invited-to-interview" "Kutsuttu haast."]
+   ["invited-to-exam" "Kutsuttu valintak."]
    ["evaluating" "Arvioinnissa"]
    ["processed" "Käsitelty"]
-   ["inactivated" "Passiivinen"]
    ["information-request" "Täydennyspyyntö"]])
 
-(def initial-application-review-state "unprocessed")
+(def initial-application-hakukohde-processing-state "unprocessed")
 
 (def application-hakukohde-selection-states
   [["incomplete" "Kesken"]
@@ -36,7 +41,8 @@
    ["not-obligated" "Ei velvollinen"]])
 
 (def hakukohde-review-types
-  [[:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
+  [[:processing-state "Käsittelyvaihe" application-hakukohde-processing-states]
+   [:language-requirement "Kielitaitovaatimus" application-hakukohde-review-states]
    [:degree-requirement "Tutkinnon kelpoisuus" application-hakukohde-review-states]
    [:eligibility-state "Hakukelpoisuus" application-hakukohde-eligibility-states]
    [:payment-obligation "Maksuvelvollisuus" application-payment-obligation-states]

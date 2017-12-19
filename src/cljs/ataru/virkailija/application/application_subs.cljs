@@ -1,7 +1,8 @@
 (ns ataru.virkailija.application.application-subs
   (:require [cljs-time.core :as t]
             [re-frame.core :as re-frame]
-            [ataru.util :as u]))
+            [ataru.util :as u]
+            [ataru.application.review-states :as review-states]))
 
 (defn- from-multi-lang [text]
   (some #(get text %) [:fi :sv :en]))
@@ -212,49 +213,39 @@
                  (-> db :application :information-requests))
          (sort event-and-information-request-comparator))))
 
-(defn- show-email-icon-for-application? [application]
-  (and (-> application :new-application-modifications (> 0))
-       (-> application :state (= "information-request"))))
-
-(re-frame/reg-sub
-  :application/show-state-email-icon?
-  (fn [db [_ application-key]]
-    (->> db
-         :application
-         :applications
-         (filter (comp (partial = application-key) :key))
-         (first)
-         (show-email-icon-for-application?))))
-
 (re-frame/reg-sub
   :application/resend-modify-application-link-enabled?
   (fn [db _]
     (-> db :application :modify-application-link :state nil?)))
 
+(defn- filter-by-hakukohde-review
+  [application requirement-name default-state-name states-to-include]
+  (let [states (->> (:application-hakukohde-reviews application)
+                    (filter #(= requirement-name (:requirement %)))
+                    (map :state))]
+    (or
+      (not (empty? (clojure.set/intersection
+                     states-to-include
+                     (set states))))
+      (and
+        (contains? states-to-include default-state-name)
+        (or
+          (empty? processing-states)
+          (< (count processing-states)
+             (count (:hakukohde application))))))))
+
 (re-frame/reg-sub
   :application/filtered-applications
   (fn [db _]
-    (let [applications                (-> db :application :applications)
-          states-to-include           (-> db :application :filter set)
-          selection-states-to-include (-> db :application :selection-filter set)]
+    (let [applications                 (-> db :application :applications)
+          processing-states-to-include (-> db :application :filter set)
+          selection-states-to-include  (-> db :application :selection-filter set)]
       (filter
-       (fn [application]
-         (let [selection-states (->> (:application-hakukohde-reviews application)
-                                     (filter #(= "selection-state" (:requirement %)))
-                                     (map :state))]
-           (and
-            (contains? states-to-include (:state application))
-            (or
-             (not (empty? (clojure.set/intersection
-                           selection-states-to-include
-                           (set selection-states))))
-             (and
-              (contains? selection-states-to-include "incomplete")
-              (or
-               (empty? selection-states)
-               (< (count selection-states)
-                  (count (:hakukohde application)))))))))
-       applications))))
+        (fn [application]
+          (and
+            (filter-by-hakukohde-review application "processing-state" review-states/initial-application-hakukohde-processing-state processing-states-to-include)
+            (filter-by-hakukohde-review application "selection-state" "incomplete" selection-states-to-include)))
+        applications))))
 
 (re-frame/reg-sub
   :application/review-state-setting-enabled?

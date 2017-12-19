@@ -9,6 +9,7 @@
 (sql/defqueries "sql/migration-1.36-queries.sql")
 (sql/defqueries "sql/migration-1.71-queries.sql")
 (sql/defqueries "sql/migration-1.75-queries.sql")
+(sql/defqueries "sql/migration-1.80-queries.sql")
 
 (defn get-all-applications
   []
@@ -16,6 +17,13 @@
           (assoc (t/transform-keys k/->kebab-case-keyword application)
                  :content (:content application)))
         (db/exec :db yesql-get-all-applications {})))
+
+(defn get-latest-versions-of-all-applications
+  []
+  (mapv (fn [application]
+          (assoc (t/transform-keys k/->kebab-case-keyword application)
+            :content (:content application)))
+        (db/exec :db yesql-get-latest-versions-of-all-applications {})))
 
 (defn set-application-key-to-application-review
   [review-id key]
@@ -76,3 +84,7 @@
   (->> note
        (t/transform-keys k/->snake_case_keyword)
        (db/exec :db yesql-create-application-review-note!)))
+
+(defn set-application-state
+  [application-key state]
+  (db/exec :db yesql-update-application-state! {:key application-key :state state}))

@@ -7,7 +7,6 @@
     describe('for first form', function() {
       var firstNotSelected = null;
       var eventCountBefore = null;
-      var firstNotSelectedCaption = null;
       before(
         navigateToApplicationHandling,
         wait.until(directFormHakuListExists),
@@ -18,27 +17,22 @@
         wait.until(function() { return applicationHeader().text() ===  'Selaintestilomake1' }),
         clickElement(applicationRow),
         wait.until(function() { return reviewHeader().length > 0 }),
-        clickElement(selectedState),
-        wait.until(function() { return notSelectedStates().length > 1 }),
+        clickElement(function () { return selectedState().first() }),
+        wait.until(function() { return notSelectedStates().length === 6 }),
         function() {
-          var notSelected =  notSelectedStates();
-          expect(notSelected.length).to.be.at.least(1);
-          firstNotSelected = notSelected.first();
-          firstNotSelectedCaption = firstNotSelected.text();
-          eventCountBefore = eventCaptions().length;
-          expect(eventCountBefore).to.be.at.least(1)
+          firstNotSelected = notSelectedStates().first();
+          expect(eventCaptions().length).to.equal(1);
         },
         clickElement(function () { return firstNotSelected }),
-        wait.until(function() { return eventCountBefore < eventCaptions().length })
+        wait.until(function() { return eventCaptions().length == 2 })
       );
       it('has applications', function() {
         expect(applicationHeader().text()).to.equal('Selaintestilomake1');
         expect(downloadLink().text()).to.equal('Lataa Excel')
       });
       it('stores an event for review state change', function() {
-        expect(eventCountBefore+1).to.equal(eventCaptions().length);
         var lastEventNow = testFrame().find('.application-handling__event-caption').last().text();
-        expect(lastEventNow).to.equal(firstNotSelectedCaption)
+        expect(lastEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (VV)')
       });
       it('Successfully stores notes and score for an application', function(done) {
         var scoreForVatanen = Math.floor((Math.random() * 50) + 1);
@@ -94,7 +88,7 @@
         )
         it('selects new state correctly', function() {
           expect(selectionStateSelected().text()).to.equal("Hyväksytty")
-          expect(thirdApplication().parent().find('.application-handling__selection-state-cell').text()).to.equal("Hyväksytty")
+          expect(thirdApplication().find('.application-handling__hakukohde-selection').text()).to.equal("Hyväksytty")
         })
       })
 
@@ -102,11 +96,11 @@
 
       function selectionStateOpened() { return testFrame().find('.application-handling__review-state-container-selection-state .application-handling__review-state-list-opened') }
 
-      function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)') }
+      function firstApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Vatanen)').closest('.application-handling__list-row') }
 
-      function secondApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)') }
+      function secondApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Kuikeloinen)').closest('.application-handling__list-row') }
 
-      function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Tyrni)') }
+      function thirdApplication() { return testFrame().find('.application-handling__list-row--applicant:contains(Tyrni)').closest('.application-handling__list-row') }
 
       function reviewNotes() { return testFrame().find('.application-handling__review-note-input') }
 
@@ -131,7 +125,7 @@
       }
 
       function applicationRow() {
-        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) > .application-handling__list-row--applicant:contains(Vatanen)')
+        return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant:contains(Vatanen)')
       }
 
       function selectedState() {
@@ -164,16 +158,6 @@
               // fixture are so close
               return firstApplicantName() !== firstApplicantNameBeforeAnySorting
             }))
-            .then(clickElement(scoreColumn))
-            .then(wait.until(firstApplicantNameIs("Kuikeloinen, Seija Susanna")))
-            .then(function() {
-              expectApplicants(["Kuikeloinen, Seija Susanna", "Vatanen, Ari", "Tyrni, Johanna Irmeli"])
-            })
-            .then(clickElement(scoreColumn))
-            .then(wait.until(firstApplicantNameIs("Tyrni, Johanna Irmeli")))
-            .then(function() {
-              expectApplicants(["Tyrni, Johanna Irmeli", "Vatanen, Ari", "Kuikeloinen, Seija Susanna"])
-            })
             .then(clickElement(applicantColumn))
             .then(wait.until(firstApplicantNameIs("Vatanen, Ari")))
             .then(function() {
@@ -226,27 +210,27 @@
 
     });
 
-    describe('application filtering on application state', function() {
-      before(clickElement(applicationStateFilterLink));
+    describe('application filtering on hakukohde processing state', function() {
+      before(clickElement(hakukohdeProcessingFilterLink));
       it('reduces application list', function(done) {
-        expect(includedApplicationStateFilters()).to.equal(9);
+        expect(includedHakukohdeProcessingStateFilters()).to.equal(8);
         expect(filteredApplicationsCount()).to.equal(3);
 
-        var stateOfFirstApplication = applicationStates().eq(0).text();
-        var stateOfSecondApplication = applicationStates().eq(2).text();
+        var stateOfFirstApplicationHakukohde = applicationHakukohdeProcessingStates().eq(0).text();
+        var stateOfSecondApplicationHakukohde = applicationHakukohdeProcessingStates().eq(2).text();
 
-        filterOutBasedOnFirstApplicationState(stateOfFirstApplication);
+        filterOutBasedOnFirstApplicationState(stateOfFirstApplicationHakukohde);
         wait.until(function() {
-          var expectedFilteredCount = stateOfFirstApplication === stateOfSecondApplication ? 0 : 1;
+          var expectedFilteredCount = stateOfFirstApplicationHakukohde === stateOfSecondApplicationHakukohde ? 0 : 1;
           return filteredApplicationsCount() === expectedFilteredCount
         })()
         .then(function() {
-          filterInBasedOnFirstApplicationState(stateOfFirstApplication);
+          filterInBasedOnFirstApplicationState(stateOfFirstApplicationHakukohde);
           return wait.until(function() {
             return filteredApplicationsCount() === 3
           })()
         })
-        .then(clickElement(applicationStateFilterLink))
+        .then(clickElement(hakukohdeProcessingFilterLink))
         .then(done)
         .fail(done)
       });
@@ -259,12 +243,12 @@
         testFrame().find('.application-handling__list-row--state .application-handling__filter-state-selection-row span:contains(' + stateOfFirstApplication + ')').click()
       }
 
-      function applicationStates() {
-        return testFrame().find('.application-handling__list .application-handling__list-row--state')
+      function applicationHakukohdeProcessingStates() {
+        return testFrame().find('.application-handling__list .application-handling__hakukohde-state')
       }
 
       function filteredApplicationsCount() {
-        return applicationStates().length
+        return applicationHakukohdeProcessingStates().length
       }
     });
 
@@ -382,11 +366,11 @@
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
           wait.until(applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')),
-          clickElement(applicationStateFilterLink)
+          clickElement(hakukohdeProcessingFilterLink)
         );
 
-        it('shows virkailija edit link', function() {
-          expect(includedApplicationStateFilters()).to.equal(6);
+        it('has correct filters selected', function() {
+          expect(includedHakukohdeProcessingStateFilters()).to.equal(5);
         })
       });
     });
@@ -402,7 +386,7 @@
         )
 
         it('has expected data in applications and popup', function() {
-          expect(applicationStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsittelemättä', 'Käsittelyssä', 'Käsittelemättä'])
           expect(massUpdateFromStateSelectionClosed().text()).to.equal('Käsittelemättä (2)')
           expect(massUpdateToStateSelectionClosed().text()).to.equal('Käsittelemättä')
         })
@@ -452,11 +436,11 @@
       describe('updates applications', function () {
         before(
           wait.until(function() {
-            return applicationStates().length > 0
+            return applicationHakukohdeStates().length > 0
           })
         )
         it('to selected state', function() {
-          expect(applicationStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
+          expect(applicationHakukohdeStates()).to.eql(['Käsitelty', 'Käsittelyssä', 'Käsitelty'])
         })
       })
     })
@@ -495,8 +479,8 @@
       return testFrame().find('.application-handling__mass-edit-review-states-popup')
     }
 
-    function applicationStates() {
-      return _.map(testFrame().find('.application-handling__list-row--state').slice(1), function(o) {
+    function applicationHakukohdeStates() {
+      return _.map(testFrame().find('.application-handling__hakukohde-state'), function(o) {
         return $(o).text()
       })
     }
@@ -533,7 +517,7 @@
       loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
     }
 
-    function includedApplicationStateFilters() {
+    function includedHakukohdeProcessingStateFilters() {
       return testFrame().find('.application-handling__filter-state:eq(0) .application-handling__filter-state-selected-row').length
     }
 
@@ -547,7 +531,7 @@
       }
     }
 
-    function applicationStateFilterLink() {
+    function hakukohdeProcessingFilterLink() {
       return testFrame().find('.application-handling__filter-state a').eq(0)
     }
 
@@ -556,7 +540,7 @@
     }
 
     function applicationRow() {
-      return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) > .application-handling__list-row--applicant:contains(Vatanen)')
+      return testFrame().find('.application-handling__list-row:not(.application-handling__list-header) .application-handling__list-row--applicant:contains(Vatanen)')
     }
 
     function reviewHeader() {
@@ -564,11 +548,11 @@
     }
 
     function selectionStates() {
-      return testFrame().find('.application-handling__list .application-handling__list-row--selection')
+      return testFrame().find('.application-handling__list .application-handling__hakukohde-selection')
     }
 
     function filteredApplicationsCount() {
-      return selectionStates().length
+      return testFrame().find('.application-handling__list-row').not('.application-handling__list-header').length
     }
   })
 })();

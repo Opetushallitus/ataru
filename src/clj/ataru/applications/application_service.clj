@@ -17,7 +17,8 @@
    [ataru.hakija.application-email-confirmation :as email]
    [ataru.person-service.person-service :as person-service]
    [ataru.util :as util]
-   [ataru.person-service.birth-date-converter :as bd-converter])
+   [ataru.person-service.birth-date-converter :as bd-converter]
+   [medley.core :refer [filter-vals]])
   (:import [java.io ByteArrayInputStream]))
 
 (defn get-application-list-by-form [form-key session organization-service]
@@ -109,13 +110,13 @@
       (update :nationality get-country-by-code)))
 
 (defn- person-info-from-onr-person [person]
-  {:first-name         (:etunimet person)
-   :preferred-name     (:kutsumanimi person)
-   :last-name          (:sukunimi person)
-   :ssn                (:hetu person)
-   :birth-date         (-> person :syntymaaika bd-converter/convert-to-finnish-format)
-   :gender             (-> person :sukupuoli)
-   :nationality        (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
+  {:first-name     (:etunimet person)
+   :preferred-name (:kutsumanimi person)
+   :last-name      (:sukunimi person)
+   :ssn            (:hetu person)
+   :birth-date     (some-> person :syntymaaika bd-converter/convert-to-finnish-format)
+   :gender         (-> person :sukupuoli)
+   :nationality    (-> person :kansalaisuus first (get :kansalaisuusKoodi "999"))})
 
 (defn get-person [application person-client]
   (let [person-from-onr (when-let [oid (:person-oid application)]
@@ -204,14 +205,14 @@
      :hakukohde-reviews (parse-application-hakukohde-reviews application-key)}))
 
 (defn mass-update-application-states
-  [session organization-service application-keys from-state to-state]
+  [session organization-service application-keys hakukohde-oid from-state to-state]
   (doseq [application-key application-keys]
     (aac/check-application-access
       application-key
       session
       organization-service
       [:edit-applications]))
-  (application-store/mass-update-application-states session application-keys from-state to-state)
+  (application-store/mass-update-application-states session application-keys hakukohde-oid from-state to-state)
   {})
 
 (defn send-modify-application-link-email [application-key session organization-service tarjonta-service]

@@ -39,7 +39,6 @@
   display: flex;
   justify-content: space-between;
   padding-top: 0;
-  border-bottom: 1px solid @separator-color;
   margin-bottom: 10px;
   padding-bottom: 10px;
   -webkit-user-select: none;
@@ -242,6 +241,7 @@ and (max-width: 1000px) {
   -ms-user-select: none;
   user-select: none;
   overflow-x: hidden;
+  border-bottom: 1px solid @review-separator-color;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -261,8 +261,7 @@ and (max-width: 1000px) {
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
   border-radius: 3px;
-  background-color: @selected-blue;
-  color: #fff;
+  background-color: @application-form-list-background-color;
 }
 
 .application-handling__list-header:hover {
@@ -282,13 +281,14 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--applicant {
-  width: 25%;
+  width: 30%;
   display: inline-block;
 }
 
 .application-handling__list-row--time {
-  width: 15%;
+  width: 35%;
   display: inline-block;
+  color: @sg-color-gray-2;
 }
 
 .application-handling__list-row--time-day {
@@ -296,19 +296,16 @@ and (max-width: 1000px) {
   display: inline-block;
 }
 
-.application-handling__list-row--score {
-  width: 10%;
-  display: inline-block;
-}
-
 .application-handling__list-row--state {
   width: 20%;
   display: inline-block;
+  margin-left: -3px;
 }
 
 .application-handling__list-row--selection {
-  width: 30%;
+  width: 15%;
   display: inline-block;
+  margin-left: -3px;
 }
 
 .application-handling__list-row-email-icon {
@@ -317,6 +314,28 @@ and (max-width: 1000px) {
 
 .application-handling__list-row-email-icon--not-selected {
   color: @blue-text-color;
+}
+
+.application-handling__list-row-hakukohde {
+  padding-bottom: 2px;
+  margin-top: 1px;
+}
+
+.application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
+  filter: brightness(75%);
+}
+
+.application-handling__application-hakukohde-cell--selected {
+  text-decoration: underline;
+}
+
+.application-handling__application-hakukohde-cell--form {
+  margin-top: -20px;
+}
+
+.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-state,
+.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-selection {
+  filter: brightness(115%);
 }
 
 .application-handling__list-loading-indicator {
@@ -521,6 +540,16 @@ and (max-width: 1000px) {
   color: @text-color;
   .semibold;
   margin-bottom: 15px;
+}
+
+.application-handling__review-hakukohde-inputs {
+  border-left: 1px solid @section-gray-border;
+  padding-left: 10px;
+}
+
+.application-handling__review-state-container-processing-state {
+  border-bottom: 1px solid @review-separator-color;
+  padding-bottom: 5px;
 }
 
 .application-handling__review-header--language-requirement,
@@ -920,12 +949,18 @@ and (max-width: 1000px) {
   cursor: default;
 }
 
+.application-handling__review-state-row:hover {
+  background-color: @application-form-list-background-color;
+  cursor: pointer;
+}
+
 .application-handling__review-state-row--mass-update {
   width: 270px;
 }
 
 .application-handling__review-state-row--disabled {
   color: @sg-gray-lighten-3;
+  cursor: auto;
 }
 
 .application-handling__review-state-row--enabled {
@@ -933,7 +968,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-state-row--enabled:hover {
-  background-color: #e8f3f6;
+  background-color: @application-form-list-background-color
 }
 
 .application-handling__review-state-row--disabled:hover {
@@ -1034,10 +1069,9 @@ and (max-width: 1000px) {
 }
 
 .application-handling__review-inputs {
-  margin-bottom: 20px;
-  padding: 20px 0px 10px;
-  border-bottom: 1px solid @review-separator-color;
   border-top: 1px solid @review-separator-color;
+  margin-bottom: 20px;
+  padding-top: 10px;
 }
 
 .application-handling__score-input {
@@ -1078,6 +1112,7 @@ and (max-width: 1000px) {
   flex-direction: column;
   margin-bottom: 20px;
   padding-right: 15px;
+  max-width: 610px;
 }
 
 .application__form-field-label {
@@ -1095,6 +1130,7 @@ and (max-width: 1000px) {
 .application__form-field-value {
   color: @text-color;
   font-size: 14px;
+  overflow: auto;
 }
 
 .application__form-info-text {
@@ -1149,7 +1185,7 @@ and (max-width: 1000px) {
   color: white;
   display: flex;
   font-size: 13px;
-  margin-left: 10px;
+  margin-left: 20px;
   padding: 4px 7px 4px 4px;
 
   i {
@@ -1440,16 +1476,36 @@ th.application__readonly-adjacent--header {
   background-color: @sg-color-red;
 }
 
-.application-handling__application-state-cell {
+.application-handling__application-hakukohde-cell {
   font-size: 12px;
+  color: @sg-color-gray-2;
+  width: 65%;
+  display: inline-block;
+}
+
+.application-handling__application-state-cell {
+  font-size: 11px;
   text-transform: uppercase;
 }
 
-.application-handling__selection-state-cell {
-  font-size: 12px;
+.application-handling__hakukohde-state-cell, .application-handling__hakukohde-selection-cell {
+  display: inline-block;
+  margin-left: -4px;
+}
+
+.application-handling__hakukohde-state-cell {
+  width: 20%;
+}
+
+.application-handling__hakukohde-selection-cell {
+  width: 10%;
+}
+
+.application-handling__hakukohde-state, .application-handling__hakukohde-selection {
+  font-size: 11px;
   border-radius: 4px;
   background-color: @medium-pale-blue;
-  padding: 2px 8px;
+  padding: 1px 8px;
   margin-right: 8px;
   text-transform: uppercase;
   color: white;
@@ -1528,4 +1584,69 @@ th.application__readonly-adjacent--header {
 .application-handling__dropdown-box-closed-label {
   margin-left: 7px;
   display: inline;
+}
+
+.application-handling__review-deactivate-toggle {
+  width: 140px;
+  height: 26px;
+  border-radius: 13px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.application-handling__review-deactivate-toggle-slider {
+  display: flex;
+  width: 280px;
+  height: 26px;
+  border-radius: 13px;
+  align-items: center;
+  transition: transform 0.1s, background-color 0.1s;
+  cursor: pointer;
+}
+
+.application-handling__review-deactivate-toggle-slider-left {
+  transform: translateX(-114px);
+  background-color: @disabled-list-item-color;
+}
+
+.application-handling__review-deactivate-toggle-slider-right {
+  transform: translateX(0px);
+  background-color: @button-green;
+}
+
+.application-handling__review-deactivate-toggle-hidden-input {
+  display: none;
+}
+
+.application-handling__review-deactivate-toggle-label-left {
+  margin-left: 37px;
+  min-width: 67px;
+  color: white;
+  cursor: pointer;
+}
+
+.application-handling__review-deactivate-toggle-label-right {
+  min-width: 76px;
+  color: @sg-color-gray;
+  cursor: pointer;
+}
+
+.application-handling__review-deactivate-toggle-divider {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: white;
+  margin-left: 12px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.application-handling__review-deactivate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.application-handling__review-deactivate-label {
+  .semibold;
 }

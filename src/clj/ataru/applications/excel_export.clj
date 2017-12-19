@@ -82,6 +82,8 @@
    {:label     "Hakemuksen tila"
     :field     :state
     :format-fn application-state-formatter}
+   {:label     "Hakukohteen käsittelyn tila"
+    :format-fn (partial hakukohde-review-formatter "processing-state")}
    {:label     "Kielitaitovaatimus"
     :format-fn (partial hakukohde-review-formatter "language-requirement")}
    {:label     "Tutkinnon kelpoisuus"

@@ -22,7 +22,7 @@
 
 (defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
-(defn- str->googdate [timestamp-value]
+(defn str->googdate [timestamp-value]
   (->> (for [formatter formatters]
            (try (f/parse formatter timestamp-value)
                 (catch :default _

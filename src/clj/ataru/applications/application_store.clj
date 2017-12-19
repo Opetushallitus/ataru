@@ -3,6 +3,7 @@
             [ataru.util.language-label :as label]
             [ataru.schema.form-schema :as schema]
             [ataru.application.review-states :refer [incomplete-states]]
+            [ataru.application.application-states :as application-states]
             [ataru.virkailija.authentication.virkailija-edit]
             [ataru.util :refer [answers-by-key]]
             [ataru.application.review-states :as application-review-states]
@@ -322,6 +323,16 @@
       (first)
       (unwrap-application)))
 
+(defn get-latest-application-by-key-with-hakukohde-reviews
+  [application-key]
+  (-> (exec-db :db
+               yesql-get-latest-application-by-key-with-hakukohde-reviews
+               {:application_key              application-key
+                :query_type                   "ALL"
+                :authorized_organization_oids [""]})
+      (first)
+      (unwrap-application)))
+
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db yesql-get-latest-application-by-secret {:secret secret})
                               (first)
@@ -388,13 +399,13 @@
   (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn save-application-hakukohde-review
-  [virkailija application-key hakukohde hakukohde-review-requirement hakukohde-review-state session]
+  [virkailija application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
                                                                :requirement     hakukohde-review-requirement
                                                                :state           hakukohde-review-state
-                                                               :hakukohde       hakukohde}
+                                                               :hakukohde       hakukohde-oid}
                                   existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
                                   existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)
                                   username                    (get-in session [:identity :username])
@@ -582,45 +593,42 @@
        (map unwrap-person-and-hakemus-oid)
        (into {})))
 
-(defn- assert-correct-from-state-for-review
-  [application-review from-state]
-  (assert (or (= (:state application-review) from-state)
-              (and (nil? (:state application-review))
-                   (= from-state ataru.application.review-states/initial-application-review-state)))))
+(defn- update-hakukohde-process-state!
+  [connection username organization-oid hakukohde-oid from-state to-state application-key]
+  (let [application      (get-latest-application-by-key-with-hakukohde-reviews application-key)
+        existing-reviews (filter
+                           #(= (:state %) from-state)
+                           (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oid))
+        new-reviews      (map
+                           #(-> %
+                                (assoc :state to-state)
+                                (assoc :application_key application-key))
+                           existing-reviews)
+        new-event        {:application_key  application-key
+                          :event_type       "review-state-change"
+                          :new_review_state to-state
+                          :virkailija_oid   nil
+                          :hakukohde        hakukohde-oid
+                          :review_key       nil}]
+    (when (seq new-reviews)
+      (info "Updating" (count new-reviews) "application-hakukohde-reviews"))
+    (doseq [new-review new-reviews]
+      (yesql-upsert-application-hakukohde-review! new-review connection)
+      (yesql-add-application-event<! new-event connection))
+    {:new              new-event
+     :id               username
+     :operation        audit-log/operation-new
+     :organization-oid organization-oid}))
 
 (defn mass-update-application-states
-  [session application-keys from-state to-state]
+  [session application-keys hakukohde-oid from-state to-state]
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection       {:connection conn}
                                   username         (get-in session [:identity :username])
                                   organization-oid (get-in session [:identity :organizations 0 :oid])]
-                              (mapv (fn [application-key]
-                                      (let [existing-review   (get-application-review application-key)
-                                            new-review        (if existing-review
-                                                                (transform-keys ->snake_case
-                                                                                (-> existing-review
-                                                                                    (assoc :state to-state)
-                                                                                    (dissoc :modified-time)))
-                                                                {:state           to-state
-                                                                 :application_key application-key})
-                                            application-event {:application_key  application-key
-                                                               :event_type       "review-state-change"
-                                                               :new_review_state to-state
-                                                               :virkailija_oid   nil
-                                                               :hakukohde        nil
-                                                               :review_key       nil}]
-                                        (assert-correct-from-state-for-review existing-review from-state)
-                                        (if existing-review
-                                          (yesql-save-application-review! new-review connection)
-                                          (yesql-add-application-review! new-review connection))
-                                        (yesql-add-application-event<!
-                                          application-event
-                                          connection)
-                                        {:new              application-event
-                                         :id               username
-                                         :operation        audit-log/operation-new
-                                         :organization-oid organization-oid}))
-                                    application-keys)))]
+                              (mapv
+                                (partial update-hakukohde-process-state! connection username organization-oid hakukohde-oid from-state to-state)
+                                application-keys)))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-log-entry))))
 
