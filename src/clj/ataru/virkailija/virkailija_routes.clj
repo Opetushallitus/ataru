@@ -53,7 +53,9 @@
             [medley.core :refer [map-kv]]
             [ataru.cache.cache-service :as cache]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [ataru.person-service.person-service :as person-service])
+            [ataru.person-service.person-service :as person-service]
+            [ataru.applications.application-store :as application-store]
+            [ataru.person-service.person-integration :as person-integration])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter))
 
@@ -174,6 +176,11 @@
                            (do
                              (client-error/log-client-error error-details)
                              (ok {})))
+
+                 (api/GET "/update-persons" []
+                   (doseq [application-id (map :id (application-store/get-application-keys))]
+                     (person-integration/upsert-and-log-person person-service application-id))
+                   (ok (str "Updated persons for applications")))
 
                  (api/context "/applications" []
                    :tags ["applications-api"]
