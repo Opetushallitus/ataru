@@ -659,3 +659,6 @@
 (defn remove-review-note [note-id]
   (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
     note-id))
+
+(defn get-application-keys []
+  (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
