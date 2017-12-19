@@ -866,5 +866,5 @@ WHERE person_oid IS NOT NULL
   AND state <> 'inactivated'
 ORDER BY created_time DESC;
 
---name: yesql-get-application-keys
+--name: yesql-get-latest-application-ids-distinct-by-person-oid
 SELECT DISTINCT ON (person_oid) id FROM latest_applications ORDER BY person_oid, id DESC;

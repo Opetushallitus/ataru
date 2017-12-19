@@ -661,4 +661,4 @@
     note-id))
 
 (defn get-application-keys []
-  (exec-db :db yesql-get-application-keys nil))
+  (exec-db :db yesql-get-latest-application-ids-distinct-by-person-oid nil))
