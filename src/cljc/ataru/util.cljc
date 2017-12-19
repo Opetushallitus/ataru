@@ -129,14 +129,13 @@
   [vec item]
   (some #(= item %) vec))
 
-(defn after-apply-end-within-days?
-  [apply-end-long days]
-  (when apply-end-long
-    (let [now            (time/now)
-          apply-end      (from-long apply-end-long)
-          days-after-end (time/plus apply-end (time/days days))]
-      (and (time/after? now apply-end)
-           (time/after? days-after-end now)))))
-
 (defn not-blank? [s]
   (not (clojure.string/blank? s)))
+
+(defn application-not-in-processing? [application-hakukohde-reviews]
+  (not-empty
+    (filter
+      #(and
+        (= "processing-state" (:requirement %))
+        (contains? #{"unprocessed" "information-request"} (:state %)))
+      application-hakukohde-reviews)))

@@ -64,15 +64,9 @@
 
 (defn in-processing-state-in-jatkuva-haku?
   [application-key hakuaika]
-  (let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
-    (and
-     (:jatkuva-haku? hakuaika)
-     (not-empty
-       (filter
-         #(and
-           (= "processing-state" (:requirement %))
-           (contains? #{"unprocessed" "information-request"} (:state %)))
-         application-hakukohde-reviews)))))
+  (when-let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
+    (and (:jatkuva-haku? hakuaika)
+         (util/application-not-in-processing? application-hakukohde-reviews))))
 
 (defn- editing-allowed-by-hakuaika?
   [answer application hakuaika]
@@ -133,7 +127,7 @@
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
         (not (or virkailija?
-                 (and (not (in-processing-state-in-jatkuva-haku? hakuaika state))
+                 (and (not (in-processing-state-in-jatkuva-haku? (:key application) hakuaika))
                       (editing-allowed-by-hakuaika? answer
                                                     application
                                                     hakuaika)))))))
@@ -282,7 +276,7 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (in-processing-state-in-jatkuva-haku? hakuaika state))
+           (in-processing-state-in-jatkuva-haku? (:key application) hakuaika))
       {:passed false :failures ["Application is in review state and cannot be modified."]}
 
       (not (:passed? validation-result))
