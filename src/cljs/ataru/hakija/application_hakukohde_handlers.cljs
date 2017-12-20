@@ -11,17 +11,23 @@
 
 (defn- set-visibility-of-belongs-to-hakukohteet-questions
   [db]
-  (let [selected-hakukohteet (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))]
-    (util/reduce-form-fields
-     (fn [db field]
-       (if (empty? (:belongs-to-hakukohteet field))
-         db
-         (assoc-in db [:application :ui (keyword (:id field)) :visible?]
-                   (not (empty? (clojure.set/intersection
-                                 (set (:belongs-to-hakukohteet field))
-                                 selected-hakukohteet))))))
-     db
-     (get-in db [:form :content]))))
+  (util/reduce-form-fields
+    (fn [db field]
+      (let [selected-hakukohteet                    (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+            question-belongs-to-selected-hakukohde? (not (empty? (clojure.set/intersection
+                                                                   (set (:belongs-to-hakukohteet field))
+                                                                   selected-hakukohteet)))
+            key                                     (keyword (:id field))]
+        (if (empty? (:belongs-to-hakukohteet field))
+          db
+          (cond-> db
+                  (not question-belongs-to-selected-hakukohde?)
+                  (update-in [:application :answers key] dissoc :value :values)
+
+                  :always (assoc-in [:application :ui key :visible?]
+                                    question-belongs-to-selected-hakukohde?)))))
+    db
+    (get-in db [:form :content])))
 
 (defn- set-values-changed
   [db]
