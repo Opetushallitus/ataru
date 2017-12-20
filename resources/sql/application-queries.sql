@@ -700,53 +700,73 @@ WHERE key IN (select key from applications where id = :id)
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
 WITH filtered_applications AS (
-  SELECT
-    a.key AS key,
-    a.haku AS haku,
-    a.hakukohde AS hakukohde,
-    ar.state AS state
-  FROM latest_applications AS a
-  JOIN forms AS f ON f.id = a.form_id
-  JOIN latest_forms AS lf ON lf.key = f.key
-  JOIN application_reviews AS ar ON a.key = ar.application_key
-  WHERE a.haku IS NOT NULL
-    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+    SELECT
+      a.key       AS key,
+      a.haku      AS haku,
+      a.hakukohde AS hakukohde,
+      ar.state    AS state
+    FROM latest_applications AS a
+      JOIN forms AS f ON f.id = a.form_id
+      JOIN latest_forms AS lf ON lf.key = f.key
+      JOIN application_reviews AS ar ON a.key = ar.application_key
+    WHERE a.haku IS NOT NULL
+          AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 ), unnested_hakukohde AS (
-  SELECT
-    key,
-    haku,
-    unnest(hakukohde) AS hakukohde,
-    state
-  FROM filtered_applications
+    SELECT
+      key,
+      haku,
+      unnest(hakukohde) AS hakukohde,
+      state
+    FROM filtered_applications
 ), haku_counts AS (
-  SELECT
-    haku,
-    count(key) AS application_count,
-    sum(CASE WHEN state = 'unprocessed'
+    SELECT
+      haku,
+      count(key)      AS application_count,
+      sum(CASE WHEN state = 'active'
         THEN 1
-        ELSE 0 END) AS unprocessed,
-    sum(CASE WHEN state IN (:incomplete_states)
+          ELSE 0 END) AS active
+    FROM filtered_applications
+    GROUP BY haku
+), haku_review_complete_counts AS (
+    SELECT
+      haku,
+      sum(CASE WHEN application_hakukohde_reviews.state = 'processed'
         THEN 1
-        ELSE 0 END) AS incomplete
-  FROM filtered_applications
-  GROUP BY haku
+          ELSE 0 END) AS complete_count
+    FROM application_hakukohde_reviews
+      JOIN unnested_hakukohde ON unnested_hakukohde.key = (SELECT key
+                                                           FROM unnested_hakukohde
+                                                           WHERE unnested_hakukohde.hakukohde =
+                                                                 application_hakukohde_reviews.hakukohde
+                                                           LIMIT 1)
+    WHERE application_hakukohde_reviews.requirement = 'processing-state'
+    GROUP BY haku
+), hakukohde_review_complete_counts AS (
+    SELECT
+      hakukohde,
+      sum(CASE WHEN application_hakukohde_reviews.state = 'processed'
+        THEN 1
+          ELSE 0 END) AS complete_count
+    FROM application_hakukohde_reviews
+    WHERE application_hakukohde_reviews.requirement = 'processing-state'
+    GROUP BY hakukohde
 )
 SELECT
-  uhk.haku,
-  uhk.hakukohde,
-  max(hk.application_count) AS haku_application_count,
-  max(hk.unprocessed) AS haku_unprocessed,
-  max(hk.incomplete) AS haku_incomplete,
-  count(uhk.key) AS application_count,
-  sum(CASE WHEN uhk.state = 'unprocessed'
-      THEN 1
-      ELSE 0 END) AS unprocessed,
-  sum(CASE WHEN uhk.state IN (:incomplete_states)
-      THEN 1
-      ELSE 0 END) AS incomplete
-FROM unnested_hakukohde AS uhk
-JOIN haku_counts AS hk ON hk.haku = uhk.haku
-GROUP BY uhk.haku, uhk.hakukohde;
+  unnested_hakukohde.haku,
+  unnested_hakukohde.hakukohde,
+  max(haku_counts.application_count)                   AS haku_application_count,
+  max(haku_counts.active)                              AS haku_active,
+  max(haku_review_complete_counts.complete_count)      AS haku_complete,
+  max(hakukohde_review_complete_counts.complete_count) AS complete,
+  count(unnested_hakukohde.key)                        AS application_count,
+  sum(CASE WHEN unnested_hakukohde.state = 'active'
+    THEN 1
+      ELSE 0 END)                                      AS active
+FROM unnested_hakukohde
+  JOIN haku_counts ON haku_counts.haku = unnested_hakukohde.haku
+  JOIN haku_review_complete_counts ON haku_review_complete_counts.haku = unnested_hakukohde.haku
+  JOIN hakukohde_review_complete_counts ON hakukohde_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
+GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 SELECT
