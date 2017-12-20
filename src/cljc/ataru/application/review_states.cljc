@@ -52,8 +52,10 @@
   (map (comp name first) hakukohde-review-types))
 
 ; States where applications are considered "complete" in the application handling UI
-(def complete-states ["processed" "inactivated"])
+(def complete-states ["inactivated"])
 
 ;; States which are not considered terminal, see above for terminal states
-(def incomplete-states
-  (-> (map first application-review-states) set (difference (set complete-states)) vec))
+(def incomplete-states ["active"])
+
+(def complete-hakukohde-process-states ["processed"])
+
