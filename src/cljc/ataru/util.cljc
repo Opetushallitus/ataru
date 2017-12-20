@@ -140,3 +140,9 @@
 
 (defn not-blank? [s]
   (not (clojure.string/blank? s)))
+
+(defn- group-has-visible-fields? [fields selected-hakukohteet]
+  (not (empty? (filter (fn [field]
+                         (or (not (contains? field :belongs-to-hakukohteet))
+                             (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) (set selected-hakukohteet)))))
+                 fields))))

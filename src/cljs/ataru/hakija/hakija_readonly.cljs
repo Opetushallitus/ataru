@@ -28,30 +28,37 @@
     (clojure.string/split s #"\s*,\s*")
     s))
 
+(defn- answer-belongs-to-selected-hakukohde?
+  [field selected-hakukohteet]
+  (or (not (contains? field :belongs-to-hakukohteet))
+      (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) (set selected-hakukohteet)))))
+
 (defn text [field-descriptor application lang group-idx]
-  (let [answer (get-in application [:answers (keyword (:id field-descriptor))])]
-    [:div.application__form-field
-     [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     (if (:cannot-view answer)
-       [:div "***********"]
-       [:div.application__readonly-text
-        (let [values (cond-> (get-value answer group-idx)
-                       (contains? field-descriptor :koodisto-source)
-                       split-if-string
-                       (predefined-value-answer? field-descriptor)
-                       (replace-with-option-label (:options field-descriptor) lang))]
-          (cond (and (sequential? values) (< 1 (count values)))
-                [:ul.application__form-field-list
-                 (map-indexed
-                  (fn [i value]
-                    ^{:key (str (:id field-descriptor) i)}
-                    [:li (render-paragraphs value)])
-                  values)]
-                (sequential? values)
-                (render-paragraphs (first values))
-                :else
-                (render-paragraphs values)))])]))
+  (let [answer                                (get-in application [:answers (keyword (:id field-descriptor))])
+        selected-hakukohteet                  (map :value (-> application :answers :hakukohteet :values))]
+    (when (answer-belongs-to-selected-hakukohde? field-descriptor selected-hakukohteet)
+      [:div.application__form-field
+       [:label.application__form-field-label
+        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+       (if (:cannot-view answer)
+         [:div "***********"]
+         [:div.application__readonly-text
+          (let [values (cond-> (get-value answer group-idx)
+                               (contains? field-descriptor :koodisto-source)
+                               split-if-string
+                               (predefined-value-answer? field-descriptor)
+                               (replace-with-option-label (:options field-descriptor) lang))]
+            (cond (and (sequential? values) (< 1 (count values)))
+                  [:ul.application__form-field-list
+                   (map-indexed
+                    (fn [i value]
+                      ^{:key (str (:id field-descriptor) i)}
+                      [:li (render-paragraphs value)])
+                    values)]
+                  (sequential? values)
+                  (render-paragraphs (first values))
+                  :else
+                  (render-paragraphs values)))])])))
 
 (defn- attachment-list [attachments]
   [:div
@@ -61,18 +68,20 @@
         attachments)])
 
 (defn attachment [field-descriptor application lang question-group-index]
-  (let [answer-key (keyword (answer-key field-descriptor))
-        values     (if question-group-index
-                     (-> application
-                         :answers
-                         answer-key
-                         :values
-                         (nth question-group-index))
-                     (-> application :answers answer-key :values))]
-    [:div.application__form-field
-     [:label.application__form-field-label
-      (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     [attachment-list values]]))
+  (let [answer-key           (keyword (answer-key field-descriptor))
+        values               (if question-group-index
+                               (-> application
+                                   :answers
+                                   answer-key
+                                   :values
+                                   (nth question-group-index))
+                               (-> application :answers answer-key :values))
+        selected-hakukohteet (map :value (-> application :answers :hakukohteet :values))]
+    (when (answer-belongs-to-selected-hakukohde? field-descriptor selected-hakukohteet)
+      [:div.application__form-field
+       [:label.application__form-field-label
+        (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
+       [attachment-list values]])))
 
 (declare field)
 
@@ -99,15 +108,18 @@
       [field child application lang idx])]])
 
 (defn question-group [content application lang children]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application lang children]
-      (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
-         [:p.application__read-only-heading-text (-> content :label lang)]
-         [:div
-          (for [idx (range groups-amount)]
-            ^{:key (str "question-group-row-" idx)}
-            [question-group-row application lang children idx])]]))))
+  (let [ui          (subscribe [:state-query [:application :ui]])
+        hakukohteet (subscribe [:application/selected-hakukohteet])]
+    (when (and (not-empty children)
+               (util/group-has-visible-fields? children @hakukohteet))
+      (fn [content application lang children]
+        (let [groups-amount (->> content :id keyword (get @ui) :count)]
+          [:div.application__wrapper-element.application__wrapper-element--border.application__question-group.application__read-only
+           [:p.application__read-only-heading-text (-> content :label lang)]
+           [:div
+            (for [idx (range groups-amount)]
+              ^{:key (str "question-group-row-" idx)}
+              [question-group-row application lang children idx])]])))))
 
 (defn row-container [application lang children question-group-index]
   (let [ui (subscribe [:state-query [:application :ui]])]

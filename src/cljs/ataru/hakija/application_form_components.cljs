@@ -319,13 +319,6 @@
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
-(defn- group-has-visible-fields? [fields selected-hakukohteet]
-  (not (empty? (filter (fn [field]
-                    (or (not (contains? field :belongs-to-hakukohteet))
-                        (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) (set selected-hakukohteet)))))
-            fields))))
-
-
 (defn question-group [field-descriptor children]
   (let [row-count    (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edit? (->> children
@@ -335,7 +328,7 @@
                           (some identity))
         hakukohteet  (subscribe [:application/selected-hakukohteet])]
     (when (and (not-empty children)
-               (group-has-visible-fields? children @hakukohteet))
+               (util/group-has-visible-fields? children @hakukohteet))
       [:div.application__question-group
        [scroll-to-anchor field-descriptor]
        [:div
