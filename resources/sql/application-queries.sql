@@ -777,10 +777,7 @@ SELECT
   count(a.key)    AS application_count,
   sum(CASE WHEN ar.state = 'active' and ahr.state != 'processed'
     THEN 1
-      ELSE 0 END) AS active,
-  sum(CASE WHEN ahr.state = 'processed'
-    THEN 1
-      ELSE 0 END) AS complete
+      ELSE 0 END) AS unprocessed
 FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
   JOIN latest_forms AS lf ON lf.key = f.key
@@ -788,7 +785,7 @@ FROM latest_applications AS a
   JOIN application_hakukohde_reviews AS ahr ON ahr.id = (SELECT id
                                                          FROM application_hakukohde_reviews ahr2
                                                          WHERE ahr2.hakukohde = 'form' AND
-                                                               ahr2.requirement = 'processing_state' AND
+                                                               ahr2.requirement = 'processing-state' AND
                                                                ahr2.application_key = a.key)
 WHERE a.haku IS NULL
       AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
