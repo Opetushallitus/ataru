@@ -345,21 +345,18 @@
                                          :name              LocalizedStringOptional
                                          :application-count s/Int
                                          :unprocessed       s/Int
-                                         :incomplete        s/Int
                                          :haku              s/Str})
 
 (s/defschema TarjontaHaku {:oid               s/Str
                            :name              LocalizedStringOptional
                            :application-count s/Int
                            :unprocessed       s/Int
-                           :incomplete        s/Int
                            :hakukohteet       [ApplicationCountsHakukohde]})
 
 (s/defschema DirectFormHaku {:name              s/Str
                              :key               s/Str
                              :application-count s/Int
-                             :unprocessed       s/Int
-                             :incomplete        s/Int})
+                             :unprocessed       s/Int})
 
 (s/defschema Haut {:tarjonta-haut    [TarjontaHaku]
                    :direct-form-haut [DirectFormHaku]})

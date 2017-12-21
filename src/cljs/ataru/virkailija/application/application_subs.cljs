@@ -55,13 +55,13 @@
      (get-in db [:application :selected-hakukohde])
      (get-in db [:application :selected-form-key])))))
 
-(defn filter-haku-seq [haku-seq incomplete-eq]
-  (filter #(incomplete-eq (:incomplete %) 0) haku-seq))
+(defn filter-haku-seq [haku-seq compare-fn]
+  (filter #(compare-fn (:unprocessed %) 0) haku-seq))
 
-(defn filter-haut [haut incomplete-eq]
+(defn filter-haut-by-unprocessed-compared-to-zero [haut compare-fn]
   (-> haut
-      (assoc :direct-form-haut (filter-haku-seq (:direct-form-haut haut) incomplete-eq))
-      (assoc :tarjonta-haut (filter-haku-seq (:tarjonta-haut haut) incomplete-eq))))
+      (assoc :direct-form-haut (filter-haku-seq (:direct-form-haut haut) compare-fn))
+      (assoc :tarjonta-haut (filter-haku-seq (:tarjonta-haut haut) compare-fn))))
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (sort-by :unprocessed #(compare %2 %1) haku-seq))
@@ -98,7 +98,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut >)
+            (filter-haut-by-unprocessed-compared-to-zero >)
             (sort-haut sort-haku-seq-by-unprocessed)))))
 
 (re-frame/reg-sub
@@ -107,7 +107,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut >)
+            (filter-haut-by-unprocessed-compared-to-zero >)
             count-haut))))
 
 (re-frame/reg-sub
@@ -117,7 +117,7 @@
        db
        #(->
          %
-         (filter-haut =)
+         (filter-haut-by-unprocessed-compared-to-zero =)
          (sort-haut sort-haku-seq-by-name)))))
 
 (re-frame/reg-sub
@@ -126,7 +126,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut =)
+            (filter-haut-by-unprocessed-compared-to-zero =)
             count-haut))))
 
 (re-frame/reg-sub
@@ -230,8 +230,8 @@
       (and
         (contains? states-to-include default-state-name)
         (or
-          (empty? processing-states)
-          (< (count processing-states)
+          (empty? states)
+          (< (count states)
              (count (:hakukohde application))))))))
 
 (re-frame/reg-sub
