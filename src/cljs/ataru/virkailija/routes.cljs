@@ -54,7 +54,7 @@
        (not-empty (get-in db [:editor :forms key])))
      :handler select-editor-form-if-not-deleted))
 
-  (defroute #"^/lomake-editori/applications/" []
+  (defroute #"^/lomake-editori/applications/?" []
     (secretary/dispatch! "/lomake-editori/applications/incomplete"))
 
   (defroute #"^/lomake-editori/applications/incomplete/" []
