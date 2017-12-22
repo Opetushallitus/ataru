@@ -534,7 +534,9 @@
      :lahiosoite          (-> answers :address :value)
      :postinumero         (-> answers :postal-code :value)
      :postitoimipaikka    (-> answers :postal-office :value)
-     :asuinmaa            (-> answers :country-of-residence :value)
+     ; Default asuinmaa to finland for forms that are from before
+     ; country-of-residence was implemented, or copied from those forms.
+     :asuinmaa            (or (-> answers :country-of-residence :value) "246")
      :kotikunta           (-> answers :home-town :value)
      :kkPohjakoulutus     (kk-base-educations answers)}))
 
