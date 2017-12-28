@@ -700,71 +700,97 @@ WHERE key IN (select key from applications where id = :id)
 
 -- name: yesql-get-haut-and-hakukohteet-from-applications
 WITH filtered_applications AS (
-  SELECT
-    a.key AS key,
-    a.haku AS haku,
-    a.hakukohde AS hakukohde,
-    ar.state AS state
-  FROM latest_applications AS a
-  JOIN forms AS f ON f.id = a.form_id
-  JOIN latest_forms AS lf ON lf.key = f.key
-  JOIN application_reviews AS ar ON a.key = ar.application_key
-  WHERE a.haku IS NOT NULL
-    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+    SELECT
+      a.key       AS key,
+      a.haku      AS haku,
+      a.hakukohde AS hakukohde,
+      ar.state    AS state
+    FROM latest_applications AS a
+      JOIN forms AS f ON f.id = a.form_id
+      JOIN latest_forms AS lf ON lf.key = f.key
+      JOIN application_reviews AS ar ON a.key = ar.application_key
+    WHERE a.haku IS NOT NULL
+          AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+), active_applications AS (
+    SELECT *
+    FROM filtered_applications
+    WHERE state = 'active'
+), inactive_applications AS (
+    SELECT *
+    FROM filtered_applications
+    WHERE state != 'active'
 ), unnested_hakukohde AS (
-  SELECT
-    key,
-    haku,
-    unnest(hakukohde) AS hakukohde,
-    state
-  FROM filtered_applications
-), haku_counts AS (
-  SELECT
-    haku,
-    count(key) AS application_count,
-    sum(CASE WHEN state = 'unprocessed'
+    SELECT
+      key,
+      haku,
+      unnest(hakukohde) AS hakukohde,
+      state
+    FROM filtered_applications
+), haku_counts AS (SELECT
+                     haku,
+                     count(key) AS application_count
+                   FROM active_applications
+                   GROUP BY haku
+), haku_review_complete_counts AS (
+    SELECT
+      haku,
+      sum(CASE WHEN application_hakukohde_reviews.state != 'processed'
         THEN 1
-        ELSE 0 END) AS unprocessed,
-    sum(CASE WHEN state IN (:incomplete_states)
+          ELSE 0 END) AS unprocessed
+    FROM application_hakukohde_reviews
+      JOIN unnested_hakukohde ON unnested_hakukohde.key = (SELECT key
+                                                           FROM unnested_hakukohde
+                                                           WHERE unnested_hakukohde.hakukohde =
+                                                                 application_hakukohde_reviews.hakukohde
+                                                           LIMIT 1)
+    WHERE application_hakukohde_reviews.requirement = 'processing-state' AND
+          application_hakukohde_reviews.application_key NOT IN (SELECT key
+                                                                FROM inactive_applications)
+    GROUP BY haku
+), hakukohde_review_complete_counts AS (
+    SELECT
+      hakukohde,
+      sum(CASE WHEN application_hakukohde_reviews.state = 'processed'
         THEN 1
-        ELSE 0 END) AS incomplete
-  FROM filtered_applications
-  GROUP BY haku
+          ELSE 0 END) AS unprocessed
+    FROM application_hakukohde_reviews
+    WHERE application_hakukohde_reviews.requirement = 'processing-state'
+          AND application_hakukohde_reviews.application_key NOT IN (SELECT key
+                                                                    FROM inactive_applications)
+    GROUP BY hakukohde
 )
 SELECT
-  uhk.haku,
-  uhk.hakukohde,
-  max(hk.application_count) AS haku_application_count,
-  max(hk.unprocessed) AS haku_unprocessed,
-  max(hk.incomplete) AS haku_incomplete,
-  count(uhk.key) AS application_count,
-  sum(CASE WHEN uhk.state = 'unprocessed'
-      THEN 1
-      ELSE 0 END) AS unprocessed,
-  sum(CASE WHEN uhk.state IN (:incomplete_states)
-      THEN 1
-      ELSE 0 END) AS incomplete
-FROM unnested_hakukohde AS uhk
-JOIN haku_counts AS hk ON hk.haku = uhk.haku
-GROUP BY uhk.haku, uhk.hakukohde;
+  unnested_hakukohde.haku,
+  unnested_hakukohde.hakukohde,
+  max(haku_counts.application_count)                AS haku_application_count,
+  max(haku_review_complete_counts.unprocessed)      AS haku_unprocessed,
+  max(hakukohde_review_complete_counts.unprocessed) AS unprocessed,
+  count(unnested_hakukohde.key)                     AS application_count
+FROM unnested_hakukohde
+  JOIN haku_counts ON haku_counts.haku = unnested_hakukohde.haku
+  JOIN haku_review_complete_counts ON haku_review_complete_counts.haku = unnested_hakukohde.haku
+  JOIN hakukohde_review_complete_counts ON hakukohde_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
+GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 
 -- name: yesql-get-direct-form-haut
 SELECT
   lf.name,
   lf.key,
-  count(a.key) AS application_count,
-  sum(CASE WHEN ar.state = 'unprocessed'
+  count(a.key)    AS application_count,
+  sum(CASE WHEN ar.state = 'active' AND (ahr.state IS NULL OR ahr.state != 'processed')
     THEN 1
-      ELSE 0 END) AS unprocessed,
-  sum(CASE WHEN ar.state IN (:incomplete_states)
-    THEN 1
-      ELSE 0 END) AS incomplete
-  FROM latest_applications AS a
-  JOIN forms AS f on f.id = a.form_id
-  JOIN latest_forms AS lf on lf.key = f.key
+      ELSE 0 END) AS unprocessed
+FROM latest_applications AS a
+  JOIN forms AS f ON f.id = a.form_id
+  JOIN latest_forms AS lf ON lf.key = f.key
   JOIN application_reviews AS ar ON a.key = ar.application_key
-  WHERE a.haku IS NULL
-    AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+  LEFT JOIN application_hakukohde_reviews AS ahr ON ahr.id = (SELECT id
+                                                              FROM application_hakukohde_reviews ahr2
+                                                              WHERE ahr2.hakukohde = 'form' AND
+                                                                    ahr2.requirement = 'processing-state' AND
+                                                                    ahr2.application_key = a.key)
+WHERE a.haku IS NULL
+      AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 GROUP BY lf.name, lf.key;
 
 -- name: yesql-add-application-feedback<!

@@ -484,7 +484,8 @@
                                   :query_type "ORGS"
                                   :authorized_organization_oids organization-oids})))
 
-(defn get-all-direct-form-haut []
+(defn get-all-direct-form-haut
+  []
   (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut
                                  {:incomplete_states incomplete-states
                                   :query_type "ALL"
