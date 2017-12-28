@@ -728,7 +728,7 @@ WITH filtered_applications AS (
     FROM filtered_applications
 ), haku_counts AS (SELECT
                      haku,
-                     count(key) as application_count
+                     count(key) AS application_count
                    FROM active_applications
                    GROUP BY haku
 ), haku_review_complete_counts AS (
@@ -744,7 +744,8 @@ WITH filtered_applications AS (
                                                                  application_hakukohde_reviews.hakukohde
                                                            LIMIT 1)
     WHERE application_hakukohde_reviews.requirement = 'processing-state' AND
-          application_hakukohde_reviews.application_key NOT IN (select key from inactive_applications)
+          application_hakukohde_reviews.application_key NOT IN (SELECT key
+                                                                FROM inactive_applications)
     GROUP BY haku
 ), hakukohde_review_complete_counts AS (
     SELECT
@@ -754,7 +755,8 @@ WITH filtered_applications AS (
           ELSE 0 END) AS unprocessed
     FROM application_hakukohde_reviews
     WHERE application_hakukohde_reviews.requirement = 'processing-state'
-          AND application_hakukohde_reviews.application_key NOT IN (select key from inactive_applications)
+          AND application_hakukohde_reviews.application_key NOT IN (SELECT key
+                                                                    FROM inactive_applications)
     GROUP BY hakukohde
 )
 SELECT
@@ -775,18 +777,18 @@ SELECT
   lf.name,
   lf.key,
   count(a.key)    AS application_count,
-  sum(CASE WHEN ar.state = 'active' and ahr.state != 'processed'
+  sum(CASE WHEN ar.state = 'active' AND (ahr.state IS NULL OR ahr.state != 'processed')
     THEN 1
       ELSE 0 END) AS unprocessed
 FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
   JOIN latest_forms AS lf ON lf.key = f.key
   JOIN application_reviews AS ar ON a.key = ar.application_key
-  JOIN application_hakukohde_reviews AS ahr ON ahr.id = (SELECT id
-                                                         FROM application_hakukohde_reviews ahr2
-                                                         WHERE ahr2.hakukohde = 'form' AND
-                                                               ahr2.requirement = 'processing-state' AND
-                                                               ahr2.application_key = a.key)
+  LEFT JOIN application_hakukohde_reviews AS ahr ON ahr.id = (SELECT id
+                                                              FROM application_hakukohde_reviews ahr2
+                                                              WHERE ahr2.hakukohde = 'form' AND
+                                                                    ahr2.requirement = 'processing-state' AND
+                                                                    ahr2.application_key = a.key)
 WHERE a.haku IS NULL
       AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 GROUP BY lf.name, lf.key;
