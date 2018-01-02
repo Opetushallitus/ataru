@@ -750,7 +750,7 @@ WITH filtered_applications AS (
 ), hakukohde_review_complete_counts AS (
     SELECT
       hakukohde,
-      sum(CASE WHEN application_hakukohde_reviews.state = 'processed'
+      sum(CASE WHEN application_hakukohde_reviews.state != 'processed'
         THEN 1
           ELSE 0 END) AS unprocessed
     FROM application_hakukohde_reviews
