@@ -118,31 +118,35 @@
            (assoc-in [:application :applications] updated-applications)
            (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
-(reg-event-db
- :application/update-sort
- (fn [db [_ column-id]]
-   (let [current-applications (get-in db [:application :applications])
-         current-sort         (get-in db [:application :sort])
-         new-order            (if (= :ascending (:order current-sort))
-                                :descending
-                                :ascending)]
-     (if (= column-id (:column current-sort))
-       (-> db
-           (update-in
+(defn- update-sort
+  [db column-id]
+  (let [current-applications (get-in db [:application :applications])
+        current-sort         (get-in db [:application :sort])
+        new-order            (if (= :ascending (:order current-sort))
+                               :descending
+                               :ascending)]
+    (if (= column-id (:column current-sort))
+      (-> db
+          (update-in
             [:application :sort]
             assoc
             :order
             new-order)
-           (assoc-in
+          (assoc-in
             [:application :applications]
             (application-sorting/sort-by-column current-applications column-id new-order)))
-       (-> db
-           (assoc-in
+      (-> db
+          (assoc-in
             [:application :sort]
             {:column column-id :order :descending})
-           (assoc-in
+          (assoc-in
             [:application :applications]
-            (application-sorting/sort-by-column current-applications column-id :descending)))))))
+            (application-sorting/sort-by-column current-applications column-id :descending))))))
+
+(reg-event-db
+ :application/update-sort
+ (fn [db [_ column-id]]
+   (update-sort db column-id)))
 
 (defn- parse-application-time
   [application]
@@ -157,7 +161,8 @@
                  (assoc-in [:application :fetching-applications] false)
                  (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
-                 (assoc-in [:application :information-request] nil))
+                 (assoc-in [:application :information-request] nil)
+                 (update-sort (:column application-sorting/initial-sort)))
           application-key (if (= 1 (count applications-with-times))
                             (-> applications-with-times first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
