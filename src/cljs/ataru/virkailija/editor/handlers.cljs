@@ -237,7 +237,9 @@
       db
       (-> db
           (update :editor dissoc :ui)
-          (assoc-in [:editor :forms key] (languages->kwd response))
+          (assoc-in [:editor :forms key] (-> response
+                                             (languages->kwd)
+                                             (update :created-time temporal/str->googdate)))
           (assoc-in [:editor :autosave]
                     (autosave/interval-loop {:subscribe-path    [:editor :forms key]
                                              :changed-predicate editor-autosave-predicate
@@ -248,6 +250,7 @@
   [form-id]
   {:http {:method :get
           :path (str "/lomake-editori/api/forms/" form-id)
+          :skip-parse-times? true
           :handler-or-dispatch :editor/handle-fetch-form}})
 
 (reg-event-fx
