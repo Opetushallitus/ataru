@@ -564,20 +564,24 @@
    :hakukohteet   hakukohde})
 
 (defn- get-external-applications
-  [haku-oid hakukohde-oid hakemus-oids]
+  [haku-oid hakukohde-oid hakemus-oids organizations]
   (->> (exec-db :db
                 yesql-applications-by-haku-and-hakukohde-oids
-                {:haku_oid       haku-oid
+                {:query_type (if (nil? organizations) "ALL" "ORGS")
+                 :authorized_organization_oids (if (nil? organizations)
+                                                 [""]
+                                                 organizations)
+                 :haku_oid                     haku-oid
                  ; Empty string to avoid empty parameter lists
-                 :hakukohde_oids (cond-> [""]
-                                         (some? hakukohde-oid)
-                                         (conj hakukohde-oid))
-                 :hakemus_oids   (cons "" hakemus-oids)})
+                 :hakukohde_oids               (cond-> [""]
+                                                       (some? hakukohde-oid)
+                                                       (conj hakukohde-oid))
+                 :hakemus_oids                 (cons "" hakemus-oids)})
        (map unwrap-external-application)))
 
 (defn applications-for-external-api
-  [haku-oid hakukohde-oid hakemus-oids]
-  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids)
+  [haku-oid hakukohde-oid hakemus-oids organization-oids]
+  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids organization-oids)
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
