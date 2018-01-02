@@ -847,7 +847,7 @@ WHERE application_key = :application_key AND state = :state AND hakukohde = :hak
 
 -- name: yesql-applications-by-haku-and-hakukohde-oids
 SELECT
-  key,
+  la.key,
   haku,
   person_oid,
   lang,
@@ -855,16 +855,19 @@ SELECT
   email,
   ssn,
   hakukohde
-FROM latest_applications
-JOIN application_reviews ON application_key = key
-WHERE person_oid IS NOT NULL
+FROM latest_applications AS la
+JOIN application_reviews as ar ON ar.application_key = la.key
+JOIN forms AS f ON la.form_id = f.id
+JOIN latest_forms AS lf ON lf.key = f.key
+WHERE (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
+  AND person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND (:haku_oid::text IS NULL OR haku = :haku_oid)
   -- Parameter list contains empty string to avoid empty lists
-  AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR key IN (:hakemus_oids))
+  AND (array_length(ARRAY[:hakemus_oids], 1) < 2 OR la.key IN (:hakemus_oids))
   AND (array_length(ARRAY[:hakukohde_oids], 1) < 2 OR ARRAY[:hakukohde_oids] && hakukohde)
   AND state <> 'inactivated'
-ORDER BY created_time DESC;
+ORDER BY la.created_time DESC;
 
 --name: yesql-applications-for-hakurekisteri
 SELECT
