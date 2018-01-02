@@ -98,10 +98,10 @@
        haku-oid
        hakukohde-oid
        hakemus-oids %)
-    #(application-store/applications-for-external-api
+    #(application-store/applications-for-external-api-unrestricted
        haku-oid
        hakukohde-oid
-       hakemus-oids %)))
+       hakemus-oids)))
 
 (defn hakurekisteri-applications [organization-service session haku-oid hakukohde-oids person-oids modified-after]
   (session-orgs/run-org-authorized

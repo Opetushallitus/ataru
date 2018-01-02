@@ -586,6 +586,12 @@
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
+(defn applications-for-external-api-unrestricted
+  [haku-oid hakukohde-oid hakemus-oids]
+  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids nil)
+        payment-obligations (when (not-empty applications)
+                              (payment-obligations-for-applications (map :oid applications)))]
+    (map #(payment-obligation-to-application % payment-obligations) applications)))
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
   {key person_oid})
