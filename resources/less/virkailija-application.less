@@ -259,6 +259,11 @@ and (max-width: 1000px) {
   overflow-x: visible;
 }
 
+.application-handling__list-row--inactivated {
+  filter: grayscale(100%) opacity(55%);
+  background-color: @light-gray;
+}
+
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
   border-radius: 3px;
   background-color: @application-form-list-background-color;

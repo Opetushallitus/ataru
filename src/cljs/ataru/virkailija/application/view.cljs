@@ -352,16 +352,18 @@
         application-hakukohde-oids))))
 
 (defn application-list-row [application selected?]
-  (let [day-date-time           (clojure.string/split (t/time->str (:created-time application)) #"\s")
-        day                     (first day-date-time)
-        date-time               (->> day-date-time (rest) (clojure.string/join " "))
-        applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
-        hakukohteet             (subscribe [:state-query [:application :hakukohteet]])
-        selected-hakukohde      (subscribe [:state-query [:application :selected-review-hakukohde]])]
+  (let [day-date-time      (clojure.string/split (t/time->str (:created-time application)) #"\s")
+        day                (first day-date-time)
+        date-time          (->> day-date-time (rest) (clojure.string/join " "))
+        applicant          (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
+        hakukohteet        (subscribe [:state-query [:application :hakukohteet]])
+        selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application))
-      :class    (when selected?
-                  "application-handling__list-row--selected")}
+      :class    (clojure.string/join " " [(when selected?
+                                            "application-handling__list-row--selected")
+                                          (when (= "inactivated" (:state application))
+                                            "application-handling__list-row--inactivated")])}
      [:div.application-handling__list-row-person-info
       [:span.application-handling__list-row--applicant
        (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
