@@ -19,7 +19,8 @@
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
     [ataru.cljs-util :as cljs-util]
-    [medley.core :refer [find-first]]))
+    [medley.core :refer [find-first]]
+    [ataru.virkailija.temporal :as temporal]))
 
 (defn- icon-check []
   [:img.application-handling__review-state-selected-icon
@@ -774,8 +775,6 @@
       :else
       maybe-number)))
 
-(def date-format (f/formatter "d.M.yyyy HH:mm" "Europe/Helsinki"))
-
 (defn- application-review-note-input []
   (let [input-value     (subscribe [:state-query [:application :review-comment]])
         review-notes    (subscribe [:state-query [:application :review-notes]])
@@ -805,7 +804,7 @@
                                      (str (:first-name @note) " " (:last-name @note))
                                      "Virkailija ei tiedossa"))
         created-time     (reaction (when-let [created-time (:created-time @note)]
-                                     (f/unparse-local date-format created-time)))
+                                     (temporal/time->short-str created-time)))
         notes            (reaction (:notes @note))
         animated?        (reaction (:animated? @note))
         remove-disabled? (reaction (or (-> @note :state some?)

@@ -11,12 +11,6 @@
 (def days-finnish
   ["Su" "Ma" "Ti" "Ke" "To" "Pe" "La"])
 
-(def months-finnish
-  ["Tammikuu" "Helmikuu" "Maaliskuu" "Huhtikuu" "Toukokuu" "Kesäkuu" "Heinäkuu" "Elokuu" "Syyskuu" "Lokakuu" "Marraskuu" "Joulukuu"])
-
-(defn dow->dayname [dow]
-  (days-finnish dow))
-
 (defn with-dow [google-date]
   (days-finnish (.getDay (c/to-default-time-zone google-date))))
 
@@ -29,15 +23,6 @@
                   nil)))
        (filter some?)
        first))
-
-(defn coerce-timestamp [kw]
-  (fn [element]
-    (update-in element [kw] str->googdate)))
-
-(defn time->iso-str [t]
-  (->> t
-       c/to-default-time-zone
-       (f/unparse (f/formatters :date-time))))
 
 (defn time->short-str [google-date]
   (->> google-date
