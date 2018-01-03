@@ -56,15 +56,22 @@
      (get-in db [:application :selected-form-key])))))
 
 (defn filter-haku-seq [haku-seq compare-fn]
-  (filter #(compare-fn (:unprocessed %) 0) haku-seq))
+  (filter #(compare-fn (:processed %) 0) haku-seq))
 
-(defn filter-haut-by-unprocessed-compared-to-zero [haut compare-fn]
-  (-> haut
-      (assoc :direct-form-haut (filter-haku-seq (:direct-form-haut haut) compare-fn))
-      (assoc :tarjonta-haut (filter-haku-seq (:tarjonta-haut haut) compare-fn))))
+(defn- haku-completely-processed?
+  [haku]
+  (= (:processed haku) (:application-count haku)))
+
+(defn- filter-haut-all-not-processed [haut]
+  {:direct-form-haut (remove haku-completely-processed? (:direct-form-haut haut))
+   :tarjonta-haut (remove haku-completely-processed? (:tarjonta-haut haut))})
+
+(defn- filter-haut-all-processed [haut]
+  {:direct-form-haut (filter haku-completely-processed? (:direct-form-haut haut))
+   :tarjonta-haut (filter haku-completely-processed? (:tarjonta-haut haut))})
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
-  (sort-by :unprocessed #(compare %2 %1) haku-seq))
+  (sort-by :processed #(compare %1 %2) haku-seq))
 
 (defn sort-haku-seq-by-name [haku-seq]
   (sort-by (fn [haku]
@@ -98,7 +105,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut-by-unprocessed-compared-to-zero >)
+            (filter-haut-all-not-processed)
             (sort-haut sort-haku-seq-by-unprocessed)))))
 
 (re-frame/reg-sub
@@ -107,7 +114,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut-by-unprocessed-compared-to-zero >)
+            (filter-haut-all-not-processed)
             count-haut))))
 
 (re-frame/reg-sub
@@ -117,7 +124,7 @@
        db
        #(->
          %
-         (filter-haut-by-unprocessed-compared-to-zero =)
+         (filter-haut-all-processed)
          (sort-haut sort-haku-seq-by-name)))))
 
 (re-frame/reg-sub
@@ -126,7 +133,7 @@
    (when-haut
        db
        #(-> %
-            (filter-haut-by-unprocessed-compared-to-zero =)
+            (filter-haut-all-processed)
             count-haut))))
 
 (re-frame/reg-sub

@@ -711,14 +711,6 @@ WITH filtered_applications AS (
       JOIN application_reviews AS ar ON a.key = ar.application_key
     WHERE a.haku IS NOT NULL
           AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
-), active_applications AS (
-    SELECT *
-    FROM filtered_applications
-    WHERE state = 'active'
-), inactive_applications AS (
-    SELECT *
-    FROM filtered_applications
-    WHERE state != 'active'
 ), unnested_hakukohde AS (
     SELECT
       key,
@@ -729,47 +721,40 @@ WITH filtered_applications AS (
 ), haku_counts AS (SELECT
                      haku,
                      count(key) AS application_count
-                   FROM active_applications
+                   FROM filtered_applications
                    GROUP BY haku
 ), haku_review_complete_counts AS (
     SELECT
       haku,
-      sum(CASE WHEN application_hakukohde_reviews.state != 'processed'
-        THEN 1
-          ELSE 0 END) AS unprocessed
-    FROM application_hakukohde_reviews
-      JOIN unnested_hakukohde ON unnested_hakukohde.key = (SELECT key
-                                                           FROM unnested_hakukohde
-                                                           WHERE unnested_hakukohde.hakukohde =
-                                                                 application_hakukohde_reviews.hakukohde
-                                                           LIMIT 1)
-    WHERE application_hakukohde_reviews.requirement = 'processing-state' AND
-          application_hakukohde_reviews.application_key NOT IN (SELECT key
-                                                                FROM inactive_applications)
+      count(key) AS processed
+    FROM unnested_hakukohde
+      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
+    WHERE
+      (application_hakukohde_reviews.state = 'processed' AND application_hakukohde_reviews.requirement = 'processing-state')
+      OR unnested_hakukohde.state = 'inactivated'
     GROUP BY haku
 ), hakukohde_review_complete_counts AS (
     SELECT
-      hakukohde,
-      sum(CASE WHEN application_hakukohde_reviews.state != 'processed'
-        THEN 1
-          ELSE 0 END) AS unprocessed
-    FROM application_hakukohde_reviews
-    WHERE application_hakukohde_reviews.requirement = 'processing-state'
-          AND application_hakukohde_reviews.application_key NOT IN (SELECT key
-                                                                    FROM inactive_applications)
-    GROUP BY hakukohde
+      unnested_hakukohde.hakukohde,
+      count(key) AS processed
+    FROM unnested_hakukohde
+      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
+    WHERE
+      (application_hakukohde_reviews.state = 'processed' AND application_hakukohde_reviews.requirement = 'processing-state')
+      OR unnested_hakukohde.state = 'inactivated'
+    GROUP BY unnested_hakukohde.hakukohde
 )
 SELECT
   unnested_hakukohde.haku,
   unnested_hakukohde.hakukohde,
-  max(haku_counts.application_count)                AS haku_application_count,
-  max(haku_review_complete_counts.unprocessed)      AS haku_unprocessed,
-  max(hakukohde_review_complete_counts.unprocessed) AS unprocessed,
-  count(unnested_hakukohde.key)                     AS application_count
+  max(haku_counts.application_count)                             AS haku_application_count,
+  count(unnested_hakukohde.key)                                  AS application_count,
+  coalesce(max(haku_review_complete_counts.processed), 0)        AS haku_processed,
+  coalesce(max(hakukohde_review_complete_counts.processed), 0)   AS processed
 FROM unnested_hakukohde
   JOIN haku_counts ON haku_counts.haku = unnested_hakukohde.haku
-  JOIN haku_review_complete_counts ON haku_review_complete_counts.haku = unnested_hakukohde.haku
-  JOIN hakukohde_review_complete_counts ON hakukohde_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
+  LEFT JOIN haku_review_complete_counts ON haku_review_complete_counts.haku = unnested_hakukohde.haku
+  LEFT JOIN hakukohde_review_complete_counts ON hakukohde_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
 GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 
 -- name: yesql-get-direct-form-haut
@@ -777,9 +762,9 @@ SELECT
   lf.name,
   lf.key,
   count(a.key)    AS application_count,
-  sum(CASE WHEN ar.state = 'active' AND (ahr.state IS NULL OR ahr.state != 'processed')
+  sum(CASE WHEN ar.state = 'inactivated' OR ahr.state = 'processed'
     THEN 1
-      ELSE 0 END) AS unprocessed
+      ELSE 0 END) AS processed
 FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
   JOIN latest_forms AS lf ON lf.key = f.key
