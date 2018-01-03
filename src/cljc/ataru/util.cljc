@@ -132,10 +132,8 @@
 (defn not-blank? [s]
   (not (clojure.string/blank? s)))
 
-(defn application-not-in-processing? [application-hakukohde-reviews]
-  (not-empty
-    (filter
-      #(and
-        (= "processing-state" (:requirement %))
-        (contains? #{"unprocessed" "information-request"} (:state %)))
-      application-hakukohde-reviews)))
+(defn application-in-processing? [application-hakukohde-reviews]
+  (some #(and (= "processing-state" (:requirement %))
+              (not (contains? #{"unprocessed" "information-request"}
+                              (:state %))))
+        application-hakukohde-reviews))

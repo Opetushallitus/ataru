@@ -170,7 +170,7 @@
 (defn application-processing-jatkuva-haku? [application hakuaika]
   (when-let [application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (and (:jatkuva-haku? hakuaika)
-         (util/application-not-in-processing? application-hakukohde-reviews))))
+         (util/application-in-processing? application-hakukohde-reviews))))
 
 (defn applying-possible? [form application]
   (get-in form [:tarjonta :hakuaika-dates :on] true))

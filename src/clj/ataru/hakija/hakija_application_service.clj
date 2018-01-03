@@ -66,7 +66,7 @@
   [application-key hakuaika]
   (when-let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
     (and (:jatkuva-haku? hakuaika)
-         (util/application-not-in-processing? application-hakukohde-reviews))))
+         (util/application-in-processing? application-hakukohde-reviews))))
 
 (defn- editing-allowed-by-hakuaika?
   [answer application hakuaika]
