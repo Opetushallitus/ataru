@@ -119,12 +119,14 @@
            (assoc-in [:application :review-state-counts] (review-state-counts updated-applications)))))))
 
 (defn- update-sort
-  [db column-id]
+  [db column-id swap-order?]
   (let [current-applications (get-in db [:application :applications])
         current-sort         (get-in db [:application :sort])
-        new-order            (if (= :ascending (:order current-sort))
-                               :descending
-                               :ascending)]
+        new-order            (if swap-order?
+                               (if (= :ascending (:order current-sort))
+                                 :descending
+                                 :ascending)
+                               (:order current-sort))]
     (if (= column-id (:column current-sort))
       (-> db
           (update-in
@@ -146,7 +148,7 @@
 (reg-event-db
  :application/update-sort
  (fn [db [_ column-id]]
-   (update-sort db column-id)))
+   (update-sort db column-id true)))
 
 (defn- parse-application-time
   [application]
@@ -162,7 +164,7 @@
                  (assoc-in [:application :review-state-counts] (review-state-counts applications-with-times))
                  (assoc-in [:application :sort] application-sorting/initial-sort)
                  (assoc-in [:application :information-request] nil)
-                 (update-sort (:column application-sorting/initial-sort)))
+                 (update-sort (:column application-sorting/initial-sort) false))
           application-key (if (= 1 (count applications-with-times))
                             (-> applications-with-times first :key)
                             (when-let [query-key (:application-key (cljs-util/extract-query-params))]
