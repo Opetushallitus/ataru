@@ -259,7 +259,7 @@
    :hakuOid            s/Str
    :henkiloOid         s/Str
    :asiointikieli      s/Str
-   :hakukohteet        [s/Str]
+   :hakutoiveet        {s/Str {s/Str s/Str}}
    :email              (s/maybe s/Str)
    :paymentObligations {s/Str s/Str}})
 

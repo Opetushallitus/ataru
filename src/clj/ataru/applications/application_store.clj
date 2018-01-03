@@ -555,14 +555,25 @@
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
+(defn- requirement-names-mapped-to-states
+  [requirements]
+  (reduce (fn [acc requirement]
+            (assoc acc (:requirement requirement) (:state requirement)))
+          {}
+          requirements))
+
 (defn- unwrap-external-application
-  [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
+  [{:keys [key haku person_oid lang email] :as application}]
   {:oid           key
    :hakuOid       haku
    :henkiloOid    person_oid
    :asiointikieli lang
    :email         email
-   :hakukohteet   hakukohde})
+   :hakutoiveet   (->> (application-states/get-all-reviews-for-all-requirements application nil)
+                       (group-by :hakukohde)
+                       (reduce (fn [acc [hakukohde-oid requirements]]
+                                 (assoc acc hakukohde-oid (requirement-names-mapped-to-states requirements)))
+                               {}))})
 
 (defn- get-external-applications
   [haku-oid hakukohde-oid hakemus-oids organizations]
