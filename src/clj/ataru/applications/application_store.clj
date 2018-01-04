@@ -7,7 +7,7 @@
             [ataru.virkailija.authentication.virkailija-edit]
             [ataru.util :refer [answers-by-key]]
             [ataru.application.review-states :as application-review-states]
-            [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword]]
+            [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as time]
             [clj-time.format :as f]
@@ -555,16 +555,40 @@
                               (payment-obligations-for-applications (map :oid applications)))]
     (map #(payment-obligation-to-application % payment-obligations) applications)))
 
+(defn- requirement-names-mapped-to-states
+  [requirements]
+  (reduce (fn [acc requirement]
+            (assoc acc (-> requirement :requirement keyword ->camelCase) (:state requirement)))
+          {}
+          requirements))
+
+(defn- requirement-names-mapped-to-states-by-hakukohde
+  [requirements-by-hakukohde]
+  (reduce (fn [acc [hakukohde-oid requirements]]
+            (assoc acc hakukohde-oid (requirement-names-mapped-to-states requirements)))
+          {}
+          requirements-by-hakukohde))
+
+(defn- hakutoiveet-to-list
+  [hakutoiveet]
+  (map (fn [[hakukohde-oid requirements]]
+         (merge (dissoc requirements :languageRequirement :selectionState :degreeRequirement)
+                {:hakukohdeOid hakukohde-oid}))
+       hakutoiveet))
+
 (defn- unwrap-external-application
-  [{:keys [key haku person_oid lang preferred_name email ssn hakukohde]}]
+  [{:keys [key haku person_oid lang email] :as application}]
   {:oid           key
    :hakuOid       haku
    :henkiloOid    person_oid
    :asiointikieli lang
    :email         email
-   :hakukohteet   hakukohde})
+   :hakutoiveet   (->> (application-states/get-all-reviews-for-all-requirements application nil)
+                       (group-by :hakukohde)
+                       (requirement-names-mapped-to-states-by-hakukohde)
+                       (hakutoiveet-to-list))})
 
-(defn- get-external-applications
+(defn get-external-applications
   [haku-oid hakukohde-oid hakemus-oids organizations]
   (->> (exec-db :db
                 yesql-applications-by-haku-and-hakukohde-oids
@@ -580,19 +604,6 @@
                  :hakemus_oids                 (cons "" hakemus-oids)})
        (map unwrap-external-application)))
 
-(defn applications-for-external-api
-  [haku-oid hakukohde-oid hakemus-oids organization-oids]
-  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids organization-oids)
-        payment-obligations (when (not-empty applications)
-                              (payment-obligations-for-applications (map :oid applications)))]
-    (map #(payment-obligation-to-application % payment-obligations) applications)))
-
-(defn applications-for-external-api-unrestricted
-  [haku-oid hakukohde-oid hakemus-oids]
-  (let [applications        (get-external-applications haku-oid hakukohde-oid hakemus-oids nil)
-        payment-obligations (when (not-empty applications)
-                              (payment-obligations-for-applications (map :oid applications)))]
-    (map #(payment-obligation-to-application % payment-obligations) applications)))
 (defn- unwrap-person-and-hakemus-oid
   [{:keys [key person_oid]}]
   {key person_oid})
