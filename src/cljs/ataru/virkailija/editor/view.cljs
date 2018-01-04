@@ -87,26 +87,24 @@
    [:h1.editor-form__form-heading "Lomakkeet"]
    [form-controls]])
 
-(defn editor-name []
-  (let [form              (subscribe [:editor/selected-form])
-        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
-        form-name         (reaction (:name @form))]
+(defn- editor-name []
+  (let [form (subscribe [:editor/selected-form])
+        new-form-created? (subscribe [:state-query [:editor :new-form-created?]])]
     (r/create-class
-      {:display-name        "editor-name"
-       :component-did-mount (fn [element]
+     {:component-did-update (fn [this]
                               (when @new-form-created?
                                 (do
-                                  (doto (r/dom-node element)
-                                    (.focus)
-                                    (.select))
-                                  (dispatch [:set-state [:editor :new-form-created?] false]))))
-       :reagent-render      (fn []
-                              [:input.editor-form__form-name-input
-                               {:key           (str "editor-name-" (:key @form)) ; needed to trigger component-did-update
-                                :type          "text"
-                                :default-value @form-name
-                                :placeholder   "Lomakkeen nimi"
-                                :on-change     #(dispatch [:editor/change-form-name (.-value (.-target %))])}])})))
+                                  (.focus (r/dom-node this))
+                                  (.select (r/dom-node this)))))
+      :reagent-render (fn []
+                        [:input.editor-form__form-name-input
+                         {:key           (str "editor-name-" (:key @form))
+                          :type          "text"
+                          :default-value (:name @form)
+                          :placeholder   "Lomakkeen nimi"
+                          :on-change     #(do (dispatch [:editor/change-form-name (.-value (.-target %))])
+                                              (dispatch [:set-state [:editor :new-form-created?] false]))
+                          :on-blur       #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
 
 (def ^:private lang-versions
   {:fi "Suomi"
