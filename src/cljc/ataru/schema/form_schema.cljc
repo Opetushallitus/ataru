@@ -254,12 +254,18 @@
    :email s/Str
    :hakukohteet [s/Str]})
 
+(s/defschema Hakutoive
+  {:processingState   s/Str
+   :eligibilityState  s/Str
+   :paymentObligation s/Str
+   :hakukohdeOid      s/Str})
+
 (s/defschema VtsApplication
   {:oid                s/Str ; (:key application)
    :hakuOid            s/Str
    :henkiloOid         s/Str
    :asiointikieli      s/Str
-   :hakutoiveet        [{s/Keyword s/Str}]
+   :hakutoiveet        [Hakutoive]
    :email              (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplication
