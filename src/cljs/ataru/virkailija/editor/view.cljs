@@ -87,24 +87,36 @@
    [:h1.editor-form__form-heading "Lomakkeet"]
    [form-controls]])
 
-(defn- editor-name []
+(defn- editor-name-input [lang focus? lang-tag?]
   (let [form (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])]
     (r/create-class
      {:component-did-update (fn [this]
-                              (when @new-form-created?
+                              (when (and focus? @new-form-created?)
                                 (do
                                   (.focus (r/dom-node this))
                                   (.select (r/dom-node this)))))
-      :reagent-render (fn []
-                        [:input.editor-form__form-name-input
-                         {:key           (str "editor-name-" (:key @form))
-                          :type          "text"
-                          :default-value (:name @form)
-                          :placeholder   "Lomakkeen nimi"
-                          :on-change     #(do (dispatch [:editor/change-form-name (.-value (.-target %))])
-                                              (dispatch [:set-state [:editor :new-form-created?] false]))
-                          :on-blur       #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
+      :reagent-render (fn [lang focus? lang-tag?]
+                        [:div.editor-form__form-name-input-wrapper
+                         [:input.editor-form__form-name-input
+                          {:type        "text"
+                           :value       (:name @form)
+                           :placeholder "Lomakkeen nimi"
+                           :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
+                                             (dispatch [:set-state [:editor :new-form-created?] false]))
+                           :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}]
+                         (when lang-tag?
+                           [:div.editor-form__form-name-input-lang
+                            (clojure.string/upper-case (name lang))])])})))
+
+(defn- editor-name []
+  (let [[l & ls] @(subscribe [:editor/languages])]
+    [:div
+     ^{:key (str "editor-name-" l)}
+     [editor-name-input l true (not-empty ls)]
+     (doall (for [l ls]
+              ^{:key (str "editor-name-" l)}
+              [editor-name-input l false true]))]))
 
 (def ^:private lang-versions
   {:fi "Suomi"

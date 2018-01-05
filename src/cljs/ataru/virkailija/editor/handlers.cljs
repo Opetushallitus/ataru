@@ -370,7 +370,7 @@
 
 (reg-event-db
   :editor/change-form-name
-  (fn [db [_ new-form-name]]
+  (fn [db [_ lang new-form-name]]
     (with-form-key [db selected-form-key]
       (update-in db [:editor :forms selected-form-key]
                  assoc :name

@@ -379,16 +379,32 @@
   margin-right: 20px;
 }
 
-.editor-form__form-name-input {
-  font-family: @input-font;
-  font-size: 24px;
-  padding: 8px 12px 11px 13px;
+.editor-form__form-name-input-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   width: 100%;
   background-image: linear-gradient(-180deg, #f0f0f0  0%, #FFFFFF  9%);
   border: 1px solid #C1C1C1;
   border-radius: 2px;
+  padding: 8px 12px 11px 13px;
   margin: 10px 0 5px 0;
+}
+
+.editor-form__form-name-input {
+  flex: auto;
+  font-family: @input-font;
+  font-size: 24px;
   .semibold;
+  border: 0;
+}
+
+.editor-form__form-name-input-lang {
+  display: flex;
+  justify-content: flex-end;
+  flex: none;
+  color: @blue-text-color;
+  font-size: 20px;
 }
 
 .editor-form__section_wrapper {
