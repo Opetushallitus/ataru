@@ -839,7 +839,12 @@ SELECT
   preferred_name,
   email,
   ssn,
-  hakukohde
+  hakukohde,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = la.key) AS application_hakukohde_reviews
 FROM latest_applications AS la
 JOIN application_reviews as ar ON ar.application_key = la.key
 JOIN forms AS f ON la.form_id = f.id

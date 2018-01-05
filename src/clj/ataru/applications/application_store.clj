@@ -583,7 +583,10 @@
    :henkiloOid    person_oid
    :asiointikieli lang
    :email         email
-   :hakutoiveet   (->> (application-states/get-all-reviews-for-all-requirements application nil)
+   :hakutoiveet   (->> (application-states/get-all-reviews-for-all-requirements
+                        (clojure.set/rename-keys application
+                                                 {:application_hakukohde_reviews :application-hakukohde-reviews})
+                        nil)
                        (group-by :hakukohde)
                        (requirement-names-mapped-to-states-by-hakukohde)
                        (hakutoiveet-to-list))})

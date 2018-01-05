@@ -29,8 +29,8 @@
                                     (name))]
     (into relevant-states (map
                             (fn [oid] {:requirement review-requirement-name
-                                       :hakukohde   oid
-                                       :state       default-state-name})
+                                       :state       default-state-name
+                                       :hakukohde   oid})
                             unreviewed-targets))))
 
 (defn get-all-reviews-for-all-requirements
