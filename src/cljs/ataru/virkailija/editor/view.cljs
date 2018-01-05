@@ -14,7 +14,8 @@
   [:a.editor-form__row
    {:class (when selected? "editor-form__selected-row")
     :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" (:key form)))}
-   [:span.editor-form__list-form-name (:name form)]
+   [:span.editor-form__list-form-name (some #(get-in form [:name %])
+                                            [:fi :sv :en])]
    [:span.editor-form__list-form-time (time->str (:created-time form))]
    [:span.editor-form__list-form-editor (:created-by form)]
    (when (< 0 used-in-haku-count)
@@ -87,7 +88,7 @@
    [:h1.editor-form__form-heading "Lomakkeet"]
    [form-controls]])
 
-(defn- editor-name-input [lang focus? lang-tag?]
+(defn- editor-name-input [lang focus?]
   (let [form (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])]
     (r/create-class
@@ -96,27 +97,30 @@
                                 (do
                                   (.focus (r/dom-node this))
                                   (.select (r/dom-node this)))))
-      :reagent-render (fn [lang focus? lang-tag?]
-                        [:div.editor-form__form-name-input-wrapper
-                         [:input.editor-form__form-name-input
-                          {:type        "text"
-                           :value       (:name @form)
-                           :placeholder "Lomakkeen nimi"
-                           :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
-                                             (dispatch [:set-state [:editor :new-form-created?] false]))
-                           :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}]
-                         (when lang-tag?
-                           [:div.editor-form__form-name-input-lang
-                            (clojure.string/upper-case (name lang))])])})))
+      :reagent-render (fn [lang focus?]
+                        [:input.editor-form__form-name-input
+                         {:type        "text"
+                          :value       (get-in @form [:name lang])
+                          :placeholder "Lomakkeen nimi"
+                          :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
+                                            (dispatch [:set-state [:editor :new-form-created?] false]))
+                          :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
+
+(defn- editor-name-wrapper [lang focus? lang-tag?]
+  [:div.editor-form__form-name-input-wrapper
+   [editor-name-input lang focus?]
+   (when lang-tag?
+     [:div.editor-form__form-name-input-lang
+      (clojure.string/upper-case (name lang))])])
 
 (defn- editor-name []
   (let [[l & ls] @(subscribe [:editor/languages])]
     [:div
      ^{:key (str "editor-name-" l)}
-     [editor-name-input l true (not-empty ls)]
+     [editor-name-wrapper l true (not-empty ls)]
      (doall (for [l ls]
               ^{:key (str "editor-name-" l)}
-              [editor-name-input l false true]))]))
+              [editor-name-wrapper l false true]))]))
 
 (def ^:private lang-versions
   {:fi "Suomi"

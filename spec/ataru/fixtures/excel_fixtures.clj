@@ -3,7 +3,7 @@
 
 (def form {:id           123
            :key          "form_123_key"
-           :name         "Form name"
+           :name         {:fi "Form name"}
            :created-by   "SEPPO PAPUNEN"
            :created-time (c/date-time 2016 6 14 12 34 56)
            :content      [{:id       "form_field_0"
@@ -19,7 +19,7 @@
 
 (def form-for-hakukohde {:id           321
                          :key          "form_321_key"
-                         :name         "Form name"
+                         :name         {:fi "Form name"}
                          :created-by   "IRMELI KUIKELOINEN"
                          :created-time (c/date-time 2016 6 14 12 34 56)
                          :content      [{:id       "form_field_1"
@@ -39,7 +39,7 @@
                            :created-time (c/date-time 2016 6 15 12 34 56)
                            :state        "active"
                            :form         123
-                           :name         "Standalone form"
+                           :name         {:fi "Standalone form"}
                            :lang         "fi"
                            :application-hakukohde-reviews [{:requirement "language-requirement" :state "unreviewed" :hakukohde "form"}
                                                            {:requirement "degree-requirement" :state "fulfilled" :hakukohde "form"}
@@ -62,7 +62,7 @@
                                 :created-time   (c/date-time 2016 6 15 12 34 56)
                                 :state          "active"
                                 :form           321
-                                :name           "Form with hakukohde and haku"
+                                :name           {:fi "Form with hakukohde and haku"}
                                 :lang           "fi"
                                 :hakukohde      ["hakukohde.oid"]
                                 :haku           "haku.oid"

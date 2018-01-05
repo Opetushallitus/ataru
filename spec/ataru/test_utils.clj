@@ -46,7 +46,7 @@
 (defn get-latest-form
   [form-name]
   (if-let [form (->> (form-store/get-all-forms)
-                     (filter #(= (:name %) form-name))
+                     (filter #(= (-> % :name :fi) form-name))
                      (first))]
     form
     (insert-test-form form-name)))

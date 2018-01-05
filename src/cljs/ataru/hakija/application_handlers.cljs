@@ -922,12 +922,13 @@
 (reg-event-fx
   :application/rating-feedback-submit
   (fn [{:keys [db]}]
-    (let [new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
+    (let [lang-kw   (keyword (-> db :form :selected-language))
+          new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
           feedback  (-> db :application :feedback)
           text      (:text feedback)
           post-data {:form-key   (-> db :form :key)
                      :form-id    (-> db :form :id)
-                     :form-name  (-> db :form :name)
+                     :form-name  (-> db :form :name lang-kw)
                      :user-agent (.-userAgent js/navigator)
                      :rating     (:stars feedback)
                      :feedback   (when text
@@ -949,7 +950,7 @@
           title-prefix  (util/get-translation :page-title)
           title-suffix  (or
                           (lang-kw (-> db :form :tarjonta :haku-name))
-                          (-> db :form :name))]
+                          (-> db :form :name lang-kw))]
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
 

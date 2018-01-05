@@ -139,6 +139,6 @@ SELECT
 FROM forms f
   JOIN latest_forms lf ON f.id = lf.max_id
 WHERE (f.deleted IS NULL OR f.deleted = FALSE)
-      AND f.name = :form_name
+      AND f.name->>'fi' = :form_name
 ORDER BY created_time DESC
 LIMIT 1;

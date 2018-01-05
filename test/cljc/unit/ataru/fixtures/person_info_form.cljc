@@ -2,7 +2,7 @@
 
 (def form
   {:id         866,
-   :name       "Uusi lomake torstainaaaaaaa",
+   :name       {:fi "Uusi lomake torstainaaaaaaa"},
    :created-by "DEVELOPER",
    :content
                [{:id              "1e350fce-aee4-4bde-a47e-1d2eabd49b1b",

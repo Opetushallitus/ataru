@@ -45,12 +45,6 @@
     (.println System/err (:err results))
     (should= 0 (:exit results))))
 
-(defn- get-latest-form
-  [form-name]
-  (->> (form-store/get-all-forms)
-       (filter #(= (:name %) form-name))
-       (first)))
-
 (describe "Ataru UI tests /"
   (tags :ui)
   (around-all [specs]

@@ -8,7 +8,7 @@
 
 (def form1
   {:id 37,
-   :name "uusi lomake",
+   :name {:fi "uusi lomake"},
    :created-time "x",
    :created-by "DEVELOPER",
    :content [{:id "G__1",
@@ -35,7 +35,7 @@
 
 (def person-info-form
   {:id 22,
-   :name "Testilomake",
+   :name {:fi "Testilomake"},
    :created-by "DEVELOPER",
    :created-time "2016-07-15T13:48:17.815+03:00",
    :content
@@ -181,7 +181,7 @@
 
 (def form2
   {:id 38,
-   :name "toinen lomake",
+   :name {:fi "toinen lomake"},
    :created-time "y",
    :created-by "DEVELOPER",
    :content [{:id "w1",
