@@ -320,31 +320,34 @@
        [remove-question-group-button field-descriptor idx])]))
 
 (defn question-group [field-descriptor children]
-  (let [row-count (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
+  (let [row-count    (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
         cannot-edit? (->> children
                           (map (fn [child]
                                  @(subscribe [:application/cannot-edit-answer?
                                               (keyword (:id child))])))
-                          (some identity))]
-    [:div.application__question-group
-     [scroll-to-anchor field-descriptor]
-     [:div
-      (doall
-       (for [idx (range (or @row-count 1))]
-         ^{:key (str "question-group-row-" idx)}
-         [question-group-row
-          field-descriptor
-          children
-          idx
-          (and (< 1 @row-count) (not cannot-edit?))]))]
-     (when (not cannot-edit?)
-       [:div.application__add-question-group-row
-        [:a {:href     "#"
-             :on-click (fn add-question-group-row [event]
-                         (.preventDefault event)
-                         (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
-         [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         (get-translation :add-more-button)]])]))
+                          (some identity))
+        hakukohteet  (subscribe [:application/selected-hakukohteet])]
+    (when (and (not-empty children)
+               (util/group-has-visible-fields? children @hakukohteet))
+      [:div.application__question-group
+       [scroll-to-anchor field-descriptor]
+       [:div
+        (doall
+          (for [idx (range (or @row-count 1))]
+            ^{:key (str "question-group-row-" idx)}
+            [question-group-row
+             field-descriptor
+             children
+             idx
+             (and (< 1 @row-count) (not cannot-edit?))]))]
+       (when (not cannot-edit?)
+         [:div.application__add-question-group-row
+          [:a {:href     "#"
+               :on-click (fn add-question-group-row [event]
+                           (.preventDefault event)
+                           (dispatch [:application/add-question-group-row (:id field-descriptor)]))}
+           [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+           (get-translation :add-more-button)]])])))
 
 (defn row-wrapper [children]
   (into [:div.application__row-field-wrapper]
