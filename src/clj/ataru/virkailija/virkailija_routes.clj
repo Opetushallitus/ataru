@@ -83,6 +83,9 @@
                 json-generator
                 (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
 
+(require '[ring.swagger.json-schema :as json-schema])
+(defmethod json-schema/convert-class ZonedDateTime [_ _] {:type "string"})
+
 (defn render-virkailija-page
   []
   (let [config (json/generate-string (or (:public-config config) {}))]
