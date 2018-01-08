@@ -55,9 +55,6 @@
      (get-in db [:application :selected-hakukohde])
      (get-in db [:application :selected-form-key])))))
 
-(defn filter-haku-seq [haku-seq compare-fn]
-  (filter #(compare-fn (:processed %) 0) haku-seq))
-
 (defn- haku-completely-processed?
   [haku]
   (= (:processed haku) (:application-count haku)))
@@ -71,7 +68,12 @@
    :tarjonta-haut (filter haku-completely-processed? (:tarjonta-haut haut))})
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
-  (sort-by :processed #(compare %1 %2) haku-seq))
+  (sort
+    (fn [a b]
+      (-
+        (- (:application-count b) (:processed b))
+        (- (:application-count a) (:processed a))))
+    haku-seq))
 
 (defn sort-haku-seq-by-name [haku-seq]
   (sort-by (fn [haku]
