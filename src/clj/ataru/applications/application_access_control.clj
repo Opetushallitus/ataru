@@ -1,10 +1,11 @@
 (ns ataru.applications.application-access-control
   (:require
-   [ataru.virkailija.user.session-organizations :as session-orgs]
-   [ataru.forms.form-access-control :as form-access-control]
-   [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.odw.odw-service :as odw-service]))
+    [ataru.virkailija.user.session-organizations :as session-orgs]
+    [ataru.forms.form-access-control :as form-access-control]
+    [ataru.applications.application-store :as application-store]
+    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.odw.odw-service :as odw-service]
+    [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]))
 
 (defn check-form-access [form-key session organization-service rights]
   (when-not
@@ -33,14 +34,32 @@
    #(hash-map :applications (application-store/get-application-list-by-hakukohde hakukohde-oid %))
    #(hash-map :applications (application-store/get-full-application-list-by-hakukohde hakukohde-oid))))
 
-(defn get-application-list-by-haku [haku-oid session organization-service]
+(defn get-application-list-by-haku [haku-oid
+                                    session
+                                    organization-service
+                                    tarjonta-service
+                                    ohjausparametrit-service]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    empty-applications-result-fn
-   #(hash-map :applications (application-store/get-application-list-by-haku haku-oid %))
-   #(hash-map :applications (application-store/get-full-application-list-by-haku haku-oid))))
+   #(->> (application-store/get-application-list-by-haku haku-oid %)
+         (map (fn [application]
+                (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service
+                                                                                 ohjausparametrit-service
+                                                                                 (:haku application)
+                                                                                 (:hakukohde application))]
+                  (merge application tarjonta-info))))
+         (hash-map :applications))
+   #(->> (application-store/get-full-application-list-by-haku haku-oid)
+         (map (fn [application]
+                (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service
+                                                                                 ohjausparametrit-service
+                                                                                 (:haku application)
+                                                                                 (:hakukohde application))]
+                  (merge application tarjonta-info))))
+         (hash-map :applications))))
 
 (defn get-application-list-by-ssn [ssn session organization-service]
   (session-orgs/run-org-authorized

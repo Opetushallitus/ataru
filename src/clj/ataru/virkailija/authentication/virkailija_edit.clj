@@ -14,10 +14,11 @@
 
 (defn upsert-virkailija
   [session]
-  (when-let [virkailija (ldap/get-virkailija-by-username (-> session :identity :username))]
-    (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
-                                            :first_name (:givenName virkailija)
-                                            :last_name  (:sn virkailija)})))
+  (when session
+    (when-let [virkailija (ldap/get-virkailija-by-username (-> session :identity :username))]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        (:employeeNumber virkailija)
+                                              :first_name (:givenName virkailija)
+                                              :last_name  (:sn virkailija)}))))
 
 (defn create-virkailija-credentials [session application-key]
   (when-let [virkailija (upsert-virkailija session)]
