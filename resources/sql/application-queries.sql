@@ -726,7 +726,7 @@ WITH filtered_applications AS (
 ), haku_review_complete_counts AS (
     SELECT
       haku,
-      count(key) AS processed
+      count(distinct(key)) AS processed
     FROM unnested_hakukohde
       LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
     WHERE
@@ -736,7 +736,7 @@ WITH filtered_applications AS (
 ), hakukohde_review_complete_counts AS (
     SELECT
       unnested_hakukohde.hakukohde,
-      count(key) AS processed
+      count(distinct(key)) AS processed
     FROM unnested_hakukohde
       LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
     WHERE
