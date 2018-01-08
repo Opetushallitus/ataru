@@ -99,8 +99,12 @@
      (if @hakukohteet-opened
        [:div.application__search-control-hakukohteet
         (when (< 1 hakukohde-count)
-          [:i.zmdi.zmdi-chevron-up.application__search-control-open-hakukohteet
-           {:on-click toggle-opened}])
+          [:div.application__search-control-open-hakukohteet-container
+           {:on-click toggle-opened}
+           [:i.application__search-control-open-hakukohteet.application__search-control-open-hakukohteet--up]])
+        (when (and @hakukohteet-opened (< 1 hakukohde-count))
+          [:div.application__search-control-hakukohteet-vline
+           [:on-click toggle-opened]])
         [:div.application__search-control-hakukohde-listing
          (map
            (fn [hakukohde]
@@ -111,8 +115,9 @@
                hakukohde]])
            hakukohteet)]]
        [:div.application__search-control-hakukohteet
-        [:i.zmdi.zmdi-chevron-down.application__search-control-open-hakukohteet
-         {:on-click toggle-opened}]
+        [:div.application__search-control-open-hakukohteet-container
+         {:on-click toggle-opened}
+         [:i.application__search-control-open-hakukohteet.application__search-control-open-hakukohteet--down]]
         [:div.application__search-control-hakukohde-count
          (str (count hakukohteet) " hakukohdetta")]]))])
 

@@ -1490,6 +1490,7 @@ th.application__readonly-adjacent--header {
   font-size: 13px;
   display: flex;
   flex-flow: row nowrap;
+  .light;
 }
 
 .application__search-control-hakukohde:last-child {
@@ -1500,17 +1501,51 @@ th.application__readonly-adjacent--header {
   margin-left: 8px;
   float: right;
 }
+.application__search-control-open-hakukohteet-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 15px;
+  cursor: pointer;
+}
 
 .application__search-control-open-hakukohteet {
-  font-size: 19px;
-  cursor: pointer;
+  border: solid @pale-blue;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(-135deg);
   position: absolute;
   left: 3px;
+  top: 5px;
+  pointer-events: none;
+}
+
+.application__search-control-open-hakukohteet--down {
+  transform: rotate(45deg);
+  top: 3px;
+}
+
+.application__search-control-open-hakukohteet--up {
+  transform: rotate(-135deg);
+}
+
+.application__search-control-hakukohteet-vline {
+  position: absolute;
+  top: 6px;
+  bottom: 0;
+  left: 6px;
+  width: 1px;
+  border-left: 2px solid @pale-blue;
+  pointer-events: none;
 }
 
 .application__search-control-hakukohde-count {
   padding-left: 22px;
   color: @sg-color-gray-2;
+  font-size: 13px;
+  font-weight: 300;
 }
 
 .application-handling__application-contents {
