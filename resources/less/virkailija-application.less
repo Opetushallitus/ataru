@@ -21,6 +21,8 @@
 
 .application-handling__header-wrapper {
   padding: 20px 85px 0 85px;
+  max-width: 1200px;
+  margin: auto;
 }
 
 .application-handling__bottom-wrapper {
@@ -1432,7 +1434,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-haku {
   color: @pale-blue;
-  margin-bottom: 20px;
+  margin-bottom: 1px;
   padding: 12px 10px 15px 15px;
   box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
   border-radius: 3px;
@@ -1442,35 +1444,73 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku.application__search-control-direct-form-haku {
-  padding-left: 46px;
+  padding-left: 15px;
   display: flex;
   align-items: center;
 }
 
+.application__search-control-haku.application__search-control-direct-form-haku a {
+  width: 100%;
+}
+
+.application__search-control-haku-link {
+  display: flex;
+  width: 100%;
+}
+
+.application__search-control-haku-title {
+  flex-grow: 0;
+}
+
+.application__search-control-haku-hl {
+  flex-grow: 1;
+  border-bottom: 1px dashed @light-gray;
+  height: 9px;
+  margin-left: 10px;
+}
+
+.application__search-control-haku-processed {
+  flex-grow: 0;
+}
+
+.application__search-control-tarjonta-haku-info {
+  margin-bottom: 5px;
+}
+
+.application__search-control-hakukohteet {
+  position: relative;
+}
+
+.application__search-control-hakukohde-listing {
+  padding-left: 22px;
+}
+
 .application__search-control-hakukohde {
   padding: 0 0 10px 0;
-  margin-left: 28px;
   font-size: 13px;
+  display: flex;
+  flex-flow: row nowrap;
 }
 
 .application__search-control-hakukohde:last-child {
   padding-bottom: 0;
 }
 
-.application__search-control-hakukohde:first-of-type {
-  margin-top: 10px;
-}
-
 .application__search-control-haku-unprocessed {
-  color: #6BB432;
   margin-left: 8px;
+  float: right;
 }
 
 .application__search-control-open-hakukohteet {
   font-size: 19px;
   cursor: pointer;
-  margin-left: 7px;
-  margin-right: 10px;
+  position: absolute;
+  left: 3px;
+}
+
+.application__search-control-hakukohde-count {
+  padding-left: 22px;
+  color: @sg-color-gray-2;
 }
 
 .application-handling__application-contents {
@@ -1507,7 +1547,7 @@ th.application__readonly-adjacent--header {
   width: 10%;
 }
 
-.application-handling__hakukohde-state, .application-handling__hakukohde-selection {
+.application-handling__reviewed-state-tag {
   font-size: 11px;
   border-radius: 4px;
   background-color: @medium-pale-blue;
@@ -1515,6 +1555,11 @@ th.application__readonly-adjacent--header {
   margin-right: 8px;
   text-transform: uppercase;
   color: white;
+  white-space: nowrap;
+}
+
+.application-handling__hakukohde-state, .application-handling__hakukohde-selection {
+  float: right;
 }
 
 .application__text-field-paragraph {

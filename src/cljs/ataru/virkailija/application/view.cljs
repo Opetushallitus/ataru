@@ -342,7 +342,7 @@
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              [:span.application-handling__hakukohde-selection-cell
-              [:span.application-handling__hakukohde-selection
+              [:span.application-handling__hakukohde-selection.application-handling__reviewed-state-tag
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
