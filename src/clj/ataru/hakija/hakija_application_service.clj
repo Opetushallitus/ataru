@@ -63,10 +63,9 @@
           (get :attachment-modify-grace-period-days 14))))
 
 (defn in-processing-state-in-jatkuva-haku?
-  [application-key hakuaika]
-  (when-let [application-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)]
-    (and (:jatkuva-haku? hakuaika)
-         (util/application-in-processing? application-hakukohde-reviews))))
+  [application-hakukohde-reviews hakuaika]
+  (and (:jatkuva-haku? hakuaika)
+       (util/application-in-processing? application-hakukohde-reviews)))
 
 (defn- editing-allowed-by-hakuaika?
   [answer application hakuaika]
@@ -121,19 +120,21 @@
 
 (defn- answer-uneditable? [answer
                            application
-                           state
+                           application-hakukohde-reviews
                            hakuaika
                            virkailija?]
   (let [answer-kw (-> answer :key keyword)]
     (or (contains? editing-forbidden-person-info-field-ids answer-kw)
         (not (or virkailija?
-                 (and (not (in-processing-state-in-jatkuva-haku? (:key application) hakuaika))
+                 (and (not (in-processing-state-in-jatkuva-haku?
+                            application-hakukohde-reviews
+                            hakuaika))
                       (editing-allowed-by-hakuaika? answer
                                                     application
                                                     hakuaika)))))))
 
 (defn flag-uneditable-answers
-  [{:keys [answers] :as application} state hakuaika virkailija?]
+  [{:keys [answers] :as application} application-hakukohde-reviews hakuaika virkailija?]
   (assoc application
     :answers
     (map
@@ -145,7 +146,7 @@
 
                   (answer-uneditable? answer
                                       application
-                                      state
+                                      application-hakukohde-reviews
                                       hakuaika
                                       virkailija?)
                   (merge {:cannot-edit true}))))
@@ -172,11 +173,11 @@
 (defn- merge-uneditable-answers-from-previous
   [new-application
    old-application
-   state
+   application-hakukohde-reviews
    hakuaika
    virkailija?]
   (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers state
+                                     (flag-uneditable-answers application-hakukohde-reviews
                                                               hakuaika
                                                               virkailija?)
                                      :answers)
@@ -227,35 +228,37 @@
       (:has-applied (application-store/has-email-applied haku-oid (:email identifier))))))
 
 (defn- validate-and-store [tarjonta-service ohjausparametrit-service application store-fn is-modify?]
-  (let [tarjonta-info      (when (:haku application)
-                             (tarjonta-parser/parse-tarjonta-info-by-haku tarjonta-service ohjausparametrit-service (:haku application)))
-        hakuaika           (get-hakuaikas tarjonta-service
-                                          ohjausparametrit-service
-                                          application)
-        form               (-> application
-                               (:form)
-                               (form-store/fetch-by-id)
-                               (hakija-form-service/inject-hakukohde-component-if-missing)
-                               (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                               (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        virkailija-secret  (valid-virkailija-secret application)
-        latest-application (application-store/get-latest-version-of-application-for-edit application)
-        state              (some-> latest-application
-                                   :key
-                                   application-store/get-application-review
-                                   :state)
-        final-application  (if is-modify?
-                             (-> application
-                                 (merge-uneditable-answers-from-previous latest-application
-                                                                         state
-                                                                         hakuaika
-                                                                         (some? virkailija-secret))
-                                 (assoc :person-oid (:person-oid latest-application)))
-                             application)
-        validation-result  (validator/valid-application?
-                             has-applied
-                             (set-original-values latest-application final-application)
-                             form)]
+  (let [tarjonta-info                 (when (:haku application)
+                                        (tarjonta-parser/parse-tarjonta-info-by-haku
+                                         tarjonta-service
+                                         ohjausparametrit-service
+                                         (:haku application)))
+        hakuaika                      (get-hakuaikas tarjonta-service
+                                                     ohjausparametrit-service
+                                                     application)
+        form                          (-> application
+                                          (:form)
+                                          (form-store/fetch-by-id)
+                                          (hakija-form-service/inject-hakukohde-component-if-missing)
+                                          (hakukohde/populate-hakukohde-answer-options tarjonta-info)
+                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
+        virkailija-secret             (valid-virkailija-secret application)
+        latest-application            (application-store/get-latest-version-of-application-for-edit application)
+        application-hakukohde-reviews (some-> latest-application
+                                              :key
+                                              application-store/get-application-hakukohde-reviews)
+        final-application             (if is-modify?
+                                        (-> application
+                                            (merge-uneditable-answers-from-previous latest-application
+                                                                                    application-hakukohde-reviews
+                                                                                    hakuaika
+                                                                                    (some? virkailija-secret))
+                                            (assoc :person-oid (:person-oid latest-application)))
+                                        application)
+        validation-result             (validator/valid-application?
+                                       has-applied
+                                       (set-original-values latest-application final-application)
+                                       form)]
     (cond
       (and (not (nil? virkailija-secret))
            (not (virkailija-secret-valid? virkailija-secret)))
@@ -276,7 +279,8 @@
 
       (and is-modify?
            (not virkailija-secret)
-           (in-processing-state-in-jatkuva-haku? (:key application) hakuaika))
+           (in-processing-state-in-jatkuva-haku? application-hakukohde-reviews
+                                                 hakuaika))
       {:passed false :failures ["Application is in review state and cannot be modified."]}
 
       (not (:passed? validation-result))
@@ -357,30 +361,31 @@
                                         tarjonta-service
                                         ohjausparametrit-service
                                         person-client]
-  (let [[virkailija? hakija-secret] (match [secret]
-                                      [{:virkailija s}]
-                                      [true
-                                       (when (virkailija-edit/virkailija-secret-valid? s)
-                                         (application-store/get-hakija-secret-by-virkailija-secret s))]
-                                      [{:hakija s}]
-                                      [false s]
-                                      :else
-                                      [false nil])
-        application                 (when (some? hakija-secret)
-                                      (application-store/get-latest-application-by-secret hakija-secret))
-        state                       (some-> application
-                                            :key
-                                            application-store/get-application-review
-                                            :state)
-        hakuaika                    (when (some? application)
-                                      (get-hakuaikas tarjonta-service
-                                                     ohjausparametrit-service
-                                                     application))
-        person                      (some-> application
-                                            (application-service/get-person person-client)
-                                            (dissoc :ssn :birth-date))]
+  (let [[virkailija? hakija-secret]   (match [secret]
+                                        [{:virkailija s}]
+                                        [true
+                                         (when (virkailija-edit/virkailija-secret-valid? s)
+                                           (application-store/get-hakija-secret-by-virkailija-secret s))]
+                                        [{:hakija s}]
+                                        [false s]
+                                        :else
+                                        [false nil])
+        application                   (when (some? hakija-secret)
+                                        (application-store/get-latest-application-by-secret hakija-secret))
+        application-hakukohde-reviews (some-> application
+                                              :key
+                                              application-store/get-application-hakukohde-reviews)
+        hakuaika                      (when (some? application)
+                                        (get-hakuaikas tarjonta-service
+                                                       ohjausparametrit-service
+                                                       application))
+        person                        (some-> application
+                                              (application-service/get-person person-client)
+                                              (dissoc :ssn :birth-date))]
     (some-> application
-            (flag-uneditable-answers state hakuaika virkailija?)
+            (flag-uneditable-answers application-hakukohde-reviews
+                                     hakuaika
+                                     virkailija?)
             attachments-metadata->answers
             (assoc :person person)
             (dissoc :person-oid))))
