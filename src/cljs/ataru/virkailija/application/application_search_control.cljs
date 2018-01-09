@@ -101,17 +101,11 @@
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
-   (let [toggle-opened   #(reset! hakukohteet-opened (not @hakukohteet-opened))
-         hakukohde-count (count hakukohteet)]
+   (let [hakukohde-count (count hakukohteet)]
      (if @hakukohteet-opened
        [:div.application__search-control-hakukohteet
-        (when (< 1 hakukohde-count)
-          [:div.application__search-control-open-hakukohteet-container
-           {:on-click toggle-opened}
-           [:i.application__search-control-open-hakukohteet.application__search-control-open-hakukohteet--up]])
         (when (and @hakukohteet-opened (< 1 hakukohde-count))
-          [:div.application__search-control-hakukohteet-vline
-           [:on-click toggle-opened]])
+          [:div.application__search-control-hakukohteet-vline])
         [:div.application__search-control-hakukohde-listing
          (map
            (fn [hakukohde]
@@ -122,9 +116,6 @@
                hakukohde]])
            hakukohteet)]]
        [:div.application__search-control-hakukohteet
-        [:div.application__search-control-open-hakukohteet-container
-         {:on-click toggle-opened}
-         [:i.application__search-control-open-hakukohteet.application__search-control-open-hakukohteet--down]]
         [:div.application__search-control-hakukohde-count
          (str (count hakukohteet) " hakukohdetta")]]))])
 
@@ -133,6 +124,12 @@
     (fn [haku]
       [:div.application__search-control-haku
        [:div.application__search-control-tarjonta-haku-info
+        [:div.application__search-control-open-hakukohteet-container
+         {:on-click #(reset! hakukohteet-opened (not @hakukohteet-opened))}
+         [:i.application__search-control-open-hakukohteet
+          {:class (if @hakukohteet-opened
+                    "application__search-control-open-hakukohteet--up"
+                    "application__search-control-open-hakukohteet--down")}]]
         [haku-info-link
          (str "/lomake-editori/applications/haku/" (:oid haku))
          haku]]

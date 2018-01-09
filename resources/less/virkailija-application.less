@@ -1446,6 +1446,7 @@ th.application__readonly-adjacent--header {
 .application__search-control-haku-link {
   display: flex;
   width: 100%;
+  padding-left: 22px;
 }
 
 .application__search-control-haku-title {
@@ -1474,7 +1475,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-progress-bar::-webkit-progress-bar {
-  background-color: @pale-blue;
+  background-color: @medium-pale-blue;
   border-radius: 3px;
 }
 
@@ -1485,14 +1486,11 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-tarjonta-haku-info {
   margin-bottom: 5px;
+  position: relative;
 }
 
 .application__search-control-hakukohteet {
   position: relative;
-}
-
-.application__search-control-hakukohde-listing {
-  padding-left: 22px;
 }
 
 .application__search-control-hakukohde {
@@ -1548,12 +1546,11 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-hakukohteet-vline {
   position: absolute;
-  top: 6px;
+  top: 0;
   bottom: 0;
   left: 6px;
   width: 1px;
-  border-left: 2px solid @pale-blue;
-  pointer-events: none;
+  border-left: 2px solid @light-gray;
 }
 
 .application__search-control-hakukohde-count {
