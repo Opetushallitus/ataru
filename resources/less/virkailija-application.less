@@ -1466,11 +1466,31 @@ th.application__readonly-adjacent--header {
   flex-grow: 1;
   border-bottom: 1px dashed @light-gray;
   height: 9px;
-  margin-left: 10px;
 }
 
 .application__search-control-haku-processed {
   flex-grow: 0;
+  position: relative;
+}
+
+.application__search-progress-bar, .application__search-progress-bar[role] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  background-size: auto;
+  height: 16px;
+  width: 150px;
+}
+
+.application__search-progress-bar::-webkit-progress-bar {
+  background-color: @pale-blue;
+  border-radius: 3px;
+}
+
+.application__search-progress-bar::-webkit-progress-value {
+  background-color: @light-green;
+  border-radius: 3px;
 }
 
 .application__search-control-tarjonta-haku-info {
@@ -1498,8 +1518,13 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku-unprocessed {
-  margin-left: 8px;
-  float: right;
+  position: absolute;
+  color: @white;
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  left: 20px;
+  top: 2px;
 }
 .application__search-control-open-hakukohteet-container {
   position: absolute;
@@ -1582,15 +1607,26 @@ th.application__readonly-adjacent--header {
   width: 10%;
 }
 
-.application-handling__reviewed-state-tag {
+.application-handling__count-tag {
   font-size: 11px;
   border-radius: 4px;
-  background-color: @medium-pale-blue;
   padding: 1px 8px;
   margin-right: 8px;
   text-transform: uppercase;
   color: white;
   white-space: nowrap;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.application-handling__count-tag--reviewed {
+  background-color: @medium-pale-blue;
+}
+
+.application-handling__count-tag--total {
+  background-color: @light-green;
+  padding: 1px 5px;
+  margin-left: 8px;
 }
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {

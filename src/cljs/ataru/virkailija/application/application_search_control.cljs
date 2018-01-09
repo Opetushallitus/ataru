@@ -78,19 +78,26 @@
       "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
+
+(defn- processed-progress-bar
+  [total unprocessed processed]
+  [:progress.application__search-progress-bar
+   {:max   total
+    :value processed}])
+
 (defn haku-info-link [link-href {:keys [name application-count processed]}]
   (let [unprocessed (- application-count processed)]
     [:a.application__search-control-haku-link
      {:href link-href}
      [:span.application__search-control-haku-title
-      (some #(get name %) [:fi :sv :en])
-      (str " (" application-count ")")]
+      (some #(get name %) [:fi :sv :en])]
+     [:span.application__search-control-haku-hl]
+     [:span.application__search-control-haku-count.application-handling__count-tag.application-handling__count-tag--total application-count]
      (when (pos? unprocessed)
-       [:span.application__search-control-haku-hl])
-     (when (pos? unprocessed)
-       [:span.application__search-control-haku-processed
-        [:span.application__search-control-haku-unprocessed.application-handling__reviewed-state-tag
-         (str " " unprocessed " Käsittelemättä")]])]))
+       (into
+         [:span.application__search-control-haku-processed
+          [:span.application__search-control-haku-unprocessed (str unprocessed " käsittelemättä")]
+          [processed-progress-bar application-count unprocessed processed]]))]))
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
