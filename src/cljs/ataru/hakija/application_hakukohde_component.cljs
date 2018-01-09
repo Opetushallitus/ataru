@@ -74,22 +74,41 @@
      :role               "button"}
     (get-translation :remove)]])
 
+(defn- selected-hakukohde-increase-priority
+  [hakukohde-oid priority-index]
+  (let [disabled? (= priority-index 1)]
+    [:i.zmdi.zmdi-caret-up.application__hakukohde-priority-changer
+     {:class    (when disabled? "disabled")
+      :on-click (when-not disabled?
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
+
+(defn- selected-hakukohde-decrease-priority
+  [hakukohde-oid priority-index]
+  (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
+        disabled? (= priority-index (count selected-hakukohteet))]
+    [:i.zmdi.zmdi-caret-down.application__hakukohde-priority-changer
+     {:class    (when disabled? "disabled")
+      :on-click (when-not disabled?
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
+
+(defn- prioritize-hakukohteet-buttons
+  [hakukohde-oid]
+  (let [priority-index @(subscribe [:application/hakukohde-priority-order hakukohde-oid])]
+    [:div.application__hakukohde-row-priority-container
+     [selected-hakukohde-increase-priority hakukohde-oid priority-index]
+     priority-index
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-index]]))
+
 (defn- selected-hakukohde-row
   [hakukohde-oid]
   (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
-        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
-        priority-index @(subscribe [:application/hakukohde-priority-order hakukohde-oid])]
+        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])]
     [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
-       [:div.application__hakukohde-row-priority-container
-        [:i.zmdi.zmdi-caret-up
-         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1])}]
-        priority-index
-        [:i.zmdi.zmdi-caret-down
-         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1])}]])
+       [prioritize-hakukohteet-buttons hakukohde-oid])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected

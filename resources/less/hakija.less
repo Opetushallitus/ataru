@@ -1026,10 +1026,23 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row-priority-container {
   display: flex;
   flex-direction: column;
+  font-size: 30px;
+  align-items: center;
+}
 
-  .zmdi {
-    font-size: 60px;
-    line-height: 30%;
+.application__hakukohde-priority-changer {
+  font-size: 60px;
+  line-height: 30%;
+  color: @sg-color-gray-2;
+  cursor: pointer;
+
+  &:hover {
+    color: @sg-color-gray;
+  }
+
+  &.disabled {
+    cursor: default;
+    color: @sg-gray-lighten-3;
   }
 }
 
@@ -1092,6 +1105,10 @@ and (max-width: @desktop-content-width) {
 .application__hakukohde-row-icon-container {
   color: @blue-text-color;
   margin: 0 15px;
+}
+
+.application__hakukohde-row-text-container {
+   padding-right: 120px;
 }
 
 .application__hakukohde-selected-row-header {
