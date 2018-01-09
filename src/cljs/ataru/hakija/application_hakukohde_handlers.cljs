@@ -25,8 +25,8 @@
 
 (defn- set-values-changed
   [db]
-  (let [values (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-        original-values (set (get-in db [:application :answers :hakukohteet :original-value] []))]
+  (let [values (map :value (get-in db [:application :answers :hakukohteet :values] []))
+        original-values (get-in db [:application :answers :hakukohteet :original-value] [])]
     (update-in db [:application :values-changed?]
                (fnil (if (= original-values values) disj conj) #{})
                :hakukohteet)))
@@ -134,4 +134,6 @@
                                         current-index (nth hakukohde-oids new-index)
                                         new-index (nth hakukohde-oids current-index))
           new-values (map #(hash-map :valid true :value %) ordered-hakukohde-oids)]
-      (assoc-in db [:application :answers :hakukohteet :values] new-values))))
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values] new-values)
+          set-values-changed))))
