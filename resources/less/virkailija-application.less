@@ -1328,11 +1328,12 @@ th.application__readonly-adjacent--header {
   color: @pale-blue;
   border-radius: 3px;
   background: @white;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.17));
   border-radius: 3px;
   font-size: 15px;
   min-height: 52px;
   margin-bottom: 20px;
+  .light;
 }
 
 .application__search-control-tab-text {
@@ -1341,14 +1342,18 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-selected-tab {
-  background-color: @pale-blue;
-  color: @white;
+  color: @text-color;
+  .arrow(bottom, @white, 11px);
 }
 
 .application__search-control-selected-tab-with-input {
-  border: solid @pale-blue 3px;
+  border: solid transparent 3px;
+  .arrow(bottom, @white, 11px);
   color: @white;
-  box-shadow: none;
+}
+
+.application__search-control-selected-tab-with-input:after {
+  bottom: -2px;
 }
 
 .application__search-control-tab-selector.application__search-control-selected-tab-with-input  {
@@ -1365,21 +1370,6 @@ th.application__readonly-adjacent--header {
 .application__search-control-loading-indicator > i {
   font-size: 50px;
   .spin
-}
-
-.application__search-control-tab-selector.application__search-control-selected-tab {
-  box-shadow: none;
-}
-
-.application-handling_search-control-tab-arrow-down {
-  position: absolute;
-  top: 52px;
-  left: 48%;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 9px solid @pale-blue;
 }
 
 .application__search-control-clear-search-term {
