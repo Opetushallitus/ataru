@@ -84,8 +84,12 @@
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
-       [:div.application__hakukohde-row-text-container
-        priority-index])
+       [:div.application__hakukohde-row-priority-container
+        [:i.zmdi.zmdi-caret-up
+         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1])}]
+        priority-index
+        [:i.zmdi.zmdi-caret-down
+         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1])}]])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected

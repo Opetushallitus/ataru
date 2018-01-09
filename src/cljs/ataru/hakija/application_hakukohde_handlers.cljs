@@ -123,3 +123,15 @@
   :application/show-answers-belonging-to-hakukohteet
   (fn [db _]
     (set-visibility-of-belongs-to-hakukohteet-questions db)))
+
+(reg-event-db
+  :application/change-hakukohde-priority
+  (fn [db [_ hakukohde-oid index-change]]
+    (let [hakukohde-oids         (mapv :value (-> db :application :answers :hakukohteet :values))
+          current-index          (count (take-while #(not= hakukohde-oid %) hakukohde-oids))
+          new-index              (+ current-index index-change)
+          ordered-hakukohde-oids (assoc hakukohde-oids
+                                        current-index (nth hakukohde-oids new-index)
+                                        new-index (nth hakukohde-oids current-index))
+          new-values (map #(hash-map :valid true :value %) ordered-hakukohde-oids)]
+      (assoc-in db [:application :answers :hakukohteet :values] new-values))))
