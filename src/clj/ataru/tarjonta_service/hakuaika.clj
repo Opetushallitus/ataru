@@ -21,7 +21,7 @@
       (last hakuaikas))))
 
 (defn- jatkuva-haku? [haku]
-  (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03"))
+  (clojure.string/starts-with? (:hakutapaUri haku) "hakutapa_03#"))
 
 (defn- parse-hakuaika
   "Hakuaika from hakuaika can override hakuaika from haku. Haku may have multiple hakuaikas defined."
