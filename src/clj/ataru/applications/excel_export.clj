@@ -100,26 +100,45 @@
 
 (def ^:private review-headers ["Muistiinpanot" "Pisteet"])
 
+(def cell-style (atom nil))
+
+(def cell-style-quote-prefixed (atom nil))
+
+(defn- create-cell-styles!
+  [workbook]
+  (reset! cell-style
+          (doto (.createCellStyle workbook)
+            (.setWrapText true)
+            (.setVerticalAlignment VerticalAlignment/TOP)))
+  (reset! cell-style-quote-prefixed
+          (doto (.createCellStyle workbook)
+            (.setQuotePrefixed true)
+            (.setWrapText true)
+            (.setVerticalAlignment VerticalAlignment/TOP))))
+
+(defn- create-workbook-and-styles!
+  []
+  (let [workbook (XSSFWorkbook.)]
+    (create-cell-styles! workbook)
+    workbook))
+
 (defn- indexed-meta-fields
   [fields]
   (map-indexed (fn [idx field] (merge field {:column idx})) fields))
 
-(defn- set-cell-style [cell value workbook]
-  (let [cell-style (.createCellStyle workbook)]
-    (when (and (string? value)
-               (contains? #{\= \+ \- \@} (first value)))
-      (.setQuotePrefixed cell-style true))
-    (.setWrapText cell-style true)
-    (.setVerticalAlignment cell-style VerticalAlignment/TOP)
-    (.setCellStyle cell cell-style)
-    cell))
+(defn- set-cell-style [cell value]
+  (if (and (string? value)
+           (contains? #{\= \+ \- \@} (first value)))
+    (.setCellStyle cell @cell-style-quote-prefixed)
+    (.setCellStyle cell @cell-style))
+  cell)
 
 (defn- update-row-cell! [sheet row column value workbook]
   (when-let [v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet row)
             (.createRow sheet row))
         (.getCell column Row$MissingCellPolicy/CREATE_NULL_AS_BLANK)
-        (set-cell-style value workbook)
+        (set-cell-style value)
         (.setCellValue v)))
   sheet)
 
@@ -405,7 +424,7 @@
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
-  (let [workbook                (XSSFWorkbook.)
+  (let [workbook                (create-workbook-and-styles!)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
         application-meta-fields (indexed-meta-fields application-meta-fields)
