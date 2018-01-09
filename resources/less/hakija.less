@@ -1043,6 +1043,11 @@ and (max-width: @desktop-content-width) {
   }
 }
 
+.application__hakukohde-row--selected {
+  display: flex;
+  align-items: flex-start;
+}
+
 .application__hakukohde-row--selected.fadeIn {
   -webkit-animation-duration: 0.7s;
   -moz-animation-duration: 0.7s;
@@ -1073,18 +1078,8 @@ and (max-width: @desktop-content-width) {
 }
 
 .application__hakukohde-row-icon-container {
-  position: absolute;
-  left: 0;
-  top: 17px;
   color: @blue-text-color;
-}
-
-.application__hakukohde-row-text-container {
-  padding-right: 120px;
-}
-
-.application__hakukohde-row-text-container--selected {
-  padding-left: 60px;
+  margin: 0 15px;
 }
 
 .application__hakukohde-selected-row-header {

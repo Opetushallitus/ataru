@@ -134,6 +134,7 @@
   {:hakukohteet                        [FormTarjontaHakukohde]
    :haku-oid                           s/Str
    :haku-name                          LocalizedStringOptional
+   :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
    (s/optional-key :default-hakukohde) FormTarjontaHakukohde

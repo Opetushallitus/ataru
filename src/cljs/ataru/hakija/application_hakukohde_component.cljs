@@ -76,11 +76,16 @@
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])]
+  (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
+        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])
+        priority-index @(subscribe [:application/hakukohde-priority-order hakukohde-oid])]
     [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
+     (when prioritize-hakukohteet?
+       [:div.application__hakukohde-row-text-container
+        priority-index])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected

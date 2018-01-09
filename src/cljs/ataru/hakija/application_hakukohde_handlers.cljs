@@ -70,7 +70,7 @@
 (reg-event-fx
   :application/hakukohde-add-selection
   (fn [{db :db} [_ hakukohde-oid]]
-    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+    (let [selected-hakukohteet (-> db :application :answers :hakukohteet :values vec)
           not-yet-selected? (every? #(not= hakukohde-oid (:value %))
                                     selected-hakukohteet)
           new-hakukohde-values (cond-> selected-hakukohteet
