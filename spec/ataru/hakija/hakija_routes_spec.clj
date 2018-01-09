@@ -67,11 +67,11 @@
   []
   (let [app-count
         (+ (count (ataru-db/exec :db
-                                 yesql-get-application-list-by-hakukohde
-                                 {:hakukohde_oid (:hakukohde @form)
-                                  :query_type "ALL"
-                                  :authorized_organization_oids [""]}))
-           (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
+                    yesql-get-application-list-by-hakukohde
+                    {:hakukohde_oid                (:hakukohde @form)
+                     :query_type                   "ALL"
+                     :authorized_organization_oids [""]}))
+          (count (ataru-db/exec :db yesql-get-application-list-by-form {:form_key (:key @form)})))]
     (< 0 app-count)))
 
 (defmacro add-failing-post-spec
@@ -109,9 +109,9 @@
 
 (defn- hakuaika-ongoing
   [_ _ _]
-  {:on true
+  {:on    true
    :start (- (System/currentTimeMillis) (* 2 24 3600 1000))
-   :end (+ (System/currentTimeMillis) (* 2 24 3600 1000))})
+   :end   (+ (System/currentTimeMillis) (* 2 24 3600 1000))})
 
 (defn- hakuaika-ended-within-grace-period
   [_ _ _]
@@ -127,9 +127,9 @@
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (quot edit-grace-period 2)]
-    {:on    false
-     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
-     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))
+    {:on              false
+     :start           (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end             (- (System/currentTimeMillis) (* end 24 3600 1000))
      :hakukierros-end (+ (System/currentTimeMillis) (* 2 24 3600 1000))}))
 
 (defn- hakuaika-ended-grace-period-passed
@@ -146,9 +146,9 @@
   (let [edit-grace-period (-> config :public-config :attachment-modify-grace-period-days)
         start             (* 2 edit-grace-period)
         end               (+ edit-grace-period 1)]
-    {:on    false
-     :start (- (System/currentTimeMillis) (* start 24 3600 1000))
-     :end   (- (System/currentTimeMillis) (* end 24 3600 1000))
+    {:on              false
+     :start           (- (System/currentTimeMillis) (* start 24 3600 1000))
+     :end             (- (System/currentTimeMillis) (* end 24 3600 1000))
      :hakukierros-end (+ (System/currentTimeMillis) (* 2 24 3600 1000))}))
 
 (describe "/application"
@@ -212,7 +212,7 @@
         (with-get-response "12345" resp
           (should= 200 (:status resp))
           (let [answers (-> resp :body :answers)]
-            (should= 6 (count (filter cannot-edit? answers)))
+            (should= 7 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers)))))))
 
     (it "should get application with hakuaika ended"
@@ -233,80 +233,80 @@
             (should= 9 (count (filter cannot-edit? answers)))
             (should= 1 (count (filter cannot-view? answers))))))))
 
-    (describe "PUT application"
-      (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                      application-email/start-email-edit-confirmation-job (fn [_ _])
-                      application-service/remove-orphan-attachments (fn [_ _])
-                      hakuaika/get-hakuaika-info hakuaika-ongoing]
-          (spec)))
+  (describe "PUT application"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _])
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
+        (spec)))
 
-      (before-all
-        (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
+    (before-all
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
 
-      (it "should create"
-        (with-response :post resp application-fixtures/person-info-form-application
+    (it "should create"
+      (with-response :post resp application-fixtures/person-info-form-application
+        (should= 200 (:status resp))
+        (should (have-application-in-db (get-in resp [:body :id])))))
+
+    (it "should edit application"
+      (with-response :put resp application-edited-email
+        (should= 200 (:status resp))
+        (let [id          (-> resp :body :id)
+              application (get-application-by-id id)]
+          (should= "edited@foo.com" (get-answer application "email")))))
+
+    (it "should not allow editing ssn"
+      (with-response :put resp application-edited-ssn
+        (should= 200 (:status resp))
+        (let [id          (-> resp :body :id)
+              application (get-application-by-id id)]
+          (should= "010101A123N" (get-answer application "ssn"))))))
+
+  (describe "PUT application after hakuaika ended"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
+                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _])]
+        (spec)))
+
+    (before-all
+      (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
+
+    (it "should create"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
+        (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
-          (should (have-application-in-db (get-in resp [:body :id])))))
+          (should (have-application-in-db (get-in resp [:body :id]))))))
 
-      (it "should edit application"
-        (with-response :put resp application-edited-email
+    (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing]
+        (with-response :put resp application-for-hakukohde-edited
           (should= 200 (:status resp))
-          (let [id (-> resp :body :id)
+          (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "edited@foo.com" (get-answer application "email")))))
+            (should= "suomi" (get-answer application "language"))
+            (should= "edited@foo.com" (get-answer application "email"))
+            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
+                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
-      (it "should not allow editing ssn"
-        (with-response :put resp application-edited-ssn
+    (it "should allow application edit after grace period and only changes to limited person info"
+      (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
+        (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
           (should= 200 (:status resp))
-          (let [id (-> resp :body :id)
+          (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
-            (should= "010101A123N" (get-answer application "ssn"))))))
-
-    (describe "PUT application after hakuaika ended"
-      (around [spec]
-        (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                      application-email/start-email-edit-confirmation-job   (fn [_ _])
-                      application-service/remove-orphan-attachments         (fn [_ _])]
-          (spec)))
-
-      (before-all
-        (reset! form (db/init-db-fixture form-fixtures/person-info-form)))
-
-      (it "should create"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
-          (with-response :post resp application-fixtures/person-info-form-application-for-hakukohde
-            (should= 200 (:status resp))
-            (should (have-application-in-db (get-in resp [:body :id]))))))
-
-      (it "should allow application edit after hakuaika within 10 days and only changes to attachments and limited person info"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period-hakukierros-ongoing]
-          (with-response :put resp application-for-hakukohde-edited
-            (should= 200 (:status resp))
-            (let [id (-> resp :body :id)
-                  application (get-application-by-id id)]
-              (should= "suomi" (get-answer application "language"))
-              (should= "edited@foo.com" (get-answer application "email"))
-              (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
-                       (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
-
-      (it "should allow application edit after grace period and only changes to limited person info"
-        (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
-          (with-response :put resp application-fixtures/person-info-form-application-for-hakukohde
-            (should= 200 (:status resp))
-            (let [id (-> resp :body :id)
-                  application (get-application-by-id id)]
-              (should= "suomi" (get-answer application "language"))
-              (should= "aku@ankkalinna.com" (get-answer application "email"))
-              (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
-                       (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
+            (should= "suomi" (get-answer application "language"))
+            (should= "aku@ankkalinna.com" (get-answer application "email"))
+            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
+                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
 
   (describe "Tests for a more complicated form"
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (fn [_ _])
-                    application-email/start-email-edit-confirmation-job (fn [_ _])
-                    application-service/remove-orphan-attachments (fn [_ _])
-                    hakuaika/get-hakuaika-info hakuaika-ongoing]
+                    application-email/start-email-edit-confirmation-job   (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _])
+                    hakuaika/get-hakuaika-info                            hakuaika-ongoing]
         (spec)))
 
     (before-all
@@ -315,8 +315,8 @@
     (it "should not create"
       (with-response :post resp application-fixtures/person-info-form-application
         (should= 400 (:status resp))
-        (should= {:failures {:adjacent-answer-1 {:passed? false}
-                             :repeatable-required {:passed? false}
+        (should= {:failures {:adjacent-answer-1            {:passed? false}
+                             :repeatable-required          {:passed? false}
                              :more-questions-attachment-id {:passed? false}}}
                  (:body resp))))
 

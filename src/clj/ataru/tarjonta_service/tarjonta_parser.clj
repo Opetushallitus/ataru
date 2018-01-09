@@ -57,16 +57,6 @@
                          (map #(.get-koulutus tarjonta-service %))
                          (map parse-koulutus))}))
 
-(defn- jatkuva-haku? [haku]
-  "Hakutapauri is hakutapa_03#1 for jatkuva haku in koodisto version 1."
-  (let [[_ hakutapa-uri version] (clojure.string/split (:hakutapaUri haku) #"_|#")]
-    (->> (get-koodisto-options "hakutapa" (Integer/parseInt version))
-         (filter #(= (:value %) hakutapa-uri))
-         first
-         :label
-         :fi
-         (= "Jatkuva haku"))))
-
 (defn parse-tarjonta-info-by-haku
   ([tarjonta-service ohjausparametrit-service haku-oid included-hakukohde-oids]
    {:pre [(some? tarjonta-service)
@@ -85,13 +75,9 @@
            :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
-           :hakuaika-dates   (assoc (hakuaika/get-hakuaika-info
-                                      (first hakukohteet)
-                                      haku ; TODO take into account each hakukohde time?
-                                      ohjausparametrit)
-                                    :hakukierros-end
-                                    (-> ohjausparametrit :PH_HKP :date))
-           :is-jatkuva-haku? (jatkuva-haku? haku)
+           :hakuaika-dates   (hakuaika/get-hakuaika-info (first hakukohteet)
+                                                         haku ; TODO take into account each hakukohde time?
+                                                         ohjausparametrit)
            :can-submit-multiple-applications (:canSubmitMultipleApplications haku)}}))))
   ([tarjonta-service ohjausparametrit-service haku-oid]
    (when haku-oid

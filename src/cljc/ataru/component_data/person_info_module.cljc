@@ -68,7 +68,7 @@
 (defn- have-finnish-ssn-component
   []
   (-> (component/dropdown)
-      (merge {:label (:have-finnish-ssn person-info-module-texts )
+      (merge {:label (:have-finnish-ssn person-info-module-texts)
               :rules {:toggle-ssn-based-fields :ssn}
               :no-blank-option true
               :exclude-from-answers true

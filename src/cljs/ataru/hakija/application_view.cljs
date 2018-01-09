@@ -68,7 +68,9 @@
        (when apply-dates
          [:div.application__sub-header-container
           [:span.application__sub-header-dates apply-dates]])
-       (when (and (application-processing-jatkuva-haku? @application (:tarjonta form))
+       (when (and (application-processing-jatkuva-haku?
+                   @application
+                   (-> form :tarjonta :hakuaika-dates))
                   (not @virkailija-secret))
          [:div.application__sub-header-container
           [:span.application__sub-header-modifying-prevented
@@ -79,15 +81,10 @@
     (fn [form]
       [readonly-view/readonly-fields form @application])))
 
-(defn render-fields [form]
-  (let [submit-status (subscribe [:state-query [:application :submit-status]])
-        editing?      (subscribe [:state-query [:application :editing?]])
-        can-apply?    (subscribe [:application/can-apply?])]
+(defn- render-fields [form]
+  (let [submit-status (subscribe [:state-query [:application :submit-status]])]
     (fn [form]
-      (if (or (= :submitted @submit-status)
-              (and
-                @editing?
-                (not @can-apply?)))
+      (if (= :submitted @submit-status)
         [readonly-fields form]
         (do
           (dispatch [:application/run-rule])                ; wtf

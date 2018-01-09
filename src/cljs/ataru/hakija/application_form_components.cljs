@@ -19,8 +19,7 @@
             [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.editing-forbidden-fields :refer [viewing-forbidden-person-info-field-ids editing-forbidden-person-info-field-ids]]
-            [ataru.hakija.onr-fields :as onr-fields])
+            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]])
   (:import (goog.html.sanitizer HtmlSanitizer)))
 
 (defonce builder (new HtmlSanitizer.Builder))
@@ -106,8 +105,7 @@
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
         answer       (if (and @editing
-                              (contains? editing-forbidden-person-info-field-ids id)
-                              (contains? onr-fields/onr-fields id))
+                              (contains? editing-forbidden-person-info-field-ids id))
                        {:value @(subscribe [:state-query
                                             [:application :person id]])
                         :valid true}
@@ -368,18 +366,14 @@
         lang         (subscribe [:application/form-language])
         default-lang (subscribe [:application/default-language])
         id           (keyword (:id field-descriptor))
-        disabled?    (reaction (or
-                                 (and @editing
-                                      (contains? editing-forbidden-person-info-field-ids id)
-                                      (contains? onr-fields/onr-fields id))
-                                 (->
-                                   (:answers @application)
-                                   (get (answer-key field-descriptor))
-                                   :cannot-edit)))
+        disabled?    (-> (:answers @application)
+                         (get (answer-key field-descriptor))
+                         :cannot-edit)
         id           (answer-key field-descriptor)
+        use-onr-info? (contains? (:person application) id)
         value-path   (if (and @editing
                               (contains? editing-forbidden-person-info-field-ids id)
-                              (contains? onr-fields/onr-fields id))
+                              use-onr-info?)
                        [:application :person id]
                        (cond-> [:application :answers id]
                          idx (concat [:values idx 0])
@@ -397,13 +391,13 @@
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
      [:div.application__form-select-wrapper
-      (when (not @disabled?)
+      (when (not disabled?)
         [:span.application__form-select-arrow])
-      [(keyword (str "select.application__form-select" (when (not @disabled?) ".application__form-select--enabled")))
+      [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
        {:id        (:id field-descriptor)
         :value     (or @value "")
         :on-change on-change
-        :disabled  @disabled?
+        :disabled  disabled?
         :required  (is-required-field? field-descriptor)}
        (concat
         (when

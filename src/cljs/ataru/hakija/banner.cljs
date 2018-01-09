@@ -86,10 +86,11 @@
                     (edit-text @secret @virkailija-secret)]))))
 
 (defn status-controls []
-  (let [valid-status         (subscribe [:application/valid-status])
-        submit-status        (subscribe [:state-query [:application :submit-status]])
-        can-apply?           (subscribe [:application/can-apply?])]
-    (when @can-apply?
+  (let [valid-status  (subscribe [:application/valid-status])
+        submit-status (subscribe [:state-query [:application :submit-status]])
+        can-apply?    (subscribe [:application/can-apply?])
+        editing?      (subscribe [:state-query [:application :editing?]])]
+    (when (or @can-apply? @editing?)
       [:div.application__status-controls
        [send-button-or-placeholder @valid-status @submit-status]
        [invalid-field-status @valid-status]

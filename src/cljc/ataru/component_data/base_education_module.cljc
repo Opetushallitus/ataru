@@ -152,5 +152,5 @@
                                                         :fieldClass      "formField",
                                                         :validators      ["required"]
                                                         :koodisto-source {:uri "maatjavaltiot2", :title "Maat ja valtiot", :version 1}}]}
-                                          {:label (:no general-texts), :value "Nej"}],
+                                          {:label (:have-not general-texts), :value "Nej"}],
                              :validators ["required"]})]}))

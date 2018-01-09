@@ -167,39 +167,10 @@
                      (not= (:fieldType %) "adjacentfieldset")))
        (map #(select-keys % [:id :label :children]))))
 
-(defn- bools-all-true [bools] (and (not (empty? bools)) (every? true? bools)))
-
-(defn application-processing-jatkuva-haku? [application haku]
-  (when-let [state (:state application)]
-    (and (nil? (some #{state} ["unprocessed" "information-request"]))
-         (:is-jatkuva-haku? haku))))
-
-(defn- attachment-modify-grace-period-days
-  [hakuaika]
-  (or (:attachment-modify-grace-period-days hakuaika)
-      (-> js/config
-          js->clj
-          (get "attachment-modify-grace-period-days" 14))))
+(defn application-processing-jatkuva-haku? [application hakuaika]
+  (when-let [application-hakukohde-reviews (:application-hakukohde-reviews application)]
+    (and (:jatkuva-haku? hakuaika)
+         (util/application-in-processing? application-hakukohde-reviews))))
 
 (defn applying-possible? [form application]
-  (cond
-    (:virkailija-secret application)
-    true
-
-    (application-processing-jatkuva-haku? application (:tarjonta form))
-    false
-
-    (and
-      (:editing? application)
-      (util/after-apply-end-within-days? (-> form :tarjonta :hakuaika-dates :end)
-                                         (attachment-modify-grace-period-days
-                                          (-> form :tarjonta :hakuaika-dates))))
-    true
-
-    ;; When applying to hakukohde, hakuaika must be on
-    (-> form :tarjonta)
-    (-> form :tarjonta :hakuaika-dates :on)
-
-    ;; Applying to direct form haku
-    :else
-    true))
+  (get-in form [:tarjonta :hakuaika-dates :on] true))
