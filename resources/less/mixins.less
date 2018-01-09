@@ -158,3 +158,15 @@ span, p {
     border-right: @size solid @color;
   }
 }
+
+.arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = bottom) {
+  &:after {
+    bottom: 0;
+    left: @offset;
+    margin-bottom: -@size;
+
+    border-right: @size solid transparent;
+    border-left: @size solid transparent;
+    border-top: @size solid @color;
+  }
+}
