@@ -1469,27 +1469,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-haku-processed {
   flex-grow: 0;
-  position: relative;
-}
-
-.application__search-progress-bar, .application__search-progress-bar[role] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  border: none;
-  background-size: auto;
-  height: 16px;
-  width: 150px;
-}
-
-.application__search-progress-bar::-webkit-progress-bar {
-  background-color: @medium-pale-blue;
-  border-radius: 3px;
-}
-
-.application__search-progress-bar::-webkit-progress-value {
-  background-color: @light-green;
-  border-radius: 3px;
+  margin-top: -1px;
 }
 
 .application__search-control-tarjonta-haku-info {
@@ -1514,7 +1494,6 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku-unprocessed {
-  position: absolute;
   color: @white;
   font-size: 11px;
   text-transform: uppercase;
@@ -1604,6 +1583,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__count-tag {
   font-size: 11px;
+  line-height: 13px;
   border-radius: 4px;
   padding: 1px 8px;
   margin-right: 8px;
@@ -1615,7 +1595,10 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__count-tag--reviewed {
-  background-color: @medium-pale-blue;
+  background-color: @notice-orange;
+  min-width: 40px;
+  display: inline-block;
+  text-align: center;
 }
 
 .application-handling__count-tag--total {

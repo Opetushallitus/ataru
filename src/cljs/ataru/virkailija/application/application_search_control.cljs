@@ -94,10 +94,9 @@
      [:span.application__search-control-haku-hl]
      [:span.application__search-control-haku-count application-count]
      (when (pos? unprocessed)
-       (into
-         [:span.application__search-control-haku-processed
-          [:span.application__search-control-haku-unprocessed (str unprocessed " käsittelemättä")]
-          [processed-progress-bar application-count unprocessed processed]]))]))
+       [:span.application__search-control-haku-processed
+        [:span.application__search-control-haku-unprocessed.application-handling__count-tag.application-handling__count-tag--reviewed
+         (str unprocessed)]])]))
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
