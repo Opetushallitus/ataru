@@ -221,12 +221,18 @@
         clojure.string/lower-case
         keyword)))
 
+(defn- visible? [ui field-descriptor]
+  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+       (or (empty? (:children field-descriptor))
+           (some (partial visible? ui) (:children field-descriptor)))))
+
 (defn readonly-fields [form application]
   (when form
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
-                   :fi)]
+                   :fi)
+          ui   (subscribe [:state-query [:application :ui]])]
       (into [:div.application__readonly-container]
         (for [content (:content form)
-              :when (get-in @(subscribe [:state-query [:application :ui]]) [(keyword (:id content)) :visible?] true)]
+              :when (visible? ui content)]
           [field content application lang])))))
