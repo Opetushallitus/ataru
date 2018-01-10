@@ -28,8 +28,16 @@
 (declare BasicElement)
 (declare WrapperElement)
 
+(s/defschema LocalizedString {:fi                  s/Str
+                              (s/optional-key :sv) s/Str
+                              (s/optional-key :en) s/Str})
+
+(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
+                                      (s/optional-key :sv) s/Str
+                                      (s/optional-key :en) s/Str})
+
 (s/defschema Form {(s/optional-key :id)                s/Int
-                   :name                               s/Str
+                   :name                               LocalizedStringOptional
                    :content                            (s/pred empty?)
                    (s/optional-key :languages)         [s/Str]
                    (s/optional-key :key)               s/Str
@@ -38,14 +46,6 @@
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)})
-
-(s/defschema LocalizedString {:fi                  s/Str
-                              (s/optional-key :sv) s/Str
-                              (s/optional-key :en) s/Str})
-
-(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
-                                      (s/optional-key :sv) s/Str
-                                      (s/optional-key :en) s/Str})
 
 (s/defschema Module (s/enum :person-info))
 
@@ -358,7 +358,7 @@
                            :processed         s/Int
                            :hakukohteet       [ApplicationCountsHakukohde]})
 
-(s/defschema DirectFormHaku {:name              s/Str
+(s/defschema DirectFormHaku {:name              LocalizedStringOptional
                              :key               s/Str
                              :application-count s/Int
                              :processed         s/Int})

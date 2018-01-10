@@ -53,7 +53,7 @@
     (fn [form]
       [:div
        [:div.application__header-container
-        [:span.application__header (or haku-name (:name form))]
+        [:span.application__header (or haku-name (-> form :name selected-lang))]
         (when (and (not= :submitted @submit-status)
                    (> (count languages) 0)
                    (nil? secret))

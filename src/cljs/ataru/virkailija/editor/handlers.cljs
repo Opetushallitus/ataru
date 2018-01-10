@@ -321,7 +321,7 @@
   :editor/add-form
   (fn [db _]
     (post-new-form
-     {:name             "Uusi lomake"
+     {:name             {:fi "Uusi lomake"}
       :content          [(component/hakukohteet) (pm/person-info-module)]
       :languages        [:fi]})
     db))
@@ -329,7 +329,10 @@
 (defn- copy-form [db _]
   (let [form-id (get-in db [:editor :selected-form-key])
         form    (-> (get-in db [:editor :forms form-id])
-                    (update :name str " - KOPIO"))]
+                    (update :name (fn [name]
+                                    (reduce-kv #(assoc %1 %2 (str %3 " - KOPIO"))
+                                               {}
+                                               name))))]
     (post-new-form (select-keys form [:name :content :languages :organization-oid]))
     db))
 
@@ -370,11 +373,9 @@
 
 (reg-event-db
   :editor/change-form-name
-  (fn [db [_ new-form-name]]
+  (fn [db [_ lang new-form-name]]
     (with-form-key [db selected-form-key]
-      (update-in db [:editor :forms selected-form-key]
-                 assoc :name
-                 new-form-name))))
+      (assoc-in db [:editor :forms selected-form-key :name lang] new-form-name))))
 
 (reg-event-db
   :editor/change-form-organization
@@ -457,26 +458,37 @@
         (= (get coll idx) t) idx
         :else (recur (inc idx))))))
 
+(defn- toggle [x set]
+  (if (contains? set x)
+    (disj set x)
+    (conj set x)))
+
+(defn- if-empty [default seq]
+  (if (empty? seq) default seq))
+
 (defn- toggle-language [db [_ lang]]
-  (let [form-path [:editor :forms (get-in db [:editor :selected-form-key])]
-        lang-path (conj form-path :languages)]
-    (->
-      (update-in db lang-path
-        (fn [languages]
-          (let [languages (or languages [:fi])]
-            (cond
-              (not (some #{lang} languages)) (sort-by (partial index-of lang-order)
-                                               (conj languages lang))
-              (> (count languages) 1)        (filter (partial not= lang) languages)
-              :else                          languages))))
-      (update-in [:editor :ui]
-        (fn [ui]
-          (clojure.walk/prewalk
-            (fn [x]
-              (if (= [:focus? true] x)
-                [:focus? false]
-                x))
-            ui))))))
+  (let [selected (get-in db [:editor :selected-form-key])]
+    (-> db
+        (update-in [:editor :forms selected :languages]
+                   (fn [languages]
+                     (->> (set languages)
+                          (toggle lang)
+                          (if-empty languages)
+                          (sort-by (partial index-of lang-order)))))
+        (update-in [:editor :forms selected :name]
+                   (fn [name]
+                     (->> (if (contains? name lang)
+                            (dissoc name lang)
+                            (assoc name lang ""))
+                          (if-empty name))))
+        (update-in [:editor :ui]
+                   (fn [ui]
+                     (clojure.walk/prewalk
+                      (fn [x]
+                        (if (= [:focus? true] x)
+                          [:focus? false]
+                          x))
+                      ui))))))
 
 (reg-event-db :editor/toggle-language toggle-language)
 

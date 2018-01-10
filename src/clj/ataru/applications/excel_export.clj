@@ -62,7 +62,8 @@
 
 (def ^:private form-meta-fields
   [{:label "Nimi"
-    :field :name}
+    :field :name
+    :format-fn #(some (partial get %) [:fi :sv :en])}
    {:label "Id"
     :field :id}
    {:label "Tunniste"
@@ -483,7 +484,9 @@
 (defn filename-by-form
   [form-key]
   {:post [(some? %)]}
-  (create-filename (-> form-key form-store/fetch-by-key :name)))
+  (let [form (form-store/fetch-by-key form-key)]
+    (create-filename (some #(get-in form [:name %])
+                           [:fi :sv :en]))))
 
 (defn filename-by-hakukohde
   [hakukohde-oid session organization-service tarjonta-service]

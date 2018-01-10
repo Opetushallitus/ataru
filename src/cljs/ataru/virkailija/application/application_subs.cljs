@@ -15,7 +15,7 @@
          selected-form-key   (get-in db [:application :selected-form-key])
          forms               (get-in db [:application :forms])
          applications        (get-in db [:application :applications])]
-     (or (:name (get forms selected-form-key))
+     (or (from-multi-lang (:name (get forms selected-form-key)))
          (from-multi-lang (:name selected-hakukohde))
          (from-multi-lang (:name selected-haku))
          (if (sequential? applications) (str "Löytyi " (count applications) " hakemusta"))))))

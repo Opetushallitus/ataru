@@ -118,7 +118,7 @@
   [:div.application__search-control-haku.application__search-control-direct-form-haku
    [haku-info-link
     (str "/lomake-editori/applications/" (:key haku))
-    (update haku :name (partial hash-map :fi))]])
+    haku]])
 
 (defn loading-indicator []
   [:div.application__search-control-loading-indicator

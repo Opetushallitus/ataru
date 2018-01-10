@@ -1,7 +1,7 @@
 (ns ataru.fixtures.form)
 
 (def form-with-content
-  {:name        "Test fixture!"
+  {:name        {:fi "Test fixture!"}
    :created-by "DEVELOPER"
    :content
                 [{:fieldClass "formField"
@@ -19,7 +19,7 @@
                                 :fieldType  "textField"}]}]})
 
 (def person-info-form {:id 2147483647, ;; shouldn't clash with serial sequence id. Tests also create forms which use serial id, and the previous id 15 caused serious issues.
-                       :name "Uusi lomake",
+                       :name {:fi "Uusi lomake"},
                        :created-by "DEVELOPER",
                        :organization-oid "1.2.246.562.10.2.45",
                        :created-time "2016-07-28T09:58:34.217+03:00",

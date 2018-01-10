@@ -14,7 +14,7 @@
 
 (def form1 {:id               1,
             :key              "foobar1",
-            :name             "Selaintestilomake1",
+            :name             {:fi "Selaintestilomake1"},
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
             :content
@@ -31,7 +31,7 @@
 
 (def form2 {:id               2,
             :key              "foobar2",
-            :name             "Selaintestilomake2",
+            :name             {:fi "Selaintestilomake2"},
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
             :content
@@ -48,7 +48,7 @@
 
 (def form3 {:id               3,
             :key              "41101b4f-1762-49af-9db0-e3603adae3ad",
-            :name             "Selaintestilomake3",
+            :name             {:fi "Selaintestilomake3"},
             :created-by       "DEVELOPER"
             :organization-oid "1.2.246.562.10.0439845"
             :languages        ["fi", "en"]
@@ -68,7 +68,7 @@
 
 (def ssn-testform {:id               4,
                    :key              "41101b4f-1762-49af-9db0-e3603adae656",
-                   :name             "SSN_testilomake",
+                   :name             {:fi "SSN_testilomake"},
                    :created-by       "DEVELOPER"
                    :organization-oid "1.2.246.562.10.0439845"
                    :languages        ["fi"]
@@ -78,7 +78,7 @@
 
 (def belongs-to-hakukohteet-test-form {:id 5
                                        :key "belongs-to-hakukohteet-test-form"
-                                       :name "belongs-to-hakukohteet-test-form"
+                                       :name {:fi "belongs-to-hakukohteet-test-form"}
                                        :created-by "DEVELOPER"
                                        :organization-oid "1.2.246.562.10.0439845"
                                        :languages ["fi"]
