@@ -92,7 +92,7 @@
      [:span.application__search-control-haku-title
       (some #(get name %) [:fi :sv :en])]
      [:span.application__search-control-haku-hl]
-     [:span.application__search-control-haku-count.application-handling__count-tag.application-handling__count-tag--total application-count]
+     [:span.application__search-control-haku-count application-count]
      (when (pos? unprocessed)
        (into
          [:span.application__search-control-haku-processed
