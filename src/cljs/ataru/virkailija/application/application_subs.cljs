@@ -70,9 +70,7 @@
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (sort
     (fn [a b]
-      (-
-        (- (:application-count b) (:processed b))
-        (- (:application-count a) (:processed a))))
+      (- (:unprocessed b) (:unprocessed a)))
     haku-seq))
 
 (defn sort-haku-seq-by-name [haku-seq]

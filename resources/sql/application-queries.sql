@@ -723,38 +723,48 @@ WITH filtered_applications AS (
                      count(key) AS application_count
                    FROM filtered_applications
                    GROUP BY haku
+), unnested_hakukohde_with_hakukohde_reviews AS (
+    SELECT
+      key,
+      haku,
+      unnested_hakukohde.hakukohde              AS hakukohde,
+      unnested_hakukohde.state                  AS application_state,
+      application_hakukohde_reviews.requirement AS hakukohde_review_requirement,
+      application_hakukohde_reviews.state       AS hakukohde_review_state
+    FROM unnested_hakukohde
+      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
 ), haku_review_complete_counts AS (
     SELECT
       haku,
-      count(distinct(key)) AS processed
-    FROM unnested_hakukohde
-      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
+      hakukohde,
+      count(DISTINCT (key)) AS processed
+    FROM unnested_hakukohde_with_hakukohde_reviews
     WHERE
-      (application_hakukohde_reviews.state = 'processed' AND application_hakukohde_reviews.requirement = 'processing-state')
-      OR unnested_hakukohde.state = 'inactivated'
-    GROUP BY haku
-), hakukohde_review_complete_counts AS (
+      (hakukohde_review_state = 'processed' AND hakukohde_review_requirement = 'processing-state')
+      OR application_state = 'inactivated'
+    GROUP BY haku, hakukohde
+), haku_review_processing_counts AS (
     SELECT
-      unnested_hakukohde.hakukohde,
-      count(distinct(key)) AS processed
-    FROM unnested_hakukohde
-      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
-    WHERE
-      (application_hakukohde_reviews.state = 'processed' AND application_hakukohde_reviews.requirement = 'processing-state')
-      OR unnested_hakukohde.state = 'inactivated'
-    GROUP BY unnested_hakukohde.hakukohde
+      haku,
+      hakukohde,
+      count(DISTINCT (key)) AS processing
+    FROM unnested_hakukohde_with_hakukohde_reviews
+    WHERE hakukohde_review_requirement = 'processing-state' AND hakukohde_review_state != 'unprocessed' AND
+          hakukohde_review_state != 'processed' AND
+          application_state != 'inactivated'
+    GROUP BY haku, hakukohde
 )
 SELECT
   unnested_hakukohde.haku,
   unnested_hakukohde.hakukohde,
-  max(haku_counts.application_count)                             AS haku_application_count,
-  count(unnested_hakukohde.key)                                  AS application_count,
-  coalesce(max(haku_review_complete_counts.processed), 0)        AS haku_processed,
-  coalesce(max(hakukohde_review_complete_counts.processed), 0)   AS processed
+  max(haku_counts.application_count)                         AS haku_application_count,
+  count(DISTINCT (unnested_hakukohde.key))                   AS application_count,
+  coalesce(max(haku_review_complete_counts.processed), 0)    AS processed,
+  coalesce(max(haku_review_processing_counts.processing), 0) AS processing
 FROM unnested_hakukohde
   JOIN haku_counts ON haku_counts.haku = unnested_hakukohde.haku
-  LEFT JOIN haku_review_complete_counts ON haku_review_complete_counts.haku = unnested_hakukohde.haku
-  LEFT JOIN hakukohde_review_complete_counts ON hakukohde_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
+  LEFT JOIN haku_review_complete_counts ON haku_review_complete_counts.hakukohde = unnested_hakukohde.hakukohde
+  LEFT JOIN haku_review_processing_counts ON haku_review_processing_counts.hakukohde = unnested_hakukohde.hakukohde
 GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 
 -- name: yesql-get-direct-form-haut
@@ -764,7 +774,10 @@ SELECT
   count(a.key)    AS application_count,
   sum(CASE WHEN ar.state = 'inactivated' OR ahr.state = 'processed'
     THEN 1
-      ELSE 0 END) AS processed
+      ELSE 0 END) AS processed,
+  sum(CASE WHEN ahr.state IS NULL OR ahr.state = 'unprocessed'
+    THEN 1
+      ELSE 0 END) AS unprocessed
 FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
   JOIN latest_forms AS lf ON lf.key = f.key
