@@ -576,8 +576,16 @@
                 {:hakukohdeOid hakukohde-oid}))
        hakutoiveet))
 
+(defn- hakutoiveet-priority-order
+  [hakukohteet-in-priority-order hakutoiveet]
+  (map (fn [hakukohde-oid]
+         (->> hakutoiveet
+              (filter #(= hakukohde-oid (:hakukohdeOid %)))
+              first))
+         hakukohteet-in-priority-order))
+
 (defn- unwrap-external-application
-  [{:keys [key haku person_oid lang email] :as application}]
+  [{:keys [key haku person_oid lang email hakukohde] :as application}]
   {:oid           key
    :hakuOid       haku
    :henkiloOid    person_oid
@@ -589,7 +597,8 @@
                         nil)
                        (group-by :hakukohde)
                        (requirement-names-mapped-to-states-by-hakukohde)
-                       (hakutoiveet-to-list))})
+                       (hakutoiveet-to-list)
+                       (hakutoiveet-priority-order hakukohde))})
 
 (defn get-external-applications
   [haku-oid hakukohde-oid hakemus-oids organizations]
