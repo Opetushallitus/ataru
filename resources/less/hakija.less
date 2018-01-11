@@ -1028,21 +1028,40 @@ and (max-width: @desktop-content-width) {
   flex-direction: column;
   font-size: 30px;
   align-items: center;
+  cursor: default;
 }
 
 .application__hakukohde-priority-changer {
-  font-size: 60px;
-  line-height: 30%;
-  color: @sg-color-gray-2;
   cursor: pointer;
 
-  &:hover {
-    color: @sg-color-gray;
+  &.increase {
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 12px solid @sg-color-gray-2;
+
+    &:hover {
+      border-bottom-color: @sg-color-gray;
+    }
+
+    &.disabled {
+      cursor: default;
+      border-bottom-color: @sg-gray-lighten-3;
+    }
   }
 
-  &.disabled {
-    cursor: default;
-    color: @sg-gray-lighten-3;
+  &.decrease {
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid @sg-color-gray-2;
+
+    &:hover {
+      border-top-color: @sg-color-gray;
+    }
+
+    &.disabled {
+      cursor: default;
+      border-top-color: @sg-gray-lighten-3;
+    }
   }
 }
 

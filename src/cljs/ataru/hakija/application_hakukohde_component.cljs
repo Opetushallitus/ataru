@@ -77,7 +77,7 @@
 (defn- selected-hakukohde-increase-priority
   [hakukohde-oid priority-index]
   (let [disabled? (= priority-index 1)]
-    [:i.zmdi.zmdi-caret-up.application__hakukohde-priority-changer
+    [:span.application__hakukohde-priority-changer.increase
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
@@ -86,12 +86,12 @@
   [hakukohde-oid priority-index]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
         disabled? (= priority-index (count selected-hakukohteet))]
-    [:i.zmdi.zmdi-caret-down.application__hakukohde-priority-changer
+    [:span.application__hakukohde-priority-changer.decrease
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
 
-(defn- prioritize-hakukohteet-buttons
+(defn- prioritize-hakukohde-buttons
   [hakukohde-oid]
   (let [priority-index @(subscribe [:application/hakukohde-priority-order hakukohde-oid])]
     [:div.application__hakukohde-row-priority-container
@@ -108,7 +108,7 @@
                "fadeOut"
                "fadeIn")}
      (when prioritize-hakukohteet?
-       [prioritize-hakukohteet-buttons hakukohde-oid])
+       [prioritize-hakukohde-buttons hakukohde-oid])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected

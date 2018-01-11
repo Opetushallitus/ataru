@@ -113,14 +113,14 @@ function nthHakukohdeSearchResultButton(n) {
 function nthHakukohdePriorityUp(n) {
   return testFrame().find('.application__hakukohde-row-priority-container')
     .eq(n)
-    .find('i')
+    .find('span')
     .eq(0)
 }
 
 function nthHakukohdePriorityDown(n) {
   return testFrame().find('.application__hakukohde-row-priority-container')
     .eq(n)
-    .find('i')
+    .find('span')
     .eq(1)
 }
 
