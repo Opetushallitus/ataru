@@ -14,6 +14,7 @@
   (let [url                (viestintapalvelu-address)
         wrapped-recipients (mapv (fn [rcp] {:email rcp}) recipients)
         response           @(http/post url {:headers {"content-type" "application/json"}
+                                            :query-params {:sanitize "false"}
                                             :body    (json/generate-string {:email     {:from    from
                                                                                         :subject subject
                                                                                         :isHtml  true
