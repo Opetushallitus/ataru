@@ -35,6 +35,8 @@
   background-color: @very-light-gray;
   border-bottom: 1px solid @separator-color;
   .application-handling-webkit-scrollbar-mixin;
+  max-width: 1200px;
+  margin: auto;
 }
 
 .application-handling__header {
@@ -1460,6 +1462,14 @@ th.application__readonly-adjacent--header {
   margin: 0 10px;
 }
 
+.application__search-control-haku-link:hover .application__search-control-haku-hl {
+  border-bottom: 1px solid @medium-pale-blue;
+}
+
+.application__search-control-haku-link:hover .application__search-control-haku-title {
+  font-weight: bolder;
+}
+
 .application__search-control-haku-count {
   color: @text-color;
   font-size: 13px;
@@ -1531,6 +1541,10 @@ th.application__readonly-adjacent--header {
   transform: rotate(-135deg);
 }
 
+.application__search-control-open-hakukohteet--disabled {
+  border-color: @sg-color-gray-2;
+}
+
 .application__search-control-hakukohteet-vline {
   position: absolute;
   top: 0;
@@ -1595,7 +1609,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__count-tag--reviewed {
-  background-color: @notice-orange;
+  background-color: @pale-blue;
   min-width: 40px;
   display: inline-block;
   text-align: center;

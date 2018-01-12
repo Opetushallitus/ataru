@@ -78,32 +78,24 @@
       "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
-
-(defn- processed-progress-bar
-  [total unprocessed processed]
-  [:progress.application__search-progress-bar
-   {:max   total
-    :value processed}])
-
-(defn haku-info-link [link-href {:keys [name application-count processed]}]
-  (let [unprocessed (- application-count processed)]
-    [:a.application__search-control-haku-link
-     {:href link-href}
-     [:span.application__search-control-haku-title
-      (some #(get name %) [:fi :sv :en])]
-     [:span.application__search-control-haku-hl]
-     [:span.application__search-control-haku-count application-count]
-     (when (pos? unprocessed)
-       [:span.application__search-control-haku-processed
-        [:span.application__search-control-haku-unprocessed.application-handling__count-tag.application-handling__count-tag--reviewed
-         (str unprocessed)]])]))
+(defn haku-info-link [link-href {:keys [name application-count unprocessed]}]
+  [:a.application__search-control-haku-link
+   {:href link-href}
+   [:span.application__search-control-haku-title
+    (some #(get name %) [:fi :sv :en])]
+   [:span.application__search-control-haku-hl]
+   [:span.application__search-control-haku-count application-count]
+   (when (pos? unprocessed)
+     [:span.application__search-control-haku-processed
+      [:span.application__search-control-haku-unprocessed.application-handling__count-tag.application-handling__count-tag--reviewed
+       (str unprocessed)]])])
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
    (let [hakukohde-count (count hakukohteet)]
      (if @hakukohteet-opened
        [:div.application__search-control-hakukohteet
-        (when (and @hakukohteet-opened (< 1 hakukohde-count))
+        (when (and @hakukohteet-opened (pos? hakukohde-count))
           [:div.application__search-control-hakukohteet-vline])
         [:div.application__search-control-hakukohde-listing
          (map
@@ -119,16 +111,21 @@
          (str (count hakukohteet) " hakukohdetta")]]))])
 
 (defn tarjonta-haku [haku]
-  (let [hakukohteet-opened (r/atom (= 1 (count (:hakukohteet haku))))]
+  (let [hakukohde-count    (count (:hakukohteet haku))
+        hakukohteet-opened (r/atom (= 1 hakukohde-count))]
     (fn [haku]
       [:div.application__search-control-haku
        [:div.application__search-control-tarjonta-haku-info
         [:div.application__search-control-open-hakukohteet-container
-         {:on-click #(reset! hakukohteet-opened (not @hakukohteet-opened))}
+         {:on-click #(when (< 1 hakukohde-count)
+                       (reset! hakukohteet-opened (not @hakukohteet-opened)))}
          [:i.application__search-control-open-hakukohteet
-          {:class (if @hakukohteet-opened
-                    "application__search-control-open-hakukohteet--up"
-                    "application__search-control-open-hakukohteet--down")}]]
+          {:class (clojure.string/join
+                    " "
+                    [(if @hakukohteet-opened
+                       "application__search-control-open-hakukohteet--up"
+                       "application__search-control-open-hakukohteet--down")
+                     (when (= 1 hakukohde-count) "application__search-control-open-hakukohteet--disabled")])}]]
         [haku-info-link
          (str "/lomake-editori/applications/haku/" (:oid haku))
          haku]]
