@@ -129,7 +129,8 @@
   (fn [db [_ hakukohde-oid index-change]]
     (let [hakukohteet     (-> db :application :answers :hakukohteet :values)
           current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
-                                                  %1)))
+                                                  %1)
+                                               hakukohteet))
           new-index       (+ current-index index-change)
           new-hakukohteet (assoc hakukohteet
                                  current-index (nth hakukohteet new-index)
