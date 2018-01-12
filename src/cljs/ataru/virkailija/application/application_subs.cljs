@@ -70,7 +70,10 @@
 (defn sort-haku-seq-by-unprocessed [haku-seq]
   (sort
     (fn [a b]
-      (- (:unprocessed b) (:unprocessed a)))
+      (let [unprocessed-diff (- (:unprocessed b) (:unprocessed a))]
+        (if (zero? unprocessed-diff)
+          (- (:application-count b) (:application-count a))
+          unprocessed-diff)))
     haku-seq))
 
 (defn sort-haku-seq-by-name [haku-seq]
