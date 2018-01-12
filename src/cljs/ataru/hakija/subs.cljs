@@ -178,8 +178,7 @@
 (re-frame/reg-sub
   :application/hakukohde-priority-order
   (fn [db [_ hakukohde-oid]]
-    (let [hakukohde-oids (map :value (-> db :application :answers :hakukohteet :values))
-          index          (count (take-while #(not= hakukohde-oid %) hakukohde-oids))]
-      (when (or (< index (count hakukohde-oids))
-                (= hakukohde-oid (last hakukohde-oids)))
-        (inc index)))))
+    (->> (-> db :application :answers :hakukohteet :values)
+         (keep-indexed #(when (= hakukohde-oid (:value %2))
+                          (inc %1)))
+         first)))

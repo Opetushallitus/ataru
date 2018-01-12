@@ -127,13 +127,13 @@
 (reg-event-db
   :application/change-hakukohde-priority
   (fn [db [_ hakukohde-oid index-change]]
-    (let [hakukohde-oids         (mapv :value (-> db :application :answers :hakukohteet :values))
-          current-index          (count (take-while #(not= hakukohde-oid %) hakukohde-oids))
-          new-index              (+ current-index index-change)
-          ordered-hakukohde-oids (assoc hakukohde-oids
-                                        current-index (nth hakukohde-oids new-index)
-                                        new-index (nth hakukohde-oids current-index))
-          new-values (map #(hash-map :valid true :value %) ordered-hakukohde-oids)]
+    (let [hakukohteet     (-> db :application :answers :hakukohteet :values)
+          current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
+                                                  %1)))
+          new-index       (+ current-index index-change)
+          new-hakukohteet (assoc hakukohteet
+                                 current-index (nth hakukohteet new-index)
+                                 new-index (nth hakukohteet current-index))]
       (-> db
-          (assoc-in [:application :answers :hakukohteet :values] new-values)
+          (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
           set-values-changed))))
