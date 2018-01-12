@@ -718,11 +718,12 @@ WITH filtered_applications AS (
       unnest(hakukohde) AS hakukohde,
       state
     FROM filtered_applications
-), haku_counts AS (SELECT
-                     haku,
-                     count(key) AS application_count
-                   FROM filtered_applications
-                   GROUP BY haku
+), haku_counts AS (
+    SELECT
+      haku,
+      count(key) AS application_count
+    FROM filtered_applications
+    GROUP BY haku
 ), unnested_hakukohde_with_hakukohde_reviews AS (
     SELECT
       key,
@@ -775,7 +776,7 @@ SELECT
   sum(CASE WHEN ar.state = 'inactivated' OR ahr.state = 'processed'
     THEN 1
       ELSE 0 END) AS processed,
-  sum(CASE WHEN ahr.state IS NULL OR ahr.state = 'unprocessed'
+  sum(CASE WHEN ar.state != 'inactivated' AND (ahr.state IS NULL OR ahr.state = 'unprocessed')
     THEN 1
       ELSE 0 END) AS unprocessed
 FROM latest_applications AS a
