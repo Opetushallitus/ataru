@@ -176,7 +176,7 @@
     (-> db :form :tarjonta :prioritize-hakukohteet)))
 
 (re-frame/reg-sub
-  :application/hakukohde-priority-order
+  :application/hakukohde-priority-number
   (fn [db [_ hakukohde-oid]]
     (->> (-> db :application :answers :hakukohteet :values)
          (keep-indexed #(when (= hakukohde-oid (:value %2))

@@ -75,17 +75,17 @@
     (get-translation :remove)]])
 
 (defn- selected-hakukohde-increase-priority
-  [hakukohde-oid priority-index]
-  (let [disabled? (= priority-index 1)]
+  [hakukohde-oid priority-number]
+  (let [disabled? (= priority-number 1)]
     [:span.application__hakukohde-priority-changer.increase
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
 
 (defn- selected-hakukohde-decrease-priority
-  [hakukohde-oid priority-index]
+  [hakukohde-oid priority-number]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        disabled? (= priority-index (count selected-hakukohteet))]
+        disabled? (= priority-number (count selected-hakukohteet))]
     [:span.application__hakukohde-priority-changer.decrease
      {:class    (when disabled? "disabled")
       :on-click (when-not disabled?
@@ -93,11 +93,11 @@
 
 (defn- prioritize-hakukohde-buttons
   [hakukohde-oid]
-  (let [priority-index @(subscribe [:application/hakukohde-priority-order hakukohde-oid])]
+  (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
     [:div.application__hakukohde-row-priority-container
-     [selected-hakukohde-increase-priority hakukohde-oid priority-index]
-     priority-index
-     [selected-hakukohde-decrease-priority hakukohde-oid priority-index]]))
+     [selected-hakukohde-increase-priority hakukohde-oid priority-number]
+     priority-number
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-number]]))
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
