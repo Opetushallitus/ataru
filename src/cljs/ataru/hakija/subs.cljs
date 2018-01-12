@@ -169,3 +169,16 @@
   :application/mouse-over-remove-question-group-button
   (fn [db [_ field-descriptor idx]]
     (get-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx])))
+
+(re-frame/reg-sub
+  :application/prioritize-hakukohteet?
+  (fn [db _]
+    (-> db :form :tarjonta :prioritize-hakukohteet)))
+
+(re-frame/reg-sub
+  :application/hakukohde-priority-number
+  (fn [db [_ hakukohde-oid]]
+    (->> (-> db :application :answers :hakukohteet :values)
+         (keep-indexed #(when (= hakukohde-oid (:value %2))
+                          (inc %1)))
+         first)))

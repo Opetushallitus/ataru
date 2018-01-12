@@ -74,13 +74,41 @@
      :role               "button"}
     (get-translation :remove)]])
 
+(defn- selected-hakukohde-increase-priority
+  [hakukohde-oid priority-number]
+  (let [disabled? (= priority-number 1)]
+    [:span.application__hakukohde-priority-changer.increase
+     {:class    (when disabled? "disabled")
+      :on-click (when-not disabled?
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
+
+(defn- selected-hakukohde-decrease-priority
+  [hakukohde-oid priority-number]
+  (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
+        disabled? (= priority-number (count selected-hakukohteet))]
+    [:span.application__hakukohde-priority-changer.decrease
+     {:class    (when disabled? "disabled")
+      :on-click (when-not disabled?
+                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
+
+(defn- prioritize-hakukohde-buttons
+  [hakukohde-oid]
+  (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
+    [:div.application__hakukohde-row-priority-container
+     [selected-hakukohde-increase-priority hakukohde-oid priority-number]
+     priority-number
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-number]]))
+
 (defn- selected-hakukohde-row
   [hakukohde-oid]
-  (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])]
+  (let [deleting? @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
+        prioritize-hakukohteet? @(subscribe [:application/prioritize-hakukohteet?])]
     [:div.application__hakukohde-row.application__hakukohde-row--selected.animated
      {:class (if deleting?
                "fadeOut"
                "fadeIn")}
+     (when prioritize-hakukohteet?
+       [prioritize-hakukohde-buttons hakukohde-oid])
      [:div.application__hakukohde-row-icon-container
       [:i.zmdi.zmdi-graduation-cap.zmdi-hc-3x]]
      [:div.application__hakukohde-row-text-container.application__hakukohde-row-text-container--selected

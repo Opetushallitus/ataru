@@ -101,6 +101,7 @@
    :1.2.246.562.29.65950024186 (merge
                                  base-haku
                                  {:oid              "1.2.246.562.29.65950024186"
+                                  :usePriority      true
                                   :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
                                   :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                      "1.2.246.562.20.49028196524"
@@ -190,8 +191,9 @@
     ((keyword hakukohde-oid) hakukohde))
 
   (get-hakukohde-name [this hakukohde-oid]
-    (when (= hakukohde-oid "hakukohde.oid")
-      {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}))
+    (if (= hakukohde-oid "hakukohde.oid")
+      {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
+      {:fi "Testihakukohde"}))
 
   (hakukohde-search [_ _ _]
     (->> [(:1.2.246.562.20.49028196523 hakukohde)

@@ -112,6 +112,40 @@
       })
     })
 
+    describe('changing hakukohde order back and forth', function() {
+      before(
+        clickElement(function() {
+          return nthHakukohdePriorityDown(0)
+        }),
+        wait.until(function() {
+          return selectedHakukohdeTexts() === 'Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne BTestihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A';
+        }),
+        clickElement(function() {
+          return nthHakukohdePriorityUp(1)
+        }),
+        wait.until(function() {
+          return selectedHakukohdeTexts() === 'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B'
+        }),
+        //Make sure the disabled buttons do nothing
+        clickElement(function() {
+          return nthHakukohdePriorityUp(0)
+        }),
+        wait.until(function() {
+          return selectedHakukohdeTexts() === 'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B'
+        }),
+        clickElement(function() {
+          return nthHakukohdePriorityDown(1)
+        }),
+        wait.until(function() {
+          return selectedHakukohdeTexts() === 'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B'
+        })
+      );
+
+      it('has hakukohdes in correct order', function() {
+          expect(selectedHakukohdeTexts()).to.equal('Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+      });
+    });
+
     describe('submitting form and viewing results', function () {
       before(
         clickElement(function () {
@@ -123,7 +157,7 @@
       )
       it('shows readonly application with selected data', function() {
         var hakukohdeValues = testFrame().find('.application__hakukohde-selected-list').text()
-        expect(hakukohdeValues).to.equal('Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne BTestihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A')
+        expect(hakukohdeValues).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
 
         var otherValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
         var expectedOtherValues = ["Etunimi Tokanimi",

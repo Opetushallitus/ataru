@@ -25,8 +25,8 @@
 
 (defn- set-values-changed
   [db]
-  (let [values (set (map :value (get-in db [:application :answers :hakukohteet :values] [])))
-        original-values (set (get-in db [:application :answers :hakukohteet :original-value] []))]
+  (let [values (map :value (get-in db [:application :answers :hakukohteet :values] []))
+        original-values (get-in db [:application :answers :hakukohteet :original-value] [])]
     (update-in db [:application :values-changed?]
                (fnil (if (= original-values values) disj conj) #{})
                :hakukohteet)))
@@ -97,7 +97,7 @@
  :application/hakukohde-remove
  (fn [{db :db} [_ hakukohde-oid]]
    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
-         new-hakukohde-values (remove #(= hakukohde-oid (:value %)) selected-hakukohteet)
+         new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
          db (-> db
                 (assoc-in [:application :answers :hakukohteet :values]
                           new-hakukohde-values)
@@ -123,3 +123,18 @@
   :application/show-answers-belonging-to-hakukohteet
   (fn [db _]
     (set-visibility-of-belongs-to-hakukohteet-questions db)))
+
+(reg-event-db
+  :application/change-hakukohde-priority
+  (fn [db [_ hakukohde-oid index-change]]
+    (let [hakukohteet     (-> db :application :answers :hakukohteet :values)
+          current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
+                                                  %1)
+                                               hakukohteet))
+          new-index       (+ current-index index-change)
+          new-hakukohteet (assoc hakukohteet
+                                 current-index (nth hakukohteet new-index)
+                                 new-index (nth hakukohteet current-index))]
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+          set-values-changed))))

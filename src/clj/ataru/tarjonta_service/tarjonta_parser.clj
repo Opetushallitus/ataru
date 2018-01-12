@@ -73,6 +73,7 @@
           {:hakukohteet      hakukohteet
            :haku-oid         haku-oid
            :haku-name        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
+           :prioritize-hakukohteet (:usePriority haku)
            :max-hakukohteet  (when (and max-hakukohteet (pos? max-hakukohteet))
                                max-hakukohteet)
            :hakuaika-dates   (hakuaika/get-hakuaika-info (first hakukohteet)

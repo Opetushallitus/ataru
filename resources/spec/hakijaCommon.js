@@ -110,6 +110,24 @@ function nthHakukohdeSearchResultButton(n) {
   return hakukohdeSearchHits().eq(n).find('a')
 }
 
+function nthHakukohdePriorityUp(n) {
+  return testFrame().find('.application__hakukohde-row-priority-container')
+    .eq(n)
+    .find('span')
+    .eq(0)
+}
+
+function nthHakukohdePriorityDown(n) {
+  return testFrame().find('.application__hakukohde-row-priority-container')
+    .eq(n)
+    .find('span')
+    .eq(1)
+}
+
+function selectedHakukohdeTexts() {
+  return testFrame().find('.application__hakukohde-row-text-container--selected').text()
+}
+
 function assertOnlyFinnishSsn() {
   expect(hasFormField('ssn')).to.equal(true);
   expect(hasFormField('have-finnish-ssn')).to.equal(false);

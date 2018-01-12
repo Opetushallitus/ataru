@@ -230,7 +230,7 @@
    :id        2
    :secret    "12345"
    :haku      "1.2.246.562.29.65950024186"
-   :hakukohde ["1.2.246.562.20.49028196523"]
+   :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
    :answers   [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a",
                 :value     "Vastaus tekstikysymykseen",
                 :fieldType "textField",
@@ -257,7 +257,11 @@
                {:key "postal-code", :value "00013", :fieldType "textField", :label {:fi "Postinumero", :sv "Postnummer"}}
                {:key "language", :value "suomi", :fieldType "dropdown", :label {:fi "Äidinkieli", :sv "Modersmål"}}
                {:key "gender", :value "Mies", :fieldType "dropdown", :label {:fi "Sukupuoli", :sv "Kön"}}
-               {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}]})
+               {:key "164954b5-7b23-4774-bd44-dee14071316b" :value ["57af9386-d80c-4321-ab4a-d53619c14a74"] :fieldType "attachment" :label {:fi "Eka liite" :sv ""}}
+               {:key       "hakukohteet"
+                :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                :fieldType "hakukohteet"
+                :label     {:fi "Hakukohteet", :sv "Ansökningsmål", :en "Application options"}}]})
 
 (def application-with-person-info-module {:key "9d24af7d-f672-4c0e-870f-3c6999f105e0",
                                           :lang "fi",
