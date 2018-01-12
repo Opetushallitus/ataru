@@ -1071,7 +1071,9 @@
             (str "Oppija " person-oid)]]
           (when-not yksiloity
             [:a.individualization
-             {:href   (str "/henkilo-ui/oppija/" person-oid "/duplikaatit")
+             {:href   (str "/henkilo-ui/oppija/"
+                           person-oid
+                           "/duplikaatit?permissionCheckService=ATARU")
               :target "_blank"}
              [:i.zmdi.zmdi-account-o]
              [:span "Hakijaa ei ole yksilöity. Tee yksilöinti henkilöpalvelussa."]])])]
