@@ -448,10 +448,11 @@
       (let [all-filters-selected? (= (count @hakukohde-review-filters)
                                      (count application-review-states/application-hakukohde-processing-states))]
         [:span.application-handling__filter-state.application-handling__filter-state--application-state
-         [:a.application-handling__filter-state-link
+         [:a.application-handling__basic-list-basic-column-header
           {:on-click toggle-filter-opened}
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
-          (str "Käsittelyvaihe" (when-not all-filters-selected? " *"))]
+          "Käsittelyvaihe"
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
@@ -486,10 +487,11 @@
       (let [all-filters-selected? (= (count @state-filters)
                                      (count review-states/application-hakukohde-selection-states))]
         [:span.application-handling__filter-state
-         [:a.application-handling__filter-state-link
+         [:a.application-handling__basic-list-basic-column-header
           {:on-click toggle-filter-opened}
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
-          (str "Valinta" (when-not all-filters-selected? " *"))]
+          "Valinta"
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection.application-handling__filter-state--selection-state
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
@@ -524,11 +526,12 @@
        {:class    css-class
         :on-click (partial sortable-column-click column-id)}
        [:span.application-handling__basic-list-basic-column-header
-        heading]
-       (when (= column-id (:column @application-sort))
-         (if (= :descending (:order @application-sort))
-           [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
-           [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
+        heading
+        (if (= column-id (:column @application-sort))
+          (if (= :descending (:order @application-sort))
+            [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
+            [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow])
+          [:i.zmdi.zmdi-chevron-down..application-handling__sort-arrow.application-handling__sort-arrow--disabled])]])))
 
 (defn application-list-loading-indicator []
   (let [fetching (subscribe [:state-query [:application :fetching-applications]])]

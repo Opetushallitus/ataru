@@ -149,7 +149,6 @@ and (max-width: 1000px) {
 .application-handling__filter-state {
   position: relative;
   float: left;
-  margin-left: 6px;
 }
 
 .application-handling__filter-state-link {
@@ -160,7 +159,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-link-icon {
-  margin-right: 5px;
+  margin-left: 5px;
+  color: @white;
+}
+
+.application-handling__filter-state-link-icon--enabled {
+  color: @text-color;
 }
 
 .application-handling__filter-state-selection {
@@ -227,9 +231,10 @@ and (max-width: 1000px) {
 
 .application-handling__list {
   cursor: pointer;
-  overflow: auto;
+  overflow-x: visible;
+  overflow-y: auto;
   max-height: 120px;
-  margin-bottom: 15px;
+  padding: 0 1px;
 }
 
 .application-handling__list--expanded {
@@ -237,17 +242,13 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row {
-  padding: 7px 8px 8px 8px;
-  margin: 0;
-  display: block;
-  font-size: 15px;
-  line-height: 15px;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  overflow-x: hidden;
-  border-bottom: 1px solid @review-separator-color;
+  margin-bottom: 1px;
+  padding: 12px 10px 15px 15px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.17);
+  border-radius: 3px;
+  font-size: 14px;
+  background: #ffffff;
+  min-height: 50px;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -267,6 +268,14 @@ and (max-width: 1000px) {
   color: #5E5E5E;
   font-size: 14px;
   display: flex;
+  overflow: visible;
+  border-bottom: none;
+  padding: 20px 0 20px 12px;
+  margin: 1px;
+}
+
+.application-handling__list-header:hover {
+  background: inherit;
 }
 
 .application-handling__list-row--inactivated {
@@ -280,19 +289,28 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-header:hover {
-  background: none;
+  background: @white;
 }
 
 .application-handling__sort-arrow {
-  color: @blue-text-color;
+  color: @text-color;
   font-weight: bold;
   margin-left: 5px;
   cursor: pointer;
 }
 
+.application-handling__sort-arrow--disabled {
+  color: @white;
+}
+
+
 .application-handling__basic-list-basic-column-header {
-  color: @blue-text-color;
+  color: @text-color;
+  .light;
   cursor: pointer;
+  background-color: @popover-highlighted-gray;
+  border-radius: 3px;
+  padding: 6px 10px;
 }
 
 .application-handling__list-row-person-info {
@@ -307,6 +325,7 @@ and (max-width: 1000px) {
 .application-handling__list-row--application-applicant {
   flex: 1 1 45%;
   display: inline-block;
+  color: @pale-blue;
 }
 
 .application-handling__list-row--time {
@@ -318,7 +337,8 @@ and (max-width: 1000px) {
 .application-handling__list-row--application-time {
   flex: 0 0 55%;
   display: inline-block;
-  color: @sg-color-gray-2;
+  color: @sg-color-gray;
+  .light;
 }
 
 .application-handling__list-row--time-day {
@@ -1592,7 +1612,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__application-hakukohde-cell {
   font-size: 13px;
-  color: @sg-color-gray-2;
+  color: @gray-of-the-beast;
   .light;
   flex: 1 0 70%;
   margin-top: 3px;
