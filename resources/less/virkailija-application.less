@@ -148,7 +148,8 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state {
   position: relative;
-  float: right;
+  float: left;
+  margin-left: 6px;
 }
 
 .application-handling__filter-state-link {
@@ -253,6 +254,10 @@ and (max-width: 1000px) {
   }
 }
 
+.application-handling__list-row-hakukohteet-wrapper {
+  margin-top: 3px;
+}
+
 .application-handling__list-row:hover {
   background: #f5f5f5;
   border-radius: 3px;
@@ -305,7 +310,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--time {
-  flex: 0 0 20%;
+  flex: 0 0 25%;
   display: inline-block;
   color: @sg-color-gray-2;
 }
@@ -327,7 +332,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--selection {
-  flex: 0 0 15%;
+  flex: 0 0 10%;
   display: inline-block;
 }
 
@@ -1586,9 +1591,11 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__application-hakukohde-cell {
-  font-size: 12px;
+  font-size: 13px;
   color: @sg-color-gray-2;
-  flex: 1 1 65%;
+  .light;
+  flex: 1 0 70%;
+  margin-top: 3px;
   display: inline-block;
 }
 
@@ -1597,17 +1604,12 @@ th.application__readonly-adjacent--header {
   text-transform: uppercase;
 }
 
-.application-handling__hakukohde-state-cell, .application-handling__hakukohde-selection-cell {
-  display: inline-block;
-  margin-left: -4px;
-}
-
 .application-handling__hakukohde-state-cell {
   flex: 0 0 20%;
 }
 
 .application-handling__hakukohde-selection-cell {
-  flex: 0 0 15%;
+  flex: 0 0 10%;
 }
 
 .application-handling__count-tag {
@@ -1616,7 +1618,6 @@ th.application__readonly-adjacent--header {
   border-radius: 4px;
   padding: 1px 8px;
   text-transform: uppercase;
-  color: white;
   white-space: nowrap;
   height: 16px;
   margin-top: 1px;
@@ -1624,6 +1625,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__count-tag--reviewed {
   background-color: @pale-blue;
+  color: @white;
   min-width: 40px;
   display: inline-block;
   text-align: center;
@@ -1635,8 +1637,23 @@ th.application__readonly-adjacent--header {
   margin-left: 8px;
 }
 
+.application-handling__state-label {
+  border-left: 6px solid;
+  height: 10px;
+  margin-right: 4px;
+  display: inline-block;
+  border-color: @pale-blue;
+}
+
+.application-handling__state-label--processed,
+.application-handling__state-label--reserve,
+.application-handling__state-label--selected,
+.application-handling__state-label--rejected {
+  border-color: @light-green;
+}
+
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {
-  float: right;
+  float: left;
 }
 
 .application__text-field-paragraph {

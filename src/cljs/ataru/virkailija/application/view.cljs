@@ -300,24 +300,30 @@
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
+(defn hakukohde-review-state
+  [hakukohde-reviews hakukohde-oid requirement]
+  (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
+                            (= (:requirement %) requirement))
+                      hakukohde-reviews)))
+
 (defn review-label-for-hakukohde
   [reviews states hakukohde-oid requirement]
   (application-states/get-review-state-label-by-name
     states
-    (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
-                              (= (:requirement %) requirement))
-                        reviews))))
+    (hakukohde-review-state reviews hakukohde-oid requirement)))
 
 (defn applications-hakukohde-rows
   [application all-hakukohteet selected-hakukohde]
   (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
         application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
-      [:div.application-handling-list-row-hakukohteet-wrapper
+      [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
           (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
+                processing-state       (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "processing-state")
+                selection-state        (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "selection-state")
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
                                          (->> application
@@ -331,7 +337,9 @@
                :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state.application-handling__count-tag.application-handling__count-tag--reviewed
+              [:span.application-handling__hakukohde-state.application-handling__count-tag
+               [:span.application-handling__state-label
+                {:class (str "application-handling__state-label--" processing-state)}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
@@ -342,7 +350,9 @@
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              [:span.application-handling__hakukohde-selection-cell
-              [:span.application-handling__hakukohde-selection.application-handling__count-tag.application-handling__count-tag--reviewed
+              [:span.application-handling__hakukohde-selection.application-handling__count-tag
+               [:span.application-handling__state-label
+                {:class (str "application-handling__state-label--" selection-state)}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
