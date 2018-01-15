@@ -331,7 +331,7 @@
                :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state
+              [:span.application-handling__hakukohde-state.application-handling__count-tag.application-handling__count-tag--reviewed
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
@@ -366,9 +366,9 @@
                                           (when (= "inactivated" (:state application))
                                             "application-handling__list-row--inactivated")])}
      [:div.application-handling__list-row-person-info
-      [:span.application-handling__list-row--applicant
+      [:span.application-handling__list-row--application-applicant
        (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-      [:span.application-handling__list-row--time
+      [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]]
      [applications-hakukohde-rows application @hakukohteet @selected-hakukohde]]))
