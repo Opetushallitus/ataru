@@ -336,6 +336,7 @@
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
                :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
+             [:span.application-handling__application-hl]
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state.application-handling__count-tag
                [:span.application-handling__state-label

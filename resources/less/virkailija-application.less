@@ -259,9 +259,16 @@ and (max-width: 1000px) {
   margin-top: 3px;
 }
 
-.application-handling__list-row:hover {
-  background: #f5f5f5;
-  border-radius: 3px;
+.application-handling__list-row-hakukohde:hover .application-handling__application-hl {
+  border-bottom: 1px solid @medium-pale-blue;
+}
+
+.application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
+  font-weight: normal;
+}
+
+.application-handling__list-row:hover .application-handling__list-row--application-applicant {
+  .semibold;
 }
 
 .application-handling__list-header {
@@ -284,8 +291,8 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
-  border-radius: 3px;
-  background-color: @application-form-list-background-color;
+  border-left: 7px solid @pale-blue;
+  padding-left: 5px;
 }
 
 .application-handling__list-header:hover {
@@ -303,7 +310,6 @@ and (max-width: 1000px) {
   color: @white;
 }
 
-
 .application-handling__basic-list-basic-column-header {
   color: @text-color;
   .light;
@@ -311,6 +317,8 @@ and (max-width: 1000px) {
   background-color: @popover-highlighted-gray;
   border-radius: 3px;
   padding: 6px 10px;
+  white-space: nowrap;
+  margin-right: 1px;
 }
 
 .application-handling__list-row-person-info {
@@ -347,12 +355,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  flex: 0 0 20%;
+  flex: 0 0 17%;
   display: inline-block;
 }
 
 .application-handling__list-row--selection {
-  flex: 0 0 10%;
+  flex: 0 0 13%;
   display: inline-block;
 }
 
@@ -380,11 +388,6 @@ and (max-width: 1000px) {
 
 .application-handling__application-hakukohde-cell--form {
   margin-top: -20px;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-state,
-.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-selection {
-  filter: brightness(115%);
 }
 
 .application-handling__list-loading-indicator {
@@ -1614,9 +1617,18 @@ th.application__readonly-adjacent--header {
   font-size: 13px;
   color: @gray-of-the-beast;
   .light;
-  flex: 1 0 70%;
+  flex: 0 0 0%;
   margin-top: 3px;
   display: inline-block;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.application-handling__application-hl {
+  flex: 1 1 100%;
+  border-bottom: 1px dashed @light-gray;
+  height: 12px;
+  margin: 0 10px;
 }
 
 .application-handling__application-state-cell {
@@ -1625,11 +1637,11 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__hakukohde-state-cell {
-  flex: 0 0 20%;
+  flex: 0 0 17%;
 }
 
 .application-handling__hakukohde-selection-cell {
-  flex: 0 0 10%;
+  flex: 0 0 13%;
 }
 
 .application-handling__count-tag {
@@ -1639,8 +1651,7 @@ th.application__readonly-adjacent--header {
   padding: 1px 8px;
   text-transform: uppercase;
   white-space: nowrap;
-  height: 16px;
-  margin-top: 1px;
+  margin-top: 3px;
 }
 
 .application-handling__count-tag--reviewed {
