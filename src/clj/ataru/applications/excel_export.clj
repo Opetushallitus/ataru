@@ -268,20 +268,20 @@
 
 (defn pick-form-labels
   [form-content pick-cond]
-  (->> (reduce
-         (fn [acc form-element]
-           (let [followups (remove nil? (mapcat :followups (:options form-element)))]
-             (cond
-               (pos? (count (:children form-element)))
-               (into acc (pick-form-labels (:children form-element) pick-cond))
+  (reduce
+   (fn [acc form-element]
+     (let [followups (remove nil? (mapcat :followups (:options form-element)))]
+       (cond
+         (pos? (count (:children form-element)))
+         (into acc (pick-form-labels (:children form-element) pick-cond))
 
-               (pos? (count followups))
-               (into (into acc (pick-label form-element pick-cond)) (pick-form-labels followups pick-cond))
+         (pos? (count followups))
+         (into (into acc (pick-label form-element pick-cond)) (pick-form-labels followups pick-cond))
 
-               :else
-               (into acc (pick-label form-element pick-cond)))))
-         []
-         form-content)))
+         :else
+         (into acc (pick-label form-element pick-cond)))))
+   []
+   form-content))
 
 (defn- find-parent [element fields]
   (let [contains-element? (fn [children] (some? ((set (map :id children)) (:id element))))

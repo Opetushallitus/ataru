@@ -84,12 +84,12 @@
          (assoc form :deleted true))))))
 
 (defn get-forms-for-editor [session organization-service]
-  {:forms (->> (session-orgs/run-org-authorized
-                session
-                organization-service
-                [:form-edit]
-                vector
-                #(form-store/get-forms %)
-                #(form-store/get-all-forms)))})
+  {:forms (session-orgs/run-org-authorized
+           session
+           organization-service
+           [:form-edit]
+           vector
+           #(form-store/get-forms %)
+           #(form-store/get-all-forms))})
 
 
