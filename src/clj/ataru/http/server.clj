@@ -18,10 +18,6 @@
       (reset! repl-started true)
       (info "nREPL started on port" repl-port))))
 
-(defmacro ^:private try-f
-  [& form]
-  `(try ~@form (catch Exception _#)))
-
 (defrecord Server []
   component/Lifecycle
 
@@ -39,8 +35,7 @@
 
   (stop [this]
     (info "Stopping server")
-    (try-f (let [server (:server this)]
-            (.close server)))
+    (try (.close (:server this)) (catch Exception e))
     (info "Stopped server")
     (assoc this :server nil)))
 
