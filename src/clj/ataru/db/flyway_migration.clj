@@ -22,9 +22,9 @@
 (defmacro defmigration [name version description & body]
   `(deftype ~name []
      JdbcMigration
-     (migrate [this connection]
+     (migrate [~'this ~'connection]
        ~@body)
 
      MigrationInfoProvider
-     (getDescription [this] ~description)
-     (getVersion [this] (MigrationVersion/fromVersion ~version))))
+     (getDescription [~'this] ~description)
+     (getVersion [~'this] (MigrationVersion/fromVersion ~version))))
