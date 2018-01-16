@@ -33,6 +33,7 @@
 (defn close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
+      (assoc-in [:application :selected-review-hakukohde] nil)
       (assoc-in [:application :selected-key] nil)
       (assoc-in [:application :selected-application-and-form] nil)
       (assoc-in [:application :application-list-expanded?] true)))
@@ -248,7 +249,10 @@
       (assoc-in [:application :review] review)
       (assoc-in [:application :review-notes] review-notes)
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
-      (assoc-in [:application :selected-review-hakukohde] (or (-> application :hakukohde (first)) "form"))
+      (update-in [:application :selected-review-hakukohde] (fn [current-hakukohde]
+                                                             (or
+                                                               (when (contains? (set (:hakukohde application)) current-hakukohde) current-hakukohde)
+                                                               (or (-> application :hakukohde (first)) "form"))))
       (assoc-in [:application :information-requests] information-requests)))
 
 (defn review-autosave-predicate [current prev]

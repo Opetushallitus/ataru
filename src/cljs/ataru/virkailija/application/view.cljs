@@ -332,9 +332,12 @@
                                                             (= (:state %) "information-request")))
                                               (seq)))]
             [:div.application-handling__list-row-hakukohde
+             {:data-hakukohde-oid hakukohde-oid}
              [:span.application-handling__application-hakukohde-cell
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
-               :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
+               :on-click (fn []
+                           (select-application (:key application))
+                           (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
              [:span.application-handling__application-hl]
              [:span.application-handling__hakukohde-state-cell
@@ -642,7 +645,7 @@
         list-opened                (subscribe [:application/review-list-visible? :hakukohde])
         select-list-item           (partial toggle-review-list-visibility :hakukohde)]
     (fn []
-      (when (pos? (count @application-hakukohde-oids))
+      (when (not-empty @application-hakukohde-oids)
         [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
          [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohde-oids) ")")]
          (if @list-opened
