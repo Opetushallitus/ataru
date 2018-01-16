@@ -282,8 +282,9 @@
     (not (clojure.string/blank? value))))
 
 (defn- parse-value
+  "Values in answers are a flat string collection when submitted, but a
+  collection of maps beforehand (in front-end db) :("
   [value]
-  "Values in answers are a flat string collection when submitted, but a collection of maps beforehand (in front-end db) :("
   (cond
     (every? string? value) value
     (every? map? value) (map :value value)))

@@ -8,8 +8,9 @@
             [pandect.algo.sha256 :refer :all])
   (:import [java.security SecureRandom]))
 
-(defn- datasource-spec [ds-key]
+(defn- datasource-spec
   "Merge configuration defaults and db config. Latter overrides the defaults"
+  [ds-key]
   (merge {:auto-commit        false
           :read-only          false
           :connection-timeout 30000

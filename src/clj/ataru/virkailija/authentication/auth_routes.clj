@@ -8,8 +8,10 @@
             [clojure.core.match :refer [match]]
             [clojure.string :as string]))
 
-(defn- rewrite-url-for-environment [url-from-session]
-  "Ensure that https is used when available (due to https termination on non-development environments)"
+(defn- rewrite-url-for-environment
+  "Ensure that https is used when available (due to https termination on
+   non-development environments)"
+  [url-from-session]
   (if (:dev? env)
     url-from-session
     (string/replace url-from-session #"^http://" "https://")))
