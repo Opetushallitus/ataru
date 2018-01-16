@@ -445,18 +445,18 @@
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [filtered-states :- [s/Str]
    hakukohde-oid :- s/Str]
-  (->> (exec-db :db yesql-get-applications-for-hakukohde
-                {:filtered_states filtered-states
-                 :hakukohde_oid   hakukohde-oid})
-       (mapv (partial unwrap-application))))
+  (mapv unwrap-application
+        (exec-db :db yesql-get-applications-for-hakukohde
+                 {:filtered_states filtered-states
+                  :hakukohde_oid   hakukohde-oid})))
 
 (s/defn get-applications-for-haku :- [schema/Application]
   [haku-oid :- s/Str
    filtered-states :- [s/Str]]
-  (->> (exec-db :db yesql-get-applications-for-haku
-         {:filtered_states filtered-states
-          :haku_oid        haku-oid})
-       (mapv (partial unwrap-application))))
+  (mapv unwrap-application
+        (exec-db :db yesql-get-applications-for-haku
+                 {:filtered_states filtered-states
+                  :haku_oid        haku-oid})))
 
 (defn add-person-oid
   "Add person OID to an application"
