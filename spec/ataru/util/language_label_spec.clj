@@ -1,4 +1,4 @@
-(ns ataru.util-spec
+(ns ataru.util.language-label-spec
   (:require [speclj.core :refer [describe tags it should=]]
             [ataru.util.language-label :as label]))
 
