@@ -548,8 +548,9 @@
                                            :hakukohde_oids (cons "" hakukohde-oids)
                                            :person_oids    (cons "" person-oids)
                                            :modified_after (some->> modified-after
-                                                                    (f/parse (f/formatter "yyyyMMddHHmm"))
-                                                                    (c/to-sql-date))})
+                                                                    (f/parse (f/formatter "yyyyMMddHHmm"
+                                                                                          (time/time-zone-for-id "Europe/Helsinki")))
+                                                                    str)})
                                  (map unwrap-hakurekisteri-application))
         payment-obligations (when (not-empty applications)
                               (payment-obligations-for-applications (map :oid applications)))]
