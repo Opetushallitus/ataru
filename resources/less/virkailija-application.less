@@ -254,20 +254,12 @@ and (max-width: 1000px) {
   }
 }
 
+.application-handling__list-row:hover {
+  background-color: @very-light-gray;
+}
+
 .application-handling__list-row-hakukohteet-wrapper {
   margin-top: 3px;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__application-hl {
-  border-bottom: 1px dashed @medium-pale-blue;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
-  font-weight: normal;
-}
-
-.application-handling__list-row:hover .application-handling__list-row--application-applicant {
-  .semibold;
 }
 
 .application-handling__list-header {
@@ -291,7 +283,7 @@ and (max-width: 1000px) {
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
   border-left: 7px solid @pale-blue;
-  padding-left: 5px;
+  padding-left: 10px;
 }
 
 .application-handling__list-header:hover {
@@ -375,18 +367,6 @@ and (max-width: 1000px) {
   padding-bottom: 2px;
   margin-top: 1px;
   display: flex;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
-  filter: brightness(75%);
-}
-
-.application-handling__application-hakukohde-cell--selected {
-  text-decoration: underline;
-}
-
-.application-handling__application-hakukohde-cell--form {
-  margin-top: -20px;
 }
 
 .application-handling__list-loading-indicator {
@@ -1478,6 +1458,10 @@ th.application__readonly-adjacent--header {
   min-height: 50px;
 }
 
+.application__search-control-haku:hover {
+  background-color: @very-light-gray;
+}
+
 .application__search-control-haku.application__search-control-direct-form-haku {
   padding-left: 15px;
   display: flex;
@@ -1504,14 +1488,6 @@ th.application__readonly-adjacent--header {
   border-bottom: 1px dashed @light-gray;
   height: 9px;
   margin: 0 10px;
-}
-
-.application__search-control-haku-link:hover .application__search-control-haku-hl {
-  border-bottom: 1px solid @medium-pale-blue;
-}
-
-.application__search-control-haku-link:hover .application__search-control-haku-title {
-  font-weight: bolder;
 }
 
 .application__search-control-haku-count {
@@ -1624,6 +1600,10 @@ th.application__readonly-adjacent--header {
   width: auto;
   flex: 0 1 auto;
   margin-top: 3px;
+}
+
+.application-handling__application-hakukohde-cell--form {
+  margin-top: -20px;
 }
 
 .application-handling__application-hl {
