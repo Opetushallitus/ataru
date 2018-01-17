@@ -260,7 +260,7 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row-hakukohde:hover .application-handling__application-hl {
-  border-bottom: 1px solid @medium-pale-blue;
+  border-bottom: 1px dashed @medium-pale-blue;
 }
 
 .application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
@@ -337,13 +337,13 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--time {
-  flex: 0 0 25%;
+  flex: 0 3 300px;
   display: inline-block;
   color: @sg-color-gray-2;
 }
 
 .application-handling__list-row--application-time {
-  flex: 0 0 55%;
+  flex: 0 2 550px;
   display: inline-block;
   color: @sg-color-gray;
   .light;
@@ -355,12 +355,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  flex: 0 0 17%;
+  flex: 0 0 150px;
   display: inline-block;
 }
 
 .application-handling__list-row--selection {
-  flex: 0 0 13%;
+  flex: 0 0 110px;
   display: inline-block;
 }
 
@@ -1618,15 +1618,13 @@ th.application__readonly-adjacent--header {
   font-size: 13px;
   color: @gray-of-the-beast;
   .light;
-  flex: 0 0 0%;
+  width: auto;
+  flex: 0 1 auto;
   margin-top: 3px;
-  display: inline-block;
-  flex-wrap: nowrap;
-  white-space: nowrap;
 }
 
 .application-handling__application-hl {
-  flex: 1 1 100%;
+  flex: 1 0 0;
   border-bottom: 1px dashed @light-gray;
   height: 12px;
   margin: 0 10px;
@@ -1638,11 +1636,11 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__hakukohde-state-cell {
-  flex: 0 0 17%;
+  flex: 0 0 150px;
 }
 
 .application-handling__hakukohde-selection-cell {
-  flex: 0 0 13%;
+  flex: 0 0 110px;
 }
 
 .application-handling__count-tag {
