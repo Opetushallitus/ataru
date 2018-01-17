@@ -1655,7 +1655,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__count-tag--reviewed {
-  background-color: @pale-blue;
+  background-color: @processing-blue;
   color: @white;
   min-width: 40px;
   display: inline-block;
@@ -1663,7 +1663,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__count-tag--total {
-  background-color: @light-green;
+  background-color: @processed-green;
   padding: 1px 5px;
   margin-left: 8px;
 }
@@ -1676,11 +1676,18 @@ th.application__readonly-adjacent--header {
   border-color: @pale-blue;
 }
 
-.application-handling__state-label--processed,
+.application-handling__state-label--processed {
+  border-color: @processed-green;
+}
+
+.application-handling__state-label--unprocessed {
+  border-color: @unprocessed-orange;
+}
+
 .application-handling__state-label--reserve,
 .application-handling__state-label--selected,
 .application-handling__state-label--rejected {
-  border-color: @light-green;
+  border-color: @processing-blue;
 }
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {
