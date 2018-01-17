@@ -354,18 +354,20 @@
                                          :unprocessed       s/Int
                                          :haku              s/Str})
 
-(s/defschema TarjontaHaku {:oid               s/Str
-                           :name              LocalizedStringOptional
-                           :application-count s/Int
-                           :processed         s/Int
-                           :unprocessed       s/Int
-                           :hakukohteet       [ApplicationCountsHakukohde]})
+(s/defschema TarjontaHaku {:oid                    s/Str
+                           :name                   LocalizedStringOptional
+                           :haku-application-count s/Int
+                           :application-count      s/Int
+                           :processed              s/Int
+                           :unprocessed            s/Int
+                           :hakukohteet            [ApplicationCountsHakukohde]})
 
-(s/defschema DirectFormHaku {:name              LocalizedStringOptional
-                             :key               s/Str
-                             :application-count s/Int
-                             :processed         s/Int
-                             :unprocessed       s/Int})
+(s/defschema DirectFormHaku {:name                   LocalizedStringOptional
+                             :key                    s/Str
+                             :haku-application-count s/Int
+                             :application-count      s/Int
+                             :processed              s/Int
+                             :unprocessed            s/Int})
 
 (s/defschema Haut {:tarjonta-haut    [TarjontaHaku]
                    :direct-form-haut [DirectFormHaku]})

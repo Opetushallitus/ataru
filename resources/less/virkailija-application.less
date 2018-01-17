@@ -33,7 +33,6 @@
 
 .application-handling__overview {
   background-color: @very-light-gray;
-  border-bottom: 1px solid @separator-color;
   .application-handling-webkit-scrollbar-mixin;
   max-width: 1200px;
   margin: auto;
@@ -1496,11 +1495,12 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-haku-title {
-  flex-grow: 0;
+  flex: 0 1 auto;
+  max-width: 650px;
 }
 
 .application__search-control-haku-hl {
-  flex-grow: 1;
+  flex: 1 1 0;
   border-bottom: 1px dashed @light-gray;
   height: 9px;
   margin: 0 10px;
@@ -1517,8 +1517,11 @@ th.application__readonly-adjacent--header {
 .application__search-control-haku-count {
   color: @text-color;
   font-size: 13px;
-  margin-right: 5px;
-  font-weight: normal;
+  .light;
+  text-align: right;
+  flex: 0 0 0;
+  margin-right: 10px;
+  white-space: nowrap;
 }
 
 .application__search-control-haku-processed {
@@ -1651,20 +1654,15 @@ th.application__readonly-adjacent--header {
   text-transform: uppercase;
   white-space: nowrap;
   margin-top: 3px;
+  color: @text-color;
+  font-weight: normal;
 }
 
-.application-handling__count-tag--reviewed {
-  background-color: @processing-blue;
-  color: @white;
-  min-width: 40px;
-  display: inline-block;
-  text-align: center;
-}
-
-.application-handling__count-tag--total {
-  background-color: @processed-green;
-  padding: 1px 5px;
-  margin-left: 8px;
+.application-handling__count-tag--haku-list {
+  width: 40px;
+  font-size: 13px;
+  margin-top: 2px;
+  flex: 0 0 45px;
 }
 
 .application-handling__state-label {
@@ -1675,18 +1673,17 @@ th.application__readonly-adjacent--header {
   border-color: @pale-blue;
 }
 
-.application-handling__state-label--processed {
+.application-handling__state-label--processed,
+.application-handling__state-label--reserve,
+.application-handling__state-label--selected,
+.application-handling__state-label--selection-proposal,
+.application-handling__state-label--rejected {
   border-color: @processed-green;
 }
 
-.application-handling__state-label--unprocessed {
+.application-handling__state-label--unprocessed,
+.application-handling__state-label--incomplete {
   border-color: @unprocessed-orange;
-}
-
-.application-handling__state-label--reserve,
-.application-handling__state-label--selected,
-.application-handling__state-label--rejected {
-  border-color: @processing-blue;
 }
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {

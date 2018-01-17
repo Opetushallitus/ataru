@@ -17,27 +17,30 @@
 (defn- haku-processed-counts
   [hakukohteet]
   (reduce
-    (fn [{:keys [processed processing]} hakukohde]
+    (fn [{:keys [total processed processing]} hakukohde]
       {:processed  (+ processed (:processed hakukohde))
-       :processing (+ processing (:processing hakukohde))})
+       :processing (+ processing (:processing hakukohde))
+       :total      (+ total (:application-count hakukohde))})
     {:processed  0
-     :processing 0}
+     :processing 0
+     :total      0}
     hakukohteet))
 
 (defn- handle-hakukohteet
   [tarjonta-service raw-hakukohde-rows]
   (for [[haku-oid rows] (group-by :haku raw-hakukohde-rows)]
-    (let [application-count (:haku-application-count (first rows))
-          {:keys [processed processing]} (haku-processed-counts rows)
-          unprocessed       (- application-count processed processing)]
-      {:oid               haku-oid
-       :name              (or
-                            (.get-haku-name tarjonta-service haku-oid)
-                            {:fi haku-oid})
-       :hakukohteet       (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
-       :application-count application-count
-       :processed         processed
-       :unprocessed       unprocessed})))
+    (let [haku-application-count (:haku-application-count (first rows))
+          {:keys [processed processing total]} (haku-processed-counts rows)
+          unprocessed            (- total processed processing)]
+      {:oid                    haku-oid
+       :name                   (or
+                                 (.get-haku-name tarjonta-service haku-oid)
+                                 {:fi haku-oid})
+       :hakukohteet            (map (partial raw-haku-row->hakukohde tarjonta-service) rows)
+       :haku-application-count haku-application-count
+       :application-count      total
+       :processed              processed
+       :unprocessed            unprocessed})))
 
 (defn get-haut
   [session organization-service tarjonta-service]

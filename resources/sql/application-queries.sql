@@ -772,6 +772,7 @@ GROUP BY unnested_hakukohde.haku, unnested_hakukohde.hakukohde;
 SELECT
   lf.name,
   lf.key,
+  count(a.key)    AS haku_application_count,
   count(a.key)    AS application_count,
   sum(CASE WHEN ar.state = 'inactivated' OR ahr.state = 'processed'
     THEN 1

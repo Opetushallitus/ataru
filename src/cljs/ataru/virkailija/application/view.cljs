@@ -343,7 +343,7 @@
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state.application-handling__count-tag
                [:span.application-handling__state-label
-                {:class (str "application-handling__state-label--" processing-state)}]
+                {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
@@ -356,7 +356,7 @@
              [:span.application-handling__hakukohde-selection-cell
               [:span.application-handling__hakukohde-selection.application-handling__count-tag
                [:span.application-handling__state-label
-                {:class (str "application-handling__state-label--" selection-state)}]
+                {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
