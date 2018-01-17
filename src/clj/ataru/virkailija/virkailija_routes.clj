@@ -435,7 +435,7 @@
                  (api/POST "/checkpermission" []
                            :body [dto ataru-schema/PermissionCheckDto]
                            :return ataru-schema/PermissionCheckResponseDto
-                           (ok (permission-check/check organization-service dto)))
+                           (ok (permission-check/check dto)))
 
                  (api/context "/external" []
                    :tags ["external-api"]
