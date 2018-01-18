@@ -9,9 +9,10 @@
 }
 
 .editor-form__container {
-  padding: 14px 85px 15px 85px;
+  padding: 14px 85px 0 85px;
   background-color: @very-light-gray;
-  border-bottom: 1px solid #E6E6E6;
+  max-width: 1200px;
+  margin: 0 auto;
   ::-webkit-scrollbar {
     width: 7px;
     background-color: @light-gray;
@@ -118,7 +119,6 @@
   cursor: pointer;
   overflow: auto;
   max-height: 120px;
-  margin-bottom: 15px;
 }
 
 .editor-form__list_expanded {
@@ -129,12 +129,14 @@
   display: inline-block;
   width: 50%;
   padding-right: 10px;
+  color: @pale-blue;
 }
 
 .editor-form__list-form-time {
   display: inline-block;
   width: 25%;
   vertical-align: top;
+  .light;
 }
 
 .editor-form__list-form-editor {
@@ -193,6 +195,8 @@
 .editor-form__panel-container {
   padding: 20px 85px 15px + @banner-height 85px;
   position: relative;
+  background-color: @white;
+  border: 1px solid @review-separator-color;
 }
 
 .editor-form__row {
