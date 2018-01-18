@@ -383,9 +383,7 @@
                        (dispatch [:application/dropdown-change
                                   field-descriptor
                                   (.-value (.-target e))
-                                  idx]))
-        lang         @lang
-        default-lang @default-lang]
+                                  idx]))]
     [div-kwd
      [label field-descriptor]
      [:div.application__form-text-input-info-text
@@ -399,21 +397,24 @@
         :on-change on-change
         :disabled  disabled?
         :required  (is-required-field? field-descriptor)}
-       (concat
-        (when
-            (and
-             (nil? (:koodisto-source field-descriptor))
-             (not (:no-blank-option field-descriptor))
-             (not= "" (:value (first (:options field-descriptor)))))
-          [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-        (map-indexed
-         (fn [idx option]
-           (let [label        (non-blank-val (get-in option [:label lang])
-                                             (get-in option [:label default-lang]))
-                 option-value (:value option)]
-             ^{:key idx}
-             [:option {:value option-value} label]))
-         (:options field-descriptor)))]]
+       (doall
+        (concat
+         (when
+             (and
+              (nil? (:koodisto-source field-descriptor))
+              (not (:no-blank-option field-descriptor))
+              (not= "" (:value (first (:options field-descriptor)))))
+           [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+         (map-indexed
+          (fn [idx option]
+            (let [label        (non-blank-val (get-in option [:label @lang])
+                                              (get-in option [:label @default-lang]))
+                  option-value (:value option)]
+              ^{:key idx}
+              [:option {:value option-value} label]))
+          (cond->> (:options field-descriptor)
+            (some? (:koodisto-source field-descriptor))
+            (sort-by #(get-in % [:label @lang]))))))]]
      (when-not idx
        (dropdown-followups field-descriptor @value))]))
 
@@ -455,7 +456,8 @@
 (defn multiple-choice
   [field-descriptor & {:keys [div-kwd disabled] :or {div-kwd :div.application__form-field disabled false}}]
   (let [id           (answer-key field-descriptor)
-        cannot-edit? @(subscribe [:application/cannot-edit-answer? id])]
+        lang         (subscribe [:application/form-language])
+        cannot-edit? (subscribe [:application/cannot-edit-answer? id])]
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
        [label field-descriptor]
@@ -466,8 +468,10 @@
         (doall
           (map-indexed (fn [option-idx option]
                          ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
-                         [multiple-choice-option field-descriptor option id cannot-edit? idx])
-            (:options field-descriptor)))]])))
+                         [multiple-choice-option field-descriptor option id @cannot-edit? idx])
+                       (cond->> (:options field-descriptor)
+                         (some? (:koodisto-source field-descriptor))
+                         (sort-by #(get-in % [:label @lang])))))]])))
 
 (defn- single-choice-option [option parent-id field-descriptor cannot-edit? question-group-idx]
   (let [lang         (subscribe [:application/form-language])
