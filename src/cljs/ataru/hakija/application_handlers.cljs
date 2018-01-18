@@ -689,6 +689,7 @@
                  (set-single-choice-followup-visibility field-descriptor value))
              (-> db
                  (assoc-in value-path new-value)
+                 (set-multi-value-changed id :value)
                  (set-single-choice-followup-visibility field-descriptor value)))
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
