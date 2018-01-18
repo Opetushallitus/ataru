@@ -4,6 +4,7 @@
             [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
             [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
+            [goog.dom :as gdom]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
@@ -191,9 +192,12 @@
     :confirm
     [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
      {:on-click (fn [event]
-                  (let [target (if component-wrapped?
-                                 (-> event .-target .-parentNode .-parentNode .-parentNode)
-                                 (-> event .-target .-parentNode .-parentNode))]
+                  (let [target (-> event
+                                   .-target
+                                   (gdom/getAncestorByClass
+                                    (if component-wrapped?
+                                      "editor-form__section_wrapper"
+                                      "editor-form__component-wrapper")))]
                     (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
                     (dispatch [:editor/confirm-remove-component path])))}
      "Vahvista poisto"]
