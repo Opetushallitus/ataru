@@ -138,14 +138,31 @@
 (reg-event-db
   :editor/remove-component
   (fn [db [_ path]]
-    (let [forms-meta-db (update-in db [:editor :forms-meta] assoc path :removed)]
-      (remove-component forms-meta-db path))))
+    (-> db
+        (update-in [:editor :forms-meta] assoc path :removed)
+        (update-in [:editor :ui :remove-component-button-state] dissoc path)
+        (remove-component path))))
+
+(reg-event-fx
+  :editor/confirm-remove-component
+  (fn [{db :db} [_ path]]
+    {:db (-> db
+             (assoc-in [:editor :forms-meta path] :fade-out)
+             (assoc-in [:editor :ui :remove-component-button-state path] :disabled))
+     :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
+
+(reg-event-db
+  :editor/unstart-remove-component
+  (fn [db [_ path]]
+    (cond-> db
+      (= :confirm (get-in db [:editor :ui :remove-component-button-state path]))
+      (assoc-in [:editor :ui :remove-component-button-state path] :active))))
 
 (reg-event-fx
   :editor/start-remove-component
   (fn [{db :db} [_ path]]
-    {:db (assoc-in db [:editor :forms-meta path] :fade-out)
-     :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]}))
+    {:db (assoc-in db [:editor :ui :remove-component-button-state path] :confirm)
+     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-component path]}]}))
 
 (reg-event-fx
   :editor/refresh-used-by-haut

@@ -182,6 +182,26 @@
               :fade-in  "animated fadeInUp"
               nil)))
 
+(defn- remove-component-button [component-wrapped? path]
+  (case @(subscribe [:editor/remove-component-button-state path])
+    :active
+    [:button.editor-form__remove-component-button
+     {:on-click #(dispatch [:editor/start-remove-component path])}
+     "Poista"]
+    :confirm
+    [:button.editor-form__remove-component-button--confirm.editor-form__remove-component-button
+     {:on-click (fn [event]
+                  (let [target (if component-wrapped?
+                                 (-> event .-target .-parentNode .-parentNode .-parentNode)
+                                 (-> event .-target .-parentNode .-parentNode))]
+                    (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
+                    (dispatch [:editor/confirm-remove-component path])))}
+     "Vahvista poisto"]
+    :disabled
+    [:button.editor-form__remove-component-button--disabled.editor-form__remove-component-button
+     {:disabled true}
+     "Vahvista poisto"]))
+
 (defn- text-header
   [label path & {:keys [component-wrapped?
                         draggable
@@ -205,14 +225,7 @@
           (map (partial get sub-header))
           (remove clojure.string/blank?)
           (clojure.string/join " - "))]]
-   [:a.editor-form__component-header-link
-    {:on-click (fn [event]
-                 (let [target (if component-wrapped?
-                                (-> event .-target .-parentNode .-parentNode .-parentNode)
-                                (-> event .-target .-parentNode .-parentNode))]
-                   (set! (.-height (.-style target)) (str (.-offsetHeight target) "px"))
-                   (dispatch [:editor/start-remove-component path])))}
-    "Poista"]])
+   [remove-component-button component-wrapped? path]])
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
