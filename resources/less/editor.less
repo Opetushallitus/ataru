@@ -48,6 +48,7 @@
 
 .editor-form__control-button {
   align-items: center;
+  border: 0px;
   border-radius: 3px;
   color: @white;
   display: flex;
@@ -55,6 +56,7 @@
   justify-content: center;
   margin-left: 10px;
   width: 133px;
+  cursor: pointer;
 }
 
 .editor-form__control-button--enabled {
@@ -72,6 +74,40 @@
 .editor-form__control-button--disabled {
   background-color: @section-gray-border;
   cursor: default;
+}
+
+.editor-form__remove-component-button {
+  border: 0;
+  border-radius: 3px;
+  color: @white;
+  display: flex;
+  height: 25px;
+  margin: 8px 8px 8px 0px;
+  align-items: center;
+  justify-content: center;
+  background-color: @pale-blue;
+  cursor: pointer;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+}
+
+.editor-form__remove-component-button--confirm {
+  background-color: @editor-control-button-confirm-red;
+
+  &:hover {
+    background-color: @editor-control-button-confirm-red;
+  }
+}
+
+.editor-form__remove-component-button--disabled {
+  background-color: @section-gray-border;
+  cursor: default;
+
+  &:hover {
+    background-color: @section-gray-border;
+  }
 }
 
 .editor-form__list {

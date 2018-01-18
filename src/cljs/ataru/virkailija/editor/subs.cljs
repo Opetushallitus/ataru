@@ -114,3 +114,16 @@
   :editor/all-folded
   (fn [db _]
     (get-in db [:editor :ui :all-folded] false)))
+
+(re-frame/reg-sub
+  :editor/remove-form-button-state
+  (fn [db _]
+    (get-in db [:editor :ui :remove-form-button-state]
+            (if (some? (get-in db [:editor :selected-form-key]))
+              :active
+              :disabled))))
+
+(re-frame/reg-sub
+  :editor/remove-component-button-state
+  (fn [db [_ path]]
+    (get-in db [:editor :ui :remove-component-button-state path] :active)))
