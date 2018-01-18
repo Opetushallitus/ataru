@@ -39,7 +39,7 @@
                 [form-row form selected? used-in-haku-count]))))))
 
 (defn- add-form []
-  [:a.editor-form__control-button.editor-form__control-button--enabled
+  [:button.editor-form__control-button.editor-form__control-button--enabled
    {:on-click (fn [evt]
                 (.preventDefault evt)
                 (dispatch [:editor/add-form]))}
@@ -49,10 +49,11 @@
   (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
         disabled? (reaction (nil? @form-key))]
     (fn []
-      [:a.editor-form__control-button
+      [:button.editor-form__control-button
        {:on-click (fn [event]
                     (.preventDefault event)
                     (dispatch [:editor/copy-form]))
+        :disabled @disabled?
         :class    (if @disabled?
                     "editor-form__control-button--disabled"
                     "editor-form__control-button--enabled")}
@@ -63,7 +64,7 @@
         confirm?  (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
         disabled? (reaction (nil? @form-key))]
     (fn []
-      [:a.editor-form__control-button
+      [:button.editor-form__control-button
        {:on-click (fn [event]
                     (.preventDefault event)
                     (if @confirm?
