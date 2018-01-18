@@ -1023,7 +1023,10 @@
                         autil/remove-nth idx)
              (contains? answer :value)
              (update-in [:application :answers id :value]
-                        autil/remove-nth idx))))
+                        autil/remove-nth idx)
+             (or (contains? answer :values)
+                 (contains? answer :value))
+             (update-in [:application :values-changed?] conj id))))
        with-decremented-count
        (:children field-descriptor)))))
 
