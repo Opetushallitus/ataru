@@ -60,23 +60,19 @@
        "Kopioi lomake"])))
 
 (defn- remove-form []
-  (let [form-key  (subscribe [:state-query [:editor :selected-form-key]])
-        confirm?  (subscribe [:state-query [:editor :show-remove-confirm-dialog?]])
-        disabled? (reaction (nil? @form-key))]
-    (fn []
-      [:button.editor-form__control-button
-       {:on-click (fn [event]
-                    (.preventDefault event)
-                    (if @confirm?
-                      (dispatch [:editor/remove-form])
-                      (dispatch [:set-state [:editor :show-remove-confirm-dialog?] true])))
-        :class    (cond
-                    @confirm? "editor-form__control-button--confirm"
-                    @disabled? "editor-form__control-button--disabled"
-                    :else "editor-form__control-button--enabled")}
-       (if @confirm?
-         "Vahvista poisto"
-         "Poista lomake")])))
+  (case @(subscribe [:editor/remove-form-button-state])
+    :active
+    [:button.editor-form__control-button--enabled.editor-form__control-button
+     {:on-click #(dispatch [:editor/start-remove-form])}
+     "Poista lomake"]
+    :confirm
+    [:button.editor-form__control-button--confirm.editor-form__control-button
+     {:on-click #(dispatch [:editor/confirm-remove-form])}
+     "Vahvista poisto"]
+    :disabled
+    [:button.editor-form__control-button--disabled.editor-form__control-button
+     {:disabled true}
+     "Poista lomake"]))
 
 (defn- form-controls []
   [:div.editor-form__form-controls-container

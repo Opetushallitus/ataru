@@ -197,17 +197,12 @@
                                         (util/group-by-first :key)
                                         (sort-by-time-and-deletedness))))))
 
-(defn hide-remove-confirm-dialog
-  [db]
-  (-> db
-      (update :editor dissoc :show-remove-confirm-dialog?)))
-
 (reg-event-db
   :editor/refresh-forms-for-editor
   (fn [db _]
     (autosave/stop-autosave! (-> db :editor :autosave))
     (refresh-forms-for-editor)
-    (hide-remove-confirm-dialog db)))
+    db))
 
 (reg-event-db
   :editor/refresh-forms-if-empty
@@ -217,7 +212,7 @@
       (do
         (autosave/stop-autosave! (-> db :editor :autosave))
         (refresh-forms-for-editor)
-        (hide-remove-confirm-dialog db)))))
+        db))))
 
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
@@ -363,17 +358,32 @@
 (defn- reset-application-review-state [db]
   (assoc db :application {}))
 
-(defn- remove-form [{:keys [db]} _]
-  (let [form-key (get-in db [:editor :selected-form-key])
-        form-id  (get-in db [:editor :forms form-key :id])]
-    (-> {:db   (cond-> (update db :editor dissoc :selected-form-key)
-                 (removed-application-review-active? db)
-                 (reset-application-review-state))
-         :http {:method              :delete
-                :path                (str "/lomake-editori/api/forms/" form-id)
-                :handler-or-dispatch :editor/refresh-forms-for-editor}})))
+(reg-event-fx
+  :editor/confirm-remove-form
+  (fn [{:keys [db]} _]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          form-id  (get-in db [:editor :forms form-key :id])]
+      (-> {:db   (cond-> (-> db
+                             (update :editor dissoc :selected-form-key)
+                             (assoc-in [:editor :ui :remove-form-button-state] :disabled))
+                   (removed-application-review-active? db)
+                   (reset-application-review-state))
+           :http {:method              :delete
+                  :path                (str "/lomake-editori/api/forms/" form-id)
+                  :handler-or-dispatch :editor/refresh-forms-for-editor}}))))
 
-(reg-event-fx :editor/remove-form remove-form)
+(reg-event-db
+  :editor/unstart-remove-form
+  (fn [db _]
+    (cond-> db
+      (= :confirm (get-in db [:editor :ui :remove-form-button-state]))
+      (assoc-in [:editor :ui :remove-form-button-state] :active))))
+
+(reg-event-fx
+  :editor/start-remove-form
+  (fn [{db :db} _]
+    {:db (assoc-in db [:editor :ui :remove-form-button-state] :confirm)
+     :dispatch-later [{:ms 2000 :dispatch [:editor/unstart-remove-form]}]}))
 
 (reg-event-fx
   :editor/refresh-forms-in-use

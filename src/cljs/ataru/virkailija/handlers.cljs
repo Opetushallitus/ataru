@@ -34,9 +34,7 @@
  :set-active-panel
  (fn [db [_ active-panel]]
    (autosave/stop-autosave! (-> db :editor :autosave))
-   (-> db
-       (assoc :active-panel active-panel)
-       (assoc-in [:editor :show-remove-confirm-dialog?] false))))
+   (assoc db :active-panel active-panel)))
 
 (reg-event-fx
   :flasher
