@@ -12,15 +12,10 @@
 (def repl-started (atom false))
 
 (defn start-repl! [repl-port]
-  (when (and (:dev? env) (not @repl-started))
+  (when (and (:dev? env) (compare-and-set! repl-started false true))
     (do
       (nrepl/start-server :port repl-port)
-      (reset! repl-started true)
       (info "nREPL started on port" repl-port))))
-
-(defmacro ^:private try-f
-  [& form]
-  `(try ~@form (catch Exception _#)))
 
 (defrecord Server []
   component/Lifecycle
@@ -32,15 +27,13 @@
           handler      (cond-> (get-in this [:handler :routes])
                          (:dev? env) (wrap-reload))
           server       (http/start-server handler {:port port})]
-      (do
-        (a/go (start-repl! repl-port)))
+      (start-repl! repl-port)
       (info (str "Started server on port " port))
       (assoc this :server server)))
 
   (stop [this]
     (info "Stopping server")
-    (try-f (let [server (:server this)]
-            (.close server)))
+    (try (.close (:server this)) (catch Exception e))
     (info "Stopped server")
     (assoc this :server nil)))
 
