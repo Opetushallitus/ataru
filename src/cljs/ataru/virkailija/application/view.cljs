@@ -314,11 +314,14 @@
 
 (defn applications-hakukohde-rows
   [application all-hakukohteet selected-hakukohde]
-  (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
+  (let [direct-form-application?      (empty? (:hakukohde application))
+        application-hakukohde-oids    (if direct-form-application?
+                                        ["form"]
+                                        (:hakukohde application))
         application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
-       {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
+       {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
           (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
@@ -338,7 +341,8 @@
                            (select-application (:key application))
                            (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
-             [:span.application-handling__application-hl]
+             [:span.application-handling__application-hl
+              {:class (when direct-form-application? "application-handling__application-hl--direct-form")}]
              [:span.application-handling__hakukohde-state-cell
               [:span.application-handling__hakukohde-state.application-handling__count-tag
                [:span.application-handling__state-label
