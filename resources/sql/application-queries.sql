@@ -754,7 +754,6 @@ WITH filtered_applications AS (
       count(DISTINCT (key)) AS processing
     FROM unnested_hakukohde_with_processing_states
     WHERE hakukohde_review_state NOT IN ('unprocessed', 'processed') AND
-          hakukohde_review_state != 'processed' AND
           application_state != 'inactivated'
     GROUP BY haku, hakukohde
 )
