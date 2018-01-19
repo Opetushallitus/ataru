@@ -78,41 +78,65 @@
       "/lomake-editori/applications/complete"
       (str "Käsitellyt haut" (haku-count-str @complete-count))]]))
 
-(defn haku-info-link [link-href {:keys [name application-count processed]}]
-  [:a
-   {:href link-href}
-   (some #(get name %) [:fi :sv :en])
-   (str " (" application-count ")")
-   (let [unprocessed (- application-count processed)]
-     (when (pos? unprocessed)
-       [:span.application__search-control-haku-unprocessed
-        (str " " unprocessed " Käsittelemättä")]))])
+(defn haku-info-link [link-href {:keys [name haku-application-count application-count unprocessed processed]}]
+  (let [processing (- application-count unprocessed processed)]
+    [:a.application__search-control-haku-link
+     {:href link-href}
+     [:span.application__search-control-haku-title
+      (some #(get name %) [:fi :sv :en])]
+     [:span.application__search-control-haku-hl]
+     (when haku-application-count
+       [:span.application__search-control-haku-count (str haku-application-count " hakemus" (when (< 1 haku-application-count) "ta"))])
+     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      [:span.application-handling__state-label.application-handling__state-label--unprocessed]
+      unprocessed]
+     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      [:span.application-handling__state-label.application-handling__state-label--processing]
+      processing]
+     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+      [:span.application-handling__state-label.application-handling__state-label--processed]
+      processed]]))
 
-(defn hakukohde-list [hakukohteet]
-  [:div (map
+(defn hakukohde-list [hakukohteet-opened hakukohteet]
+  [:div.application__search-control-hakukohde-container
+   (if @hakukohteet-opened
+     [:div.application__search-control-hakukohteet
+      (when (not-empty hakukohteet)
+        [:div.application__search-control-hakukohteet-vline])
+      [:div.application__search-control-hakukohde-listing
+       (map
          (fn [hakukohde]
            ^{:key (:oid hakukohde)}
            [:div.application__search-control-hakukohde
             [haku-info-link
              (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
              hakukohde]])
-         hakukohteet)])
+         hakukohteet)]]
+     [:div.application__search-control-hakukohteet
+      [:div.application__search-control-hakukohde-count
+       (str (count hakukohteet) " hakukohdetta")]])])
 
 (defn tarjonta-haku [haku]
-  (let [hakukohteet-opened (r/atom false)]
+  (let [hakukohde-count    (count (:hakukohteet haku))
+        hakukohteet-opened (r/atom (= 1 hakukohde-count))]
     (fn [haku]
-      (let [toggle-opened #(reset! hakukohteet-opened (not @hakukohteet-opened))]
-        [:div.application__search-control-haku
-         [:div.application__search-control-tarjonta-haku-info
-          (if @hakukohteet-opened
-            [:i.zmdi.zmdi-chevron-up.application__search-control-open-hakukohteet
-             {:on-click toggle-opened}]
-            [:i.zmdi.zmdi-chevron-down.application__search-control-open-hakukohteet
-             {:on-click toggle-opened}])
-          [haku-info-link
-           (str "/lomake-editori/applications/haku/" (:oid haku))
-           haku]]
-          (when @hakukohteet-opened [hakukohde-list (:hakukohteet haku)])]))))
+      [:div.application__search-control-haku
+       [:div.application__search-control-tarjonta-haku-info
+        [:div.application__search-control-open-hakukohteet-container
+         {:on-click #(when (< 1 hakukohde-count)
+                       (reset! hakukohteet-opened (not @hakukohteet-opened)))}
+         [:i.application__search-control-open-hakukohteet
+          {:class (clojure.string/join
+                    " "
+                    [(if @hakukohteet-opened
+                       "application__search-control-open-hakukohteet--up"
+                       "application__search-control-open-hakukohteet--down")
+                     (when (= 1 hakukohde-count) "application__search-control-open-hakukohteet--disabled")])}]]
+        [haku-info-link
+         (str "/lomake-editori/applications/haku/" (:oid haku))
+         haku]]
+       (when (seq (:hakukohteet haku))
+         [hakukohde-list hakukohteet-opened (:hakukohteet haku)])])))
 
 (defn direct-form-haku [haku]
   [:div.application__search-control-haku.application__search-control-direct-form-haku

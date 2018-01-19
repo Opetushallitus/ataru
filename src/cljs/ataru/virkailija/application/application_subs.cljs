@@ -68,12 +68,7 @@
    :tarjonta-haut (filter haku-completely-processed? (:tarjonta-haut haut))})
 
 (defn sort-haku-seq-by-unprocessed [haku-seq]
-  (sort
-    (fn [a b]
-      (-
-        (- (:application-count b) (:processed b))
-        (- (:application-count a) (:processed a))))
-    haku-seq))
+  (->> haku-seq (sort-by :application-count >) (sort-by :unprocessed >)))
 
 (defn sort-haku-seq-by-name [haku-seq]
   (sort-by (fn [haku]

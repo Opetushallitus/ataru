@@ -21,6 +21,8 @@
 
 .application-handling__header-wrapper {
   padding: 20px 85px 0 85px;
+  max-width: 1200px;
+  margin: auto;
 }
 
 .application-handling__bottom-wrapper {
@@ -31,8 +33,9 @@
 
 .application-handling__overview {
   background-color: @very-light-gray;
-  border-bottom: 1px solid @separator-color;
   .application-handling-webkit-scrollbar-mixin;
+  max-width: 1200px;
+  margin: auto;
 }
 
 .application-handling__header {
@@ -144,6 +147,7 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state {
   position: relative;
+  float: left;
 }
 
 .application-handling__filter-state-link {
@@ -154,7 +158,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-link-icon {
-  margin-right: 5px;
+  margin-left: 5px;
+  color: @white;
+}
+
+.application-handling__filter-state-link-icon--enabled {
+  color: @text-color;
 }
 
 .application-handling__filter-state-selection {
@@ -221,9 +230,10 @@ and (max-width: 1000px) {
 
 .application-handling__list {
   cursor: pointer;
-  overflow: auto;
+  overflow-x: visible;
+  overflow-y: auto;
   max-height: 120px;
-  margin-bottom: 15px;
+  padding: 0 1px;
 }
 
 .application-handling__list--expanded {
@@ -231,17 +241,13 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row {
-  padding: 7px 8px 8px 8px;
-  margin: 0;
-  display: block;
-  font-size: 15px;
-  line-height: 15px;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  overflow-x: hidden;
-  border-bottom: 1px solid @review-separator-color;
+  margin-bottom: 1px;
+  padding: 12px 10px 15px 15px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.17);
+  border-radius: 3px;
+  font-size: 14px;
+  background: #ffffff;
+  min-height: 50px;
 
   .application-handling__list-row--applicant-unknown {
     color: gray;
@@ -249,14 +255,31 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row:hover {
-  background: #f5f5f5;
-  border-radius: 3px;
+  background-color: @very-light-gray;
+}
+
+.application-handling__list-row.application-handling__list-header:hover {
+  background-color: transparent;
+}
+
+.application-handling__list-row-hakukohteet-wrapper {
+  margin-top: 3px;
 }
 
 .application-handling__list-header {
   color: #5E5E5E;
   font-size: 14px;
-  overflow-x: visible;
+  display: flex;
+  overflow: visible;
+  border-bottom: none;
+  padding: 20px 0 10px 12px;
+  margin: 1px;
+  box-shadow: none;
+  background: transparent;
+}
+
+.application-handling__list-header:hover {
+  background: inherit;
 }
 
 .application-handling__list-row--inactivated {
@@ -265,35 +288,62 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--selected, .application-handling__list-row--selected:hover {
-  border-radius: 3px;
-  background-color: @application-form-list-background-color;
+  border-left: 7px solid @pale-blue;
+  padding-left: 10px;
 }
 
 .application-handling__list-header:hover {
-  background: none;
+  background: @white;
 }
 
 .application-handling__sort-arrow {
-  color: @blue-text-color;
+  color: @text-color;
   font-weight: bold;
   margin-left: 5px;
   cursor: pointer;
 }
 
+.application-handling__sort-arrow--disabled {
+  color: @white;
+}
+
 .application-handling__basic-list-basic-column-header {
-  color: @blue-text-color;
+  color: @text-color;
+  .light;
   cursor: pointer;
+  background-color: @popover-highlighted-gray;
+  border-radius: 3px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  margin-right: 1px;
+}
+
+.application-handling__list-row-person-info {
+  display: flex;
 }
 
 .application-handling__list-row--applicant {
-  width: 30%;
+  flex: 1 1 45%;
   display: inline-block;
 }
 
+.application-handling__list-row--application-applicant {
+  flex: 1 1 45%;
+  display: inline-block;
+  color: @pale-blue;
+}
+
 .application-handling__list-row--time {
-  width: 35%;
+  flex: 0 3 300px;
   display: inline-block;
   color: @sg-color-gray-2;
+}
+
+.application-handling__list-row--application-time {
+  flex: 0 2 550px;
+  display: inline-block;
+  color: @sg-color-gray;
+  .light;
 }
 
 .application-handling__list-row--time-day {
@@ -302,15 +352,13 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  width: 20%;
+  flex: 0 0 150px;
   display: inline-block;
-  margin-left: -3px;
 }
 
 .application-handling__list-row--selection {
-  width: 15%;
+  flex: 0 0 110px;
   display: inline-block;
-  margin-left: -3px;
 }
 
 .application-handling__list-row-email-icon {
@@ -324,23 +372,7 @@ and (max-width: 1000px) {
 .application-handling__list-row-hakukohde {
   padding-bottom: 2px;
   margin-top: 1px;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__application-hakukohde-cell {
-  filter: brightness(75%);
-}
-
-.application-handling__application-hakukohde-cell--selected {
-  text-decoration: underline;
-}
-
-.application-handling__application-hakukohde-cell--form {
-  margin-top: -20px;
-}
-
-.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-state,
-.application-handling__list-row-hakukohde:hover .application-handling__hakukohde-selection {
-  filter: brightness(115%);
+  display: flex;
 }
 
 .application-handling__list-loading-indicator {
@@ -358,6 +390,7 @@ and (max-width: 1000px) {
 .application-handling__detail-container {
   position: relative;
   padding: 20px 85px 15px 85px;
+  background-color: @white;
 }
 
 .application-handling__review-area {
@@ -1326,11 +1359,12 @@ th.application__readonly-adjacent--header {
   color: @pale-blue;
   border-radius: 3px;
   background: @white;
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.17));
   border-radius: 3px;
   font-size: 15px;
   min-height: 52px;
   margin-bottom: 20px;
+  .light;
 }
 
 .application__search-control-tab-text {
@@ -1339,14 +1373,18 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-control-selected-tab {
-  background-color: @pale-blue;
-  color: @white;
+  color: @text-color;
+  .arrow(bottom, @white, 11px);
 }
 
 .application__search-control-selected-tab-with-input {
-  border: solid @pale-blue 3px;
+  border: solid transparent 3px;
+  .arrow(bottom, @white, 11px);
   color: @white;
-  box-shadow: none;
+}
+
+.application__search-control-selected-tab-with-input:after {
+  bottom: -2px;
 }
 
 .application__search-control-tab-selector.application__search-control-selected-tab-with-input  {
@@ -1363,21 +1401,6 @@ th.application__readonly-adjacent--header {
 .application__search-control-loading-indicator > i {
   font-size: 50px;
   .spin
-}
-
-.application__search-control-tab-selector.application__search-control-selected-tab {
-  box-shadow: none;
-}
-
-.application-handling_search-control-tab-arrow-down {
-  position: absolute;
-  top: 52px;
-  left: 48%;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 9px solid @pale-blue;
 }
 
 .application__search-control-clear-search-term {
@@ -1432,7 +1455,7 @@ th.application__readonly-adjacent--header {
 
 .application__search-control-haku {
   color: @pale-blue;
-  margin-bottom: 20px;
+  margin-bottom: 1px;
   padding: 12px 10px 15px 15px;
   box-shadow: 0 1px 3px 0 rgba(0,0,0,0.17);
   border-radius: 3px;
@@ -1441,36 +1464,130 @@ th.application__readonly-adjacent--header {
   min-height: 50px;
 }
 
+.application__search-control-haku:hover {
+  background-color: @very-light-gray;
+}
+
 .application__search-control-haku.application__search-control-direct-form-haku {
-  padding-left: 46px;
+  padding-left: 15px;
   display: flex;
   align-items: center;
 }
 
+.application__search-control-haku.application__search-control-direct-form-haku a {
+  width: 100%;
+}
+
+.application__search-control-haku-link {
+  display: flex;
+  width: 100%;
+  padding-left: 22px;
+}
+
+.application__search-control-haku-title {
+  flex: 0 1 auto;
+  max-width: 650px;
+}
+
+.application__search-control-haku-hl {
+  flex: 1 1 0;
+  border-bottom: 1px dashed @light-gray;
+  height: 9px;
+  margin: 0 10px;
+}
+
+.application__search-control-haku-count {
+  color: @text-color;
+  font-size: 13px;
+  .light;
+  text-align: right;
+  flex: 0 0 0;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.application__search-control-haku-processed {
+  flex-grow: 0;
+  margin-top: -1px;
+}
+
+.application__search-control-tarjonta-haku-info {
+  margin-bottom: 5px;
+  position: relative;
+}
+
+.application__search-control-hakukohteet {
+  position: relative;
+}
+
 .application__search-control-hakukohde {
   padding: 0 0 10px 0;
-  margin-left: 28px;
   font-size: 13px;
+  display: flex;
+  flex-flow: row nowrap;
+  .light;
 }
 
 .application__search-control-hakukohde:last-child {
   padding-bottom: 0;
 }
 
-.application__search-control-hakukohde:first-of-type {
-  margin-top: 10px;
-}
-
 .application__search-control-haku-unprocessed {
-  color: #6BB432;
-  margin-left: 8px;
+  color: @white;
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  left: 20px;
+  top: 2px;
+}
+.application__search-control-open-hakukohteet-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 15px;
+  cursor: pointer;
 }
 
 .application__search-control-open-hakukohteet {
-  font-size: 19px;
-  cursor: pointer;
-  margin-left: 7px;
-  margin-right: 10px;
+  border: solid @pale-blue;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+  transform: rotate(-135deg);
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  pointer-events: none;
+}
+
+.application__search-control-open-hakukohteet--down {
+  transform: rotate(45deg);
+  top: 3px;
+}
+
+.application__search-control-open-hakukohteet--up {
+  transform: rotate(-135deg);
+}
+
+.application__search-control-open-hakukohteet--disabled {
+  border-color: @sg-color-gray-2;
+}
+
+.application__search-control-hakukohteet-vline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  width: 1px;
+  border-left: 2px solid @light-gray;
+}
+
+.application__search-control-hakukohde-count {
+  padding-left: 22px;
+  color: @sg-color-gray-2;
+  font-size: 13px;
+  font-weight: 300;
 }
 
 .application-handling__application-contents {
@@ -1483,10 +1600,23 @@ th.application__readonly-adjacent--header {
 }
 
 .application-handling__application-hakukohde-cell {
-  font-size: 12px;
-  color: @sg-color-gray-2;
-  width: 65%;
-  display: inline-block;
+  font-size: 13px;
+  color: @gray-of-the-beast;
+  .light;
+  width: auto;
+  flex: 0 1 auto;
+  margin-top: 3px;
+}
+
+.application-handling__application-hakukohde-cell--form {
+  margin-top: -20px;
+}
+
+.application-handling__application-hl {
+  flex: 1 0 0;
+  border-bottom: 1px dashed @light-gray;
+  height: 12px;
+  margin: 0 10px;
 }
 
 .application-handling__application-state-cell {
@@ -1494,27 +1624,56 @@ th.application__readonly-adjacent--header {
   text-transform: uppercase;
 }
 
-.application-handling__hakukohde-state-cell, .application-handling__hakukohde-selection-cell {
-  display: inline-block;
-  margin-left: -4px;
-}
-
 .application-handling__hakukohde-state-cell {
-  width: 20%;
+  flex: 0 0 150px;
 }
 
 .application-handling__hakukohde-selection-cell {
-  width: 10%;
+  flex: 0 0 110px;
+}
+
+.application-handling__count-tag {
+  font-size: 11px;
+  line-height: 13px;
+  border-radius: 4px;
+  padding: 1px 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  margin-top: 3px;
+  color: @text-color;
+  font-weight: normal;
+}
+
+.application-handling__count-tag--haku-list {
+  width: 40px;
+  font-size: 13px;
+  margin-top: 2px;
+  flex: 0 0 45px;
+}
+
+.application-handling__state-label {
+  border-left: 6px solid;
+  height: 10px;
+  margin-right: 4px;
+  display: inline-block;
+  border-color: @pale-blue;
+}
+
+.application-handling__state-label--processed,
+.application-handling__state-label--reserve,
+.application-handling__state-label--selected,
+.application-handling__state-label--selection-proposal,
+.application-handling__state-label--rejected {
+  border-color: @processed-green;
+}
+
+.application-handling__state-label--unprocessed,
+.application-handling__state-label--incomplete {
+  border-color: @unprocessed-orange;
 }
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {
-  font-size: 11px;
-  border-radius: 4px;
-  background-color: @medium-pale-blue;
-  padding: 1px 8px;
-  margin-right: 8px;
-  text-transform: uppercase;
-  color: white;
+  float: left;
 }
 
 .application__text-field-paragraph {

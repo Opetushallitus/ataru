@@ -300,24 +300,30 @@
   (util/update-url-with-query-params {:application-key application-key})
   (dispatch [:application/select-application application-key]))
 
+(defn hakukohde-review-state
+  [hakukohde-reviews hakukohde-oid requirement]
+  (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
+                            (= (:requirement %) requirement))
+                      hakukohde-reviews)))
+
 (defn review-label-for-hakukohde
   [reviews states hakukohde-oid requirement]
   (application-states/get-review-state-label-by-name
     states
-    (:state (find-first #(and (= (:hakukohde %) hakukohde-oid)
-                              (= (:requirement %) requirement))
-                        reviews))))
+    (hakukohde-review-state reviews hakukohde-oid requirement)))
 
 (defn applications-hakukohde-rows
   [application all-hakukohteet selected-hakukohde]
   (let [application-hakukohde-oids    (or (not-empty (:hakukohde application)) ["form"])
         application-hakukohde-reviews (:application-hakukohde-reviews application)]
     (into
-      [:div.application-handling-list-row-hakukohteet-wrapper
+      [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when (empty? (:hakukohde application)) "application-handling__application-hakukohde-cell--form")}]
       (map
         (fn [hakukohde-oid]
           (let [hakukohde              ((keyword hakukohde-oid) all-hakukohteet)
+                processing-state       (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "processing-state")
+                selection-state        (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "selection-state")
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
                                          (->> application
@@ -328,10 +334,15 @@
             [:div.application-handling__list-row-hakukohde
              [:span.application-handling__application-hakukohde-cell
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
-               :on-click (fn [] (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
+               :on-click (fn []
+                           (select-application (:key application))
+                           (dispatch [:state-update #(assoc-in % [:application :selected-review-hakukohde] hakukohde-oid)]))}
               (from-multi-lang (:name hakukohde))]
+             [:span.application-handling__application-hl]
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state
+              [:span.application-handling__hakukohde-state.application-handling__count-tag
+               [:span.application-handling__state-label
+                {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
@@ -342,7 +353,9 @@
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              [:span.application-handling__hakukohde-selection-cell
-              [:span.application-handling__hakukohde-selection
+              [:span.application-handling__hakukohde-selection.application-handling__count-tag
+               [:span.application-handling__state-label
+                {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
                (or
                  (review-label-for-hakukohde
                    application-hakukohde-reviews
@@ -366,9 +379,9 @@
                                           (when (= "inactivated" (:state application))
                                             "application-handling__list-row--inactivated")])}
      [:div.application-handling__list-row-person-info
-      [:span.application-handling__list-row--applicant
+      [:span.application-handling__list-row--application-applicant
        (or applicant [:span.application-handling__list-row--applicant-unknown "Tuntematon"])]
-      [:span.application-handling__list-row--time
+      [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]]
      [applications-hakukohde-rows application @hakukohteet @selected-hakukohde]]))
@@ -438,10 +451,11 @@
       (let [all-filters-selected? (= (count @hakukohde-review-filters)
                                      (count application-review-states/application-hakukohde-processing-states))]
         [:span.application-handling__filter-state.application-handling__filter-state--application-state
-         [:a.application-handling__filter-state-link
+         [:a.application-handling__basic-list-basic-column-header
           {:on-click toggle-filter-opened}
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
-          (str "Käsittelyvaihe" (when-not all-filters-selected? " *"))]
+          "Käsittelyvaihe"
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
@@ -476,10 +490,11 @@
       (let [all-filters-selected? (= (count @state-filters)
                                      (count review-states/application-hakukohde-selection-states))]
         [:span.application-handling__filter-state
-         [:a.application-handling__filter-state-link
+         [:a.application-handling__basic-list-basic-column-header
           {:on-click toggle-filter-opened}
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon]
-          (str "Valinta" (when-not all-filters-selected? " *"))]
+          "Valinta"
+          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection.application-handling__filter-state--selection-state
                   [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
@@ -514,11 +529,12 @@
        {:class    css-class
         :on-click (partial sortable-column-click column-id)}
        [:span.application-handling__basic-list-basic-column-header
-        heading]
-       (when (= column-id (:column @application-sort))
-         (if (= :descending (:order @application-sort))
-           [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
-           [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow]))])))
+        heading
+        (if (= column-id (:column @application-sort))
+          (if (= :descending (:order @application-sort))
+            [:i.zmdi.zmdi-chevron-down.application-handling__sort-arrow]
+            [:i.zmdi.zmdi-chevron-up.application-handling__sort-arrow])
+          [:i.zmdi.zmdi-chevron-down..application-handling__sort-arrow.application-handling__sort-arrow--disabled])]])))
 
 (defn application-list-loading-indicator []
   (let [fetching (subscribe [:state-query [:application :fetching-applications]])]
@@ -628,7 +644,7 @@
         list-opened                (subscribe [:application/review-list-visible? :hakukohde])
         select-list-item           (partial toggle-review-list-visibility :hakukohde)]
     (fn []
-      (when (pos? (count @application-hakukohde-oids))
+      (when (not-empty @application-hakukohde-oids)
         [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
          [:div.application-handling__review-header (str "Hakukohteet (" (count @application-hakukohde-oids) ")")]
          (if @list-opened

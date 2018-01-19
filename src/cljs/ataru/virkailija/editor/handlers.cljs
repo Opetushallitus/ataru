@@ -187,15 +187,21 @@
   (update form :languages
     (partial mapv keyword)))
 
+(defn- parse-form-created-times
+  [form]
+  (assoc form :created-time (temporal/str->googdate (:created-time form))))
+
 (defn refresh-forms-for-editor []
   (http
    :get
-   (str "/lomake-editori/api/forms")
+   "/lomake-editori/api/forms"
    (fn [db {:keys [forms]}]
      (assoc-in db [:editor :forms] (->> forms
+                                        (mapv parse-form-created-times)
                                         (mapv languages->kwd)
                                         (util/group-by-first :key)
-                                        (sort-by-time-and-deletedness))))))
+                                        (sort-by-time-and-deletedness))))
+   :skip-parse-times? true))
 
 (reg-event-db
   :editor/refresh-forms-for-editor
@@ -390,7 +396,8 @@
   (fn [_ _]
     {:http {:method              :get
             :path                "/lomake-editori/api/forms-in-use"
-            :handler-or-dispatch :editor/update-forms-in-use}}))
+            :handler-or-dispatch :editor/update-forms-in-use
+            :skip-parse-times?   true}}))
 
 (reg-event-fx
   :editor/update-forms-in-use

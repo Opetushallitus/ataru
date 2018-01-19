@@ -44,6 +44,10 @@ span, p {
   font-weight: 600;
 }
 
+.light {
+  font-weight: 300;
+}
+
 .spin {
   -webkit-animation-name: spin;
   -webkit-animation-duration: 1300ms;
@@ -152,5 +156,17 @@ span, p {
     border-top: @size solid transparent;
     border-bottom: @size solid transparent;
     border-right: @size solid @color;
+  }
+}
+
+.arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = bottom) {
+  &:after {
+    bottom: 0;
+    left: @offset;
+    margin-bottom: -@size;
+
+    border-right: @size solid transparent;
+    border-left: @size solid transparent;
+    border-top: @size solid @color;
   }
 }
