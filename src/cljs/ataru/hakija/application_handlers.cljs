@@ -689,6 +689,7 @@
                  (set-single-choice-followup-visibility field-descriptor value))
              (-> db
                  (assoc-in value-path new-value)
+                 (set-multi-value-changed id :value)
                  (set-single-choice-followup-visibility field-descriptor value)))
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
@@ -1022,7 +1023,10 @@
                         autil/remove-nth idx)
              (contains? answer :value)
              (update-in [:application :answers id :value]
-                        autil/remove-nth idx))))
+                        autil/remove-nth idx)
+             (or (contains? answer :values)
+                 (contains? answer :value))
+             (update-in [:application :values-changed?] conj id))))
        with-decremented-count
        (:children field-descriptor)))))
 
