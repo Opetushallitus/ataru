@@ -733,7 +733,9 @@ WITH filtered_applications AS (
       application_hakukohde_reviews.requirement AS hakukohde_review_requirement,
       application_hakukohde_reviews.state       AS hakukohde_review_state
     FROM unnested_hakukohde
-      LEFT JOIN application_hakukohde_reviews ON unnested_hakukohde.key = application_hakukohde_reviews.application_key
+      LEFT JOIN application_hakukohde_reviews
+        ON unnested_hakukohde.key = application_hakukohde_reviews.application_key AND
+           unnested_hakukohde.hakukohde = application_hakukohde_reviews.hakukohde
 ), haku_review_complete_counts AS (
     SELECT
       haku,
