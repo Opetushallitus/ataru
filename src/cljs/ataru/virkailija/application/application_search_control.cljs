@@ -99,23 +99,22 @@
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet]
   [:div.application__search-control-hakukohde-container
-   (let [hakukohde-count (count hakukohteet)]
-     (if @hakukohteet-opened
-       [:div.application__search-control-hakukohteet
-        (when (and @hakukohteet-opened (pos? hakukohde-count))
-          [:div.application__search-control-hakukohteet-vline])
-        [:div.application__search-control-hakukohde-listing
-         (map
-           (fn [hakukohde]
-             ^{:key (:oid hakukohde)}
-             [:div.application__search-control-hakukohde
-              [haku-info-link
-               (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
-               hakukohde]])
-           hakukohteet)]]
-       [:div.application__search-control-hakukohteet
-        [:div.application__search-control-hakukohde-count
-         (str (count hakukohteet) " hakukohdetta")]]))])
+   (if @hakukohteet-opened
+     [:div.application__search-control-hakukohteet
+      (when (not-empty hakukohteet)
+        [:div.application__search-control-hakukohteet-vline])
+      [:div.application__search-control-hakukohde-listing
+       (map
+         (fn [hakukohde]
+           ^{:key (:oid hakukohde)}
+           [:div.application__search-control-hakukohde
+            [haku-info-link
+             (str "/lomake-editori/applications/hakukohde/" (:oid hakukohde))
+             hakukohde]])
+         hakukohteet)]]
+     [:div.application__search-control-hakukohteet
+      [:div.application__search-control-hakukohde-count
+       (str (count hakukohteet) " hakukohdetta")]])])
 
 (defn tarjonta-haku [haku]
   (let [hakukohde-count    (count (:hakukohteet haku))

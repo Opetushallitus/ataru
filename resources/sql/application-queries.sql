@@ -786,11 +786,10 @@ FROM latest_applications AS a
   JOIN forms AS f ON f.id = a.form_id
   JOIN latest_forms AS lf ON lf.key = f.key
   JOIN application_reviews AS ar ON a.key = ar.application_key
-  LEFT JOIN application_hakukohde_reviews AS ahr ON ahr.id = (SELECT id
-                                                              FROM application_hakukohde_reviews ahr2
-                                                              WHERE ahr2.hakukohde = 'form' AND
-                                                                    ahr2.requirement = 'processing-state' AND
-                                                                    ahr2.application_key = a.key)
+  LEFT JOIN application_hakukohde_reviews AS ahr
+    ON ahr.application_key = a.key
+       AND ahr.hakukohde = 'form'
+       AND ahr.requirement = 'processing-state'
 WHERE a.haku IS NULL
       AND (:query_type = 'ALL' OR lf.organization_oid IN (:authorized_organization_oids))
 GROUP BY lf.name, lf.key;

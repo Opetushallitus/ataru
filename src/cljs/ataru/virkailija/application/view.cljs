@@ -332,7 +332,6 @@
                                                             (= (:state %) "information-request")))
                                               (seq)))]
             [:div.application-handling__list-row-hakukohde
-             {:data-hakukohde-oid hakukohde-oid}
              [:span.application-handling__application-hakukohde-cell
               {:class    (when (= selected-hakukohde hakukohde-oid) "application-handling__application-hakukohde-cell--selected")
                :on-click (fn []
