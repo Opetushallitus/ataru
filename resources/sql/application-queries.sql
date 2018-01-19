@@ -724,7 +724,7 @@ WITH filtered_applications AS (
       count(key) AS application_count
     FROM filtered_applications
     GROUP BY haku
-), unnested_hakukohde_with_hakukohde_reviews AS (
+), unnested_hakukohde_with_processing_states AS (
     SELECT
       key,
       haku,
@@ -735,15 +735,16 @@ WITH filtered_applications AS (
     FROM unnested_hakukohde
       LEFT JOIN application_hakukohde_reviews
         ON unnested_hakukohde.key = application_hakukohde_reviews.application_key AND
-           unnested_hakukohde.hakukohde = application_hakukohde_reviews.hakukohde
+           unnested_hakukohde.hakukohde = application_hakukohde_reviews.hakukohde AND
+           application_hakukohde_reviews.requirement = 'processing-state'
 ), haku_review_complete_counts AS (
     SELECT
       haku,
       hakukohde,
       count(DISTINCT (key)) AS processed
-    FROM unnested_hakukohde_with_hakukohde_reviews
+    FROM unnested_hakukohde_with_processing_states
     WHERE
-      (hakukohde_review_state = 'processed' AND hakukohde_review_requirement = 'processing-state')
+      hakukohde_review_state = 'processed'
       OR application_state = 'inactivated'
     GROUP BY haku, hakukohde
 ), haku_review_processing_counts AS (
@@ -751,8 +752,8 @@ WITH filtered_applications AS (
       haku,
       hakukohde,
       count(DISTINCT (key)) AS processing
-    FROM unnested_hakukohde_with_hakukohde_reviews
-    WHERE hakukohde_review_requirement = 'processing-state' AND hakukohde_review_state != 'unprocessed' AND
+    FROM unnested_hakukohde_with_processing_states
+    WHERE hakukohde_review_state NOT IN ('unprocessed', 'processed') AND
           hakukohde_review_state != 'processed' AND
           application_state != 'inactivated'
     GROUP BY haku, hakukohde
