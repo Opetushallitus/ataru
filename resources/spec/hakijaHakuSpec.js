@@ -157,7 +157,7 @@
       )
       it('shows readonly application with selected data', function() {
         var hakukohdeValues = testFrame().find('.application__hakukohde-selected-list').text()
-        expect(hakukohdeValues).to.equal('Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne ATestihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
+        expect(hakukohdeValues).to.equal('1Testihakukohde 1 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne A2Testihakukohde 2 –\xa0Koulutuskeskus Sedu, Ilmajoki, IlmajoentieTarkenne B')
 
         var otherValues = _.map(testFrame().find('.application__form-field div'), function(e) { return $(e).text() })
         var expectedOtherValues = ["Etunimi Tokanimi",
