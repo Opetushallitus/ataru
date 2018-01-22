@@ -152,44 +152,22 @@
                   (merge {:cannot-edit true}))))
       (apply conj answers (get-questions-without-answers application)))))
 
-(defn- uneditable-answers-with-labels-from-new
-  [uneditable-answers new-answers old-answers]
-  ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
-  (keep (fn [answer]
-          (let [answer-key      (:key answer)
-                answer-with-key #(= (:key %) answer-key)
-                old-answer      (->> old-answers
-                                     (filter answer-with-key)
-                                     (first))
-                new-label       (->> new-answers
-                                     (filter answer-with-key)
-                                     (first)
-                                     :label)]
-            (when old-answer
-              ;Sometimes an old answer doesn't exist: old application <-> new question in form (flag-uneditable-answers)
-              (merge old-answer {:label new-label}))))
-        uneditable-answers))
-
 (defn- merge-uneditable-answers-from-previous
   [new-application
    old-application
-   application-hakukohde-reviews
-   hakuaika
-   virkailija?]
-  (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers application-hakukohde-reviews
-                                                              hakuaika
-                                                              virkailija?)
-                                     :answers)
-        uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
-        uneditable-answers       (filter uneditable-or-unviewable new-answers)
-        editable-answers         (remove uneditable-or-unviewable new-answers)
-        merged-answers           (into editable-answers
-                                       (uneditable-answers-with-labels-from-new
-                                        uneditable-answers
-                                        new-answers
-                                        (:answers old-application)))]
-    (assoc new-application :answers merged-answers)))
+   form]
+  (let [fields-by-key      (util/reduce-form-fields #(assoc %1 (:id %2) %2)
+                                                    {}
+                                                    (:content form))
+        old-answers-by-key (reduce #(assoc %1 (:key %2) %2)
+                                   {}
+                                   (:answers old-application))]
+    (update new-application :answers
+            (partial keep (fn [answer]
+                            (if (:cannot-edit (fields-by-key (:key answer)))
+                              (when-let [old-answer (old-answers-by-key (:key answer))]
+                                (assoc old-answer :label (:label answer)))
+                              answer))))))
 
 (defn- flatten-attachment-keys [application]
   (->> (:answers application)
@@ -236,23 +214,25 @@
         hakuaika                      (get-hakuaikas tarjonta-service
                                                      ohjausparametrit-service
                                                      application)
+        virkailija-secret             (valid-virkailija-secret application)
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
                                           (hakija-form-service/inject-hakukohde-component-if-missing)
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        virkailija-secret             (valid-virkailija-secret application)
+                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
+                                          (hakija-form-service/flag-uneditable-and-unviewable-fields
+                                           hakuaika
+                                           (some? virkailija-secret)))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
         final-application             (if is-modify?
                                         (-> application
-                                            (merge-uneditable-answers-from-previous latest-application
-                                                                                    application-hakukohde-reviews
-                                                                                    hakuaika
-                                                                                    (some? virkailija-secret))
+                                            (merge-uneditable-answers-from-previous
+                                             latest-application
+                                             form)
                                             (assoc :person-oid (:person-oid latest-application)))
                                         application)
         validation-result             (validator/valid-application?
