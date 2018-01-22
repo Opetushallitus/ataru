@@ -58,6 +58,8 @@
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
+                        (s/optional-key :cannot-view)                    s/Bool
+                        (s/optional-key :cannot-edit)                    s/Bool
                         (s/optional-key :validators)                     [(apply s/enum (concat (keys validator/pure-validators)
                                                                                                 (keys validator/async-validators)))]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
