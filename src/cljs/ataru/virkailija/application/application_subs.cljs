@@ -242,8 +242,8 @@
   :application/filtered-applications
   (fn [db _]
     (let [applications                 (-> db :application :applications)
-          processing-states-to-include (-> db :application :filter set)
-          selection-states-to-include  (-> db :application :selection-filter set)]
+          processing-states-to-include (-> db :application :processing-state-filter set)
+          selection-states-to-include  (-> db :application :selection-state-filter set)]
       (filter
         (fn [application]
           (and

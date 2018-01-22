@@ -5,15 +5,15 @@
 
 (def default-db
   {:editor       {:forms             nil
-                  :autosave          nil ; autosave stop function, see autosave.cljs
+                  :autosave          nil                    ; autosave stop function, see autosave.cljs
                   :selected-form-key nil
                   :used-by-haut      {:fetching? false
-                                      :error? false}}
-                                        ; Initial active panel on page load.
+                                      :error?    false}}
+   ; Initial active panel on page load.
    :active-panel :editor
-   :application  {:review              {}
-                  :filter              (mapv first review-states/application-hakukohde-processing-states)
-                  :selection-filter    (mapv first review-states/application-hakukohde-selection-states)
-                  :sort                application-sorting/initial-sort
+   :application  {:review                     {}
+                  :processing-state-filter    (mapv first review-states/application-hakukohde-processing-states)
+                  :selection-state-filter     (mapv first review-states/application-hakukohde-selection-states)
+                  :sort                       application-sorting/initial-sort
                   :application-list-expanded? true}
    :banner       {:type :in-flow}})

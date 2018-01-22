@@ -405,61 +405,31 @@
                 [util/wrap-scroll-to [application-list-row application selected?]]
                 [application-list-row application selected?]))))))
 
-
-; TODO refactor/merge the two fns below
-(defn toggle-application-hakukohde-processing-state-filter
-  [hakukohde-filters review-state-id selected]
-  (let [new-application-filter (if selected
-                                 (remove #(= review-state-id %) hakukohde-filters)
-                                 (conj hakukohde-filters review-state-id))]
+(defn- toggle-state-filter!
+  [hakukohde-filters states filter-kw filter-id selected?]
+  (let [new-filter (if selected?
+                     (remove #(= filter-id %) hakukohde-filters)
+                     (conj hakukohde-filters filter-id))]
     (util/update-url-with-query-params
-      {:unselected-states (clojure.string/join ","
-                                               (util/get-unselected-review-states
-                                                 new-application-filter
-                                                 review-states/application-hakukohde-processing-states))})
-    (dispatch [:state-update #(assoc-in % [:application :filter] new-application-filter)])))
+      {filter-kw (clojure.string/join ","
+                                      (util/get-unselected-review-states
+                                        new-filter
+                                        states))})
+    (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])))
 
-(defn toggle-hakukohde-selection-filter
-  [hakukohde-filters filter-id selected?]
-  (let [new-selection-filter (if selected?
-                                 (remove #(= filter-id %) hakukohde-filters)
-                                 (conj hakukohde-filters filter-id))]
-    (util/update-url-with-query-params
-      {:unselected-selection-states (clojure.string/join ","
-                                                         (util/get-unselected-review-states
-                                                           new-selection-filter
-                                                           review-states/application-hakukohde-selection-states))})
-    (dispatch [:state-update #(assoc-in % [:application :selection-filter] new-selection-filter)])))
-
-(defn- toggle-all-hakukohde-processing-state-filters [all-filters-selected?]
-  (util/update-url-with-query-params {:unselected-states nil})
-  (dispatch [:state-update #(assoc-in % [:application :filter]
-                                      (if all-filters-selected?
-                                        (map first application-review-states/application-hakukohde-processing-states)
-                                        []))]))
-
-(defn- toggle-all-hakukohde-selection-state-filters
-  [all-filters-selected?]
-  (util/update-url-with-query-params {:unselected-selection-states nil})
-  (dispatch [:state-update #(assoc-in % [:application :selection-filter]
-                                      (if all-filters-selected?
-                                        (map first application-review-states/application-hakukohde-selection-states)
-                                        []))]))
-
-
-(defn state-filter-controls []
-  (let [hakukohde-review-filters (subscribe [:state-query [:application :filter]])
-        review-state-counts      (subscribe [:state-query [:application :review-state-counts]])
-        filter-opened            (r/atom false)
-        toggle-filter-opened     (fn [_] (swap! filter-opened not))
-        get-review-state-count   (fn [counts state-id] (or (get counts state-id) 0))]
+(defn hakukohde-state-filter-controls
+  [filter-kw title states state-counts-sub]
+  (let [filter-sub           (subscribe [:state-query [:application filter-kw]])
+        filter-opened        (r/atom false)
+        toggle-filter-opened #(swap! filter-opened not)
+        get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
     (fn []
-      (let [all-filters-selected? (= (count @hakukohde-review-filters)
-                                     (count application-review-states/application-hakukohde-processing-states))]
+      (let [all-filters-selected? (= (count @filter-sub)
+                                     (count states))]
         [:span.application-handling__filter-state.application-handling__filter-state--application-state
          [:a.application-handling__basic-list-basic-column-header
           {:on-click toggle-filter-opened}
-          "Käsittelyvaihe"
+          title
           [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
            {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
          (when @filter-opened
@@ -470,59 +440,27 @@
                     [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                              :type      "checkbox"
                              :checked   all-filters-selected?
-                             :on-change #(toggle-all-hakukohde-processing-state-filters (not all-filters-selected?))}]
+                             :on-change (fn [_]
+                                          (util/update-url-with-query-params {filter-kw nil})
+                                          (dispatch [:state-update #(assoc-in % [:application filter-kw]
+                                                                              (if all-filters-selected?
+                                                                                (map first states)
+                                                                                []))]))}]
                     [:span "Kaikki"]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
-                     (let [filter-selected (some #{review-state-id} @hakukohde-review-filters)]
+                     (let [filter-selected? (contains? (set @filter-sub) review-state-id)]
                        [:div.application-handling__filter-state-selection-row
-                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
+                        {:class (if filter-selected? "application-handling__filter-state-selected-row" "")}
                         [:label
                          [:input {:class     "application-handling__filter-state-selection-row-checkbox"
                                   :type      "checkbox"
-                                  :checked   (boolean filter-selected)
-                                  :on-change #(toggle-application-hakukohde-processing-state-filter @hakukohde-review-filters review-state-id filter-selected)}]
+                                  :checked   filter-selected?
+                                  :on-change #(toggle-state-filter! @filter-sub states filter-kw review-state-id filter-selected?)}]
                          [:span (str review-state-label
-                                     " (" (get-review-state-count @review-state-counts review-state-id) ")")]]]))
-                   application-review-states/application-hakukohde-processing-states)))
-         (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
-
-(defn selection-state-filter-controls
-  []
-  (let [state-filters        (subscribe [:state-query [:application :selection-filter]])
-        filter-opened        (r/atom false)
-        toggle-filter-opened #(swap! filter-opened not)]
-    (fn []
-      (let [all-filters-selected? (= (count @state-filters)
-                                     (count review-states/application-hakukohde-selection-states))]
-        [:span.application-handling__filter-state
-         [:a.application-handling__basic-list-basic-column-header
-          {:on-click toggle-filter-opened}
-          "Valinta"
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
-           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
-         (when @filter-opened
-           (into [:div.application-handling__filter-state-selection.application-handling__filter-state--selection-state
-                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
-                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
-                   [:label
-                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                             :type      "checkbox"
-                             :checked   all-filters-selected?
-                             :on-change #(toggle-all-hakukohde-selection-state-filters (not all-filters-selected?))}]
-                    [:span "Kaikki"]]]]
-                 (mapv
-                   (fn [[review-state-id review-state-label]]
-                     (let [filter-selected (some #{review-state-id} @state-filters)]
-                       [:div.application-handling__filter-state-selection-row
-                        {:class (if filter-selected "application-handling__filter-state-selected-row" "")}
-                        [:label
-                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                                  :type      "checkbox"
-                                  :checked   (boolean filter-selected)
-                                  :on-change #(toggle-hakukohde-selection-filter @state-filters review-state-id filter-selected)}]
-                         [:span review-state-label]]]))
-                   application-review-states/application-hakukohde-selection-states)))
+                                     (when state-counts-sub
+                                       (str " (" (get-state-count @state-counts-sub review-state-id) ")")))]]]))
+                   states)))
          (when @filter-opened [:div.application-handling__filter-state-selection-arrow-up])]))))
 
 (defn sortable-column-click [column-id evt]
@@ -561,9 +499,18 @@
        :created-time
        "application-handling__list-row--time"
        "Saapunut"]
-      [:span.application-handling__list-row--state [state-filter-controls]]
+      [:span.application-handling__list-row--state
+       [hakukohde-state-filter-controls
+        :processing-state-filter
+        "Käsittelyvaihe"
+        application-review-states/application-hakukohde-processing-states
+        (subscribe [:state-query [:application :review-state-counts]])]]
       (when (:selection-state @review-settings)
-        [:span.application-handling__list-row--selection [selection-state-filter-controls]])]
+        [:span.application-handling__list-row--selection
+         [hakukohde-state-filter-controls
+          :selection-state-filter
+          "Valinta"
+          application-review-states/application-hakukohde-selection-states]])]
      (when-not @fetching
        [application-list-contents applications])]))
 

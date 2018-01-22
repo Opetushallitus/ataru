@@ -185,12 +185,12 @@
 (defn fetch-applications-fx [db path]
   {:db   (-> db
              (assoc-in [:application :fetching-applications] true)
-             (assoc-in [:application :filter] (extract-unselected-review-states-from-query
-                                                :unselected-states
-                                                review-states/application-hakukohde-processing-states))
-             (assoc-in [:application :selection-filter] (extract-unselected-review-states-from-query
-                                                          :unselected-selection-states
-                                                          review-states/application-hakukohde-selection-states)))
+             (assoc-in [:application :processing-state-filter] (extract-unselected-review-states-from-query
+                                                                 :processing-state-filter
+                                                                 review-states/application-hakukohde-processing-states))
+             (assoc-in [:application :selection-state-filter] (extract-unselected-review-states-from-query
+                                                                :selection-state-filter
+                                                                review-states/application-hakukohde-selection-states)))
    :http {:method              :get
           :path                path
           :skip-parse-times?   true
