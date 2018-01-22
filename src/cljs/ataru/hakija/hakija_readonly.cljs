@@ -178,6 +178,9 @@
 (defn- selected-hakukohde-row
   [hakukohde-oid]
   [:div.application__hakukohde-row
+   (when @(subscribe [:application/prioritize-hakukohteet?])
+     [:p.application__hakukohde-priority-number-readonly
+      @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
    [:div.application__hakukohde-row-text-container
     [:div.application__hakukohde-selected-row-header
      @(subscribe [:application/hakukohde-label hakukohde-oid])]
