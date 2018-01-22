@@ -102,6 +102,22 @@
                                      (@default-lang (-> field-descriptor :params :info-text :label)))]
         [markdown-paragraph info]))))
 
+(defn question-hakukohde-names [field-descriptor]
+  (let [lang                           @(subscribe [:application/form-language])
+        tarjonta-hakukohtet            @(subscribe [:application/tarjonta-hakukohteet])
+        selected-hakukohteet           @(subscribe [:application/selected-hakukohteet])
+        field-hakukohteet              (:belongs-to-hakukohteet field-descriptor)
+        selected-hakukohteet-for-field (clojure.set/intersection (set field-hakukohteet)
+                                                                 (set selected-hakukohteet))
+        selected-hakukohde-names       (->> tarjonta-hakukohtet
+                                            (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
+                                            (map :name)
+                                            (map #(some % [lang :fi :sv :en])))]
+    (println selected-hakukohde-names)
+    [:div
+     (str (get-translation :question-for-hakukohde)
+          (clojure.string/join ", " selected-hakukohde-names))]))
+
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))
         answer       (if (and @editing
@@ -124,6 +140,8 @@
                                                    (:value answer)
                                                    (:valid answer))]
     [div-kwd
+     (when (:belongs-to-hakukohteet field-descriptor)
+       [question-hakukohde-names field-descriptor])
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
