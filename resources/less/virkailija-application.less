@@ -323,24 +323,24 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--applicant {
-  flex: 1 1 45%;
+  flex: 0 3 450px;
   display: inline-block;
 }
 
 .application-handling__list-row--application-applicant {
-  flex: 1 1 45%;
+  flex: 1 3 450px;
   display: inline-block;
   color: @pale-blue;
 }
 
 .application-handling__list-row--time {
-  flex: 0 3 300px;
+  flex: 2 3 288px;
   display: inline-block;
   color: @sg-color-gray-2;
 }
 
 .application-handling__list-row--application-time {
-  flex: 0 2 550px;
+  flex: 0 3 550px;
   display: inline-block;
   color: @sg-color-gray;
   .light;
@@ -352,12 +352,12 @@ and (max-width: 1000px) {
 }
 
 .application-handling__list-row--state {
-  flex: 0 0 150px;
+  flex: 0 0 160px;
   display: inline-block;
 }
 
 .application-handling__list-row--selection {
-  flex: 0 0 110px;
+  flex: 0 0 120px;
   display: inline-block;
 }
 
@@ -391,6 +391,10 @@ and (max-width: 1000px) {
   position: relative;
   padding: 20px 85px 15px 85px;
   background-color: @white;
+}
+
+.application-handling__review-area-container {
+  border-top: 1px solid @review-separator-color;
 }
 
 .application-handling__review-area {
@@ -498,7 +502,7 @@ and (max-width: 1000px) {
 
 .application-handling__review-area-settings-link {
   position: absolute;
-  top: -82px;
+  top: -75px;
   right: 25px;
 }
 

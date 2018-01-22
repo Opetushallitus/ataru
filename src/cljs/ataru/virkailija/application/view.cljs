@@ -313,7 +313,7 @@
     (hakukohde-review-state reviews hakukohde-oid requirement)))
 
 (defn applications-hakukohde-rows
-  [application all-hakukohteet selected-hakukohde]
+  [review-settings application all-hakukohteet selected-hakukohde]
   (let [direct-form-application?      (empty? (:hakukohde application))
         application-hakukohde-oids    (if direct-form-application?
                                         ["form"]
@@ -356,17 +356,18 @@
                  "Käsittelemättä")
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
-             [:span.application-handling__hakukohde-selection-cell
-              [:span.application-handling__hakukohde-selection.application-handling__count-tag
-               [:span.application-handling__state-label
-                {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
-               (or
-                 (review-label-for-hakukohde
-                   application-hakukohde-reviews
-                   application-review-states/application-hakukohde-selection-states
-                   hakukohde-oid
-                   "selection-state")
-                 "Kesken")]]]))
+             (when (:selection-state review-settings)
+               [:span.application-handling__hakukohde-selection-cell
+                [:span.application-handling__hakukohde-selection.application-handling__count-tag
+                 [:span.application-handling__state-label
+                  {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
+                 (or
+                   (review-label-for-hakukohde
+                     application-hakukohde-reviews
+                     application-review-states/application-hakukohde-selection-states
+                     hakukohde-oid
+                     "selection-state")
+                   "Kesken")]])]))
         application-hakukohde-oids))))
 
 (defn application-list-row [application selected?]
@@ -374,6 +375,7 @@
         day                (first day-date-time)
         date-time          (->> day-date-time (rest) (clojure.string/join " "))
         applicant          (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
+        review-settings    (subscribe [:state-query [:application :review-settings :config]])
         hakukohteet        (subscribe [:state-query [:application :hakukohteet]])
         selected-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde]])]
     [:div.application-handling__list-row
@@ -388,7 +390,7 @@
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]]
-     [applications-hakukohde-rows application @hakukohteet @selected-hakukohde]]))
+     [applications-hakukohde-rows @review-settings application @hakukohteet @selected-hakukohde]]))
 
 (defn application-list-contents [applications]
   (let [selected-key (subscribe [:state-query [:application :selected-key]])
@@ -547,7 +549,8 @@
          [:i.zmdi.zmdi-spinner]])))
 
 (defn application-list [applications]
-  (let [fetching       (subscribe [:state-query [:application :fetching-applications]])]
+  (let [fetching        (subscribe [:state-query [:application :fetching-applications]])
+        review-settings (subscribe [:state-query [:application :review-settings :config]])]
     [:div
      [:div.application-handling__list-header.application-handling__list-row
       [application-list-basic-column-header
@@ -559,7 +562,8 @@
        "application-handling__list-row--time"
        "Saapunut"]
       [:span.application-handling__list-row--state [state-filter-controls]]
-      [:span.application-handling__list-row--selection [selection-state-filter-controls]]]
+      (when (:selection-state @review-settings)
+        [:span.application-handling__list-row--selection [selection-state-filter-controls]])]
      (when-not @fetching
        [application-list-contents applications])]))
 
@@ -1148,7 +1152,7 @@
          [application-list @filtered-applications]
          [application-list-loading-indicator]])]
      (when (not @search-control-all-page)
-       [:div
+       [:div.application-handling__review-area-container
         [application-review-area @filtered-applications]])]))
 
 (defn create-review-position-handler []
