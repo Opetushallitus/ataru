@@ -6,7 +6,7 @@
   (try
     {:accessAllowed
      (not (empty? (clojure.set/intersection
-                   (:organisationOids check-dto)
+                   (set (:organisationOids check-dto))
                    (get-organization-oids-of-applications-of-persons
                     (:personOidsForSamePerson check-dto)))))}
     (catch Exception e
