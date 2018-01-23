@@ -113,10 +113,12 @@
                                             (filter #(some #{(:oid %)} selected-hakukohteet-for-field))
                                             (map :name)
                                             (map #(some % [lang :fi :sv :en])))]
-    (println selected-hakukohde-names)
-    [:div
-     (str (get-translation :question-for-hakukohde)
-          (clojure.string/join ", " selected-hakukohde-names))]))
+    [:div.application__question_hakukohde_names_container
+     (get-translation :question-for-hakukohde)
+     [:ul.application__question_hakukohde_names
+      (for [name selected-hakukohde-names]
+        [:li {:key (str (:id field-descriptor) name)}
+         name])]]))
 
 (defn text-field [field-descriptor & {:keys [div-kwd disabled editing idx] :or {div-kwd :div.application__form-field disabled false editing false}}]
   (let [id           (keyword (:id field-descriptor))

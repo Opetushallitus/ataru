@@ -133,9 +133,9 @@
    :file-type-forbidden               {:fi "Tiedostoa ei ladattu, yritä uudelleen"
                                        :en "File failed to upload, try again"
                                        :sv "Fil inte laddat, försök igen"}
-   :question-for-hakukohde            {:fi "Kysymys hakukohteille - "
-                                       :en "Question for application options - "
-                                       :sv "Fråga för ansökningsmålar - "}})
+   :question-for-hakukohde            {:fi "Kysymys hakukohteille"
+                                       :en "Question for application options"
+                                       :sv "Fråga för ansökningsmålar"}})
 
 (def general-texts
   {:yes      {:en "Yes"
