@@ -16,7 +16,10 @@
 (defn init-db-fixture
   [fixture]
   (nuke-old-fixture-data (:id fixture))
-  (let [{:keys [id] :as form} (form-store/create-form-or-increment-version! fixture)]
+  (let [{:keys [id] :as form}
+        (if (some? (:key fixture))
+          (form-store/create-new-form! fixture (:key fixture))
+          (form-store/create-new-form! fixture))]
     (ataru-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id fixture)})
     form))
 
