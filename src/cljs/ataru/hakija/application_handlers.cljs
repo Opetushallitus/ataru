@@ -1024,6 +1024,12 @@
              (contains? answer :value)
              (update-in [:application :answers id :value]
                         autil/remove-nth idx)
+             (and (contains? answer :values)
+                  (contains? answer :valid))
+             (update-in [:application :answers id]
+                        #(assoc % :valid (->> (:values %)
+                                              flatten
+                                              (every? :valid))))
              (or (contains? answer :values)
                  (contains? answer :value))
              (update-in [:application :values-changed?] conj id))))
