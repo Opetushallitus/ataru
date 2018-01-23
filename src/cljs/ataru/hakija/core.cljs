@@ -36,10 +36,10 @@
         virkailija-secret (:virkailija-secret query-params)]
     (cond
       (u/not-blank? hakukohde-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil])
+      (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid nil nil])
 
       (u/not-blank? haku-oid)
-      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil])
+      (re-frame/dispatch [:application/get-latest-form-by-haku haku-oid nil nil])
 
       (u/not-blank? hakija-secret)
       (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
@@ -48,7 +48,7 @@
       (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret])
 
       :else
-      (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url)]))))
+      (re-frame/dispatch [:application/get-latest-form-by-key (form-key-from-url) nil nil]))))
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)

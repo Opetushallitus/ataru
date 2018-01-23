@@ -1,5 +1,6 @@
 (ns ataru.hakija.rules
-  (:require [cljs.core.match :refer-macros [match]]
+  (:require [ataru.util :as util]
+            [cljs.core.match :refer-macros [match]]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-validators :as validators]
             [ataru.preferred-name :as pn]
@@ -8,9 +9,9 @@
 (def ^:private no-required-answer {:valid false :value ""})
 
 (defn- set-empty-validity
-  [a valid?]
+  [a cannot-view? valid?]
   (if (and (clojure.string/blank? (:value a))
-           (not (:cannot-view a)))
+           (not cannot-view?))
     (assoc a :valid valid?)
     a))
 
@@ -26,9 +27,15 @@
   ([db id]
    (show-field db id false))
   ([db id valid?]
-   (-> db
-       (update-in [:application :answers id] set-empty-validity valid?)
-       (assoc-in [:application :ui id :visible?] true))))
+   (let [cannot-view? (and (get-in db [:application :editing?])
+                           (->> (get-in db [:form :content])
+                                util/flatten-form-fields
+                                (filter #(= id (keyword (:id %))))
+                                first
+                                :cannot-view))]
+     (-> db
+         (update-in [:application :answers id] set-empty-validity cannot-view? valid?)
+         (assoc-in [:application :ui id :visible?] true)))))
 
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
@@ -74,13 +81,19 @@
   ^{:dependencies [:have-finnish-ssn :ssn]}
   [db]
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
-        ssn (get-in db [:application :answers :ssn])]
+        ssn (get-in db [:application :answers :ssn])
+        cannot-view? (and (get-in db [:application :editing?])
+                          (->> (get-in db [:form :content])
+                               util/flatten-form-fields
+                               (filter #(= "ssn" (:id %)))
+                               first
+                               :cannot-view))]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
                                            (not-empty (:value ssn)))
                                       [(parse-birth-date-from-ssn (:value ssn))
                                        (parse-gender-from-ssn (:value ssn))]
-                                      (:cannot-view ssn)
+                                      cannot-view?
                                       [(get-in db [:application :answers :birth-date :value])
                                        (get-in db [:application :answers :gender :value])]
                                       :else

@@ -2,7 +2,6 @@
   (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch]]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
-            [ataru.util :as cljc-util]
             [ataru.util :as autil]
             [ataru.hakija.rules :as rules]
             [cljs.core.match :refer-macros [match]]
@@ -44,8 +43,14 @@
                    (assoc-in [:form :selected-language] (or (keyword lang) :fi))
                    (assoc-in [:form :hakukohde-name] hakukohde-name))
      :dispatch (if haku
-                 [:application/get-latest-form-by-haku haku answers]
-                 [:application/get-latest-form-by-key form-key answers])}))
+                 [:application/get-latest-form-by-haku
+                  haku
+                  answers
+                  (when (= :virkailija-secret secret-kwd) secret-val)]
+                 [:application/get-latest-form-by-key
+                  form-key
+                  answers
+                  (when (= :virkailija-secret secret-kwd) secret-val)])}))
 
 (reg-event-fx
   :application/handle-get-application
@@ -75,16 +80,22 @@
 
 (reg-event-fx
   :application/get-latest-form-by-key
-  (fn [{:keys [db]} [_ form-key answers]]
+  (fn [{:keys [db]} [_ form-key answers virkailija-secret]]
     {:db   db
      :http {:method  :get
-            :url     (str "/hakemus/api/form/" form-key)
+            :url     (str "/hakemus/api/form/"
+                          form-key
+                          (when virkailija-secret
+                            (str "?virkailija-secret=" virkailija-secret)))
             :handler [:application/handle-form answers]}}))
 
-(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers]]
+(defn- get-latest-form-by-hakukohde [{:keys [db]} [_ hakukohde-oid answers virkailija-secret]]
   {:db   (assoc-in db [:application :preselected-hakukohde] hakukohde-oid)
    :http {:method  :get
-          :url     (str "/hakemus/api/hakukohde/" hakukohde-oid)
+          :url     (str "/hakemus/api/hakukohde/"
+                        hakukohde-oid
+                        (when virkailija-secret
+                          (str "?virkailija-secret=" virkailija-secret)))
           :handler [:application/handle-form answers]}})
 
 (reg-event-fx
@@ -93,10 +104,13 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
-  (fn [{:keys [db]} [_ haku-oid answers]]
+  (fn [{:keys [db]} [_ haku-oid answers virkailija-secret]]
     {:db db
      :http {:method  :get
-            :url     (str "/hakemus/api/haku/" haku-oid)
+            :url     (str "/hakemus/api/haku/"
+                          haku-oid
+                          (when virkailija-secret
+                            (str "?virkailija-secret=" virkailija-secret)))
             :handler [:application/handle-form answers]}}))
 
 (defn handle-submit [db _]
@@ -257,11 +271,17 @@
 
 (defn- set-have-finnish-ssn
   [db]
-  (let [ssn (get-in db [:application :answers :ssn])]
+  (let [cannot-view? (->> (get-in db [:form :content])
+                          autil/flatten-form-fields
+                          (filter #(= "ssn" (:id %)))
+                          first
+                          :cannot-view)
+        ssn (get-in db [:application :answers :ssn])]
     (update-in db [:application :answers :have-finnish-ssn]
                merge {:valid true
-                      :value (str (or (and (clojure.string/blank? (:value ssn))
-                                           (:cannot-view ssn))
+                      :value (str (or (and (contains? ssn :value)
+                                           (clojure.string/blank? (:value ssn))
+                                           cannot-view?)
                                       (not (clojure.string/blank? (:value ssn)))))})))
 
 (defn- populate-hakukohde-answers-if-necessary
@@ -281,7 +301,7 @@
     x))
 
 (defn set-question-group-row-amounts [db]
-  (let [flattened-form-fields (cljc-util/flatten-form-fields (-> db :form :content))]
+  (let [flattened-form-fields (autil/flatten-form-fields (-> db :form :content))]
     (reduce-kv (fn [db answer-key {:keys [value values]}]
                  (let [field-descriptor  (->> flattened-form-fields
                                               (filter (comp (partial = answer-key) keyword :id))
@@ -320,43 +340,38 @@
   (-> db
       (update-in [:application :answers]
                  (fn [answers]
-                   (reduce (fn [answers {:keys [key value cannot-edit cannot-view] :as answer}]
+                   (reduce (fn [answers {:keys [key value] :as answer}]
                              (let [answer-key (keyword key)
                                    value      (cond-> value
                                                 (and (vector? value)
                                                      (not (supports-multiple-values (:fieldType answer))))
                                                 (first))]
                                (if (contains? answers answer-key)
-                                 (let [answer (match answer
-                                                     {:fieldType "multipleChoice"}
-                                                     (-> answers
-                                                         (update answer-key (partial merge-multiple-choice-option-values value))
-                                                         (assoc-in [answer-key :valid] true))
+                                 (match answer
+                                   {:fieldType "multipleChoice"}
+                                   (-> answers
+                                       (update answer-key (partial merge-multiple-choice-option-values value))
+                                       (assoc-in [answer-key :valid] true))
 
-                                                     {:fieldType "singleChoice"}
-                                                     (update answers answer-key (partial merge-single-choice-values value))
+                                   {:fieldType "singleChoice"}
+                                   (update answers answer-key (partial merge-single-choice-values value))
 
-                                                     {:fieldType "dropdown"}
-                                                     (update answers answer-key (partial merge-dropdown-values value))
+                                   {:fieldType "dropdown"}
+                                   (update answers answer-key (partial merge-dropdown-values value))
 
-                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                                     (letfn [(parse-values [value-or-values]
-                                                               (if (vector? value-or-values)
-                                                                 (mapv parse-values value-or-values)
-                                                                 (cond-> {:valid true :value value-or-values}
-                                                                   (= field-type "attachment")
-                                                                   (assoc :status :ready))))]
-                                                       (update answers answer-key merge
-                                                               {:valid  true
-                                                                :values (parse-values (:value answer))}))
+                                   {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
+                                   (letfn [(parse-values [value-or-values]
+                                             (if (vector? value-or-values)
+                                               (mapv parse-values value-or-values)
+                                               (cond-> {:valid true :value value-or-values}
+                                                 (= field-type "attachment")
+                                                 (assoc :status :ready))))]
+                                     (update answers answer-key merge
+                                             {:valid  true
+                                              :values (parse-values (:value answer))}))
 
-                                                     :else
-                                                     (update answers answer-key merge {:valid true :value value}))]
-                                   (update
-                                     answer
-                                     answer-key
-                                     merge
-                                     {:cannot-edit cannot-edit :cannot-view cannot-view}))
+                                   :else
+                                   (update answers answer-key merge {:valid true :value value}))
                                  answers)))
                            answers
                            submitted-answers)))
@@ -494,6 +509,7 @@
        :validate {:value value
                   :answers answers
                   :field-descriptor field
+                  :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-application-field-valid
                                              field valid? errors]))}})))
@@ -553,6 +569,7 @@
      :validate {:value value
                 :answers (get-in db [:application :answers])
                 :field-descriptor field-descriptor
+                :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
                                            (keyword (:id field-descriptor))
@@ -652,6 +669,7 @@
          :validate-every {:values (get-in db [:application :answers id :value])
                           :answers (get-in db [:application :answers])
                           :field-descriptor field-descriptor
+                          :editing? (get-in db [:application :editing?])
                           :on-validated (fn [[valid? errors]]
                                           (dispatch [:application/set-multiple-choice-valid
                                                      field-descriptor
@@ -660,6 +678,7 @@
          :validate {:value (get-in db [:application :answers id :value])
                     :answers (get-in db [:application :answers])
                     :field-descriptor field-descriptor
+                    :editing? (get-in db [:application :editing?])
                     :on-validated (fn [[valid? errors]]
                                     (dispatch [:application/set-multiple-choice-valid
                                                field-descriptor
@@ -694,6 +713,7 @@
        :validate {:value new-value
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor
+                  :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-repeatable-application-field-valid
                                              id
@@ -711,6 +731,7 @@
      :validate {:value value
                 :answers (get-in db [:application :answers])
                 :field-descriptor field-descriptor
+                :editing? (get-in db [:application :editing?])
                 :on-validated (fn [[valid? errors]]
                                 (dispatch [:application/set-repeatable-application-field-valid
                                            (keyword (:id field-descriptor))
@@ -826,6 +847,7 @@
        :validate {:value (get-in db path)
                   :answers (get-in db [:application :answers])
                   :field-descriptor field-descriptor
+                  :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-attachment-valid
                                              (keyword component-id)

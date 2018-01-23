@@ -127,12 +127,14 @@
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (form->flat-form-map form)]
-    (for [[ans-key {:keys [value values cannot-edit cannot-view]}] (-> answers
-                                                                       (remove-invisible-followup-values flat-form-map ui)
-                                                                       (remove-invisible-answers flat-form-map ui))
-          :let [field-map    (get flat-form-map (name ans-key))
-                field-type   (:fieldType field-map)
-                label        (:label field-map)]
+    (for [[ans-key {:keys [value values]}] (-> answers
+                                               (remove-invisible-followup-values flat-form-map ui)
+                                               (remove-invisible-answers flat-form-map ui))
+          :let [field-map   (get flat-form-map (name ans-key))
+                field-type  (:fieldType field-map)
+                label       (:label field-map)
+                cannot-view (:cannot-view field-map)
+                cannot-edit (:cannot-edit field-map)]
           :when (or
                   values
                   cannot-edit
@@ -145,9 +147,7 @@
                             value
                             (map (partial value-from-values field-map) values))
                :fieldType field-type
-               :label     label}
-              cannot-edit (assoc :cannot-edit true)
-              cannot-view (assoc :cannot-view true)))))
+               :label     label}))))
 
 (defn create-application-to-submit [application form lang]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]

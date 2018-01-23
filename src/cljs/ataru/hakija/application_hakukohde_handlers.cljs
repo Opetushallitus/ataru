@@ -6,6 +6,7 @@
 
 (defn- hakukohteet-field [db]
   (->> (get-in db [:form :content] [])
+       util/flatten-form-fields
        (filter #(= "hakukohteet" (:id %)))
        first))
 
@@ -85,6 +86,7 @@
        :validate {:value new-hakukohde-values
                   :answers (get-in db [:application :answers])
                   :field-descriptor (hakukohteet-field db)
+                  :editing? (get-in db [:application :editing?])
                   :on-validated (fn [[valid? errors]]
                                   (dispatch [:application/set-hakukohde-valid
                                              valid?]))}})))
@@ -108,6 +110,7 @@
       :validate {:value new-hakukohde-values
                  :answers (get-in db [:application :answers])
                  :field-descriptor (hakukohteet-field db)
+                 :editing? (get-in db [:application :editing?])
                  :on-validated (fn [[valid? errors]]
                                  (dispatch [:application/set-hakukohde-valid
                                             valid?]))}})))

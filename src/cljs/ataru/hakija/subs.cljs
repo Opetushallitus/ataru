@@ -1,6 +1,7 @@
 (ns ataru.hakija.subs
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
+            [ataru.util :as util]
             [ataru.hakija.application :refer [answers->valid-status
                                               applying-possible?]]))
 
@@ -34,10 +35,24 @@
       :fi))) ; When user lands on the page, there isn't any language set until the form is loaded)
 
 (re-frame/reg-sub
-  :application/cannot-edit-answer?
+  :application/cannot-view?
   (fn [db [_ key]]
-    (let [answer (-> db :application :answers key)]
-      (or (:cannot-edit answer) (:cannot-view answer)))))
+    (let [field (->> (get-in db [:form :content])
+                     util/flatten-form-fields
+                     (filter #(= (keyword key) (keyword (:id %))))
+                     first)
+          editing? (get-in db [:application :editing?])]
+      (and editing? (:cannot-view field)))))
+
+(re-frame/reg-sub
+  :application/cannot-edit?
+  (fn [db [_ key]]
+    (let [field (->> (get-in db [:form :content])
+                     util/flatten-form-fields
+                     (filter #(= (keyword key) (keyword (:id %))))
+                     first)
+          editing? (get-in db [:application :editing?])]
+      (and editing? (:cannot-edit field)))))
 
 (re-frame/reg-sub
   :application/default-language
@@ -81,6 +96,7 @@
 
 (defn- hakukohteet-field [db]
   (->> (get-in db [:form :content] [])
+       util/flatten-form-fields
        (filter #(= "hakukohteet" (:id %)))
        first))
 
@@ -104,7 +120,7 @@
   :application/hakukohteet-editable?
   (fn [db _]
     (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
-         (not @(re-frame/subscribe [:application/cannot-edit-answer? :hakukohteet])))))
+         (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
 (re-frame/reg-sub
   :application/hakukohde-query
