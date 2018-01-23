@@ -441,11 +441,14 @@
                              :type      "checkbox"
                              :checked   all-filters-selected?
                              :on-change (fn [_]
-                                          (util/update-url-with-query-params {filter-kw nil})
+                                          (util/update-url-with-query-params
+                                            {filter-kw (if all-filters-selected?
+                                                         (clojure.string/join "," (map first states))
+                                                         nil)})
                                           (dispatch [:state-update #(assoc-in % [:application filter-kw]
                                                                               (if all-filters-selected?
-                                                                                (map first states)
-                                                                                []))]))}]
+                                                                                []
+                                                                                (map first states)))]))}]
                     [:span "Kaikki"]]]]
                  (mapv
                    (fn [[review-state-id review-state-label]]
