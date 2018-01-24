@@ -356,7 +356,7 @@
                  "Käsittelemättä")
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
-             (when-not (false? (:selection-state review-settings))
+             (when (:selection-state review-settings true)
                [:span.application-handling__hakukohde-selection-cell
                 [:span.application-handling__hakukohde-selection.application-handling__count-tag
                  [:span.application-handling__state-label
@@ -508,7 +508,7 @@
         "Käsittelyvaihe"
         application-review-states/application-hakukohde-processing-states
         (subscribe [:state-query [:application :review-state-counts]])]]
-      (when-not (false? (:selection-state @review-settings))
+      (when (:selection-state @review-settings true)
         [:span.application-handling__list-row--selection
          [hakukohde-state-filter-controls
           :selection-state-filter
