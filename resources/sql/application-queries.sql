@@ -398,6 +398,7 @@ SELECT
   a.content,
   a.person_oid,
   a.hakukohde,
+  a.haku,
   ar.state                            AS state,
   f.key                               AS form_key,
   (SELECT json_agg(json_build_object('requirement', requirement,
