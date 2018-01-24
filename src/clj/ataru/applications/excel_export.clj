@@ -480,24 +480,3 @@
    "_"
    (time-formatter (t/now) filename-time-format)
    ".xlsx"))
-
-(defn filename-by-form
-  [form-key]
-  {:post [(some? %)]}
-  (let [form (form-store/fetch-by-key form-key)]
-    (create-filename (some #(get-in form [:name %])
-                           [:fi :sv :en]))))
-
-(defn filename-by-hakukohde
-  [hakukohde-oid session organization-service tarjonta-service]
-  {:post [(some? %)]}
-  (let [name (some #(get (.get-hakukohde-name tarjonta-service hakukohde-oid) %)
-                   [:fi :sv :en])]
-    (create-filename (or name hakukohde-oid))))
-
-(defn filename-by-haku
-  [haku-oid session organization-service tarjonta-service]
-  {:post [(some? %)]}
-  (let [name (some #(get (.get-haku-name tarjonta-service haku-oid) %)
-                   [:fi :sv :en])]
-    (create-filename (or name haku-oid))))
