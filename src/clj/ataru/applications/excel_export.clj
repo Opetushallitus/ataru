@@ -463,7 +463,9 @@
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
-    (set-column-widths workbook)
+    (when (< (count applications) 1000)
+      ; turns out .autoSizeColumn is a performance killer for large sheets
+      (set-column-widths workbook))
     (with-open [stream (ByteArrayOutputStream.)]
       (.write workbook stream)
       (.toByteArray stream))))
