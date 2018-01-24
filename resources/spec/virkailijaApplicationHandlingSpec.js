@@ -503,7 +503,7 @@
     }
 
     function navigateToApplicationHandlingWithUrlParams() {
-      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&unselected-states=processing,invited-to-interview')
+      loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1?application-key=application-key1&processing-state-filter=processing,invited-to-interview')
     }
 
     function navigateToApplicationHandlingForForm() {
