@@ -177,7 +177,9 @@
     (get-in koodi [:label lang])))
 
 (defn- raw-values->human-readable-value [{:keys [content]} {:keys [lang]} key value]
-  (let [field-descriptor (util/get-field-descriptor content key)
+  (let [field-descriptor (->> (util/flatten-form-fields content)
+                              (filter #(= key (:id %)))
+                              first)
         lang (-> lang clojure.string/lower-case keyword)
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
