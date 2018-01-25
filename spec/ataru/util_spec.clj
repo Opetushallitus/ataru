@@ -25,21 +25,3 @@
                        :label      {:fi "Pohjakoulutuksesi?" :sv ""}
                        :fieldType  "textField"
                        :fieldClass "formField"})
-
-(describe "get-field-descriptor"
-  (tags :get-fd)
-
-  (it "gets field-descriptor from simple list"
-    (should= field-descriptor (util/get-field-descriptor [field-descriptor] field-descriptor-id)))
-
-  (it "gets field-descriptor from a child list"
-    (should= field-descriptor (util/get-field-descriptor [{:id "invalid"
-                                                           :children [field-descriptor]}]
-                                                         field-descriptor-id)))
-
-  (it "gets field-descriptor from a list with followup questions"
-    (should= field-descriptor (util/get-field-descriptor [{:id "invalid"
-                                                           :options [{:label {:fi "Dropdown question"}
-                                                                      :value "Dropdown question"
-                                                                      :followups [field-descriptor]}]}]
-                                                         field-descriptor-id))))
