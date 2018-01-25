@@ -12,7 +12,9 @@
         attachment-ids (->> application
                             :answers
                             (filter #(= (:fieldType %) "attachment"))
-                            (mapcat :value))]
+                            (map :value)
+                            flatten
+                            (remove nil?))]
     (when (> (count attachment-ids) 0)
       (let [response @(http/post (resolve-url :liiteri.finalize)
                                  {:headers {"Content-Type" "application/json"}
