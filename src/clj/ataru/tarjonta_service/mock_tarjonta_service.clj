@@ -97,7 +97,8 @@
   {:1.2.246.562.29.65950024185 base-haku
    :haku.oid                   (merge
                                  base-haku
-                                 {:hakukohdeOids ["hakukohde_oid"]})
+                                 {:hakukohdeOids ["hakukohde_oid"]
+                                  :usePriority true})
    :1.2.246.562.29.65950024186 (merge
                                  base-haku
                                  {:oid              "1.2.246.562.29.65950024186"

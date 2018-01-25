@@ -398,14 +398,15 @@
   (update hakukohde-answer :value
           (partial map-indexed (fn [index oid]
                                  (let [name     (get-hakukohde-name tarjonta-service lang oid)
-                                       haku     (tarjonta/get-haku tarjonta-service haku-oid)
+                                       haku     (when name
+                                                  (tarjonta/get-haku tarjonta-service haku-oid))
                                        priority (when (:usePriority haku)
-                                                  (str " (" index ") "))]
-                                   (when name
-                                     (str name
-                                          priority
-                                          " (" oid ")"))
-                                   oid)))))
+                                                  (str "(" (inc index) ") "))]
+                                   (if name
+                                     (str priority
+                                          name
+                                          " (" oid ")")
+                                     (str priority oid)))))))
 
 (defn- add-hakukohde-names [tarjonta-service application]
   (update application :answers
