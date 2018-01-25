@@ -394,18 +394,24 @@
       (str (get-in hakukohde [:name lang]) " - "
            (get-in hakukohde [:tarjoaja-name lang])))))
 
-(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer]
-  (update hakukohde-answer :value
-          (partial map (fn [oid]
-                         (if-let [name (get-hakukohde-name tarjonta-service lang oid)]
-                           (str name " (" oid ")")
-                           oid)))))
+(defn- add-hakukohde-name [tarjonta-service lang hakukohde-answer haku-oid]
+  (let [use-priority (some->> haku-oid
+                              (tarjonta/get-haku tarjonta-service)
+                              :usePriority)]
+    (update hakukohde-answer :value
+            (partial map-indexed (fn [index oid]
+                                   (let [name           (get-hakukohde-name tarjonta-service lang oid)
+                                         priority-index (when use-priority
+                                                          (str "(" (inc index) ") "))]
+                                     (if name
+                                       (str priority-index name " (" oid ")")
+                                       (str priority-index oid))))))))
 
 (defn- add-hakukohde-names [tarjonta-service application]
   (update application :answers
           (partial map (fn [answer]
                          (if (= "hakukohteet" (:key answer))
-                           (add-hakukohde-name tarjonta-service (:lang application) answer)
+                           (add-hakukohde-name tarjonta-service (:lang application) answer (:haku application))
                            answer)))))
 
 (defn- add-all-hakukohde-reviews

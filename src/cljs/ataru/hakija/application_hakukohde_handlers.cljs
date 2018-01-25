@@ -127,7 +127,7 @@
 (reg-event-db
   :application/change-hakukohde-priority
   (fn [db [_ hakukohde-oid index-change]]
-    (let [hakukohteet     (-> db :application :answers :hakukohteet :values)
+    (let [hakukohteet     (-> db :application :answers :hakukohteet :values vec)
           current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
                                                   %1)
                                                hakukohteet))

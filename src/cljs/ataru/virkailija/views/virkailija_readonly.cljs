@@ -181,10 +181,14 @@
 (defn- hakukohteet-list-row [hakukohde-oid]
   [:div.application__form-field
    [:div.application-handling__hakukohde-wrapper
-    [:div.application-handling__review-area-hakukohde-heading
-     @(subscribe [:application/hakukohde-label hakukohde-oid])]
-    [:div.application-handling__review-area-koulutus-heading
-     @(subscribe [:application/hakukohde-description hakukohde-oid])]]])
+    (when @(subscribe [:application/prioritize-hakukohteet?])
+      [:p.application__hakukohde-priority-number-readonly
+       @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
+    [:div
+     [:div.application-handling__review-area-hakukohde-heading
+      @(subscribe [:application/hakukohde-label hakukohde-oid])]
+     [:div.application-handling__review-area-koulutus-heading
+      @(subscribe [:application/hakukohde-description hakukohde-oid])]]]])
 
 (defn- hakukohteet [content]
   (when-let [hakukohteet (seq @(subscribe [:application/hakukohteet]))]

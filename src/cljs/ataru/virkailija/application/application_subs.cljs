@@ -273,3 +273,15 @@
   (fn [db]
     (or (-> db :application :review-notes count)
         0)))
+
+(re-frame/reg-sub
+  :application/prioritize-hakukohteet?
+  (fn [db _]
+    (-> db :application :selected-application-and-form :application :tarjonta :prioritize-hakukohteet)))
+
+(re-frame/reg-sub
+  :application/hakukohde-priority-number
+  (fn [db [_ hakukohde-oid]]
+    (->> (-> db :application :selected-application-and-form :application :answers :hakukohteet :value)
+         (keep-indexed #(when (= hakukohde-oid %2) (inc %1)))
+         first)))
