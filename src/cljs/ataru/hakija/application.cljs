@@ -132,13 +132,11 @@
                                                (remove-invisible-answers flat-form-map ui))
           :let [field-map   (get flat-form-map (name ans-key))
                 field-type  (:fieldType field-map)
-                label       (:label field-map)
-                cannot-view (:cannot-view field-map)
-                cannot-edit (:cannot-edit field-map)]
+                label       (:label field-map)]
           :when (or
                   values
-                  cannot-edit
-                  cannot-view
+                  (:cannot-edit field-map)
+                  (:cannot-view field-map)
                   ; permit empty dropdown values, because server side validation expects to match form fields to answers
                   (and (empty? value) (= "dropdown" field-type))
                   (and (not-empty value) (not (:exclude-from-answers field-map))))]
