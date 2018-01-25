@@ -29,11 +29,12 @@
     s))
 
 (defn text [field-descriptor application lang group-idx]
-  (let [answer (get-in application [:answers (keyword (:id field-descriptor))])]
+  (let [id (keyword (:id field-descriptor))
+        answer (get-in application [:answers id])]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (-> field-descriptor :label lang) (required-hint field-descriptor))]
-     (if (:cannot-view answer)
+     (if @(subscribe [:application/cannot-view? id])
        [:div "***********"]
        [:div.application__readonly-text
         (let [values (cond-> (get-value answer group-idx)

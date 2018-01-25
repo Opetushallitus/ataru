@@ -55,141 +55,36 @@
     (when (every? some? [haku hakukohde])
       (hakuaika/get-hakuaika-info hakukohde haku ohjausparametrit))))
 
-(defn- attachment-modify-grace-period
-  [hakuaika]
-  (or (:attachment-modify-grace-period-days hakuaika)
-      (-> config
-          :public-config
-          (get :attachment-modify-grace-period-days 14))))
-
 (defn in-processing-state-in-jatkuva-haku?
   [application-hakukohde-reviews hakuaika]
   (and (:jatkuva-haku? hakuaika)
        (util/application-in-processing? application-hakukohde-reviews)))
 
-(defn- editing-allowed-by-hakuaika?
-  [answer application hakuaika]
-  (let [answer-kw           (-> answer :key keyword)
-        hakuaika-start      (some-> hakuaika :start t/from-long)
-        hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (some-> hakuaika-end (time/plus (time/days (attachment-modify-grace-period hakuaika))))
-        hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
-        after?              (fn [t] (or (nil? t)
-                                        (time/after? (time/now) t)))
-        before?             (fn [t] (and (some? t)
-                                         (time/before? (time/now) t)))]
-    (or (empty? (get-hakukohteet application))
-        (and (after? hakuaika-start)
-             (or (before? hakuaika-end)
-                 (and (before? attachment-edit-end)
-                      (= "attachment" (:fieldType answer)))
-                 (and (before? hakukierros-end)
-                      (contains? editing-allowed-person-info-field-ids
-                                 answer-kw)))))))
-
-(defn- dummy-answer-to-unanswered-question
-  [{:keys [id fieldType label]}]
-  {:key       id
-   :fieldType fieldType
-   :label     label
-   :value     ""})
-
-(defn- filter-questions-without-answers
-  [answers-by-key form-fields]
-  (filter (fn [answer]
-            (and (not (util/in? (keys answers-by-key) (keyword (:id answer))))
-                 (not (util/in? (:validators answer) "required"))
-                 (some #{(:fieldType answer)} types/form-fields)
-                 (not (:followup? answer)) ; make sure followup answers don't show when parent not selected
-                 (not (:exclude-from-answers answer))
-                 (not (:exclude-from-answers-if-hidden answer)))) form-fields))
-
-(defn- get-questions-without-answers
-  "This function serves to get dummy answers and their editability for fields that were not required and thus were left
-   editable in the 10 day attachment grace period. This happened due to the fact that they had no answer in db to which
-   make uneditable in flag-uneditable-answers."
-  [application]
-  (let [form-fields               (-> application
-                                      (:form)
-                                      (form-store/fetch-by-id)
-                                      :content
-                                      (util/flatten-form-fields))
-        answers-by-key            (util/answers-by-key (:answers application))
-        questions-without-answers (filter-questions-without-answers answers-by-key form-fields)]
-    (map dummy-answer-to-unanswered-question questions-without-answers)))
-
-(defn- answer-uneditable? [answer
-                           application
-                           application-hakukohde-reviews
-                           hakuaika
-                           virkailija?]
-  (let [answer-kw (-> answer :key keyword)]
-    (or (contains? editing-forbidden-person-info-field-ids answer-kw)
-        (not (or virkailija?
-                 (and (not (in-processing-state-in-jatkuva-haku?
-                            application-hakukohde-reviews
-                            hakuaika))
-                      (editing-allowed-by-hakuaika? answer
-                                                    application
-                                                    hakuaika)))))))
-
-(defn flag-uneditable-answers
-  [{:keys [answers] :as application} application-hakukohde-reviews hakuaika virkailija?]
-  (assoc application
-    :answers
-    (map
-      (fn [answer]
-        (let [answer-kw (keyword (:key answer))]
-          (cond-> answer
-                  (contains? viewing-forbidden-person-info-field-ids answer-kw)
-                  (merge {:cannot-view true :value nil})
-
-                  (answer-uneditable? answer
-                                      application
-                                      application-hakukohde-reviews
-                                      hakuaika
-                                      virkailija?)
-                  (merge {:cannot-edit true}))))
-      (apply conj answers (get-questions-without-answers application)))))
-
-(defn- uneditable-answers-with-labels-from-new
-  [uneditable-answers new-answers old-answers]
-  ; the old (persisted) answers do not include labels for all languages, so they are taken from new answers instead
-  (keep (fn [answer]
-          (let [answer-key      (:key answer)
-                answer-with-key #(= (:key %) answer-key)
-                old-answer      (->> old-answers
-                                     (filter answer-with-key)
-                                     (first))
-                new-label       (->> new-answers
-                                     (filter answer-with-key)
-                                     (first)
-                                     :label)]
-            (when old-answer
-              ;Sometimes an old answer doesn't exist: old application <-> new question in form (flag-uneditable-answers)
-              (merge old-answer {:label new-label}))))
-        uneditable-answers))
+(defn remove-unviewable-answers
+  [application form]
+  (let [fields-by-key (->> (:content form)
+                           util/flatten-form-fields
+                           (util/group-by-first :id))]
+    (update application :answers
+            (partial map (fn [answer]
+                           (cond-> answer
+                             (:cannot-view (fields-by-key (:key answer)))
+                             (assoc :value nil)))))))
 
 (defn- merge-uneditable-answers-from-previous
   [new-application
    old-application
-   application-hakukohde-reviews
-   hakuaika
-   virkailija?]
-  (let [new-answers              (-> new-application
-                                     (flag-uneditable-answers application-hakukohde-reviews
-                                                              hakuaika
-                                                              virkailija?)
-                                     :answers)
-        uneditable-or-unviewable #(or (:cannot-edit %) (:cannot-view %))
-        uneditable-answers       (filter uneditable-or-unviewable new-answers)
-        editable-answers         (remove uneditable-or-unviewable new-answers)
-        merged-answers           (into editable-answers
-                                       (uneditable-answers-with-labels-from-new
-                                        uneditable-answers
-                                        new-answers
-                                        (:answers old-application)))]
-    (assoc new-application :answers merged-answers)))
+   form]
+  (let [fields-by-key      (->> (:content form)
+                                util/flatten-form-fields
+                                (util/group-by-first :id))
+        old-answers-by-key (util/group-by-first :key (:answers old-application))]
+    (update new-application :answers
+            (partial keep (fn [answer]
+                            (if (:cannot-edit (fields-by-key (:key answer)))
+                              (when-let [old-answer (old-answers-by-key (:key answer))]
+                                (assoc old-answer :label (:label answer)))
+                              answer))))))
 
 (defn- flatten-attachment-keys [application]
   (->> (:answers application)
@@ -236,23 +131,25 @@
         hakuaika                      (get-hakuaikas tarjonta-service
                                                      ohjausparametrit-service
                                                      application)
+        virkailija-secret             (valid-virkailija-secret application)
         form                          (-> application
                                           (:form)
                                           (form-store/fetch-by-id)
                                           (hakija-form-service/inject-hakukohde-component-if-missing)
                                           (hakukohde/populate-hakukohde-answer-options tarjonta-info)
-                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info))
-        virkailija-secret             (valid-virkailija-secret application)
+                                          (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)
+                                          (hakija-form-service/flag-uneditable-and-unviewable-fields
+                                           hakuaika
+                                           (some? virkailija-secret)))
         latest-application            (application-store/get-latest-version-of-application-for-edit application)
         application-hakukohde-reviews (some-> latest-application
                                               :key
                                               application-store/get-application-hakukohde-reviews)
         final-application             (if is-modify?
                                         (-> application
-                                            (merge-uneditable-answers-from-previous latest-application
-                                                                                    application-hakukohde-reviews
-                                                                                    hakuaika
-                                                                                    (some? virkailija-secret))
+                                            (merge-uneditable-answers-from-previous
+                                             latest-application
+                                             form)
                                             (assoc :person-oid (:person-oid latest-application)))
                                         application)
         validation-result             (validator/valid-application?
@@ -361,31 +258,36 @@
                                         tarjonta-service
                                         ohjausparametrit-service
                                         person-client]
-  (let [[virkailija? hakija-secret]   (match [secret]
-                                        [{:virkailija s}]
-                                        [true
-                                         (when (virkailija-edit/virkailija-secret-valid? s)
-                                           (application-store/get-hakija-secret-by-virkailija-secret s))]
-                                        [{:hakija s}]
-                                        [false s]
-                                        :else
-                                        [false nil])
-        application                   (when (some? hakija-secret)
-                                        (application-store/get-latest-application-by-secret hakija-secret))
-        application-hakukohde-reviews (some-> application
-                                              :key
-                                              application-store/get-application-hakukohde-reviews)
-        hakuaika                      (when (some? application)
-                                        (get-hakuaikas tarjonta-service
-                                                       ohjausparametrit-service
-                                                       application))
-        person                        (some-> application
-                                              (application-service/get-person person-client)
-                                              (dissoc :ssn :birth-date))]
+  (let [[virkailija?
+         hakija-secret] (match [secret]
+                          [{:virkailija s}]
+                          [true
+                           (when (virkailija-edit/virkailija-secret-valid? s)
+                             (application-store/get-hakija-secret-by-virkailija-secret s))]
+                          [{:hakija s}]
+                          [false s]
+                          :else
+                          [false nil])
+        application     (when (some? hakija-secret)
+                          (application-store/get-latest-application-by-secret hakija-secret))
+        form            (cond (some? (:haku application)) (hakija-form-service/fetch-form-by-haku-oid
+                                                           tarjonta-service
+                                                           ohjausparametrit-service
+                                                           (:haku application)
+                                                           virkailija?)
+                              (some? (:form application)) (hakija-form-service/fetch-form-by-key
+                                                           (->> application
+                                                                :form
+                                                                form-store/fetch-by-id
+                                                                :key)
+                                                           nil
+                                                           virkailija?)
+                              :else                       nil)
+        person          (some-> application
+                                (application-service/get-person person-client)
+                                (dissoc :ssn :birth-date))]
     (some-> application
-            (flag-uneditable-answers application-hakukohde-reviews
-                                     hakuaika
-                                     virkailija?)
+            (remove-unviewable-answers form)
             attachments-metadata->answers
             (assoc :person person)
             (dissoc :person-oid))))

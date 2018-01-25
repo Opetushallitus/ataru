@@ -19,6 +19,7 @@
                                 :fieldType  "textField"}]}]})
 
 (def person-info-form {:id 2147483647, ;; shouldn't clash with serial sequence id. Tests also create forms which use serial id, and the previous id 15 caused serious issues.
+                       :key "41101b4f-1762-49af-9db0-e3603adae3ad"
                        :name {:fi "Uusi lomake"},
                        :created-by "DEVELOPER",
                        :organization-oid "1.2.246.562.10.2.45",

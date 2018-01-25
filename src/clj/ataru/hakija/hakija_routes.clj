@@ -97,27 +97,32 @@
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
       :summary "Gets form for haku"
       :path-params [haku-oid :- s/Str]
+      :query-params [{virkailija-secret :- s/Str nil}]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid
-                                     tarjonta-service
-                                     ohjausparametrit-service
-                                     haku-oid)]
+                                   tarjonta-service
+                                   ohjausparametrit-service
+                                   haku-oid
+                                   (some? virkailija-secret))]
         (response/ok form-with-tarjonta)
         (response/not-found)))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
+      :query-params [{virkailija-secret :- s/Str nil}]
       :return ataru-schema/FormWithContentAndTarjontaMetadata
       (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid
-                                    tarjonta-service
-                                    ohjausparametrit-service
-                                    hakukohde-oid)]
+                                   tarjonta-service
+                                   ohjausparametrit-service
+                                   hakukohde-oid
+                                   (some? virkailija-secret))]
         (response/ok form-with-tarjonta)
         (response/not-found)))
     (api/GET "/form/:key" []
       :path-params [key :- s/Str]
+      :query-params [{virkailija-secret :- s/Str nil}]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key)]
+      (if-let [form (form-service/fetch-form-by-key key nil (some? virkailija-secret))]
         (response/ok form)
         (response/not-found)))
     (api/POST "/feedback" []

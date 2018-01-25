@@ -623,6 +623,3 @@
                  :fieldType       "fieldset",
                  :fieldClass      "wrapperElement",
                  :label-amendment {:fi "(Osio lisätään automaattisesti lomakkeelle)", :sv "Partitionen automatiskt lägga formen"}}]})
-
-
-
