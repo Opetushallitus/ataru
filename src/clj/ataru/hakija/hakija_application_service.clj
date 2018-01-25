@@ -62,9 +62,9 @@
 
 (defn remove-unviewable-answers
   [application form]
-  (let [fields-by-key (util/reduce-form-fields #(assoc %1 (:id %2) %2)
-                                               {}
-                                               (:content form))]
+  (let [fields-by-key (->> (:content form)
+                           util/flatten-form-fields
+                           (util/group-by-first :id))]
     (update application :answers
             (partial map (fn [answer]
                            (cond-> answer
@@ -75,12 +75,10 @@
   [new-application
    old-application
    form]
-  (let [fields-by-key      (util/reduce-form-fields #(assoc %1 (:id %2) %2)
-                                                    {}
-                                                    (:content form))
-        old-answers-by-key (reduce #(assoc %1 (:key %2) %2)
-                                   {}
-                                   (:answers old-application))]
+  (let [fields-by-key      (->> (:content form)
+                                util/flatten-form-fields
+                                (util/group-by-first :id))
+        old-answers-by-key (util/group-by-first :key (:answers old-application))]
     (update new-application :answers
             (partial keep (fn [answer]
                             (if (:cannot-edit (fields-by-key (:key answer)))
