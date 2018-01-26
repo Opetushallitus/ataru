@@ -271,17 +271,11 @@
 
 (defn- set-have-finnish-ssn
   [db]
-  (let [cannot-view? (->> (:flat-form-content db)
-                          (filter #(= "ssn" (:id %)))
-                          first
-                          :cannot-view)
-        ssn (get-in db [:application :answers :ssn])]
+  (let [ssn (get-in db [:application :answers :ssn])]
     (update-in db [:application :answers :have-finnish-ssn]
                merge {:valid true
-                      :value (str (or (:cannot-view ssn)
-                                      (and (contains? ssn :value)
-                                           (clojure.string/blank? (:value ssn))
-                                           cannot-view?)
+                      :value (str (or (and (clojure.string/blank? (:value ssn))
+                                           (:cannot-view ssn))
                                       (not (clojure.string/blank? (:value ssn)))))})))
 
 (defn- populate-hakukohde-answers-if-necessary
@@ -339,38 +333,39 @@
   (-> db
       (update-in [:application :answers]
                  (fn [answers]
-                   (reduce (fn [answers {:keys [key value] :as answer}]
+                   (reduce (fn [answers {:keys [key value cannot-view] :as answer}]
                              (let [answer-key (keyword key)
                                    value      (cond-> value
                                                 (and (vector? value)
                                                      (not (supports-multiple-values (:fieldType answer))))
                                                 (first))]
                                (if (contains? answers answer-key)
-                                 (match answer
-                                   {:fieldType "multipleChoice"}
-                                   (-> answers
-                                       (update answer-key (partial merge-multiple-choice-option-values value))
-                                       (assoc-in [answer-key :valid] true))
+                                 (let [answer (match answer
+                                                     {:fieldType "multipleChoice"}
+                                                     (-> answers
+                                                         (update answer-key (partial merge-multiple-choice-option-values value))
+                                                         (assoc-in [answer-key :valid] true))
 
-                                   {:fieldType "singleChoice"}
-                                   (update answers answer-key (partial merge-single-choice-values value))
+                                                     {:fieldType "singleChoice"}
+                                                     (update answers answer-key (partial merge-single-choice-values value))
 
-                                   {:fieldType "dropdown"}
-                                   (update answers answer-key (partial merge-dropdown-values value))
+                                                     {:fieldType "dropdown"}
+                                                     (update answers answer-key (partial merge-dropdown-values value))
 
-                                   {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                   (letfn [(parse-values [value-or-values]
-                                             (if (vector? value-or-values)
-                                               (mapv parse-values value-or-values)
-                                               (cond-> {:valid true :value value-or-values}
-                                                 (= field-type "attachment")
-                                                 (assoc :status :ready))))]
-                                     (update answers answer-key merge
-                                             {:valid  true
-                                              :values (parse-values (:value answer))}))
+                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
+                                                     (letfn [(parse-values [value-or-values]
+                                                               (if (vector? value-or-values)
+                                                                 (mapv parse-values value-or-values)
+                                                                 (cond-> {:valid true :value value-or-values}
+                                                                         (= field-type "attachment")
+                                                                         (assoc :status :ready))))]
+                                                       (update answers answer-key merge
+                                                               {:valid  true
+                                                                :values (parse-values (:value answer))}))
 
-                                   :else
-                                   (update answers answer-key merge {:valid true :value value}))
+                                                     :else
+                                                     (update answers answer-key merge {:valid true :value value}))]
+                                   (assoc-in answer [answer-key :cannot-view] cannot-view))
                                  answers)))
                            answers
                            submitted-answers)))
