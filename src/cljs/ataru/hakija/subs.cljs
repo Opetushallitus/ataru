@@ -37,8 +37,7 @@
 (re-frame/reg-sub
   :application/cannot-view?
   (fn [db [_ key]]
-    (let [field (->> (get-in db [:form :content])
-                     util/flatten-form-fields
+    (let [field (->> (:flat-form-content db)
                      (filter #(= (keyword key) (keyword (:id %))))
                      first)
           editing? (get-in db [:application :editing?])]
@@ -47,8 +46,7 @@
 (re-frame/reg-sub
   :application/cannot-edit?
   (fn [db [_ key]]
-    (let [field (->> (get-in db [:form :content])
-                     util/flatten-form-fields
+    (let [field (->> (:flat-form-content db)
                      (filter #(= (keyword key) (keyword (:id %))))
                      first)
           editing? (get-in db [:application :editing?])]
@@ -95,8 +93,7 @@
       (= option-value value))))
 
 (defn- hakukohteet-field [db]
-  (->> (get-in db [:form :content] [])
-       util/flatten-form-fields
+  (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
        first))
 

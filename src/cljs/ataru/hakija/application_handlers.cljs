@@ -271,8 +271,7 @@
 
 (defn- set-have-finnish-ssn
   [db]
-  (let [cannot-view? (->> (get-in db [:form :content])
-                          autil/flatten-form-fields
+  (let [cannot-view? (->> (:flat-form-content db)
                           (filter #(= "ssn" (:id %)))
                           first
                           :cannot-view)
@@ -301,23 +300,22 @@
     x))
 
 (defn set-question-group-row-amounts [db]
-  (let [flattened-form-fields (autil/flatten-form-fields (-> db :form :content))]
-    (reduce-kv (fn [db answer-key {:keys [value values]}]
-                 (let [field-descriptor  (->> flattened-form-fields
-                                              (filter (comp (partial = answer-key) keyword :id))
-                                              (first))
-                       question-group-id (-> field-descriptor :params :question-group-id)]
-                   (cond-> db
-                     question-group-id
-                     (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
-                                                                                                  (-> values count)
-                                                                                                  (-> value count)
-                                                                                                  1)]
-                                                                               (if (> % provided-val)
-                                                                                 %
-                                                                                 provided-val))))))
-               db
-               (-> db :application :answers))))
+  (reduce-kv (fn [db answer-key {:keys [value values]}]
+               (let [field-descriptor  (->> (:flat-form-content db)
+                                            (filter (comp (partial = answer-key) keyword :id))
+                                            (first))
+                     question-group-id (-> field-descriptor :params :question-group-id)]
+                 (cond-> db
+                   question-group-id
+                   (update-in [:application :ui question-group-id :count] #(let [provided-val ((some-fn >0?)
+                                                                                               (-> values count)
+                                                                                               (-> value count)
+                                                                                               1)]
+                                                                             (if (> % provided-val)
+                                                                               %
+                                                                               provided-val))))))
+             db
+             (-> db :application :answers)))
 
 (defn- merge-single-choice-values [value answer]
   (if (and (vector? value)
@@ -446,6 +444,7 @@
                                      (cond-> form
                                              (some? selected-language)
                                              (assoc :selected-language selected-language))))
+                     (assoc :flat-form-content (autil/flatten-form-fields (:content form)))
                      (assoc-in [:application :answers] (create-initial-answers form preselected-hakukohde))
                      (assoc-in [:application :show-hakukohde-search] false)
                      (assoc :wrapper-sections (extract-wrapper-sections form))

@@ -5,8 +5,7 @@
     [ataru.hakija.application-validators :as validator]))
 
 (defn- hakukohteet-field [db]
-  (->> (get-in db [:form :content] [])
-       util/flatten-form-fields
+  (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
        first))
 

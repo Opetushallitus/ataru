@@ -23,8 +23,7 @@
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         lang                (subscribe [:application/form-language])
-        default-lang        (subscribe [:application/default-language])
-        form-fields         (reaction (util/flatten-form-fields @(subscribe [:state-query [:form :content]])))]
+        default-lang        (subscribe [:application/default-language])]
     (fn [valid-status]
       (when (seq (:invalid-fields valid-status))
         [:div.application__invalid-field-status

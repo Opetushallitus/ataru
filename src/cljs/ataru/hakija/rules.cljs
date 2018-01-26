@@ -28,8 +28,7 @@
    (show-field db id false))
   ([db id valid?]
    (let [cannot-view? (and (get-in db [:application :editing?])
-                           (->> (get-in db [:form :content])
-                                util/flatten-form-fields
+                           (->> (:flat-form-content db)
                                 (filter #(= id (keyword (:id %))))
                                 first
                                 :cannot-view))]
@@ -83,8 +82,7 @@
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
         ssn (get-in db [:application :answers :ssn])
         cannot-view? (and (get-in db [:application :editing?])
-                          (->> (get-in db [:form :content])
-                               util/flatten-form-fields
+                          (->> (:flat-form-content db)
                                (filter #(= "ssn" (:id %)))
                                first
                                :cannot-view))]
