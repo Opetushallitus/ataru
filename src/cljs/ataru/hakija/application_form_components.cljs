@@ -445,7 +445,8 @@
                   :type      "checkbox"
                   :checked   @checked?
                   :value     value
-                  :on-change on-change}
+                  :on-change on-change
+                  :aria-role "option"}
                  (when @cannot-edit? {:disabled true}))]
          [:label
           (merge {:for option-id}
@@ -465,7 +466,8 @@
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)
-         :aria-invalid    @(subscribe [:application/answer-invalid? id])}
+         :aria-invalid    @(subscribe [:application/answer-invalid? id])
+         :aria-role       "listbox"}
         (doall
           (map-indexed (fn [option-idx option]
                          ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
@@ -493,7 +495,8 @@
                 :type      "checkbox"
                 :checked   @checked?
                 :value     option-value
-                :on-change on-change}
+                :on-change on-change
+                :aria-role "radio"}
                (when @cannot-edit? {:disabled true}))]
        [:label
         (merge {:for option-id}
@@ -526,7 +529,8 @@
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
         {:aria-labelledby (id-for-label field-descriptor)
-         :aria-invalid    @(subscribe [:application/answer-invalid? button-id])}
+         :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
+         :aria-role       "radiogroup"}
         (doall
          (map-indexed (fn [option-idx option]
                         ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
