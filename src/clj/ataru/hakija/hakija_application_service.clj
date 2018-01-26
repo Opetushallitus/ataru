@@ -189,29 +189,33 @@
         (store-and-log final-application store-fn)))))
 
 (defn- start-person-creation-job [application-id]
-  (job/start-job hakija-jobs/job-definitions
-                 (:type person-integration/job-definition)
-                 {:application-id application-id}))
+  (log/info "Started person creation job (to person service) with job id"
+            (job/start-job hakija-jobs/job-definitions
+                           (:type person-integration/job-definition)
+                           {:application-id application-id})))
+
+(defn- start-attachment-finalizer-job [application-id]
+  (log/info "Started attachment finalizer job (to Liiteri) with job id"
+            (job/start-job hakija-jobs/job-definitions
+                           (:type attachment-finalizer-job/job-definition)
+                           {:application-id application-id})))
 
 (defn- start-submit-jobs [tarjonta-service application-id]
-  (let [person-service-job-id       (start-person-creation-job application-id)
-        attachment-finalizer-job-id (job/start-job hakija-jobs/job-definitions
-                                                   (:type attachment-finalizer-job/job-definition)
-                                                   {:application-id application-id})]
-    (application-email/start-email-submit-confirmation-job tarjonta-service
-                                                           application-id)
-    (log/info "Started person creation job (to person service) with job id" person-service-job-id)
-    (log/info "Started attachment finalizer job (to Liiteri) with job id" attachment-finalizer-job-id)))
+  (application-email/start-email-submit-confirmation-job tarjonta-service
+                                                         application-id)
+  (start-person-creation-job application-id)
+  (start-attachment-finalizer-job application-id))
 
 (defn- start-virkailija-edit-jobs [virkailija-secret application-id application]
   (invalidate-virkailija-credentials virkailija-secret)
   (when (nil? (:person-oid application))
-    (log/info "Started person creation job (to person service) with job id"
-              (start-person-creation-job application-id))))
+    (start-person-creation-job application-id))
+  (start-attachment-finalizer-job application-id))
 
 (defn- start-hakija-edit-jobs [tarjonta-service application-id]
   (application-email/start-email-edit-confirmation-job tarjonta-service
-                                                       application-id))
+                                                       application-id)
+  (start-attachment-finalizer-job application-id))
 
 (defn handle-application-submit [tarjonta-service ohjausparametrit-service application]
   (log/info "Application submitted:" application)
