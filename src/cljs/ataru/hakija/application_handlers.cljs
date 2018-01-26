@@ -278,7 +278,8 @@
         ssn (get-in db [:application :answers :ssn])]
     (update-in db [:application :answers :have-finnish-ssn]
                merge {:valid true
-                      :value (str (or (and (contains? ssn :value)
+                      :value (str (or (:cannot-view ssn)
+                                      (and (contains? ssn :value)
                                            (clojure.string/blank? (:value ssn))
                                            cannot-view?)
                                       (not (clojure.string/blank? (:value ssn)))))})))

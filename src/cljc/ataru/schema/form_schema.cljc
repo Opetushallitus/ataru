@@ -174,16 +174,17 @@
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
-(s/defschema Answer {:key                    s/Str,
-                     :value                  (s/cond-pre s/Str
-                                                         s/Int
-                                                         [(s/cond-pre s/Str
-                                                                      File
-                                                                      [(s/cond-pre s/Str s/Int File)])])
-                     :fieldType              (apply s/enum form-fields)
-                     (s/optional-key :label) (s/maybe (s/cond-pre
-                                                       LocalizedString
-                                                       s/Str))})
+(s/defschema Answer {:key                          s/Str,
+                     :value                        (s/cond-pre s/Str
+                                                               s/Int
+                                                               [(s/cond-pre s/Str
+                                                                            File
+                                                                            [(s/cond-pre s/Str s/Int File)])])
+                     :fieldType                    (apply s/enum form-fields)
+                     (s/optional-key :cannot-view) s/Bool
+                     (s/optional-key :label)       (s/maybe (s/cond-pre
+                                                              LocalizedString
+                                                              s/Str))})
 
 (def review-requirement-values
   (->> review-states/hakukohde-review-types

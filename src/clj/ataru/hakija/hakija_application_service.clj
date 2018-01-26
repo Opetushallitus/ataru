@@ -68,8 +68,8 @@
     (update application :answers
             (partial map (fn [answer]
                            (cond-> answer
-                             (:cannot-view (fields-by-key (:key answer)))
-                             (assoc :value nil)))))))
+                                   (:cannot-view (fields-by-key (:key answer)))
+                                   (assoc :value nil :cannot-view true)))))))
 
 (defn- merge-uneditable-answers-from-previous
   [new-application
