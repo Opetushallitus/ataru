@@ -195,3 +195,8 @@
          (keep-indexed #(when (= hakukohde-oid (:value %2))
                           (inc %1)))
          first)))
+
+(re-frame/reg-sub
+  :application/answer-invalid?
+  (fn [db [_ key]]
+    (-> db :application :answers (get key) :valid not)))
