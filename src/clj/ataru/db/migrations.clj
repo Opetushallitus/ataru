@@ -17,6 +17,7 @@
     [ataru.component-data.value-transformers :as t]
     [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
     [ataru.person-service.person-integration :as person-integration]
+    [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.background-job.job :as job]
     [ataru.application.review-states :as review-states]))
 
@@ -299,6 +300,13 @@
             (println "Updating application review state" key (:id application) state "->" new-application-state)
             (migration-app-store/set-application-state key new-application-state)))))))
 
+(defn- start-attachment-finalizer-job-for-all-applications
+  []
+  (doseq [application (migration-app-store/get-latest-versions-of-all-applications)]
+    (job/start-job hakija-jobs/job-definitions
+                   (:type attachment-finalizer-job/job-definition)
+                   {:application-id (:id application)})))
+
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
@@ -373,6 +381,11 @@
   migrate-application-states-to-hakukohteet "1.80"
   "Move (most) application states to be hakukohde specific"
   (application-states-to-hakukohteet))
+
+(migrations/defmigration
+  migrate-start-attachment-finalizer-jobs "1.82"
+  "Start attachment finalizer job for all applications"
+  (start-attachment-finalizer-job-for-all-applications))
 
 (defn migrate
   []
