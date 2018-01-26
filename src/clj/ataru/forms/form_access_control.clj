@@ -62,10 +62,26 @@
       :else
       (do-fn))))
 
+(defn- check-form-field-id-duplicates
+  [form]
+  (let [form-element-ids (atom [])]
+    (clojure.walk/prewalk
+      (fn [x]
+        (when (and (map-entry? x)
+                   (= :id (key x)))
+          (swap! form-element-ids conj (val x)))
+        x)
+      (:content form))
+    (when (and
+            (not-empty @form-element-ids)
+            (not (apply distinct? @form-element-ids)))
+      (throw (Exception. (str "Duplicate element id in form: " @form-element-ids))))))
+
 (defn post-form [form session organization-service]
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
+    (check-form-field-id-duplicates form)
     (check-edit-authorization
      form-with-org
      session
