@@ -193,6 +193,8 @@
                               data-idx (int (.getAttribute (.-target evt) "data-idx"))]
                           (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))]
         (into [div-kwd
+               (when (:belongs-to-hakukohteet field-descriptor)
+                 [question-hakukohde-names field-descriptor])
                [label field-descriptor]
                [:div.application__form-text-input-info-text
                 [info-text field-descriptor]]]
@@ -268,6 +270,8 @@
                         (partial multi-value-field-change field-descriptor 0 idx)
                         (partial textual-field-change field-descriptor))]
         [div-kwd
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          [label field-descriptor]
          [:div.application__form-text-area-info-text
           [info-text field-descriptor]]
@@ -404,6 +408,8 @@
                                   (.-value (.-target e))
                                   idx]))]
     [div-kwd
+     (when (:belongs-to-hakukohteet field-descriptor)
+       [question-hakukohde-names field-descriptor])
      [label field-descriptor]
      [:div.application__form-text-input-info-text
       [info-text field-descriptor]]
@@ -481,6 +487,8 @@
         lang         (subscribe [:application/form-language])]
     (fn [field-descriptor & {:keys [div-kwd disabled idx] :or {div-kwd :div.application__form-field disabled false}}]
       [div-kwd
+       (when (:belongs-to-hakukohteet field-descriptor)
+         [question-hakukohde-names field-descriptor])
        [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -544,6 +552,8 @@
         validators   (:validators field-descriptor)]
     (fn [field-descriptor & {:keys [div-kwd idx] :or {div-kwd :div.application__form-field}}]
       [div-kwd
+       (when (:belongs-to-hakukohteet field-descriptor)
+         [question-hakukohde-names field-descriptor])
        [label field-descriptor]
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
@@ -656,6 +666,8 @@
     (fn [{:keys [id] :as field-descriptor} & {question-group-idx :idx}]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          [label field-descriptor]
          (when-not (clojure.string/blank? @text)
            [markdown-paragraph @text])
@@ -707,6 +719,8 @@
                            (.preventDefault event)
                            (dispatch [:application/add-adjacent-fields field-descriptor question-group-idx]))]
         [:div.application__form-field
+         (when (:belongs-to-hakukohteet field-descriptor)
+           [question-hakukohde-names field-descriptor])
          [label field-descriptor]
          (when-let [info (@language (some-> field-descriptor :params :info-text :label))]
            [:div.application__form-info-text [markdown-paragraph info]])
