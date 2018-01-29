@@ -173,7 +173,7 @@
     (.setCellStyle cell @cell-style))
   cell)
 
-(defn- update-row-cell! [^XSSFSheet sheet row column value workbook]
+(defn- update-row-cell! [^XSSFSheet sheet row column value]
   (when-let [^String v (not-empty (trim (str value)))]
     (-> (or (.getRow sheet (int row))
             (.createRow sheet (int row)))
@@ -182,13 +182,13 @@
         (.setCellValue v)))
   sheet)
 
-(defn- make-writer [sheet row-offset workbook]
+(defn- make-writer [sheet row-offset]
   (fn [row column value]
     (update-row-cell!
       sheet
       (+ row-offset row)
       column
-      value workbook)
+      value)
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
@@ -400,7 +400,7 @@
 
 (defn- create-form-meta-sheet [workbook meta-fields]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
-        writer (make-writer sheet 0 workbook)]
+        writer (make-writer sheet 0)]
     (doseq [meta-field meta-fields
             :let [column (:column meta-field)
                   label  (:label meta-field)]]
@@ -412,7 +412,7 @@
 (defn- sheet-name [{:keys [id name]}]
   {:pre [(some? id)
          (some? name)]}
-  (let [name (str id "_" (clojure.string/replace name invalid-char-matcher "_"))]
+  (let [name (str id "_" (clojure.string/replace (some (partial get name) [:fi :sv :en]) invalid-char-matcher "_"))]
     (cond-> name
       (> (count name) 30)
       (subs 0 30))))
@@ -473,7 +473,6 @@
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
 (defn export-applications [applications application-reviews selected-hakukohde skip-answers? tarjonta-service ohjausparametrit-service]
-(defn export-applications [applications selected-hakukohde tarjonta-service ohjausparametrit-service]
   (let [workbook                (create-workbook-and-styles!)
         form-meta-fields        (indexed-meta-fields form-meta-fields)
         form-meta-sheet         (create-form-meta-sheet workbook form-meta-fields)
@@ -506,8 +505,8 @@
          (map-indexed (fn [sheet-idx {:keys [sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
                               headers            (extract-headers applications form skip-answers?)
-                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx) workbook)
-                              header-writer      (make-writer applications-sheet 0 workbook)
+                              meta-writer        (make-writer form-meta-sheet (inc sheet-idx))
+                              header-writer      (make-writer applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
                                                          (util/flatten-form-fields (:content form)))]
@@ -518,7 +517,7 @@
                                (reverse)
                                (map #(merge % (get-tarjonta-info (:haku %))))
                                (map-indexed (fn [row-idx application]
-                                              (let [row-writer (make-writer applications-sheet (inc row-idx) workbook)
+                                              (let [row-writer (make-writer applications-sheet (inc row-idx))
                                                     application-review (get application-reviews (:key application))]
                                                 (write-application! row-writer
                                                                     application
