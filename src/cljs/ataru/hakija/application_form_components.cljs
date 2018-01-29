@@ -129,20 +129,21 @@
       [info-text field-descriptor]]
      [:div.application__form-text-input-and-validation-errors
       [:input.application__form-text-input
-       (merge {:id          id
-               :type        "text"
-               :placeholder (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                              (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
-               :class       (str size-class
-                                 (if show-error?
-                                   " application__form-field-error"
-                                   " application__form-text-input--normal"))
-               :value       (if @(subscribe [:application/cannot-view? id])
-                              "***********"
-                              (:value answer))
-               :on-blur     on-blur
-               :on-change   on-change
-               :required    (is-required-field? field-descriptor)}
+       (merge {:id           id
+               :type         "text"
+               :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                               (non-blank-val (get input-hint @lang) (get input-hint @default-lang)))
+               :class        (str size-class
+                                  (if show-error?
+                                    " application__form-field-error"
+                                    " application__form-text-input--normal"))
+               :value        (if @(subscribe [:application/cannot-view? id])
+                               "***********"
+                               (:value answer))
+               :on-blur      on-blur
+               :on-change    on-change
+               :required     (is-required-field? field-descriptor)
+               :aria-invalid @(subscribe [:application/answer-invalid? id])}
               (when (or disabled
                         @(subscribe [:application/cannot-edit? id]))
                 {:disabled true}))]
@@ -180,14 +181,15 @@
               [:div
                [:input.application__form-text-input
                 (merge
-                  {:type      "text"
-                   :class     (str size-class (if (show-text-field-error-class? field-descriptor value valid)
-                                                " application__form-field-error"
-                                                " application__form-text-input--normal"))
-                   :value     value
-                   :data-idx  0
-                   :on-change on-change
-                   :required  (is-required-field? field-descriptor)}
+                 {:type         "text"
+                  :class        (str size-class (if (show-text-field-error-class? field-descriptor value valid)
+                                                  " application__form-field-error"
+                                                  " application__form-text-input--normal"))
+                  :value        value
+                  :data-idx     0
+                  :on-change    on-change
+                  :required     (is-required-field? field-descriptor)
+                  :aria-invalid @(subscribe [:application/answer-invalid? id])}
                   (when (empty? value)
                     {:on-blur on-blur})
                   (when @cannot-edit?
@@ -258,7 +260,8 @@
                   :default-value @value
                   :on-change     on-change
                   :value         @value
-                  :required      (is-required-field? field-descriptor)}
+                  :required      (is-required-field? field-descriptor)
+                  :aria-invalid  @(subscribe [:application/answer-invalid? (-> field-descriptor :id keyword)])}
                  (when @cannot-edit?
                    {:disabled true}))]
          (when max-length
@@ -388,11 +391,12 @@
       (when (not disabled?)
         [:span.application__form-select-arrow])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id        (:id field-descriptor)
-        :value     (or @value "")
-        :on-change on-change
-        :disabled  disabled?
-        :required  (is-required-field? field-descriptor)}
+       {:id           (:id field-descriptor)
+        :value        (or @value "")
+        :on-change    on-change
+        :disabled     disabled?
+        :required     (is-required-field? field-descriptor)
+        :aria-invalid @(subscribe [:application/answer-invalid? id])}
        (doall
         (concat
          (when
@@ -441,7 +445,8 @@
                   :type      "checkbox"
                   :checked   @checked?
                   :value     value
-                  :on-change on-change}
+                  :on-change on-change
+                  :aria-role "option"}
                  (when @cannot-edit? {:disabled true}))]
          [:label
           (merge {:for option-id}
@@ -460,7 +465,9 @@
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
-        {:aria-labelledby (id-for-label field-descriptor)}
+        {:aria-labelledby (id-for-label field-descriptor)
+         :aria-invalid    @(subscribe [:application/answer-invalid? id])
+         :aria-role       "listbox"}
         (doall
           (map-indexed (fn [option-idx option]
                          ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
@@ -488,7 +495,8 @@
                 :type      "checkbox"
                 :checked   @checked?
                 :value     option-value
-                :on-change on-change}
+                :on-change on-change
+                :aria-role "radio"}
                (when @cannot-edit? {:disabled true}))]
        [:label
         (merge {:for option-id}
@@ -520,7 +528,9 @@
        [:div.application__form-text-input-info-text
         [info-text field-descriptor]]
        [:div.application__form-single-choice-button-outer-container
-        {:aria-labelledby (id-for-label field-descriptor)}
+        {:aria-labelledby (id-for-label field-descriptor)
+         :aria-invalid    @(subscribe [:application/answer-invalid? button-id])
+         :aria-role       "radiogroup"}
         (doall
          (map-indexed (fn [option-idx option]
                         ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" option-idx)}
@@ -548,12 +558,13 @@
         language @(subscribe [:application/form-language])]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input
-      {:id        id
-       :type      "file"
-       :multiple  "multiple"
-       :key       (str "upload-button-" component-id "-" attachment-count)
-       :on-change (partial upload-attachment field-descriptor component-id attachment-count question-group-idx)
-       :required  (is-required-field? field-descriptor)}]
+      {:id           id
+       :type         "file"
+       :multiple     "multiple"
+       :key          (str "upload-button-" component-id "-" attachment-count)
+       :on-change    (partial upload-attachment field-descriptor component-id attachment-count question-group-idx)
+       :required     (is-required-field? field-descriptor)
+       :aria-invalid @(subscribe [:application/answer-invalid? id])}]
      [:label.application__form-upload-label
       {:for id}
       [:i.zmdi.zmdi-cloud-upload.application__form-upload-icon]
