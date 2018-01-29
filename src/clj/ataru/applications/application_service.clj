@@ -163,7 +163,7 @@
      :information-requests (information-request-store/get-information-requests application-key)}))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde session organization-service tarjonta-service ohjausparametrit-service]
+  [application-keys selected-hakukohde skip-answers? session organization-service tarjonta-service ohjausparametrit-service]
   (let [applications         (application-store/get-applications-by-keys application-keys)
         forms                (->> applications
                                   (map :form-key)
@@ -182,6 +182,7 @@
     (ByteArrayInputStream. (excel/export-applications allowed-applications
                                                       application-reviews
                                                       selected-hakukohde
+                                                      skip-answers?
                                                       tarjonta-service
                                                       ohjausparametrit-service))))
 
