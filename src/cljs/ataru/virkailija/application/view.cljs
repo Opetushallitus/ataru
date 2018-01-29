@@ -28,28 +28,29 @@
 
 (defn excel-download-link
   [applications selected-hakukohde filename]
-  [:div
-   [:form#excel-download-link
-    {:action "/lomake-editori/api/applications/excel"
-     :method "POST"}
-    [:input {:type  "hidden"
-             :name  "application-keys"
-             :value (clojure.string/join "," (map :key applications))}]
-    [:input {:type  "hidden"
-             :name  "filename"
-             :value filename}]
-    (when-let [csrf-token (cljs-util/csrf-token)]
+  (when (not-empty applications)
+    [:div
+     [:form#excel-download-link
+      {:action "/lomake-editori/api/applications/excel"
+       :method "POST"}
       [:input {:type  "hidden"
-               :name  "CSRF"
-               :value csrf-token}])
-    (when selected-hakukohde
+               :name  "application-keys"
+               :value (clojure.string/join "," (map :key applications))}]
       [:input {:type  "hidden"
-               :name  "selected-hakukohde"
-               :value selected-hakukohde}])]
-   [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
-    {:on-click (fn [e]
-                 (.submit (.getElementById js/document "excel-download-link")))}
-    "Lataa Excel"]])
+               :name  "filename"
+               :value filename}]
+      (when-let [csrf-token (cljs-util/csrf-token)]
+        [:input {:type  "hidden"
+                 :name  "CSRF"
+                 :value csrf-token}])
+      (when selected-hakukohde
+        [:input {:type  "hidden"
+                 :name  "selected-hakukohde"
+                 :value selected-hakukohde}])]
+     [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled
+      {:on-click (fn [e]
+                   (.submit (.getElementById js/document "excel-download-link")))}
+      "Lataa Excel"]]))
 
 (defn- count-for-application-state
   [from-states state]
