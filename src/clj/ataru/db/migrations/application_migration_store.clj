@@ -10,6 +10,11 @@
 (sql/defqueries "sql/migration-1.71-queries.sql")
 (sql/defqueries "sql/migration-1.75-queries.sql")
 (sql/defqueries "sql/migration-1.80-queries.sql")
+(sql/defqueries "sql/migration-1.82-queries.sql")
+
+(defn get-ids-of-latest-applications
+  []
+  (map :id (db/exec :db yesql-get-ids-of-latest-applications {})))
 
 (defn get-all-applications
   []

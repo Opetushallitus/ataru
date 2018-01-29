@@ -302,10 +302,10 @@
 
 (defn- start-attachment-finalizer-job-for-all-applications
   []
-  (doseq [application (migration-app-store/get-latest-versions-of-all-applications)]
+  (doseq [application-id (migration-app-store/get-ids-of-latest-applications)]
     (job/start-job hakija-jobs/job-definitions
                    (:type attachment-finalizer-job/job-definition)
-                   {:application-id (:id application)})))
+                   {:application-id application-id})))
 
 (migrations/defmigration
   migrate-person-info-module "1.13"
